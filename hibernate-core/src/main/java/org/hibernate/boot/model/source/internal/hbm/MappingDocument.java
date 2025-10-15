@@ -24,8 +24,8 @@ import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PersistentClass;
 
-import org.jboss.logging.Logger;
 
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.boot.model.source.internal.hbm.Helper.collectToolingHints;
 
 /**
@@ -34,7 +34,6 @@ import static org.hibernate.boot.model.source.internal.hbm.Helper.collectTooling
  * @author Steve Ebersole
  */
 public class MappingDocument implements HbmLocalMetadataBuildingContext, MetadataSourceProcessor {
-	private static final Logger LOG = Logger.getLogger( MappingDocument.class );
 
 	private final JaxbHbmHibernateMapping documentRoot;
 	private final Origin origin;
@@ -181,7 +180,7 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 					? StringHelper.unqualify( name )
 					: renameBinding.getRename();
 			getMetadataCollector().addImport( rename, name );
-			LOG.tracef( "Import (query rename): %s -> %s", rename, name );
+			BOOT_LOGGER.importEntry( rename, name );
 		}
 	}
 

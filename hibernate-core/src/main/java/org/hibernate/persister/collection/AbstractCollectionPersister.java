@@ -724,31 +724,31 @@ public abstract class AbstractCollectionPersister
 
 	protected void logStaticSQL() {
 		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-			MODEL_MUTATION_LOGGER.tracef( "Static SQL for collection: %s", getRole() );
+			MODEL_MUTATION_LOGGER.staticSqlForCollection( getRole() );
 
 			final var rowMutationOperations = getRowMutationOperations();
 
 			final var insertRowOperation = rowMutationOperations.getInsertRowOperation();
 			final String insertRowSql = insertRowOperation != null ? insertRowOperation.getSqlString() : null;
 			if ( insertRowSql != null ) {
-				MODEL_MUTATION_LOGGER.tracef( " Row insert: %s", insertRowSql );
+				MODEL_MUTATION_LOGGER.collectionRowInsert( insertRowSql );
 			}
 
 			final var updateRowOperation = rowMutationOperations.getUpdateRowOperation();
 			final String updateRowSql = updateRowOperation != null ? updateRowOperation.getSqlString() : null;
 			if ( updateRowSql != null ) {
-				MODEL_MUTATION_LOGGER.tracef( " Row update: %s", updateRowSql );
+				MODEL_MUTATION_LOGGER.collectionRowUpdate( updateRowSql );
 			}
 
 			final var deleteRowOperation = rowMutationOperations.getDeleteRowOperation();
 			final String deleteRowSql = deleteRowOperation != null ? deleteRowOperation.getSqlString() : null;
 			if ( deleteRowSql != null ) {
-				MODEL_MUTATION_LOGGER.tracef( " Row delete: %s", deleteRowSql );
+				MODEL_MUTATION_LOGGER.collectionRowDelete( deleteRowSql );
 			}
 
 			final String deleteAllSql = getRemoveCoordinator().getSqlString();
 			if ( deleteAllSql != null ) {
-				MODEL_MUTATION_LOGGER.tracef( " One-shot delete: %s", deleteAllSql );
+				MODEL_MUTATION_LOGGER.collectionOneShotDelete( deleteAllSql );
 			}
 		}
 	}

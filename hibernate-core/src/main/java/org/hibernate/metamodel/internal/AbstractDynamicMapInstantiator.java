@@ -33,8 +33,8 @@ public abstract class AbstractDynamicMapInstantiator implements Instantiator {
 	@Override
 	public boolean isInstance(Object object) {
 		return object instanceof Map<?, ?> map
-			&& isSameRole( (String) map.get( TYPE_KEY ) );
-		// todo (6.0) : should this be an exception if there is no TYPE_KEY
+			// TODO: should this be an exception if there is no TYPE_KEY
+			&& roleName.equals( map.get( TYPE_KEY ) );
 	}
 
 	protected boolean isSameRole(String type) {

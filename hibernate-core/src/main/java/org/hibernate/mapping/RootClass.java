@@ -295,9 +295,9 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 		if ( hasSubclasses() ) {
 			final Set<Table> tables = new HashSet<>();
 			tables.add( getTable() );
-			for ( Subclass subclass : getSubclasses() ) {
+			for ( var subclass : getSubclasses() ) {
 				if ( !(subclass instanceof SingleTableSubclass) ) {
-					final Table table = subclass.getTable();
+					final var table = subclass.getTable();
 					if ( !tables.add( table ) ) {
 						// we encountered a duplicate table mapping
 						if ( getDiscriminator() == null ) {
@@ -328,7 +328,7 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	private void checkCompositeIdentifier() {
 		if ( getIdentifier() instanceof Component id
 				&& !id.isDynamic() ) {
-			final Class<?> idClass = id.getComponentClass();
+			final var idClass = id.getComponentClass();
 			if ( idClass != null ) {
 				if ( !overridesEquals( idClass ) ) {
 					CORE_LOGGER.compositeIdClassDoesNotOverrideEquals( idClass.getName() );
@@ -386,7 +386,7 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 
 	public Set<Table> getIdentityTables() {
 		final Set<Table> tables = new HashSet<>();
-		for ( PersistentClass clazz : getSubclassClosure() ) {
+		for ( var clazz : getSubclassClosure() ) {
 			if ( clazz.isAbstract() == null || !clazz.isAbstract() ) {
 				tables.add( clazz.getIdentityTable() );
 			}
@@ -396,8 +396,8 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 
 	@Override
 	public void enableSoftDelete(Column indicatorColumn, SoftDeleteType strategy) {
-		this.softDeleteColumn = indicatorColumn;
-		this.softDeleteStrategy = strategy;
+		softDeleteColumn = indicatorColumn;
+		softDeleteStrategy = strategy;
 	}
 
 	@Override

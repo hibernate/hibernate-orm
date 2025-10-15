@@ -41,17 +41,17 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 			LockTimeoutType.NONE,
 			RowLockStrategy.TABLE,
 			OuterJoinLockingType.IDENTIFIED,
-			ConnectionLockTimeoutStrategy.NONE
+			SybaseImpl.IMPL
 	);
 
 	public static final LockingSupport SYBASE_ASE = new TransactSQLLockingSupport(
-			PessimisticLockStyle.NONE,
+			PessimisticLockStyle.TABLE_HINT,
 			LockTimeoutType.CONNECTION,
 			LockTimeoutType.NONE,
 			LockTimeoutType.NONE,
 			RowLockStrategy.TABLE,
 			OuterJoinLockingType.IDENTIFIED,
-			ConnectionLockTimeoutStrategy.NONE
+			SybaseImpl.IMPL
 	);
 
 	public static final LockingSupport SYBASE_LEGACY = new TransactSQLLockingSupport(
@@ -61,7 +61,7 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 			LockTimeoutType.NONE,
 			RowLockStrategy.TABLE,
 			OuterJoinLockingType.IDENTIFIED,
-			ConnectionLockTimeoutStrategy.NONE
+			SybaseImpl.IMPL
 	);
 
 	public static LockingSupport forSybaseAnywhere(DatabaseVersion version) {
@@ -76,7 +76,7 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 						? RowLockStrategy.COLUMN
 						: RowLockStrategy.TABLE,
 				OuterJoinLockingType.IDENTIFIED,
-				ConnectionLockTimeoutStrategy.NONE
+				SybaseImpl.IMPL
 		);
 	}
 
@@ -111,13 +111,13 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 
 		@Override
 		public Level getSupportedLevel() {
-			return ConnectionLockTimeoutStrategy.Level.EXTENDED;
+			return Level.EXTENDED;
 		}
 
 		@Override
 		public Timeout getLockTimeout(Connection connection, SessionFactoryImplementor factory) {
 			return Helper.getLockTimeout(
-					"select @@LOCK_TIMEOUT",
+					"select @@lock_timeout",
 					(resultSet) -> {
 						final int timeoutInMilliseconds = resultSet.getInt( 1 );
 						return switch ( timeoutInMilliseconds ) {
@@ -146,6 +146,58 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 					connection,
 					factory
 			);
+		}
+	}
+
+	public static class SybaseImpl implements ConnectionLockTimeoutStrategy {
+		public static final SybaseImpl IMPL = new SybaseImpl();
+
+		@Override
+		public Level getSupportedLevel() {
+			return Level.SUPPORTED;
+		}
+
+		@Override
+		public Timeout getLockTimeout(Connection connection, SessionFactoryImplementor factory) {
+			return Helper.getLockTimeout(
+					"select @@lock_timeout",
+					(resultSet) -> {
+						final int timeoutInMilliseconds = resultSet.getInt( 1 );
+						return switch ( timeoutInMilliseconds ) {
+							case -1 -> Timeouts.WAIT_FOREVER;
+							case 0 -> Timeouts.NO_WAIT;
+							default -> Timeout.milliseconds( timeoutInMilliseconds );
+						};
+					},
+					connection,
+					factory
+			);
+		}
+
+		@Override
+		public void setLockTimeout(Timeout timeout, Connection connection, SessionFactoryImplementor factory) {
+			final int milliseconds = timeout.milliseconds();
+
+			if ( milliseconds == Timeouts.SKIP_LOCKED_MILLI ) {
+				throw new HibernateException( "Sybase does not accept skip-locked for lock-timeout" );
+			}
+
+			// Sybase needs a special syntax for NO_WAIT rather than a number
+			if ( milliseconds == Timeouts.NO_WAIT_MILLI ) {
+				// NOTE: The docs say this is supported, and it does not fail when used,
+				// but immediately after the setting value is still -1.  So it seems to
+				// allow the call but ignore it.  Might just be jTDS.
+				Helper.setLockTimeout( "set lock nowait", connection, factory );
+			}
+			else if ( milliseconds == Timeouts.WAIT_FOREVER_MILLI ) {
+				// Even though Sybase's wait-forever (and default) value is -1, it won't accept
+				// -1 as a value because, well, of course it won't.  Need to set max value instead
+				// because, well, of course you do.
+				Helper.setLockTimeout( 2147483647, "set lock wait %s", connection, factory );
+			}
+			else {
+				Helper.setLockTimeout( milliseconds, "set lock wait %s", connection, factory );
+			}
 		}
 	}
 }

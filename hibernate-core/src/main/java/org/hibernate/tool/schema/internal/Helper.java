@@ -9,7 +9,6 @@ import java.io.Reader;
 import java.io.Writer;
 import java.net.URL;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Map;
 
 import org.hibernate.boot.Metadata;
@@ -20,7 +19,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.internal.exec.AbstractScriptSourceInput;
@@ -165,11 +163,11 @@ public class Helper {
 	}
 
 	public static DatabaseInformation buildDatabaseInformation(
-			ServiceRegistry serviceRegistry,
 			DdlTransactionIsolator ddlTransactionIsolator,
 			SqlStringGenerationContext context,
 			SchemaManagementTool tool) {
-		final JdbcEnvironment jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
+		final var serviceRegistry = ddlTransactionIsolator.getJdbcContext().getServiceRegistry();
+		final var jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
 		try {
 			return new DatabaseInformationImpl(
 					serviceRegistry,
@@ -231,9 +229,8 @@ public class Helper {
 			ScriptSourceInput scriptInput,
 			Formatter formatter,
 			GenerationTarget[] targets) {
-		final List<String> commands = scriptInput.extract(
-				reader -> commandExtractor.extractCommands( reader, dialect )
-		);
+		final var commands =
+				scriptInput.extract( reader -> commandExtractor.extractCommands( reader, dialect ) );
 		for ( var target : targets ) {
 			target.beforeScript( scriptInput );
 		}

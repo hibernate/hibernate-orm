@@ -185,6 +185,10 @@ public abstract sealed class Collection
 		return buildingContext;
 	}
 
+	BootstrapContext getBootstrapContext() {
+		return getBuildingContext().getBootstrapContext();
+	}
+
 	public MetadataImplementor getMetadata() {
 		return getBuildingContext().getMetadataCollector();
 	}
@@ -224,17 +228,13 @@ public abstract sealed class Collection
 
 	public Comparator<?> getComparator() {
 		if ( comparator == null && comparatorClassName != null ) {
-			@SuppressWarnings("rawtypes")
-			final Class<? extends Comparator> clazz =
-					classForName( Comparator.class, comparatorClassName, getBuildingContext().getBootstrapContext() );
+			final var clazz = classForName( Comparator.class, comparatorClassName, getBootstrapContext() );
 			try {
 				comparator = clazz.getConstructor().newInstance();
 			}
 			catch (Exception e) {
-				throw new MappingException(
-						"Could not instantiate comparator class [" + comparatorClassName
-								+ "] for collection " + getRole()
-				);
+				throw new MappingException( "Could not instantiate comparator class ["
+						+ comparatorClassName + "] for collection " + getRole() );
 			}
 		}
 		return comparator;
@@ -466,7 +466,7 @@ public abstract sealed class Collection
 	}
 
 	private ManagedBean<? extends UserCollectionType> userTypeBean() {
-		final BootstrapContext bootstrapContext = getBuildingContext().getBootstrapContext();
+		final var bootstrapContext = getBootstrapContext();
 		return createUserTypeBean(
 				role,
 				classForName( UserCollectionType.class, typeName, bootstrapContext ),
@@ -546,7 +546,7 @@ public abstract sealed class Collection
 			key.createForeignKeyOfEntity( entityName );
 		}
 		else {
-			final Property property = owner.getProperty( referencedPropertyName );
+			final var property = owner.getProperty( referencedPropertyName );
 			assert property != null;
 			key.createForeignKeyOfEntity( entityName,
 					property.getValue().getConstraintColumns() );
@@ -657,16 +657,14 @@ public abstract sealed class Collection
 			boolean autoAliasInjection,
 			java.util.Map<String, String> aliasTableMap,
 			java.util.Map<String, String> aliasEntityMap) {
-		filters.add(
-				new FilterConfiguration(
-						name,
-						condition,
-						autoAliasInjection,
-						aliasTableMap,
-						aliasEntityMap,
-						null
-				)
-		);
+		filters.add( new FilterConfiguration(
+				name,
+				condition,
+				autoAliasInjection,
+				aliasTableMap,
+				aliasEntityMap,
+				null
+		) );
 	}
 
 	@Override
@@ -680,16 +678,14 @@ public abstract sealed class Collection
 			boolean autoAliasInjection,
 			java.util.Map<String, String> aliasTableMap,
 			java.util.Map<String, String> aliasEntityMap) {
-		manyToManyFilters.add(
-				new FilterConfiguration(
-						name,
-						condition,
-						autoAliasInjection,
-						aliasTableMap,
-						aliasEntityMap,
-						null
-				)
-		);
+		manyToManyFilters.add( new FilterConfiguration(
+				name,
+				condition,
+				autoAliasInjection,
+				aliasTableMap,
+				aliasEntityMap,
+				null
+		) );
 	}
 
 	public List<FilterConfiguration> getManyToManyFilters() {

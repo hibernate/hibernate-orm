@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -19,6 +20,7 @@ import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -196,5 +198,37 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 			}
 			hql.append( ')' );
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof AbstractSqmInsertStatement<?> that
+			&& super.equals( that )
+			&& Objects.equals( getInsertionTargetPaths(), that.getInsertionTargetPaths() )
+			&& Objects.equals( getConflictClause(), that.getConflictClause() );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + Objects.hashCode( getInsertionTargetPaths() );
+		result = 31 * result + Objects.hashCode( getConflictClause() );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof AbstractSqmInsertStatement<?> that
+			&& super.isCompatible( that )
+			&& SqmCacheable.areCompatible( getInsertionTargetPaths(), that.getInsertionTargetPaths() )
+			&& SqmCacheable.areCompatible( getConflictClause(), that.getConflictClause() );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( getInsertionTargetPaths() );
+		result = 31 * result + SqmCacheable.cacheHashCode( getConflictClause() );
+		return result;
 	}
 }

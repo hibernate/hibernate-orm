@@ -19,7 +19,7 @@ import org.hibernate.service.spi.ServiceContributor;
  *
  * Used to define the ServiceRegistry to be used for testing.  Can be used alone:
  *
- * [source, JAVA, indent=0]
+ * [source, java, indent=0]
  * ----
  * @ServiceRegistry ( ... )
  * class MyTest extends ServiceRegistryAware {
@@ -44,7 +44,7 @@ import org.hibernate.service.spi.ServiceContributor;
  * or {@link SessionFactoryImplementor} via {@link SessionFactory},
  * with or without {@link ServiceRegistryScopeAware}.  E.g.
  *
- * [source, JAVA, indent=0]
+ * [source, java, indent=0]
  * ----
  * @ServiceRegistry ( ... )
  * @TestDomain ( ... )

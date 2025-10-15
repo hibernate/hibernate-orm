@@ -1,6 +1,5 @@
 [[mutability]]
 === Mutability
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :mutability-example-dir: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/mutability
 :extrasdir: extras/immutability
@@ -68,7 +67,7 @@ Hibernate will skip any modification, therefore no SQL `UPDATE` statement is exe
 include::{mutability-example-dir}/entity/EntityImmutabilityTest.java[tags=entity-immutability-update-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/entity-immutability-update-example.sql[]
 ----
@@ -152,7 +151,7 @@ For instance, we can still modify the entity name:
 include::{mutability-example-dir}/attribute/PluralAttributeMutabilityTest.java[tags=collection-entity-update-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/collection-entity-update-example.sql[]
 ----

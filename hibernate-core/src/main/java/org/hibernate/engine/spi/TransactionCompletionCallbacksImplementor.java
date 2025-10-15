@@ -44,4 +44,10 @@ public interface TransactionCompletionCallbacksImplementor extends TransactionCo
 	 * the same transaction coordinator. Returns this instance for convenience/fluency.
 	 */
 	TransactionCompletionCallbacksImplementor forSharing();
+
+
+	/**
+	 * Execute all pending {@link org.hibernate.action.internal.BulkOperationCleanupAction}
+	 */
+	void executePendingBulkOperationCleanUpActions();
 }

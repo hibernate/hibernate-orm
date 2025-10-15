@@ -119,28 +119,34 @@ public class HiLoOptimizer extends AbstractOptimizer {
 	private GenerationState noTenantState;
 	private Map<String,GenerationState> tenantSpecificState;
 
-	private GenerationState locateGenerationState(String tenantIdentifier) {
-		if ( tenantIdentifier == null ) {
+	@Override
+	public void reset() {
+		noTenantState = null;
+		tenantSpecificState = null;
+	}
+
+	private GenerationState locateGenerationState(String tenantId) {
+		if ( tenantId == null ) {
 			if ( noTenantState == null ) {
 				noTenantState = new GenerationState();
 			}
 			return noTenantState;
 		}
 		else {
-			GenerationState state;
 			if ( tenantSpecificState == null ) {
 				tenantSpecificState = new ConcurrentHashMap<>();
-				state = new GenerationState();
-				tenantSpecificState.put( tenantIdentifier, state );
+				final var state = new GenerationState();
+				tenantSpecificState.put( tenantId, state );
+				return state;
 			}
 			else {
-				state = tenantSpecificState.get( tenantIdentifier );
+				var state = tenantSpecificState.get( tenantId );
 				if ( state == null ) {
 					state = new GenerationState();
-					tenantSpecificState.put( tenantIdentifier, state );
+					tenantSpecificState.put( tenantId, state );
 				}
+				return state;
 			}
-			return state;
 		}
 	}
 

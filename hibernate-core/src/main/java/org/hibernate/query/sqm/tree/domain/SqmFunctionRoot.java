@@ -14,10 +14,9 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.NavigablePath;
-
-import java.util.Objects;
 
 
 /**
@@ -145,14 +144,14 @@ public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E>
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		return object instanceof SqmFunctionRoot<?> that
-			&& super.equals( object )
-			&& Objects.equals( this.function, that.function );
+	public boolean deepEquals(SqmFrom<?, ?> object) {
+		return super.deepEquals( object )
+			&& function.equals( ((SqmFunctionRoot<?>) object).function );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( super.hashCode(), function );
+	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
+		return super.isDeepCompatible( object )
+			&& function.isCompatible( ((SqmFunctionRoot<?>) object).function );
 	}
 }

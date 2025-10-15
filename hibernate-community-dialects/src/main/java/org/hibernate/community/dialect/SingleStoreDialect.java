@@ -235,8 +235,7 @@ public class SingleStoreDialect extends Dialect {
 	private static boolean getUpdateForEnabled(DialectResolutionInfo info) {
 		return ConfigurationHelper.getBoolean(
 				SINGLE_STORE_FOR_UPDATE_LOCK_ENABLED,
-				info.getConfigurationValues(),
-				false
+				info.getConfigurationValues()
 		);
 	}
 
@@ -277,22 +276,15 @@ public class SingleStoreDialect extends Dialect {
 
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		switch ( unit ) {
-			case SECOND:
-				return "(second(?2)+microsecond(?2)/1e6)";
-			case WEEK:
-				return "weekofyear(?2)";
-			case DAY_OF_WEEK:
-				return "dayofweek(?2)";
-			case DAY_OF_MONTH:
-				return "dayofmonth(?2)";
-			case DAY_OF_YEAR:
-				return "dayofyear(?2)";
-			case EPOCH:
-				return "unix_timestamp(?2)";
-			default:
-				return "?1(?2)";
-		}
+		return switch ( unit ) {
+			case SECOND -> "(second(?2)+microsecond(?2)/1e6)";
+			case WEEK -> "weekofyear(?2)";
+			case DAY_OF_WEEK -> "dayofweek(?2)";
+			case DAY_OF_MONTH -> "dayofmonth(?2)";
+			case DAY_OF_YEAR -> "dayofyear(?2)";
+			case EPOCH -> "unix_timestamp(?2)";
+			default -> "?1(?2)";
+		};
 	}
 
 	@Override
@@ -325,14 +317,11 @@ public class SingleStoreDialect extends Dialect {
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		String fromType = fromTemporalType == TemporalType.TIME ? "to_timestamp(?2, 'HH24:MI:SS.FF6')" : "?2";
 		String toType = toTemporalType == TemporalType.TIME ? "to_timestamp(?3, 'HH24:MI:SS.FF6')" : "?3";
-		switch ( unit ) {
-			case NANOSECOND:
-				return String.format( "timestampdiff(microsecond,%s,%s)*1e3", fromType, toType );
-			case NATIVE:
-				return String.format( "timestampdiff(microsecond,%s,%s)", fromType, toType );
-			default:
-				return String.format( "timestampdiff(?1,%s,%s)", fromType, toType );
-		}
+		return switch ( unit ) {
+			case NANOSECOND -> String.format( "timestampdiff(microsecond,%s,%s)*1e3", fromType, toType );
+			case NATIVE -> String.format( "timestampdiff(microsecond,%s,%s)", fromType, toType );
+			default -> String.format( "timestampdiff(?1,%s,%s)", fromType, toType );
+		};
 	}
 
 	@Override
@@ -700,34 +689,22 @@ public class SingleStoreDialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-				return "bit";
-			case TIMESTAMP:
-				return "datetime($p)";
-			case TIMESTAMP_WITH_TIMEZONE:
-				return "timestamp($p)";
-			case TIME_WITH_TIMEZONE:
-				return "time($p)";
-			case SqlTypes.NUMERIC:
-				return columnType( DECIMAL );
-			case FLOAT:
-				// Avoid using float type because
-				// SingleStore has potential inaccuracy when using the = or != comparison operators on FLOAT columns in WHERE clause
-				return columnType( DOUBLE );
-			case NCHAR:
-				return "char($l) character set utf8";
-			case NVARCHAR:
-				return "varchar($l) character set utf8";
-			case BLOB:
-				return "longblob";
-			case NCLOB:
-				return "longtext character set utf8";
-			case CLOB:
-				return "longtext";
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+		return switch ( sqlTypeCode ) {
+			case BOOLEAN -> "bit";
+			case TIMESTAMP -> "datetime($p)";
+			case TIMESTAMP_WITH_TIMEZONE -> "timestamp($p)";
+			case TIME_WITH_TIMEZONE -> "time($p)";
+			case SqlTypes.NUMERIC -> columnType( DECIMAL );
+			// Avoid using float type because
+			// SingleStore has potential inaccuracy when using the = or != comparison operators on FLOAT columns in WHERE clause
+			case FLOAT -> columnType( DOUBLE );
+			case NCHAR -> "char($l) character set utf8";
+			case NVARCHAR -> "varchar($l) character set utf8";
+			case BLOB -> "longblob";
+			case NCLOB -> "longtext character set utf8";
+			case CLOB -> "longtext";
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -745,30 +722,15 @@ public class SingleStoreDialect extends Dialect {
 
 	@Override
 	protected String castType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-			case BIT:
-				//special case for casting to Boolean
-				return "unsigned";
-			case TINYINT:
-			case SMALLINT:
-			case INTEGER:
-			case BIGINT:
-				return "signed";
-			case CHAR:
-			case VARCHAR:
-			case LONG32VARCHAR:
-				return "char";
-			case NCHAR:
-			case NVARCHAR:
-			case LONG32NVARCHAR:
-				return "char character set utf8";
-			case BINARY:
-			case VARBINARY:
-			case LONG32VARBINARY:
-				return "binary";
-		}
-		return super.castType( sqlTypeCode );
+		return switch ( sqlTypeCode ) {
+			//special case for casting to Boolean
+			case BOOLEAN, BIT -> "unsigned";
+			case TINYINT, SMALLINT, INTEGER, BIGINT -> "signed";
+			case CHAR, VARCHAR, LONG32VARCHAR -> "char";
+			case NCHAR, NVARCHAR, LONG32NVARCHAR -> "char character set utf8";
+			case BINARY, VARBINARY, LONG32VARBINARY ->  "binary";
+			default -> super.castType( sqlTypeCode );
+		};
 	}
 
 	@Override

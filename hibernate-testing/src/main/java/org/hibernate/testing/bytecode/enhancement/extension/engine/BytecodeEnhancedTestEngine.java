@@ -31,6 +31,7 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.Extension;
+import org.junit.jupiter.api.extension.ExtensionConfigurationException;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestInstantiationAwareExtension;
 import org.junit.jupiter.api.io.CleanupMode;
@@ -41,21 +42,28 @@ import org.junit.jupiter.engine.config.JupiterConfiguration;
 import org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor;
 import org.junit.jupiter.engine.descriptor.ClassTestDescriptor;
 import org.junit.jupiter.engine.descriptor.JupiterEngineDescriptor;
-import org.junit.jupiter.engine.descriptor.LauncherStoreFacade;
 import org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor;
 import org.junit.jupiter.engine.descriptor.TestTemplateTestDescriptor;
 import org.junit.jupiter.engine.execution.JupiterEngineExecutionContext;
+import org.junit.jupiter.engine.execution.LauncherStoreFacade;
 import org.junit.platform.engine.EngineDiscoveryRequest;
 import org.junit.platform.engine.EngineExecutionListener;
 import org.junit.platform.engine.ExecutionRequest;
+import org.junit.platform.engine.OutputDirectoryCreator;
 import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.UniqueId;
-import org.junit.platform.engine.reporting.OutputDirectoryProvider;
+import org.junit.platform.engine.support.descriptor.EngineDescriptor;
 import org.junit.platform.engine.support.hierarchical.EngineExecutionContext;
 import org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine;
 import org.junit.platform.engine.support.hierarchical.ThrowableCollector;
 
 public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEngineExecutionContext> {
+
+	public static final String ENHANCEMENT_EXTENSION_ENGINE_ENABLED = "hibernate.testing.bytecode.enhancement.extension.engine.enabled";
+
+	public static boolean isEnabled() {
+		return "true".equalsIgnoreCase( System.getProperty( ENHANCEMENT_EXTENSION_ENGINE_ENABLED, "false" ) );
+	}
 
 	@Override
 	public String getId() {
@@ -64,6 +72,24 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 
 	@Override
 	public TestDescriptor discover(EngineDiscoveryRequest discoveryRequest, UniqueId uniqueId) {
+		if ( isEnabled() ) {
+			try {
+				return doDiscover( discoveryRequest, uniqueId );
+			}
+			catch (OutOfMemoryError e) {
+				throw e;
+			}
+			catch (Error e) {
+				throw new ExtensionConfigurationException(
+						"Encountered a problem when enhancing the test classes. It is highly likely that @BytecodeEnhanced extension is incompatible with the provided version of JUnit.",
+						e );
+			}
+		}
+
+		return new EngineDescriptor( uniqueId, getId() );
+	}
+
+	public TestDescriptor doDiscover(EngineDiscoveryRequest discoveryRequest, UniqueId uniqueId) {
 		final BytecodeEnhancedEngineDescriptor engineDescriptor = new BytecodeEnhancedEngineDescriptor(
 				(JupiterEngineDescriptor) new JupiterTestEngine().discover( discoveryRequest, uniqueId )
 		);
@@ -235,8 +261,12 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 	}
 
 	private JupiterConfiguration getJupiterConfiguration(ExecutionRequest request) {
-		JupiterEngineDescriptor engineDescriptor = (JupiterEngineDescriptor) request.getRootTestDescriptor();
-		return engineDescriptor.getConfiguration();
+		if ( request.getRootTestDescriptor() instanceof JupiterEngineDescriptor descriptor ) {
+			return descriptor.getConfiguration();
+		}
+		else {
+			return null;
+		}
 	}
 
 	public Optional<String> getGroupId() {
@@ -278,8 +308,8 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 		}
 
 		@Override
-		public <T> Optional<T> getRawConfigurationParameter(String s, Function<String, T> function) {
-			return configuration.getRawConfigurationParameter( s, function );
+		public <T> Optional<T> getRawConfigurationParameter(String key, Function<? super String, ? extends T> transformer) {
+			return configuration.getRawConfigurationParameter(  key, transformer );
 		}
 
 		@Override
@@ -353,8 +383,8 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 		}
 
 		@Override
-		public OutputDirectoryProvider getOutputDirectoryProvider() {
-			return configuration.getOutputDirectoryProvider();
+		public OutputDirectoryCreator getOutputDirectoryCreator() {
+			return configuration.getOutputDirectoryCreator();
 		}
 	}
 

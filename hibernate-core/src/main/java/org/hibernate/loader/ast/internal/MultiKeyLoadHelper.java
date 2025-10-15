@@ -35,9 +35,10 @@ public class MultiKeyLoadHelper {
 		}
 
 		final var typeConfiguration = sessionFactory.getTypeConfiguration();
-		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 
-		final var rawArrayJavaType = javaTypeRegistry.resolveArrayDescriptor( elementClass );
+		final var rawArrayJavaType =
+				typeConfiguration.getJavaTypeRegistry()
+						.resolveArrayDescriptor( elementClass );
 		if ( !(rawArrayJavaType instanceof BasicPluralJavaType<?> arrayJavaType ) ) {
 			throw new IllegalArgumentException( "Expecting BasicPluralJavaType for array class '"
 												+ elementClass.getTypeName() + "[]', but got '"

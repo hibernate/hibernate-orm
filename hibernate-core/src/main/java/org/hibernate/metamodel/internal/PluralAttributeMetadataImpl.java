@@ -19,6 +19,17 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.ValueClassification;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
+import static org.hibernate.metamodel.CollectionClassification.BAG;
+import static org.hibernate.metamodel.CollectionClassification.ID_BAG;
+import static org.hibernate.metamodel.CollectionClassification.LIST;
+import static org.hibernate.metamodel.CollectionClassification.MAP;
+import static org.hibernate.metamodel.CollectionClassification.ORDERED_MAP;
+import static org.hibernate.metamodel.CollectionClassification.ORDERED_SET;
+import static org.hibernate.metamodel.CollectionClassification.SET;
+import static org.hibernate.metamodel.CollectionClassification.SORTED_MAP;
+import static org.hibernate.metamodel.CollectionClassification.SORTED_SET;
+import static org.hibernate.metamodel.internal.AttributeFactory.getSignatureType;
+
 /**
  * @author Steve Ebersole
  */
@@ -26,8 +37,6 @@ class PluralAttributeMetadataImpl<X, Y, E>
 		extends BaseAttributeMetadata<X, Y>
 		implements PluralAttributeMetadata<X, Y, E> {
 	private final CollectionClassification collectionClassification;
-	private final AttributeClassification elementClassification;
-	private final AttributeClassification listIndexOrMapKeyClassification;
 	private final Class<?> elementJavaType;
 	private final Class<?> keyJavaType;
 	private final ValueContext elementValueContext;
@@ -41,47 +50,17 @@ class PluralAttributeMetadataImpl<X, Y, E>
 			AttributeClassification elementClassification,
 			AttributeClassification listIndexOrMapKeyClassification) {
 		super( propertyMapping, ownerType, member, attributeClassification );
-		this.collectionClassification = determineCollectionType( getJavaType(), propertyMapping );
-		this.elementClassification = elementClassification;
-		this.listIndexOrMapKeyClassification = listIndexOrMapKeyClassification;
 
-		final ParameterizedType signatureType = AttributeFactory.getSignatureType( member );
-		switch ( collectionClassification ) {
-			case MAP:
-			case SORTED_MAP:
-			case ORDERED_MAP: {
-				keyJavaType = signatureType != null
-						? getClassFromGenericArgument( signatureType.getActualTypeArguments()[0] )
-						: Object.class;
+		collectionClassification = determineCollectionType( getJavaType(), propertyMapping );
 
-				elementJavaType = signatureType != null
-						? getClassFromGenericArgument( signatureType.getActualTypeArguments()[1] )
-						: Object.class;
-
-				break;
-			}
-			case ARRAY:
-			case LIST: {
-				keyJavaType = Integer.class;
-
-				elementJavaType = signatureType != null
-						? getClassFromGenericArgument( signatureType.getActualTypeArguments()[0] )
-						: Object.class;
-
-				break;
-			}
-			default: {
-				elementJavaType = signatureType != null
-						? getClassFromGenericArgument( signatureType.getActualTypeArguments()[0] )
-						: Object.class;
-				keyJavaType = null;
-			}
-		}
+		final var signatureType = getSignatureType( member );
+		keyJavaType = getKeyJavaType( signatureType );
+		elementJavaType = getElementJavaType( signatureType );
 
 		elementValueContext = new ValueContext() {
 			@Override
 			public Value getHibernateValue() {
-				return ( (Collection) getPropertyMapping().getValue() ).getElement();
+				return ( (Collection) propertyMapping.getValue() ).getElement();
 			}
 
 			@Override
@@ -91,7 +70,7 @@ class PluralAttributeMetadataImpl<X, Y, E>
 
 			@Override
 			public ValueClassification getValueClassification() {
-				return toValueClassification(PluralAttributeMetadataImpl.this.elementClassification);
+				return toValueClassification( elementClassification );
 			}
 
 			@Override
@@ -105,7 +84,7 @@ class PluralAttributeMetadataImpl<X, Y, E>
 			keyValueContext = new ValueContext() {
 				@Override
 				public Value getHibernateValue() {
-					return ( (Map) getPropertyMapping().getValue() ).getIndex();
+					return ( (Map) propertyMapping.getValue() ).getIndex();
 				}
 
 				@Override
@@ -115,7 +94,7 @@ class PluralAttributeMetadataImpl<X, Y, E>
 
 				@Override
 				public ValueClassification getValueClassification() {
-					return toValueClassification(PluralAttributeMetadataImpl.this.listIndexOrMapKeyClassification);
+					return toValueClassification( listIndexOrMapKeyClassification );
 				}
 
 				@Override
@@ -129,15 +108,36 @@ class PluralAttributeMetadataImpl<X, Y, E>
 		}
 	}
 
+	private Class<?> getElementJavaType(ParameterizedType signatureType) {
+		return switch ( collectionClassification ) {
+			case MAP, SORTED_MAP, ORDERED_MAP ->
+					signatureType == null
+							? Object.class
+							: getClassFromGenericArgument( signatureType.getActualTypeArguments()[1] );
+			case SET, SORTED_SET, ORDERED_SET, ARRAY, LIST, BAG, ID_BAG ->
+					signatureType == null
+							? Object.class
+							: getClassFromGenericArgument( signatureType.getActualTypeArguments()[0] );
+		};
+	}
+
+	private Class<?> getKeyJavaType(ParameterizedType signatureType) {
+		return switch ( collectionClassification ) {
+			case ARRAY, LIST -> Integer.class;
+			case MAP, SORTED_MAP, ORDERED_MAP ->
+					signatureType == null
+							? Object.class
+							: getClassFromGenericArgument( signatureType.getActualTypeArguments()[0] );
+			default -> null;
+		};
+	}
+
 	private static ValueClassification toValueClassification(AttributeClassification classification) {
-		switch ( classification ) {
-			case EMBEDDED:
-				return ValueClassification.EMBEDDABLE;
-			case BASIC:
-				return ValueClassification.BASIC;
-			default:
-				return ValueClassification.ENTITY;
-		}
+		return switch ( classification ) {
+			case EMBEDDED -> ValueClassification.EMBEDDABLE;
+			case BASIC -> ValueClassification.BASIC;
+			default -> ValueClassification.ENTITY;
+		};
 	}
 
 	private Class<?> getClassFromGenericArgument(java.lang.reflect.Type type) {
@@ -145,15 +145,15 @@ class PluralAttributeMetadataImpl<X, Y, E>
 			return clazz;
 		}
 		else if ( type instanceof TypeVariable<?> typeVariable ) {
-			final java.lang.reflect.Type upperBound = typeVariable.getBounds()[0];
+			final var upperBound = typeVariable.getBounds()[0];
 			return getClassFromGenericArgument( upperBound );
 		}
 		else if ( type instanceof ParameterizedType parameterizedType ) {
-			final java.lang.reflect.Type rawType = parameterizedType.getRawType();
+			final var rawType = parameterizedType.getRawType();
 			return getClassFromGenericArgument( rawType );
 		}
 		else if ( type instanceof WildcardType wildcardType ) {
-			final java.lang.reflect.Type upperBound = wildcardType.getUpperBounds()[0];
+			final var upperBound = wildcardType.getUpperBounds()[0];
 			return getClassFromGenericArgument( upperBound );
 		}
 		else {
@@ -165,39 +165,35 @@ class PluralAttributeMetadataImpl<X, Y, E>
 	}
 
 	public static CollectionClassification determineCollectionType(Class<?> javaType, Property property) {
-		final Collection collection = (Collection) property.getValue();
-
+		final var collection = (Collection) property.getValue();
 		if ( java.util.List.class.isAssignableFrom( javaType ) ) {
-			return CollectionClassification.LIST;
+			return LIST;
 		}
 		else if ( java.util.Set.class.isAssignableFrom( javaType ) ) {
 			if ( collection.isSorted() ) {
-				return CollectionClassification.SORTED_SET;
+				return SORTED_SET;
 			}
-
-			if ( collection.hasOrder() ) {
-				return CollectionClassification.ORDERED_SET;
+			else if ( collection.hasOrder() ) {
+				return ORDERED_SET;
 			}
-
-			return CollectionClassification.SET;
+			else {
+				return SET;
+			}
 		}
 		else if ( java.util.Map.class.isAssignableFrom( javaType ) ) {
 			if ( collection.isSorted() ) {
-				return CollectionClassification.SORTED_MAP;
+				return SORTED_MAP;
 			}
-
-			if ( collection.hasOrder() ) {
-				return CollectionClassification.ORDERED_MAP;
+			else if ( collection.hasOrder() ) {
+				return ORDERED_MAP;
 			}
-
-			return CollectionClassification.MAP;
+			else {
+				return MAP;
+			}
 		}
 		else if ( java.util.Collection.class.isAssignableFrom( javaType ) ) {
-			if ( collection.isIdentified() ) {
-				return CollectionClassification.ID_BAG;
-			}
+			return collection.isIdentified() ? ID_BAG : BAG;
 
-			return CollectionClassification.BAG;
 		}
 		else if ( javaType.isArray() ) {
 			return CollectionClassification.ARRAY;

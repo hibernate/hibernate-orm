@@ -79,4 +79,11 @@ public class TransactionCompletionCallbacksImpl implements TransactionCompletion
 		}
 		return this;
 	}
+
+	@Override
+	public void executePendingBulkOperationCleanUpActions() {
+		if ( afterTransactionProcesses != null ) {
+			afterTransactionProcesses.executePendingBulkOperationCleanUpActions();
+		}
+	}
 }

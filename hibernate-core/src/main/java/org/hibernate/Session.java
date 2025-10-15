@@ -577,9 +577,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <li>on the other hand, for databases with no SQL array type, a large batch size results
 	 *     in long SQL statements with many JDBC parameters.
 	 * </ul>
-	 * <p>
-	 * For more advanced cases, use {@link #byMultipleIds(Class)}, which returns an instance of
-	 * {@link MultiIdentifierLoadAccess}.
 	 *
 	 * @param entityType the entity type
 	 * @param ids the list of identifiers
@@ -588,7 +585,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return an ordered list of persistent instances, with null elements representing missing
 	 *         entities, whose positions in the list match the positions of their ids in the
 	 *         given list of identifiers
-	 * @see #byMultipleIds(Class)
+	 *
+	 * @see FindMultipleOption
+	 *
 	 * @since 7.0
 	 */
 	<E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption... options);
@@ -617,9 +616,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <li>on the other hand, for databases with no SQL array type, a large batch size results
 	 *     in long SQL statements with many JDBC parameters.
 	 * </ul>
-	 * <p>
-	 * For more advanced cases, use {@link #byMultipleIds(Class)}, which returns an instance of
-	 * {@link MultiIdentifierLoadAccess}.
 	 *
 	 * @param entityGraph the entity graph interpreted as a load graph
 	 * @param ids the list of identifiers
@@ -628,7 +624,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return an ordered list of persistent instances, with null elements representing missing
 	 *         entities, whose positions in the list match the positions of their ids in the
 	 *         given list of identifiers
-	 * @see #byMultipleIds(Class)
+	 *
+	 * @see FindMultipleOption
+	 *
 	 * @since 7.0
 	 */
 	<E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> ids, FindOption... options);
@@ -1165,7 +1163,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @throws HibernateException If the given class does not resolve as a mapped entity
 	 *
 	 * @see #findMultiple(Class, List, FindOption...)
+	 *
+	 * @deprecated Use {@link #findMultiple(Class, List, FindOption...)} instead.
 	 */
+	@Deprecated(since = "7.2", forRemoval = true)
 	<T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass);
 
 	/**
@@ -1177,7 +1178,11 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return an instance of {@link MultiIdentifierLoadAccess} for executing the lookup
 	 *
 	 * @throws HibernateException If the given name does not resolve to a mapped entity
+	 *
+	 * @deprecated Use {@link #findMultiple(EntityGraph, List, FindOption...)} instead,
+	 * 		with {@linkplain SessionFactory#createGraphForDynamicEntity(String)}.
 	 */
+	@Deprecated(since = "7.2", forRemoval = true)
 	<T> MultiIdentifierLoadAccess<T> byMultipleIds(String entityName);
 
 	/**

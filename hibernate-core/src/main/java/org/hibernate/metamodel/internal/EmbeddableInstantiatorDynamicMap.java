@@ -31,9 +31,9 @@ public class EmbeddableInstantiatorDynamicMap
 	@Override
 	public Object instantiate(ValueAccess valuesAccess) {
 		final Map<?,?> dataMap = generateDataMap();
-		final Object[] values = valuesAccess == null ? null : valuesAccess.getValues();
+		final var values = valuesAccess == null ? null : valuesAccess.getValues();
 		if ( values != null ) {
-			final EmbeddableMappingType mappingType = runtimeDescriptorAccess.get();
+			final var mappingType = runtimeDescriptorAccess.get();
 			mappingType.setValues( dataMap, values );
 		}
 		return dataMap;

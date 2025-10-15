@@ -94,7 +94,10 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.tool.schema.extract.internal.InformationExtractorPostgreSQLImpl;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+import org.hibernate.tool.schema.extract.spi.InformationExtractor;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
@@ -227,63 +230,41 @@ public class PostgreSQLLegacyDialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case TINYINT:
-				// no tinyint, not even in Postgres 11
-				return "smallint";
+		return switch ( sqlTypeCode ) {
+			// no tinyint, not even in Postgres 11
+			case TINYINT -> "smallint";
 			// there are no nchar/nvarchar types in Postgres
-			case NCHAR:
-				return columnType( CHAR );
-			case NVARCHAR:
-				return columnType( VARCHAR );
+			case NCHAR -> columnType( CHAR );
+			case NVARCHAR -> columnType( VARCHAR );
 			// since there's no real difference between TEXT and VARCHAR,
 			// except for the length limit, we can just use 'text' for the
 			// "long" string types
-			case LONG32VARCHAR:
-			case LONG32NVARCHAR:
-				return "text";
-			case BLOB:
-			case CLOB:
-			case NCLOB:
-				// use oid as the blob/clob type on Postgres because
-				// the JDBC driver doesn't allow using bytea/text through LOB APIs
-				return "oid";
+			case LONG32VARCHAR, LONG32NVARCHAR -> "text";
+			// use oid as the blob/clob type on Postgres because
+			// the JDBC driver doesn't allow using bytea/text through LOB APIs
+			case BLOB, CLOB, NCLOB -> "oid";
 			// use bytea as the "long" binary type (that there is no
 			// real VARBINARY type in Postgres, so we always use this)
-			case BINARY:
-			case VARBINARY:
-			case LONG32VARBINARY:
-				return "bytea";
+			case BINARY, VARBINARY, LONG32VARBINARY -> "bytea";
 
 			// We do not use the time with timezone type because PG deprecated it and it lacks certain operations like subtraction
 //			case TIME_UTC:
 //				return columnType( TIME_WITH_TIMEZONE );
 
-			case TIMESTAMP_UTC:
-				return columnType( TIMESTAMP_WITH_TIMEZONE );
+			case TIMESTAMP_UTC -> columnType( TIMESTAMP_WITH_TIMEZONE );
 
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
 	protected String castType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case CHAR:
-			case NCHAR:
-			case VARCHAR:
-			case NVARCHAR:
-				return "varchar";
-			case LONG32VARCHAR:
-			case LONG32NVARCHAR:
-				return "text";
-			case BINARY:
-			case VARBINARY:
-			case LONG32VARBINARY:
-				return "bytea";
-		}
-		return super.castType( sqlTypeCode );
+		return switch ( sqlTypeCode ) {
+			case CHAR, NCHAR, VARCHAR, NVARCHAR -> "varchar";
+			case LONG32VARCHAR, LONG32NVARCHAR -> "text";
+			case BINARY, VARBINARY, LONG32VARBINARY ->"bytea";
+			default -> super.castType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -635,6 +616,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		functionFactory.initcap();
 		functionFactory.substr();
 		functionFactory.substring_substr();
+		functionFactory.reverse();
 		//also natively supports ANSI-style substring()
 		functionFactory.translate();
 		functionFactory.toCharNumberDateTimestamp();
@@ -937,6 +919,13 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	@Override
 	public boolean supportsCaseInsensitiveLike() {
 		return true;
+	}
+
+	@Override
+	public String generatedAs(String generatedAs) {
+		return getVersion().isSameOrAfter( 18 )
+				? " generated always as (" + generatedAs + ")"
+				: super.generatedAs( generatedAs );
 	}
 
 	@Override
@@ -1669,6 +1658,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	@Override
 	public boolean supportsRecursiveSearchClause() {
 		return getVersion().isSameOrAfter( 14 );
+	}
+
+	@Override
+	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
+		return new InformationExtractorPostgreSQLImpl( extractionContext );
 	}
 
 }

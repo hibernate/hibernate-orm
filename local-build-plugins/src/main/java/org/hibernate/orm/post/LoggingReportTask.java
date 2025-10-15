@@ -21,6 +21,7 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskAction;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
@@ -48,7 +49,7 @@ public abstract class LoggingReportTask extends AbstractJandexAwareTask {
 	public LoggingReportTask() {
 		setDescription( "Generates a report of \"system\" logging" );
 		reportFile = getProject().getObjects().fileProperty();
-		reportFile.convention( getProject().getLayout().getBuildDirectory().file( "orm/generated/logging/logging.adoc" ) );
+		reportFile.convention( getProject().getLayout().getBuildDirectory().file( "orm/generated/logging/index.adoc" ) );
 	}
 
 	@Override
@@ -95,8 +96,8 @@ public abstract class LoggingReportTask extends AbstractJandexAwareTask {
 			}
 			else {
 				idRange = new IdRange(
-						idRangeAnnUsage.value( "min" ).asInt(),
-						idRangeAnnUsage.value( "max" ).asInt(),
+						asIntOrDefault( idRangeAnnUsage, "min" , 1 ),
+						asIntOrDefault( idRangeAnnUsage, "max" , 999999 ),
 						true,
 						loggerClassInfo.simpleName(),
 						subSystem
@@ -129,7 +130,7 @@ public abstract class LoggingReportTask extends AbstractJandexAwareTask {
 
 		for ( int i = 0; i < messageAnnUsages.size(); i++ ) {
 			final AnnotationInstance msgAnnUsage = messageAnnUsages.get( i );
-			final int msgId = msgAnnUsage.value( "id" ).asInt();
+			final int msgId = asIntOrDefault( msgAnnUsage, "id", -1 );
 
 			if ( msgId < minId ) {
 				minId = msgId;
@@ -331,5 +332,14 @@ public abstract class LoggingReportTask extends AbstractJandexAwareTask {
 		public String getLabel() {
 			return minValueText + " - " + maxValueText;
 		}
+	}
+
+	private int asIntOrDefault(AnnotationInstance instance, String param, int defaultValue) {
+		final AnnotationValue value = instance.value( param );
+		if ( value == null ) {
+			getLogger().warn( "Explicit value for [{}] was not provided at {}! ", param, instance.target() );
+			return defaultValue;
+		}
+		return value.asInt();
 	}
 }

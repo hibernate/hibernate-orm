@@ -12,7 +12,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.internal.util.config.ConfigurationException;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.type.BindingContext;
@@ -41,6 +40,8 @@ import java.util.Map;
 import static java.util.Comparator.comparingInt;
 import static org.hibernate.cfg.QuerySettings.QUERY_PLAN_CACHE_ENABLED;
 import static org.hibernate.cfg.QuerySettings.QUERY_PLAN_CACHE_MAX_SIZE;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 
 /**
  * Aggregation and encapsulation of the components Hibernate uses
@@ -97,30 +98,30 @@ public class QueryEngineImpl implements QueryEngine {
 			QueryEngineOptions options,
 			Dialect dialect,
 			SqmCreationContext sqmCreationContext) {
-		final var sqmCreationOptions = new SqmCreationOptionsStandard( options );
-		if ( options.getCustomHqlTranslator() != null ) {
-			return options.getCustomHqlTranslator();
+		final var customHqlTranslator = options.getCustomHqlTranslator();
+		if ( customHqlTranslator != null ) {
+			return customHqlTranslator;
 		}
-		else if ( dialect.getHqlTranslator() != null ) {
-			return dialect.getHqlTranslator();
+		final var hqlTranslator = dialect.getHqlTranslator();
+		if ( hqlTranslator != null ) {
+			return hqlTranslator;
 		}
-		else {
-			return new StandardHqlTranslator( sqmCreationContext, sqmCreationOptions );
-		}
+		return new StandardHqlTranslator( sqmCreationContext,
+				new SqmCreationOptionsStandard( options ) );
 	}
 
 	private static SqmTranslatorFactory resolveSqmTranslatorFactory(
 			QueryEngineOptions runtimeOptions,
 			Dialect dialect) {
-		if ( runtimeOptions.getCustomSqmTranslatorFactory() != null ) {
-			return runtimeOptions.getCustomSqmTranslatorFactory();
+		final var customSqmTranslatorFactory = runtimeOptions.getCustomSqmTranslatorFactory();
+		if ( customSqmTranslatorFactory != null ) {
+			return customSqmTranslatorFactory;
 		}
-		else if ( dialect.getSqmTranslatorFactory() != null ) {
-			return dialect.getSqmTranslatorFactory();
+		final var sqmTranslatorFactory1 = dialect.getSqmTranslatorFactory();
+		if ( sqmTranslatorFactory1 != null ) {
+			return sqmTranslatorFactory1;
 		}
-		else {
-			return new StandardSqmTranslatorFactory();
-		}
+		return new StandardSqmTranslatorFactory();
 	}
 
 	private static SqmFunctionRegistry createFunctionRegistry(
@@ -171,14 +172,14 @@ public class QueryEngineImpl implements QueryEngine {
 
 	public static QueryInterpretationCache buildInterpretationCache(
 			ServiceRegistry serviceRegistry, Map<String, Object> properties) {
-		final boolean useCache = ConfigurationHelper.getBoolean(
+		final boolean useCache = getBoolean(
 				QUERY_PLAN_CACHE_ENABLED,
 				properties,
 				// enabled by default
 				true
 		);
 
-		final Integer explicitMaxPlanSize = ConfigurationHelper.getInteger(
+		final Integer explicitMaxPlanSize = getInteger(
 				QUERY_PLAN_CACHE_MAX_SIZE,
 				properties
 		);
@@ -186,18 +187,18 @@ public class QueryEngineImpl implements QueryEngine {
 		//Let's avoid some confusion and check settings consistency:
 		final int appliedMaxPlanSize =
 				explicitMaxPlanSize == null
-						? QueryEngine.DEFAULT_QUERY_PLAN_MAX_COUNT
+						? DEFAULT_QUERY_PLAN_MAX_COUNT
 						: explicitMaxPlanSize;
 		if ( !useCache && explicitMaxPlanSize != null && appliedMaxPlanSize > 0 ) {
 			throw new ConfigurationException( "Inconsistent configuration: '" + QUERY_PLAN_CACHE_MAX_SIZE
-												+ "' can only be set to a greater than zero value when '"
+												+ "' can only be set to a value greater than zero when '"
 												+ QUERY_PLAN_CACHE_ENABLED + "' is enabled" );
 		}
 
 		if ( appliedMaxPlanSize < 0 ) {
 			throw new ConfigurationException( "Inconsistent configuration: '" + QUERY_PLAN_CACHE_MAX_SIZE
-												+ "' can't be set to a negative value. To disable the query plan cache set '"
-												+ QUERY_PLAN_CACHE_ENABLED + "' to 'false'" );
+												+ "' can't be set to a negative value (to disable the query plan cache set '"
+												+ QUERY_PLAN_CACHE_ENABLED + "' to 'false')" );
 		}
 
 		return useCache

@@ -6,11 +6,9 @@ package org.hibernate.tool.schema.internal;
 
 import org.hibernate.Incubating;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.spi.Cleaner;
@@ -18,7 +16,7 @@ import org.hibernate.tool.schema.spi.Cleaner;
 import java.util.Collection;
 
 import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.toList;
+import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.internal.util.collections.ArrayHelper.join;
 
 /**
@@ -46,16 +44,16 @@ public class StandardTableCleaner implements Cleaner {
 
 	@Override
 	public String[] getSqlTruncateStrings(Collection<Table> tables, Metadata metadata, SqlStringGenerationContext context) {
-		String[] tableNames = tables.stream()
-				.map( table -> context.format( getTableName( table ) ) )
-				.collect( toList() )
-				.toArray( ArrayHelper.EMPTY_STRING_ARRAY );
-		String[] truncateTableStatements = dialect.getTruncateTableStatements( tableNames );
-		String[] initStatements = tables.stream()
-				.flatMap( table -> table.getInitCommands( context ).stream() )
-				.flatMap( command -> stream( command.initCommands() ) )
-				.toList()
-				.toArray( ArrayHelper.EMPTY_STRING_ARRAY );
+		final String[] tableNames =
+				tables.stream()
+						.map( table -> context.format( getTableName( table ) ) )
+						.toArray( String[]::new );
+		final String[] truncateTableStatements = dialect.getTruncateTableStatements( tableNames );
+		final String[] initStatements =
+				tables.stream()
+						.flatMap( table -> table.getInitCommands( context ).stream() )
+						.flatMap( command -> stream( command.initCommands() ) )
+						.toArray( String[]::new );
 		return join( truncateTableStatements, initStatements );
 	}
 
@@ -71,8 +69,8 @@ public class StandardTableCleaner implements Cleaner {
 
 	private static QualifiedNameParser.NameParts getTableName(Table table) {
 		return new QualifiedNameParser.NameParts(
-				Identifier.toIdentifier(table.getCatalog(), table.isCatalogQuoted()),
-				Identifier.toIdentifier(table.getSchema(), table.isSchemaQuoted()),
+				toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
+				toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
 				table.getNameIdentifier()
 		);
 	}

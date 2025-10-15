@@ -59,12 +59,7 @@ public class ResultMementoEntityStandard implements ResultMementoEntity, FetchMe
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
 
-		final FetchBuilderBasicValued discriminatorResultBuilder = discriminatorMemento != null
-				? (FetchBuilderBasicValued) discriminatorMemento.resolve( this, querySpaceConsumer, context )
-				: null;
-
 		final HashMap<Fetchable, FetchBuilder> fetchBuilderMap = new HashMap<>();
-
 		fetchMementoMap.forEach(
 				(attrName, fetchMemento) -> fetchBuilderMap.put(
 						(Fetchable) entityDescriptor.findByPath( attrName ),
@@ -77,7 +72,10 @@ public class ResultMementoEntityStandard implements ResultMementoEntity, FetchMe
 				navigablePath,
 				entityDescriptor,
 				lockMode,
-				discriminatorResultBuilder,
+				discriminatorMemento == null
+						? null
+						: (FetchBuilderBasicValued)
+								discriminatorMemento.resolve( this, querySpaceConsumer, context ),
 				fetchBuilderMap
 		);
 	}

@@ -867,14 +867,14 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	}
 
 	@Override
-	public final Iterator<E> queuedAdditionIterator() {
+	public final Iterator<?> queuedAdditionIterator() {
 		if ( hasQueuedOperations() ) {
 			return new Iterator<>() {
 				private int index;
 
 				@Override
-				public E next() {
-					return operationQueue.get( index++ ).getAddedInstance();
+				public Object next() {
+					return operationQueue.get( index++ ).getAddedEntry();
 				}
 
 				@Override
@@ -1248,6 +1248,10 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		void operate();
 
 		E getAddedInstance();
+
+		default Object getAddedEntry() {
+			return getAddedInstance();
+		}
 
 		E getOrphan();
 	}

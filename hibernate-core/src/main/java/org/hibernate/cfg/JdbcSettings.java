@@ -15,7 +15,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
- * Settings related to JDBC, Connections, pools, Dialects, etc
+ * Settings related to JDBC, Connections, pools, Dialects, and so on.
  *
  * @author Steve Ebersole
  */
@@ -162,7 +162,7 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	/**
 	 * Used in conjunction with {@value #JAKARTA_HBM2DDL_DB_NAME} for the purpose of
 	 * determining the {@link org.hibernate.dialect.Dialect} to use when the name does
-	 * not provide enough detail.
+	 * not provide enough information.
 	 * <p>
 	 * The value is expected to match what would be returned from
 	 * {@link java.sql.DatabaseMetaData#getDatabaseProductVersion()}) for the
@@ -175,7 +175,7 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	/**
 	 * Used in conjunction with {@value #JAKARTA_HBM2DDL_DB_NAME} for the purpose of
 	 * determining the {@link org.hibernate.dialect.Dialect} to use when the name does
-	 * not provide enough detail.
+	 * not provide enough information.
 	 * <p>
 	 * The value is expected to match what would be returned from
 	 * {@link java.sql.DatabaseMetaData#getDatabaseMajorVersion()}) for the underlying
@@ -188,7 +188,7 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	/**
 	 * Used in conjunction with {@value #JAKARTA_HBM2DDL_DB_NAME} for the purpose of
 	 * determining the {@link org.hibernate.dialect.Dialect} to use when the name does
-	 * not provide enough detail.
+	 * not provide enough information.
 	 * <p>
 	 * The value is expected to match what would be returned from
 	 * {@link java.sql.DatabaseMetaData#getDatabaseMinorVersion()}) for the underlying
@@ -258,7 +258,7 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * The default implementation is not recommended for use in production.
 	 *
 	 * @apiNote The term {@code "class"} appears in the setting name due to legacy reasons;
-	 *          however it can accept instances.
+	 *          however, it can accept instances.
 	 */
 	String CONNECTION_PROVIDER = "hibernate.connection.provider_class";
 
@@ -303,14 +303,15 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 
 	/**
 	 * Indicates that connections obtained from the configured {@link ConnectionProvider} have
-	 * auto-commit already disabled when they are acquired.
+	 * {@linkplain java.sql.Connection#getAutoCommit auto-commit} already disabled when they
+	 * are acquired.
 	 * <p>
 	 * It is inappropriate to set this value to {@code true} when the connections returned by
 	 * the provider do not, in fact, have auto-commit disabled. Doing so may lead to Hibernate
 	 * executing SQL operations outside the scope of any transaction.
 	 *
 	 * @apiNote By default, Hibernate calls {@link java.sql.Connection#setAutoCommit(boolean)}
-	 * on newly-obtained connections. With this setting enabled, that call is skipped, along
+	 * on newly obtained connections. With this setting enabled, that call is skipped, along
 	 * with some other operations, in the interest of performance.
 	 *
 	 * @settingDefault {@code false}
@@ -332,6 +333,7 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * and {@link org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider}.
 	 */
 	@Deprecated(since="7")
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String CONNECTION_PREFIX = "hibernate.connection";
 
 	/**
@@ -340,7 +342,7 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * either:
 	 * <ul>
 	 *     <li>an instance of {@code StatementInspector},
-	 *     <li>a {@link Class} representing an class that implements {@code StatementInspector}, or
+	 *     <li>a {@link Class} representing a class that implements {@code StatementInspector}, or
 	 *     <li>the name of a class that implements {@code StatementInspector}.
 	 * </ul>
 	 *
@@ -423,6 +425,7 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * @deprecated It's not necessary to set this explicitly
 	 */
 	@Deprecated(since = "7", forRemoval = true)
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String USE_SCROLLABLE_RESULTSET = "hibernate.jdbc.use_scrollable_resultset";
 
 	/**
@@ -539,12 +542,12 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * Whether access to JDBC {@linkplain java.sql.DatabaseMetaData metadata} is allowed during bootstrap.
 	 * <p/>
 	 * Typically, Hibernate accesses this metadata to understand the capabilities of the underlying
-	 * database to help minimize needed configuration.  Disabling this access means that only explicit
-	 * settings are used.  At a minimum, the Dialect to use must be specified using either the {@value #DIALECT}
-	 * or {@value JdbcSettings#JAKARTA_HBM2DDL_DB_NAME} setting.  When the Dialect to use is specified in
+	 * database to help minimize needed configuration. Disabling this access means that only explicit
+	 * settings are used. At a minimum, the Dialect to use must be specified using either the {@value #DIALECT}
+	 * or {@value JdbcSettings#JAKARTA_HBM2DDL_DB_NAME} setting. When the Dialect to use is specified in
 	 * this manner it is generally a good idea to specify the
-	 * {@linkplain JdbcSettings#JAKARTA_HBM2DDL_DB_VERSION database version} as well - Dialects use the version
-	 * to configure themselves.
+	 * {@linkplain JdbcSettings#JAKARTA_HBM2DDL_DB_VERSION database version} as well - Dialects use the
+	 * version to configure themselves.
 	 *
 	 * @apiNote The specified Dialect may also provide defaults into the "explicit" settings.
 	 *

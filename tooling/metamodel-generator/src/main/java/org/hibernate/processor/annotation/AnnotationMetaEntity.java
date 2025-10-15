@@ -2065,7 +2065,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				new CriteriaFinderMethod(
 						this, method,
 						methodName,
-						returnType.toString(),
+						typeAsString( returnType, false ),
 						containerType,
 						paramNames,
 						paramTypes,
@@ -2378,7 +2378,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					new CriteriaFinderMethod(
 							this, method,
 							methodName,
-							returnType.toString(),
+							typeAsString( returnType, false ),
 							containerType,
 							paramNames,
 							paramTypes,
@@ -2482,7 +2482,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							new CriteriaFinderMethod(
 									this, method,
 									methodName,
-									returnType.toString(),
+									typeAsString( returnType, false ),
 									containerType,
 									paramNames,
 									paramTypes,
@@ -3426,19 +3426,35 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 * Workaround for a bug in Java 20/21. Should not be necessary!
 	 */
 	private String typeAsString(TypeMirror type) {
-		String result = type.toString();
-		for ( AnnotationMirror annotation : type.getAnnotationMirrors() ) {
-			final String annotationString = annotation.toString();
-			result = result
-					// if it has a space after it, we need to remove that too
-					.replace(annotationString + ' ', "")
-					// just in case it did not have a space after it
-					.replace(annotationString, "");
+		return typeAsString( type, true );
+	}
+
+	private String typeAsString(TypeMirror type, boolean includeAnnotations) {
+		if ( type instanceof DeclaredType dt && dt.asElement() instanceof TypeElement te ) {
+			StringBuilder result = new StringBuilder();
+			if ( includeAnnotations ) {
+				for ( AnnotationMirror annotation : type.getAnnotationMirrors() ) {
+					result.append( annotation.toString() ).append( ' ' );
+				}
+			}
+			// get the "fqcn" without any type arguments
+			result.append( te.getQualifiedName().toString() );
+			// add the < ? ,? ....> as necessary:
+			if ( !dt.getTypeArguments().isEmpty() ) {
+				result.append( "<" );
+				int index = 0;
+				for ( ; index < dt.getTypeArguments().size() - 1; index++ ) {
+					result.append( typeAsString( dt.getTypeArguments().get( index ), true ) )
+							.append( ", " );
+				}
+				result.append( typeAsString( dt.getTypeArguments().get( index ), true ) );
+				result.append( ">" );
+			}
+			return result.toString();
 		}
-		for ( AnnotationMirror annotation : type.getAnnotationMirrors() ) {
-			result = annotation.toString() + ' ' + result;
+		else {
+			return type.toString();
 		}
-		return result;
 	}
 
 	private TypeMirror parameterType(VariableElement parameter) {

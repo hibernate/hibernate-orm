@@ -4,6 +4,7 @@ image:https://img.shields.io/maven-central/v/org.hibernate.orm/hibernate-core.sv
 image:https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fci.hibernate.org%2Fjob%2Fhibernate-orm-pipeline%2Fjob%2Fmain%2F&style=for-the-badge[Build Status,link=https://ci.hibernate.org/job/hibernate-orm-pipeline/job/main/]
 image:https://img.shields.io/badge/Revved%20up%20by-Develocity-06A0CE?style=for-the-badge&logo=gradle[Develocity,link=https://develocity.commonhaus.dev/scans?search.rootProjectNames=Hibernate%20ORM]
 image:https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/jvm-repo-rebuild/reproducible-central/master/content/org/hibernate/orm/hibernate-core/badge.json&style=for-the-badge[Reproducible Builds,link=https://github.com/jvm-repo-rebuild/reproducible-central/blob/master/content/org/hibernate/orm/hibernate-core/README.md]
+image:https://testpilot.oracle.com/ords/testpilot/badges/github/hibernate/hibernate-orm[Oracle Test Pilot,link=https://testpilot.oracle.com/]
 
 Hibernate ORM is a powerful object/relational mapping solution for Java, and makes it easy to develop persistence logic for applications, libraries, and frameworks.
 

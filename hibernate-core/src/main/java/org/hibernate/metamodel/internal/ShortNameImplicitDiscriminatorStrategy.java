@@ -27,7 +27,7 @@ public class ShortNameImplicitDiscriminatorStrategy implements ImplicitDiscrimin
 	public EntityMappingType toEntityMapping(Object discriminatorValue, NavigableRole discriminatorRole, MappingMetamodelImplementor mappingModel) {
 		if ( discriminatorValue instanceof String assumedEntityName ) {
 			final String importedName = mappingModel.getImportedName( assumedEntityName );
-			final EntityMappingType entityMapping = mappingModel.findEntityDescriptor( importedName );
+			final var entityMapping = mappingModel.findEntityDescriptor( importedName );
 			if ( entityMapping != null ) {
 				return entityMapping;
 			}

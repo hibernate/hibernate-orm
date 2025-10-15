@@ -33,26 +33,27 @@ public abstract class BaseAttributeMetadata<X, Y> implements AttributeMetadata<X
 		this.ownerType = ownerType;
 		this.member = member;
 		this.attributeClassification = attributeClassification;
+		//noinspection unchecked
+		javaType = (Class<Y>) declaredType( propertyMapping, member );
+	}
 
-		final Class declaredType;
-
+	private static Class<?> declaredType(Property propertyMapping, Member member) {
 		if ( member == null ) {
 			// assume we have a MAP entity-mode "class"
-			declaredType = propertyMapping.getType().getReturnedClass();
+			return propertyMapping.getType().getReturnedClass();
 		}
 		else if ( member instanceof Field field ) {
-			declaredType = field.getType();
+			return field.getType();
 		}
 		else if ( member instanceof Method method ) {
-			declaredType = method.getReturnType();
+			return method.getReturnType();
 		}
 		else if ( member instanceof MapMember mapMember ) {
-			declaredType = mapMember.getType();
+			return mapMember.getType();
 		}
 		else {
 			throw new IllegalArgumentException( "Cannot determine java-type from given member [" + member + "]" );
 		}
-		this.javaType = declaredType;
 	}
 
 	public String getName() {

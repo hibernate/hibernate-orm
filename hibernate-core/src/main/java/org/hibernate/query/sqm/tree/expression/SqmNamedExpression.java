@@ -67,11 +67,27 @@ public class SqmNamedExpression<T> extends AbstractSqmExpression<T> {
 	public boolean equals(Object object) {
 		return object instanceof SqmNamedExpression<?> that
 			&& Objects.equals( this.name, that.name )
-			&& Objects.equals( this.expression, that.expression );
+			&& this.expression.equals( that.expression );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( expression, name );
+		int result = expression.hashCode();
+		result = 31 * result + name.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmNamedExpression<?> that
+			&& Objects.equals( this.name, that.name )
+			&& this.expression.isCompatible( that.expression );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = expression.cacheHashCode();
+		result = 31 * result + name.hashCode();
+		return result;
 	}
 }

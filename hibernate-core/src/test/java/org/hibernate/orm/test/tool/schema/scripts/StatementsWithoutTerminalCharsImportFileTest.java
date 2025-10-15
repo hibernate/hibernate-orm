@@ -57,7 +57,7 @@ import static org.junit.Assert.fail;
 public class StatementsWithoutTerminalCharsImportFileTest extends BaseUnitTestCase implements ExecutionOptions {
 	private StandardServiceRegistry ssr;
 
-	private static final String EXPECTED_ERROR_MESSAGE = "Import script Sql statements must terminate with a ';' char";
+	private static final String EXPECTED_ERROR_MESSAGE = "Import script SQL statements must terminate with a ';' char";
 
 	@Before
 	public void setUp() {

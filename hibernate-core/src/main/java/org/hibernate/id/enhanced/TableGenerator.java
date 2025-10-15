@@ -36,20 +36,26 @@ import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.jdbc.AbstractReturningWork;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.boot.model.internal.GeneratorBinder.applyIfNotEmpty;
 import static org.hibernate.cfg.MappingSettings.TABLE_GENERATOR_STORE_LAST_USED;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
+import static org.hibernate.id.enhanced.ResyncHelper.getCurrentTableValue;
+import static org.hibernate.id.enhanced.ResyncHelper.getMaxPrimaryKey;
 import static org.hibernate.id.enhanced.TableGeneratorLogger.TABLE_GENERATOR_LOGGER;
 import static org.hibernate.id.IdentifierGeneratorHelper.getNamingStrategy;
 import static org.hibernate.id.enhanced.OptimizerFactory.determineImplicitOptimizerName;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
@@ -58,12 +64,10 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 /**
  * An enhanced version of table-based id generation.
  * <p>
- * Unlike the simplistic legacy one (which  was only ever intended for subclassing
- * support) we "segment" the table into multiple values.  Thus, a single table can
- * actually serve as the persistent storage for multiple independent generators.  One
- * approach would be to segment the values by the name of the entity for which we are
- * performing generation, which would mean that we would have a row in the generator
- * table for each entity name.  Or any configuration really; the setup is very flexible.
+ * A single table may serve as the persistent storage for multiple independent generators.
+ * For example, we might segment the generated values by the name of the entity for which
+ * we are generation ids. This, we would have a row in the generator table for each entity
+ * name. Other approaches are also possible.
  * <p>
  * By default, we use a single row for all generators (the {@value #DEF_SEGMENT_VALUE}
  * segment). The configuration parameter {@value #CONFIG_PREFER_SEGMENT_PER_ENTITY} can
@@ -84,7 +88,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
  *   <tr>
  *     <td>{@value #VALUE_COLUMN_PARAM}</td>
  *     <td>{@value #DEF_VALUE_COLUMN}</td>
- *     <td>The name of column which holds the sequence value for the given segment</td>
+ *     <td>The name of the column which holds the sequence value for the given segment</td>
  *   </tr>
  *   <tr>
  *     <td>{@value #SEGMENT_COLUMN_PARAM}</td>
@@ -188,6 +192,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	private boolean storeLastUsedValue;
 
 	private Type identifierType;
+	private Table table;
 
 	private QualifiedName qualifiedTableName;
 	private QualifiedName physicalTableName;
@@ -327,6 +332,8 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 				serviceRegistry.requireService( ConfigurationService.class )
 						.getSetting( TABLE_GENERATOR_STORE_LAST_USED, BOOLEAN, true );
 		identifierType = creationContext.getType();
+
+		table = creationContext.getValue().getTable();
 
 		final var jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
 
@@ -480,30 +487,30 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		return getInt( INCREMENT_PARAM, params, DEFAULT_INCREMENT_SIZE );
 	}
 
-	protected String buildSelectQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {
+	protected String buildSelectQuery(SqlStringGenerationContext context) {
 		return new SimpleSelect( context.getDialect() )
 				.addColumn( valueColumnName )
-				.setTableName( formattedPhysicalTableName )
+				.setTableName( context.format( physicalTableName ) )
 				.addRestriction( segmentColumnName )
 				.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE ) )
 				.toStatementString();
 	}
 
-	protected String buildUpdateQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {
-		return "update " + formattedPhysicalTableName
+	protected String buildUpdateQuery(SqlStringGenerationContext context) {
+		return "update " + context.format( physicalTableName )
 				+ " set " + valueColumnName + "=? "
 				+ " where " + valueColumnName + "=? and " + segmentColumnName + "=?";
 	}
 
-	protected String buildInsertQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {
-		return "insert into " + formattedPhysicalTableName
+	protected String buildInsertQuery(SqlStringGenerationContext context) {
+		return "insert into " + context.format( physicalTableName )
 				+ " (" + segmentColumnName + ", " + valueColumnName + ") " + " values (?,?)";
 	}
 
 	protected InitCommand generateInsertInitCommand(SqlStringGenerationContext context) {
-		final String renderedTableName = context.format( physicalTableName );
+		final String tableName = context.format( physicalTableName );
 		final int value = storeLastUsedValue ? initialValue - 1 : initialValue;
-		return new InitCommand( "insert into " + renderedTableName
+		return new InitCommand( "insert into " + tableName
 				+ "(" + segmentColumnName + ", " + valueColumnName + ")"
 				+ " values ('" + segmentValue + "'," + ( value ) + ")" );
 	}
@@ -513,97 +520,117 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	}
 
 	@Override
-	public Object generate(final SharedSessionContractImplementor session, final Object obj) {
-		final var statementLogger =
-				session.getFactory().getJdbcServices()
-						.getSqlStatementLogger();
-		final var statsCollector = session.getEventListenerManager();
-		return optimizer.generate(
-				new AccessCallback() {
-					@Override
-					public IntegralDataTypeHolder getNextValue() {
-						return session.getTransactionCoordinator().createIsolationDelegate().delegateWork(
-								new AbstractReturningWork<>() {
-									@Override
-									public IntegralDataTypeHolder execute(Connection connection) throws SQLException {
-										return nextValue( connection, statementLogger, statsCollector, session );
-									}
-								},
-								true
-						);
-					}
-					@Override
-					public String getTenantIdentifier() {
-						return session.getTenantIdentifier();
-					}
-				}
-		);
+	public Object generate(final SharedSessionContractImplementor session, final Object object) {
+		return optimizer.generate( new NextValueCallback( session ) );
+	}
+
+	private class NextValueCallback
+			extends AbstractReturningWork<IntegralDataTypeHolder>
+			implements AccessCallback {
+		private final SharedSessionContractImplementor session;
+		private NextValueCallback(SharedSessionContractImplementor session) {
+			this.session = session;
+		}
+		@Override
+		public IntegralDataTypeHolder getNextValue() {
+			return session.getTransactionCoordinator().createIsolationDelegate()
+					.delegateWork( this, true );
+		}
+		@Override
+		public IntegralDataTypeHolder execute(Connection connection)
+				throws SQLException {
+			return nextValue( connection, session );
+		}
+		@Override
+		public String getTenantIdentifier() {
+			return session.getTenantIdentifier();
+		}
 	}
 
 	private IntegralDataTypeHolder nextValue(
 			Connection connection,
-			SqlStatementLogger logger,
-			SessionEventListenerManager listener,
 			SharedSessionContractImplementor session)
-			throws SQLException {
-		final IntegralDataTypeHolder value = makeValue();
+					throws SQLException {
+		final var logger =
+				session.getFactory().getJdbcServices()
+						.getSqlStatementLogger();
+		final var listener = session.getEventListenerManager();
+		final var value = makeValue();
 		int rows;
 		do {
-			TABLE_GENERATOR_LOGGER.retrievingCurrentValueForSegment( segmentValue );
-			try ( var prepareStatement = prepareStatement( connection, selectQuery, logger, listener, session ) ) {
-				prepareStatement.setString( 1, segmentValue );
-				final var resultSet = executeQuery( prepareStatement, listener, selectQuery, session );
-				if ( !resultSet.next() ) {
-					final long initializationValue = storeLastUsedValue ? initialValue - 1 : initialValue;
-					value.initialize( initializationValue );
-
-					TABLE_GENERATOR_LOGGER.insertingInitialValueForSegment( value, segmentValue );
-					try ( PreparedStatement statement = prepareStatement( connection, insertQuery, logger, listener, session ) ) {
-						statement.setString( 1, segmentValue );
-						value.bind( statement, 2 );
-						executeUpdate( statement, listener, insertQuery, session);
-					}
-				}
-				else {
-					final int defaultValue = storeLastUsedValue ? 0 : 1;
-					value.initialize( resultSet, defaultValue );
-					if ( resultSet.wasNull() ) {
-						throw new HibernateException(
-								String.format( "%s for %s '%s' is null",
-										valueColumnName, segmentColumnName,
-										segmentValue ) );
-					}
-				}
-				resultSet.close();
-			}
-			catch (SQLException e) {
-				TABLE_GENERATOR_LOGGER.unableToReadOrInitializeHiValue( physicalTableName.render(), e );
-				throw e;
-			}
-
-			final IntegralDataTypeHolder updateValue = value.copy();
+			retrieveCurrentValue( connection, logger, listener, session, value );
+			final var updateValue = value.copy();
 			if ( optimizer.applyIncrementSizeToSourceValues() ) {
 				updateValue.add( incrementSize );
 			}
 			else {
 				updateValue.increment();
 			}
-			TABLE_GENERATOR_LOGGER.updatingCurrentValueForSegment( updateValue, segmentValue );
-			try ( var statement = prepareStatement( connection, updateQuery, logger, listener, session ) ) {
-				updateValue.bind( statement, 1 );
-				value.bind( statement, 2 );
-				statement.setString( 3, segmentValue );
-				rows = executeUpdate( statement, listener, updateQuery, session );
-			}
-			catch (SQLException e) {
-				TABLE_GENERATOR_LOGGER.unableToUpdateHiValue( physicalTableName.render(), e );
-				throw e;
-			}
+			rows = updateValue( connection, logger, listener, session, updateValue, value );
 		}
 		while ( rows == 0 );
-
 		accessCount++;
 		return storeLastUsedValue ? value.increment() : value;
+	}
+
+	private int updateValue(
+			Connection connection,
+			SqlStatementLogger logger,
+			SessionEventListenerManager listener,
+			SharedSessionContractImplementor session,
+			IntegralDataTypeHolder updateValue,
+			IntegralDataTypeHolder value)
+					throws SQLException {
+		TABLE_GENERATOR_LOGGER.updatingCurrentValueForSegment( updateValue, segmentValue );
+		try ( var statement = prepareStatement( connection, updateQuery, logger, listener, session ) ) {
+			updateValue.bind( statement, 1 );
+			value.bind( statement, 2 );
+			statement.setString( 3, segmentValue );
+			return executeUpdate( statement, listener, updateQuery, session );
+		}
+		catch (SQLException e) {
+			TABLE_GENERATOR_LOGGER.unableToUpdateHiValue( physicalTableName.render(), e );
+			throw e;
+		}
+	}
+
+	private void retrieveCurrentValue(
+			Connection connection,
+			SqlStatementLogger logger,
+			SessionEventListenerManager listener,
+			SharedSessionContractImplementor session,
+			IntegralDataTypeHolder value)
+					throws SQLException {
+		TABLE_GENERATOR_LOGGER.retrievingCurrentValueForSegment( segmentValue );
+		try ( var prepareStatement = prepareStatement( connection, selectQuery, logger, listener, session ) ) {
+			prepareStatement.setString( 1, segmentValue );
+			final var resultSet = executeQuery( prepareStatement, listener, selectQuery, session );
+			if ( !resultSet.next() ) {
+				final long initializationValue = storeLastUsedValue ? initialValue - 1 : initialValue;
+				value.initialize( initializationValue );
+				TABLE_GENERATOR_LOGGER.insertingInitialValueForSegment( value, segmentValue );
+				try ( var statement = prepareStatement( connection, insertQuery, logger, listener, session ) ) {
+					statement.setString( 1, segmentValue );
+					value.bind( statement, 2 );
+					executeUpdate( statement, listener, insertQuery, session );
+				}
+			}
+			else {
+				final int defaultValue = storeLastUsedValue ? 0 : 1;
+				value.initialize( resultSet, defaultValue );
+				if ( resultSet.wasNull() ) {
+					throw new HibernateException(
+							String.format( "%s for %s '%s' is null",
+									valueColumnName, segmentColumnName,
+									segmentValue ) );
+				}
+			}
+			resultSet.close();
+		}
+		catch (SQLException e) {
+			TABLE_GENERATOR_LOGGER.unableToReadOrInitializeHiValue( physicalTableName.render(), e );
+			throw e;
+		}
 	}
 
 	private PreparedStatement prepareStatement(
@@ -611,7 +638,8 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			String sql,
 			SqlStatementLogger logger,
 			SessionEventListenerManager listener,
-			SharedSessionContractImplementor session) throws SQLException {
+			SharedSessionContractImplementor session)
+					throws SQLException {
 		logger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
 		final var eventMonitor = session.getEventMonitor();
 		final var creationEvent = eventMonitor.beginJdbcPreparedStatementCreationEvent();
@@ -636,7 +664,8 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			PreparedStatement ps,
 			SessionEventListenerManager listener,
 			String sql,
-			SharedSessionContractImplementor session) throws SQLException {
+			SharedSessionContractImplementor session)
+					throws SQLException {
 		final var eventMonitor = session.getEventMonitor();
 		final var executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
@@ -653,7 +682,8 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			PreparedStatement ps,
 			SessionEventListenerManager listener,
 			String sql,
-			SharedSessionContractImplementor session) throws SQLException {
+			SharedSessionContractImplementor session)
+					throws SQLException {
 		final var eventMonitor = session.getEventMonitor();
 		final var executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
@@ -668,59 +698,98 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 	@Override
 	public void registerExportables(Database database) {
-		final Namespace namespace = database.locateNamespace(
+		final var namespace = database.locateNamespace(
 				qualifiedTableName.getCatalogName(),
 				qualifiedTableName.getSchemaName()
 		);
-
-		Table table = namespace.locateTable( qualifiedTableName.getObjectName() );
-		if ( table == null ) {
-			table = namespace.createTable(
-					qualifiedTableName.getObjectName(),
-					(identifier) -> new Table( contributor, namespace, identifier, false )
-			);
-			if ( isNotEmpty( options ) ) {
-				table.setOptions( options );
-			}
-
-			final var basicTypeRegistry = database.getTypeConfiguration().getBasicTypeRegistry();
-			// todo : not sure the best solution here.  do we add the columns if missing?  other?
-			final var ddlTypeRegistry = database.getTypeConfiguration().getDdlTypeRegistry();
-			final var segmentColumn =
-					ExportableColumnHelper.column( database, table, segmentColumnName,
-							basicTypeRegistry.resolve( StandardBasicTypes.STRING ),
-							ddlTypeRegistry.getTypeName( Types.VARCHAR, Size.length( segmentValueLength ) ) );
-			segmentColumn.setNullable( false );
-			table.addColumn( segmentColumn );
-
-			// lol
-			table.setPrimaryKey( new PrimaryKey( table ) );
-			table.getPrimaryKey().addColumn( segmentColumn );
-
-			final var type = basicTypeRegistry.resolve( StandardBasicTypes.LONG );
-			final var valueColumn =
-					ExportableColumnHelper.column( database, table, valueColumnName, type,
-							ddlTypeRegistry.getTypeName( type.getJdbcType().getDdlTypeCode(), database.getDialect() ) );
-			table.addColumn( valueColumn );
-		}
-
+		final var existingTable = namespace.locateTable( qualifiedTableName.getObjectName() );
+		final var table = existingTable == null ? createTable( database, namespace ) : existingTable;
 		// allow physical naming strategies a chance to kick in
 		physicalTableName = table.getQualifiedTableName();
 		table.addInitCommand( this::generateInsertInitCommand );
+		table.addResyncCommand( this::generateResyncCommand );
+		table.addResetCommand( this::generateResetCommand );
+	}
+
+	private InitCommand generateResyncCommand(SqlStringGenerationContext context, DdlTransactionIsolator isolator) {
+		final String sequenceTableName = context.format( physicalTableName );
+		final String tableName = context.format( table.getQualifiedTableName() );
+		final String primaryKeyColumnName = table.getPrimaryKey().getColumn( 0 ).getName();
+		final int adjustment = optimizer.getAdjustment() - 1;
+		final long max = getMaxPrimaryKey( isolator, primaryKeyColumnName, tableName );
+		final long current =
+				getCurrentTableValue( isolator, sequenceTableName, valueColumnName,
+						segmentColumnName, segmentValue );
+		if ( max + adjustment > current ) {
+			optimizer.reset();
+			final String update =
+					"update " + sequenceTableName
+					+ " set " + valueColumnName + " = " + (max + adjustment)
+					+ " where " + segmentColumnName + " = '" + segmentValue + "'";
+			return new InitCommand( update );
+		}
+		else {
+			return new InitCommand();
+		}
+	}
+
+	private InitCommand generateResetCommand(SqlStringGenerationContext context) {
+		optimizer.reset();
+		final String update =
+				"update " + context.format( physicalTableName )
+				+ " set " + valueColumnName + " = " + initialValue
+				+ " where " + segmentColumnName + " = '" + segmentValue + "'";
+		return new InitCommand( update );
+	}
+
+	private Table createTable(Database database, Namespace namespace) {
+		final var table =
+				namespace.createTable( qualifiedTableName.getObjectName(),
+						identifier -> new Table( contributor, namespace, identifier, false ) );
+		if ( isNotBlank( options ) ) {
+			table.setOptions( options );
+		}
+
+		final var typeConfiguration = database.getTypeConfiguration();
+		// todo : not sure the best solution here.  do we add the columns if missing?  other?
+		final var segmentColumn = segmentColumn( database, table, typeConfiguration );
+		table.addColumn( segmentColumn );
+		table.setPrimaryKey( new PrimaryKey( table ) );
+		table.getPrimaryKey().addColumn( segmentColumn );
+
+		final var longType =
+				typeConfiguration.getBasicTypeRegistry()
+						.resolve( StandardBasicTypes.LONG );
+		final var valueColumn =
+				ExportableColumnHelper.column( database, table, valueColumnName, longType,
+						typeConfiguration.getDdlTypeRegistry()
+								.getTypeName( longType.getJdbcType().getDdlTypeCode(), database.getDialect() ) );
+		table.addColumn( valueColumn );
+		return table;
+	}
+
+	private Column segmentColumn(Database database, Table table, TypeConfiguration typeConfiguration) {
+		final var segmentColumn =
+				ExportableColumnHelper.column( database, table, segmentColumnName,
+						typeConfiguration.getBasicTypeRegistry()
+								.resolve( StandardBasicTypes.STRING ),
+						typeConfiguration.getDdlTypeRegistry()
+								.getTypeName( Types.VARCHAR, Size.length( segmentValueLength ) ) );
+		segmentColumn.setNullable( false );
+		return segmentColumn;
 	}
 
 	@Override
 	public void initialize(SqlStringGenerationContext context) {
-		final String formattedPhysicalTableName = context.format( physicalTableName );
-		selectQuery = buildSelectQuery( formattedPhysicalTableName, context );
-		updateQuery = buildUpdateQuery( formattedPhysicalTableName, context );
-		insertQuery = buildInsertQuery( formattedPhysicalTableName, context );
+		selectQuery = buildSelectQuery( context );
+		updateQuery = buildUpdateQuery( context );
+		insertQuery = buildInsertQuery( context );
 	}
 
 	public static void applyConfiguration(
 			jakarta.persistence.TableGenerator generatorConfig,
 			BiConsumer<String, String> configurationCollector) {
-		configurationCollector.accept( CONFIG_PREFER_SEGMENT_PER_ENTITY, "true" );
+		configurationCollector.accept( CONFIG_PREFER_SEGMENT_PER_ENTITY, String.valueOf(true) );
 
 		applyIfNotEmpty( TABLE_PARAM, generatorConfig.table(), configurationCollector );
 		applyIfNotEmpty( CATALOG, generatorConfig.catalog(), configurationCollector );

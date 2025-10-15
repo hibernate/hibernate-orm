@@ -28,13 +28,19 @@ public class SqmJpaCriteriaParameterWrapper<T>
 		extends AbstractSqmExpression<T>
 		implements SqmParameter<T> {
 	private final JpaCriteriaParameter<T> jpaCriteriaParameter;
+	private final int criteriaParameterId;
+	private final int unnamedParameterId;
 
 	public SqmJpaCriteriaParameterWrapper(
 			BindableType<T> type,
 			JpaCriteriaParameter<T> jpaCriteriaParameter,
+			int criteriaParameterId,
+			int unnamedParameterId,
 			NodeBuilder criteriaBuilder) {
 		super( toSqmType( type, criteriaBuilder ), criteriaBuilder );
 		this.jpaCriteriaParameter = jpaCriteriaParameter;
+		this.criteriaParameterId = criteriaParameterId;
+		this.unnamedParameterId = unnamedParameterId;
 	}
 
 	@Override
@@ -48,6 +54,8 @@ public class SqmJpaCriteriaParameterWrapper<T>
 				new SqmJpaCriteriaParameterWrapper<>(
 						getNodeType(),
 						jpaCriteriaParameter.copy( context ),
+						criteriaParameterId,
+						unnamedParameterId,
 						nodeBuilder()
 				)
 		);
@@ -66,6 +74,27 @@ public class SqmJpaCriteriaParameterWrapper<T>
 
 	public JpaCriteriaParameter<T> getJpaCriteriaParameter() {
 		return jpaCriteriaParameter;
+	}
+
+	/**
+	 * The 0-based encounter of a {@link JpaCriteriaParameter} instance in a
+	 * {@link org.hibernate.query.sqm.SqmQuerySource#CRITERIA} query.
+	 *
+	 * @see org.hibernate.query.sqm.tree.jpa.ParameterCollector
+	 */
+	public int getCriteriaParameterId() {
+		return criteriaParameterId;
+	}
+
+	/**
+	 * The 0-based encounter of an unnamed {@link JpaCriteriaParameter} instance in a
+	 * {@link org.hibernate.query.sqm.SqmQuerySource#CRITERIA} query.
+	 * If the {@link #getJpaCriteriaParameter()} has a name, returns -1.
+	 *
+	 * @see org.hibernate.query.sqm.tree.jpa.ParameterCollector
+	 */
+	public int getUnnamedParameterId() {
+		return unnamedParameterId;
 	}
 
 	@Override
@@ -88,6 +117,8 @@ public class SqmJpaCriteriaParameterWrapper<T>
 		return new SqmJpaCriteriaParameterWrapper<>(
 				getNodeType(),
 				jpaCriteriaParameter,
+				criteriaParameterId,
+				unnamedParameterId,
 				nodeBuilder()
 		);
 	}
@@ -129,20 +160,23 @@ public class SqmJpaCriteriaParameterWrapper<T>
 	}
 
 	@Override
-	public int compareTo(SqmParameter<T> parameter) {
-		return parameter instanceof SqmJpaCriteriaParameterWrapper<T> wrapper
-				? getJpaCriteriaParameter().compareTo( wrapper.getJpaCriteriaParameter() )
-				: 1;
+	public final boolean equals(Object o) {
+		return o instanceof SqmJpaCriteriaParameterWrapper<?> that
+			&& criteriaParameterId == that.criteriaParameterId;
 	}
 
-//	@Override
-//	public boolean equals(Object object) {
-//		return object instanceof SqmJpaCriteriaParameterWrapper<?> that
-//			&& Objects.equals( this.jpaCriteriaParameter, that.jpaCriteriaParameter );
-//	}
-//
-//	@Override
-//	public int hashCode() {
-//		return jpaCriteriaParameter.hashCode();
-//	}
+	@Override
+	public int hashCode() {
+		return criteriaParameterId;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
+	}
 }

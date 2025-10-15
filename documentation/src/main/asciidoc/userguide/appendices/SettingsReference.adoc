@@ -24,4 +24,4 @@ For (legacy) Hibernate settings which have a direct Jakarta Persistence corollar
 form should be preferred - e.g. `hibernate.connection.driver_class` -> `jakarta.persistence.jdbc.driver`.
 ====
 
-include::../../../../../target/asciidoc/fragments/config-settings.adoc[]
+include::{doc-generated-content-dir}/config-settings.adoc[]

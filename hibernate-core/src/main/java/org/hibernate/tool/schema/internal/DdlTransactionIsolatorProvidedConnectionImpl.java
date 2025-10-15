@@ -7,7 +7,6 @@ package org.hibernate.tool.schema.internal;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.internal.exec.JdbcConnectionAccessProvidedConnectionImpl;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
@@ -56,7 +55,7 @@ class DdlTransactionIsolatorProvidedConnectionImpl implements DdlTransactionIsol
 
 	@Override
 	public void release() {
-		JdbcConnectionAccess connectionAccess = jdbcContext.getJdbcConnectionAccess();
+		final var connectionAccess = jdbcContext.getJdbcConnectionAccess();
 		if( !( connectionAccess instanceof JdbcConnectionAccessProvidedConnectionImpl ) ) {
 			throw new IllegalStateException(
 				"DdlTransactionIsolatorProvidedConnectionImpl should always use a JdbcConnectionAccessProvidedConnectionImpl"

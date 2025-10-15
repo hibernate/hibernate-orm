@@ -12,14 +12,34 @@ plugins {
 
 description = 'Maven plugin to integrate aspects of Hibernate into your build.'
 
+sourceSets {
+    intTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+configurations {
+    intTestImplementation.extendsFrom implementation
+    intTestRuntimeOnly.extendsFrom runtimeOnly
+}
+
 dependencies {
     implementation project( ":hibernate-core" )
 
-    implementation "org.apache.maven:maven-plugin-api:3.6.3"
+    implementation "org.apache.maven:maven-plugin-api:3.9.11"
     implementation "org.apache.maven:maven-project:2.2.1"
     implementation "org.apache.maven.shared:file-management:3.1.0"
 
-    compileOnly "org.apache.maven.plugin-tools:maven-plugin-annotations:3.6.0"
+    compileOnly "org.apache.maven.plugin-tools:maven-plugin-tools-annotations:3.15.1"
+
+    intTestImplementation 'org.junit.jupiter:junit-jupiter:5.13.4'
+    intTestImplementation 'org.apache.maven:maven-embedder:3.9.11'
+    intTestRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    intTestRuntimeOnly 'ch.qos.logback:logback-classic:1.5.18'
+    intTestRuntimeOnly 'org.apache.maven:maven-compat:3.9.11'
+    intTestRuntimeOnly 'org.apache.maven.resolver:maven-resolver-transport-http:1.9.24'
+    intTestRuntimeOnly 'org.apache.maven.resolver:maven-resolver-connector-basic:1.9.24'
 }
 
 def releasePrepareTask = tasks.register("releasePrepare") {
@@ -35,6 +55,22 @@ tasks.register("preVerifyRelease") {
     description "Delegates to `releasePrepare` task"
 
     dependsOn releasePrepareTask
+}
+
+tasks.register('integrationTest', Test) {
+    description = 'Runs integration tests.'
+    group = 'verification'
+
+    testClassesDirs = sourceSets.intTest.output.classesDirs
+    classpath = sourceSets.intTest.runtimeClasspath
+    shouldRunAfter test
+
+    useJUnitPlatform()
+
+}
+
+tasks.forbiddenApisIntTest {
+    enabled = false
 }
 
 var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
@@ -64,3 +100,10 @@ publishingExtension.publications.named("publishedArtifacts") {
     }
 }
 
+integrationTest {
+    environment "hibernateVersion", project.version
+}
+
+integrationTest.dependsOn rootProject.childProjects.'hibernate-core'.tasks.publishToMavenLocal
+integrationTest.dependsOn publishToMavenLocal
+check.dependsOn integrationTest

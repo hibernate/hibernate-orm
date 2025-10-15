@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
@@ -1126,6 +1127,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
 		return new DynamicFilterAliasGenerator(subclassTableNameClosure, rootAlias);
+	}
+
+	@Override
+	public void forEachTableDetails(Consumer<TableDetails> consumer) {
+		super.forEachTableDetails( consumer );
 	}
 
 	@Override

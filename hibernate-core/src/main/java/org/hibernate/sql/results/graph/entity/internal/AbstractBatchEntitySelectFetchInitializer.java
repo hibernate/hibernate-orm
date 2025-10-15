@@ -4,21 +4,14 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import org.hibernate.EntityFilterException;
-import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
-import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -49,9 +42,15 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 				AbstractBatchEntitySelectFetchInitializer<?> initializer,
 				RowProcessingState rowProcessingState) {
 			super( initializer, rowProcessingState );
+			batchDisabled = isBatchDisabled( initializer, rowProcessingState );
+		}
 
-			batchDisabled = rowProcessingState.isScrollResult()
-					|| !rowProcessingState.getLoadQueryInfluencers().effectivelyBatchLoadable( initializer.toOneMapping.getEntityMappingType().getEntityPersister() );
+		private static boolean isBatchDisabled(
+				AbstractBatchEntitySelectFetchInitializer<?> initializer,
+				RowProcessingState rowProcessingState) {
+			return rowProcessingState.isScrollResult()
+				|| !rowProcessingState.getLoadQueryInfluencers()
+					.effectivelyBatchLoadable( initializer.toOneMapping.getEntityMappingType().getEntityPersister() );
 		}
 	}
 
@@ -65,7 +64,9 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			AssemblerCreationState creationState) {
 		super( parent, toOneMapping, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter, creationState );
 		//noinspection unchecked
-		this.owningEntityInitializer = (EntityInitializer<InitializerData>) Initializer.findOwningEntityInitializer( parent );
+		owningEntityInitializer =
+				(EntityInitializer<InitializerData>)
+						Initializer.findOwningEntityInitializer( parent );
 		assert owningEntityInitializer != null : "This initializer requires an owning parent entity initializer";
 	}
 
@@ -73,46 +74,42 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 
 	@Override
 	public void resolveKey(Data data) {
-		if ( data.getState() != State.UNINITIALIZED ) {
-			return;
-		}
-
-		data.entityKey = null;
-		data.setInstance( null );
-		final RowProcessingState rowProcessingState = data.getRowProcessingState();
-		//noinspection unchecked
-		final Initializer<InitializerData> initializer = (Initializer<InitializerData>) keyAssembler.getInitializer();
-		if ( initializer != null ) {
-			final InitializerData subData = initializer.getData( rowProcessingState );
-			initializer.resolveKey( subData );
-			data.entityIdentifier = null;
-			data.setState( subData.getState() == State.MISSING ? State.MISSING : State.KEY_RESOLVED );
-		}
-		else {
-			data.entityIdentifier = keyAssembler.assemble( rowProcessingState );
-			data.setState( data.entityIdentifier == null ? State.MISSING : State.KEY_RESOLVED );
+		if ( data.getState() == State.UNINITIALIZED ) {
+			data.entityKey = null;
+			data.setInstance( null );
+			final var rowProcessingState = data.getRowProcessingState();
+			//noinspection unchecked
+			final var initializer = (Initializer<InitializerData>) keyAssembler.getInitializer();
+			if ( initializer != null ) {
+				final var subData = initializer.getData( rowProcessingState );
+				initializer.resolveKey( subData );
+				data.entityIdentifier = null;
+				data.setState( subData.getState() == State.MISSING ? State.MISSING : State.KEY_RESOLVED );
+			}
+			else {
+				data.entityIdentifier = keyAssembler.assemble( rowProcessingState );
+				data.setState( data.entityIdentifier == null ? State.MISSING : State.KEY_RESOLVED );
+			}
 		}
 	}
 
 	@Override
 	public void resolveInstance(Data data) {
-		if ( data.getState() != State.KEY_RESOLVED ) {
-			return;
-		}
-
-		data.setState( State.RESOLVED );
-		final RowProcessingState rowProcessingState = data.getRowProcessingState();
-		if ( data.entityIdentifier == null ) {
-			// entityIdentifier can be null if the identifier is based on an initializer
-			data.entityIdentifier = keyAssembler.assemble( rowProcessingState );
+		if ( data.getState() == State.KEY_RESOLVED ) {
+			data.setState( State.RESOLVED );
+			final var rowProcessingState = data.getRowProcessingState();
 			if ( data.entityIdentifier == null ) {
-				data.entityKey = null;
-				data.setInstance( null );
-				data.setState( State.MISSING );
-				return;
+				// entityIdentifier can be null if the identifier is based on an initializer
+				data.entityIdentifier = keyAssembler.assemble( rowProcessingState );
+				if ( data.entityIdentifier == null ) {
+					data.entityKey = null;
+					data.setInstance( null );
+					data.setState( State.MISSING );
+					return;
+				}
 			}
+			resolveInstanceFromIdentifier( data );
 		}
-		resolveInstanceFromIdentifier( data );
 	}
 
 	protected void resolveInstanceFromIdentifier(Data data) {
@@ -136,11 +133,16 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			data.setState( State.MISSING );
 			data.entityKey = null;
 			data.setInstance( null );
-			return;
 		}
-		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		else {
+			resolve( instance, data );
+		}
+	}
+
+	private void resolve(Object instance, Data data) {
+		final var rowProcessingState = data.getRowProcessingState();
 		// Only need to extract the identifier if the identifier has a many to one
-		final LazyInitializer lazyInitializer = extractLazyInitializer( instance );
+		final var lazyInitializer = extractLazyInitializer( instance );
 		data.entityKey = null;
 		data.entityIdentifier = null;
 		if ( lazyInitializer == null ) {
@@ -157,15 +159,19 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 					data.setState( State.RESOLVED );
 					data.entityIdentifier = enhancementInterceptor.getIdentifier();
 				}
+				if ( keyIsEager && data.entityIdentifier == null ) {
+					data.entityIdentifier =
+							concreteDescriptor.getIdentifier( instance,
+									rowProcessingState.getSession() );
+				}
 			}
 			else {
-				// If the entity initializer is null, we know the entity is fully initialized,
-				// otherwise it will be initialized by some other initializer
+				// If the entity initializer is null, we know the entity is fully initialized;
+				// otherwise, it will be initialized by some other initializer
 				data.setState( State.RESOLVED );
-				data.entityIdentifier = concreteDescriptor.getIdentifier( instance, rowProcessingState.getSession() );
-			}
-			if ( keyIsEager && data.entityIdentifier == null ) {
-				data.entityIdentifier = concreteDescriptor.getIdentifier( instance, rowProcessingState.getSession() );
+				data.entityIdentifier =
+						concreteDescriptor.getIdentifier( instance,
+								rowProcessingState.getSession() );
 			}
 		}
 		else if ( lazyInitializer.isUninitialized() ) {
@@ -185,7 +191,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			resolveInstanceFromIdentifier( data );
 		}
 		if ( keyIsEager ) {
-			final Initializer<?> initializer = keyAssembler.getInitializer();
+			final var initializer = keyAssembler.getInitializer();
 			assert initializer != null;
 			initializer.resolveInstance( data.entityIdentifier, rowProcessingState );
 		}
@@ -197,21 +203,23 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 
 	@Override
 	public void initializeInstance(Data data) {
-		if ( data.getState() != State.RESOLVED ) {
-			return;
-		}
-		data.setState( State.INITIALIZED );
-		if ( data.batchDisabled ) {
-			Hibernate.initialize( data.getInstance() );
+		if ( data.getState() == State.RESOLVED ) {
+			data.setState( State.INITIALIZED );
+			if ( data.batchDisabled ) {
+				Hibernate.initialize( data.getInstance() );
+			}
 		}
 	}
 
 	protected Object getExistingInitializedInstance(Data data) {
-		final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final EntityHolder holder = persistenceContext.getEntityHolder( data.entityKey );
-		if ( holder != null && holder.getEntity() != null && holder.isEventuallyInitialized() ) {
-			return holder.getEntity();
+		final var session = data.getRowProcessingState().getSession();
+		final var persistenceContext = session.getPersistenceContextInternal();
+		final var holder = persistenceContext.getEntityHolder( data.entityKey );
+		if ( holder != null ) {
+			final Object entity = holder.getEntity();
+			if ( entity != null && holder.isEventuallyInitialized() ) {
+				return entity;
+			}
 		}
 		// we need to register a resolution listener only if there is not an already initialized instance
 		// or an instance that another initializer is loading
@@ -227,10 +235,11 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 
 	@Override
 	public void initializeInstanceFromParent(Object parentInstance, Data data) {
-		final AttributeMapping attributeMapping = getInitializedPart().asAttributeMapping();
-		final Object instance = attributeMapping != null
-				? attributeMapping.getValue( parentInstance )
-				: parentInstance;
+		final var attributeMapping = getInitializedPart().asAttributeMapping();
+		final Object instance =
+				attributeMapping != null
+						? attributeMapping.getValue( parentInstance )
+						: parentInstance;
 		// No need to initialize these fields
 		data.entityKey = null;
 		data.setInstance( null );
@@ -238,7 +247,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			data.setState( State.MISSING );
 		}
 		else {
-			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( instance );
+			final var lazyInitializer = extractLazyInitializer( instance );
 			if ( lazyInitializer != null && lazyInitializer.isUninitialized() ) {
 				data.entityKey = new EntityKey( lazyInitializer.getInternalIdentifier(), concreteDescriptor );
 				registerToBatchFetchQueue( data );
@@ -252,47 +261,28 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			ToOneAttributeMapping toOneMapping,
 			boolean affectedByFilter,
 			SharedSessionContractImplementor session) {
-		final Object instance = session.internalLoad(
-				entityKey.getEntityName(),
-				entityKey.getIdentifier(),
-				true,
-				toOneMapping.isInternalLoadNullable()
-		);
+		final String entityName = entityKey.getEntityName();
+		final Object identifier = entityKey.getIdentifier();
+		final Object instance =
+				session.internalLoad( entityName, identifier, true,
+						toOneMapping.isInternalLoadNullable() );
 		if ( instance == null ) {
-			if ( toOneMapping.getNotFoundAction() != NotFoundAction.IGNORE ) {
-				if ( affectedByFilter ) {
-					throw new EntityFilterException(
-							entityKey.getEntityName(),
-							entityKey.getIdentifier(),
-							toOneMapping.getNavigableRole().getFullPath()
-					);
-				}
-				if ( toOneMapping.getNotFoundAction() == NotFoundAction.EXCEPTION ) {
-					throw new FetchNotFoundException( entityKey.getEntityName(), entityKey.getIdentifier() );
-				}
-			}
+			checkNotFound( toOneMapping, affectedByFilter, entityName, identifier );
 		}
 		return instance;
 	}
 
 	protected AttributeMapping[] getParentEntityAttributes(String attributeName) {
-		final EntityPersister entityDescriptor = owningEntityInitializer.getEntityDescriptor();
-		final AttributeMapping[] parentEntityAttributes = new AttributeMapping[
+		final var entityDescriptor = owningEntityInitializer.getEntityDescriptor();
+		final int size =
 				entityDescriptor.getRootEntityDescriptor()
-						.getSubclassEntityNames()
-						.size()
-				];
-		parentEntityAttributes[entityDescriptor.getSubclassId()] = getParentEntityAttribute(
-				entityDescriptor,
-				toOneMapping,
-				attributeName
-		);
+						.getSubclassEntityNames().size();
+		final var parentEntityAttributes = new AttributeMapping[size];
+		parentEntityAttributes[ entityDescriptor.getSubclassId() ] =
+				getParentEntityAttribute( entityDescriptor, toOneMapping, attributeName );
 		for ( EntityMappingType subMappingType : entityDescriptor.getSubMappingTypes() ) {
-			parentEntityAttributes[subMappingType.getSubclassId()] = getParentEntityAttribute(
-					subMappingType,
-					toOneMapping,
-					attributeName
-			);
+			parentEntityAttributes[ subMappingType.getSubclassId() ] =
+					getParentEntityAttribute( subMappingType, toOneMapping, attributeName );
 		}
 		return parentEntityAttributes;
 	}
@@ -301,14 +291,14 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			EntityMappingType subMappingType,
 			ToOneAttributeMapping referencedModelPart,
 			String attributeName) {
-		final AttributeMapping parentAttribute = subMappingType.findAttributeMapping( attributeName );
-		if ( parentAttribute != null && parentAttribute.getDeclaringType() == referencedModelPart.getDeclaringType()
-				.findContainingEntityMapping() ) {
-			// These checks are needed to avoid setting the instance using the wrong (child's) model part or
-			// setting it multiple times in case parent and child share the same attribute name for the association.
-			return parentAttribute;
-		}
-		return null;
+		final var parentAttribute = subMappingType.findAttributeMapping( attributeName );
+		// These checks are needed to avoid setting the instance using the wrong (child's) model part or
+		// setting it multiple times in case parent and child share the same attribute name for the association.
+		return parentAttribute != null
+			&& parentAttribute.getDeclaringType()
+					== referencedModelPart.getDeclaringType().findContainingEntityMapping()
+				? parentAttribute
+				: null;
 	}
 
 }

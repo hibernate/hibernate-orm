@@ -61,7 +61,9 @@ public class OracleLockingSupport implements LockingSupport, LockingSupport.Meta
 
 	@Override
 	public OuterJoinLockingType getOuterJoinLockingType() {
-		return OuterJoinLockingType.UNSUPPORTED;
+		// Per Loic, as of 23 at least, Oracle does support this.
+		// Let's see what CI says for previous supported versions.
+		return OuterJoinLockingType.IDENTIFIED;
 	}
 
 	@Override

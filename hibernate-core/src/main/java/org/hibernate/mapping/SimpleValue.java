@@ -8,7 +8,6 @@ import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -19,6 +18,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
@@ -45,8 +45,6 @@ import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.descriptor.jdbc.LobTypeMappings;
-import org.hibernate.type.descriptor.jdbc.NationalizedTypeMappings;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.internal.ParameterizedTypeImpl;
 import org.hibernate.type.MappingContext;
@@ -64,6 +62,10 @@ import static org.hibernate.boot.model.relational.internal.SqlStringGenerationCo
 import static org.hibernate.internal.util.ReflectHelper.reflectedPropertyClass;
 import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray;
 import static org.hibernate.mapping.MappingHelper.classForName;
+import static org.hibernate.models.spi.TypeDetails.Kind.PARAMETERIZED_TYPE;
+import static org.hibernate.type.descriptor.jdbc.LobTypeMappings.getLobCodeTypeMapping;
+import static org.hibernate.type.descriptor.jdbc.LobTypeMappings.isMappedToKnownLobCode;
+import static org.hibernate.type.descriptor.jdbc.NationalizedTypeMappings.toNationalizedTypeCode;
 
 /**
  * A mapping model object that represents any value that maps to columns.
@@ -147,6 +149,10 @@ public abstract class SimpleValue implements KeyValue {
 		return buildingContext;
 	}
 
+	BootstrapContext getBootstrapContext() {
+		return getBuildingContext().getBootstrapContext();
+	}
+
 	public MetadataImplementor getMetadata() {
 		return metadata;
 	}
@@ -161,7 +167,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public TypeConfiguration getTypeConfiguration() {
-		return getBuildingContext().getBootstrapContext().getTypeConfiguration();
+		return getBootstrapContext().getTypeConfiguration();
 	}
 
 	public void setOnDeleteAction(OnDeleteAction onDeleteAction) {
@@ -220,12 +226,12 @@ public abstract class SimpleValue implements KeyValue {
 
 	public void sortColumns(int[] originalOrder) {
 		if ( columns.size() > 1 ) {
-			final Selectable[] originalColumns = columns.toArray( new Selectable[0] );
+			final var originalColumns = columns.toArray( new Selectable[0] );
 			final boolean[] originalInsertability = toBooleanArray( insertability );
 			final boolean[] originalUpdatability = toBooleanArray( updatability );
 			for ( int i = 0; i < originalOrder.length; i++ ) {
 				final int originalIndex = originalOrder[i];
-				final Selectable selectable = originalColumns[i];
+				final var selectable = originalColumns[i];
 				if ( selectable instanceof Column column ) {
 					column.setTypeIndex( originalIndex );
 				}
@@ -238,7 +244,7 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public boolean hasFormula() {
-		for ( Selectable selectable : getSelectables() ) {
+		for ( var selectable : getSelectables() ) {
 			if ( selectable instanceof Formula ) {
 				return true;
 			}
@@ -286,19 +292,18 @@ public abstract class SimpleValue implements KeyValue {
 
 	void setAttributeConverterDescriptor(String typeName) {
 		final String converterClassName = typeName.substring( TYPE_NAME_PREFIX.length() );
-		final MetadataBuildingContext context = getBuildingContext();
+		final var bootstrapContext = getBootstrapContext();
 		@SuppressWarnings("unchecked") // Completely safe
-		final Class<? extends AttributeConverter<?,?>> clazz =
+		final var clazz =
 				(Class<? extends AttributeConverter<?,?>>)
-						classForName( AttributeConverter.class, converterClassName,
-								context.getBootstrapContext() );
+						classForName( AttributeConverter.class, converterClassName, bootstrapContext );
 		attributeConverterDescriptor =
 				ConverterDescriptors.of( clazz, null, false,
-						context.getBootstrapContext().getClassmateContext() );
+						bootstrapContext.getClassmateContext() );
 	}
 
 	ClassLoaderService classLoaderService() {
-		return getBuildingContext().getBootstrapContext().getClassLoaderService();
+		return getBootstrapContext().getClassLoaderService();
 	}
 
 	public void makeVersion() {
@@ -332,12 +337,12 @@ public abstract class SimpleValue implements KeyValue {
 	@Override
 	public void createForeignKey() throws MappingException {}
 
-	public void createForeignKey(PersistentClass referencedEntity, AnnotatedJoinColumns joinColumns) throws MappingException {}
+	public void createForeignKey(PersistentClass referencedEntity, AnnotatedJoinColumns joinColumns) {}
 
 	@Override
 	public ForeignKey createForeignKeyOfEntity(String entityName) {
 		if ( isConstrained() ) {
-			final ForeignKey foreignKey = table.createForeignKey(
+			final var foreignKey = table.createForeignKey(
 					getForeignKeyName(),
 					getConstraintColumns(),
 					entityName,
@@ -347,14 +352,15 @@ public abstract class SimpleValue implements KeyValue {
 			foreignKey.setOnDeleteAction( onDeleteAction );
 			return foreignKey;
 		}
-
-		return null;
+		else {
+			return null;
+		}
 	}
 
 	@Override
 	public ForeignKey createForeignKeyOfEntity(String entityName, List<Column> referencedColumns) {
 		if ( isConstrained() ) {
-			final ForeignKey foreignKey = table.createForeignKey(
+			final var foreignKey = table.createForeignKey(
 					getForeignKeyName(),
 					getConstraintColumns(),
 					entityName,
@@ -403,7 +409,7 @@ public abstract class SimpleValue implements KeyValue {
 
 			@Override
 			public SqlStringGenerationContext getSqlStringGenerationContext() {
-				final Database database = buildingContext.getMetadataCollector().getDatabase();
+				final var database = buildingContext.getMetadataCollector().getDatabase();
 				return fromExplicit( database.getJdbcEnvironment(), database, getDefaultCatalog(), getDefaultSchema() );
 			}
 		} );
@@ -416,9 +422,8 @@ public abstract class SimpleValue implements KeyValue {
 			Property property,
 			GeneratorSettings defaults) {
 		if ( customIdGeneratorCreator != null ) {
-			final IdGeneratorCreationContext context =
-					new IdGeneratorCreationContext( rootClass, property, defaults );
-			final Generator generator = customIdGeneratorCreator.createGenerator( context );
+			final var context = new IdGeneratorCreationContext( this, rootClass, property, defaults );
+			final var generator = customIdGeneratorCreator.createGenerator( context );
 			if ( generator.allowAssignedIdentifiers() && nullValue == null ) {
 				setNullValueUndefined();
 			}
@@ -480,7 +485,14 @@ public abstract class SimpleValue implements KeyValue {
 	 * @see org.hibernate.engine.spi.VersionValue
 	 */
 	public void setNullValue(String nullValue) {
-		nullValueSemantic = switch (nullValue) {
+		nullValueSemantic = decodeNullValueSemantic( nullValue );
+		if ( nullValueSemantic == NullValueSemantic.VALUE ) {
+			this.nullValue = nullValue;
+		}
+	}
+
+	private static NullValueSemantic decodeNullValueSemantic(String nullValue) {
+		return switch ( nullValue ) {
 			// magical values (legacy of hbm.xml)
 			case "null" -> NullValueSemantic.NULL;
 			case "none" -> NullValueSemantic.NONE;
@@ -488,9 +500,6 @@ public abstract class SimpleValue implements KeyValue {
 			case "undefined" -> NullValueSemantic.UNDEFINED;
 			default -> NullValueSemantic.VALUE;
 		};
-		if ( nullValueSemantic == NullValueSemantic.VALUE ) {
-			this.nullValue = nullValue;
-		}
 	}
 
 	/**
@@ -574,7 +583,7 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public boolean isNullable() {
-		for ( Selectable selectable : getSelectables() ) {
+		for ( var selectable : getSelectables() ) {
 			if ( selectable instanceof Formula ) {
 				// if there are *any* formulas, then the Value overall is
 				// considered nullable
@@ -602,7 +611,7 @@ public abstract class SimpleValue implements KeyValue {
 		return getColumnSpan() == getType().getColumnSpan( mappingContext );
 	}
 
-	protected void setAttributeConverterDescriptor(ConverterDescriptor descriptor) {
+	protected void setAttributeConverterDescriptor(ConverterDescriptor<?,?> descriptor) {
 		this.attributeConverterDescriptor = descriptor;
 	}
 
@@ -610,76 +619,34 @@ public abstract class SimpleValue implements KeyValue {
 		return attributeConverterDescriptor;
 	}
 
-	//	public Type getType() throws MappingException {
-//		if ( type != null ) {
-//			return type;
-//		}
-//
-//		if ( typeName == null ) {
-//			throw new MappingException( "No type name" );
-//		}
-//
-//		if ( typeParameters != null
-//				&& Boolean.valueOf( typeParameters.getProperty( DynamicParameterizedType.IS_DYNAMIC ) )
-//				&& typeParameters.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
-//			createParameterImpl();
-//		}
-//
-//		Type result = getMetadata().getTypeConfiguration().getTypeResolver().heuristicType( typeName, typeParameters );
-//
-//		if ( isVersion && result instanceof BinaryType ) {
-//			// if this is a byte[] version/timestamp, then we need to use RowVersionType
-//			// instead of BinaryType (HHH-10413)
-//			// todo (6.0) - although for T/SQL databases we should use its
-//			LOG.debug( "version is BinaryType; changing to RowVersionType" );
-//			result = RowVersionType.INSTANCE;
-//		}
-//
-//		if ( result == null ) {
-//			String msg = "Could not determine type for: " + typeName;
-//			if ( table != null ) {
-//				msg += ", at table: " + table.getName();
-//			}
-//			if ( columns != null && columns.size() > 0 ) {
-//				msg += ", for columns: " + columns;
-//			}
-//			throw new MappingException( msg );
-//		}
-//
-//		return result;
-//	}
-
 	@Override
 	public void setTypeUsingReflection(String className, String propertyName) throws MappingException {
-		// NOTE : this is called as the last piece in setting SimpleValue type information, and implementations
-		// rely on that fact, using it as a signal that all information it is going to get is defined at this point...
-
-		if ( typeName != null ) {
-			// assume either (a) explicit type was specified or (b) determine was already performed
-			return;
-		}
-
-		if ( type != null ) {
-			return;
-		}
-
-		if ( attributeConverterDescriptor == null ) {
-			// this is here to work like legacy.  This should change when we integrate with metamodel to
-			// look for JdbcType and JavaType individually and create the BasicType (well, really
-			// keep a registry of [JdbcType,JavaType] -> BasicType...)
-			if ( className == null ) {
-				throw new MappingException( "Attribute types for a dynamic entity must be explicitly specified: " + propertyName );
+		// NOTE: this is called as the last piece in setting SimpleValue type information,
+		//       and implementations rely on that fact, using it as a signal that all
+		//       the information it is going to get is already specified at this point
+		if ( typeName == null && type == null ) {
+			if ( attributeConverterDescriptor == null ) {
+				// This is here to work like legacy. This should change when we integrate with metamodel
+				// to look for JdbcType and JavaType individually and create the BasicType (well, really
+				// keep a registry of [JdbcType,JavaType] -> BasicType...)
+				if ( className == null ) {
+					throw new MappingException(
+							"Attribute types for a dynamic entity must be explicitly specified: " + propertyName );
+				}
+				typeName = getClass( className, propertyName ).getName();
+				// TODO: To fully support isNationalized here we need to do the process hinted at above
+				// 		 essentially, much of the logic from #buildAttributeConverterTypeAdapter wrt
+				// 		 resolving a (1) JdbcType, a (2) JavaType and dynamically building a BasicType
+				// 		 combining them.
 			}
-			typeName = getClass( className, propertyName ).getName();
-			// todo : to fully support isNationalized here we need to do the process hinted at above
-			// 		essentially, much of the logic from #buildAttributeConverterTypeAdapter wrt resolving
-			//		a (1) JdbcType, a (2) JavaType and dynamically building a BasicType
-			// 		combining them.
-			return;
+			else {
+				// we had an AttributeConverter
+				type = buildAttributeConverterTypeAdapter();
+			}
 		}
-
-		// we had an AttributeConverter...
-		type = buildAttributeConverterTypeAdapter();
+		// otherwise assume either
+		// (a) explicit type was specified or
+		// (b) determine was already performed
 	}
 
 	private Class<?> getClass(String className, String propertyName) {
@@ -723,7 +690,7 @@ public abstract class SimpleValue implements KeyValue {
 				new JpaAttributeConverterCreationContext() {
 					@Override
 					public ManagedBeanRegistry getManagedBeanRegistry() {
-						return getBuildingContext().getBootstrapContext().getManagedBeanRegistry();
+						return getBootstrapContext().getManagedBeanRegistry();
 					}
 
 					@Override
@@ -736,8 +703,8 @@ public abstract class SimpleValue implements KeyValue {
 
 	private <T> Type buildAttributeConverterTypeAdapter(
 			JpaAttributeConverter<T, ?> jpaAttributeConverter) {
-		final JavaType<T> domainJavaType = jpaAttributeConverter.getDomainJavaType();
-		final JavaType<?> relationalJavaType = jpaAttributeConverter.getRelationalJavaType();
+		final var domainJavaType = jpaAttributeConverter.getDomainJavaType();
+		final var relationalJavaType = jpaAttributeConverter.getRelationalJavaType();
 
 		// build the SqlTypeDescriptor adapter ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Going back to the illustration, this should be a SqlTypeDescriptor that handles the Integer <-> String
@@ -745,7 +712,7 @@ public abstract class SimpleValue implements KeyValue {
 		//		corresponding to the AttributeConverter's declared "databaseColumnJavaType" (how we read that value out
 		// 		of ResultSets).  See JdbcTypeJavaClassMappings for details.  Again, given example, this should return
 		// 		VARCHAR/CHAR
-		final JdbcType recommendedJdbcType = relationalJavaType.getRecommendedJdbcType(
+		final var recommendedJdbcType = relationalJavaType.getRecommendedJdbcType(
 				// todo (6.0) : handle the other JdbcRecommendedSqlTypeMappingContext methods
 				new JdbcTypeIndicators() {
 					@Override
@@ -764,31 +731,6 @@ public abstract class SimpleValue implements KeyValue {
 					}
 				}
 		);
-		int jdbcTypeCode = recommendedJdbcType.getDdlTypeCode();
-		if ( isLob() ) {
-			if ( LobTypeMappings.isMappedToKnownLobCode( jdbcTypeCode ) ) {
-				jdbcTypeCode = LobTypeMappings.getLobCodeTypeMapping( jdbcTypeCode );
-			}
-			else {
-				if ( Serializable.class.isAssignableFrom( domainJavaType.getJavaTypeClass() ) ) {
-					jdbcTypeCode = Types.BLOB;
-				}
-				else {
-					throw new IllegalArgumentException(
-							String.format(
-									Locale.ROOT,
-									"JDBC type-code [%s (%s)] not known to have a corresponding LOB equivalent, and Java type is not Serializable (to use BLOB)",
-									jdbcTypeCode,
-									JdbcTypeNameMapper.getTypeName( jdbcTypeCode )
-							)
-					);
-				}
-			}
-		}
-		if ( isNationalized() ) {
-			jdbcTypeCode = NationalizedTypeMappings.toNationalizedTypeCode( jdbcTypeCode );
-		}
-
 
 		// todo : cache the AttributeConverterTypeAdapter in case that AttributeConverter is applied multiple times.
 		return new ConvertedBasicTypeImpl<>(
@@ -799,9 +741,39 @@ public abstract class SimpleValue implements KeyValue {
 						domainJavaType.getTypeName(),
 						relationalJavaType.getTypeName()
 				),
-				metadata.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( jdbcTypeCode ),
+				metadata.getTypeConfiguration().getJdbcTypeRegistry()
+						.getDescriptor( jdbcTypeCode( recommendedJdbcType, domainJavaType ) ),
 				jpaAttributeConverter
 		);
+	}
+
+	private <T> int jdbcTypeCode(JdbcType recommendedJdbcType, JavaType<T> domainJavaType) {
+		final int recommendedDdlTypeCode = recommendedJdbcType.getDdlTypeCode();
+		final int jdbcTypeCode;
+		if ( isLob() ) {
+			if ( isMappedToKnownLobCode( recommendedDdlTypeCode ) ) {
+				jdbcTypeCode = getLobCodeTypeMapping( recommendedDdlTypeCode );
+			}
+			else {
+				if ( Serializable.class.isAssignableFrom( domainJavaType.getJavaTypeClass() ) ) {
+					jdbcTypeCode = Types.BLOB;
+				}
+				else {
+					throw new IllegalArgumentException(
+							String.format(
+									Locale.ROOT,
+									"JDBC type-code [%s (%s)] not known to have a corresponding LOB equivalent, and Java type is not Serializable (to use BLOB)",
+									recommendedDdlTypeCode,
+									JdbcTypeNameMapper.getTypeName( recommendedDdlTypeCode )
+							)
+					);
+				}
+			}
+		}
+		else {
+			jdbcTypeCode = recommendedDdlTypeCode;
+		}
+		return isNationalized() ? toNationalizedTypeCode( jdbcTypeCode ) : jdbcTypeCode;
 	}
 
 	public boolean isTypeSpecified() {
@@ -814,7 +786,7 @@ public abstract class SimpleValue implements KeyValue {
 
 	public void setTypeParameters(Map<String, ?> parameters) {
 		if ( parameters != null ) {
-			final Properties properties = new Properties();
+			final var properties = new Properties();
 			properties.putAll( parameters );
 			setTypeParameters( properties );
 		}
@@ -889,24 +861,17 @@ public abstract class SimpleValue implements KeyValue {
 				return true;
 			}
 		}
-
 		return false;
 	}
 
 	@Override
 	public boolean isColumnInsertable(int index) {
-		if ( !insertability.isEmpty() ) {
-			return insertability.get( index );
-		}
-		return false;
+		return !insertability.isEmpty() && insertability.get( index );
 	}
 
 	@Override
 	public boolean isColumnUpdateable(int index) {
-		if ( !updatability.isEmpty() ) {
-			return updatability.get( index );
-		}
-		return false;
+		return !updatability.isEmpty() && updatability.get( index );
 	}
 
 	public boolean isPartitionKey() {
@@ -936,10 +901,12 @@ public abstract class SimpleValue implements KeyValue {
 
 	private static final Annotation[] NO_ANNOTATIONS = new Annotation[0];
 	private static Annotation[] getAnnotations(MemberDetails memberDetails) {
-		final Collection<? extends Annotation> directAnnotationUsages =
-				memberDetails == null ? null
+		final var directAnnotationUsages =
+				memberDetails == null
+						? null
 						: memberDetails.getDirectAnnotationUsages();
-		return directAnnotationUsages == null ? NO_ANNOTATIONS
+		return directAnnotationUsages == null
+				? NO_ANNOTATIONS
 				: directAnnotationUsages.toArray( Annotation[]::new );
 	}
 
@@ -947,15 +914,13 @@ public abstract class SimpleValue implements KeyValue {
 		try {
 			final String[] columnNames = new String[ columns.size() ];
 			final Long[] columnLengths = new Long[ columns.size() ];
-
 			for ( int i = 0; i < columns.size(); i++ ) {
-				final Selectable selectable = columns.get(i);
+				final var selectable = columns.get(i);
 				if ( selectable instanceof Column column ) {
 					columnNames[i] = column.getName();
 					columnLengths[i] = column.getLength();
 				}
 			}
-
 			// todo : not sure this works for handling @MapKeyEnumerated
 			return createParameterType( columnNames, columnLengths );
 		}
@@ -965,7 +930,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	private ParameterType createParameterType(String[] columnNames, Long[] columnLengths) {
-		final MemberDetails attribute = (MemberDetails) typeParameters.get( DynamicParameterizedType.XPROPERTY );
+		final var attribute = (MemberDetails) typeParameters.get( DynamicParameterizedType.XPROPERTY );
 		return new ParameterTypeImpl(
 				classLoaderService()
 						.classForTypeName( typeParameters.getProperty( DynamicParameterizedType.RETURNED_CLASS ) ),
@@ -1011,16 +976,14 @@ public abstract class SimpleValue implements KeyValue {
 			this.columns = columns;
 			this.columnLengths = columnLengths;
 
-			if ( returnedTypeDetails != null ) {
-				if ( returnedTypeDetails.getTypeKind() == TypeDetails.Kind.PARAMETERIZED_TYPE ) {
-					this.returnedJavaType = ParameterizedTypeImpl.from( returnedTypeDetails.asParameterizedType() );
-				}
-				else {
-					this.returnedJavaType = returnedTypeDetails.determineRawClass().toJavaClass();
-				}
+			if ( returnedTypeDetails == null ) {
+				returnedJavaType = null;
 			}
 			else {
-				this.returnedJavaType = null;
+				returnedJavaType =
+						returnedTypeDetails.getTypeKind() == PARAMETERIZED_TYPE
+								? ParameterizedTypeImpl.from( returnedTypeDetails.asParameterizedType() )
+								: returnedTypeDetails.determineRawClass().toJavaClass();
 			}
 		}
 
@@ -1071,11 +1034,13 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	private class IdGeneratorCreationContext implements GeneratorCreationContext {
+		private final SimpleValue identifier;
 		private final RootClass rootClass;
 		private final Property property;
 		private final GeneratorSettings defaults;
 
-		public IdGeneratorCreationContext(RootClass rootClass, Property property, GeneratorSettings defaults) {
+		public IdGeneratorCreationContext(SimpleValue identifier, RootClass rootClass, Property property, GeneratorSettings defaults) {
+			this.identifier = identifier;
 			this.rootClass = rootClass;
 			this.property = property;
 			this.defaults = defaults;
@@ -1119,6 +1084,11 @@ public abstract class SimpleValue implements KeyValue {
 		@Override
 		public Property getProperty() {
 			return property;
+		}
+
+		@Override
+		public Value getValue() {
+			return identifier;
 		}
 
 		@Override

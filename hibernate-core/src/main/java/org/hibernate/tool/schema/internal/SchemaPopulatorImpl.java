@@ -9,15 +9,12 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaPopulator;
 import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
-
-import java.util.Map;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabled;
@@ -49,8 +46,8 @@ public class SchemaPopulatorImpl extends AbstractSchemaPopulator implements Sche
 	@Override
 	public void doPopulation(ExecutionOptions options, TargetDescriptor targetDescriptor) {
 		if ( !targetDescriptor.getTargetTypes().isEmpty() ) {
-			final Map<String, Object> configuration = options.getConfigurationValues();
-			final JdbcContext context = tool.resolveJdbcContext( configuration );
+			final var configuration = options.getConfigurationValues();
+			final var context = tool.resolveJdbcContext( configuration );
 			doPopulation( context.getDialect(), options,
 					tool.buildGenerationTargets( targetDescriptor, context, configuration, true ) );
 		}
@@ -58,7 +55,7 @@ public class SchemaPopulatorImpl extends AbstractSchemaPopulator implements Sche
 
 	@Internal
 	public void doPopulation(Dialect dialect, ExecutionOptions options, GenerationTarget... targets) {
-		for ( GenerationTarget target : targets ) {
+		for ( var target : targets ) {
 			target.prepare();
 		}
 
@@ -66,7 +63,7 @@ public class SchemaPopulatorImpl extends AbstractSchemaPopulator implements Sche
 			performPopulation( dialect, options, targets );
 		}
 		finally {
-			for ( GenerationTarget target : targets ) {
+			for ( var target : targets ) {
 				try {
 					target.release();
 				}
@@ -82,11 +79,8 @@ public class SchemaPopulatorImpl extends AbstractSchemaPopulator implements Sche
 			ExecutionOptions options,
 			GenerationTarget... targets) {
 		final boolean format = interpretFormattingEnabled( options.getConfigurationValues() );
-		applyImportSources( options, getCommandExtractor(), format, dialect, targets );
-	}
-
-	private SqlScriptCommandExtractor getCommandExtractor() {
-		return tool.getServiceRegistry().getService( SqlScriptCommandExtractor.class );
+		final var commandExtractor = tool.getServiceRegistry().getService( SqlScriptCommandExtractor.class );
+		applyImportSources( options, commandExtractor, format, dialect, targets );
 	}
 
 	@Override

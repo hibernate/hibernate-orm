@@ -19,7 +19,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.jboss.logging.Logger;
 
 /**
- * JUnit 5 extension used to add {@link RequiresDialect} and {@link SkipForDialect}
+ * JUnit Jupiter extension used to add {@link RequiresDialect} and {@link SkipForDialect}
  * handling
  *
  * @author Steve Ebersole

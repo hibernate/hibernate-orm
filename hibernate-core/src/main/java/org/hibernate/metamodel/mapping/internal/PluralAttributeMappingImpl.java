@@ -596,7 +596,7 @@ public class PluralAttributeMappingImpl
 		// returning a domain result assembler that returns LazyPropertyInitializer.UNFETCHED_PROPERTY
 		final var containingEntityMapping = findContainingEntityMapping();
 		final boolean unfetched;
-		if ( fetchParent.getReferencedModePart() == containingEntityMapping
+		if ( fetchParent.getReferencedMappingContainer() == containingEntityMapping
 				&& containingEntityMapping.getEntityPersister().getPropertyLaziness()[getStateArrayPosition()] ) {
 			collectionKeyDomainResult = null;
 			unfetched = true;

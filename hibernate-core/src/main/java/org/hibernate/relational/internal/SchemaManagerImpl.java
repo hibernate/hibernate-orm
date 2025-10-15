@@ -143,6 +143,20 @@ public class SchemaManagerImpl implements SchemaManager {
 	}
 
 	@Override
+	public void resynchronizeGenerators() {
+		Map<String, Object> properties = new HashMap<>( sessionFactory.getProperties() );
+		properties.put( JAKARTA_HBM2DDL_DATABASE_ACTION, Action.SYNCHRONIZE );
+		properties.put( JAKARTA_HBM2DDL_SCRIPTS_ACTION, Action.NONE );
+		addSchemaAndCatalog( properties );
+		SchemaManagementToolCoordinator.process(
+				metadata,
+				sessionFactory.getServiceRegistry(),
+				properties,
+				action -> {}
+		);
+	}
+
+	@Override
 	public void create(boolean createSchemas) {
 		exportMappedObjects( createSchemas );
 	}

@@ -698,8 +698,8 @@ public class AttributeFactory {
 
 	private static Member resolveEntityMember(Property property, EntityPersister declaringEntity) {
 		final String propertyName = property.getName();
-		final var attributeMapping = declaringEntity.findAttributeMapping( propertyName );
-		return attributeMapping == null
+		return !propertyName.equals( declaringEntity.getIdentifierPropertyName() )
+			&& declaringEntity.findAttributeMapping( propertyName ) == null
 				// just like in #determineIdentifierJavaMember , this *should* indicate we have an IdClass mapping
 				? resolveVirtualIdentifierMember( property, declaringEntity )
 				: getter( declaringEntity, property, propertyName, property.getType().getReturnedClass() );

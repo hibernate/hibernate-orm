@@ -41,12 +41,9 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
@@ -206,10 +203,10 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	private static boolean isAnsiNull(DialectResolutionInfo info) {
-		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
+		final var databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
 			try ( var statement = databaseMetaData.getConnection().createStatement() ) {
-				final ResultSet resultSet = statement.executeQuery( "SELECT @@options" );
+				final var resultSet = statement.executeQuery( "SELECT @@options" );
 				if ( resultSet.next() ) {
 					final byte[] optionBytes = resultSet.getBytes( 1 );
 					// By trial and error, enabling and disabling ansinull revealed that this bit is the indicator
@@ -221,14 +218,14 @@ public class SybaseASEDialect extends SybaseDialect {
 			}
 		}
 		// default to the dialect-specific configuration setting
-		return getBoolean( SYBASE_ANSI_NULL, info.getConfigurationValues(), false );
+		return getBoolean( SYBASE_ANSI_NULL, info.getConfigurationValues() );
 	}
 
 	private int pageSize(DialectResolutionInfo info) {
-		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
+		final var databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
 			try ( var statement = databaseMetaData.getConnection().createStatement() ) {
-				final ResultSet resultSet = statement.executeQuery( "SELECT @@maxpagesize" );
+				final var resultSet = statement.executeQuery( "SELECT @@maxpagesize" );
 				if ( resultSet.next() ) {
 					return resultSet.getInt( 1 );
 				}
@@ -296,8 +293,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
-		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
-				.getJdbcTypeRegistry();
+		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, TinyIntJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcType.INSTANCE );
 	}

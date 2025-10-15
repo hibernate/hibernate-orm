@@ -10,7 +10,6 @@ import java.util.function.BiConsumer;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentList;
-import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -23,6 +22,8 @@ import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
 /**
  * CollectionInitializer for PersistentList loading
@@ -58,15 +59,15 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer<Abst
 				creationState
 		);
 		//noinspection unchecked
-		this.listIndexAssembler = (DomainResultAssembler<Integer>) listIndexFetch.createAssembler( this, creationState );
-		this.elementAssembler = elementFetch.createAssembler( this, creationState );
-		this.listIndexBase = attributeMapping.getIndexMetadata().getListIndexBase();
+		listIndexAssembler = (DomainResultAssembler<Integer>) listIndexFetch.createAssembler( this, creationState );
+		elementAssembler = elementFetch.createAssembler( this, creationState );
+		listIndexBase = attributeMapping.getIndexMetadata().getListIndexBase();
 	}
 
 	@Override
 	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
 		super.forEachSubInitializer( consumer, data );
-		final Initializer<?> initializer = elementAssembler.getInitializer();
+		final var initializer = elementAssembler.getInitializer();
 		if ( initializer != null ) {
 			consumer.accept( initializer, data.getRowProcessingState() );
 		}
@@ -79,36 +80,32 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer<Abst
 
 	@Override
 	protected void readCollectionRow(ImmediateCollectionInitializerData data, List<Object> loadingState) {
-		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		final var rowProcessingState = data.getRowProcessingState();
 		final Integer indexValue = listIndexAssembler.assemble( rowProcessingState );
 		if ( indexValue == null ) {
 			throw new HibernateException( "Illegal null value for list index encountered while reading: "
 					+ getCollectionAttributeMapping().getNavigableRole() );
 		}
 		final Object element = elementAssembler.assemble( rowProcessingState );
-		if ( element == null ) {
-			// If element is null, then NotFoundAction must be IGNORE
-			return;
+		if ( element != null ) {
+			int index = indexValue;
+			if ( listIndexBase != 0 ) {
+				index -= listIndexBase;
+			}
+			for ( int i = loadingState.size(); i <= index; ++i ) {
+				loadingState.add( i, null );
+			}
+			loadingState.set( index, element );
 		}
-		int index = indexValue;
-
-		if ( listIndexBase != 0 ) {
-			index -= listIndexBase;
-		}
-
-		for ( int i = loadingState.size(); i <= index; ++i ) {
-			loadingState.add( i, null );
-		}
-
-		loadingState.set( index, element );
+		// else if the element is null, then NotFoundAction must be IGNORE
 	}
 
 	@Override
 	protected void initializeSubInstancesFromParent(ImmediateCollectionInitializerData data) {
-		final Initializer<?> initializer = elementAssembler.getInitializer();
+		final var initializer = elementAssembler.getInitializer();
 		if ( initializer != null ) {
-			final RowProcessingState rowProcessingState = data.getRowProcessingState();
-			final PersistentList<?> list = getCollectionInstance( data );
+			final var rowProcessingState = data.getRowProcessingState();
+			final var list = getCollectionInstance( data );
 			assert list != null;
 			for ( Object element : list ) {
 				initializer.initializeInstanceFromParent( element, rowProcessingState );
@@ -118,12 +115,12 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer<Abst
 
 	@Override
 	protected void resolveInstanceSubInitializers(ImmediateCollectionInitializerData data) {
-		final Initializer<?> initializer = elementAssembler.getInitializer();
+		final var initializer = elementAssembler.getInitializer();
 		if ( initializer != null ) {
-			final RowProcessingState rowProcessingState = data.getRowProcessingState();
+			final var rowProcessingState = data.getRowProcessingState();
 			Integer index = listIndexAssembler.assemble( rowProcessingState );
 			if ( index != null ) {
-				final PersistentList<?> list = getCollectionInstance( data );
+				final var list = getCollectionInstance( data );
 				assert list != null;
 				if ( listIndexBase != 0 ) {
 					index -= listIndexBase;
@@ -145,6 +142,6 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer<Abst
 
 	@Override
 	public String toString() {
-		return "ListInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
+		return "ListInitializer(" + toLoggableString( getNavigablePath() ) + ")";
 	}
 }

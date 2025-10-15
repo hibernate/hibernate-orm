@@ -36,13 +36,13 @@ public class MultiNaturalIdLoaderInPredicate<E> extends AbstractMultiNaturalIdLo
 			MultiNaturalIdLoadOptions loadOptions,
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session) {
-		final EntityMappingType descriptor = getEntityDescriptor();
+		final var entityDescriptor = getEntityDescriptor();
 		return new MultiNaturalIdLoadingBatcher(
-				descriptor,
-				descriptor.getNaturalIdMapping(),
+				entityDescriptor,
+				entityDescriptor.getNaturalIdMapping(),
 				Math.min( naturalIds.length, getMaxBatchSize( naturalIds, loadOptions, session ) ),
 				// naturalId here is the one passed in by the API as part of the values array
-				(naturalId, s) -> descriptor.getNaturalIdMapping().normalizeInput( naturalId ),
+				(naturalId, s) -> entityDescriptor.getNaturalIdMapping().normalizeInput( naturalId ),
 				session.getLoadQueryInfluencers(),
 				lockOptions,
 				session.getFactory()
@@ -59,7 +59,8 @@ public class MultiNaturalIdLoaderInPredicate<E> extends AbstractMultiNaturalIdLo
 		}
 		else {
 			return session.getJdbcServices().getJdbcEnvironment().getDialect()
-					.getMultiKeyLoadSizingStrategy().determineOptimalBatchLoadSize(
+					.getMultiKeyLoadSizingStrategy()
+					.determineOptimalBatchLoadSize(
 							getEntityDescriptor().getNaturalIdMapping().getJdbcTypeCount(),
 							naturalIds.length,
 							session.getFactory().getSessionFactoryOptions().inClauseParameterPaddingEnabled()

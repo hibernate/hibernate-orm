@@ -340,21 +340,32 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		return resolvePath( (PersistentAttribute<T, M>) attribute );
 	}
 
+	// The equals/hashCode and isCompatible/cacheHashCode implementations are based on NavigablePath to match paths
+	// "syntactically" for regular uses in expressions and predicates, which is good enough since the NavigablePath
+	// contains all the important information. Deep equality for SqmFrom is determined through SqmFromClause
+
 	@Override
 	public boolean equals(Object object) {
 		return object instanceof AbstractSqmPath<?> that
 			&& this.getClass() == that.getClass()
-			&& Objects.equals( this.navigablePath, that.navigablePath )
-			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() );
-//			&& Objects.equals( this.lhs, that.lhs );
+			&& Objects.equals( this.navigablePath, that.navigablePath );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( navigablePath, getExplicitAlias() );
-//		return lhs == null ? 0 : lhs.hashCode();
-//		return navigablePath.hashCode();
-//		return Objects.hash( navigablePath, lhs );
+		return navigablePath.hashCode();
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof AbstractSqmPath<?> that
+			&& this.getClass() == that.getClass()
+			&& Objects.equals( this.navigablePath, that.navigablePath );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return navigablePath.hashCode();
 	}
 
 	@Override

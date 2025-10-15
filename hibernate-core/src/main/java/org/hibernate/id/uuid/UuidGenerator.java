@@ -57,9 +57,7 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 			org.hibernate.annotations.UuidGenerator config,
 			MemberDetails memberDetails) {
 		generator = determineValueGenerator( config, memberDetails.getDeclaringType().getName(), memberDetails.getName() );
-
-		final Class<?> memberType = memberDetails.getType().determineRawClass().toJavaClass();
-		valueTransformer = determineProperTransformer( memberType );
+		valueTransformer = determineProperTransformer( memberDetails.getType().determineRawClass().toJavaClass() );
 	}
 
 	@Internal
@@ -67,9 +65,7 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 			org.hibernate.annotations.UuidGenerator config,
 			Member idMember) {
 		generator = determineValueGenerator( config, idMember.getDeclaringClass().getName(), idMember.getName() );
-
-		final Class<?> propertyType = getPropertyType( idMember );
-		this.valueTransformer = determineProperTransformer( propertyType );
+		valueTransformer = determineProperTransformer( getPropertyType( idMember ) );
 	}
 
 	public UuidGenerator(
@@ -106,16 +102,20 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 			org.hibernate.annotations.UuidGenerator config,
 			String memberDeclaringClassName,
 			String memberName) {
-		if ( config != null ) {
+		if ( config == null ) {
+			return StandardRandomStrategy.INSTANCE;
+		}
+		else {
 			// there is an annotation
+			final var style = config.style();
 			if ( config.algorithm() != UuidValueGenerator.class ) {
 				// the annotation specified a custom algorithm
-				if ( config.style() != AUTO ) {
+				if ( style != AUTO ) {
 					throw new MappingException(
 							String.format(
 									Locale.ROOT,
-									"Style [%s] should not be specified with custom UUID value generator : %s.%s",
-									config.style().name(),
+									"Style [%s] should not be specified with custom UUID value generator: %s.%s",
+									style.name(),
 									memberDeclaringClassName,
 									memberName
 							)
@@ -123,22 +123,13 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 				}
 				return instantiateCustomGenerator( config.algorithm() );
 			}
-			if ( config.style() == TIME ) {
-				return new CustomVersionOneStrategy();
-			}
-			if ( config.style() == VERSION_6 ) {
-				return UuidVersion6Strategy.INSTANCE;
-			}
-			if ( config.style() == VERSION_7 ) {
-				return UuidVersion7Strategy.INSTANCE;
-			}
-			// NOTE : AUTO falls through
+			return switch ( style ) {
+				case TIME -> new CustomVersionOneStrategy();
+				case VERSION_6 -> UuidVersion6Strategy.INSTANCE;
+				case VERSION_7 -> UuidVersion7Strategy.INSTANCE;
+				default -> StandardRandomStrategy.INSTANCE;
+			};
 		}
-
-		// Either -
-		//		1. there is no annotation
-		//		2. the annotation specified AUTO (with no custom algorithm)
-		return StandardRandomStrategy.INSTANCE;
 	}
 
 	private static UuidValueGenerator instantiateCustomGenerator(Class<? extends UuidValueGenerator> algorithmClass) {
@@ -154,15 +145,14 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 		if ( UUID.class.isAssignableFrom( propertyType ) ) {
 			return UUIDJavaType.PassThroughTransformer.INSTANCE;
 		}
-
-		if ( String.class.isAssignableFrom( propertyType ) ) {
+		else if ( String.class.isAssignableFrom( propertyType ) ) {
 			return UUIDJavaType.ToStringTransformer.INSTANCE;
 		}
-
-		if ( byte[].class.isAssignableFrom( propertyType ) ) {
+		else if ( byte[].class.isAssignableFrom( propertyType ) ) {
 			return UUIDJavaType.ToBytesTransformer.INSTANCE;
 		}
-
-		throw new HibernateException( "Unanticipated return type [" + propertyType.getName() + "] for UUID conversion" );
+		else {
+			throw new HibernateException( "Unanticipated return type [" + propertyType.getName() + "] for UUID conversion" );
+		}
 	}
 }

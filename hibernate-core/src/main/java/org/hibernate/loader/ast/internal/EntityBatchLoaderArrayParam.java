@@ -4,12 +4,9 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.lang.reflect.Array;
-import java.util.Arrays;
 import java.util.Locale;
 
 import org.hibernate.LockOptions;
-import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.build.AllowReflection;
@@ -18,18 +15,17 @@ import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
-import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
-import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 
 import static org.hibernate.loader.ast.internal.LoaderHelper.loadByArrayParameter;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.trimIdBatch;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
+import static org.hibernate.sql.exec.spi.JdbcParameterBindings.NO_BINDINGS;
 
 /**
  * {@link SingleIdEntityLoaderSupport} implementation based on using a single
@@ -43,7 +39,6 @@ public class EntityBatchLoaderArrayParam<T>
 		implements SqlArrayMultiKeyLoader {
 	private final int domainBatchSize;
 
-	private final BasicEntityIdentifierMapping identifierMapping;
 	private final JdbcMapping arrayJdbcMapping;
 	private final JdbcParameter jdbcParameter;
 	private final SelectStatement sqlAst;
@@ -69,14 +64,13 @@ public class EntityBatchLoaderArrayParam<T>
 		this.domainBatchSize = domainBatchSize;
 
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.tracef(
-					"Batch fetching enabled for entity '%s' using ARRAY strategy with batch size %s",
+			MULTI_KEY_LOAD_LOGGER.enabledEntityArray(
 					entityDescriptor.getEntityName(),
 					domainBatchSize
 			);
 		}
 
-		identifierMapping = (BasicEntityIdentifierMapping) getLoadable().getIdentifierMapping();
+		final var identifierMapping = (BasicEntityIdentifierMapping) getLoadable().getIdentifierMapping();
 		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
 				identifierMapping.getJdbcMapping(),
 				identifierMapping.getJavaType().getJavaTypeClass(),
@@ -96,7 +90,7 @@ public class EntityBatchLoaderArrayParam<T>
 		jdbcSelectOperation =
 				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
 						.buildSelectTranslator( sessionFactory, sqlAst )
-						.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
+						.translate( NO_BINDINGS, QueryOptions.NONE );
 	}
 
 	@Override
@@ -107,8 +101,7 @@ public class EntityBatchLoaderArrayParam<T>
 	@AllowReflection
 	protected Object[] resolveIdsToInitialize(Object pkValue, SharedSessionContractImplementor session) {
 		//TODO: should this really be different to EntityBatchLoaderInPredicate impl?
-		final Class<?> idType = identifierMapping.getJavaType().getJavaTypeClass();
-		final Object[] idsToLoad = (Object[]) Array.newInstance( idType, domainBatchSize );
+		final Object[] idsToLoad = new Object[domainBatchSize];
 		session.getPersistenceContextInternal().getBatchFetchQueue()
 				.collectBatchLoadableEntityIds(
 						domainBatchSize,
@@ -128,9 +121,8 @@ public class EntityBatchLoaderArrayParam<T>
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.tracef( "Entity ids to initialize via batch fetching (%s) %s",
-					infoString( getLoadable(), id),
-					Arrays.toString( idsToInitialize ) );
+			MULTI_KEY_LOAD_LOGGER.entityIdsToInitialize(
+					infoString( getLoadable(), id), idsToInitialize );
 		}
 
 		removeBatchLoadableEntityKeys( idsToInitialize, session );
@@ -151,8 +143,8 @@ public class EntityBatchLoaderArrayParam<T>
 	}
 
 	private void removeBatchLoadableEntityKeys(Object[] idsToInitialize, SharedSessionContractImplementor session) {
-		final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
-		final EntityPersister persister = getLoadable().getEntityPersister();
+		final var batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
+		final var persister = getLoadable().getEntityPersister();
 		for ( Object initializedId : idsToInitialize ) {
 			if ( initializedId != null ) {
 				// found or not, remove the key from the batch-fetch queue

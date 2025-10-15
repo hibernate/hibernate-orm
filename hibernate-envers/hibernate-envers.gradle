@@ -26,6 +26,10 @@ dependencies {
 
     testImplementation project( ':hibernate-testing' )
 
+    // todo : to get rid of these
+    testImplementation testLibs.junit4
+    testImplementation testLibs.junit4Engine
+
     testAnnotationProcessor project( ':hibernate-processor' )
 }
 
@@ -56,7 +60,9 @@ configurations {
 
 tasks.withType( Test.class ).each { test ->
     // see GradleParallelTestingResolver for how the test worker id is resolved in JDBC configs
-    if ( project.db == "h2" || project.db == "hsqldb" || project.db == "pgsql_ci" ) {
+    if ( project.db == "h2" || project.db == "hsqldb" || project.db == "pgsql_ci" || project.db == "edb_ci"
+            || project.db == "oracle_ci" || project.db == "oracle_xe_ci" || project.db == "mysql_ci" || project.db == "mariadb_ci"
+            || project.db == "db2_ci" || project.db == "mssql_ci" ) {
         // Most systems have multi-threading and maxing out a core on both threads will hurt performance
         // Also, as soon as we hit 16+ threads, the returns are diminishing, so divide by 4
         def threadCount = Runtime.runtime.availableProcessors()

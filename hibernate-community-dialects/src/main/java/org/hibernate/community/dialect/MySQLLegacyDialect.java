@@ -191,16 +191,18 @@ public class MySQLLegacyDialect extends Dialect {
 
 	protected static DatabaseVersion createVersion(DialectResolutionInfo info) {
 		final String versionString = info.getDatabaseVersion();
-		final String[] components = StringHelper.split( ".", versionString );
-		if ( components.length >= 3 ) {
-			try {
-				final int majorVersion = Integer.parseInt( components[0] );
-				final int minorVersion = Integer.parseInt( components[1] );
-				final int patchLevel = Integer.parseInt( components[2] );
-				return DatabaseVersion.make( majorVersion, minorVersion, patchLevel );
-			}
-			catch (NumberFormatException ex) {
-				// Ignore
+		if ( versionString != null ) {
+			final String[] components = StringHelper.split( ".", versionString );
+			if ( components.length >= 3 ) {
+				try {
+					final int majorVersion = Integer.parseInt( components[0] );
+					final int minorVersion = Integer.parseInt( components[1] );
+					final int patchLevel = Integer.parseInt( components[2] );
+					return DatabaseVersion.make( majorVersion, minorVersion, patchLevel );
+				}
+				catch (NumberFormatException ex) {
+					// Ignore
+				}
 			}
 		}
 		return info.makeCopyOrDefault( DEFAULT_VERSION );

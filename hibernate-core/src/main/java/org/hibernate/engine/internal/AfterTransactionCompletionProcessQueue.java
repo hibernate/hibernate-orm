@@ -5,6 +5,7 @@
 package org.hibernate.engine.internal;
 
 import org.hibernate.HibernateException;
+import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.cache.CacheException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -58,5 +59,38 @@ public class AfterTransactionCompletionProcessQueue
 					.invalidate( querySpacesToInvalidate.toArray( new String[0] ), session );
 		}
 		querySpacesToInvalidate.clear();
+	}
+
+	public void executePendingBulkOperationCleanUpActions() {
+		AfterCompletionCallback process;
+		boolean hasPendingBulkOperationCleanUpActions = false;
+		while ( ( process = processes.poll() ) != null ) {
+			if ( process instanceof BulkOperationCleanupAction.BulkOperationCleanUpAfterTransactionCompletionProcess ) {
+				try {
+					hasPendingBulkOperationCleanUpActions = true;
+					process.doAfterTransactionCompletion( true, session );
+				}
+				catch (CacheException ce) {
+					CORE_LOGGER.unableToReleaseCacheLock( ce );
+					// continue loop
+				}
+				catch (Exception e) {
+					throw new HibernateException(
+							"Unable to perform afterTransactionCompletion callback: " + e.getMessage(),
+							e
+					);
+				}
+			}
+		}
+
+		if ( hasPendingBulkOperationCleanUpActions ) {
+			if ( session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
+				session.getFactory().getCache().getTimestampsCache().invalidate(
+						querySpacesToInvalidate.toArray( new String[0] ),
+						session
+				);
+			}
+			querySpacesToInvalidate.clear();
+		}
 	}
 }

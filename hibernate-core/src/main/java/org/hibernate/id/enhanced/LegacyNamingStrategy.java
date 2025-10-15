@@ -12,6 +12,7 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
+import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.ServiceRegistry;
 
@@ -64,18 +65,16 @@ public class LegacyNamingStrategy implements ImplicitDatabaseObjectNamingStrateg
 			Map<?, ?> configValues,
 			ServiceRegistry serviceRegistry) {
 		final String sequenceName = implicitSequenceName( configValues );
+		return sequenceName.contains( "." )
+				? QualifiedNameParser.INSTANCE.parse( sequenceName )
+				: new QualifiedSequenceName(
+						catalogName,
+						schemaName,
+						serviceRegistry.requireService( JdbcEnvironment.class )
+								.getIdentifierHelper()
+								.toIdentifier( sequenceName )
+				);
 
-		if ( sequenceName.contains( "." ) ) {
-			return QualifiedNameParser.INSTANCE.parse( sequenceName );
-		}
-
-		return new QualifiedSequenceName(
-				catalogName,
-				schemaName,
-				serviceRegistry.requireService( JdbcEnvironment.class )
-						.getIdentifierHelper()
-						.toIdentifier( sequenceName )
-		);
 	}
 
 	private String implicitSequenceName(Map<?, ?> configValues) {
@@ -104,17 +103,15 @@ public class LegacyNamingStrategy implements ImplicitDatabaseObjectNamingStrateg
 			ServiceRegistry serviceRegistry) {
 		final String implicitName = implicitTableName( configValues );
 
-		if ( implicitName.contains( "." ) ) {
-			return QualifiedNameParser.INSTANCE.parse( implicitName );
-		}
-
-		return new QualifiedNameParser.NameParts(
-				catalogName,
-				schemaName,
-				serviceRegistry.requireService( JdbcEnvironment.class )
-						.getIdentifierHelper()
-						.toIdentifier( implicitName )
-		);
+		return implicitName.contains( "." )
+				? QualifiedNameParser.INSTANCE.parse( implicitName )
+				: new QualifiedTableName(
+						catalogName,
+						schemaName,
+						serviceRegistry.requireService( JdbcEnvironment.class )
+								.getIdentifierHelper()
+								.toIdentifier( implicitName )
+				);
 	}
 
 	private String implicitTableName(Map<?, ?> configValues) {

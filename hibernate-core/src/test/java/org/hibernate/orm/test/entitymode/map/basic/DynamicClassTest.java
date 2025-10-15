@@ -4,95 +4,110 @@
  */
 package org.hibernate.orm.test.entitymode.map.basic;
 
+import org.hibernate.Hibernate;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gavin King
  */
-public class DynamicClassTest extends BaseCoreFunctionalTestCase {
+@SessionFactory
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/entitymode/map/basic/ProductLine.hbm.xml"
+)
+class DynamicClassTest {
 
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
-	}
+	@Test
+	void testLazyDynamicClass(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Map<String, Object> cars = new HashMap<>();
+			cars.put( "description", "Cars" );
+			Map<String, Object> monaro = new HashMap<>();
+			monaro.put( "productLine", cars );
+			monaro.put( "name", "monaro" );
+			monaro.put( "description", "Holden Monaro" );
+			Map<String, Object> hsv = new HashMap<>();
+			hsv.put( "productLine", cars );
+			hsv.put( "name", "hsv" );
+			hsv.put( "description", "Holden Commodore HSV" );
+			List<Map<String, Object>> models = new ArrayList<>();
+			cars.put( "models", models );
+			models.add( hsv );
+			models.add( monaro );
+			s.persist( "ProductLine", cars );
+		} );
 
-	@Override
-	public String[] getMappings() {
-		return new String[] { "entitymode/map/basic/ProductLine.hbm.xml" };
-	}
+		scope.inTransaction( s -> {
+			Map<String, Object> cars = (Map<String, Object>) s.createQuery(
+					"from ProductLine pl order by pl.description" ).uniqueResult();
+			List<Map<String, Object>> models = (List<Map<String, Object>>) cars.get( "models" );
+			assertFalse( Hibernate.isInitialized( models ) );
+			assertEquals( 2, models.size() );
+			assertTrue( Hibernate.isInitialized( models ) );
 
-	@Override
-	public void configure(Configuration cfg) {
+			s.clear();
+
+			List<?> list = s.createQuery( "from Model m" ).list();
+			for ( Iterator<?> i = list.iterator(); i.hasNext(); ) {
+				assertFalse( Hibernate.isInitialized( ((Map<String, Object>) i.next()).get( "productLine" ) ) );
+			}
+			Map<String, Object> model = (Map<String, Object>) list.get( 0 );
+			assertTrue( ((List<Map<String, Object>>) ((Map<String, Object>) model.get( "productLine" )).get(
+					"models" )).contains( model ) );
+			s.clear();
+
+		} );
+
+		scope.inTransaction( s -> {
+			Map<String, Object> cars = (Map<String, Object>) s.createQuery(
+					"from ProductLine pl order by pl.description" ).uniqueResult();
+			s.remove( cars );
+		} );
 	}
 
 	@Test
-	public void testLazyDynamicClass() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
+	void multiload(SessionFactoryScope scope) {
+		final Object id = scope.fromTransaction( s -> {
+			Map<String, Object> cars = new HashMap<>();
+			cars.put( "description", "Cars" );
+			Map<String, Object> monaro = new HashMap<>();
+			monaro.put( "productLine", cars );
+			monaro.put( "name", "monaro" );
+			monaro.put( "description", "Holden Monaro" );
+			Map<String, Object> hsv = new HashMap<>();
+			hsv.put( "productLine", cars );
+			hsv.put( "name", "hsv" );
+			hsv.put( "description", "Holden Commodore HSV" );
+			List<Map<String, Object>> models = new ArrayList<>();
+			cars.put( "models", models );
+			models.add( hsv );
+			models.add( monaro );
+			s.persist( "ProductLine", cars );
 
-		Map cars = new HashMap();
-		cars.put("description", "Cars");
-		Map monaro = new HashMap();
-		monaro.put("productLine", cars);
-		monaro.put("name", "monaro");
-		monaro.put("description", "Holden Monaro");
-		Map hsv = new HashMap();
-		hsv.put("productLine", cars);
-		hsv.put("name", "hsv");
-		hsv.put("description", "Holden Commodore HSV");
-		List models = new ArrayList();
-		cars.put("models", models);
-		models.add(hsv);
-		models.add(monaro);
-		s.persist("ProductLine", cars);
-		t.commit();
-		s.close();
+			return cars.get( "id" );
+		} );
 
-		s = openSession();
-		t = s.beginTransaction();
+		scope.inTransaction( s -> {
+			var rootGraph = s.getSessionFactory().createGraphForDynamicEntity( "ProductLine" );
 
-		cars = (Map) s.createQuery("from ProductLine pl order by pl.description").uniqueResult();
-		models = (List) cars.get("models");
-		assertFalse( Hibernate.isInitialized(models) );
-		assertEquals( models.size(), 2);
-		assertTrue( Hibernate.isInitialized(models) );
+			List<Map<String, ?>> found = s.findMultiple( rootGraph, List.of( id ) );
 
-		s.clear();
+			assertThat( found ).hasSize( 1 );
+		} );
 
-		List list = s.createQuery("from Model m").list();
-		for ( Iterator i=list.iterator(); i.hasNext(); ) {
-			assertFalse( Hibernate.isInitialized( ( (Map) i.next() ).get("productLine") ) );
-		}
-		Map model = (Map) list.get(0);
-		assertTrue( ( (List) ( (Map) model.get("productLine") ).get("models") ).contains(model) );
-		s.clear();
-
-		t.commit();
-		s.close();
-
-		s = openSession();
-		t = s.beginTransaction();
-		cars = (Map) s.createQuery("from ProductLine pl order by pl.description").uniqueResult();
-		s.remove(cars);
-		t.commit();
-		s.close();
 	}
-
-
 }

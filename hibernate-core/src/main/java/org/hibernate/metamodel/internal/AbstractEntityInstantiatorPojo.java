@@ -6,6 +6,7 @@ package org.hibernate.metamodel.internal;
 
 
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor.EntityRelatedState;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.persister.entity.EntityPersister;
@@ -23,7 +24,7 @@ public abstract class AbstractEntityInstantiatorPojo extends AbstractPojoInstant
 
 	private final Class<?> proxyInterface;
 	private final boolean applyBytecodeInterception;
-	private final LazyAttributeLoadingInterceptor.EntityRelatedState loadingInterceptorState;
+	private final EntityRelatedState loadingInterceptorState;
 
 	public AbstractEntityInstantiatorPojo(
 			EntityPersister persister,
@@ -34,17 +35,15 @@ public abstract class AbstractEntityInstantiatorPojo extends AbstractPojoInstant
 		//TODO this PojoEntityInstantiator appears to not be reused ?!
 		applyBytecodeInterception =
 				isPersistentAttributeInterceptableType( persistentClass.getMappedClass() );
-		if ( applyBytecodeInterception ) {
-			loadingInterceptorState = new LazyAttributeLoadingInterceptor.EntityRelatedState(
-					persister.getEntityName(),
-					persister.getBytecodeEnhancementMetadata()
-						.getLazyAttributesMetadata()
-						.getLazyAttributeNames()
-			);
-		}
-		else {
-			loadingInterceptorState = null;
-		}
+		loadingInterceptorState =
+				applyBytecodeInterception
+						? new EntityRelatedState(
+								persister.getEntityName(),
+								persister.getBytecodeEnhancementMetadata()
+										.getLazyAttributesMetadata()
+										.getLazyAttributeNames()
+						)
+						: null;
 	}
 
 	protected Object applyInterception(Object entity) {
@@ -64,5 +63,19 @@ public abstract class AbstractEntityInstantiatorPojo extends AbstractPojoInstant
 		return super.isInstance( object )
 			// this one needed only for guessEntityMode()
 			|| proxyInterface!=null && proxyInterface.isInstance(object);
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected boolean isApplyBytecodeInterception() {
+		return applyBytecodeInterception;
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected LazyAttributeLoadingInterceptor.EntityRelatedState getLoadingInterceptorState() {
+		return loadingInterceptorState;
 	}
 }

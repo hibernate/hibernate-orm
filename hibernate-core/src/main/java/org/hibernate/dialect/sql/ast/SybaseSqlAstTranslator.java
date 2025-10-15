@@ -187,9 +187,6 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
 			Locking.FollowOn followOnStrategy) {
-		if ( followOnStrategy == Locking.FollowOn.FORCE ) {
-			return LockStrategy.FOLLOW_ON;
-		}
 		// No need for follow on locking
 		return LockStrategy.CLAUSE;
 	}

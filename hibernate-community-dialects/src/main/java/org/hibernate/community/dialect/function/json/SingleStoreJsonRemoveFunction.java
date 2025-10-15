@@ -42,8 +42,8 @@ public class SingleStoreJsonRemoveFunction extends AbstractJsonRemoveFunction {
 			if ( pathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
 				sqlAppender.appendSingleQuoteEscapedString( attribute.attribute() );
 			}
-			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess ) {
-				final String parameterName = ( (JsonPathHelper.JsonParameterIndexAccess) pathElement ).parameterName();
+			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess indexParameter) {
+				final String parameterName = indexParameter.parameterName();
 				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
 			}
 			else {

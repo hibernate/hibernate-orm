@@ -21,6 +21,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmRestrictedDmlStatement;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -170,7 +171,9 @@ public class SqmUpdateStatement<T>
 
 	@Override
 	public <Y, X extends Y> SqmUpdateStatement<T> set(SingularAttribute<? super T, Y> attribute, X value) {
-		applyAssignment( getTarget().get( attribute ), (SqmExpression<? extends Y>) nodeBuilder().value( value ) );
+		final SqmCriteriaNodeBuilder nodeBuilder = (SqmCriteriaNodeBuilder) nodeBuilder();
+		SqmPath<Y> sqmAttribute = getTarget().get( attribute );
+		applyAssignment( sqmAttribute, nodeBuilder.value( value, sqmAttribute) );
 		return this;
 	}
 
@@ -289,18 +292,34 @@ public class SqmUpdateStatement<T>
 	}
 
 	@Override
-	public boolean equals(Object node) {
-		return node instanceof SqmUpdateStatement<?> that
-			&& super.equals( node )
+	public boolean equals(Object object) {
+		return object instanceof SqmUpdateStatement<?> that
+			&& super.equals( that )
 			&& this.versioned == that.versioned
-			&& Objects.equals( this.setClause, that.setClause )
-			&& Objects.equals( this.getTarget(), that.getTarget() )
-			&& Objects.equals( this.getWhereClause(), that.getWhereClause() )
-			&& Objects.equals( this.getCteStatements(), that.getCteStatements() );
+			&& Objects.equals( setClause, that.setClause );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( versioned, setClause, getTarget(), getWhereClause(), getCteStatements() );
+		int result = getTarget().hashCode();
+		result = 31 * result + Boolean.hashCode( versioned );
+		result = 31 * result + Objects.hashCode( setClause );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmUpdateStatement<?> that
+			&& super.isCompatible( that )
+			&& this.versioned == that.versioned
+			&& SqmCacheable.areCompatible( setClause, that.setClause );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = getTarget().cacheHashCode();
+		result = 31 * result + Boolean.hashCode( versioned );
+		result = 31 * result + SqmCacheable.cacheHashCode( setClause );
+		return result;
 	}
 }

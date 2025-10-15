@@ -68,6 +68,9 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.tool.schema.extract.internal.InformationExtractorMySQLImpl;
+import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+import org.hibernate.tool.schema.extract.spi.InformationExtractor;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
@@ -93,6 +96,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 
 import static java.lang.Integer.parseInt;
@@ -146,7 +150,7 @@ public class MySQLDialect extends Dialect {
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 8 );
 
-	private final MySQLStorageEngine storageEngine = createStorageEngine();
+	private final MySQLStorageEngine storageEngine;
 
 	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
 		@Override
@@ -207,7 +211,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	public MySQLDialect(DatabaseVersion version, MySQLServerConfiguration serverConfiguration) {
-		this( version, serverConfiguration.getBytesPerCharacter(), serverConfiguration.isNoBackslashEscapesEnabled() );
+		super( version );
+		maxVarcharLength = maxVarcharLength( getMySQLVersion(), serverConfiguration.getBytesPerCharacter() ); //conservative assumption
+		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
+		noBackslashEscapesEnabled = serverConfiguration.isNoBackslashEscapesEnabled();
+		storageEngine = createStorageEngine( serverConfiguration.getConfiguredStorageEngine() );
 	}
 
 	public MySQLDialect(DatabaseVersion version, int bytesPerCharacter, boolean noBackslashEscapes) {
@@ -215,6 +223,7 @@ public class MySQLDialect extends Dialect {
 		maxVarcharLength = maxVarcharLength( getMySQLVersion(), bytesPerCharacter ); //conservative assumption
 		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
 		noBackslashEscapesEnabled = noBackslashEscapes;
+		storageEngine = createStorageEngine( Environment.getProperties().getProperty( AvailableSettings.STORAGE_ENGINE ) );
 	}
 
 	public MySQLDialect(DialectResolutionInfo info) {
@@ -257,13 +266,10 @@ public class MySQLDialect extends Dialect {
 		getDefaultProperties().setProperty( FetchSettings.MAX_FETCH_DEPTH, "2" );
 	}
 
-	private MySQLStorageEngine createStorageEngine() {
-		final String storageEngine =
-				Environment.getProperties()
-						.getProperty( AvailableSettings.STORAGE_ENGINE );
-		return storageEngine == null
+	private MySQLStorageEngine createStorageEngine(String configuredStorageEngine) {
+		return configuredStorageEngine == null
 				? getDefaultMySQLStorageEngine()
-				: switch ( storageEngine ) {
+				: switch ( configuredStorageEngine.toLowerCase(Locale.ROOT) ) {
 					case "innodb" -> InnoDBStorageEngine.INSTANCE;
 					case "myisam" -> MyISAMStorageEngine.INSTANCE;
 					default -> throw new UnsupportedOperationException(
@@ -1663,4 +1669,8 @@ public class MySQLDialect extends Dialect {
 		return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
 	}
 
+	@Override
+	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
+		return new InformationExtractorMySQLImpl( extractionContext );
+	}
 }

@@ -4,22 +4,23 @@
  */
 package org.hibernate.id.enhanced;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
+import org.hibernate.mapping.Table;
 
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHolder;
+import static org.hibernate.id.enhanced.ResyncHelper.getNextSequenceValue;
+import static org.hibernate.id.enhanced.ResyncHelper.getMaxPrimaryKey;
 
 /**
  * Describes a sequence.
@@ -107,14 +108,15 @@ public class SequenceStructure implements DatabaseStructure {
 			public IntegralDataTypeHolder getNextValue() {
 				accessCounter++;
 				try {
-					final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-					final PreparedStatement st = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
+					final var jdbcCoordinator = session.getJdbcCoordinator();
+					final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
+					final var resourceRegistry = jdbcCoordinator.getLogicalConnection().getResourceRegistry();
 					try {
-						final ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st, sql );
+						final var resultSet = jdbcCoordinator.getResultSetReturn().extract( statement, sql );
 						try {
-							rs.next();
-							final IntegralDataTypeHolder value = getIntegralDataTypeHolder( numberType );
-							value.initialize( rs, 1 );
+							resultSet.next();
+							final var value = getIntegralDataTypeHolder( numberType );
+							value.initialize( resultSet, 1 );
 							if ( JDBC_LOGGER.isTraceEnabled() ) {
 								JDBC_LOGGER.sequenceValueRetrievedFromDatabase( value.makeValue() );
 							}
@@ -122,7 +124,7 @@ public class SequenceStructure implements DatabaseStructure {
 						}
 						finally {
 							try {
-								jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( rs, st );
+								resourceRegistry.release( resultSet, statement );
 							}
 							catch( Throwable ignore ) {
 								// intentionally empty
@@ -130,7 +132,7 @@ public class SequenceStructure implements DatabaseStructure {
 						}
 					}
 					finally {
-						jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( st );
+						resourceRegistry.release( statement );
 						jdbcCoordinator.afterStatementExecution();
 					}
 
@@ -163,8 +165,30 @@ public class SequenceStructure implements DatabaseStructure {
 
 	@Override
 	public void initialize(SqlStringGenerationContext context) {
-		this.sql = context.getDialect().getSequenceSupport()
+		sql = context.getDialect().getSequenceSupport()
 				.getSequenceNextValString( context.format( physicalSequenceName ) );
+	}
+
+	@Override
+	public void registerExtraExportables(Table table, Optimizer optimizer) {
+		table.addResyncCommand( (sqlContext, isolator) -> {
+			final String sequenceName = sqlContext.format( physicalSequenceName );
+			final String tableName = sqlContext.format( table.getQualifiedTableName() );
+			final String primaryKeyColumnName = table.getPrimaryKey().getColumn( 0 ).getName();
+			final int adjustment = optimizer.getAdjustment();
+			final long max = getMaxPrimaryKey( isolator, primaryKeyColumnName, tableName );
+			final long current = getNextSequenceValue( isolator, sequenceName);
+			final long startWith = Math.max( max + adjustment, current );
+			optimizer.reset();
+			return new InitCommand( sqlContext.getDialect().getSequenceSupport()
+					.getRestartSequenceString( sequenceName, startWith ) );
+		} );
+		table.addResetCommand( sqlContext -> {
+			optimizer.reset();
+			final String sequenceName = sqlContext.format( physicalSequenceName );
+			return new InitCommand( sqlContext.getDialect().getSequenceSupport()
+					.getRestartSequenceString( sequenceName, initialValue ) );
+		} );
 	}
 
 	@Override
@@ -181,20 +205,26 @@ public class SequenceStructure implements DatabaseStructure {
 	}
 
 	protected void buildSequence(Database database) {
-		final int sourceIncrementSize = getSourceIncrementSize();
+		final var sequence =
+				locateOrCreateSequence( database.locateNamespace(
+						logicalQualifiedSequenceName.getCatalogName(),
+						logicalQualifiedSequenceName.getSchemaName()
+				) );
+		physicalSequenceName = sequence.getName();
+	}
 
-		final Namespace namespace = database.locateNamespace(
-				logicalQualifiedSequenceName.getCatalogName(),
-				logicalQualifiedSequenceName.getSchemaName()
-		);
-		Sequence sequence = namespace.locateSequence( logicalQualifiedSequenceName.getObjectName() );
-		if ( sequence != null ) {
-			sequence.validate( initialValue, sourceIncrementSize );
+	private Sequence locateOrCreateSequence(Namespace namespace) {
+		final int sourceIncrementSize = getSourceIncrementSize();
+		final var objectName = logicalQualifiedSequenceName.getObjectName();
+		final var existingSequence = namespace.locateSequence( objectName );
+		if ( existingSequence != null ) {
+			existingSequence.validate( initialValue, sourceIncrementSize );
+			return existingSequence;
 		}
 		else {
-			sequence = namespace.createSequence(
-					logicalQualifiedSequenceName.getObjectName(),
-					(physicalName) -> new Sequence(
+			return namespace.createSequence(
+					objectName,
+					physicalName -> new Sequence(
 							contributor,
 							namespace.getPhysicalName().catalog(),
 							namespace.getPhysicalName().schema(),
@@ -205,7 +235,5 @@ public class SequenceStructure implements DatabaseStructure {
 					)
 			);
 		}
-
-		physicalSequenceName = sequence.getName();
 	}
 }

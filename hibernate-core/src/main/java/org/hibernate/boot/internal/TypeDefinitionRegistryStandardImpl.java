@@ -12,8 +12,8 @@ import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 
-import org.jboss.logging.Logger;
 
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
@@ -22,7 +22,6 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
  * @author Chris Cranford
  */
 public class TypeDefinitionRegistryStandardImpl implements TypeDefinitionRegistry {
-	private static final Logger LOG = Logger.getLogger( TypeDefinitionRegistryStandardImpl.class );
 
 	private final TypeDefinitionRegistry parent;
 	private final Map<String, TypeDefinition> typeDefinitionMap = new HashMap<>();
@@ -37,7 +36,7 @@ public class TypeDefinitionRegistryStandardImpl implements TypeDefinitionRegistr
 
 	@Override
 	public TypeDefinition resolve(String typeName) {
-		final TypeDefinition localDefinition = typeDefinitionMap.get( typeName );
+		final var localDefinition = typeDefinitionMap.get( typeName );
 		if ( localDefinition != null ) {
 			return localDefinition;
 		}
@@ -50,11 +49,12 @@ public class TypeDefinitionRegistryStandardImpl implements TypeDefinitionRegistr
 	}
 
 	@Override
-	public TypeDefinition resolveAutoApplied(BasicJavaType<?> jtd) {
+	public TypeDefinition resolveAutoApplied(BasicJavaType<?> basicJavaType) {
 		// For now, check the definition map for an entry keyed by the JTD name.
 		// Ultimately should maybe have TypeDefinition or the registry keep explicit
 		// track of auto-applied definitions.
-		return jtd.getJavaType() == null ? null : typeDefinitionMap.get( jtd.getTypeName() );
+		return basicJavaType.getJavaType() == null ? null
+				: typeDefinitionMap.get( basicJavaType.getTypeName() );
 	}
 
 	@Override
@@ -72,12 +72,14 @@ public class TypeDefinitionRegistryStandardImpl implements TypeDefinitionRegistr
 			throw new IllegalArgumentException( "TypeDefinition to register cannot define null #typeImplementorClass" );
 		}
 
-		if ( !isEmpty( typeDefinition.getName() ) ) {
-			register( typeDefinition.getName(), typeDefinition, duplicationStrategy );
+		final String typeDefinitionName = typeDefinition.getName();
+		if ( !isEmpty( typeDefinitionName ) ) {
+			register( typeDefinitionName, typeDefinition, duplicationStrategy );
 		}
 
-		if ( typeDefinition.getRegistrationKeys() != null ) {
-			for ( String registrationKey : typeDefinition.getRegistrationKeys() ) {
+		final String[] registrationKeys = typeDefinition.getRegistrationKeys();
+		if ( registrationKeys != null ) {
+			for ( String registrationKey : registrationKeys ) {
 				register( registrationKey, typeDefinition, duplicationStrategy );
 			}
 		}
@@ -92,10 +94,10 @@ public class TypeDefinitionRegistryStandardImpl implements TypeDefinitionRegistr
 			}
 		}
 		else {
-			final TypeDefinition existing = typeDefinitionMap.put( name, typeDefinition );
+			final var existing = typeDefinitionMap.put( name, typeDefinition );
 			if ( existing != null && existing != typeDefinition ) {
 				if ( duplicationStrategy == DuplicationStrategy.OVERWRITE ) {
-					LOG.debugf( "Overwrote existing registration [%s] for type definition.", name );
+					BOOT_LOGGER.overwroteExistingRegistrationForTypeDefinition( name );
 				}
 				else {
 					throw new IllegalArgumentException(

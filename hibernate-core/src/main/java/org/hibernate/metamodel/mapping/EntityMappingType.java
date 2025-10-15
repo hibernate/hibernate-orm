@@ -4,14 +4,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
+import jakarta.persistence.Entity;
 import org.hibernate.Filter;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
@@ -19,11 +12,13 @@ import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.mapping.Contributable;
 import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.metamodel.internal.EntityRepresentationStrategyMap;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityNameUse;
@@ -42,7 +37,13 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import jakarta.persistence.Entity;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 
@@ -84,15 +85,23 @@ public interface EntityMappingType
 	 * and{@linkplain jakarta.persistence.InheritanceType#TABLE_PER_CLASS union}
 	 * inheritance hierarchies
 	 *
-	 * @see #getIdentifierTableDetails()
+	 * @see #getIdentifierTableDetails
+	 * @see #forEachTableDetails
 	 */
 	TableDetails getMappedTableDetails();
 
 	/**
 	 * Details for the table that defines the identifier column(s)
 	 * for an entity hierarchy.
+	 *
+	 * @see #forEachTableDetails
 	 */
 	TableDetails getIdentifierTableDetails();
+
+	/**
+	 * Visit details for each table associated with the entity.
+	 */
+	void forEachTableDetails(Consumer<TableDetails> consumer);
 
 	@Override
 	default EntityMappingType findContainingEntityMapping() {
@@ -464,6 +473,13 @@ public interface EntityMappingType
 
 	default String getImportedName() {
 		return getEntityPersister().getImportedName();
+	}
+
+	default RootGraphImplementor<?> createRootGraph(SharedSessionContractImplementor session) {
+		final var factory = session.getSessionFactory();
+		return getRepresentationStrategy() instanceof EntityRepresentationStrategyMap strategyMap
+				? factory.createGraphForDynamicEntity( getEntityName() )
+				: factory.createEntityGraph( getMappedJavaType().getJavaTypeClass() );
 	}
 
 	interface ConstraintOrderedTableConsumer {

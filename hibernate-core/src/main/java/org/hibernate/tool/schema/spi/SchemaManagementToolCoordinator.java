@@ -282,6 +282,19 @@ public class SchemaManagementToolCoordinator {
 				);
 				break;
 			}
+			case SYNCHRONIZE: {
+				tool.getSequenceSynchronizer( configurationValues ).doSynchronize(
+						metadata,
+						executionOptions,
+						contributableInclusionFilter,
+						buildDatabaseTargetDescriptor(
+								configurationValues,
+								CreateSettingSelector.INSTANCE,
+								serviceRegistry
+						)
+				);
+				break;
+			}
 			case TRUNCATE: {
 				tool.getSchemaTruncator( configurationValues ).doTruncate(
 						metadata,

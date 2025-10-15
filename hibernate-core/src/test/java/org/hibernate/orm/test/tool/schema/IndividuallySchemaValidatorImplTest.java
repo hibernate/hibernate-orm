@@ -108,7 +108,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 			Assert.fail( "SchemaManagementException expected" );
 		}
 		catch (SchemaManagementException e) {
-			assertEquals("Schema-validation: missing table [SomeCatalog.SomeSchema.MissingEntity]", e.getMessage());
+			assertEquals("Schema validation: missing table [SomeCatalog.SomeSchema.MissingEntity]", e.getMessage());
 		}
 	}
 
@@ -126,7 +126,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 			Assert.fail( "SchemaManagementException expected" );
 		}
 		catch (SchemaManagementException e) {
-			assertEquals("Schema-validation: missing table [UnqualifiedMissingEntity]", e.getMessage());
+			assertEquals("Schema validation: missing table [UnqualifiedMissingEntity]", e.getMessage());
 		}
 	}
 
@@ -177,7 +177,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 				Assert.fail( "SchemaManagementException expected" );
 			}
 			catch (SchemaManagementException e) {
-				assertEquals("Schema-validation: missing column [name] in table [SomeSchema.ColumnEntity]", e.getMessage());
+				assertEquals("Schema validation: missing column [name] in table [SomeSchema.ColumnEntity]", e.getMessage());
 			}
 		}
 		finally {
@@ -237,13 +237,13 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 				if ( metadata.getDatabase().getDialect().getVersion().isSameOrAfter( 2 ) ) {
 					// Reports "character varying" since 2.0
 					assertEquals(
-							"Schema-validation: wrong column type encountered in column [name] in table [SomeSchema.ColumnEntity]; found [character varying (Types#VARCHAR)], but expecting [integer (Types#INTEGER)]",
+							"Schema validation: wrong column type encountered in column [name] in table [SomeSchema.ColumnEntity]; found [character varying (Types#VARCHAR)], but expecting [integer (Types#INTEGER)]",
 							e.getMessage()
 					);
 				}
 				else {
 					assertEquals(
-							"Schema-validation: wrong column type encountered in column [name] in table [SomeSchema.ColumnEntity]; found [varchar (Types#VARCHAR)], but expecting [integer (Types#INTEGER)]",
+							"Schema validation: wrong column type encountered in column [name] in table [SomeSchema.ColumnEntity]; found [varchar (Types#VARCHAR)], but expecting [integer (Types#INTEGER)]",
 							e.getMessage()
 					);
 				}

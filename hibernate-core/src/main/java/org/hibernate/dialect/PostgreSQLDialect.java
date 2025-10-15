@@ -85,7 +85,10 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.tool.schema.extract.internal.InformationExtractorPostgreSQLImpl;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+import org.hibernate.tool.schema.extract.spi.InformationExtractor;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
@@ -574,6 +577,7 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.substr();
 		functionFactory.substring_substr();
 		//also natively supports ANSI-style substring()
+		functionFactory.reverse();
 		functionFactory.translate();
 		functionFactory.toCharNumberDateTimestamp();
 		functionFactory.concat_pipeOperator( "convert_from(lo_get(?1),pg_client_encoding())" );
@@ -895,6 +899,13 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public boolean supportsCaseInsensitiveLike() {
 		return true;
+	}
+
+	@Override
+	public String generatedAs(String generatedAs) {
+		return getVersion().isSameOrAfter( 18 )
+				? " generated always as (" + generatedAs + ")"
+				: super.generatedAs( generatedAs );
 	}
 
 	@Override
@@ -1648,4 +1659,8 @@ public class PostgreSQLDialect extends Dialect {
 		return getVersion().isSameOrAfter( 14 );
 	}
 
+	@Override
+	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
+		return new InformationExtractorPostgreSQLImpl( extractionContext );
+	}
 }

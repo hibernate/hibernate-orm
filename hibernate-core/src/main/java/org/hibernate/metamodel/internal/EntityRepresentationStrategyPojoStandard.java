@@ -153,13 +153,16 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 	private Map<String, PropertyAccess> buildPropertyAccessMap(PersistentClass bootDescriptor) {
 		final Map<String, PropertyAccess> propertyAccessMap = new LinkedHashMap<>();
-		for ( Property property : bootDescriptor.getPropertyClosure() ) {
+		for ( var property : bootDescriptor.getPropertyClosure() ) {
 			propertyAccessMap.put( property.getName(), makePropertyAccess( property ) );
 		}
 		return propertyAccessMap;
 	}
 
-	private EntityInstantiator determineInstantiator(PersistentClass bootDescriptor, EntityPersister persister) {
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected EntityInstantiator determineInstantiator(PersistentClass bootDescriptor, EntityPersister persister) {
 		if ( reflectionOptimizer != null && reflectionOptimizer.getInstantiationOptimizer() != null ) {
 			return new EntityInstantiatorPojoOptimized(
 					persister,
@@ -187,7 +190,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		final Method idGetterMethod;
 		final Method idSetterMethod;
 		try {
-			for ( Property property : bootDescriptor.getProperties() ) {
+			for ( var property : bootDescriptor.getProperties() ) {
 				validateGetterSetterMethodProxyability( "Getter",
 						property.getGetter( clazz ).getMethod() );
 				validateGetterSetterMethodProxyability( "Setter",
@@ -251,8 +254,8 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		}
 
 		for ( var subclass : bootDescriptor.getSubclasses() ) {
-			final Class<?> subclassProxy = subclass.getProxyInterface();
-			final Class<?> subclassClass = subclass.getMappedClass();
+			final var subclassProxy = subclass.getProxyInterface();
+			final var subclassClass = subclass.getMappedClass();
 			if ( subclassProxy != null && !subclassClass.equals( subclassProxy ) ) {
 				if ( !subclassProxy.isInterface() ) {
 					throw new MappingException( "proxy must be either an interface, or the class itself: "

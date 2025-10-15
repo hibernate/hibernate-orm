@@ -150,41 +150,21 @@ public class DerbyDialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case TINYINT:
-				//no tinyint
-				return "smallint";
-
-			case NUMERIC:
-				// HHH-12827: map them both to the same type to avoid problems with schema update
-				// Note that 31 is the maximum precision Derby supports
-				return columnType( DECIMAL );
-
-			case VARBINARY:
-				return "varchar($l) for bit data";
-
-			case NCHAR:
-				return columnType( CHAR );
-			case NVARCHAR:
-				return columnType( VARCHAR );
-
-			case BLOB:
-				return "blob";
-			case CLOB:
-			case NCLOB:
-				return "clob";
-
-			case TIME:
-			case TIME_WITH_TIMEZONE:
-				return "time";
-
-			case TIMESTAMP:
-			case TIMESTAMP_WITH_TIMEZONE:
-				return "timestamp";
-
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+		return switch ( sqlTypeCode ) {
+			//no tinyint
+			case TINYINT -> "smallint";
+			// HHH-12827: map them both to the same type to avoid problems with schema update
+			// Note that 31 is the maximum precision Derby supports
+			case NUMERIC -> columnType( DECIMAL );
+			case VARBINARY -> "varchar($l) for bit data";
+			case NCHAR -> columnType( CHAR );
+			case NVARCHAR -> columnType( VARCHAR );
+			case BLOB -> "blob";
+			case CLOB, NCLOB -> "clob";
+			case TIME, TIME_WITH_TIMEZONE -> "time";
+			case TIMESTAMP, TIMESTAMP_WITH_TIMEZONE -> "timestamp";
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override

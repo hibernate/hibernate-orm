@@ -8,13 +8,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.spi.TableMigrator;
 import org.jboss.logging.Logger;
@@ -22,6 +19,7 @@ import org.jboss.logging.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 import static org.hibernate.tool.schema.internal.ColumnDefinitions.getColumnDefinition;
 import static org.hibernate.tool.schema.internal.ColumnDefinitions.hasMatchingLength;
@@ -68,44 +66,49 @@ public class StandardTableMigrator implements TableMigrator {
 			TableInformation tableInformation,
 			SqlStringGenerationContext context) throws HibernateException {
 
-		final String tableName = context.format( new QualifiedTableName(
-				Identifier.toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
-				Identifier.toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
-				table.getNameIdentifier() )
-		);
+		final String tableName = getTableName( table, context );
 
 		final String alterTable = dialect.getAlterTableString( tableName ) + ' ';
 
 		final List<String> results = new ArrayList<>();
 
-		for ( Column column : table.getColumns() ) {
-			final ColumnInformation columnInformation = tableInformation.getColumn(
-					Identifier.toIdentifier( column.getName(), column.isQuoted() )
-			);
+		for ( var column : table.getColumns() ) {
+			final var columnInformation =
+					tableInformation.getColumn( toIdentifier( column.getName(), column.isQuoted() ) );
 			if ( columnInformation == null ) {
-				// the column doesn't exist at all.
-				final String addColumn = dialect.getAddColumnString() + ' '
-						+ getFullColumnDeclaration( column, table, metadata, dialect, context )
-						+ dialect.getAddColumnSuffixString();
+				// the column doesn't exist at all
+				final String addColumn =
+						dialect.getAddColumnString() + ' '
+							+ getFullColumnDeclaration( column, table, metadata, dialect, context )
+							+ dialect.getAddColumnSuffixString();
 				results.add( alterTable + addColumn );
 			}
 			else if ( dialect.supportsAlterColumnType() ) {
 				if ( !hasMatchingType( column, columnInformation, metadata, dialect )
 						|| !hasMatchingLength( column, columnInformation, metadata, dialect ) ) {
-					final String alterColumn = dialect.getAlterColumnTypeString(
-							column.getQuotedName( dialect ),
-							column.getSqlType(metadata),
-							getColumnDefinition( column, metadata, dialect )
-					);
+					final String alterColumn =
+							dialect.getAlterColumnTypeString(
+									column.getQuotedName( dialect ),
+									column.getSqlType(metadata),
+									getColumnDefinition( column, metadata, dialect )
+							);
 					results.add( alterTable + alterColumn );
 				}
 			}
 		}
 
 		if ( results.isEmpty() ) {
-			LOG.debugf( "No alter strings for table : %s", table.getQuotedName() );
+			LOG.debugf( "No alter strings for table: %s", table.getQuotedName() );
 		}
 
 		return results;
+	}
+
+	private static String getTableName(Table table, SqlStringGenerationContext context) {
+		return context.format( new QualifiedTableName(
+				toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
+				toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
+				table.getNameIdentifier() )
+		);
 	}
 }

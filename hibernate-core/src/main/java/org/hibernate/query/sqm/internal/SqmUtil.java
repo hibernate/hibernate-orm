@@ -518,18 +518,20 @@ public class SqmUtil {
 			SharedSessionContractImplementor session) {
 		final JdbcParameterBindings jdbcParameterBindings =
 				new JdbcParameterBindingsImpl( domainParameterXref.getSqmParameterCount() );
-		domainParameterXref.getQueryParameters()
-				.forEach( (queryParameter, sqmParameters) ->
-						createJdbcParameterBinding(
-								domainParamBindings,
-								domainParameterXref,
-								jdbcParamXref,
-								mappingModelResolutionAccess,
-								session,
-								queryParameter,
-								sqmParameters,
-								jdbcParameterBindings
-						) );
+		for ( var entry : domainParameterXref.getQueryParameters().entrySet() ) {
+			var queryParameter = entry.getKey();
+			var sqmParameters = entry.getValue();
+			createJdbcParameterBinding(
+					domainParamBindings,
+					domainParameterXref,
+					jdbcParamXref,
+					mappingModelResolutionAccess,
+					session,
+					queryParameter,
+					sqmParameters,
+					jdbcParameterBindings
+			);
+		}
 		return jdbcParameterBindings;
 	}
 

@@ -27,7 +27,7 @@ public class AggregateEmbeddableInitializerImpl extends EmbeddableInitializerImp
 			AssemblerCreationState creationState,
 			boolean isResultInitializer) {
 		super( resultDescriptor, discriminatorFetch, null, parent, creationState, isResultInitializer );
-		this.aggregateValuesArrayPositions = resultDescriptor.getAggregateValuesArrayPositions();
+		aggregateValuesArrayPositions = resultDescriptor.getAggregateValuesArrayPositions();
 	}
 
 	@Override

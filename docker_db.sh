@@ -23,10 +23,13 @@ else
   fi
 fi
 
+DB_COUNT=1
 if [[ "$(uname -s)" == "Darwin" ]]; then
   IS_OSX=true
+  DB_COUNT=$(($(sysctl -n hw.physicalcpu)/2))
 else
   IS_OSX=false
+  DB_COUNT=$(($(nproc)/2))
 fi
 
 mysql() {
@@ -79,6 +82,7 @@ mysql_setup() {
         -e MYSQL_PASSWORD=hibernate_orm_test \
         -e MYSQL_ROOT_PASSWORD=hibernate_orm_test \
         -e MYSQL_DATABASE=hibernate_orm_test \
+        --tmpfs /var/lib/mysql \
         -p3306:3306 -d "${image_value}" \
         --character-set-server=utf8mb4 \
         --collation-server=utf8mb4_0900_as_cs \
@@ -101,9 +105,42 @@ mysql_setup() {
 
     if [ "$n" -gt 5 ]; then
         echo "MySQL failed to start and configure after 30 seconds"
+        exit 1
     else
         echo "MySQL successfully started"
     fi
+
+    # Wait for MySQL to become ready
+    OUTPUT=
+    n=0
+    until [ "$n" -gt 5 ]; do
+        OUTPUT="$( { $CONTAINER_CLI exec mysql bash -c "mysqladmin ping -u root -phibernate_orm_test"; } 2>/dev/null )"
+        if [[ $OUTPUT == *"alive"* ]]; then
+            break;
+        fi
+        n=$((n+1))
+        echo "Waiting for MySQL to be ready..."
+        sleep 2
+    done
+
+    if [ "$n" -gt 5 ]; then
+        echo "MySQL failed to become ready after 10 seconds"
+        exit 1
+    else
+        echo "MySQL is ready"
+    fi
+
+    databases=()
+    for n in $(seq 1 $DB_COUNT)
+    do
+      databases+=("hibernate_orm_test_${n}")
+    done
+    create_cmd=
+    for i in "${!databases[@]}";do
+      create_cmd+="create database ${databases[i]}; grant all privileges on ${databases[i]}.* to 'hibernate_orm_test'@'%';"
+    done
+    $CONTAINER_CLI exec mysql bash -c "mysql -u root -phibernate_orm_test -e \"${create_cmd}\"" 2>/dev/null
+    echo "MySQL databases were successfully setup"
 }
 
 mariadb() {
@@ -131,61 +168,79 @@ mariadb_wait_until_start()
 
 mariadb_10_6() {
     $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MARIADB_10_6:-docker.io/mariadb:10.6.23} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
-    mariadb_wait_until_start
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 --tmpfs /var/lib/mysql -d ${DB_IMAGE_MARIADB_10_6:-docker.io/mariadb:10.6.23} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_setup
 }
 
 mariadb_10_11() {
     $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MARIADB_10_11:-docker.io/mariadb:10.11.14} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
-    mariadb_wait_until_start
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 --tmpfs /var/lib/mysql -d ${DB_IMAGE_MARIADB_10_11:-docker.io/mariadb:10.11.14} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_setup
 }
 
 mariadb_11_4() {
     $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MARIADB_11_4:-docker.io/mariadb:11.4.8} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
-    mariadb_wait_until_start
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 --tmpfs /var/lib/mysql -d ${DB_IMAGE_MARIADB_11_4:-docker.io/mariadb:11.4.8} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_setup
 }
 
 mariadb_11_8() {
     $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MARIADB_11_8:-docker.io/mariadb:11.8.3} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
-    mariadb_wait_until_start
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 --tmpfs /var/lib/mysql -d ${DB_IMAGE_MARIADB_11_8:-docker.io/mariadb:11.8.3} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_setup
 }
 
 mariadb_12_0() {
     $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MARIADB_12_0:-docker.io/mariadb:12.0.2} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
-    mariadb_wait_until_start
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 --tmpfs /var/lib/mysql -d ${DB_IMAGE_MARIADB_12_0:-docker.io/mariadb:12.0.2} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_setup
 }
 
 mariadb_verylatest() {
     $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MARIADB_VERYLATEST:-quay.io/mariadb-foundation/mariadb-devel:verylatest} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 --tmpfs /var/lib/mysql -d ${DB_IMAGE_MARIADB_VERYLATEST:-quay.io/mariadb-foundation/mariadb-devel:verylatest} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_setup
+}
+
+mariadb_setup() {
     mariadb_wait_until_start
+
+    databases=()
+    for n in $(seq 1 $DB_COUNT)
+    do
+      databases+=("hibernate_orm_test_${n}")
+    done
+    create_cmd=
+    for i in "${!databases[@]}";do
+      create_cmd+="create database ${databases[i]}; grant all privileges on ${databases[i]}.* to 'hibernate_orm_test'@'%';"
+    done
+    $CONTAINER_CLI exec mariadb bash -c "mariadb -u root -phibernate_orm_test -e \"${create_cmd}\"" 2>/dev/null
+    echo "MySQL databases were successfully setup"
 }
 
 postgresql() {
-  postgresql_17
+  postgresql_18
 }
 
 postgresql_13() {
     $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d ${DB_IMAGE_POSTGRESQL_13:-docker.io/postgis/postgis:13-3.1}
+    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql/data -d ${DB_IMAGE_POSTGRESQL_13:-docker.io/postgis/postgis:13-3.1} \
+       -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
     $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-13-pgvector'
     postgresql_setup
 }
 
 postgresql_14() {
     $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d ${DB_IMAGE_POSTGRESQL_14:-docker.io/postgis/postgis:14-3.3}
+    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql/data -d ${DB_IMAGE_POSTGRESQL_14:-docker.io/postgis/postgis:14-3.3} \
+       -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
     $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-14-pgvector'
     postgresql_setup
 }
 
 postgresql_15() {
     $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /pgtmpfs:size=131072k -d ${DB_IMAGE_POSTGRESQL_15:-docker.io/postgis/postgis:15-3.3} \
+    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql/data -d ${DB_IMAGE_POSTGRESQL_15:-docker.io/postgis/postgis:15-3.3} \
       -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
     $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-15-pgvector'
     postgresql_setup
@@ -193,7 +248,7 @@ postgresql_15() {
 
 postgresql_16() {
     $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /pgtmpfs:size=131072k -d ${DB_IMAGE_POSTGRESQL_16:-docker.io/postgis/postgis:16-3.4} \
+    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql/data -d ${DB_IMAGE_POSTGRESQL_16:-docker.io/postgis/postgis:16-3.4} \
       -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
     $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-16-pgvector'
     postgresql_setup
@@ -201,15 +256,23 @@ postgresql_16() {
 
 postgresql_17() {
     $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /pgtmpfs:size=131072k -d ${DB_IMAGE_POSTGRESQL_17:-docker.io/postgis/postgis:17-3.5} \
+    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql/data -d ${DB_IMAGE_POSTGRESQL_17:-docker.io/postgis/postgis:17-3.5} \
       -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
     $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-17-pgvector'
     postgresql_setup
 }
 
+postgresql_18() {
+    $CONTAINER_CLI rm -f postgres || true
+    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql -d ${DB_IMAGE_POSTGRESQL_17:-docker.io/postgis/postgis:18-3.6} \
+      -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
+    $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-18-pgvector'
+    postgresql_setup
+}
+
 postgresql_setup() {
   databases=()
-  for n in $(seq 1 $(($(nproc)/2)))
+  for n in $(seq 1 $DB_COUNT)
   do
     databases+=("hibernate_orm_test_${n}")
   done
@@ -276,6 +339,7 @@ edb_13() {
       (cd edb; $CONTAINER_CLI build -t edb-test:13 -f edb13.Dockerfile .)
     fi
     $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d $DB_IMAGE_EDB
+    edb_setup
 }
 
 edb_14() {
@@ -286,6 +350,7 @@ edb_14() {
       (cd edb; $CONTAINER_CLI build -t edb-test:14 -f edb14.Dockerfile .)
     fi
     $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d $DB_IMAGE_EDB
+    edb_setup
 }
 
 edb_15() {
@@ -296,6 +361,7 @@ edb_15() {
       (cd edb; $CONTAINER_CLI build -t edb-test:15 -f edb15.Dockerfile .)
     fi
     $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d $DB_IMAGE_EDB
+    edb_setup
 }
 
 edb_16() {
@@ -306,6 +372,7 @@ edb_16() {
       (cd edb; $CONTAINER_CLI build -t edb-test:16 -f edb16.Dockerfile .)
     fi
     $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d $DB_IMAGE_EDB
+    edb_setup
 }
 
 edb_17() {
@@ -316,6 +383,28 @@ edb_17() {
       (cd edb; $CONTAINER_CLI build -t edb-test:17 -f edb17.Dockerfile .)
     fi
     $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d $DB_IMAGE_EDB
+    edb_setup
+}
+
+edb_setup() {
+  databases=()
+  for n in $(seq 1 $DB_COUNT)
+  do
+    databases+=("hibernate_orm_test_${n}")
+  done
+  create_cmd=
+  for i in "${!databases[@]}";do
+    create_cmd+="psql -U hibernate_orm_test -d postgres -c \"create database ${databases[i]};\";"
+  done
+  $CONTAINER_CLI exec edb bash -c "until pg_isready -U hibernate_orm_test; do sleep 1; done"
+  # Database seems to restart after it was ready once, so give it some time
+  sleep 1
+  $CONTAINER_CLI exec edb bash -c "until pg_isready -U hibernate_orm_test; do sleep 1; done"
+  $CONTAINER_CLI exec edb bash -c "${create_cmd}"
+  $CONTAINER_CLI exec edb bash -c 'psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
+  for i in "${!databases[@]}";do
+    $CONTAINER_CLI exec edb bash -c "psql -U hibernate_orm_test -d ${databases[i]} -c \"create extension postgis;\""
+  done
 }
 
 db2() {
@@ -365,6 +454,7 @@ EOF
         OUTPUT=$($CONTAINER_CLI logs db2 2>&1)
     done
     $CONTAINER_CLI exec -t db2 su - orm_test bash -c ". /database/config/orm_test/sqllib/db2profile; /database/config/orm_test/sqllib/bin/db2 'connect to orm_test'; /database/config/orm_test/sqllib/bin/db2 'CREATE USER TEMPORARY TABLESPACE usr_tbsp MANAGED BY AUTOMATIC STORAGE'"
+    db2_setup
 }
 
 db2_12_1() {
@@ -410,6 +500,19 @@ EOF
         OUTPUT=$($CONTAINER_CLI logs db2 2>&1)
     done
     $CONTAINER_CLI exec -t db2 su - orm_test bash -c ". /database/config/orm_test/sqllib/db2profile; /database/config/orm_test/sqllib/bin/db2 'connect to orm_test'; /database/config/orm_test/sqllib/bin/db2 'CREATE USER TEMPORARY TABLESPACE usr_tbsp MANAGED BY AUTOMATIC STORAGE'"
+    db2_setup
+}
+
+db2_setup() {
+    pids=()
+    for n in $(seq 1 $DB_COUNT)
+    do
+      $CONTAINER_CLI exec -t db2 su - orm_test bash -c ". /database/config/orm_test/sqllib/db2profile; /database/config/orm_test/sqllib/bin/db2 'connect to orm_test'; /database/config/orm_test/sqllib/bin/db2 'create tenant ORM_${n}';" &
+      pids[${i}]=$!
+    done
+    for pid in ${pids[*]}; do
+        wait $pid
+    done
 }
 
 db2_spatial() {
@@ -485,7 +588,7 @@ mssql_2017() {
     do
         # We need a database that uses a non-lock based MVCC approach
         # https://github.com/microsoft/homebrew-mssql-release/issues/2#issuecomment-682285561
-        $CONTAINER_CLI exec mssql bash -c 'echo "create database hibernate_orm_test collate SQL_Latin1_General_CP1_CS_AS; alter database hibernate_orm_test set READ_COMMITTED_SNAPSHOT ON" | /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin' && break
+        $CONTAINER_CLI exec mssql bash -c 'echo "select 1" | /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin' 2>&1 1>/dev/null && break
         echo "Waiting for SQL Server to start..."
         n=$((n+1))
         sleep 5
@@ -495,6 +598,12 @@ mssql_2017() {
     else
       echo "SQL Server successfully started"
     fi
+    echo "Creating databases..."
+    for n in $(seq 1 $DB_COUNT)
+    do
+      $CONTAINER_CLI exec mssql bash -c "echo \"create database hibernate_orm_test_${n} collate SQL_Latin1_General_CP1_CS_AS; alter database hibernate_orm_test_${n} set READ_COMMITTED_SNAPSHOT ON\" | /opt/mssql-tools/bin/sqlcmd -C -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin"
+    done
+    echo "SQL Server is ready"
 }
 
 mssql_2022() {
@@ -507,7 +616,7 @@ mssql_2022() {
     do
         # We need a database that uses a non-lock based MVCC approach
         # https://github.com/microsoft/homebrew-mssql-release/issues/2#issuecomment-682285561
-        $CONTAINER_CLI exec mssql bash -c 'echo "create database hibernate_orm_test collate SQL_Latin1_General_CP1_CS_AS; alter database hibernate_orm_test set READ_COMMITTED_SNAPSHOT ON" | /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin' && break
+        $CONTAINER_CLI exec mssql bash -c 'echo "select 1" | /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin' 2>&1 1>/dev/null && break
         echo "Waiting for SQL Server to start..."
         n=$((n+1))
         sleep 5
@@ -517,6 +626,12 @@ mssql_2022() {
     else
       echo "SQL Server successfully started"
     fi
+    echo "Creating databases..."
+    for n in $(seq 1 $DB_COUNT)
+    do
+      $CONTAINER_CLI exec mssql bash -c "echo \"create database hibernate_orm_test_${n} collate SQL_Latin1_General_CP1_CS_AS; alter database hibernate_orm_test_${n} set READ_COMMITTED_SNAPSHOT ON\" | /opt/mssql-tools/bin/sqlcmd -C -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin"
+    done
+    echo "SQL Server is ready"
 }
 
 mssql_2025() {
@@ -529,7 +644,7 @@ mssql_2025() {
     do
         # We need a database that uses a non-lock based MVCC approach
         # https://github.com/microsoft/homebrew-mssql-release/issues/2#issuecomment-682285561
-        $CONTAINER_CLI exec mssql bash -c 'echo "create database hibernate_orm_test collate SQL_Latin1_General_CP1_CS_AS; alter database hibernate_orm_test set READ_COMMITTED_SNAPSHOT ON" | /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin' && break
+        $CONTAINER_CLI exec mssql bash -c 'echo "select 1" | /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin' 2>&1 1>/dev/null && break
         echo "Waiting for SQL Server to start..."
         n=$((n+1))
         sleep 5
@@ -539,6 +654,12 @@ mssql_2025() {
     else
       echo "SQL Server successfully started"
     fi
+    echo "Creating databases..."
+    for n in $(seq 1 $DB_COUNT)
+    do
+      $CONTAINER_CLI exec mssql bash -c "echo \"create database hibernate_orm_test_${n} collate SQL_Latin1_General_CP1_CS_AS; alter database hibernate_orm_test_${n} set READ_COMMITTED_SNAPSHOT ON\" | /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin"
+    done
+    echo "SQL Server is ready"
 }
 
 sybase() {
@@ -683,6 +804,19 @@ oracle_setup() {
     done
     sleep 2;
     echo "Oracle successfully started"
+
+    users=()
+    for n in $(seq 1 $DB_COUNT)
+    do
+      users+=("hibernate_orm_test_${n}")
+    done
+    create_cmd=
+    for i in "${!users[@]}";do
+      create_cmd+="
+create user ${users[i]} identified by hibernate_orm_test quota unlimited on users;
+grant all privileges to ${users[i]};"
+    done
+    
     # We increase file sizes to avoid online resizes as that requires lots of CPU which is restricted in XE
     $PRIVILEGED_CLI $CONTAINER_CLI exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
 cat <<EOF | \$ORACLE_HOME/bin/sqlplus / as sysdba
@@ -744,6 +878,7 @@ alter tablespace SYSAUX nologging;
 
 create user hibernate_orm_test identified by hibernate_orm_test quota unlimited on users;
 grant all privileges to hibernate_orm_test;
+${create_cmd}
 EOF\""
 }
 
@@ -763,6 +898,19 @@ oracle_free_setup() {
     done
     sleep 2;
     echo "Oracle successfully started"
+
+    users=()
+    for n in $(seq 1 $DB_COUNT)
+    do
+      users+=("hibernate_orm_test_${n}")
+    done
+    create_cmd=
+    for i in "${!users[@]}";do
+      create_cmd+="
+create user ${users[i]} identified by hibernate_orm_test quota unlimited on users;
+grant all privileges to ${users[i]};"
+    done
+
     # We increase file sizes to avoid online resizes as that requires lots of CPU which is restricted in XE
     $PRIVILEGED_CLI $CONTAINER_CLI exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
 cat <<EOF | \$ORACLE_HOME/bin/sqlplus / as sysdba
@@ -823,6 +971,7 @@ alter tablespace SYSAUX nologging;
 
 create user hibernate_orm_test identified by hibernate_orm_test quota unlimited on users;
 grant all privileges to hibernate_orm_test;
+${create_cmd}
 EOF\""
 }
 

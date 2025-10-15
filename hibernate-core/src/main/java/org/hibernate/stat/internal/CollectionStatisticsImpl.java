@@ -25,13 +25,11 @@ public class CollectionStatisticsImpl extends AbstractCacheableDataStatistics im
 	private final LongAdder recreateCount = new LongAdder();
 
 	CollectionStatisticsImpl(CollectionPersister persister) {
-		super(
-				() -> persister.getCacheAccessStrategy() != null
-						? persister.getCacheAccessStrategy().getRegion()
-						: null
-		);
-
-		this.collectionRole = persister.getRole();
+		super( () -> {
+			final var cache = persister.getCacheAccessStrategy();
+			return cache == null ? null : cache.getRegion();
+		} );
+		collectionRole = persister.getRole();
 	}
 
 	public long getLoadCount() {

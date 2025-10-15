@@ -248,6 +248,10 @@ public interface HibernateAnnotations {
 			EmbeddedColumnNaming.class,
 			EmbeddedColumnNamingAnnotation.class
 	);
+	OrmAnnotationDescriptor<EmbeddedTable,EmbeddedTableAnnotation> EMBEDDED_TABLE = new OrmAnnotationDescriptor<>(
+			EmbeddedTable.class,
+			EmbeddedTableAnnotation.class
+	);
 	OrmAnnotationDescriptor<Fetch,FetchAnnotation> FETCH = new OrmAnnotationDescriptor<>(
 			Fetch.class,
 			FetchAnnotation.class

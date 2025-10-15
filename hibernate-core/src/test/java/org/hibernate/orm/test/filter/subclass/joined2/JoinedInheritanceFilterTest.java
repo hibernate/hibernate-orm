@@ -17,6 +17,7 @@ import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.engine.spi.SessionImplementor;
 
+import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -61,7 +62,7 @@ public class JoinedInheritanceFilterTest implements SessionFactoryScopeAware {
 		// We want to test both regular and stateless session:
 		BiConsumer<SessionFactoryScope, Consumer<SessionImplementor>> kind1 = SessionFactoryScope::inTransaction;
 		TriFunction<Session, Class<?>, Object, Object> find1 = Session::get;
-		BiConsumer<SessionFactoryScope, Consumer<StatelessSession>> kind2 = SessionFactoryScope::inStatelessTransaction;
+		BiConsumer<SessionFactoryScope, Consumer<StatelessSessionImplementor>> kind2 = SessionFactoryScope::inStatelessTransaction;
 		TriFunction<StatelessSession, Class<?>, Object, Object> find2 = StatelessSession::get;
 		return List.of(
 				Arguments.of( kind1, find1 ),

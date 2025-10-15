@@ -68,4 +68,14 @@ public class SqmTrimSpecification extends AbstractSqmNode implements SqmTypedNod
 	public int hashCode() {
 		return Objects.hashCode( specification );
 	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
+	}
 }

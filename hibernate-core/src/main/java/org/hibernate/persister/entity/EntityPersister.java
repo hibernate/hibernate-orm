@@ -316,8 +316,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	}
 
 	default void visitQuerySpaces(Consumer<String> querySpaceConsumer) {
-		final String[] spaces = getSynchronizedQuerySpaces();
-		for (String space : spaces) {
+		for ( String space : getSynchronizedQuerySpaces() ) {
 			querySpaceConsumer.accept(space);
 		}
 	}

@@ -11,7 +11,6 @@ import java.util.function.Supplier;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IdentifierBag;
@@ -47,14 +46,14 @@ public class IdBagBinder extends BagBinder {
 
 	@Override
 	protected boolean bindStarToManySecondPass(Map<String, PersistentClass> persistentClasses) {
-		boolean result = super.bindStarToManySecondPass( persistentClasses );
+		final boolean result = super.bindStarToManySecondPass( persistentClasses );
 
 		final var collectionIdAnn = property.getDirectAnnotationUsage( CollectionId.class );
 		if ( collectionIdAnn == null ) {
 			throw new MappingException( "idbag mapping missing '@CollectionId' annotation" );
 		}
 
-		final PropertyData propertyData = new WrappedInferredData(
+		final var propertyData = new WrappedInferredData(
 				new PropertyInferredData(
 						null,
 						declaringClass,

@@ -4,13 +4,6 @@
  */
 package org.hibernate.testing.orm.junit;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
@@ -20,21 +13,27 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.transaction.TransactionUtil;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
-
-import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.orm.transaction.TransactionUtil;
+import org.jboss.logging.Logger;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 import org.junit.platform.commons.support.AnnotationSupport;
 
-import org.jboss.logging.Logger;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * hibernate-testing implementation of a few JUnit5 contracts to support SessionFactory-based testing,
@@ -76,7 +75,7 @@ public class SessionFactoryExtension
 
 		if ( sfAnnRef.isPresent()
 				|| SessionFactoryProducer.class.isAssignableFrom( context.getRequiredTestClass() ) ) {
-			final DomainModelScope domainModelScope = DomainModelExtension.findDomainModelScope( testInstance, context );
+			final DomainModelScope domainModelScope = DomainModelExtension.getOrCreateDomainModelScope( testInstance, context );
 			final SessionFactoryScope created = createSessionFactoryScope( testInstance, sfAnnRef, domainModelScope, context );
 			locateExtensionStore( testInstance, context ).put( SESSION_FACTORY_KEY, created );
 		}
@@ -378,12 +377,12 @@ public class SessionFactoryExtension
 		}
 
 		@Override
-		public void inStatelessSession(Consumer<StatelessSession> action) {
+		public void inStatelessSession(Consumer<StatelessSessionImplementor> action) {
 			log.trace( "#inStatelessSession(Consumer)" );
 
 			try ( final StatelessSession statelessSession = getSessionFactory().openStatelessSession() ) {
 				log.trace( "StatelessSession opened, calling action" );
-				action.accept( statelessSession );
+				action.accept( (StatelessSessionImplementor) statelessSession );
 			}
 			finally {
 				log.trace( "StatelessSession close - auto-close block" );
@@ -391,12 +390,12 @@ public class SessionFactoryExtension
 		}
 
 		@Override
-		public void inStatelessTransaction(Consumer<StatelessSession> action) {
+		public void inStatelessTransaction(Consumer<StatelessSessionImplementor> action) {
 			log.trace( "#inStatelessTransaction(Consumer)" );
 
 			try ( final StatelessSession statelessSession = getSessionFactory().openStatelessSession() ) {
 				log.trace( "StatelessSession opened, calling action" );
-				inStatelessTransaction( statelessSession, action );
+				inStatelessTransaction( (StatelessSessionImplementor) statelessSession, action );
 			}
 			finally {
 				log.trace( "StatelessSession close - auto-close block" );
@@ -404,7 +403,7 @@ public class SessionFactoryExtension
 		}
 
 		@Override
-		public void inStatelessTransaction(StatelessSession session, Consumer<StatelessSession> action) {
+		public void inStatelessTransaction(StatelessSessionImplementor session, Consumer<StatelessSessionImplementor> action) {
 			log.trace( "inStatelessTransaction(StatelessSession,Consumer)" );
 
 			TransactionUtil.inTransaction( session, action );

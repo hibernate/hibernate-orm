@@ -17,9 +17,9 @@ import java.util.Iterator;
  * Calling #next() will return one of a JsonDocumentItem.JsonDocumentItemType.
  * The sequence of return types follows JSON specification.
  * <p>
- * When {@link JsonDocumentItemType.VALUE_KEY} is returned #getObjectKeyName() should be called to get the key name.
+ * When {@link JsonDocumentItemType#VALUE_KEY} is returned #getObjectKeyName() should be called to get the key name.
  * <p>
- * When {@link JsonDocumentItemType.VALUE}, {@link JsonDocumentItemType.BOOLEAN_VALUE}, {@link JsonDocumentItemType.NULL_VALUE} or {@link JsonDocumentItemType.NUMERIC_VALUE} is returned one of the getxxxValue() should be called to get the value.
+ * When {@link JsonDocumentItemType#VALUE}, {@link JsonDocumentItemType#BOOLEAN_VALUE}, {@link JsonDocumentItemType#NULL_VALUE} or {@link JsonDocumentItemType#NUMERIC_VALUE} is returned one of the getxxxValue() should be called to get the value.
  * <p>
  *  example :
  *  <pre>

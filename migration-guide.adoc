@@ -1,5 +1,6 @@
 = {version} Migration Guide
-:toc:
+:toc2:
+:sectanchors:
 :toclevels: 4
 :version: 7.2
 :docsBase: https://docs.jboss.org/hibernate/orm
@@ -40,13 +41,6 @@ See the link:{releaseSeriesBase}#whats-new[website] for the list of new features
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#api[API].
 
-* Code underlying the session builder APIs was reengineered, and the behavior of `noInterceptor()` for `SharedSessionBuilder` and `SharedStatelessSessionBuilder` was aligned with the preexisting semantics of this method on `SessionBuilder` and `StatelessSessionBuilder`.
-  The previous behavior may be recovered by calling `noSessionInterceptorCreation()`.
-
-* `org.hibernate.dialect.AzureSQLServerDialect` was deprecated. Use `org.hibernate.dialect.SQLServerDialect` instead.
-  If you set `hibernate.boot.allow_jdbc_metadata_access=false` for offline startup,
-  remember to also set the targeted database version through `jakarta.persistence.database-product-version`;
-  this would be 16.0 for SQL Server 2022 or 17.0 for SQL Server 2025.
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // SPI changes
@@ -57,8 +51,104 @@ This section describes changes to contracts (classes, interfaces, methods, etc.)
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#spi[SPI].
 
-* Some operations of `TypeConfiguration`, `JavaTypeRegistry`, and `BasicTypeRegistry` used unbound type parameters in the return type. The generic signatures of these methods have been changed for improved type safety.
+[[registry-generic-signatures]]
+=== Registry Generic Signatures
 
+Some operations of `TypeConfiguration`, `JavaTypeRegistry`, and `BasicTypeRegistry` had previously used unbound type parameters in the return type. The generic signatures of these methods have been changed for improved type safety.
+
+
+[[AzureSQLServerDialect]]
+=== AzureSQLServerDialect Deprecation
+
+`org.hibernate.dialect.AzureSQLServerDialect` was deprecated; use `org.hibernate.dialect.SQLServerDialect` instead.
+
+[IMPORTANT]
+====
+If you set `hibernate.boot.allow_jdbc_metadata_access=false` for offline startup,
+remember to also set the targeted database version through `jakarta.persistence.database-product-version` - this would be 16.0 for SQL Server 2022 or 17.0 for SQL Server 2025.
+====
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Changes in Behavior
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[behavior-changes]]
+== Changes in Behavior
+
+[[child-session-flush-close]]
+=== Child Session Flush/Close Behavior
+
+`Session` and `StatelessSession` which share transactional context with a parent now have slightly different semantics in regard to flushing and closing -
+
+* when the parent is flushed, the child is flushed
+* when the parent is closed, the child is closed
+
+[NOTE]
+====
+This led to a change in triggering of flush events for both -
+
+* `SessionEventListener` registrations
+* JFR events
+
+In both cases, the events are now triggered regardless of whether any entities or collections were actually flushed.
+Each already carried the number of entities and the number of collections which were actually flushed.
+Previously, when no entities and no collections were flushed to the database no event was generated; the event is now generated and both values will be zero.
+
+Interestingly, this now also aligns with handling for auto-flush events which already always triggered these events.
+====
+
+
+[[child-session-no-interceptor]]
+=== Child Session No-Interceptor Behavior
+
+The behavior of `noInterceptor()` for `SharedSessionBuilder` and (the new) `SharedStatelessSessionBuilder` was aligned with the preexisting semantics of this method on `SessionBuilder` and `StatelessSessionBuilder`.
+The previous behavior may be recovered by calling `noSessionInterceptorCreation()`.
+
+[[test-util-bytecodeenhanced-engine]]
+=== JUnit `BytecodeEnhancedTestEngine`
+
+With this version, `BytecodeEnhancedTestEngine` will be disabled by default.
+To be able to run the tests annotated with `@BytecodeEnhanced`, this engine has to be explicitly enabled via a system property:
+
+[source, properties]
+----
+hibernate.testing.bytecode.enhancement.extension.engine.enabled=true
+----
+
+For a Maven-based project this can be done as part of the failsafe/surefire plugin configuration:
+
+[source, xml]
+----
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-surefire-plugin</artifactId>
+    <configuration>
+        <systemPropertyVariables>
+            <hibernate.testing.bytecode.enhancement.extension.engine.enabled>true</hibernate.testing.bytecode.enhancement.extension.engine.enabled>
+            <!-- Any other system properties required by your tests -->
+        </systemPropertyVariables>
+        <!-- The rest of the testing plugin configuration -->
+        <!-- ... -->
+    </configuration>
+</plugin>
+----
+
+While for a Gradle-based project this can be done in multiple ways, it essentially comes down to configuring the
+link:https://docs.gradle.org/current/dsl/org.gradle.api.tasks.testing.Test.html#org.gradle.api.tasks.testing.Test:systemProperties[`systemProperties`]
+of a `Test` task:
+
+[source, groovy]
+----
+tasks.withType(Test.class) {
+    // Enable bytecode enhanced engine:
+    systemProperties.systemProperties['hibernate.testing.bytecode.enhancement.extension.engine.enabled'] = true
+    // Any other test task configurations
+    // ...
+}
+----
+
+Also, this engine is expected to only work with the exact version of JUnit that `org.hibernate.orm:hibernate-testing` depends on.
+While it may work with other versions as well, there is no guarantee of that.
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // DDL changes
@@ -76,3 +166,9 @@ Such changes typically do not impact programs using a relational schema managed 
 
 This section describes changes to dependencies used by Hibernate ORM.
 
+[[junit6]]
+=== JUnit 6 update
+
+Hibernate ORM test utils distributed as `org.hibernate.orm:hibernate-testing` are now based on JUnit 6.0.
+In general, this update is compatible with previous JUnit 5 versions unless the tests depended on the
+<<test-util-bytecodeenhanced-engine,@BytecodeEnhanced extension>>.

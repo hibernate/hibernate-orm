@@ -4,7 +4,7 @@
 [[architecture-overview]]
 === Overview
 
-image:images/architecture/data_access_layers.svg[Data Access Layers]
+image::images/architecture/data_access_layers.svg[Data Access Layers,align="center"]
 
 Hibernate, as an ORM solution, effectively "sits between" the Java application data access layer and the Relational Database, as can be seen in the diagram above.
 The Java application makes use of the Hibernate APIs to load, store, query, etc. its domain data.
@@ -13,7 +13,7 @@ This will be a brief introduction; we will discuss these contracts in detail lat
 
 As a Jakarta Persistence provider, Hibernate implements the Java Persistence API specifications and the association between Jakarta Persistence interfaces and Hibernate specific implementations can be visualized in the following diagram:
 
-image:images/architecture/JPA_Hibernate.svg[image]
+image::images/architecture/JPA_Hibernate.svg[image,align="center"]
 
 SessionFactory (`org.hibernate.SessionFactory`):: A thread-safe (and immutable) representation of the mapping of the application domain model to a database.
 Acts as a factory for `org.hibernate.Session` instances. The `EntityManagerFactory` is the Jakarta Persistence equivalent of a `SessionFactory` and basically, those two converge into the same `SessionFactory` implementation.

@@ -16,6 +16,7 @@ import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
@@ -305,7 +306,23 @@ public class SqmDynamicInstantiation<T>
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( instantiationTarget, arguments );
+		int result = instantiationTarget.hashCode();
+		result = 31 * result + Objects.hashCode( arguments );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmDynamicInstantiation<?> that
+			&& Objects.equals( instantiationTarget, that.instantiationTarget )
+			&& SqmCacheable.areCompatible( arguments, that.arguments );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = instantiationTarget.hashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( arguments );
+		return result;
 	}
 
 	@SuppressWarnings("unused")

@@ -52,7 +52,7 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 		}
 
 		try {
-			final Object[] values = valuesAccess == null ? null : valuesAccess.getValues();
+			final var values = valuesAccess == null ? null : valuesAccess.getValues();
 			final Object instance = constructor.newInstance();
 			if ( values != null ) {
 				// At this point, createEmptyCompositesEnabled is always true.

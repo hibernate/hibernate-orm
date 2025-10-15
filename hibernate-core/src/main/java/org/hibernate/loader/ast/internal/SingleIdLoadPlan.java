@@ -4,8 +4,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.List;
-
 import org.hibernate.LockOptions;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -23,12 +21,13 @@ import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
-import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
+
+import java.util.List;
 
 /**
  * Describes a plan for loading an entity by identifier.
@@ -43,7 +42,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 	private final EntityMappingType entityMappingType;
 	private final ModelPart restrictivePart;
 	private final LockOptions lockOptions;
-	private final JdbcOperationQuerySelect jdbcSelect;
+	private final JdbcSelect jdbcSelect;
 	private final JdbcParametersList jdbcParameters;
 
 	public SingleIdLoadPlan(
@@ -91,7 +90,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 	}
 
 	@Override
-	public JdbcOperationQuerySelect getJdbcSelect() {
+	public JdbcSelect getJdbcSelect() {
 		return jdbcSelect;
 	}
 
@@ -124,7 +123,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 		final int jdbcTypeCount = restrictivePart.getJdbcTypeCount();
 		assert jdbcParameters.size() % jdbcTypeCount == 0;
 
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcTypeCount );
+		final var jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcTypeCount );
 
 		int offset = 0;
 		while ( offset < jdbcParameters.size() ) {
@@ -137,7 +136,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 			);
 		}
 		assert offset == jdbcParameters.size();
-		final QueryOptions queryOptions = new SimpleQueryOptions( lockOptions, readOnly );
+		final var queryOptions = new SimpleQueryOptions( lockOptions, readOnly );
 		final Callback callback = new CallbackImpl();
 
 		final List<T> list = session.getJdbcServices().getJdbcSelectExecutor().list(
@@ -162,10 +161,11 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 		if ( list.isEmpty() ) {
 			return null;
 		}
-
-		final T entity = list.get( 0 );
-		callback.invokeAfterLoadActions( entity, entityMappingType, session );
-		return entity;
+		else {
+			final T entity = list.get( 0 );
+			callback.invokeAfterLoadActions( entity, entityMappingType, session );
+			return entity;
+		}
 	}
 
 	private static class SingleIdExecutionContext extends BaseExecutionContext {

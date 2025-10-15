@@ -5,6 +5,7 @@
 package org.hibernate.relational;
 
 import org.hibernate.Incubating;
+import org.hibernate.tool.schema.spi.GeneratorSynchronizer;
 
 /**
  * Allows programmatic {@linkplain #exportMappedObjects schema export},
@@ -19,7 +20,8 @@ import org.hibernate.Incubating;
  * {@link jakarta.persistence.SchemaManager}, which it now inherits,
  * with a minor change to the naming of its operations. It is retained
  * for backward compatibility and as a place to define additional
- * functionality such as {@link #populate} and {@link #forSchema}.
+ * operations like {@link #populate}, {@link #resynchronizeGenerators},
+ * and {@link #forSchema}.
  *
  * @since 6.2
  * @author Gavin King
@@ -65,7 +67,9 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	void validateMappedObjects();
 
 	/**
-	 * Truncate the database tables mapped by Hibernate entities, and then
+	 * Truncate the database tables mapped by Hibernate entities, reset all associated
+	 * {@linkplain jakarta.persistence.SequenceGenerator sequences} and tables backing
+	 * {@linkplain jakarta.persistence.TableGenerator table generators}, and then
 	 * reimport initial data from {@code /import.sql} and any other configured
 	 * {@linkplain org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
 	 * load script}.
@@ -86,6 +90,10 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	 * {@linkplain org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
 	 * load script}.
 	 * <p>
+	 * This operation does not automatically resynchronize sequences or tables backing
+	 * {@linkplain jakarta.persistence.TableGenerator table generators}, and so it might
+	 * be necessary to call {@link #resynchronizeGenerators} after calling this method.
+	 * <p>
 	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaPopulator}.
 	 *
 	 * @since 7.0
@@ -94,6 +102,25 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	 */
 	@Incubating
 	void populate();
+
+	/**
+	 * Resynchronize {@linkplain jakarta.persistence.SequenceGenerator sequences} and
+	 * {@linkplain jakarta.persistence.TableGenerator table-based generators} after
+	 * importing entity data.
+	 * <p>
+	 * When data is imported to the database without the use of a Hibernate session,
+	 * a database sequence might become stale with respect to the data in the table for
+	 * which it is used to generate unique keys. This operation restarts every sequence
+	 * so that the next generated unique key will be larger than the largest key
+	 * currently in use. A similar phenomenon might occur for the database table backing
+	 * a table-based generator, and so this operation also updates such tables.
+	 * <p>
+	 * Programmatic way to run {@link GeneratorSynchronizer}.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	void resynchronizeGenerators();
 
 	/**
 	 * Obtain an instance which targets the given schema.

@@ -12,6 +12,7 @@ import org.hibernate.Transaction;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
+import org.hibernate.internal.AbstractSharedSessionContract;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -31,7 +32,8 @@ import java.util.TimeZone;
  */
 public record SessionCreationOptionsAdaptor(
 		SessionFactoryImplementor factory,
-		CommonSharedSessionCreationOptions options)
+		CommonSharedSessionCreationOptions options,
+		AbstractSharedSessionContract originalSession)
 			implements SharedSessionCreationOptions {
 
 	@Override
@@ -142,5 +144,10 @@ public record SessionCreationOptionsAdaptor(
 	@Override
 	public TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacks() {
 		return options.getTransactionCompletionCallbacksImplementor();
+	}
+
+	@Override
+	public void registerParentSessionObserver(ParentSessionObserver observer) {
+		registerParentSessionObserver( observer, originalSession );
 	}
 }

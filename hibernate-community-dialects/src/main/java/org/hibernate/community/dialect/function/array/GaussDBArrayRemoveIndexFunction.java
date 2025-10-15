@@ -44,8 +44,7 @@ public class GaussDBArrayRemoveIndexFunction extends ArrayRemoveIndexUnnestFunct
 		arrayExpression.accept( walker );
 		sqlAppender.append( ", 1) AS idx " );
 
-		if ( indexExpression instanceof Literal ) {
-			Literal literal = (Literal) indexExpression;
+		if ( indexExpression instanceof Literal literal ) {
 			Object literalValue = literal.getLiteralValue();
 			if ( literalValue != null ) {
 				appendWhere( sqlAppender, walker, indexExpression );

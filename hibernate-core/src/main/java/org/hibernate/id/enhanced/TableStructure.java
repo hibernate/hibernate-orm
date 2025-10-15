@@ -14,29 +14,22 @@ import org.hibernate.LockOptions;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.InitCommand;
-import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.monitor.spi.EventMonitor;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
-import org.hibernate.mapping.Column;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Table;
-import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
-
-import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.LockMode.PESSIMISTIC_WRITE;
 import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHolder;
+import static org.hibernate.id.enhanced.ResyncHelper.getCurrentTableValue;
+import static org.hibernate.id.enhanced.ResyncHelper.getMaxPrimaryKey;
 import static org.hibernate.id.enhanced.TableGeneratorLogger.TABLE_GENERATOR_LOGGER;
 
 /**
@@ -148,8 +141,8 @@ public class TableStructure implements DatabaseStructure {
 			throw new AssertionFailure( "SequenceStyleGenerator's TableStructure was not properly initialized" );
 		}
 
-		final SessionEventListenerManager statsCollector = session.getEventListenerManager();
-		final SqlStatementLogger statementLogger =
+		final var statsCollector = session.getEventListenerManager();
+		final var statementLogger =
 				session.getFactory().getJdbcServices()
 						.getSqlStatementLogger();
 
@@ -160,29 +153,29 @@ public class TableStructure implements DatabaseStructure {
 						new AbstractReturningWork<>() {
 							@Override
 							public IntegralDataTypeHolder execute(Connection connection) throws SQLException {
-								final IntegralDataTypeHolder value = makeValue();
+								final var value = makeValue();
 								int rows;
 								do {
-									try ( PreparedStatement selectStatement = prepareStatement(
+									try ( var selectStatement = prepareStatement(
 											connection,
 											selectQuery,
 											statementLogger,
 											statsCollector,
 											session
 									) ) {
-										final ResultSet selectRS = executeQuery(
+										final var resultSet = executeQuery(
 												selectStatement,
 												statsCollector,
 												selectQuery,
 												session
 										);
-										if ( !selectRS.next() ) {
+										if ( !resultSet.next() ) {
 											throw new IdentifierGenerationException(
 													"Could not read a hi value, populate the table: "
 															+ physicalTableName );
 										}
-										value.initialize( selectRS, 1 );
-										selectRS.close();
+										value.initialize( resultSet, 1 );
+										resultSet.close();
 									}
 									catch (SQLException sqle) {
 										TABLE_GENERATOR_LOGGER.unableToReadHiValue( physicalTableName.render(), sqle );
@@ -190,7 +183,7 @@ public class TableStructure implements DatabaseStructure {
 									}
 
 
-									try ( PreparedStatement updatePS = prepareStatement(
+									try ( var updateStatement = prepareStatement(
 											connection,
 											updateQuery,
 											statementLogger,
@@ -198,10 +191,10 @@ public class TableStructure implements DatabaseStructure {
 											session
 									) ) {
 										final int increment = applyIncrementSizeToSourceValues ? incrementSize : 1;
-										final IntegralDataTypeHolder updateValue = value.copy().add( increment );
-										updateValue.bind( updatePS, 1 );
-										value.bind( updatePS, 2 );
-										rows = executeUpdate( updatePS, statsCollector, updateQuery, session );
+										final var updateValue = value.copy().add( increment );
+										updateValue.bind( updateStatement, 1 );
+										value.bind( updateStatement, 2 );
+										rows = executeUpdate( updateStatement, statsCollector, updateQuery, session );
 									}
 									catch (SQLException e) {
 										TABLE_GENERATOR_LOGGER.unableToUpdateHiValue( physicalTableName.render(), e );
@@ -232,9 +225,9 @@ public class TableStructure implements DatabaseStructure {
 			SessionEventListenerManager statsCollector,
 			SharedSessionContractImplementor session) throws SQLException {
 		logger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
-		final EventMonitor eventMonitor = session.getEventMonitor();
-		final DiagnosticEvent creationEvent = eventMonitor.beginJdbcPreparedStatementCreationEvent();
-		final StatisticsImplementor stats = session.getFactory().getStatistics();
+		final var eventMonitor = session.getEventMonitor();
+		final var creationEvent = eventMonitor.beginJdbcPreparedStatementCreationEvent();
+		final var stats = session.getFactory().getStatistics();
 		try {
 			statsCollector.jdbcPrepareStatementStart();
 			if ( stats != null && stats.isStatisticsEnabled() ) {
@@ -256,8 +249,8 @@ public class TableStructure implements DatabaseStructure {
 			SessionEventListenerManager statsCollector,
 			String sql,
 			SharedSessionContractImplementor session) throws SQLException {
-		final EventMonitor eventMonitor = session.getEventMonitor();
-		final DiagnosticEvent executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
+		final var eventMonitor = session.getEventMonitor();
+		final var executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			statsCollector.jdbcExecuteStatementStart();
 			return ps.executeUpdate();
@@ -274,8 +267,8 @@ public class TableStructure implements DatabaseStructure {
 			SessionEventListenerManager statsCollector,
 			String sql,
 			SharedSessionContractImplementor session) throws SQLException {
-		final EventMonitor eventMonitor = session.getEventMonitor();
-		final DiagnosticEvent executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
+		final var eventMonitor = session.getEventMonitor();
+		final var executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			statsCollector.jdbcExecuteStatementStart();
 			return ps.executeQuery();
@@ -293,19 +286,17 @@ public class TableStructure implements DatabaseStructure {
 
 	@Override
 	public void registerExportables(Database database) {
-
-		final Namespace namespace = database.locateNamespace(
+		final var namespace = database.locateNamespace(
 				logicalQualifiedTableName.getCatalogName(),
 				logicalQualifiedTableName.getSchemaName()
 		);
 
-		Table table = namespace.locateTable( logicalQualifiedTableName.getObjectName() );
+		final var objectName = logicalQualifiedTableName.getObjectName();
+		Table table = namespace.locateTable( objectName );
 		final boolean tableCreated;
 		if ( table == null ) {
-			table = namespace.createTable(
-					logicalQualifiedTableName.getObjectName(),
-					(identifier) -> new Table( contributor, namespace, identifier, false )
-			);
+			table = namespace.createTable( objectName,
+					identifier -> new Table( contributor, namespace, identifier, false ) );
 			tableCreated = true;
 		}
 		else {
@@ -313,23 +304,17 @@ public class TableStructure implements DatabaseStructure {
 		}
 		physicalTableName = table.getQualifiedTableName();
 
-		valueColumnNameText = logicalValueColumnNameIdentifier.render( database.getJdbcEnvironment().getDialect() );
+		valueColumnNameText = logicalValueColumnNameIdentifier.render( database.getDialect() );
 		if ( tableCreated ) {
-			final TypeConfiguration typeConfiguration = database.getTypeConfiguration();
-			final BasicType<Long> type = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.LONG );
-			final Column valueColumn = ExportableColumnHelper.column(
-					database,
-					table,
-					valueColumnNameText,
-					type,
+			final var typeConfiguration = database.getTypeConfiguration();
+			final var type = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.LONG );
+			final String typeName =
 					typeConfiguration.getDdlTypeRegistry()
-							.getTypeName( type.getJdbcType().getDdlTypeCode(), database.getDialect() )
-			);
-
+							.getTypeName( type.getJdbcType().getDdlTypeCode(), database.getDialect() );
+			final var valueColumn =
+					ExportableColumnHelper.column( database, table, valueColumnNameText, type, typeName );
 			table.addColumn( valueColumn );
-
 			table.setOptions( options );
-
 			table.addInitCommand( context -> new InitCommand(
 					"insert into " + context.format( physicalTableName )
 					+ " ( " + valueColumnNameText + " ) values ( " + initialValue + " )"
@@ -339,16 +324,44 @@ public class TableStructure implements DatabaseStructure {
 
 	@Override
 	public void initialize(SqlStringGenerationContext context) {
-		final Dialect dialect = context.getDialect();
+		final var dialect = context.getDialect();
 		final String formattedPhysicalTableName = context.format( physicalTableName );
 		final String lockedTable =
 				dialect.appendLockHint( new LockOptions( PESSIMISTIC_WRITE ), formattedPhysicalTableName )
 						+ dialect.getForUpdateString();
 		selectQuery = "select " + valueColumnNameText + " as id_val" +
 				" from " + lockedTable ;
-
 		updateQuery = "update " + formattedPhysicalTableName +
 				" set " + valueColumnNameText + "= ?" +
 				" where " + valueColumnNameText + "=?";
+	}
+
+	@Override
+	public void registerExtraExportables(Table table, Optimizer optimizer) {
+		table.addResyncCommand( (sqlContext, isolator) -> {
+			final String sequenceTableName = sqlContext.format( physicalTableName );
+			final String tableName = sqlContext.format( table.getQualifiedTableName() );
+			final String primaryKeyColumnName = table.getPrimaryKey().getColumn( 0 ).getName();
+			final int adjustment = optimizer.getAdjustment();
+			final long max = getMaxPrimaryKey( isolator, primaryKeyColumnName, tableName );
+			final long current = getCurrentTableValue( isolator, sequenceTableName, valueColumnNameText );
+			if ( max + adjustment > current ) {
+				optimizer.reset();
+				final String update =
+						"update " + sequenceTableName
+						+ " set " + valueColumnNameText + " = " + (max + adjustment);
+				return new InitCommand( update );
+			}
+			else {
+				return new InitCommand();
+			}
+		} );
+		table.addResetCommand( sqlContext -> {
+			optimizer.reset();
+			final String update =
+					"update " + sqlContext.format( physicalTableName )
+					+ " set " + valueColumnNameText + " = " + initialValue;
+			return new InitCommand( update );
+		} );
 	}
 }

@@ -67,18 +67,11 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 	protected String processSql(String sql, boolean hasFirstRow, boolean hasMaxRows, int jdbcParameterCount, @Nullable ParameterMarkerStrategy parameterMarkerStrategy, LockOptions lockOptions) {
 		if ( lockOptions != null ) {
 			final LockMode lockMode = lockOptions.getLockMode();
-			switch ( lockMode ) {
-				case PESSIMISTIC_READ:
-				case PESSIMISTIC_WRITE:
-				case UPGRADE_NOWAIT:
-				case PESSIMISTIC_FORCE_INCREMENT:
-				case UPGRADE_SKIPLOCKED: {
-					return processSql( sql, getForUpdateIndex( sql ), hasFirstRow, hasMaxRows, jdbcParameterCount, parameterMarkerStrategy );
-				}
-				default: {
-					return processSqlOffsetFetch( sql, hasFirstRow, hasMaxRows, jdbcParameterCount, parameterMarkerStrategy );
-				}
-			}
+			return switch ( lockMode ) {
+				case PESSIMISTIC_READ, PESSIMISTIC_WRITE, UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT, UPGRADE_SKIPLOCKED ->
+					processSql( sql, getForUpdateIndex( sql ), hasFirstRow, hasMaxRows, jdbcParameterCount, parameterMarkerStrategy );
+				default -> processSqlOffsetFetch( sql, hasFirstRow, hasMaxRows, jdbcParameterCount, parameterMarkerStrategy );
+				};
 		}
 		return processSqlOffsetFetch( sql, hasFirstRow, hasMaxRows, jdbcParameterCount, parameterMarkerStrategy );
 	}

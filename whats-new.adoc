@@ -1,5 +1,6 @@
 = What's New in 7.2
-:toc:
+:toc2:
+:sectanchors:
 :toclevels: 4
 :version: 7.2
 :docsBase: https://docs.jboss.org/hibernate/orm
@@ -10,6 +11,86 @@
 Describes the new features and capabilities added to Hibernate ORM in {version}.
 
 IMPORTANT: If migrating from earlier versions, be sure to also check out the link:{migrationGuide}[Migration Guide] for discussion of impactful changes.
+
+[[embedded-table]]
+== @EmbeddedTable
+
+The Jakarta Persistence compliant way to specify the table to which an embedded value maps is tedious, at best, requiring us of multiple `@AttributeOverride` and/or `@AssociationOverride` annotations -
+
+====
+[source,java]
+----
+@Entity
+@Table(name="primary")
+@SecondaryTable(name="secondary")
+class Person {
+	...
+
+    @Embedded
+    @AttributeOverride(name="street",
+        column=@Column(table="secondary"))
+    @AttributeOverride(name="city",
+        column=@Column(table="secondary"))
+    @AttributeOverride(name="state",
+        column=@Column(table="secondary"))
+    @AttributeOverride(name="zip",
+        column=@Column(table="secondary"))
+    Address address;
+}
+----
+====
+
+Hibernate now provides the `EmbeddedTable` annotation to help make this easier -
+
+====
+[source,java]
+----
+@Entity
+@Table(name="primary")
+@SecondaryTable(name="secondary")
+class Person {
+	...
+
+    @Embedded
+    @EmbeddedTable("secondary")
+    Address address;
+}
+----
+====
+
+The annotation is only legal on top-level embedded.  Placement on nested embedded values will be ignored.
+
+[[MultiFindOption]]
+== Introduction of FindMultipleOption
+
+Previous versions of Hibernate supported loading multiple entities of a type via the `Session#byMultipleIds` method.
+7.0 added `Session#findMultiple` methods which accepted `FindOption` configuration; but, for options specific to multiple-id loading, users still had to revert to `Session#byMultipleIds`.
+7.2 covers this gap and introduces new `FindMultipleOption` configuration -
+
+* `SessionCheckMode`
+* `OrderingMode`
+* `RemovalsMode`
+
+`Session#byMultipleIds` and `MultiIdentifierLoadAccess` have been deprecated.
+
+[[child-stateless-sessions]]
+== Child StatelessSession
+
+Creation of child `StatelessSession` is now supported, just as with child `Session`.
+This is a `StatelessSession` which shares "transactional context" with a parent `Session` or `StatelessSession`.
+Use `Session#statelessWithOptions` or `StatelessSession#statelessWithOptions` instead of `#sessionWithOptions`.
+
+====
+[source,java]
+----
+Session parent = ...;
+StatelessSession child = parent
+    .statelessWithOptions()
+    .connection()
+    ...
+    .open();
+----
+====
 
 [[vector-module-enhancements]]
 == Hibernate-Vector module enhancements

@@ -101,7 +101,7 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 	}
 
 	private void performDelete(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {
-		MODEL_MUTATION_LOGGER.tracef( "Performing delete (%s)", tableMapping.getTableName() );
+		MODEL_MUTATION_LOGGER.performingDelete( tableMapping.getTableName() );
 
 		final TableDeleteStandard upsertDeleteAst = new TableDeleteStandard(
 				optionalTableUpdate.getMutatingTable(),
@@ -125,7 +125,7 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 			bindDeleteKeyValues( jdbcValueBindings, statementDetails, session );
 			final int rowCount = session.getJdbcCoordinator().getResultSetReturn()
 					.executeUpdate( upsertDeleteStatement, statementDetails.getSqlString() );
-			MODEL_MUTATION_LOGGER.tracef( "%s rows upsert-deleted from '%s'", rowCount, tableMapping.getTableName() );
+			MODEL_MUTATION_LOGGER.upsertDeletedRowCount( rowCount, tableMapping.getTableName() );
 			try {
 				getExpectation().verifyOutcome( rowCount, upsertDeleteStatement, -1, statementDetails.getSqlString() );
 			}
@@ -189,7 +189,7 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 	}
 
 	private void performUpsert(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {
-		MODEL_MUTATION_LOGGER.tracef( "Performing upsert (%s)", tableMapping.getTableName() );
+		MODEL_MUTATION_LOGGER.performingUpsert( tableMapping.getTableName() );
 
 		final var statementGroup = new PreparedStatementGroupSingleTable( upsertOperation, session );
 		final var statementDetails = statementGroup.resolvePreparedStatementDetails( tableMapping.getTableName() );
@@ -201,7 +201,7 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 			final int rowCount =
 					session.getJdbcCoordinator().getResultSetReturn()
 							.executeUpdate( updateStatement, statementDetails.getSqlString() );
-			MODEL_MUTATION_LOGGER.tracef( "%s rows upserted in '%s'", rowCount, tableMapping.getTableName() );
+			MODEL_MUTATION_LOGGER.upsertedRowCount( rowCount, tableMapping.getTableName() );
 			try {
 				getExpectation().verifyOutcome( rowCount, updateStatement, -1, statementDetails.getSqlString() );
 			}

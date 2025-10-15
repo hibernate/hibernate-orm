@@ -17,7 +17,7 @@ public class AggregatedDialectSelector implements DialectSelector {
 
 	public AggregatedDialectSelector(Iterable<DialectSelector> dialectSelectorProvider) {
 		final List<DialectSelector> dialectSelectors = new ArrayList<>();
-		for ( DialectSelector dialectSelector : dialectSelectorProvider ) {
+		for ( var dialectSelector : dialectSelectorProvider ) {
 			dialectSelectors.add( dialectSelector );
 		}
 		dialectSelectors.add( new DefaultDialectSelector() );
@@ -30,8 +30,8 @@ public class AggregatedDialectSelector implements DialectSelector {
 		if ( name.isEmpty() ) {
 			return null;
 		}
-		for ( DialectSelector dialectSelector : dialectSelectors ) {
-			final Class<? extends Dialect> dialectClass = dialectSelector.resolve( name );
+		for ( var dialectSelector : dialectSelectors ) {
+			final var dialectClass = dialectSelector.resolve( name );
 			if ( dialectClass != null ) {
 				return dialectClass;
 			}

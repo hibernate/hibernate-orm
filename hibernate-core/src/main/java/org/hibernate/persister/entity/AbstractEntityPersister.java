@@ -71,6 +71,7 @@ import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.internal.FilterHelper;
+import org.hibernate.internal.util.ImmutableBitSet;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.StringHelper;
@@ -116,6 +117,7 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
@@ -146,6 +148,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.models.internal.util.CollectionHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.DeleteCoordinatorSoft;
@@ -229,7 +232,6 @@ import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1731,6 +1733,11 @@ public abstract class AbstractEntityPersister
 			final Object propValue) {
 		final int propertyNumber = lazyPropertyNumbers[index];
 		setPropertyValue( entity, propertyNumber, propValue );
+		if ( entry.getMaybeLazySet() != null ) {
+			var bitSet = entry.getMaybeLazySet().toBitSet();
+			bitSet.set( propertyNumber );
+			entry.setMaybeLazySet( ImmutableBitSet.valueOf( bitSet ) );
+		}
 		final var loadedState = entry.getLoadedState();
 		if ( loadedState != null ) {
 			// object have been loaded with setReadOnly(true); HHH-2236
@@ -1765,6 +1772,11 @@ public abstract class AbstractEntityPersister
 	// Used by Hibernate Reactive
 	protected void initializeLazyProperty(Object entity, EntityEntry entry, Object propValue, int index, Type type) {
 		setPropertyValue( entity, index, propValue );
+		if ( entry.getMaybeLazySet() != null ) {
+			var bitSet = entry.getMaybeLazySet().toBitSet();
+			bitSet.set( index );
+			entry.setMaybeLazySet( ImmutableBitSet.valueOf( bitSet ) );
+		}
 		final var loadedState = entry.getLoadedState();
 		if ( loadedState != null ) {
 			// object has been loaded with setReadOnly(true); HHH-2236
@@ -2416,7 +2428,7 @@ public abstract class AbstractEntityPersister
 			final Object[] previousState,
 			final String[] attributeNames,
 			final SessionImplementor session) {
-		final BitSet mutablePropertiesIndexes = getMutablePropertiesIndexes();
+		final var mutablePropertiesIndexes = getMutablePropertiesIndexes();
 		final int estimatedSize =
 				attributeNames == null
 						? 0
@@ -2677,6 +2689,11 @@ public abstract class AbstractEntityPersister
 		return tableMappings[i];
 	}
 
+	@Override
+	public void forEachTableDetails(Consumer<TableDetails> consumer) {
+		CollectionHelper.forEach( getTableMappings(), consumer );
+	}
+
 	/**
 	 * Unfortunately we cannot directly use `SelectableMapping#getContainingTableExpression()`
 	 * as that blows up for attributes declared on super-type for union-subclass mappings
@@ -2729,13 +2746,12 @@ public abstract class AbstractEntityPersister
 
 	protected void logStaticSQL() {
 		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-			MODEL_MUTATION_LOGGER.tracef( "Static SQL for entity: %s", getEntityName() );
+			MODEL_MUTATION_LOGGER.staticSqlForEntity( getEntityName() );
 			for ( var entry : lazyLoadPlanByFetchGroup.entrySet() ) {
-				MODEL_MUTATION_LOGGER.tracef( " Lazy select (%s) : %s",
-						entry.getKey(), entry.getValue().getJdbcSelect().getSqlString() );
+				MODEL_MUTATION_LOGGER.lazySelect( String.valueOf(entry.getKey()), entry.getValue().getJdbcSelect().getSqlString() );
 			}
 			if ( sqlVersionSelectString != null ) {
-				MODEL_MUTATION_LOGGER.tracef( " Version select: %s", sqlVersionSelectString );
+				MODEL_MUTATION_LOGGER.versionSelect( sqlVersionSelectString );
 			}
 
 			{
@@ -2743,7 +2759,7 @@ public abstract class AbstractEntityPersister
 				if ( staticInsertGroup != null ) {
 					for ( int i = 0; i < staticInsertGroup.getNumberOfOperations(); i++ ) {
 						if ( staticInsertGroup.getOperation( i ) instanceof JdbcOperation jdbcOperation ) {
-							MODEL_MUTATION_LOGGER.tracef( " Insert (%s): %s", i, jdbcOperation.getSqlString() );
+							MODEL_MUTATION_LOGGER.insertOperationSql( i, jdbcOperation.getSqlString() );
 						}
 					}
 				}
@@ -2754,7 +2770,7 @@ public abstract class AbstractEntityPersister
 				if ( staticUpdateGroup != null ) {
 					for ( int i = 0; i < staticUpdateGroup.getNumberOfOperations(); i++ ) {
 						if ( staticUpdateGroup.getOperation( i ) instanceof JdbcOperation jdbcOperation ) {
-							MODEL_MUTATION_LOGGER.tracef( " Update (%s): %s", i, jdbcOperation.getSqlString() );
+							MODEL_MUTATION_LOGGER.updateOperationSql( i, jdbcOperation.getSqlString() );
 						}
 					}
 				}
@@ -2765,7 +2781,7 @@ public abstract class AbstractEntityPersister
 				if ( staticDeleteGroup != null ) {
 					for ( int i = 0; i < staticDeleteGroup.getNumberOfOperations(); i++ ) {
 						if ( staticDeleteGroup.getOperation( i ) instanceof JdbcOperation jdbcOperation ) {
-							MODEL_MUTATION_LOGGER.tracef( " Delete (%s): %s", i, jdbcOperation.getSqlString() );
+							MODEL_MUTATION_LOGGER.deleteOperationSql( i, jdbcOperation.getSqlString() );
 						}
 					}
 				}
@@ -3355,7 +3371,7 @@ public abstract class AbstractEntityPersister
 				tableMappingBuilder = new TableMappingBuilder(
 						tableExpression,
 						relativePosition,
-						new EntityTableMapping.KeyMapping( keyColumns, identifierMapping ),
+						EntityTableMapping.createKeyMapping( keyColumns, identifierMapping ),
 						!isIdentifierTable && isNullableTable( relativePosition ),
 						inverseTable,
 						isIdentifierTable,

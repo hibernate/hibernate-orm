@@ -83,13 +83,6 @@ public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 	}
 
 	@Override
-	public int compareTo(SqmParameter<T> parameter) {
-		return parameter instanceof SqmNamedParameter<T> namedParameter
-				? getName().compareTo( namedParameter.getName() )
-				: -1;
-	}
-
-	@Override
 	public boolean equals(Object object) {
 		return object instanceof SqmNamedParameter<?> that
 			&& Objects.equals( name, that.name );
@@ -98,5 +91,15 @@ public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 	@Override
 	public int hashCode() {
 		return name.hashCode();
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals(  object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
 	}
 }

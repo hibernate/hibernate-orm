@@ -1,7 +1,7 @@
 The `hibernate-testing` module of Hibernate ORM defines utilities for writing
 tests easier.
 
-This documentation focuses on the JUnit 5 & annotation based testing support...
+This documentation focuses on the JUnit 6 & annotation based testing support...
 
 
 // todo (6.1) : write more (duh)

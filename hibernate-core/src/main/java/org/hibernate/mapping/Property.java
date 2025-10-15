@@ -137,7 +137,7 @@ public class Property implements Serializable, MetaAttributable {
 
 	public void resetOptional(boolean optional) {
 		setOptional( optional );
-		for ( Selectable selectable: getValue().getSelectables() ) {
+		for ( var selectable: getValue().getSelectables() ) {
 			if ( selectable instanceof Column column ) {
 				column.setNullable( optional );
 			}
@@ -157,7 +157,7 @@ public class Property implements Serializable, MetaAttributable {
 			return getCompositeCascadeStyle( componentType, cascade );
 		}
 		else if ( type instanceof CollectionType ) {
-			final Collection collection = (Collection) value;
+			final var collection = (Collection) value;
 			return getCollectionCascadeStyle( collection.getElement().getType(), cascade );
 		}
 		else {
@@ -533,7 +533,7 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public Property copy() {
-		final Property property =
+		final var property =
 				this instanceof SyntheticProperty
 						? new SyntheticProperty()
 						: new Property();
@@ -600,6 +600,11 @@ public class Property implements Serializable, MetaAttributable {
 		@Override
 		public Property getProperty() {
 			return Property.this;
+		}
+
+		@Override
+		public Value getValue() {
+			return value;
 		}
 
 		@Override

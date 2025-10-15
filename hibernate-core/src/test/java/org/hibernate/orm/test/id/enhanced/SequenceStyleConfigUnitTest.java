@@ -33,9 +33,12 @@ import org.hibernate.id.enhanced.SequenceStructure;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.StandardOptimizerDescriptor;
 import org.hibernate.id.enhanced.TableStructure;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.Table;
+import org.hibernate.mapping.Value;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SettingProvider;
@@ -393,19 +396,6 @@ public class SequenceStyleConfigUnitTest {
 		}
 	}
 
-
-	public static final SettingProvider.Provider<Class<? extends Dialect>> TABLE_DIALECT_PROVIDER = new SettingProvider.Provider<Class<? extends Dialect>>() {
-		@Override
-		public Class<? extends Dialect> getSetting() {
-			return TableDialect.class;
-		}
-	};
-
-	public static final SettingProvider.Provider<Class<? extends Dialect>> SEQUENCE_DIALECT_PROVIDER
-			= () -> SequenceDialect.class;
-	public static final SettingProvider.Provider<Class<? extends Dialect>> POOLED_SEQUENCE_DIALECT_PROVIDER
-			= () -> PooledSequenceDialect.class;
-
 	public static class TableDialect extends Dialect implements SettingProvider.Provider {
 		@Override
 		public DatabaseVersion getVersion() {
@@ -444,11 +434,13 @@ public class SequenceStyleConfigUnitTest {
 
 	private static class TestGeneratorCreationContext implements GeneratorCreationContext {
 		private final Type type;
+		private final BasicValue value;
 		private final MetadataImplementor metadata;
 		private final ServiceRegistry serviceRegistry;
 
 		public TestGeneratorCreationContext(Type type, MetadataBuildingContext buildingContext, ServiceRegistry serviceRegistry) {
 			this.type = type;
+			this.value = new BasicValue( buildingContext, new Table() );
 			this.metadata = buildingContext.getMetadataCollector();
 			this.serviceRegistry = serviceRegistry;
 		}
@@ -486,6 +478,11 @@ public class SequenceStyleConfigUnitTest {
 		@Override
 		public Property getProperty() {
 			return null;
+		}
+
+		@Override
+		public Value getValue() {
+			return value;
 		}
 
 		@Override

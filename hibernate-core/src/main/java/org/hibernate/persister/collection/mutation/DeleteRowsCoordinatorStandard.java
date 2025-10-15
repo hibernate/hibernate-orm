@@ -60,11 +60,7 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 		}
 
 		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-			MODEL_MUTATION_LOGGER.tracef(
-					"Deleting removed collection rows - %s : %s",
-					mutationTarget.getRolePath(),
-					key
-			);
+			MODEL_MUTATION_LOGGER.deletingRemovedCollectionRows( mutationTarget.getRolePath(), key );
 		}
 
 		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
@@ -80,7 +76,7 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 
 			final Iterator<?> deletes = collection.getDeletes( collectionDescriptor, !deleteByIndex );
 			if ( !deletes.hasNext() ) {
-				MODEL_MUTATION_LOGGER.trace( "No rows to delete" );
+				MODEL_MUTATION_LOGGER.noRowsToDelete();
 				return;
 			}
 
@@ -105,8 +101,7 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 				deletionCount++;
 			}
 
-			MODEL_MUTATION_LOGGER.tracef( "Done deleting %s collection rows : %s",
-					deletionCount, mutationTarget.getRolePath() );
+			MODEL_MUTATION_LOGGER.doneDeletingCollectionRows( deletionCount, mutationTarget.getRolePath() );
 		}
 		finally {
 			mutationExecutor.release();

@@ -73,11 +73,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 	@Override
 	public void deleteAllRows(Object key, SharedSessionContractImplementor session) {
 		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-			MODEL_MUTATION_LOGGER.tracef(
-					"Deleting collection - %s : %s",
-					mutationTarget.getRolePath(),
-					key
-			);
+			MODEL_MUTATION_LOGGER.removingCollection( mutationTarget.getRolePath(), key );
 		}
 
 		if ( operationGroup == null ) {

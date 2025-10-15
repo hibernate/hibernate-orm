@@ -20,6 +20,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.*;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.MapKeyColumnJpaAnnotation;
 import org.hibernate.boot.spi.AccessType;
@@ -88,6 +89,7 @@ import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.EMBEDDABLE;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.NONE;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromAnnotation;
+import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromAnnotations;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromNoAnnotation;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnsFromAnnotations;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFromAnnotation;
@@ -568,12 +570,8 @@ public abstract class CollectionBinder {
 			MemberDetails property,
 			MetadataBuildingContext context) {
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
-
-		final var mapKeyJoinColumns = property.getRepeatedAnnotationUsages(
-				JpaAnnotations.MAP_KEY_JOIN_COLUMN,
-				modelsContext
-		);
-
+		final var mapKeyJoinColumns =
+				property.getRepeatedAnnotationUsages( JpaAnnotations.MAP_KEY_JOIN_COLUMN, modelsContext );
 		if ( isEmpty( mapKeyJoinColumns ) ) {
 			return null;
 		}
@@ -593,7 +591,7 @@ public abstract class CollectionBinder {
 			MetadataBuildingContext context,
 			MemberDetails property) {
 //			Comment comment) {
-		return AnnotatedColumn.buildColumnFromAnnotations(
+		return buildColumnFromAnnotations(
 				property.hasDirectAnnotationUsage( MapKeyColumn.class )
 						? MapKeyColumnJpaAnnotation.toColumnAnnotation(
 								property.getDirectAnnotationUsage( MapKeyColumn.class ),
@@ -800,8 +798,8 @@ public abstract class CollectionBinder {
 				property,
 				() -> createUserTypeBean(
 						property.getDeclaringType().getName() + "#" + property.getName(),
-						typeRegistration.getImplementation(),
-						typeRegistration.getParameters(),
+						typeRegistration.implementation(),
+						typeRegistration.parameters(),
 						context.getBootstrapContext(),
 						context.getMetadataCollector().getMetadataBuildingOptions().isAllowExtensionsInCdi()
 				),
@@ -1055,10 +1053,17 @@ public abstract class CollectionBinder {
 	}
 
 	private void bind() {
+		if ( property != null ) {
+			final EmbeddedTable misplaced = property.getDirectAnnotationUsage( EmbeddedTable.class );
+			if ( misplaced != null ) {
+				// not allowed
+				throw new AnnotationPlacementException( "@EmbeddedTable only supported for use on entity or mapped-superclass" );
+			}
+		}
 		collection = createCollection( propertyHolder.getPersistentClass() );
 		final String role = qualify( propertyHolder.getPath(), propertyName );
 		if ( BOOT_LOGGER.isTraceEnabled() ) {
-BOOT_LOGGER.bindingCollectionRole( role );
+			BOOT_LOGGER.bindingCollectionRole( role );
 		}
 		collection.setRole( role );
 		collection.setMappedByProperty( mappedBy );
@@ -1502,22 +1507,25 @@ BOOT_LOGGER.bindingCollectionRole( role );
 			PersistentClass persistentClass,
 			Map<String, PersistentClass> persistentClasses) {
 		if ( persistentClass != null && isUnownedCollection() ) {
-			final Property mappedByProperty;
-			try {
-				mappedByProperty = persistentClass.getRecursiveProperty( mappedBy );
-			}
-			catch (MappingException e) {
-				throw new AnnotationException(
-						"Collection '" + safeCollectionRole()
-								+ "' is 'mappedBy' a property named '" + mappedBy
-								+ "' which does not exist in the target entity '" + elementType.getName() + "'"
-				);
-			}
+			final var mappedByProperty = getMappedByProperty( elementType, persistentClass );
 			checkMappedByType( mappedBy, mappedByProperty.getValue(), propertyName, propertyHolder, persistentClasses );
 			return persistentClass.getJoinNumber( mappedByProperty ) != 0;
 		}
 		else {
 			return false;
+		}
+	}
+
+	private Property getMappedByProperty(TypeDetails elementType, PersistentClass persistentClass) {
+		try {
+			return persistentClass.getRecursiveProperty( mappedBy );
+		}
+		catch (MappingException e) {
+			throw new AnnotationException(
+					"Collection '" + safeCollectionRole()
+					+ "' is 'mappedBy' a property named '" + mappedBy
+					+ "' which does not exist in the target entity '" + elementType.getName() + "'"
+			);
 		}
 	}
 
@@ -2377,10 +2385,10 @@ BOOT_LOGGER.bindingCollectionRole( role );
 					owner.getEntityName(),
 					owner.getJpaEntityName(),
 					collector.getLogicalTableName( owner.getTable() ),
-					collectionEntity != null ? collectionEntity.getClassName() : null,
-					collectionEntity != null ? collectionEntity.getEntityName() : null,
-					collectionEntity != null ? collectionEntity.getJpaEntityName() : null,
-					collectionEntity != null ? collector.getLogicalTableName( collectionEntity.getTable() ) : null,
+					collectionEntity == null ? null : collectionEntity.getClassName(),
+					collectionEntity == null ? null : collectionEntity.getEntityName(),
+					collectionEntity == null ? null : collectionEntity.getJpaEntityName(),
+					collectionEntity == null ? null : collector.getLogicalTableName( collectionEntity.getTable() ),
 					joinColumns.getPropertyName()
 			);
 		}
@@ -2435,34 +2443,30 @@ BOOT_LOGGER.bindingCollectionRole( role );
 			TypeDetails elementType,
 			PersistentClass collectionEntity,
 			boolean isCollectionOfEntities) {
-		if ( !isCollectionOfEntities) {
+		if ( !isCollectionOfEntities ) {
 			throw new AnnotationException( "Association '" + safeCollectionRole() + "'"
 					+ targetEntityMessage( elementType ) );
 		}
 
 		joinColumns.setManyToManyOwnerSideEntityName( collectionEntity.getEntityName() );
-
-		final Property otherSideProperty;
-		try {
-			otherSideProperty = collectionEntity.getRecursiveProperty( mappedBy );
-		}
-		catch ( MappingException e ) {
-			throw new AnnotationException( "Association '" + safeCollectionRole()
-					+ "is 'mappedBy' a property named '" + mappedBy
-					+ "' which does not exist in the target entity '" + elementType.getName() + "'" );
-		}
-		final var otherSidePropertyValue = otherSideProperty.getValue();
+		final var mappedByPropertyValue =
+				getMappedByProperty( elementType, collectionEntity )
+						.getValue();
 		final var table =
-				otherSidePropertyValue instanceof Collection collectionProperty
+				mappedByPropertyValue instanceof Collection collectionProperty
 						// this is a collection on the other side
 						? collectionProperty.getCollectionTable()
 						// this is a ToOne with a @JoinTable or a regular property
-						: otherSidePropertyValue.getTable();
+						: mappedByPropertyValue.getTable();
 		collection.setCollectionTable( table );
-		processSoftDeletes();
 
+		processSoftDeletes();
+		checkCheckAnnotation();
+	}
+
+	private void checkCheckAnnotation() {
 		if ( property.hasDirectAnnotationUsage( Checks.class )
-				|| property.hasDirectAnnotationUsage( Check.class ) ) {
+			|| property.hasDirectAnnotationUsage( Check.class ) ) {
 			throw new AnnotationException( "Association '" + safeCollectionRole()
 					+ " is an unowned collection and may not be annotated '@Check'" );
 		}
@@ -2497,9 +2501,10 @@ BOOT_LOGGER.bindingCollectionRole( role );
 	}
 
 	static String targetEntityMessage(TypeDetails elementType) {
-		final String problem = elementType.determineRawClass().hasDirectAnnotationUsage( Entity.class )
-				? " which does not belong to the same persistence unit"
-				: " which is not an '@Entity' type";
+		final String problem =
+				elementType.determineRawClass().hasDirectAnnotationUsage( Entity.class )
+						? " which does not belong to the same persistence unit"
+						: " which is not an '@Entity' type";
 		return " targets the type '" + elementType.getName() + "'" + problem;
 	}
 
@@ -2507,15 +2512,16 @@ BOOT_LOGGER.bindingCollectionRole( role );
 			MemberDetails property,
 			TypeDetails propertyClass,
 			MetadataBuildingContext context) {
-		final var propertyAnnotation
-				= property.getDirectAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class );
+		final var propertyAnnotation =
+				property.getDirectAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class );
 		if ( propertyAnnotation != null ) {
 			return propertyAnnotation.value();
 		}
 
 		final var rawPropertyClassDetails = propertyClass.determineRawClass();
-		final var classAnnotation
-				= rawPropertyClassDetails.getDirectAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class );
+
+		final var classAnnotation =
+				rawPropertyClassDetails.getDirectAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class );
 		if ( classAnnotation != null ) {
 			return classAnnotation.value();
 		}
@@ -2687,49 +2693,54 @@ BOOT_LOGGER.bindingCollectionRole( role );
 			PersistentClass targetEntity,
 			AnnotatedJoinColumns joinColumns,
 			SimpleValue value) {
-		final Property property = targetEntity.getRecursiveProperty( mappedBy );
+		final var mappedByProperty = targetEntity.getRecursiveProperty( mappedBy );
 		final var firstColumn = joinColumns.getJoinColumns().get(0);
-		for ( var selectable: mappedByColumns( targetEntity, property ) ) {
+		for ( var selectable: mappedByColumns( targetEntity, mappedByProperty ) ) {
 			firstColumn.linkValueUsingAColumnCopy( (Column) selectable, value);
 		}
-		final var metadataCollector = getMetadataCollector();
-		final String referencedPropertyName =
-				metadataCollector.getPropertyReferencedAssociation( targetEntity.getEntityName(), mappedBy );
 		final var manyToOne = (ManyToOne) value;
-		if ( referencedPropertyName != null ) {
-			//TODO always a many to one?
-			manyToOne.setReferencedPropertyName( referencedPropertyName );
-			metadataCollector.addUniquePropertyReference( targetEntity.getEntityName(), referencedPropertyName );
-		}
+		setReferencedProperty( targetEntity.getEntityName(), mappedBy, manyToOne );
 		// Ensure that we copy over the delete action from the owner side before creating the foreign key
-		if ( property.getValue() instanceof Collection collectionValue ) {
-			manyToOne.setOnDeleteAction( ( (SimpleValue) collectionValue.getKey() ).getOnDeleteAction() );
-		}
-		else if ( property.getValue() instanceof ToOne toOne ) {
-			manyToOne.setOnDeleteAction( toOne.getOnDeleteAction() );
-		}
-		manyToOne.setReferenceToPrimaryKey( referencedPropertyName == null );
+		setOnDeleteAction( mappedByProperty, manyToOne );
 		value.createForeignKey();
 	}
 
+	private void setReferencedProperty(String targetEntityName, String mappedBy, ManyToOne manyToOne) {
+		final var metadataCollector = getMetadataCollector();
+		final String referencedPropertyName =
+				metadataCollector.getPropertyReferencedAssociation( targetEntityName, mappedBy );
+		if ( referencedPropertyName != null ) {
+			//TODO always a many to one?
+			manyToOne.setReferencedPropertyName( referencedPropertyName );
+			metadataCollector.addUniquePropertyReference( targetEntityName, referencedPropertyName );
+		}
+		manyToOne.setReferenceToPrimaryKey( referencedPropertyName == null );
+	}
+
+	private static void setOnDeleteAction(Property mappedByProperty, ManyToOne manyToOne) {
+		final var mappedByPropertyValue = mappedByProperty.getValue();
+		if ( mappedByPropertyValue instanceof Collection collectionValue ) {
+			manyToOne.setOnDeleteAction( ( (SimpleValue) collectionValue.getKey() ).getOnDeleteAction() );
+		}
+		else if ( mappedByPropertyValue instanceof ToOne toOne ) {
+			manyToOne.setOnDeleteAction( toOne.getOnDeleteAction() );
+		}
+	}
+
 	private static List<Selectable> mappedByColumns(PersistentClass referencedEntity, Property property) {
-		if ( property.getValue() instanceof Collection collection ) {
-			return collection.getKey().getSelectables();
-		}
-		else {
-			//find the appropriate reference key, can be in a join
-			KeyValue key = null;
-			for ( var join : referencedEntity.getJoins() ) {
-				if ( join.containsProperty(property) ) {
-					key = join.getKey();
-					break;
-				}
+		return property.getValue() instanceof Collection collection
+				? collection.getKey().getSelectables()
+				: getReferenceKey( referencedEntity, property ).getSelectables();
+	}
+
+	private static KeyValue getReferenceKey(PersistentClass referencedEntity, Property property) {
+		//find the appropriate reference key, can be in a join
+		for ( var join : referencedEntity.getJoins() ) {
+			if ( join.containsProperty( property ) ) {
+				return join.getKey();
 			}
-			if ( key == null ) {
-				key = property.getPersistentClass().getIdentifier();
-			}
-			return key.getSelectables();
 		}
+		return property.getPersistentClass().getIdentifier();
 	}
 
 	private void setFkJoinColumns(AnnotatedJoinColumns annotatedJoinColumns) {
@@ -2770,7 +2781,7 @@ BOOT_LOGGER.bindingCollectionRole( role );
 
 	private void logOneToManySecondPass() {
 		if ( BOOT_LOGGER.isTraceEnabled() ) {
-BOOT_LOGGER.bindingOneToManyThroughForeignKey( safeCollectionRole() );
+			BOOT_LOGGER.bindingOneToManyThroughForeignKey( safeCollectionRole() );
 		}
 	}
 
@@ -2779,19 +2790,19 @@ BOOT_LOGGER.bindingOneToManyThroughForeignKey( safeCollectionRole() );
 			boolean isCollectionOfEntities,
 			boolean isManyToAny) {
 		if ( BOOT_LOGGER.isTraceEnabled() ) {
+			final String role = safeCollectionRole();
 			if ( isCollectionOfEntities && isOneToMany ) {
-	BOOT_LOGGER.bindingOneToManyThroughAssociationTable( safeCollectionRole() );
+				BOOT_LOGGER.bindingOneToManyThroughAssociationTable( role );
 			}
 			else if ( isCollectionOfEntities ) {
-	BOOT_LOGGER.bindingManyToManyThroughAssociationTable( safeCollectionRole() );
+				BOOT_LOGGER.bindingManyToManyThroughAssociationTable( role );
 			}
 			else if ( isManyToAny ) {
-	BOOT_LOGGER.bindingManyToAny( safeCollectionRole() );
+				BOOT_LOGGER.bindingManyToAny( role );
 			}
 			else {
-	BOOT_LOGGER.bindingElementCollectionToCollectionTable( safeCollectionRole() );
+				BOOT_LOGGER.bindingElementCollectionToCollectionTable( role );
 			}
 		}
 	}
-
 }

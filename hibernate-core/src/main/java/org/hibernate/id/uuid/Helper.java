@@ -98,15 +98,15 @@ public final class Helper {
 	// Helper methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public static String format(int value) {
-		final String formatted = Integer.toHexString( value );
-		StringBuilder buf = new StringBuilder( "00000000" );
+		final var formatted = Integer.toHexString( value );
+		final var buf = new StringBuilder( "00000000" );
 		buf.replace( 8 - formatted.length(), 8, formatted );
 		return buf.toString();
 	}
 
 	public static String format(short value) {
-		String formatted = Integer.toHexString( value );
-		StringBuilder buf = new StringBuilder( "0000" );
+		final var formatted = Integer.toHexString( value );
+		final var buf = new StringBuilder( "0000" );
 		buf.replace( 4 - formatted.length(), 4, formatted );
 		return buf.toString();
 	}

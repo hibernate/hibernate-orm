@@ -85,11 +85,12 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 	@SuppressWarnings("ResultOfMethodCallIgnored")
 	static Writer toFileWriter(File file, String charsetName, boolean append) {
 		try {
-			if ( ! file.exists() ) {
+			if ( !file.exists() ) {
 				// best effort, since this is very likely not allowed in EE environments
 				CORE_LOGGER.attemptingToCreateScriptTarget( file.getAbsolutePath() );
-				if ( file.getParentFile() != null ) {
-					file.getParentFile().mkdirs();
+				final var parentFile = file.getParentFile();
+				if ( parentFile != null ) {
+					parentFile.mkdirs();
 				}
 				file.createNewFile();
 			}

@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.exec.spi;
 
+import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
+
 /**
  * The strategy to use for applying locks to a {@link JdbcOperationQuerySelect}.
  *

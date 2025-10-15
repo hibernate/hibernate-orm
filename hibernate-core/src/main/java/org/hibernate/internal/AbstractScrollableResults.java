@@ -7,10 +7,10 @@ package org.hibernate.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
 
 /**
@@ -22,7 +22,7 @@ import org.hibernate.sql.results.spi.RowReader;
 public abstract class AbstractScrollableResults<R> implements ScrollableResultsImplementor<R> {
 	private final JdbcValues jdbcValues;
 	private final JdbcValuesSourceProcessingOptions processingOptions;
-	private final JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState;
+	private final JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState;
 	private final RowProcessingStateStandardImpl rowProcessingState;
 	private final RowReader<R> rowReader;
 	private final SharedSessionContractImplementor persistenceContext;
@@ -32,7 +32,7 @@ public abstract class AbstractScrollableResults<R> implements ScrollableResultsI
 	public AbstractScrollableResults(
 			JdbcValues jdbcValues,
 			JdbcValuesSourceProcessingOptions processingOptions,
-			JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState,
+			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
 			RowProcessingStateStandardImpl rowProcessingState,
 			RowReader<R> rowReader,
 			SharedSessionContractImplementor persistenceContext) {
@@ -62,7 +62,7 @@ public abstract class AbstractScrollableResults<R> implements ScrollableResultsI
 		return processingOptions;
 	}
 
-	protected JdbcValuesSourceProcessingStateStandardImpl getJdbcValuesSourceProcessingState() {
+	protected JdbcValuesSourceProcessingState getJdbcValuesSourceProcessingState() {
 		return jdbcValuesSourceProcessingState;
 	}
 

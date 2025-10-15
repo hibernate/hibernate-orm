@@ -59,4 +59,14 @@ public enum SqmJsonNullBehavior implements SqmTypedNode<Object> {
 			hql.append( " absent on null" );
 		}
 	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return this == object;
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
+	}
 }

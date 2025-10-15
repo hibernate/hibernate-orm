@@ -21,7 +21,6 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
-import org.hibernate.tool.schema.extract.internal.InformationExtractorJdbcDatabaseMetaDataImpl;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.InformationExtractor;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
@@ -34,7 +33,6 @@ import org.hibernate.tool.schema.spi.ExtractionTool;
 import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.spi.SchemaCreator;
 import org.hibernate.tool.schema.spi.SchemaDropper;
-import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaFilterProvider;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
@@ -42,6 +40,7 @@ import org.hibernate.tool.schema.spi.SchemaMigrator;
 import org.hibernate.tool.schema.spi.SchemaPopulator;
 import org.hibernate.tool.schema.spi.SchemaTruncator;
 import org.hibernate.tool.schema.spi.SchemaValidator;
+import org.hibernate.tool.schema.spi.GeneratorSynchronizer;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 import org.jboss.logging.Logger;
 
@@ -107,17 +106,22 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 	}
 
 	@Override
+	public GeneratorSynchronizer getSequenceSynchronizer(Map<String, Object> options) {
+		return new GeneratorSynchronizerImpl( this, getSchemaFilterProvider( options ).getMigrateFilter() );
+	}
+
+	@Override
 	public SchemaMigrator getSchemaMigrator(Map<String,Object> options) {
-		final SchemaFilter migrateFilter = getSchemaFilterProvider( options ).getMigrateFilter();
-		return determineJdbcMetadaAccessStrategy( options ) == JdbcMetadataAccessStrategy.GROUPED
+		final var migrateFilter = getSchemaFilterProvider( options ).getMigrateFilter();
+		return JdbcMetadataAccessStrategy.interpretSetting( options ) == JdbcMetadataAccessStrategy.GROUPED
 				? new GroupedSchemaMigratorImpl( this, migrateFilter )
 				: new IndividuallySchemaMigratorImpl( this, migrateFilter );
 	}
 
 	@Override
 	public SchemaValidator getSchemaValidator(Map<String,Object> options) {
-		final SchemaFilter validateFilter = getSchemaFilterProvider( options ).getValidateFilter();
-		return determineJdbcMetadaAccessStrategy( options ) == JdbcMetadataAccessStrategy.GROUPED
+		final var validateFilter = getSchemaFilterProvider( options ).getValidateFilter();
+		return JdbcMetadataAccessStrategy.interpretSetting( options ) == JdbcMetadataAccessStrategy.GROUPED
 				? new GroupedSchemaValidatorImpl( this, validateFilter )
 				: new IndividuallySchemaValidatorImpl( this, validateFilter );
 	}
@@ -127,10 +131,6 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 				.resolveDefaultableStrategy( SchemaFilterProvider.class,
 						options == null ? null : options.get( HBM2DDL_FILTER_PROVIDER ),
 						DefaultSchemaFilterProvider.INSTANCE );
-	}
-
-	private JdbcMetadataAccessStrategy determineJdbcMetadaAccessStrategy(Map<String,Object> options) {
-		return JdbcMetadataAccessStrategy.interpretSetting( options );
 	}
 
 	@Override
@@ -155,7 +155,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			boolean needsAutoCommit) {
 		final String scriptDelimiter = getString( HBM2DDL_DELIMITER, options, ";" );
 
-		final GenerationTarget[] targets = new GenerationTarget[ targetDescriptor.getTargetTypes().size() ];
+		final var targets = new GenerationTarget[ targetDescriptor.getTargetTypes().size() ];
 
 		int index = 0;
 
@@ -200,7 +200,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			Map<String,Object> options) {
 		final String scriptDelimiter = getString( HBM2DDL_DELIMITER, options, ";" );
 
-		final GenerationTarget[] targets = new GenerationTarget[ targetDescriptor.getTargetTypes().size() ];
+		final var targets = new GenerationTarget[ targetDescriptor.getTargetTypes().size() ];
 
 		int index = 0;
 
@@ -239,7 +239,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		final var jdbcContextBuilder = new JdbcContextBuilder( serviceRegistry );
 
 		// see if a specific connection has been provided
-		final Connection providedConnection = (Connection) coalesceSuppliedValues(
+		final var providedConnection = (Connection) coalesceSuppliedValues(
 				() -> configurationValues.get( JAKARTA_HBM2DDL_CONNECTION ),
 				() -> {
 					final Object value = configurationValues.get( HBM2DDL_CONNECTION );
@@ -468,7 +468,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 
 		@Override
 		public InformationExtractor createInformationExtractor(ExtractionContext extractionContext) {
-			return new InformationExtractorJdbcDatabaseMetaDataImpl( extractionContext );
+			return extractionContext.getJdbcEnvironment().getDialect().getInformationExtractor( extractionContext );
 		}
 	}
 }

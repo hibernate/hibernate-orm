@@ -5,25 +5,22 @@
 package org.hibernate.orm.test.mapping.collections.custom.basic;
 
 import org.hibernate.Hibernate;
+import org.hibernate.testing.orm.junit.DomainModel;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * @author Steve Ebersole
  */
+@DomainModel(
+		xmlMappings = { "/org/hibernate/orm/test/mapping/collections/custom/basic/UserPermissions.hbm.xml" },
+		concurrencyStrategy = "nonstrict-read-write"
+)
 public class UserCollectionTypeHbmVariantTest extends UserCollectionTypeTest {
-	@Override
-	protected String getBaseForMappings() {
-		return "";
-	}
-
-	@Override
-	public String[] getMappings() {
-		return new String[] { "/org/hibernate/orm/test/mapping/collections/custom/basic/UserPermissions.hbm.xml" };
-	}
 
 	@Override
 	protected void checkEmailAddressInitialization(User user) {
 		assertFalse( Hibernate.isInitialized( user.getEmailAddresses() ) );
 	}
+
 }

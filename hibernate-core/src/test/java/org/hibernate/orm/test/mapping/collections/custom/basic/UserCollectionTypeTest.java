@@ -8,25 +8,22 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
 
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Max Rydahl Andersen
  */
-public abstract class UserCollectionTypeTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected String getCacheConcurrencyStrategy() {
-		return "nonstrict-read-write";
-	}
+@SessionFactory
+public abstract class UserCollectionTypeTest {
 
 	@Test
-	public void testBasicOperation() {
+	public void testBasicOperation(SessionFactoryScope scope) {
 		User u = new User( 1, "max" );
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					u.getEmailAddresses().add( new Email("max@hibernate.org") );
 					u.getEmailAddresses().add( new Email("max.andersen@jboss.com") );
@@ -34,29 +31,26 @@ public abstract class UserCollectionTypeTest extends BaseNonConfigCoreFunctional
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					CriteriaQuery<User> criteria = criteriaBuilder.createQuery( User.class );
 					criteria.from( User.class );
 					User u2 = s.createQuery( criteria ).uniqueResult();
-//					User u2 = (User) s.createCriteria(User.class).uniqueResult();
 					checkEmailAddressInitialization( u2 );
-					assertEquals( u2.getEmailAddresses().size(), 2 );
+					assertEquals( 2, u2.getEmailAddresses().size() );
 
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
-					User u2 = s.get( User.class, u.getId() );
-					u2.getEmailAddresses().size();
-					assertEquals( 2, MyListType.lastInstantiationRequest );
-
+					User u2 = s.find( User.class, u.getId() );
+					assertEquals( u2.getEmailAddresses().size(), MyListType.lastInstantiationRequest );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> s.remove( u )
 		);
 	}

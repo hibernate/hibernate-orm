@@ -144,7 +144,10 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 
 	private void writeDialectReportEntry(DialectDelegate dialectDelegate, OutputStreamWriter fileWriter) {
 		try {
-			final String version = dialectDelegate.getMinimumVersion();
+			String version = dialectDelegate.getMinimumVersion();
+			if ( "0.0".equals( version ) ) {
+				version = "N/A";
+			}
 			fileWriter.write( '|' );
 			fileWriter.write( dialectDelegate.getDialectImplClass().getSimpleName() );
 			fileWriter.write( '|' );

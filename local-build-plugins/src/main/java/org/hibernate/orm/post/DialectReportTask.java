@@ -22,13 +22,10 @@ import org.gradle.api.Project;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
-
-import org.hibernate.orm.env.HibernateVersion;
 
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Index;
@@ -40,23 +37,15 @@ import org.jboss.jandex.Index;
  */
 public abstract class DialectReportTask extends AbstractJandexAwareTask {
 	private final Property<RegularFile> reportFile;
-	private final Property<Boolean> generateHeading;
 
 	public DialectReportTask() {
 		setDescription( "Generates a report of the supported Dialects" );
 		reportFile = getProject().getObjects().fileProperty();
-		reportFile.convention( getProject().getLayout().getBuildDirectory().file( "orm/generated/dialect/dialect.adoc" ) );
-		generateHeading = getProject().getObjects().property( Boolean.class ).convention( true );
 	}
 
 	@OutputFile
 	public Property<RegularFile> getReportFile() {
 		return reportFile;
-	}
-
-	@Input
-	public Property<Boolean> getGenerateHeading() {
-		return generateHeading;
 	}
 
 	@Override
@@ -128,15 +117,6 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 
 	private void writeDialectReportHeader(OutputStreamWriter fileWriter) {
 		try {
-			if ( this.generateHeading.get() ) {
-				fileWriter.write( "= Supported Dialects\n\n" );
-				fileWriter.write(
-						"Supported Dialects along with the minimum supported version of the underlying database.\n\n\n" );
-
-				HibernateVersion ormVersion = (HibernateVersion) getProject().getRootProject().getExtensions().getByName( "ormVersion" );
-				fileWriter.write( "NOTE: Hibernate version " + ormVersion.getFamily() + "\n\n" );
-			}
-
 			fileWriter.write( "[cols=\"a,a\", options=\"header\"]\n" );
 			fileWriter.write( "|===\n" );
 			fileWriter.write( "|Dialect |Minimum Database Version\n" );

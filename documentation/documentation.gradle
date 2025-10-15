@@ -692,7 +692,7 @@ def renderUserGuideHtmlTask = tasks.register( 'renderUserGuideHtml', Asciidoctor
 	inputs.property "hibernate-version", project.ormVersion
 	inputs.file( generateSettingsDocTask.get().outputFile )
 
-	dependsOn generateSettingsDocTask, generateDialectTableReport
+	dependsOn generateSettingsDocTask
 
 	sourceDir = file( 'src/main/asciidoc/userguide' )
 	sources {
@@ -807,6 +807,30 @@ def renderMigrationGuideTask = tasks.register( "renderMigrationGuide", Asciidoct
 	}
 }
 
+// Dialect Guide ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+def renderDialectGuideTask = tasks.register( 'renderDialectGuide', AsciidoctorTask ) { task ->
+    group = "Documentation"
+    description = 'Renders the Dialect guide in HTML format using Asciidoctor.'
+    inputs.property "hibernate-version", project.ormVersion
+    dependsOn generateDialectTableReport
+
+    sourceDir = file( 'src/main/asciidoc/dialect' )
+    sources 'dialect.adoc'
+    outputDir = layout.buildDirectory.dir( 'asciidoc/dialect' )
+
+    attributes linkcss: true, stylesheet: "css/hibernate.css",
+            'generated-report-dir': layout.buildDirectory.dir( 'orm/generated' ).get()
+
+    task.resources {
+        from( 'src/main/style/asciidoctor' ) {
+            include 'images/**'
+        }
+        from( 'src/main/style/asciidoctor' ) {
+            include 'css/**'
+        }
+    }
+}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ORM Reports
@@ -836,34 +860,8 @@ def renderLoggingReportTask = tasks.register( 'renderLoggingReport', Asciidoctor
 	}
 }
 
-def renderDialectReportTask = tasks.register( 'renderDialectReport', AsciidoctorTask ) { task ->
-	task.group = "hibernate-reports"
-	task.description = 'Renders the supported Dialect report in HTML format using Asciidoctor.'
-	task.dependsOn "generateDialectReport"
-	task.dependsOn "generateDialectTableReport"
-
-	task.inputs.property "version", project.ormVersion
-
-	task.sourceDir = layout.buildDirectory.dir( 'orm/generated/dialect' )
-	task.sources 'dialect.adoc'
-
-	task.outputDir = project.layout.buildDirectory.dir( 'asciidoc/dialect' )
-
-	task.attributes linkcss: true,
-					stylesheet: "css/hibernate.css"
-
-	task.resources {
-		from( 'src/main/style/asciidoctor' ) {
-			include 'images/**'
-		}
-		from( 'src/main/style/asciidoctor' ) {
-			include 'css/**'
-		}
-	}
-}
-
 def generateReportsTask = tasks.named( "generateReports" ) {
-	dependsOn renderLoggingReportTask, renderDialectReportTask
+	dependsOn renderLoggingReportTask
 }
 
 
@@ -882,6 +880,7 @@ def buildDocsTask = tasks.register( 'buildDocs' ) { task ->
 	task.dependsOn renderRepositoriesTask
 	task.dependsOn renderIntegrationGuidesTask
 	task.dependsOn renderTopicalGuidesTask
+    task.dependsOn renderDialectGuideTask
 	task.dependsOn generateReportsTask
 	task.dependsOn renderMigrationGuideTask
 }

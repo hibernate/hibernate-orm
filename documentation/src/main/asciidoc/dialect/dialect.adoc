@@ -24,6 +24,7 @@ Below is a list of supported dialects and the minimum required version of the da
 
 include::{generated-report-dir}/dialect/dialect-table.adoc[]
 
+[[community-dialects]]
 == Community dialects
 
 Community dialects are not included in `org.hibernate.orm:hibernate-core` and require an additional dependency to `org.hibernate.orm:hibernate-community-dialects`.

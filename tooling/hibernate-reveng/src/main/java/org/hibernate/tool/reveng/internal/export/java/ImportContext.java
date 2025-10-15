@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.export.java;
 
@@ -22,19 +9,19 @@ public interface ImportContext {
 	/**
 	 * Add fqcn to the import list. Returns fqcn as needed in source code.
 	 * Attempts to handle fqcn with array and generics references.
-	 * 
+	 *
 	 * e.g.
 	 * java.util.Collection<org.marvel.Hulk> imports java.util.Collection and returns Collection
 	 * org.marvel.Hulk[] imports org.marvel.Hulk and returns Hulk
-	 * 
-	 * 
+	 *
+	 *
 	 * @param fqcn
 	 * @return import string
 	 */
 	public abstract String importType(String fqcn);
 
 	public abstract String staticImport(String fqcn, String member);
-	
+
 	public abstract String generateImports();
 
 }

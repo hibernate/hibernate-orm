@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.core.dialect;
 
@@ -30,32 +17,32 @@ import java.util.Map;
 /**
  * Oracle Specialised MetaData dialect that uses standard JDBC and querys on the
  * Data Dictionary for reading metadata.
- * 
+ *
  * @author David Channon
  * @author Eric Kershner (added preparedstatements HBX-817)
  * @author Jacques Stadler (added HBX-1027)
- *  
+ *
  */
 
 public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 
-	
-	
+
+
 	public OracleMetaDataDialect() {
 		super();
 	}
-	
+
 	/* ******* TABLE QUERIES ******* */
-	private static final String SQL_TABLE_BASE = 
-		    "select a.table_name, a.owner, "
-						  + "(SELECT b.comments\n"
-              + "   FROM all_tab_comments b\n"
-              + "  WHERE a.owner = b.owner\n"
-              + "        AND a.table_name = b.table_name) AS comments, "
-              + "'TABLE' "
+	private static final String SQL_TABLE_BASE =
+			"select a.table_name, a.owner, "
+						+ "(SELECT b.comments\n"
+			+ "   FROM all_tab_comments b\n"
+			+ "  WHERE a.owner = b.owner\n"
+			+ "        AND a.table_name = b.table_name) AS comments, "
+			+ "'TABLE' "
 			+ "from all_tables a ";
 
-	private static final String SQL_TABLE_VIEW = 
+	private static final String SQL_TABLE_VIEW =
 		" union all select view_name, owner, NULL, 'VIEW' from all_views ";
 
 	private static final String SQL_TABLE_NONE = SQL_TABLE_BASE	+ SQL_TABLE_VIEW;
@@ -67,10 +54,10 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 			+ "where a.table_name like ?" + SQL_TABLE_VIEW + "where view_name like ?";
 
 	private static final String SQL_TABLE_SCHEMA_AND_TABLE =
-        SQL_TABLE_BASE
+		SQL_TABLE_BASE
 			+ "where a.owner like ? and a.table_name like ?"
-      + SQL_TABLE_VIEW
-      + "where owner like ? and view_name like ?";
+	+ SQL_TABLE_VIEW
+	+ "where owner like ? and view_name like ?";
 
 	private PreparedStatement prepTableNone;
 
@@ -84,7 +71,7 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 	/* ******* INDEX QUERIES ******* */
 	/* ***************************** */
 	private static final String SQL_INDEX_BASE =
-            "SELECT a.column_name\n" +
+			"SELECT a.column_name\n" +
 						"      ,decode((SELECT b.uniqueness\n" +
 						"                FROM all_indexes b\n" +
 						"               WHERE a.table_name = b.table_name\n" +
@@ -119,9 +106,9 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 
 	private PreparedStatement prepIndexSchemaAndTable;
 
-	/* ****** COLUMN QUERIES ******* */	
+	/* ****** COLUMN QUERIES ******* */
 	private static final String SQL_COLUMN_BASE =
-            "SELECT a.column_name AS COLUMN_NAME\n" +
+			"SELECT a.column_name AS COLUMN_NAME\n" +
 						"      ,a.owner AS TABLE_SCHEM\n" +
 						"      ,decode(a.nullable, 'N', 0, 1) AS NULLABLE\n" +
 						"      ,decode(a.data_type, 'FLOAT', decode(a.data_precision, NULL, a.data_length, a.data_precision), 'NUMBER',\n" +
@@ -193,7 +180,7 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 	/* ******** PK QUERIES ********* */
 	/* ***************************** */
 	private static final String SQL_PK_BASE =
-            "select c.table_name, c.column_name, c.position,  c.constraint_name, "
+			"select c.table_name, c.column_name, c.position,  c.constraint_name, "
 			+ "c.owner from all_cons_columns c join all_constraints k on "
 			+ "(k.owner = c.owner AND k.table_name = c.table_name AND k.constraint_name = c.constraint_name) "
 			+ "where  k.constraint_type = 'P' ";
@@ -223,34 +210,34 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 	/* ******** FK QUERIES ********* */
 	/* ***************************** */
 	private static final String SQL_FK_BASE =
-            "SELECT p.table_name as p_table_name\n" +
-            "      ,p.owner as p_owner\n" +
-            "      ,f.owner as f_owner\n" +
-            "      ,f.table_name as f_table_name\n" +
-            "      ,(SELECT fc.column_name\n" +
-            "          FROM all_cons_columns fc\n" +
-            "         WHERE fc.owner = f.owner\n" +
-            "               AND fc.constraint_name = f.constraint_name\n" +
-            "               AND fc.table_name = f.table_name\n" +
-            "               AND fc.position = pc.position) AS fc_column_name\n" +
-            "      ,pc.column_name as pc_column_name\n" +
-            "      ,f.constraint_name\n" +
-            "      ,(SELECT fc.position\n" +
-            "          FROM all_cons_columns fc\n" +
-            "         WHERE fc.owner = f.owner\n" +
-            "               AND fc.constraint_name = f.constraint_name\n" +
-            "               AND fc.table_name = f.table_name\n" +
-            "               AND fc.position = pc.position) AS fc_position\n" +
-            "  FROM all_constraints p\n" +
-            "  JOIN all_cons_columns pc\n" +
-            "    ON pc.owner = p.owner\n" +
-            "       AND pc.constraint_name = p.constraint_name\n" +
-            "       AND pc.table_name = p.table_name\n" +
-            "  JOIN all_constraints f\n" +
-            "    ON p.owner = f.r_owner\n" +
-            "       AND p.constraint_name = f.r_constraint_name\n" +
-            " WHERE f.constraint_type = 'R'\n" +
-            "       AND p.constraint_type = 'P'\n";
+			"SELECT p.table_name as p_table_name\n" +
+			"      ,p.owner as p_owner\n" +
+			"      ,f.owner as f_owner\n" +
+			"      ,f.table_name as f_table_name\n" +
+			"      ,(SELECT fc.column_name\n" +
+			"          FROM all_cons_columns fc\n" +
+			"         WHERE fc.owner = f.owner\n" +
+			"               AND fc.constraint_name = f.constraint_name\n" +
+			"               AND fc.table_name = f.table_name\n" +
+			"               AND fc.position = pc.position) AS fc_column_name\n" +
+			"      ,pc.column_name as pc_column_name\n" +
+			"      ,f.constraint_name\n" +
+			"      ,(SELECT fc.position\n" +
+			"          FROM all_cons_columns fc\n" +
+			"         WHERE fc.owner = f.owner\n" +
+			"               AND fc.constraint_name = f.constraint_name\n" +
+			"               AND fc.table_name = f.table_name\n" +
+			"               AND fc.position = pc.position) AS fc_position\n" +
+			"  FROM all_constraints p\n" +
+			"  JOIN all_cons_columns pc\n" +
+			"    ON pc.owner = p.owner\n" +
+			"       AND pc.constraint_name = p.constraint_name\n" +
+			"       AND pc.table_name = p.table_name\n" +
+			"  JOIN all_constraints f\n" +
+			"    ON p.owner = f.r_owner\n" +
+			"       AND p.constraint_name = f.r_constraint_name\n" +
+			" WHERE f.constraint_type = 'R'\n" +
+			"       AND p.constraint_type = 'P'\n";
 
 	private static final String SQL_FK_ORDER = " order by f.table_name, f.constraint_name, position ";
 
@@ -272,19 +259,19 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 	private PreparedStatement prepFkTable;
 
 	private PreparedStatement prepFkSchemaAndTable;
-	
+
 	public Iterator<Map<String,Object>> getTables(final String catalog, final String schema,
 			String table) {
 		try {
 			log.debug("getTables(" + catalog + "." + schema + "." + table + ")");
-			
+
 			ResultSet tableRs = getTableResultSet( schema, table );
 
 			return new ResultSetIterator(null, tableRs) {
 
 				Map<String, Object> element = new HashMap<String, Object>();
 
-				
+
 				protected Map<String, Object> convertRow(ResultSet tableResultSet)
 						throws SQLException {
 					element.clear();
@@ -292,7 +279,7 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 					element.put("TABLE_SCHEM", tableResultSet.getString(2));
 					element.put("TABLE_CAT", null);
 					element.put("TABLE_TYPE", tableResultSet.getString(4));
-          element.put("REMARKS", tableResultSet.getString(3));
+		element.put("REMARKS", tableResultSet.getString(3));
 					log.info( element.toString() );
 					return element;
 				}
@@ -305,21 +292,22 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 							schema);
 					throw new RuntimeException(
 							"Could not get list of tables from database. Probably a JDBC driver problem. "
-									+ databaseStructure, 
+									+ databaseStructure,
 							e);
 				}
 			};
-		} catch (SQLException e) {
+		}
+		catch (SQLException e) {
 			// schemaRs and catalogRs are only used for error reporting if we
 			// get an exception
 			String databaseStructure = getDatabaseStructure(catalog, schema);
 			throw new RuntimeException(
 					"Could not get list of tables from database. Probably a JDBC driver problem. "
-							+ databaseStructure, 
+							+ databaseStructure,
 					e);
 		}
 	}
-	
+
 	public Iterator<Map<String, Object>> getIndexInfo(final String catalog, final String schema,
 			final String table) {
 		try {
@@ -332,7 +320,7 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 
 				Map<String, Object> element = new HashMap<String, Object>();
 
-				
+
 				protected Map<String, Object> convertRow(ResultSet rs) throws SQLException {
 					element.clear();
 					element.put("COLUMN_NAME", rs.getString(1));
@@ -354,7 +342,8 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 							e);
 				}
 			};
-		} catch (SQLException e) {
+		}
+		catch (SQLException e) {
 			throw new RuntimeException (
 					"Exception while getting index info for "
 							+ TableNameQualifier.qualify(catalog, schema, table) + ": " + e.getMessage(),
@@ -364,7 +353,7 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 
 	public Iterator<Map<String, Object>> getColumns(final String catalog, final String schema,
 			final String table, String column) {
-		
+
 		try {
 			log.debug("getColumns(" + catalog + "." + schema + "." + table + "." + column + ")");
 
@@ -375,7 +364,7 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 
 				Map<String, Object> element = new HashMap<String, Object>();
 
-				
+
 				protected Map<String, Object> convertRow(ResultSet rs) throws SQLException {
 					element.clear();
 					element.put("COLUMN_NAME", rs.getString(1));
@@ -398,17 +387,18 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 							e);
 				}
 			};
-		} catch (SQLException e) {
+		}
+		catch (SQLException e) {
 			throw new RuntimeException(
 					"Error while reading column meta data for "
-							+ TableNameQualifier.qualify(catalog, schema, table), 
+							+ TableNameQualifier.qualify(catalog, schema, table),
 					e);
 		}
 	}
 
 	public Iterator<Map<String, Object>> getPrimaryKeys(final String catalog, final String schema,
 			final String table) {
-		
+
 		try {
 			log.debug("getPrimaryKeys(" + catalog + "." + schema + "." + table
 					+ ")");
@@ -420,7 +410,7 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 
 				Map<String, Object> element = new HashMap<String, Object>();
 
-				
+
 				protected Map<String, Object> convertRow(ResultSet rs) throws SQLException {
 					element.clear();
 					element.put("TABLE_NAME", rs.getString(1));
@@ -439,17 +429,18 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 							e);
 				}
 			};
-		} catch (SQLException e) {
+		}
+		catch (SQLException e) {
 			throw new RuntimeException(
 					"Error while reading primary key meta data for "
-							+ TableNameQualifier.qualify(catalog, schema, table), 
+							+ TableNameQualifier.qualify(catalog, schema, table),
 					e);
 		}
 	}
 
 	public Iterator<Map<String, Object>> getExportedKeys(final String catalog, final String schema,
 			final String table) {
-		
+
 		try {
 			log.debug("getExportedKeys(" + catalog + "." + schema + "." + table
 					+ ")");
@@ -460,7 +451,7 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 
 				Map<String, Object> element = new HashMap<String, Object>();
 
-				
+
 				protected Map<String, Object> convertRow(ResultSet rs) throws SQLException {
 					element.clear();
 					element.put("PKTABLE_NAME", rs.getString(1));
@@ -483,14 +474,15 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 							e);
 				}
 			};
-		} catch (SQLException e) {
+		}
+		catch (SQLException e) {
 			throw new RuntimeException(
 					"Error while reading exported keys meta data for "
-							+ TableNameQualifier.qualify(catalog, schema, table), 
+							+ TableNameQualifier.qualify(catalog, schema, table),
 					e);
 		}
-	}	
-	
+	}
+
 	public void close() {
 		try {
 			prepTableNone = close( prepTableNone );
@@ -526,19 +518,20 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 	private PreparedStatement close(PreparedStatement ps) {
 		if(ps==null) {
 			return null;
-		} else {
+		}
+		else {
 			try {
 				ps.close();
 			}
 			catch (SQLException e) {
 				throw new RuntimeException(
-						"Problem while closing prepared statement", e);				
+						"Problem while closing prepared statement", e);
 			}
 			return null;
 		}
-		
+
 	}
-	
+
 	private String escape(String str) {
 		return str.replace("_", "\\_");
 	}
@@ -557,20 +550,23 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 			.prepareStatement(SQL_PK_SCHEMA_AND_TABLE);
 			log.debug("  primary key queries prepared!");
 		}
-		
+
 		ResultSet pkeyRs;
 		if (schema == null && table == null) {
 			pkeyRs = prepPkNone.executeQuery();
-		} else if (schema != null) {
+		}
+		else if (schema != null) {
 			if (table == null) {
 				prepPkSchema.setString(1, schema);
 				pkeyRs = prepPkSchema.executeQuery();
-			} else {
+			}
+			else {
 				prepPkSchemaAndTable.setString(1, schema);
 				prepPkSchemaAndTable.setString(2, table);
 				pkeyRs = prepPkSchemaAndTable.executeQuery();
 			}
-		} else {
+		}
+		else {
 			prepPkTable.setString(1, table);
 			pkeyRs = prepPkTable.executeQuery();
 		}
@@ -586,21 +582,24 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 			prepIndexSchema = con.prepareStatement(SQL_INDEX_SCHEMA);
 			prepIndexTable = con.prepareStatement(SQL_INDEX_TABLE);
 			prepIndexSchemaAndTable = con.prepareStatement(SQL_INDEX_SCHEMA_AND_TABLE);
-			log.debug("  ...index queries prepared!");			
+			log.debug("  ...index queries prepared!");
 		}
 		ResultSet indexRs;
 		if (schema == null && table == null) {
 			indexRs = prepIndexNone.executeQuery();
-		} else if (schema != null) {
+		}
+		else if (schema != null) {
 			if (table == null) {
 				prepIndexSchema.setString(1, schema);
 				indexRs = prepIndexSchema.executeQuery();
-			} else {
+			}
+			else {
 				prepIndexSchemaAndTable.setString(1, schema);
 				prepIndexSchemaAndTable.setString(2, table);
 				indexRs = prepIndexSchemaAndTable.executeQuery();
 			}
-		} else {
+		}
+		else {
 			prepIndexTable.setString(1, table);
 			indexRs = prepIndexTable.executeQuery();
 		}
@@ -618,28 +617,31 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 			prepFkSchemaAndTable = con.prepareStatement(SQL_FK_SCHEMA_AND_TABLE);
 			log.debug("  foreign key queries prepared!");
 		}
-		
+
 		ResultSet pExportRs;
 		if (schema == null && table == null) {
 			pExportRs = prepFkNone.executeQuery();
-		} else if (schema != null) {
+		}
+		else if (schema != null) {
 			if (table == null) {
 				prepFkSchema.setString(1, schema);
 				pExportRs = prepFkSchema.executeQuery();
-			} else {
+			}
+			else {
 				prepFkSchemaAndTable.setString(1, schema);
 				prepFkSchemaAndTable.setString(2, table);
 				pExportRs = prepFkSchemaAndTable.executeQuery();
 			}
-		} else {
+		}
+		else {
 			prepFkTable.setString(1, table);
 			pExportRs = prepFkTable.executeQuery();
 		}
 		return pExportRs;
 	}
 	private ResultSet getColumnsResultSet(final String schema, final String table, String column) throws SQLException {
-		
-		if(prepColumnNone==null) {			
+
+		if(prepColumnNone==null) {
 			// Prepare column queries
 			log.debug("Preparing column queries...");
 			Connection con = getConnection();
@@ -653,30 +655,34 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 			prepColumnSchemaAndTableAndColumn = con.prepareStatement(SQL_COLUMN_SCHEMA_AND_TABLE_AND_COLUMN);
 			log.debug("  ...column queries prepared!");
 		}
-		
+
 		ResultSet columnRs;
 		// No parameters specified
 		if (schema == null && table == null && column == null) {
 			columnRs = prepColumnNone.executeQuery();
-		} else if (schema != null) {
+		}
+		else if (schema != null) {
 			if (table == null) {
 				if (column == null) {
 					// Schema specified
 					prepColumnSchema.setString(1, schema);
 					columnRs = prepColumnSchema.executeQuery();
-				} else {
+				}
+				else {
 					// Schema and column specified
 					prepColumnSchemaAndColumn.setString(1, schema);
 					prepColumnSchemaAndColumn.setString(2, column);
 					columnRs = prepColumnSchemaAndColumn.executeQuery();
 				}
-			} else {
+			}
+			else {
 				if (column == null) {
 					// Schema and table specified
 					prepColumnSchemaAndTable.setString(1, schema);
 					prepColumnSchemaAndTable.setString(2, table);
 					columnRs = prepColumnSchemaAndTable.executeQuery();
-				} else {
+				}
+				else {
 					// Schema, table and column specified
 					prepColumnSchemaAndTableAndColumn.setString(1, schema);
 					prepColumnSchemaAndTableAndColumn.setString(2, table);
@@ -684,22 +690,25 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 					columnRs = prepColumnSchemaAndTableAndColumn.executeQuery();
 				}
 			}
-		} else {
+		}
+		else {
 			if (table == null) {
 				// Column specified
 				prepColumnColumn.setString(1, column);
 				columnRs = prepColumnColumn.executeQuery();
-			} else {
+			}
+			else {
 				if (column == null) {
 					// Table specified
 					prepColumnTable.setString(1, table);
 					columnRs = prepColumnTable.executeQuery();
-				} else {
+				}
+				else {
 					// Table and column specified
 					prepColumnTableAndColumn.setString(1, table);
 					prepColumnTableAndColumn.setString(2, column);
 					columnRs = prepColumnTableAndColumn.executeQuery();
-	
+
 				}
 			}
 		}
@@ -720,19 +729,22 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 		}
 		if (schema == null && table == null) {
 			tableRs = prepTableNone.executeQuery();
-		} else if (schema != null) {
+		}
+		else if (schema != null) {
 			if (table == null) {
 				prepTableSchema.setString(1, schema);
 				prepTableSchema.setString(2, schema);
 				tableRs = prepTableSchema.executeQuery();
-			} else {
+			}
+			else {
 				prepTableSchemaAndTable.setString(1, schema);
 				prepTableSchemaAndTable.setString(2, table);
 				prepTableSchemaAndTable.setString(3, schema);
 				prepTableSchemaAndTable.setString(4, table);
 				tableRs = prepTableSchemaAndTable.executeQuery();
 			}
-		} else {
+		}
+		else {
 			prepTableTable.setString(1, table);
 			prepTableTable.setString(2, table);
 			tableRs = prepTableTable.executeQuery();

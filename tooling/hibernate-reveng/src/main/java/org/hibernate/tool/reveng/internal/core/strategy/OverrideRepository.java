@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.core.strategy;
 
@@ -167,16 +154,16 @@ public class OverrideRepository {
 			ErrorHandler errorHandler = new ErrorHandler() {
 				@Override
 				public void warning(SAXParseException exception) throws SAXException {
-					log.warn("warning while parsing xml", exception);			
+					log.warn("warning while parsing xml", exception);
 				}
 				@Override
 				public void error(SAXParseException exception) throws SAXException {
-					errors.add(exception);				
+					errors.add(exception);
 				}
 				@Override
 				public void fatalError(SAXParseException exception) throws SAXException {
-					error(exception);					
-				}				
+					error(exception);
+				}
 			};
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 			DocumentBuilder db = dbf.newDocumentBuilder();
@@ -305,7 +292,8 @@ public class OverrideRepository {
 		// can probably be simplified - but like this to be very explicit ;)
 		if(hasInclude) {
 			return true; // exclude all by default when at least one include specified
-		} else {
+		}
+		else {
 			return false; // if nothing specified or just excludes we include everything
 		}
 	}
@@ -337,14 +325,16 @@ public class OverrideRepository {
 				String result = compositeIdNameForTable.get(identifier);
 				if(result==null) {
 					return super.tableToCompositeIdName(identifier);
-				} else {
+				}
+				else {
 					return result;
 				}
 			}
 			public List<SchemaSelection> getSchemaSelections() {
 				if(schemaSelections.isEmpty()) {
 					return super.getSchemaSelections();
-				} else {
+				}
+				else {
 					return schemaSelections;
 				}
 			}
@@ -355,7 +345,8 @@ public class OverrideRepository {
 				String info = " t:" + JdbcToHibernateTypeHelper.getJDBCTypeName( sqlType ) + " l:" + length + " p:" + precision + " s:" + scale + " n:" + nullable + " id:" + generatedIdentifier;
 				if(table!=null) {
 					location = TableNameQualifier.qualify(table.getCatalog(), table.getSchema(), table.getName() ) + "." + columnName;
-				} else {
+				}
+				else {
 
 					location += " Column: " + columnName + info;
 				}
@@ -381,16 +372,18 @@ public class OverrideRepository {
 				String className = tableToClassName.get(tableIdentifier);
 
 				if(className!=null) {
-					 if(className.indexOf( "." )>=0) {
-						 return className;
-					 } else {
-						 String packageName = getPackageName(tableIdentifier);
-						 if(packageName==null) {
-							 return className;
-						 } else {
-							 return StringHelper.qualify(packageName, className);
-						 }
-					 }
+					if(className.indexOf( "." )>=0) {
+						return className;
+					}
+					else {
+						String packageName = getPackageName(tableIdentifier);
+						if(packageName==null) {
+							return className;
+						}
+						else {
+							return StringHelper.qualify(packageName, className);
+						}
+					}
 				}
 
 				String packageName = getPackageName(tableIdentifier);
@@ -408,7 +401,8 @@ public class OverrideRepository {
 				List<ForeignKey> list = foreignKeys.get(referencedTable);
 				if(list==null) {
 					return super.getForeignKeys(referencedTable);
-				} else {
+				}
+				else {
 					return list;
 				}
 			}
@@ -417,7 +411,8 @@ public class OverrideRepository {
 				String result = propertyNameForColumn.get(new TableColumnKey(table, column));
 				if(result==null) {
 					return super.columnToPropertyName(table, column);
-				} else {
+				}
+				else {
 					return result;
 				}
 			}
@@ -426,7 +421,8 @@ public class OverrideRepository {
 				String result = propertyNameForPrimaryKey.get(tableIdentifier);
 				if(result==null) {
 					return super.tableToIdentifierPropertyName(tableIdentifier);
-				} else {
+				}
+				else {
 					return result;
 				}
 			}
@@ -435,7 +431,8 @@ public class OverrideRepository {
 				String result = identifierStrategyForTable.get(tableIdentifier);
 				if(result==null) {
 					return super.getTableIdentifierStrategyName( tableIdentifier );
-				} else {
+				}
+				else {
 					log.debug("tableIdentifierStrategy for " + tableIdentifier + " -> '" + result + "'");
 					return result;
 				}
@@ -445,7 +442,8 @@ public class OverrideRepository {
 				Properties result = identifierPropertiesForTable.get(tableIdentifier);
 				if(result==null) {
 					return super.getTableIdentifierProperties( tableIdentifier );
-				} else {
+				}
+				else {
 					return result;
 				}
 			}
@@ -454,7 +452,8 @@ public class OverrideRepository {
 				List<String> result = primaryKeyColumnsForTable.get(tableIdentifier);
 				if(result==null) {
 					return super.getPrimaryKeyColumnNames(tableIdentifier);
-				} else {
+				}
+				else {
 					return result;
 				}
 			}
@@ -463,7 +462,8 @@ public class OverrideRepository {
 				String property = foreignKeyToOneName.get(keyname);
 				if(property==null) {
 					return super.foreignKeyToEntityName(keyname, fromTable, fromColumnNames, referencedTable, referencedColumnNames, uniqueReference);
-				} else {
+				}
+				else {
 					return property;
 				}
 			}
@@ -477,7 +477,8 @@ public class OverrideRepository {
 				String property = foreignKeyToInverseName.get(keyname);
 				if(property==null) {
 					return super.foreignKeyToInverseEntityName(keyname, fromTable, fromColumnNames, referencedTable, referencedColumnNames, uniqueReference);
-				} else {
+				}
+				else {
 					return property;
 				}
 			}
@@ -486,36 +487,39 @@ public class OverrideRepository {
 				String property = foreignKeyToInverseName.get(keyname);
 				if(property==null) {
 					return super.foreignKeyToCollectionName(keyname, fromTable, fromColumns, referencedTable, referencedColumns, uniqueReference);
-				} else {
+				}
+				else {
 					return property;
 				}
 			}
 
 			public boolean excludeForeignKeyAsCollection(
-					String keyname, 
-					TableIdentifier fromTable, 
-					List<?> fromColumns, 
-					TableIdentifier referencedTable, 
+					String keyname,
+					TableIdentifier fromTable,
+					List<?> fromColumns,
+					TableIdentifier referencedTable,
 					List<?> referencedColumns) {
 				Boolean bool = foreignKeyInverseExclude.get(keyname);
 				if(bool!=null) {
 					return bool.booleanValue();
-				} else {
+				}
+				else {
 					return super.excludeForeignKeyAsCollection( keyname, fromTable, fromColumns,
 							referencedTable, referencedColumns );
 				}
 			}
 
 			public boolean excludeForeignKeyAsManytoOne(
-					String keyname, 
-					TableIdentifier fromTable, 
-					List<?> fromColumns, TableIdentifier 
-					referencedTable, 
+					String keyname,
+					TableIdentifier fromTable,
+					List<?> fromColumns, TableIdentifier
+					referencedTable,
 					List<?> referencedColumns) {
 				Boolean bool = (Boolean) foreignKeyToOneExclude.get(keyname);
 				if(bool!=null) {
 					return bool.booleanValue();
-				} else {
+				}
+				else {
 					return super.excludeForeignKeyAsManytoOne( keyname, fromTable, fromColumns,
 							referencedTable, referencedColumns );
 				}
@@ -526,7 +530,8 @@ public class OverrideRepository {
 				AssociationInfo fkei = foreignKeyToInverseEntityInfo.get(foreignKey.getName());
 				if(fkei!=null) {
 					return fkei;
-				} else {
+				}
+				else {
 					return super.foreignKeyToInverseAssociationInfo(foreignKey);
 				}
 			}
@@ -535,7 +540,8 @@ public class OverrideRepository {
 				AssociationInfo fkei = foreignKeyToEntityInfo.get(foreignKey.getName());
 				if(fkei!=null) {
 					return fkei;
-				} else {
+				}
+				else {
 					return super.foreignKeyToAssociationInfo(foreignKey);
 				}
 			}
@@ -565,7 +571,7 @@ public class OverrideRepository {
 		return null;
 
 		/* inheritance not defined yet
-		 if(specific==null) { specific = Collections.EMPTY_MAP; }
+		if(specific==null) { specific = Collections.EMPTY_MAP; }
 		if(general==null) { general = Collections.EMPTY_MAP; }
 
 		MultiMap map = MetaAttributeBinder.mergeMetaMaps( specific, general );
@@ -573,7 +579,8 @@ public class OverrideRepository {
 		/*
 		if(map!=null && !map.isEmpty()) {
 			return toMetaAttributes(null, map);
-		} else {
+		}
+		else {
 			return null;
 		}
 		*/
@@ -590,7 +597,7 @@ public class OverrideRepository {
 		}
 		return null;
 	}
-	
+
 	private Map<String, MetaAttribute> toMetaAttributes(MultiValuedMap<String, SimpleMetaAttribute> mvm) {
 		Map<String, MetaAttribute> result = new HashMap<String, MetaAttribute>();
 		for (MapIterator<String, SimpleMetaAttribute> iter = mvm.mapIterator(); iter.hasNext();) {
@@ -599,7 +606,7 @@ public class OverrideRepository {
 			result.put(key, MetaAttributeHelper.toRealMetaAttribute(key, values));
 		}
 		return result;
- 	}
+	}
 
 	public RevengStrategy getReverseEngineeringStrategy() {
 		return getReverseEngineeringStrategy(null);
@@ -617,27 +624,27 @@ public class OverrideRepository {
 		}
 
 		if(StringHelper.isNotEmpty(wantedClassName)) {
-      TableIdentifier tableIdentifier = TableIdentifier.create(table);
-      String className = wantedClassName;
-      /* If wantedClassName specifies a package, it is given by
-         <hibernate-reverse-engineering><table class="xxx"> config so do no more. */
-			if(!wantedClassName.contains(".")) { 
-        /* Now look for the package name specified by 
-          <hibernate-reverse-engineering><table-filter package="xxx"> config. */
-        String packageName = getPackageName(tableIdentifier);
-        if (packageName != null && !packageName.isBlank()) {
-          className = packageName + "." + wantedClassName;
-        }
-      }
+	TableIdentifier tableIdentifier = TableIdentifier.create(table);
+	String className = wantedClassName;
+	/* If wantedClassName specifies a package, it is given by
+		<hibernate-reverse-engineering><table class="xxx"> config so do no more. */
+			if(!wantedClassName.contains(".")) {
+		/* Now look for the package name specified by
+		<hibernate-reverse-engineering><table-filter package="xxx"> config. */
+		String packageName = getPackageName(tableIdentifier);
+		if (packageName != null && !packageName.isBlank()) {
+		className = packageName + "." + wantedClassName;
+		}
+	}
 			tableToClassName.put(tableIdentifier, className);
 		}
 		tables.add(table);
-  }
+}
 
 	static class TableColumnKey {
 		private TableIdentifier query;
 		private String name;
-		
+
 		TableColumnKey(TableIdentifier query, String name){
 			this.query = query;
 			this.name = name;
@@ -661,16 +668,18 @@ public class OverrideRepository {
 			if (name == null) {
 				if (other.name != null)
 					return false;
-			} else if (!name.equals(other.name))
+			}
+			else if (!name.equals(other.name))
 				return false;
 			if (query == null) {
 				if (other.query != null)
 					return false;
-			} else if (!query.equals(other.query))
+			}
+			else if (!query.equals(other.query))
 				return false;
 			return true;
 		}
-		
+
 	}
 
 	public void setTypeNameForColumn(TableIdentifier identifier, String columnName, String type) {
@@ -757,8 +766,8 @@ public class OverrideRepository {
 	}
 
 	public void addMetaAttributeInfo(
-			TableIdentifier tableIdentifier, 
-			String name, 
+			TableIdentifier tableIdentifier,
+			String name,
 			MultiValuedMap<String, SimpleMetaAttribute> map) {
 		if(map!=null && !map.isEmpty()) {
 			columnMetaAttributes.put(new TableColumnKey( tableIdentifier, name ), map);
@@ -766,60 +775,62 @@ public class OverrideRepository {
 
 	}
 
-  /*It is not possible to match a table on TableMapper alone because RootClassBinder.bind()
-   calls nullifyDefaultCatalogAndSchema(table) before doing this TableToClassName lookup.
-   So only use the table name for initial matching, and catalog or schema names when they
-   are not null.
-  */
+/*It is not possible to match a table on TableMapper alone because RootClassBinder.bind()
+calls nullifyDefaultCatalogAndSchema(table) before doing this TableToClassName lookup.
+So only use the table name for initial matching, and catalog or schema names when they
+are not null.
+*/
 
-  private class TableToClassName {
-    Map<String, TableMapper> map = new HashMap<String, TableMapper>();
+private class TableToClassName {
+	Map<String, TableMapper> map = new HashMap<String, TableMapper>();
 
-    private String get(TableIdentifier tableIdentifier) {
-      TableMapper mapper = map.get(tableIdentifier.getName());
-      if (mapper != null) {
-        if (mapper.catalog == null || tableIdentifier.getCatalog() == null ||
-            mapper.catalog.equals(tableIdentifier.getCatalog())){
-          if (mapper.schema == null || tableIdentifier.getSchema() == null ||
-              mapper.schema.equals(tableIdentifier.getSchema())){
-            if (mapper.packageName.length() == 0) {
-              return mapper.className;
-            } else {
-              return  mapper.packageName + "." + mapper.className;
-            }
-          }
-        }
-      }
-      return null;
-    }
+	private String get(TableIdentifier tableIdentifier) {
+	TableMapper mapper = map.get(tableIdentifier.getName());
+	if (mapper != null) {
+		if (mapper.catalog == null || tableIdentifier.getCatalog() == null ||
+			mapper.catalog.equals(tableIdentifier.getCatalog())){
+		if (mapper.schema == null || tableIdentifier.getSchema() == null ||
+			mapper.schema.equals(tableIdentifier.getSchema())){
+			if (mapper.packageName.length() == 0) {
+			return mapper.className;
+			}
+			else {
+			return  mapper.packageName + "." + mapper.className;
+			}
+		}
+		}
+	}
+	return null;
+	}
 
-    private void put(TableIdentifier tableIdentifier, String wantedClassName) {
-      TableMapper tableMapper = new TableMapper(
-          tableIdentifier.getCatalog(),
-          tableIdentifier.getSchema(),
-          tableIdentifier.getName(),
-          wantedClassName);
-      map.put(tableIdentifier.getName(), tableMapper);
-    }
-  }
+	private void put(TableIdentifier tableIdentifier, String wantedClassName) {
+	TableMapper tableMapper = new TableMapper(
+		tableIdentifier.getCatalog(),
+		tableIdentifier.getSchema(),
+		tableIdentifier.getName(),
+		wantedClassName);
+	map.put(tableIdentifier.getName(), tableMapper);
+	}
+}
 
-  private class TableMapper {
-    String catalog;
-    String schema;
-    String className;
-    String packageName;
+private class TableMapper {
+	String catalog;
+	String schema;
+	String className;
+	String packageName;
 
-    private TableMapper(String catalog, String schema, String name, String wantedClassName) {
-      this.catalog = catalog;
-      this.schema = schema;
-      if (wantedClassName.contains(".")) {
-        int nameStartPos = wantedClassName.lastIndexOf(".");
-        this.className = wantedClassName.substring(nameStartPos+1);
-        this.packageName = wantedClassName.substring(0, nameStartPos);
-      } else {
-        this.className = wantedClassName;
-        this.packageName = "";
-      }
-    }
-  }
+	private TableMapper(String catalog, String schema, String name, String wantedClassName) {
+	this.catalog = catalog;
+	this.schema = schema;
+	if (wantedClassName.contains(".")) {
+		int nameStartPos = wantedClassName.lastIndexOf(".");
+		this.className = wantedClassName.substring(nameStartPos+1);
+		this.packageName = wantedClassName.substring(0, nameStartPos);
+	}
+	else {
+		this.className = wantedClassName;
+		this.packageName = "";
+	}
+	}
+}
 }

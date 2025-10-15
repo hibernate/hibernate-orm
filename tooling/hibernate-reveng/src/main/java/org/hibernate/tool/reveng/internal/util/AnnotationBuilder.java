@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.util;
 
@@ -26,18 +13,18 @@ import java.util.Map.Entry;
 public class AnnotationBuilder {
 
 	String annotation;
-	LinkedHashMap<String, String[]> attributes = new LinkedHashMap<String, String[]>(); 
-	
+	LinkedHashMap<String, String[]> attributes = new LinkedHashMap<String, String[]>();
+
 	public static AnnotationBuilder createAnnotation(String annotation) {
 		return new AnnotationBuilder(annotation);
 	}
-	
+
 	protected AnnotationBuilder(String annotation) {
 		this.annotation = annotation;
 	}
 
 	public AnnotationBuilder addAttribute(String name, String[] values) {
-		if(values!=null && values.length > 0) {				
+		if(values!=null && values.length > 0) {
 			attributes.put(name, values);
 		}
 		return this;
@@ -49,25 +36,26 @@ public class AnnotationBuilder {
 		}
 		return this;
 	}
-	
-	
+
+
 	public AnnotationBuilder resetAnnotation(String annotationName) {
 		this.annotation = annotationName;
 		clearAttributes();
 		return this;
 	}
-	
+
 	private AnnotationBuilder clearAttributes() {
 		attributes.clear();
 		return this;
 	}
-	
+
 	public String getResult() {
 		StringBuffer b = new StringBuffer("@");
 		b.append(annotation);
 		if(attributes.isEmpty()) {
 			return b.toString();
-		} else {
+		}
+		else {
 			b.append("(");
 			Iterator<Entry<String, String[]>> elements = attributes.entrySet().iterator();
 			boolean addedBefore = false;
@@ -78,14 +66,15 @@ public class AnnotationBuilder {
 				if(s.length==0) {
 					addedBefore = false;
 					continue;
-				} else {
+				}
+				else {
 					if(addedBefore) {
 						b.append(", ");
 					}
 					String key = element.getKey();
 					b.append(key).append("=");
 					attributeToString( b, s );
-					
+
 					addedBefore=true;
 				}
 			}
@@ -98,18 +87,18 @@ public class AnnotationBuilder {
 		if(values.length>1) {
 			buffer.append( "{" );
 		}
-		
+
 		for (int i = 0; i < values.length; i++) {
 			buffer.append(values[i]);
 			if(i<values.length-1) {
 				buffer.append(", ");
 			}
-		}		
-		
+		}
+
 		if(values.length>1) {
 			buffer.append( "}" );
 		}
-		
+
 	}
 
 	public void addQuotedAttributes(String name, Iterator<?> iterator) {
@@ -126,7 +115,7 @@ public class AnnotationBuilder {
 			String element = iterator.next().toString();
 			values.add( element );
 		}
-		addAttribute(name, values.toArray( new String[values.size()] ));		
+		addAttribute(name, values.toArray( new String[values.size()] ));
 	}
 	private String quote(String element) {
 		return "\"" + element + "\"";
@@ -138,7 +127,7 @@ public class AnnotationBuilder {
 		}
 		return this;
 	}
-	
+
 
 	public String toString() {
 		return getResult();
@@ -149,12 +138,12 @@ public class AnnotationBuilder {
 		String[] object = (String[]) attributes.get( name );
 		if(object==null) {
 			return null;
-		} else {
+		}
+		else {
 			attributeToString( buffer, object );
 			return buffer.toString();
 		}
 	}
 
-	
-}
 
+}

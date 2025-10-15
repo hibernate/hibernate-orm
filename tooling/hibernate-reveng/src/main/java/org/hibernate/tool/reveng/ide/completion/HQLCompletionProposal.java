@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.ide.completion;
 
@@ -22,36 +9,36 @@ import org.hibernate.mapping.Property;
 
 
 public class HQLCompletionProposal {
-	
+
 	static final char[] NO_CHAR = new char[0];
-	
+
 	public static final int ENTITY_NAME = 1;
 	public static final int PROPERTY = 2;
 	public static final int KEYWORD = 3;
 	public static final int FUNCTION = 4;
 	public static final int ALIAS_REF = 5; // ref to an alias name, e.g. "bar" in "from Bar as bar where b|"
-	
+
 	protected static final int FIRST_KIND = ENTITY_NAME;
 	protected static final int LAST_KIND = ALIAS_REF;
-	
+
 	/**
 	 * kind of completion request.
 	 */
 	private int completionKind;
-	
+
 	/**
 	 * original cursorposition in the query
 	 */
 	private int completionLocation;
-	
+
 	/**
-	 * The actual completion. 
+	 * The actual completion.
 	 */
 	private String completion = "";
-	
-	private int replaceStart = 0;	
+
+	private int replaceStart = 0;
 	private int replaceEnd = 0;
-	
+
 	/**
 	 * Relevance rating
 	 */
@@ -59,19 +46,19 @@ public class HQLCompletionProposal {
 
 	/** The default name for the entityname, keyword, property etc. */
 	private String simpleName = "";
-	
+
 	/** The full related entity name, the resolved shortEntityName. Can be null */
 	private String entityName = null;
-	
-	/** 
-	 * A short entity name. e.g. the imported name. 
-	 * e.g. "Product" instead of "org.hibernate.model.Product" 
-	 * (note: a imported name can also be the long version) 
+
+	/**
+	 * A short entity name. e.g. the imported name.
+	 * e.g. "Product" instead of "org.hibernate.model.Product"
+	 * (note: a imported name can also be the long version)
 	 **/
 	private String shortEntityName = null;
-	
+
 	/**
-	 * The propertyName, can be null.  
+	 * The propertyName, can be null.
 	 */
 	private String propertyName = null;
 
@@ -79,7 +66,7 @@ public class HQLCompletionProposal {
 	 * The underlying property. Can be null.
 	 */
 	private Property property;
-	
+
 	public String getCompletion() {
 		return completion;
 	}
@@ -127,12 +114,12 @@ public class HQLCompletionProposal {
 	public void setReplaceStart(int replaceStart) {
 		this.replaceStart = replaceStart;
 	}
-	
+
 	public HQLCompletionProposal(int kind, int cursorPosition) {
 		this.completionKind = kind;
-		this.completionLocation = cursorPosition; 
+		this.completionLocation = cursorPosition;
 	}
-		
+
 	public String getSimpleName() {
 		return simpleName;
 	}
@@ -146,7 +133,7 @@ public class HQLCompletionProposal {
 		buffer.append('[');
 		switch(this.completionKind) {
 			case ENTITY_NAME :
-				buffer.append("ENTITY_NAME"); 
+				buffer.append("ENTITY_NAME");
 				break;
 			case PROPERTY:
 				buffer.append("PROPERTY");
@@ -157,7 +144,7 @@ public class HQLCompletionProposal {
 			default :
 				buffer.append("<Unknown type>");
 				break;
-				
+
 		}
 		buffer.append("]{completion:"); //$NON-NLS-1$
 		if (this.completion != null) buffer.append(this.completion);
@@ -198,20 +185,20 @@ public class HQLCompletionProposal {
 	}
 
 	public void setProperty(Property element) {
-		this.property = element;		
+		this.property = element;
 	}
 
 	public Property getProperty() {
 		return property;
 	}
-	
+
 
 	public int aliasRefKind() { return ALIAS_REF; }
 	public int entityNameKind() { return ENTITY_NAME; }
 	public int propertyKind() { return PROPERTY; }
 	public int keywordKind() { return KEYWORD; }
 	public int functionKind() { return FUNCTION; }
-	
-	
-	
+
+
+
 }

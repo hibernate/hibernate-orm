@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.export.common;
 
@@ -35,34 +22,34 @@ import java.util.Map;
 public class ConfigurationNavigator {
 
 	private static final Logger log = Logger.getLogger(ConfigurationNavigator.class);
-	
+
 	/**
 	 * @param clazz
 	 */
 	public static void collectComponents(Map<String, Component> components, PersistentClass clazz) {
 		Iterator<Property> iter = new Cfg2JavaTool().getPOJOClass(clazz).getAllPropertiesIterator();
-		collectComponents( components, iter );		
+		collectComponents( components, iter );
 	}
 
 	public static void collectComponents(Map<String, Component> components, POJOClass clazz) {
 		Iterator<Property> iter = clazz.getAllPropertiesIterator();
-		collectComponents( components, iter );		
+		collectComponents( components, iter );
 	}
-	
+
 	private static void collectComponents(Map<String, Component> components, Iterator<Property> iter) {
 		while(iter.hasNext()) {
 			Property property = iter.next();
-			if (!"embedded".equals(property.getPropertyAccessorName()) && // HBX-267, embedded property for <properties> should not be generated as component. 
+			if (!"embedded".equals(property.getPropertyAccessorName()) && // HBX-267, embedded property for <properties> should not be generated as component.
 				property.getValue() instanceof Component) {
 				Component comp = (Component) property.getValue();
-				addComponent( components, comp );			
-			} 
+				addComponent( components, comp );
+			}
 			else if (property.getValue() instanceof Collection) {
 				// compisite-element in collection
-				Collection collection = (Collection) property.getValue();				
+				Collection collection = (Collection) property.getValue();
 				if ( collection.getElement() instanceof Component) {
-					Component comp = (Component) collection.getElement();				
-					addComponent(components, comp);				
+					Component comp = (Component) collection.getElement();
+					addComponent(components, comp);
 				}
 			}
 		}
@@ -71,17 +58,18 @@ public class ConfigurationNavigator {
 	private static void addComponent(Map<String, Component> components, Component comp) {
 		if(!comp.isDynamic()) {
 			Component existing = (Component) components.put(
-					comp.getComponentClassName(), 
-					comp);		
+					comp.getComponentClassName(),
+					comp);
 			if(existing!=null) {
 				log.warn("Component " + existing.getComponentClassName() + " found more than once! Will only generate the last found.");
 			}
-		} else {
+		}
+		else {
 			log.debug("dynamic-component found. Ignoring it as a component, but will collect any embedded components.");
-		}	
-		collectComponents( 
-				components, 
-				new ComponentPOJOClass(comp, new Cfg2JavaTool()).getAllPropertiesIterator());		
+		}
+		collectComponents(
+				components,
+				new ComponentPOJOClass(comp, new Cfg2JavaTool()).getAllPropertiesIterator());
 	}
-	
+
 }

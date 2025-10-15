@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2024-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.api.xml;
 
@@ -28,24 +15,24 @@ import java.nio.file.Files;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class XMLPrettyPrinterTest {
-	
+
 	private static final String XML_BEFORE = "<foo><bar>foobar</bar></foo>";
-	
-	private static final String XML_AFTER = 
+
+	private static final String XML_AFTER =
 			"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n" +
 			"<foo>\n" +
-	        "    <bar>foobar</bar>\n" +
+			"    <bar>foobar</bar>\n" +
 			"</foo>\n";
-	
+
 	private static final String XML_COMMENT = "<!-- Just a comment! -->";
-	
+
 	private static final String fileName = "foobarfile.xml";
 
-	@TempDir 
+	@TempDir
 	private File tempDir;
-	
+
 	private File xmlFile = null;
-	
+
 	@BeforeEach
 	public void beforeEach() throws Exception {
 		xmlFile = new File(tempDir, fileName);
@@ -54,26 +41,26 @@ public class XMLPrettyPrinterTest {
 		writer.flush();
 		writer.close();
 	}
-	
+
 	@Test
 	public void testXmlPrettyPrintDefault() throws Exception {
 		XMLPrettyPrinter.prettyPrintFile(xmlFile);
 		String result = Files.readString(xmlFile.toPath());
 		assertEquals(XML_AFTER, result);
 	}
-	
+
 	@Test
 	public void testXmlPrettyPrintWithStrategy() throws Exception {
 		XMLPrettyPrinter.prettyPrintFile(xmlFile, new FooBarStrategy());
 		String result = Files.readString(xmlFile.toPath());
 		assertEquals(XML_AFTER + XML_COMMENT, result);
 	}
-	
+
 	public static class FooBarStrategy implements XMLPrettyPrinterStrategy {
 		@Override
 		public String prettyPrint(String xml) throws Exception {
 			return XML_AFTER + XML_COMMENT;
-		}		
+		}
 	}
-	
+
 }

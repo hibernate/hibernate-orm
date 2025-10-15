@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.util;
 
@@ -25,7 +12,7 @@ final public class NameConverter {
 	private static Set<String> RESERVED_KEYWORDS;
 	static {
 		RESERVED_KEYWORDS = new HashSet<String>();
-		
+
 		RESERVED_KEYWORDS.add( "abstract" );
 		RESERVED_KEYWORDS.add( "continue" );
 		RESERVED_KEYWORDS.add( "for" );
@@ -81,14 +68,14 @@ final public class NameConverter {
 	private NameConverter() {
 
 	}
-	
+
 	/**
-	 * Converts a database name (table or column) to a java name (first letter capitalised). 
+	 * Converts a database name (table or column) to a java name (first letter capitalised).
 	 * employee_name -> EmployeeName.
 	 *
 	 * Derived from middlegen's dbnameconverter.
 	 * @param s The database name to convert.
-	 * 
+	 *
 	 * @return The converted database name.
 	 */
 	public static String toUpperCamelCase(String s) {
@@ -96,7 +83,7 @@ final public class NameConverter {
 			return s;
 		}
 		StringBuffer result = new StringBuffer();
-		
+
 		boolean capitalize = true;
 		boolean lastCapital = false;
 		boolean lastDecapitalized = false;
@@ -107,7 +94,7 @@ final public class NameConverter {
 				capitalize = true;
 				continue;
 			}
-			
+
 			if ( c.toUpperCase().equals(c) ) {
 				if (lastDecapitalized && !lastCapital) {
 					capitalize = true;
@@ -117,9 +104,9 @@ final public class NameConverter {
 			else {
 				lastCapital = false;
 			}
-			
+
 			//if(forceFirstLetter && result.length()==0) capitalize = false;
-			
+
 			if (capitalize) {
 				if (p == null || !p.equals("_") ) {
 					result.append(c.toUpperCase() );
@@ -137,12 +124,12 @@ final public class NameConverter {
 				lastDecapitalized = true;
 				p = c;
 			}
-			
+
 		}
 		String r = result.toString();
 		return r;
 	}
-	
+
 	static public String simplePluralize(String singular) {
 		char last = singular.charAt( singular.length()-1 );
 		Character prev = singular.length() > 1 ? singular.charAt( singular.length() - 2 ) : null;
@@ -155,7 +142,8 @@ final public class NameConverter {
 			case 'y':
 				if (prev != null && vowels.indexOf(prev) >= 0){
 					singular += "s";
-				} else {
+				}
+				else {
 					singular = singular.substring( 0, singular.length()-1 ) + "ies";
 				}
 				break;

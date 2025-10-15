@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.export.java;
 
@@ -49,26 +36,26 @@ import java.util.Properties;
 /**
  * Helper methods for javacode generation.
  * <p/>
- * 
+ *
  *
  * @author max
  */
 public class Cfg2JavaTool {
 
-	private static final Logger log = Logger.getLogger( Cfg2JavaTool.class );	
-			
+	private static final Logger log = Logger.getLogger( Cfg2JavaTool.class );
+
 	public Cfg2JavaTool() {
 
 	}
 
-	public POJOClass getPOJOClass(Component comp) {		
+	public POJOClass getPOJOClass(Component comp) {
 		return new ComponentPOJOClass(comp, this);
 	}
-	
-	public POJOClass getPOJOClass(PersistentClass comp) {		
+
+	public POJOClass getPOJOClass(PersistentClass comp) {
 		return new EntityPOJOClass(comp, this);
 	}
-	
+
 	public String unqualify(String name) {
 		return StringHelper.unqualify( name );
 	}
@@ -138,12 +125,12 @@ public class Cfg2JavaTool {
 		return classModifiers == null ? "public" : classModifiers;
 	}
 
-	
+
 	private String toName(Class<?> c) {
 
 		if ( c.isArray() ) {
 			Class<?> a = c.getComponentType();
-			
+
 			return a.getName() + "[]";
 		}
 		else {
@@ -170,7 +157,7 @@ public class Cfg2JavaTool {
 	public String getJavaTypeName(Property p, boolean useGenerics, ImportContext importContext) {
 		String overrideType = getMetaAsString( p, "property-type" );
 		if ( !StringHelper.isEmpty( overrideType ) ) {
-			String importType = importContext.importType(overrideType);			
+			String importType = importContext.importType(overrideType);
 			if ( useGenerics && importType.indexOf( "<" )<0) {
 				if ( p.getValue() instanceof Collection ) {
 					String decl = getGenericCollectionDeclaration( (Collection) p.getValue(), true, importContext );
@@ -182,13 +169,13 @@ public class Cfg2JavaTool {
 		else {
 			String rawType = getRawTypeName( p, useGenerics, true, importContext );
 			if(rawType==null) {
-					throw new IllegalStateException("getJavaTypeName *must* return a value");				
+					throw new IllegalStateException("getJavaTypeName *must* return a value");
 			}
 			return importContext.importType(rawType);
 		}
 	}
-	
-	private static final Map<String,String> PRIMITIVES = 
+
+	private static final Map<String,String> PRIMITIVES =
 			new HashMap<String,String>();
 
 	static {
@@ -211,27 +198,28 @@ public class Cfg2JavaTool {
 
 	private String getRawTypeName(Property p, boolean useGenerics, boolean preferRawTypeNames, ImportContext importContext) {
 		Value value = p.getValue();
-		try {			
-			
+		try {
+
 			if ( value instanceof Array ) { // array has a string rep.inside.
-				Array a = (Array) value;				
-					
+				Array a = (Array) value;
+
 				if ( a.isPrimitiveArray() ) {
 					return toName( value.getType().getReturnedClass() );
 				}
 				else if (a.getElementClassName()!=null){
 					return a.getElementClassName() + "[]";
-				} else {
+				}
+				else {
 					return getJavaTypeName(a.getElement(), preferRawTypeNames) + "[]";
 				}
 			}
 
-			if ( value instanceof Component ) { // same for component.				
+			if ( value instanceof Component ) { // same for component.
 				Component component = ( (Component) value );
 				if(component.isDynamic()) return "java.util.Map";
 				return component.getComponentClassName();
 			}
-			
+
 			if ( useGenerics ) {
 				if ( value instanceof Collection ) {
 					String decl = getGenericCollectionDeclaration( (Collection) value, preferRawTypeNames, importContext );
@@ -239,7 +227,7 @@ public class Cfg2JavaTool {
 				}
 			}
 
-			return getJavaTypeName( value, preferRawTypeNames );			
+			return getJavaTypeName( value, preferRawTypeNames );
 		}
 		catch (Exception e) {
 			//e.printStackTrace();
@@ -266,11 +254,11 @@ public class Cfg2JavaTool {
 				String indexType = importContext.importType(getJavaTypeName(idxElement, preferRawTypeNames));
 				genericDecl = indexType + "," + elementType;
 			}
-		} 
+		}
 		String decl = "<" + genericDecl + ">";
 		return decl;
 	}
-	
+
 	/**
 	 * @param simpleValue
 	 * @return
@@ -326,7 +314,7 @@ public class Cfg2JavaTool {
 		StringBuffer buf = new StringBuffer();
 		for (Property field : clazz.getRootClass().getProperties()) {
 			if ( field.isNaturalIdentifier() ) {
-				buf.append( getJavaTypeName( field, false ) ) 
+				buf.append( getJavaTypeName( field, false ) )
 						.append( " " )
 						.append( field.getName() )
 						.append( ", " );
@@ -342,7 +330,7 @@ public class Cfg2JavaTool {
 	public String asArgumentList(List<Property> fields) {
 		return asArgumentList( fields.iterator() );
 	}
-	
+
 	public String asFinderArgumentList(Map<Object,Object> parameterTypes, ImportContext ctx) {
 		StringBuffer buf = new StringBuffer();
 		Iterator<Entry<Object,Object>> iter = parameterTypes.entrySet().iterator();
@@ -355,12 +343,13 @@ public class Cfg2JavaTool {
 					type = new TypeConfiguration()
 							.getBasicTypeRegistry()
 							.getRegisteredType((String) entry.getValue());
-				} catch(Throwable t) {
+				}
+				catch(Throwable t) {
 					type = null;
 					typename = (String) entry.getValue();
 				}
 			}
-			
+
 			if(type!=null) {
 				typename = type.getReturnedClass().getName();
 			}
@@ -372,34 +361,34 @@ public class Cfg2JavaTool {
 		return buf.toString();
 	}
 
-	
-	
+
+
 	public boolean isPrimitive(String typeName) {
 		return PRIMITIVES.containsKey(typeName);
 	}
-	
+
 	public boolean isComponent(Property property) {
 		return isComponent(property.getValue());
-	}	
-	
+	}
+
 	public boolean isComponent(Value value) {
 		return ( value instanceof Component );
-	}	
-	
+	}
+
 	// TODO: should consult exporter/cfg2java tool for cached POJOEntities....or maybe not since they
 	// have their own state...
 	public Iterator<POJOClass> getPOJOIterator(
 			final Iterator<PersistentClass> persistentClasses) {
-		return new Iterator<POJOClass>() {		
+		return new Iterator<POJOClass>() {
 			public POJOClass next() {
 				return getPOJOClass((PersistentClass)persistentClasses.next());
-			}		
+			}
 			public boolean hasNext() {
 				return persistentClasses.hasNext();
-			}		
+			}
 			public void remove() {
 				persistentClasses.remove();
-			}		
+			}
 		};
 	}
 
@@ -407,18 +396,18 @@ public class Cfg2JavaTool {
 	public String simplePluralize(String str) {
 		return NameConverter.simplePluralize(str);
 	}
-	
+
 	public String keyWordCheck(String possibleKeyword) {
 		if(NameConverter.isReservedJavaKeyword(possibleKeyword)) {
 			possibleKeyword = possibleKeyword + "_";
 		}
 		return possibleKeyword;
-	}	
+	}
 
 	public boolean isArray(String typeName) {
 		return typeName!=null && typeName.endsWith("[]");
 	}
-	
+
 	public Map<?, ?> getParameterTypes(NamedHqlQueryDefinition<?> query) {
 		Map<?, ?> result = null;
 		try {
@@ -428,7 +417,8 @@ public class Cfg2JavaTool {
 			if (result == null) {
 				result = new HashMap<>();
 			}
-		} catch (NoSuchFieldException | IllegalAccessException e) {
+		}
+		catch (NoSuchFieldException | IllegalAccessException e) {
 			throw new RuntimeException(e);
 		}
 		return result;

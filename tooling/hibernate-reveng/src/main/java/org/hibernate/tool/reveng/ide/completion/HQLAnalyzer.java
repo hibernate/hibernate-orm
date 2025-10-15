@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.ide.completion;
 
@@ -29,13 +16,13 @@ import java.util.Map;
 
 /**
  * The HQLAnalyzer can answer certain questions about a HQL String.
- * 
+ *
  * @author leon, max.andersen@jboss.com
  */
 public class HQLAnalyzer {
 
 	/** Defines the HQL keywords. Based on hql.g antlr grammer in 2005 ;) */
-    private static String[] hqlKeywords = { "between", "class", "delete",
+	private static String[] hqlKeywords = { "between", "class", "delete",
 			"desc", "distinct", "elements", "escape", "exists", "false",
 			"fetch", "from", "full", "group", "having", "in", "indices",
 			"inner", "insert", "into", "is", "join", "left", "like", "new",
@@ -43,23 +30,23 @@ public class HQLAnalyzer {
 			"select", "set", "some", "true", "union", "update", "versioned",
 			"where", "and", "or", "as","on", "with",
 
-   		// -- SQL tokens --
-   		// These aren't part of HQL, but recognized by the lexer. Could be
+		// -- SQL tokens --
+		// These aren't part of HQL, but recognized by the lexer. Could be
 		// usefull for having SQL in the editor..but for now we keep them out
-    	// "case", "end", "else", "then", "when", 
-    	 
+		// "case", "end", "else", "then", "when",
 
-    	// -- EJBQL tokens --
-    	"both", "empty", "leading", "member", "object", "of", "trailing", 
-    };
-    
 
-    /**
+		// -- EJBQL tokens --
+		"both", "empty", "leading", "member", "object", "of", "trailing",
+	};
+
+
+	/**
 	 * built-in function names. Various normal builtin functions in SQL/HQL.
 	 * Maybe sShould try and do this dynamically based on dialect or
 	 * sqlfunctionregistry
 	 */
-    private static String[] builtInFunctions = {
+	private static String[] builtInFunctions = {
 			// standard sql92 functions
 			"substring", "locate", "trim", "length", "bit_length", "coalesce",
 			"nullif", "abs", "mod", "sqrt",
@@ -99,173 +86,176 @@ public class HQLAnalyzer {
 			"add_months", "months_between", "next_day",
 
 			"max", "min", };
-    
-    static {
-    	// to allow binary search
-    	Arrays.sort(builtInFunctions);
-    	Arrays.sort(hqlKeywords);
-    }
 
-    protected SimpleHQLLexer getLexer(char chars[], int end) {
-    	return new AntlrSimpleHQLLexer(chars,end);
-    }
-    
-    protected SimpleHQLLexer getLexer(char chars[]) {
-    	return new AntlrSimpleHQLLexer(chars,chars.length);
-    }
-    
-    /**
-     * Returns true if the position is at a location where an entityname makes sense.
-     * e.g. "from Pr| where x" 
-     * @param query
-     * @param cursorPosition
-     * @return
-     */
-    public boolean shouldShowEntityNames(String query, int cursorPosition) {
-    	return shouldShowEntityNames( query.toCharArray(), cursorPosition );
-    }
-    
-    public boolean shouldShowEntityNames(char chars[], int cursorPosition) {
-    	SimpleHQLLexer lexer = getLexer( chars, cursorPosition );
-        int tokenId = -1;
-        boolean show = false;
-        while ((tokenId = lexer.nextTokenId()) != HqlLexer.EOF) {
-            if ((tokenId == HqlLexer.FROM ||
-                    tokenId == HqlLexer.DELETE ||
-                    tokenId == HqlLexer.UPDATE) &&
-                    (lexer.getTokenOffset() + lexer.getTokenLength()) < cursorPosition) {
-                show = true;
-            } else if (tokenId != HqlLexer.DOT && tokenId != HqlLexer.AS && tokenId != HqlLexer.COMMA && tokenId != HqlLexer.IDENTIFIER && tokenId != HqlLexer.WS) {
-                show = false;                
-            } 
-        }
-        return show;    	
-    }
-    
-    public List<SubQuery> getVisibleSubQueries(char[] chars, int position) {
-    	SubQueryList sqList = getSubQueries(chars, position);
-        List<SubQuery> visible = new ArrayList<SubQuery>();
-        for (Iterator<SubQuery> iter = sqList.subQueries.iterator(); iter.hasNext();) {
+	static {
+		// to allow binary search
+		Arrays.sort(builtInFunctions);
+		Arrays.sort(hqlKeywords);
+	}
+
+	protected SimpleHQLLexer getLexer(char chars[], int end) {
+		return new AntlrSimpleHQLLexer(chars,end);
+	}
+
+	protected SimpleHQLLexer getLexer(char chars[]) {
+		return new AntlrSimpleHQLLexer(chars,chars.length);
+	}
+
+	/**
+	 * Returns true if the position is at a location where an entityname makes sense.
+	 * e.g. "from Pr| where x"
+	 * @param query
+	 * @param cursorPosition
+	 * @return
+	 */
+	public boolean shouldShowEntityNames(String query, int cursorPosition) {
+		return shouldShowEntityNames( query.toCharArray(), cursorPosition );
+	}
+
+	public boolean shouldShowEntityNames(char chars[], int cursorPosition) {
+		SimpleHQLLexer lexer = getLexer( chars, cursorPosition );
+		int tokenId = -1;
+		boolean show = false;
+		while ((tokenId = lexer.nextTokenId()) != HqlLexer.EOF) {
+			if ((tokenId == HqlLexer.FROM ||
+					tokenId == HqlLexer.DELETE ||
+					tokenId == HqlLexer.UPDATE) &&
+					(lexer.getTokenOffset() + lexer.getTokenLength()) < cursorPosition) {
+				show = true;
+			}
+			else if (tokenId != HqlLexer.DOT && tokenId != HqlLexer.AS && tokenId != HqlLexer.COMMA && tokenId != HqlLexer.IDENTIFIER && tokenId != HqlLexer.WS) {
+				show = false;
+			}
+		}
+		return show;
+	}
+
+	public List<SubQuery> getVisibleSubQueries(char[] chars, int position) {
+		SubQueryList sqList = getSubQueries(chars, position);
+		List<SubQuery> visible = new ArrayList<SubQuery>();
+		for (Iterator<SubQuery> iter = sqList.subQueries.iterator(); iter.hasNext();) {
 			SubQuery sq = iter.next();
-			 if (sqList.caretDepth >= sq.depth && (sq.startOffset <= position || sq.endOffset >= position)) {
-                visible.add(sq);
-            }
-        }
-        return visible;
-    }
+			if (sqList.caretDepth >= sq.depth && (sq.startOffset <= position || sq.endOffset >= position)) {
+				visible.add(sq);
+			}
+		}
+		return visible;
+	}
 
-    public List<EntityNameReference> getVisibleEntityNames(char[] chars, int position) {
-        List<SubQuery> sqs = getVisibleSubQueries(chars, position);
-        List<EntityNameReference> entityReferences = new ArrayList<EntityNameReference>();
-        for (Iterator<SubQuery> iter = sqs.iterator(); iter.hasNext();) {
+	public List<EntityNameReference> getVisibleEntityNames(char[] chars, int position) {
+		List<SubQuery> sqs = getVisibleSubQueries(chars, position);
+		List<EntityNameReference> entityReferences = new ArrayList<EntityNameReference>();
+		for (Iterator<SubQuery> iter = sqs.iterator(); iter.hasNext();) {
 			SubQuery sq = iter.next();
 			entityReferences.addAll(sq.getEntityNames());
 		}
-        return entityReferences;
-    }
+		return entityReferences;
+	}
 
-    public SubQueryList getSubQueries(char[] query, int position) {
-    	SimpleHQLLexer syntax = getLexer( query );
-    	int numericId = -1;
-        List<SubQuery> subQueries = new ArrayList<SubQuery>();
-        int depth = 0;
-        int caretDepth = 0;
-        Map<Integer, SubQuery> level2SubQuery = new HashMap<Integer, SubQuery>();
-        SubQuery current = null;
-        while ((numericId = syntax.nextTokenId()) != HqlLexer.EOF) {
-            boolean tokenAdded = false;
-            if (numericId == HqlLexer.LEFT_PAREN) {
-                depth++;
-                if (position > syntax.getTokenOffset()) {
-                    caretDepth = depth;
-                }
-            } else if (numericId == HqlLexer.RIGHT_PAREN) {
-                SubQuery currentDepthQuery = level2SubQuery.get(Integer.valueOf(depth));
-                // We check if we have a query on the current depth.
-                // If yes, we'll have to close it
-                if (currentDepthQuery != null && currentDepthQuery.depth == depth) {
-                    currentDepthQuery.endOffset = syntax.getTokenOffset();
-                    currentDepthQuery.tokenIds.add(Integer.valueOf(numericId));
-                    currentDepthQuery.tokenText.add(String.valueOf(query, syntax.getTokenOffset(), syntax.getTokenLength()));
-                    subQueries.add(currentDepthQuery);
-                    level2SubQuery.remove(Integer.valueOf(depth));
-                    tokenAdded = true;
-                }
-                depth--;
-                if (position > syntax.getTokenOffset()) {
-                    caretDepth = depth;
-                }
-            }
-            switch (numericId) {
-                case HqlLexer.FROM:
-                case HqlLexer.UPDATE:
-                case HqlLexer.DELETE:
-                case HqlLexer.SELECT:
-                    if (!level2SubQuery.containsKey(Integer.valueOf(depth))) {
-                        current = new SubQuery();
-                        current.depth = depth;
-                        current.startOffset = syntax.getTokenOffset();
-                        level2SubQuery.put(Integer.valueOf(depth), current);
-                    }
-                    current.tokenIds.add(Integer.valueOf(numericId));
-                    current.tokenText.add(String.valueOf(query, syntax.getTokenOffset(), syntax.getTokenLength()));
-                    break;
-                default:
-                    if (!tokenAdded) {
-                        SubQuery sq = level2SubQuery.get(Integer.valueOf(depth));
-                        int i = depth;
-                        while (sq == null && i >= 0) {
-                            sq = level2SubQuery.get(Integer.valueOf(i--));
-                        }
-                        if (sq != null) {
-                            sq.tokenIds.add(Integer.valueOf(numericId));
-                            sq.tokenText.add(String.valueOf(query, syntax.getTokenOffset(), syntax.getTokenLength()));
-                        }
-                    }
-            }
-        }
-        for (Iterator<SubQuery> iter = level2SubQuery.values().iterator(); iter.hasNext();) {
+	public SubQueryList getSubQueries(char[] query, int position) {
+		SimpleHQLLexer syntax = getLexer( query );
+		int numericId = -1;
+		List<SubQuery> subQueries = new ArrayList<SubQuery>();
+		int depth = 0;
+		int caretDepth = 0;
+		Map<Integer, SubQuery> level2SubQuery = new HashMap<Integer, SubQuery>();
+		SubQuery current = null;
+		while ((numericId = syntax.nextTokenId()) != HqlLexer.EOF) {
+			boolean tokenAdded = false;
+			if (numericId == HqlLexer.LEFT_PAREN) {
+				depth++;
+				if (position > syntax.getTokenOffset()) {
+					caretDepth = depth;
+				}
+			}
+			else if (numericId == HqlLexer.RIGHT_PAREN) {
+				SubQuery currentDepthQuery = level2SubQuery.get(Integer.valueOf(depth));
+				// We check if we have a query on the current depth.
+				// If yes, we'll have to close it
+				if (currentDepthQuery != null && currentDepthQuery.depth == depth) {
+					currentDepthQuery.endOffset = syntax.getTokenOffset();
+					currentDepthQuery.tokenIds.add(Integer.valueOf(numericId));
+					currentDepthQuery.tokenText.add(String.valueOf(query, syntax.getTokenOffset(), syntax.getTokenLength()));
+					subQueries.add(currentDepthQuery);
+					level2SubQuery.remove(Integer.valueOf(depth));
+					tokenAdded = true;
+				}
+				depth--;
+				if (position > syntax.getTokenOffset()) {
+					caretDepth = depth;
+				}
+			}
+			switch (numericId) {
+				case HqlLexer.FROM:
+				case HqlLexer.UPDATE:
+				case HqlLexer.DELETE:
+				case HqlLexer.SELECT:
+					if (!level2SubQuery.containsKey(Integer.valueOf(depth))) {
+						current = new SubQuery();
+						current.depth = depth;
+						current.startOffset = syntax.getTokenOffset();
+						level2SubQuery.put(Integer.valueOf(depth), current);
+					}
+					current.tokenIds.add(Integer.valueOf(numericId));
+					current.tokenText.add(String.valueOf(query, syntax.getTokenOffset(), syntax.getTokenLength()));
+					break;
+				default:
+					if (!tokenAdded) {
+						SubQuery sq = level2SubQuery.get(Integer.valueOf(depth));
+						int i = depth;
+						while (sq == null && i >= 0) {
+							sq = level2SubQuery.get(Integer.valueOf(i--));
+						}
+						if (sq != null) {
+							sq.tokenIds.add(Integer.valueOf(numericId));
+							sq.tokenText.add(String.valueOf(query, syntax.getTokenOffset(), syntax.getTokenLength()));
+						}
+					}
+			}
+		}
+		for (Iterator<SubQuery> iter = level2SubQuery.values().iterator(); iter.hasNext();) {
 			SubQuery sq = iter.next();
 			sq.endOffset = syntax.getTokenOffset() + syntax.getTokenLength();
-            subQueries.add(sq);
-        }
-        Collections.sort(subQueries);
-        SubQueryList sql = new SubQueryList();
-        sql.caretDepth = caretDepth;
-        sql.subQueries = subQueries;
-        return sql;
-    }
+			subQueries.add(sq);
+		}
+		Collections.sort(subQueries);
+		SubQueryList sql = new SubQueryList();
+		sql.caretDepth = caretDepth;
+		sql.subQueries = subQueries;
+		return sql;
+	}
 
-    
-    /** Returns reference name found from position and backwards in the array.
-     **/
-    public static String getEntityNamePrefix(char[] chars, int position) {
-        StringBuffer buff = new StringBuffer();
-        for (int i = position - 1; i >= 0; i--) {
-            char c = chars[i];
-            if (c == '.' || Character.isJavaIdentifierPart(c)) {
-                buff.insert(0, c);
-            } else {
-                break;
-            }
-        }
-        return buff.toString();
-    }
 
-    public static class SubQueryList {
+	/** Returns reference name found from position and backwards in the array.
+	 **/
+	public static String getEntityNamePrefix(char[] chars, int position) {
+		StringBuffer buff = new StringBuffer();
+		for (int i = position - 1; i >= 0; i--) {
+			char c = chars[i];
+			if (c == '.' || Character.isJavaIdentifierPart(c)) {
+				buff.insert(0, c);
+			}
+			else {
+				break;
+			}
+		}
+		return buff.toString();
+	}
 
-        int caretDepth;
+	public static class SubQueryList {
 
-        public List<SubQuery> subQueries;
-    }
+		int caretDepth;
 
-    
-    static String[] getHQLKeywords() {
-        return hqlKeywords;
-    }
-    
-    static String[] getHQLFunctionNames() {
-        return builtInFunctions;
-    }
-    
+		public List<SubQuery> subQueries;
+	}
+
+
+	static String[] getHQLKeywords() {
+		return hqlKeywords;
+	}
+
+	static String[] getHQLFunctionNames() {
+		return builtInFunctions;
+	}
+
 }

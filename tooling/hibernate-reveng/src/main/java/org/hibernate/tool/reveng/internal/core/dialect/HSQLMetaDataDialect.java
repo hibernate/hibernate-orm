@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.core.dialect;
 
@@ -40,38 +27,39 @@ public class HSQLMetaDataDialect extends JDBCMetaDataDialect {
 				return columnName; // avoid double quoting
 			}
 			return "\"" + columnName + "\"";
-		} else {
+		}
+		else {
 			return columnName;
-		}		
+		}
 	}
-	   
+
 	public Iterator<Map<String, Object>> getSuggestedPrimaryKeyStrategyName(String catalog, String schema, String table) {
-			try {			
+			try {
 				catalog = caseForSearch( catalog );
 				schema = caseForSearch( schema );
 				table = caseForSearch( table );
-				
+
 				//log.debug("geSuggestedPrimaryKeyStrategyName(" + catalog + "." + schema + "." + table + ")");
-				
+
 				final String sc = schema;
 				final String cat = catalog;
 				return new ResultSetIterator(getMetaData().getTables(catalog, schema, table, new String[]{"TABLE"})) {
-					
+
 					Map<String, Object> element = new HashMap<String, Object>();
 					protected Map<String, Object> convertRow(ResultSet tableRs) throws SQLException{
 						String table = tableRs.getString("TABLE_NAME");
 						String fullTableName = TableNameQualifier.qualify(quote(cat), quote(sc), quote(table));
-						
+
 						String sql ="SELECT * FROM " + fullTableName + " WHERE 0>1"; // can't use FALSE constant since it would not work with older HSQL versions. (JBIDE-5957)
 						boolean isAutoIncrement = false;
-						
+
 						PreparedStatement statement = null;
 						try {
 							statement = getConnection().prepareStatement( sql );
 							element.clear();
 							element.put("TABLE_NAME", table);
 							element.put("TABLE_SCHEM", sc);
-							element.put("TABLE_CAT", null);						
+							element.put("TABLE_CAT", null);
 
 							ResultSet rs = statement.executeQuery();
 							ResultSetMetaData rsmd = rs.getMetaData();
@@ -80,37 +68,41 @@ public class HSQLMetaDataDialect extends JDBCMetaDataDialect {
 								if (isAutoIncrement) break;
 							}
 
-						} catch(SQLException e) {
+						}
+						catch(SQLException e) {
 							//log error and set HIBERNATE_STRATEGY to null
 							log.debug("Error while getting suggested primary key strategy for " + fullTableName + ". Falling back to default strategy.",e);
-						} finally {
+						}
+						finally {
 							if(statement!=null) {
 								try {
 									statement.close();
 								}
 								catch (SQLException e) {
 									throw new RuntimeException(
-											"Problem while closing prepared statement", e);				
+											"Problem while closing prepared statement", e);
 								}
 							}
 						}
 
 						if(isAutoIncrement) {
 							element.put("HIBERNATE_STRATEGY", "identity");
-						} else {
-							element.put("HIBERNATE_STRATEGY", null);							
 						}
-						return element;					
+						else {
+							element.put("HIBERNATE_STRATEGY", null);
+						}
+						return element;
 					}
 					protected Throwable handleSQLException(SQLException e) {
 						// schemaRs and catalogRs are only used for error reporting if
 						// we get an exception
 						throw new RuntimeException(
-								"Could not get list of suggested identity strategies from database. Probably a JDBC driver problem. ", e);					
+								"Could not get list of suggested identity strategies from database. Probably a JDBC driver problem. ", e);
 					}
 				};
-			} catch (SQLException e) {
-				throw new RuntimeException("Could not get list of suggested identity strategies from database. Probably a JDBC driver problem. ", e);		         
-			} 		
+			}
+			catch (SQLException e) {
+				throw new RuntimeException("Could not get list of suggested identity strategies from database. Probably a JDBC driver problem. ", e);
+			}
 		}
 }

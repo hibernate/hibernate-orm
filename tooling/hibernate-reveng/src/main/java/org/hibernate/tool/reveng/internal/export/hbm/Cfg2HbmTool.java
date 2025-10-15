@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.export.hbm;
 
@@ -24,7 +11,6 @@ import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -112,13 +98,15 @@ public class Cfg2HbmTool {
 					String schema = properties.getProperty(key);
 					if (!isDefaultSchema(schema, environmentProperties)) {
 						fProp.put(key, schema);
-					} 
-				} else if ("catalog".equals(key)) {
+					}
+				}
+				else if ("catalog".equals(key)) {
 					String catalog = properties.getProperty(key);
 					if (!isDefaultCatalog(catalog, environmentProperties)) {
 						fProp.put(key, catalog);
 					}
-				} else if (! key.startsWith("target_")) {
+				}
+				else if (! key.startsWith("target_")) {
 					fProp.put(key, properties.get(key));
 				}
 			}
@@ -126,7 +114,7 @@ public class Cfg2HbmTool {
 		}
 		return null;
 	}
-	
+
 	static private boolean isDefaultSchema(String schema, Properties properties) {
 		String defaultSchema = properties.getProperty(Environment.DEFAULT_SCHEMA);
 		return defaultSchema == null ? schema == null : defaultSchema.equals(schema);
@@ -148,7 +136,8 @@ public class Cfg2HbmTool {
 				String typeName = ((SimpleValue)property.getValue()).getTypeName();
 				if("timestamp".equals(typeName) || "dbtimestamp".equals(typeName)) {
 					return "timestamp";
-				} else {
+				}
+				else {
 					return "version";
 				}
 			}
@@ -190,7 +179,7 @@ public class Cfg2HbmTool {
 		Properties val = this.getIdentifierGeneratorProperties(property);
 		return (val==null) ? false : true;
 	}
-	
+
 	public Properties getIdentifierGeneratorProperties(Property property) {
 		Properties result = null;
 		SimpleValue simpleValue = (SimpleValue)property.getValue();
@@ -200,7 +189,8 @@ public class Cfg2HbmTool {
 				result = new Properties();
 				result.putAll(idGenParams);
 			}
-		} else {
+		}
+		else {
 			Map<String, Object> properties = new ValueUtil(simpleValue).getIdentifierGeneratorParameters();
 			if (properties != null) {
 				result = new Properties();
@@ -209,7 +199,7 @@ public class Cfg2HbmTool {
 		}
 		return result;
 	}
-	
+
 	/**
 	 * @param property
 	 * @return
@@ -218,79 +208,82 @@ public class Cfg2HbmTool {
 		return getFilteredIdentifierGeneratorProperties(this.getIdentifierGeneratorProperties(property), props).keySet();
 	}
 
-    public boolean isOneToMany(Property property) {
-        return isOneToMany(property.getValue());
-    }
+	public boolean isOneToMany(Property property) {
+		return isOneToMany(property.getValue());
+	}
 
-    public boolean isOneToMany(Value value) {
-        if(value instanceof Collection) {
-            return ( (Collection)value ).isOneToMany();
-        }else if(value instanceof OneToMany){
-        	return true;
-        }
-        return false;
-    }
+	public boolean isOneToMany(Value value) {
+		if(value instanceof Collection) {
+			return ( (Collection)value ).isOneToMany();
+		}
+		else if(value instanceof OneToMany){
+			return true;
+		}
+		return false;
+	}
 
-        public boolean isManyToMany(Property property) {
-   		return isManyToMany(property.getValue());
-    }
+		public boolean isManyToMany(Property property) {
+		return isManyToMany(property.getValue());
+	}
 
-    public boolean isManyToMany(Value value) {
+	public boolean isManyToMany(Value value) {
 		return	(value instanceof Collection &&
-    			((Collection)value).getElement() instanceof ManyToOne);
-    }
+				((Collection)value).getElement() instanceof ManyToOne);
+	}
 
 
 	public boolean isCollection(Property property) {
-        return property.getValue() instanceof Collection;
-    }
+		return property.getValue() instanceof Collection;
+	}
 
 	public boolean isOneToManyCollection(Property property) {
 		return isCollection(property) && ((Collection)property.getValue()).isOneToMany();
 	}
 
 	public boolean isSimpleValue(Property property) {
-        return (property.getValue() instanceof SimpleValue);
+		return (property.getValue() instanceof SimpleValue);
 	}
 
 	public boolean isManyToOne(Property property) {
-        return isManyToOne(property.getValue());
-    }
+		return isManyToOne(property.getValue());
+	}
 
 	public boolean isManyToAny(Property property) {
-        return isManyToAny(property.getValue());
-    }
+		return isManyToAny(property.getValue());
+	}
 
 	public boolean isManyToAny(Value value) {
-        return (value instanceof Collection &&
-    			((Collection)value).getElement() instanceof Any);
-    }
+		return (value instanceof Collection &&
+				((Collection)value).getElement() instanceof Any);
+	}
 
 	public boolean isManyToOne(Value value) {
-        return (value instanceof ManyToOne);
-    }
+		return (value instanceof ManyToOne);
+	}
 
 	public boolean isOneToOne(Property property) {
-        return (property.getValue() instanceof OneToOne);
-    }
+		return (property.getValue() instanceof OneToOne);
+	}
 
 	public boolean isTemporalValue(Property property) {
 		if(property.getValue() instanceof SimpleValue) {
 			String typeName = ((SimpleValue)property.getValue()).getTypeName();
 			if("date".equals(typeName) || "java.sql.Date".equals(typeName)) {
 				return true;
-			} else if ("timestamp".equals(typeName) || "java.sql.Timestamp".equals(typeName)) {
+			}
+			else if ("timestamp".equals(typeName) || "java.sql.Timestamp".equals(typeName)) {
 				return true;
-			} else if ("time".equals(typeName) || "java.sql.Time".equals(typeName)) {
+			}
+			else if ("time".equals(typeName) || "java.sql.Time".equals(typeName)) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-    public boolean isNamedQueries(Metadata md) {
-    	final ArrayList<NamedHqlQueryDefinition<?>> list = new ArrayList<NamedHqlQueryDefinition<?>>();
-    	Consumer<NamedHqlQueryDefinition<?>> consumer = new Consumer<NamedHqlQueryDefinition<?>>() {
+	public boolean isNamedQueries(Metadata md) {
+		final ArrayList<NamedHqlQueryDefinition<?>> list = new ArrayList<NamedHqlQueryDefinition<?>>();
+		Consumer<NamedHqlQueryDefinition<?>> consumer = new Consumer<NamedHqlQueryDefinition<?>>() {
 			@Override
 			public void accept(NamedHqlQueryDefinition<?> namedHqlQueryDefinition) {
 				list.add(namedHqlQueryDefinition);
@@ -301,8 +294,8 @@ public class Cfg2HbmTool {
 	}
 
 	public boolean isNamedSQLQueries(Metadata md) {
-	   	final ArrayList<NamedNativeQueryDefinition<?>> list = new ArrayList<NamedNativeQueryDefinition<?>>();
-    	Consumer<NamedNativeQueryDefinition<?>> consumer = new Consumer<NamedNativeQueryDefinition<?>>() {
+		final ArrayList<NamedNativeQueryDefinition<?>> list = new ArrayList<NamedNativeQueryDefinition<?>>();
+		Consumer<NamedNativeQueryDefinition<?>> consumer = new Consumer<NamedNativeQueryDefinition<?>>() {
 			@Override
 			public void accept(NamedNativeQueryDefinition<?> namedHqlQueryDefinition) {
 				list.add(namedHqlQueryDefinition);
@@ -346,7 +339,8 @@ public class Cfg2HbmTool {
 		String fetch = getFetchMode(property);
 		if(fetch==null || "default".equals(fetch)) {
 			return false;
-		} else {
+		}
+		else {
 			return true;
 		}
 	}
@@ -420,42 +414,42 @@ public class Cfg2HbmTool {
 		return !(md.getImports().isEmpty());
 	}
 
- 	public boolean needsDiscriminatorElement(PersistentClass clazz) {
- 			return clazz instanceof RootClass
- 			  && (clazz.getDiscriminator() != null);
- 		}
- 		  		
+	public boolean needsDiscriminatorElement(PersistentClass clazz) {
+			return clazz instanceof RootClass
+			&& (clazz.getDiscriminator() != null);
+		}
+
 	public boolean needsDiscriminator(PersistentClass clazz) {
 
 		return clazz instanceof Subclass
-		  && !(clazz instanceof UnionSubclass) && !(clazz instanceof JoinedSubclass);
+		&& !(clazz instanceof UnionSubclass) && !(clazz instanceof JoinedSubclass);
 	}
 
 
 	public boolean needsTable(PersistentClass clazz) {
 		Boolean accept = (Boolean) clazz.accept(new PersistentClassVisitor(){
-		
+
 			public Object accept(Subclass subclass) {
 				return Boolean.FALSE;
 			}
-		
+
 			public Object accept(JoinedSubclass subclass) {
 				return Boolean.TRUE;
 			}
-		
+
 			public Object accept(SingleTableSubclass subclass) {
 				return Boolean.FALSE;
 			}
-		
+
 			public Object accept(UnionSubclass subclass) {
 				return Boolean.TRUE;
 			}
-		
+
 			public Object accept(RootClass class1) {
 				return Boolean.TRUE;
 			}
-		});						
-		
+		});
+
 		return accept.booleanValue();
 	}
 

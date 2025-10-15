@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.ide.completion;
 
@@ -53,24 +40,24 @@ public class ConfigurationCompletion {
 	public void getMatchingImports(String prefix , IHQLCompletionRequestor collector) {
 		getMatchingImports( prefix, prefix.length() , collector );
 	}
-	
+
 	public void getMatchingImports(String prefix, int cursorPosition, IHQLCompletionRequestor collector) {
 		Iterator<Entry<String, String>> iterator = metadata.getImports().entrySet().iterator();
 		while ( iterator.hasNext() ) {
 			Entry<String, String> entry = iterator.next();
 			String entityImport = (String) entry.getKey();
 			String entityName = (String) entry.getValue();
-			
+
 			if(entityImport.toLowerCase().startsWith(prefix.toLowerCase())) {
 				HQLCompletionProposal proposal = createStartWithCompletionProposal( prefix, cursorPosition, HQLCompletionProposal.ENTITY_NAME, entityImport );
 				proposal.setShortEntityName( entityImport );
 				proposal.setEntityName( entityName );
-				collector.accept(proposal);				
-								
+				collector.accept(proposal);
+
 			}
-		}		
+		}
 	}
-	
+
 	public void getMatchingKeywords(String prefix, int cursorPosition, IHQLCompletionRequestor collector) {
 		findMatchingWords( cursorPosition, prefix, HQLAnalyzer.getHQLKeywords(), HQLCompletionProposal.KEYWORD, collector);
 	}
@@ -78,75 +65,84 @@ public class ConfigurationCompletion {
 	public void getMatchingFunctions(String prefix, int cursorPosition, IHQLCompletionRequestor collector) {
 		findMatchingWords( cursorPosition, prefix, HQLAnalyzer.getHQLFunctionNames(), HQLCompletionProposal.FUNCTION, collector);
 	}
-	
+
 	public void getMatchingProperties(String path, String prefix, IHQLCompletionRequestor hcc) {
 		getMatchingProperties( path, prefix, prefix.length(), hcc );
 	}
-	
+
 	public void getMatchingProperties(String path, String prefix, int cursorPosition, IHQLCompletionRequestor hcc) {
 		int idx = path.indexOf('/');
-        if (idx == -1) { // root name
-            PersistentClass cmd = getPersistentClass(path);
-            if (cmd == null) {
-                return;
-            }
-            addPropertiesToList(cmd, prefix, cursorPosition, hcc);            
-        } else {
-            String baseEntityName = path.substring(0, idx);
-            String propertyPath = path.substring(idx + 1);
-            Value value = getNextAttributeType(baseEntityName, propertyPath);
-            if (value == null) {
-                return;
-            }
-            
-            // Go to the next property (get the y of x/y/z when root is x)
-            idx = propertyPath.indexOf('/');
-            if (idx == -1) {
-                path = "";
-            } else {
-                path = propertyPath.substring(idx + 1);
-            }
-            if (path.length() == 0) {
-                // No properties left
-                if (value instanceof Component) {
-                    addPropertiesToList((Component) value, prefix, cursorPosition, hcc);
-                } else if (value instanceof Collection && ((Collection)value).getElement() instanceof Component) {
-                	addPropertiesToList((Component) ((Collection)value).getElement(), prefix, cursorPosition, hcc);
-                } else {
-                	 addPropertiesToList(getPersistentClass( getReferencedEntityName( value ) ), prefix, cursorPosition, hcc);
-                }
-            } else {
-                // Nested properties
-                if (value instanceof Component) {
-                    // We need to find the first non-component type 
-                    while (value instanceof Component && path.length() > 0) {
-                        value = getNextAttributeType((Component) value, path);
-                        if (value != null) {
-                            // Consume part of the canonical path
-                            idx = path.indexOf('/');
-                            if (idx != -1) {
-                                path = path.substring(idx + 1);
-                            } else {
-                                path = "";
-                            }
-                        }
-                    }
-                    if (value instanceof Component) {
-                        addPropertiesToList((Component) value, prefix, cursorPosition, hcc);
-                    } else if (value != null) {
-                        if (path.length() > 0) {
-                            path = getReferencedEntityName( value ) + "/" + path;
-                        } else {
-                            path = getReferencedEntityName( value );
-                        }
-                        getMatchingProperties( path, prefix, cursorPosition, hcc );
-                    }
-                } else {
-                    // Just call the method recursively to add our new type
-                    getMatchingProperties(getReferencedEntityName( value ) + "/" + path, prefix, cursorPosition, hcc);
-                }
-            }
-        }
+		if (idx == -1) { // root name
+			PersistentClass cmd = getPersistentClass(path);
+			if (cmd == null) {
+				return;
+			}
+			addPropertiesToList(cmd, prefix, cursorPosition, hcc);
+		}
+		else {
+			String baseEntityName = path.substring(0, idx);
+			String propertyPath = path.substring(idx + 1);
+			Value value = getNextAttributeType(baseEntityName, propertyPath);
+			if (value == null) {
+				return;
+			}
+
+			// Go to the next property (get the y of x/y/z when root is x)
+			idx = propertyPath.indexOf('/');
+			if (idx == -1) {
+				path = "";
+			}
+			else {
+				path = propertyPath.substring(idx + 1);
+			}
+			if (path.length() == 0) {
+				// No properties left
+				if (value instanceof Component) {
+					addPropertiesToList((Component) value, prefix, cursorPosition, hcc);
+				}
+				else if (value instanceof Collection && ((Collection)value).getElement() instanceof Component) {
+					addPropertiesToList((Component) ((Collection)value).getElement(), prefix, cursorPosition, hcc);
+				}
+				else {
+					addPropertiesToList(getPersistentClass( getReferencedEntityName( value ) ), prefix, cursorPosition, hcc);
+				}
+			}
+			else {
+				// Nested properties
+				if (value instanceof Component) {
+					// We need to find the first non-component type
+					while (value instanceof Component && path.length() > 0) {
+						value = getNextAttributeType((Component) value, path);
+						if (value != null) {
+							// Consume part of the canonical path
+							idx = path.indexOf('/');
+							if (idx != -1) {
+								path = path.substring(idx + 1);
+							}
+							else {
+								path = "";
+							}
+						}
+					}
+					if (value instanceof Component) {
+						addPropertiesToList((Component) value, prefix, cursorPosition, hcc);
+					}
+					else if (value != null) {
+						if (path.length() > 0) {
+							path = getReferencedEntityName( value ) + "/" + path;
+						}
+						else {
+							path = getReferencedEntityName( value );
+						}
+						getMatchingProperties( path, prefix, cursorPosition, hcc );
+					}
+				}
+				else {
+					// Just call the method recursively to add our new type
+					getMatchingProperties(getReferencedEntityName( value ) + "/" + path, prefix, cursorPosition, hcc);
+				}
+			}
+		}
 	}
 
 	private String getReferencedEntityName(Value value) {
@@ -165,44 +161,44 @@ public class ConfigurationCompletion {
 					String indexType = getReferencedEntityName( value );
 					genericDecl = indexType + "," + elementType;
 				}*/
-			} 			
+			}
 			return elementType;
 		}
-		
+
 		if(value instanceof OneToMany) {
 			return ((OneToMany)value).getReferencedEntityName();
 		}
-		
+
 		return null;
 	}
 
 	private void addPropertiesToList(PersistentClass cmd, String prefix, int cursorPosition, IHQLCompletionRequestor hcc) {
 		if (cmd == null) {
-            return;
-        }
-        if (prefix == null) {
-            prefix = "";
-        }
-        
-        // Add superclass's properties too
-        while (cmd != null){
-        	EntityPOJOClass pc = new EntityPOJOClass(cmd, new Cfg2JavaTool()); // TODO: we should extract the needed functionallity from this hbm2java class.
-            
-        	Iterator<Property> allPropertiesIterator = pc.getAllPropertiesIterator();
-            while ( allPropertiesIterator.hasNext() ) {
-    			Property property = allPropertiesIterator.next();
-    			String candidate = property.getName();
-    		    if (prefix.length() == 0 || candidate.toLowerCase().startsWith(prefix.toLowerCase())) {
-    		    	HQLCompletionProposal proposal = createStartWithCompletionProposal( prefix, cursorPosition, HQLCompletionProposal.PROPERTY, candidate );
-    		    	proposal.setEntityName( cmd.getEntityName() );
-    		    	proposal.setProperty( property );
-    		    	proposal.setPropertyName( candidate );		    	
-    				hcc.accept( proposal);		    	                
-                }
-            }
-            cmd = cmd.getSuperclass();
-        }
-           	
+			return;
+		}
+		if (prefix == null) {
+			prefix = "";
+		}
+
+		// Add superclass's properties too
+		while (cmd != null){
+			EntityPOJOClass pc = new EntityPOJOClass(cmd, new Cfg2JavaTool()); // TODO: we should extract the needed functionallity from this hbm2java class.
+
+			Iterator<Property> allPropertiesIterator = pc.getAllPropertiesIterator();
+			while ( allPropertiesIterator.hasNext() ) {
+				Property property = allPropertiesIterator.next();
+				String candidate = property.getName();
+				if (prefix.length() == 0 || candidate.toLowerCase().startsWith(prefix.toLowerCase())) {
+					HQLCompletionProposal proposal = createStartWithCompletionProposal( prefix, cursorPosition, HQLCompletionProposal.PROPERTY, candidate );
+					proposal.setEntityName( cmd.getEntityName() );
+					proposal.setProperty( property );
+					proposal.setPropertyName( candidate );
+					hcc.accept( proposal);
+				}
+			}
+			cmd = cmd.getSuperclass();
+		}
+
 	}
 
 	private HQLCompletionProposal createStartWithCompletionProposal(String prefix, int cursorPosition, int kind, String candidate) {
@@ -210,13 +206,14 @@ public class ConfigurationCompletion {
 		if(candidate.startsWith(prefix)) {
 			proposal.setCompletion( candidate.substring(prefix.length()) );
 			proposal.setSimpleName( candidate );
-			proposal.setReplaceStart( cursorPosition );	
+			proposal.setReplaceStart( cursorPosition );
 			proposal.setReplaceEnd( cursorPosition );
-		} else {
+		}
+		else {
 			proposal.setCompletion( candidate );
 			proposal.setSimpleName( candidate );
-			proposal.setReplaceStart( cursorPosition  - prefix.length() );// replace prefix	
-			proposal.setReplaceEnd( cursorPosition ); 	
+			proposal.setReplaceStart( cursorPosition  - prefix.length() );// replace prefix
+			proposal.setReplaceEnd( cursorPosition );
 		}
 		return proposal;
 	}
@@ -227,135 +224,141 @@ public class ConfigurationCompletion {
 		String entityName = (String) metadata.getImports().get( path );
 		if(entityName==null) {
 			return metadata.getEntityBinding(path);
-		} else {
+		}
+		else {
 			return metadata.getEntityBinding(entityName);
-		}	
+		}
 	}
 
 	public String getCanonicalPath(List<EntityNameReference> qts, String name) {
 		Map<String, String> alias2Type = new HashMap<String, String>();
-        for (Iterator<EntityNameReference> iter = qts.iterator(); iter.hasNext();) {
+		for (Iterator<EntityNameReference> iter = qts.iterator(); iter.hasNext();) {
 			EntityNameReference qt = iter.next();
-            alias2Type.put(qt.getAlias(), qt.getEntityName());
-        }
-        if (qts.size() == 1) { 
-            EntityNameReference visible = qts.get(0);
-            String alias = visible.getAlias();
-            if (name.equals(alias)) {
-                return visible.getEntityName();
-            } else if (alias == null || alias.length() == 0 || alias.equals(visible.getEntityName())) {
-                return visible.getEntityName() + "/" + name;
-            }
-        }
-        return getCanonicalPath(new HashSet<String>(), alias2Type, name);		
+			alias2Type.put(qt.getAlias(), qt.getEntityName());
+		}
+		if (qts.size() == 1) {
+			EntityNameReference visible = qts.get(0);
+			String alias = visible.getAlias();
+			if (name.equals(alias)) {
+				return visible.getEntityName();
+			}
+			else if (alias == null || alias.length() == 0 || alias.equals(visible.getEntityName())) {
+				return visible.getEntityName() + "/" + name;
+			}
+		}
+		return getCanonicalPath(new HashSet<String>(), alias2Type, name);
 	}
-	
+
 	private String getCanonicalPath(Set<String> resolved, Map<String, String> alias2Type, String name) {
-        if (resolved.contains(name)) {
-            // To prevent a stack overflow
-            return name;
-        }
-        resolved.add(name);
-        String type = (String) alias2Type.get(name);
-        if (type != null) {
-            return name.equals(type) ? name : getCanonicalPath(resolved, alias2Type, type);
-        }
-        int idx = name.lastIndexOf('.');
-        if (idx == -1) {
-            return type != null ? type : name;
-        }
-        String baseName = name.substring(0, idx);
-        String prop = name.substring(idx + 1);
-        if (isAliasKnown(alias2Type, baseName)) {
-            return getCanonicalPath(resolved, alias2Type, baseName) + "/" + prop;
-        } else {
-            return name;
-        }
-    }
-	
+		if (resolved.contains(name)) {
+			// To prevent a stack overflow
+			return name;
+		}
+		resolved.add(name);
+		String type = (String) alias2Type.get(name);
+		if (type != null) {
+			return name.equals(type) ? name : getCanonicalPath(resolved, alias2Type, type);
+		}
+		int idx = name.lastIndexOf('.');
+		if (idx == -1) {
+			return type != null ? type : name;
+		}
+		String baseName = name.substring(0, idx);
+		String prop = name.substring(idx + 1);
+		if (isAliasKnown(alias2Type, baseName)) {
+			return getCanonicalPath(resolved, alias2Type, baseName) + "/" + prop;
+		}
+		else {
+			return name;
+		}
+	}
+
 	private static boolean isAliasKnown(Map<String, String> alias2Type, String alias) {
-        if (alias2Type.containsKey(alias)) {
-            return true;
-        }
-        int idx = alias.lastIndexOf('.');
-        if (idx == -1) {
-            return false;
-        }
-        return isAliasKnown(alias2Type, alias.substring(0, idx));
-    }
-    
+		if (alias2Type.containsKey(alias)) {
+			return true;
+		}
+		int idx = alias.lastIndexOf('.');
+		if (idx == -1) {
+			return false;
+		}
+		return isAliasKnown(alias2Type, alias.substring(0, idx));
+	}
+
 	private Value getNextAttributeType(String type, String attributePath) {
-        PersistentClass cmd = getPersistentClass( type );
-        if (cmd == null) {
-            return null;
-        }
-        String attribute;
-        int idx = attributePath.indexOf('/');
-        if (idx == -1) {
-            attribute = attributePath;
-        } else {
-            attribute = attributePath.substring(0, idx);
-        }
-        
-        String idName = cmd.getIdentifierProperty()==null?null:cmd.getIdentifierProperty().getName();
-        if (attribute.equals(idName)) {
-            return cmd.getIdentifierProperty().getValue();
-        }
-        try {
-        	Property property = cmd.getProperty( attribute );
-        	return property==null?null:property.getValue();
-        } catch (HibernateException he) {
-        	return null;
-        }
-                
-    }
+		PersistentClass cmd = getPersistentClass( type );
+		if (cmd == null) {
+			return null;
+		}
+		String attribute;
+		int idx = attributePath.indexOf('/');
+		if (idx == -1) {
+			attribute = attributePath;
+		}
+		else {
+			attribute = attributePath.substring(0, idx);
+		}
+
+		String idName = cmd.getIdentifierProperty()==null?null:cmd.getIdentifierProperty().getName();
+		if (attribute.equals(idName)) {
+			return cmd.getIdentifierProperty().getValue();
+		}
+		try {
+			Property property = cmd.getProperty( attribute );
+			return property==null?null:property.getValue();
+		}
+		catch (HibernateException he) {
+			return null;
+		}
+
+	}
 
 	private Value getNextAttributeType(Component t, String attributeName) {
-        int idx = attributeName.indexOf('/');
-        if (idx != -1) {
-            attributeName = attributeName.substring(0, idx);
-        }
-        Iterator<?> names = t.getProperties().iterator();
-        while ( names.hasNext() ) {
+		int idx = attributeName.indexOf('/');
+		if (idx != -1) {
+			attributeName = attributeName.substring(0, idx);
+		}
+		Iterator<?> names = t.getProperties().iterator();
+		while ( names.hasNext() ) {
 			Property element = (Property) names.next();
 			String name = element.getName();
 			if (attributeName.equals(name)) {
-                return element.getValue();
-            }
-        }
-        return null;
-    }
-	
+				return element.getValue();
+			}
+		}
+		return null;
+	}
+
 	void addPropertiesToList(Component t, String prefix, int cursorPosition, IHQLCompletionRequestor hcc) {
-        if (t == null) {
-            return;
-        }
-        Iterator<?> props = t.getProperties().iterator();
-        while ( props.hasNext() ) {
-			Property element = (Property) props.next();			
+		if (t == null) {
+			return;
+		}
+		Iterator<?> props = t.getProperties().iterator();
+		while ( props.hasNext() ) {
+			Property element = (Property) props.next();
 			String candidate = element.getName();
 			if (candidate.toLowerCase().startsWith(prefix.toLowerCase())) {
 				HQLCompletionProposal proposal = createStartWithCompletionProposal( prefix, cursorPosition, HQLCompletionProposal.PROPERTY, candidate );
 				//proposal.setEntityName( cmd.getEntityName() ); ...we don't know here..TODO: pass in the "path"
-		    	proposal.setPropertyName( candidate );
-		    	proposal.setProperty(element);
-				hcc.accept( proposal);				               
-            }
-        }
-    }
-	
+				proposal.setPropertyName( candidate );
+				proposal.setProperty(element);
+				hcc.accept( proposal);
+			}
+		}
+	}
+
 	private void findMatchingWords(int cursorPosition, String prefix, String[] words, int kind, IHQLCompletionRequestor hcc) {
 		int i = Arrays.binarySearch(words, prefix.toLowerCase());
 		if(i<0) {
 			i = Math.abs(i+1);
 		}
-		
+
 		for (int cnt = i; cnt < words.length; cnt++) {
 			String word = words[cnt];
 			if(word.toLowerCase().startsWith(prefix.toLowerCase())) {
 				HQLCompletionProposal proposal = createStartWithCompletionProposal( prefix, cursorPosition, kind, word );
-				hcc.accept( proposal);				
-			} else {
+				hcc.accept( proposal);
+			}
+			else {
 				break;
 			}
 		}

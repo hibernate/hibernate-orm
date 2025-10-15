@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.export.lint;
 
@@ -60,9 +47,9 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 	public String getName() {
 		return "schema";
 	}
-	
+
 	DatabaseReader reader;
-	
+
 	private SequenceCollector sequenceCollector;
 
 	private TableSelectorStrategy tableSelector;
@@ -72,9 +59,9 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 	private Dialect dialect;
 
 	private MappingContext mapping;
-	
+
 	private Properties properties;
-	
+
 	/** current table as read from the database */
 	Table currentDbTable = null;
 
@@ -82,7 +69,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		super.initialize( metadata);
 		StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();
 		ServiceRegistry serviceRegistry = builder.build();
-		
+
 		properties = Environment.getProperties();
 		dialect = serviceRegistry.getService(JdbcServices.class).getDialect();
 
@@ -90,11 +77,11 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 				new DefaultStrategy() );
 		metadataDialect = RevengDialectFactory
 				.createMetaDataDialect(
-						dialect, 
+						dialect,
 						properties );
-		reader = DatabaseReader.create( 
+		reader = DatabaseReader.create(
 				properties,
-				tableSelector, 
+				tableSelector,
 				metadataDialect,
 				serviceRegistry);
 		ConnectionProvider connectionProvider = serviceRegistry.getService(ConnectionProvider.class);
@@ -102,13 +89,13 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 	}
 
 	public void visit(IssueCollector collector) {
-		super.visit(collector);		
-		visitGenerators(collector);				
+		super.visit(collector);
+		visitGenerators(collector);
 	}
-	
+
 	public void visitGenerators(IssueCollector collector) {
 		Iterator<?> iter = iterateGenerators();
-		
+
 		Set<?> sequences = Collections.EMPTY_SET;
 		if(dialect.getSequenceSupport().supportsSequences()) {
 			sequences = sequenceCollector.readSequences(dialect.getQuerySequencesString());
@@ -122,18 +109,20 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 				collector.reportIssue( new Issue( "MISSING_ID_GENERATOR", Issue.HIGH_PRIORITY, "Missing sequence or table: " + key));
 			}
 		}
-		
+
 	}
 
 	private boolean isSequence(Object key, Set<?> sequences) {
 		if(key instanceof String) {
 			if ( sequences.contains( key ) ) {
 				return true;
-			} else {
+			}
+			else {
 				String[] strings = StringHelper.split(".", (String) key);
 				if(strings.length==3) {
 					return sequences.contains(strings[2]);
-				} else if (strings.length==2) {
+				}
+				else if (strings.length==2) {
 					return sequences.contains(strings[1]);
 				}
 			}
@@ -150,12 +139,14 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 				tableSelector.addSchemaSelection( createSchemaSelection(null,null, strings[0]) );
 				Collection<Table> collection = readFromDatabase();
 				return !collection.isEmpty();
-			} else if(strings.length==3) {
+			}
+			else if(strings.length==3) {
 				tableSelector.clearSchemaSelections();
 				tableSelector.addSchemaSelection( createSchemaSelection(strings[0],strings[1], strings[2]) );
 				Collection<Table> collection = readFromDatabase();
 				return !collection.isEmpty();
-			} else if (strings.length==2) {
+			}
+			else if (strings.length==2) {
 				tableSelector.clearSchemaSelections();
 				tableSelector.addSchemaSelection( createSchemaSelection(null,strings[0], strings[1]) );
 				Collection<Table> collection = readFromDatabase();
@@ -164,7 +155,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		}
 		return false;
 	}
-	
+
 	public void visit(Table table, IssueCollector pc) {
 
 		if ( table.isPhysicalTable() ) {
@@ -190,20 +181,20 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 			}
 			else {
 				currentDbTable = collection.iterator().next();
-				visitColumns(table,pc);				
+				visitColumns(table,pc);
 			}
 		}
 		else {
-			// log?			
+			// log?
 		}
 	}
 
 	String table(Table t) {
 		return TableNameQualifier.qualify( t.getCatalog(), t.getSchema(), t.getName() );
 	}
-	
+
 	public void visit(
-			Table table, 
+			Table table,
 			Column col,
 			IssueCollector pc) {
 		if ( currentDbTable == null ) {
@@ -236,8 +227,8 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 	private void setSchemaSelection(Table table) {
 		tableSelector.clearSchemaSelections();
 		tableSelector.addSchemaSelection( createSchemaSelection(
-				table.getCatalog(), 
-				table.getSchema(), 
+				table.getCatalog(),
+				table.getSchema(),
 				table.getName() ) );
 	}
 
@@ -247,7 +238,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 	 */
 	private Iterator<Generator> iterateGenerators() throws MappingException {
 
-		TreeMap<Object, Generator> generators = 
+		TreeMap<Object, Generator> generators =
 				new TreeMap<Object, Generator>();
 
 		Iterator<PersistentClass> persistentClassIterator = getMetadata().getEntityBindings().iterator();
@@ -290,13 +281,13 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 
 		return generators.values().iterator();
 	}
-	
+
 	private Collection<Table> readFromDatabase() {
 		RevengMetadataCollector revengMetadataCollector = new RevengMetadataCollector();
 		reader.readDatabaseSchema(revengMetadataCollector);
 		return revengMetadataCollector.getTables();
 	}
-	
+
 	private SchemaSelection createSchemaSelection(String matchCatalog, String matchSchema, String matchTable) {
 		return new SchemaSelection() {
 			@Override
@@ -311,24 +302,25 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 			public String getMatchTable() {
 				return matchTable;
 			}
-			
+
 		};
 	}
-	
+
 	private String getGeneratorKey(PersistentIdentifierGenerator ig) {
 		String result = null;
 		if  (ig instanceof SequenceStyleGenerator) {
 			result = getKeyForSequenceStyleGenerator((SequenceStyleGenerator)ig);
-		} else if (ig instanceof TableGenerator) {
+		}
+		else if (ig instanceof TableGenerator) {
 			result = getKeyForTableGenerator((TableGenerator)ig);
 		}
 		return result;
 	}
-	
+
 	private String getKeyForSequenceStyleGenerator(SequenceStyleGenerator ig) {
 		return ig.getDatabaseStructure().getPhysicalName().render();
 	}
-	
+
 	private String getKeyForTableGenerator(TableGenerator ig) {
 		return ig.getTableName();
 	}

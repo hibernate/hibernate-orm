@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.core.dialect;
 
@@ -27,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 public class CachedMetaDataDialect implements RevengDialect {
-	
+
 	RevengDialect delegate;
 	private Map<StringKey, List<Map<String, Object>>> cachedTables = new HashMap<StringKey, List<Map<String, Object>>>();
 	private Map<StringKey, List<Map<String, Object>>> cachedColumns = new HashMap<StringKey, List<Map<String, Object>>>();
@@ -39,28 +26,28 @@ public class CachedMetaDataDialect implements RevengDialect {
 	public CachedMetaDataDialect(RevengDialect realMetaData) {
 		this.delegate = realMetaData;
 	}
-	
+
 	public void close() {
 		delegate.close();
 	}
 
 	public void configure(
 			ConnectionProvider connectionProvider) {
-        delegate.configure(connectionProvider);       
-    }
-	
+		delegate.configure(connectionProvider);
+	}
+
 	public void close(Iterator<?> iterator) {
 		if(iterator instanceof CachedIterator) {
 			CachedIterator ci = (CachedIterator) iterator;
 			if(ci.getOwner()==this) {
 				ci.store();
 				return;
-			} 
+			}
 		}
 		delegate.close( iterator );
 	}
 
-	
+
 
 	public Iterator<Map<String, Object>> getColumns(String catalog, String schema, String table, String column) {
 		StringKey sk = new StringKey(new String[] { catalog, schema, table, column });
@@ -68,9 +55,10 @@ public class CachedMetaDataDialect implements RevengDialect {
 		if(cached==null) {
 			cached = new ArrayList<Map<String, Object>>();
 			return new CachedIterator(this, cachedColumns, sk, cached, delegate.getColumns( catalog, schema, table, column ));
-		} else {
+		}
+		else {
 			return cached.iterator();
-		}		
+		}
 	}
 
 	public Iterator<Map<String, Object>> getExportedKeys(String catalog, String schema, String table) {
@@ -79,9 +67,10 @@ public class CachedMetaDataDialect implements RevengDialect {
 		if(cached==null) {
 			cached = new ArrayList<Map<String, Object>>();
 			return new CachedIterator(this, cachedExportedKeys, sk, cached, delegate.getExportedKeys( catalog, schema, table ));
-		} else {
+		}
+		else {
 			return cached.iterator();
-		}		
+		}
 	}
 
 	public Iterator<Map<String, Object>> getIndexInfo(String catalog, String schema, String table) {
@@ -90,7 +79,8 @@ public class CachedMetaDataDialect implements RevengDialect {
 		if(cached==null) {
 			cached = new ArrayList<Map<String, Object>>();
 			return new CachedIterator(this, cachedIndexInfo, sk, cached, delegate.getIndexInfo( catalog, schema, table ));
-		} else {
+		}
+		else {
 			return cached.iterator();
 		}
 	}
@@ -101,7 +91,8 @@ public class CachedMetaDataDialect implements RevengDialect {
 		if(cached==null) {
 			cached = new ArrayList<Map<String, Object>>();
 			return new CachedIterator(this, cachedPrimaryKeys, sk, cached, delegate.getPrimaryKeys( catalog, schema, name ));
-		} else {
+		}
+		else {
 			return cached.iterator();
 		}
 	}
@@ -112,7 +103,8 @@ public class CachedMetaDataDialect implements RevengDialect {
 		if(cached==null) {
 			cached = new ArrayList<Map<String, Object>>();
 			return new CachedIterator(this, cachedTables, sk, cached, delegate.getTables( catalog, schema, table ));
-		} else {
+		}
+		else {
 			return cached.iterator();
 		}
 	}
@@ -123,64 +115,65 @@ public class CachedMetaDataDialect implements RevengDialect {
 		if(cached==null) {
 			cached = new ArrayList<Map<String, Object>>();
 			return new CachedIterator(this, cachedPrimaryKeyStrategyName, sk, cached, delegate.getSuggestedPrimaryKeyStrategyName( catalog, schema, table ));
-		} else {
+		}
+		else {
 			return cached.iterator();
 		}
 	}
-	
+
 	public boolean needQuote(String name) {
 		return delegate.needQuote( name );
 	}
-	
+
 	private static class StringKey {
 		String[] keys;
-		
+
 		StringKey(String[] key) {
 			this.keys=key;
 		}
-		
+
 		public int hashCode() {
 			if (keys == null)
-	            return 0;
-	 
-	        int result = 1;
-	 
-	        for (int i = 0; i < keys.length; i++) {
+				return 0;
+
+			int result = 1;
+
+			for (int i = 0; i < keys.length; i++) {
 				Object element = keys[i];
-			    result = 31 * result + (element == null ? 0 : element.hashCode());
-	        }
-	        
-	        return result;	 
+				result = 31 * result + (element == null ? 0 : element.hashCode());
+			}
+
+			return result;
 		}
-		
+
 		public boolean equals(Object obj) {
 			StringKey other = (StringKey) obj;
 			String[] otherKeys = other.keys;
-			
+
 			if(otherKeys.length!=keys.length) {
 				return false;
 			}
-			
+
 			for (int i = otherKeys.length-1; i >= 0; i--) {
 				if(!safeEquals(otherKeys[i],(keys[i]))) {
 					return false;
 				}
 			}
-			
+
 			return true;
 		}
-		
+
 		private boolean safeEquals(Object obj1, Object obj2) {
 			if ( obj1 == null ) {
 				return obj2 == null;
 			}
-	        return obj1.equals( obj2 );
+			return obj1.equals( obj2 );
 		}
 	}
-	
+
 	private static class CachedIterator implements Iterator<Map<String, Object>> {
 
-		private List<Map<String, Object>> cache; 
+		private List<Map<String, Object>> cache;
 		private StringKey target;
 		private Map<StringKey, List<Map<String, Object>>> destination;
 		private Iterator<Map<String, Object>> realIterator;
@@ -192,12 +185,12 @@ public class CachedMetaDataDialect implements RevengDialect {
 			this.realIterator = realIterator;
 			this.cache = cache;
 		}
-		
+
 		public CachedMetaDataDialect getOwner() {
 			return owner;
 		}
 
-		public boolean hasNext() {			
+		public boolean hasNext() {
 			return realIterator.hasNext();
 		}
 
@@ -217,11 +210,11 @@ public class CachedMetaDataDialect implements RevengDialect {
 			cache = null;
 			target = null;
 			destination = null;
-			realIterator = null;			
+			realIterator = null;
 		}
 	}
 
-	
 
-		
+
+
 }

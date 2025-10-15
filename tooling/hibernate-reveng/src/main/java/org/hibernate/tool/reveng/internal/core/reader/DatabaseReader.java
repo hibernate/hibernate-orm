@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.core.reader;
 
@@ -38,9 +25,9 @@ import java.util.Properties;
 public class DatabaseReader {
 
 	public static DatabaseReader create(
-			Properties properties, 
+			Properties properties,
 			RevengStrategy revengStrategy,
-			RevengDialect mdd, 
+			RevengDialect mdd,
 			ServiceRegistry serviceRegistry) {
 		ConnectionProvider connectionProvider = serviceRegistry.getService(ConnectionProvider.class);
 		return new DatabaseReader(properties, mdd, connectionProvider, revengStrategy);
@@ -55,9 +42,9 @@ public class DatabaseReader {
 	private final Properties properties;
 
 	private DatabaseReader(
-			Properties properties, 
-			RevengDialect dialect, 
-			ConnectionProvider provider, 
+			Properties properties,
+			RevengDialect dialect,
+			ConnectionProvider provider,
 			RevengStrategy reveng) {
 		this.metadataDialect = dialect;
 		this.provider = provider;
@@ -67,21 +54,22 @@ public class DatabaseReader {
 			throw new IllegalStateException("Strategy cannot be null");
 		}
 	}
-	
+
 	public void readDatabaseSchema(RevengMetadataCollector revengMetadataCollector) {
 		try {
 			metadataDialect.configure(provider);
 			TableCollector tableCollector = TableCollector.create(
-					metadataDialect, 
-					revengStrategy, 
-					revengMetadataCollector, 
+					metadataDialect,
+					revengStrategy,
+					revengMetadataCollector,
 					properties);
 			for (Iterator<SchemaSelection> iter = getSchemaSelections().iterator(); iter.hasNext();) {
 				tableCollector.processTables(iter.next());
 			}
 			revengMetadataCollector.setOneToManyCandidates(resolveForeignKeys(revengMetadataCollector));
 
-		} finally {
+		}
+		finally {
 			metadataDialect.close();
 			revengStrategy.close();
 		}
@@ -90,17 +78,17 @@ public class DatabaseReader {
 	/**
 	 * Iterates the tables and find all the foreignkeys that refers to something
 	 * that is available inside the DatabaseCollector.
-	 * 
+	 *
 	 * @param revengMetadataCollector
 	 * @return
 	 */
 	private Map<String, List<ForeignKey>> resolveForeignKeys(RevengMetadataCollector revengMetadataCollector) {
 		List<ForeignKeysInfo> fks = new ArrayList<ForeignKeysInfo>();
 		ForeignKeyProcessor foreignKeyProcessor = ForeignKeyProcessor.create(
-				metadataDialect, 
-				revengStrategy, 
-				getDefaultCatalog(), 
-				getDefaultSchema(), 
+				metadataDialect,
+				revengStrategy,
+				getDefaultCatalog(),
+				getDefaultSchema(),
 				revengMetadataCollector);
 		for (Table table : revengMetadataCollector.getTables()) {
 			// Done here after the basic process of collections as we might not have touched
@@ -132,7 +120,8 @@ public class DatabaseReader {
 			List<ForeignKey> existing = dest.get(element.getKey());
 			if (existing == null) {
 				dest.put(element.getKey(), element.getValue());
-			} else {
+			}
+			else {
 				existing.addAll(element.getValue());
 			}
 		}
@@ -155,16 +144,16 @@ public class DatabaseReader {
 				@Override
 				public String getMatchTable() {
 					return null;
-				}				
+				}
 			});
 		}
 		return result;
 	}
-	
+
 	private String getDefaultSchema() {
 		return properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
 	}
-	
+
 	private String getDefaultCatalog() {
 		return properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
 	}

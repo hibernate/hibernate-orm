@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.core.strategy;
 
@@ -45,7 +32,7 @@ import java.util.Set;
 public abstract class AbstractStrategy implements RevengStrategy {
 
 	static final private Logger log = Logger.getLogger(AbstractStrategy.class);
-	
+
 	private static Set<String> AUTO_OPTIMISTICLOCK_COLUMNS;
 
 	private RevengSettings settings = new RevengSettings(this);
@@ -56,15 +43,15 @@ public abstract class AbstractStrategy implements RevengStrategy {
 		AUTO_OPTIMISTICLOCK_COLUMNS.add("timestamp");
 		AUTO_OPTIMISTICLOCK_COLUMNS.add("dbtimestamp");
 	}
-	
-		
+
+
 	public AbstractStrategy() {
 		super();
 	}
-	
+
 	public String columnToPropertyName(TableIdentifier table, String columnName) {
 		String decapitalize = Introspector.decapitalize( toUpperCamelCase(columnName) );
-		
+
 		return keywordCheck( decapitalize );
 	}
 
@@ -74,30 +61,30 @@ public abstract class AbstractStrategy implements RevengStrategy {
 		}
 		return possibleKeyword;
 	}
-	
+
 	protected String toUpperCamelCase(String s) {
 		return NameConverter.toUpperCamelCase(s);
 	}
-	
+
 	/**
 	 * Does some crude english pluralization
 	 * TODO: are the from/to names correct ?
 	 */
-    public String foreignKeyToCollectionName(String keyname, TableIdentifier fromTable, List<?> fromColumns, TableIdentifier referencedTable, List<?> referencedColumns, boolean uniqueReference) {
+	public String foreignKeyToCollectionName(String keyname, TableIdentifier fromTable, List<?> fromColumns, TableIdentifier referencedTable, List<?> referencedColumns, boolean uniqueReference) {
 		String propertyName = Introspector.decapitalize( StringHelper.unqualify( getRoot().tableToClassName(fromTable) ) );
 		propertyName = pluralize( propertyName );
-		
+
 		if(!uniqueReference) {
-        	if(fromColumns!=null && fromColumns.size()==1) {
-        		String columnName = ( (Column) fromColumns.get(0) ).getName();
-        		propertyName = propertyName + "For" + toUpperCamelCase(columnName);
-        	} 
-        	else { // composite key or no columns at all safeguard
-        		propertyName = propertyName + "For" + toUpperCamelCase(keyname); 
-        	}
-        }
-        return propertyName;
-    }
+			if(fromColumns!=null && fromColumns.size()==1) {
+				String columnName = ( (Column) fromColumns.get(0) ).getName();
+				propertyName = propertyName + "For" + toUpperCamelCase(columnName);
+			}
+			else { // composite key or no columns at all safeguard
+				propertyName = propertyName + "For" + toUpperCamelCase(keyname);
+			}
+		}
+		return propertyName;
+	}
 
 	protected String pluralize(String singular) {
 		return NameConverter.simplePluralize(singular);
@@ -106,69 +93,71 @@ public abstract class AbstractStrategy implements RevengStrategy {
 	public String foreignKeyToInverseEntityName(String keyname,
 			TableIdentifier fromTable, List<?> fromColumnNames,
 			TableIdentifier referencedTable, List<?> referencedColumnNames,
-			boolean uniqueReference) {		
+			boolean uniqueReference) {
 		return foreignKeyToEntityName(keyname, fromTable, fromColumnNames, referencedTable, referencedColumnNames, uniqueReference);
 	}
-	
-	
-    public String foreignKeyToEntityName(String keyname, TableIdentifier fromTable, List<?> fromColumnNames, TableIdentifier referencedTable, List<?> referencedColumnNames, boolean uniqueReference) {
-        String propertyName = Introspector.decapitalize( StringHelper.unqualify( getRoot().tableToClassName(referencedTable) ) );
-        
-        if(!uniqueReference) {
-        	if(fromColumnNames!=null && fromColumnNames.size()==1) {
-        		String columnName = ( (Column) fromColumnNames.get(0) ).getName();
-        		propertyName = propertyName + "By" + toUpperCamelCase(columnName);
-        	} 
-        	else { // composite key or no columns at all safeguard
-        		propertyName = propertyName + "By" + toUpperCamelCase(keyname); 
-        	}
-        }
-        
-        return propertyName;
-    }
-	
+
+
+	public String foreignKeyToEntityName(String keyname, TableIdentifier fromTable, List<?> fromColumnNames, TableIdentifier referencedTable, List<?> referencedColumnNames, boolean uniqueReference) {
+		String propertyName = Introspector.decapitalize( StringHelper.unqualify( getRoot().tableToClassName(referencedTable) ) );
+
+		if(!uniqueReference) {
+			if(fromColumnNames!=null && fromColumnNames.size()==1) {
+				String columnName = ( (Column) fromColumnNames.get(0) ).getName();
+				propertyName = propertyName + "By" + toUpperCamelCase(columnName);
+			}
+			else { // composite key or no columns at all safeguard
+				propertyName = propertyName + "By" + toUpperCamelCase(keyname);
+			}
+		}
+
+		return propertyName;
+	}
+
 	public String columnToHibernateTypeName(TableIdentifier table, String columnName, int sqlType, int length, int precision, int scale, boolean nullable, boolean generatedIdentifier) {
 		String preferredHibernateType = JdbcToHibernateTypeHelper.getPreferredHibernateType(sqlType, length, precision, scale, nullable, generatedIdentifier);
-		
+
 		String location = "<no info>";
 		if(log.isDebugEnabled()) {
 			String info = " t:" + JdbcToHibernateTypeHelper.getJDBCTypeName( sqlType ) + " l:" + length + " p:" + precision + " s:" + scale + " n:" + nullable + " id:" + generatedIdentifier;
 			if(table!=null) {
 				location = TableNameQualifier.qualify(table.getCatalog(), table.getSchema(), table.getName() ) + "." + columnName + info;
-			} else {
-				
+			}
+			else {
+
 				location += " Column: " + columnName + info;
-			}			
+			}
 		}
 		if(preferredHibernateType==null) {
 			log.debug("No default type found for [" + location + "] falling back to [serializable]");
 			return "serializable";
-		} else {
-			log.debug("Default type found for [" + location + "] to [" + preferredHibernateType + "]");		
+		}
+		else {
+			log.debug("Default type found for [" + location + "] to [" + preferredHibernateType + "]");
 			return preferredHibernateType;
-		}		
+		}
 	}
 
-	public boolean excludeTable(TableIdentifier ti) {		
+	public boolean excludeTable(TableIdentifier ti) {
 		return false;
 	}
-	
+
 	public boolean excludeColumn(TableIdentifier identifier, String columnName) {
 		return false;
 	}
 
 	public String tableToClassName(TableIdentifier tableIdentifier) {
-		
+
 		String pkgName = settings.getDefaultPackageName();
 		String className = toUpperCamelCase( tableIdentifier.getName() );
-		
-		if(pkgName.length()>0) {			
+
+		if(pkgName.length()>0) {
 			return StringHelper.qualify(pkgName, className);
 		}
 		else {
 			return className;
 		}
-		
+
 	}
 
 	public List<ForeignKey> getForeignKeys(TableIdentifier referencedTable) {
@@ -188,14 +177,14 @@ public abstract class AbstractStrategy implements RevengStrategy {
 	}
 
 	public String classNameToCompositeIdName(String className) {
-		return className + "Id"; 
+		return className + "Id";
 	}
 
 	public void close() {
-		
+
 	}
-	
-	
+
+
 
 	/** Return explicit which column name should be used for optimistic lock */
 	public String getOptimisticLockColumnName(TableIdentifier identifier) {
@@ -205,7 +194,8 @@ public abstract class AbstractStrategy implements RevengStrategy {
 	public boolean useColumnForOptimisticLock(TableIdentifier identifier, String column) {
 		if(settings.getDetectOptimsticLock()) {
 			return AUTO_OPTIMISTICLOCK_COLUMNS.contains(column.toLowerCase())?true:false;
-		} else {
+		}
+		else {
 			return false;
 		}
 	}
@@ -223,7 +213,7 @@ public abstract class AbstractStrategy implements RevengStrategy {
 	}
 
 	public boolean excludeForeignKeyAsCollection(String keyname, TableIdentifier fromTable, List<?> fromColumns, TableIdentifier referencedTable, List<?> referencedColumns) {
-		return !settings.createCollectionForForeignKey();		
+		return !settings.createCollectionForForeignKey();
 	}
 
 	public boolean excludeForeignKeyAsManytoOne(String keyname, TableIdentifier fromTable, List<?> fromColumns, TableIdentifier referencedTable, List<?> referencedColumns) {
@@ -233,16 +223,17 @@ public abstract class AbstractStrategy implements RevengStrategy {
 	public boolean isForeignKeyCollectionInverse(String name, Table foreignKeyTable, List<?> columns, Table foreignKeyReferencedTable, List<?> referencedColumns) {
 		if(foreignKeyTable==null) {
 			return true; // we don't know better
-		}		
+		}
 		if(isManyToManyTable(foreignKeyTable)) {
-		       // if the reference column is the first one then we are inverse.
-			   Column column = foreignKeyTable.getColumn(0);
-			   Column fkColumn = (Column) referencedColumns.get(0);
-			   if(fkColumn.equals(column)) {
-				   return true;   
-			   } else {
-				   return false;
-			   }
+			// if the reference column is the first one then we are inverse.
+			Column column = foreignKeyTable.getColumn(0);
+			Column fkColumn = (Column) referencedColumns.get(0);
+			if(fkColumn.equals(column)) {
+				return true;
+			}
+			else {
+				return false;
+			}
 		}
 		return true;
 	}
@@ -252,7 +243,7 @@ public abstract class AbstractStrategy implements RevengStrategy {
 	}
 
 	public void setSettings(RevengSettings settings) {
-		this.settings = settings;		
+		this.settings = settings;
 	}
 
 	public boolean isOneToOne(ForeignKey foreignKey) {
@@ -260,7 +251,7 @@ public abstract class AbstractStrategy implements RevengStrategy {
 			// add support for non-PK associations
 			List<Column> fkColumns = foreignKey.getColumns();
 			List<Column> pkForeignTableColumns = null;
-			
+
 			if (foreignKey.getTable().hasPrimaryKey())
 				pkForeignTableColumns = foreignKey.getTable().getPrimaryKey().getColumns();
 
@@ -275,22 +266,23 @@ public abstract class AbstractStrategy implements RevengStrategy {
 			}
 
 			return equals;
-		} else {
+		}
+		else {
 			return false;
 		}
-    }
+	}
 
 	public boolean isManyToManyTable(Table table) {
 		if(settings.getDetectManyToMany()) {
-			
-			// if the number of columns in the primary key is different 
+
+			// if the number of columns in the primary key is different
 			// than the total number of columns then it can't be a middle table
 			PrimaryKey pk = table.getPrimaryKey();
 			if ( pk==null || pk.getColumns().size() != table.getColumnSpan() )
 				return false;
-			
+
 			List<ForeignKey> foreignKeys = new ArrayList<ForeignKey>();
-			
+
 			// if we have more than 2 fk, means we have more than 2 table implied
 			// in this table --> cannot be a simple many-to-many
 			for (ForeignKey fkey : table.getForeignKeys().values()) {
@@ -302,21 +294,22 @@ public abstract class AbstractStrategy implements RevengStrategy {
 			if(foreignKeys.size()!=2) {
 				return false;
 			}
-			
+
 			// tests that all columns are implied in the fks
 			Set<Column> columns = new HashSet<Column>();
 			for (Column column : table.getColumns()) {
 				columns.add(column);
 			}
-			
+
 			for (ForeignKey fkey : table.getForeignKeys().values()) {
 				if (columns.isEmpty()) break;
 				columns.removeAll(fkey.getColumns());
 			}
-			
+
 			return columns.isEmpty();
 
-		} else {
+		}
+		else {
 			return false;
 		}
 	}
@@ -324,22 +317,22 @@ public abstract class AbstractStrategy implements RevengStrategy {
 	protected RevengStrategy getRoot() {
 		return settings.getRootStrategy();
 	}
-	
+
 	public String foreignKeyToManyToManyName(ForeignKey fromKey, TableIdentifier middleTable, ForeignKey toKey, boolean uniqueReference) {
 		String propertyName = Introspector.decapitalize( StringHelper.unqualify( getRoot().tableToClassName(TableIdentifier.create( toKey.getReferencedTable()) )) );
 		propertyName = pluralize( propertyName );
-		
+
 		if(!uniqueReference) {
 			//TODO: maybe use the middleTable name here ?
-        	if(toKey.getColumns()!=null && toKey.getColumns().size()==1) {
-        		String columnName = ( (Column) toKey.getColumns().get(0) ).getName();
-        		propertyName = propertyName + "For" + toUpperCamelCase(columnName);
-        	} 
-        	else { // composite key or no columns at all safeguard
-        		propertyName = propertyName + "For" + toUpperCamelCase(toKey.getName()); 
-        	}
-        }
-        return propertyName;      
+			if(toKey.getColumns()!=null && toKey.getColumns().size()==1) {
+				String columnName = ( (Column) toKey.getColumns().get(0) ).getName();
+				propertyName = propertyName + "For" + toUpperCamelCase(columnName);
+			}
+			else { // composite key or no columns at all safeguard
+				propertyName = propertyName + "For" + toUpperCamelCase(toKey.getName());
+			}
+		}
+		return propertyName;
 	}
 
 	public Map<String,MetaAttribute> tableToMetaAttributes(TableIdentifier tableIdentifier) {
@@ -358,6 +351,6 @@ public abstract class AbstractStrategy implements RevengStrategy {
 		return null;
 	}
 
-	
-	
+
+
 }

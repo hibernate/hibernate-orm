@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.core.strategy;
 
@@ -37,7 +24,7 @@ public class MetaAttributeHelper {
 			SimpleMetaAttribute element = (SimpleMetaAttribute) iter.next();
 			attribute.addValue(element.value);
 		}
-		
+
 		return attribute;
 	}
 
@@ -46,7 +33,7 @@ public class MetaAttributeHelper {
 			Element classElement,
 			MultiValuedMap<String, SimpleMetaAttribute> inheritedMeta) {
 		return MetaAttributeHelper.mergeMetaMaps(
-				loadMetaMap(classElement), 
+				loadMetaMap(classElement),
 				inheritedMeta);
 	}
 
@@ -67,8 +54,8 @@ public class MetaAttributeHelper {
 			}
 			boolean inherit = true;
 			if(inheritStr!=null) {
-				inherit = Boolean.valueOf(inheritStr).booleanValue(); 
-			}			
+				inherit = Boolean.valueOf(inheritStr).booleanValue();
+			}
 			SimpleMetaAttribute ma = new SimpleMetaAttribute(value, inherit);
 			result.put(attribute, ma);
 		}
@@ -78,7 +65,7 @@ public class MetaAttributeHelper {
 	/**
 	 * Merges a Multimap with inherited maps.
 	 * Values specified always overrules/replaces the inherited values.
-	 * 
+	 *
 	 * @param specific
 	 * @param general
 	 * @return a MultiMap with all values from local and extra values
@@ -88,7 +75,7 @@ public class MetaAttributeHelper {
 			MultiValuedMap<String, SimpleMetaAttribute> specific,
 			MultiValuedMap<String, SimpleMetaAttribute> general) {
 		MultiValuedMap<String, SimpleMetaAttribute> result = new HashSetValuedHashMap<String, SimpleMetaAttribute>();
-		copyMultiMap(result, specific);	
+		copyMultiMap(result, specific);
 		if (general != null) {
 			for (Iterator<String> iter = general.keySet().iterator();iter.hasNext();) {
 				String key = iter.next();
@@ -104,21 +91,21 @@ public class MetaAttributeHelper {
 				}
 			}
 		}
-	
+
 		return result;
-	
+
 	}
 
-    private static void copyMultiMap(
-    		MultiValuedMap<String, SimpleMetaAttribute> destination, 
-    		MultiValuedMap<String, SimpleMetaAttribute> specific) {
-        for (Iterator<String> keyIterator = specific.keySet().iterator(); keyIterator.hasNext(); ) {
-            String key = keyIterator.next();
-            Collection<SimpleMetaAttribute> c = specific.get(key);
-            for (Iterator<SimpleMetaAttribute> valueIterator = c.iterator(); valueIterator.hasNext(); ) 
-                destination.put(key, valueIterator.next() );
-        }
-    }
+	private static void copyMultiMap(
+			MultiValuedMap<String, SimpleMetaAttribute> destination,
+			MultiValuedMap<String, SimpleMetaAttribute> specific) {
+		for (Iterator<String> keyIterator = specific.keySet().iterator(); keyIterator.hasNext(); ) {
+			String key = keyIterator.next();
+			Collection<SimpleMetaAttribute> c = specific.get(key);
+			for (Iterator<SimpleMetaAttribute> valueIterator = c.iterator(); valueIterator.hasNext(); )
+				destination.put(key, valueIterator.next() );
+		}
+	}
 
 	private static ArrayList<Element> getChildElements(Element parent, String tagName) {
 		ArrayList<Element> result = new ArrayList<Element>();
@@ -133,8 +120,8 @@ public class MetaAttributeHelper {
 		}
 		return result;
 	}
-	
-	 public static class SimpleMetaAttribute {
+
+	public static class SimpleMetaAttribute {
 		String value;
 		boolean inheritable = true;
 		public SimpleMetaAttribute(String value, boolean inherit) {

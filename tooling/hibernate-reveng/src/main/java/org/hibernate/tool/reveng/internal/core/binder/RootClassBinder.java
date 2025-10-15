@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.core.binder;
 
@@ -41,19 +28,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class RootClassBinder extends AbstractBinder {
-	
+
 	private static final Logger LOGGER = Logger.getLogger(RootClassBinder.class.getName());
-	
+
 	public static RootClassBinder create(
 			BinderContext binderContext) {
 		return new RootClassBinder(binderContext);
 	}
-	
+
 	private final PrimaryKeyBinder primaryKeyBinder;
 	private final VersionPropertyBinder versionPropertyBinder;
 	private final ForeignKeyBinder foreignKeyBinder;
 	private final BasicPropertyBinder basicPropertyBinder;
-	
+
 	private RootClassBinder(BinderContext binderContext) {
 		super(binderContext);
 		this.primaryKeyBinder = PrimaryKeyBinder.create(binderContext);
@@ -67,38 +54,39 @@ public class RootClassBinder extends AbstractBinder {
 		nullifyDefaultCatalogAndSchema(table);
 		RootClass rc = createRootClass(table);
 		addToMetadataCollector(rc, table);
-		PrimaryKeyInfo pki = bindPrimaryKey(table, rc, processed, revengMetadataCollector);		
+		PrimaryKeyInfo pki = bindPrimaryKey(table, rc, processed, revengMetadataCollector);
 		bindVersionProperty(table, rc, processed);
 		bindOutgoingForeignKeys(table, rc, processed);
 		bindColumnsToProperties(table, rc, processed);
 		bindIncomingForeignKeys(rc, processed, revengMetadataCollector);
-		updatePrimaryKey(rc, pki);	
+		updatePrimaryKey(rc, pki);
 	}
-	
+
 	private PrimaryKeyInfo bindPrimaryKey(
-			Table table, 
-			RootClass rc, 
-			Set<Column> processed, 
+			Table table,
+			RootClass rc,
+			Set<Column> processed,
 			RevengMetadataCollector revengMetadataCollector) {
-		return primaryKeyBinder.bind(table, rc, processed, revengMetadataCollector);	
+		return primaryKeyBinder.bind(table, rc, processed, revengMetadataCollector);
 	}
-	
+
 	private void updatePrimaryKey(RootClass rc, PrimaryKeyInfo pki) {
 		primaryKeyBinder.updatePrimaryKey(rc, pki);
 	}
-	
+
 	private void addToMetadataCollector(RootClass rc, Table table) {
 		try {
 			getMetadataCollector().addEntityBinding(rc);
 			getMetadataCollector().addImport( rc.getEntityName(), rc.getEntityName() );
-		} catch(DuplicateMappingException dme) {
+		}
+		catch(DuplicateMappingException dme) {
 			// TODO: detect this and generate a "permutation" of it ?
 			PersistentClass class1 = getMetadataCollector().getEntityBinding(dme.getName());
 			Table table2 = class1.getTable();
 			throw new RuntimeException("Duplicate class name '" + rc.getEntityName() + "' generated for '" + table + "'. Same name where generated for '" + table2 + "'");
 		}
 	}
-	
+
 	private RootClass createRootClass(Table table) {
 		RootClass rc = new RootClass(getMetadataBuildingContext());
 		TableIdentifier tableIdentifier = TableIdentifier.create(table);
@@ -115,26 +103,26 @@ public class RootClassBinder extends AbstractBinder {
 		rc.setOptimisticLockStyle(OptimisticLockStyle.NONE);
 		return rc;
 	}
-	
+
 	private void nullifyDefaultCatalogAndSchema(Table table) {
 		if (table.getCatalog() != null && table.getCatalog().equals(getDefaultCatalog())) {
 			table.setCatalog(null);
 		}
 		if (table.getSchema() != null && table.getSchema().equals(getDefaultSchema())) {
 			table.setSchema(null);
-		}   		
+		}
 	}
-	
+
 	private void bindVersionProperty(
-			Table table, 
-			RootClass rc, 
+			Table table,
+			RootClass rc,
 			Set<Column> processed) {
 		versionPropertyBinder.bind(table, rc, processed);
 	}
 
 	private void bindIncomingForeignKeys(
-			PersistentClass rc, 
-			Set<Column> processed, 
+			PersistentClass rc,
+			Set<Column> processed,
 			RevengMetadataCollector revengMetadataCollector) {
 		List<ForeignKey> foreignKeys = revengMetadataCollector.getOneToManyCandidates().get(rc.getEntityName());
 		if(foreignKeys!=null) {
@@ -149,11 +137,11 @@ public class RootClassBinder extends AbstractBinder {
 		// Iterate the outgoing foreign keys and create many-to-one's
 		for (ForeignKey foreignKey : table.getForeignKeys().values()) {
 			boolean mutable = true;
-            if ( contains( foreignKey.getColumns().iterator(), processedColumns ) ) {
+			if ( contains( foreignKey.getColumns().iterator(), processedColumns ) ) {
 				if ( !preferBasicCompositeIds() ) continue; //it's in the pk, so skip this one
 				mutable = false;
-            }           
-            foreignKeyBinder.bindOutgoing(foreignKey, table, rc, processedColumns, mutable);
+			}
+			foreignKeyBinder.bindOutgoing(foreignKey, table, rc, processedColumns, mutable);
 		}
 	}
 
@@ -161,25 +149,25 @@ public class RootClassBinder extends AbstractBinder {
 		for (Column column : table.getColumns()) {
 			if ( !processedColumns.contains(column) ) {
 				BinderUtils.checkColumnForMultipleBinding(column);
-				String propertyName = getColumnToPropertyNameInRevengStrategy(table, column);				
+				String propertyName = getColumnToPropertyNameInRevengStrategy(table, column);
 				Property property = basicPropertyBinder.bind(
-						BinderUtils.makeUnique(rc,propertyName), 
-						table, 
+						BinderUtils.makeUnique(rc,propertyName),
+						table,
 						column);
 				rc.addProperty(property);
 			}
 		}
 	}
 
-    private boolean contains(Iterator<Column> columnIterator, Set<Column> processedColumns) {
-        while (columnIterator.hasNext() ) {
-            Column element = (Column) columnIterator.next();
-            if(processedColumns.contains(element) ) {
-                return true;
-            }
-        }
-        return false;
-    }
+	private boolean contains(Iterator<Column> columnIterator, Set<Column> processedColumns) {
+		while (columnIterator.hasNext() ) {
+			Column element = (Column) columnIterator.next();
+			if(processedColumns.contains(element) ) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	private Map<String,MetaAttribute> getMetaAttributes(Table table) {
 		Map<String,MetaAttribute> result = null;
@@ -187,8 +175,8 @@ public class RootClassBinder extends AbstractBinder {
 		result = getRevengStrategy().tableToMetaAttributes(tableIdentifier);
 		if (result == null) {
 			tableIdentifier = RevengUtils.createTableIdentifier(
-					table, 
-					getDefaultCatalog(), 
+					table,
+					getDefaultCatalog(),
 					getDefaultSchema());
 			result = getRevengStrategy().tableToMetaAttributes(tableIdentifier);
 		}
@@ -197,7 +185,7 @@ public class RootClassBinder extends AbstractBinder {
 		}
 		return result;
 	}
-	
+
 	private String getColumnToPropertyNameInRevengStrategy(
 			Table table,
 			Column column) {

@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.core;
 
@@ -41,7 +28,7 @@ public class RevengMetadataCollector {
 		this();
 		this.metadataBuildingContext = metadataBuildingContext;
 	}
-	
+
 	public RevengMetadataCollector() {
 		this.tables = new HashMap<TableIdentifier, Table>();
 		this.suggestedIdentifierStrategies = new HashMap<TableIdentifier, String>();
@@ -50,7 +37,7 @@ public class RevengMetadataCollector {
 	public Iterator<Table> iterateTables() {
 		return tables.values().iterator();
 	}
-	
+
 	// TableIdentifier's catalog, schema and name should be quoted
 	public Table addTable(TableIdentifier tableIdentifier) {
 		Table result = null;
@@ -60,18 +47,19 @@ public class RevengMetadataCollector {
 		InFlightMetadataCollector metadataCollector = getMetadataCollector();
 		if (metadataCollector != null) {
 			result = metadataCollector.addTable(schema, catalog, name, null, false, metadataBuildingContext);
-		} else {
-			result = createTable(catalog, schema, name);			
+		}
+		else {
+			result = createTable(catalog, schema, name);
 		}
 		if (tables.containsKey(tableIdentifier)) {
 			throw new RuntimeException(
-					"Attempt to add a double entry for table: " + 
+					"Attempt to add a double entry for table: " +
 					TableNameQualifier.qualify(catalog, schema, name));
 		}
 		tables.put(tableIdentifier, result);
 		return result;
 	}
-	
+
 	public Table getTable(TableIdentifier tableIdentifier) {
 		return tables.get(tableIdentifier);
 	}
@@ -79,7 +67,7 @@ public class RevengMetadataCollector {
 	public Collection<Table> getTables() {
 		return tables.values();
 	}
-	
+
 	public void setOneToManyCandidates(Map<String, List<ForeignKey>> oneToManyCandidates) {
 		this.oneToManyCandidates = oneToManyCandidates;
 	}
@@ -95,16 +83,16 @@ public class RevengMetadataCollector {
 	public void addSuggestedIdentifierStrategy(String catalog, String schema, String name, String idstrategy) {
 		suggestedIdentifierStrategies.put(TableIdentifier.create(catalog, schema, name), idstrategy);
 	}
-	
+
 	private Table createTable(String catalog, String schema, String name) {
 		Table table = new Table("Hibernate Tools");
 		table.setAbstract(false);
 		table.setName(name);
 		table.setSchema(schema);
-		table.setCatalog(catalog);	
+		table.setCatalog(catalog);
 		return table;
 	}
-	
+
 	private InFlightMetadataCollector getMetadataCollector() {
 		InFlightMetadataCollector result = null;
 		if (metadataBuildingContext != null) {
@@ -112,5 +100,5 @@ public class RevengMetadataCollector {
 		}
 		return result;
 	}
-	
+
 }

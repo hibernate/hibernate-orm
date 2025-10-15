@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.core.strategy;
 
@@ -48,7 +35,7 @@ public class DelegatingStrategy implements RevengStrategy {
 	public boolean excludeTable(TableIdentifier ti) {
 		return delegate==null?false:delegate.excludeTable(ti);
 	}
-	
+
 	public boolean excludeColumn(TableIdentifier identifier, String columnName) {
 		return delegate==null?false:delegate.excludeColumn(identifier, columnName);
 	}
@@ -90,7 +77,7 @@ public class DelegatingStrategy implements RevengStrategy {
 	}
 
 	public String getOptimisticLockColumnName(TableIdentifier identifier) {
-		return delegate==null?null:delegate.getOptimisticLockColumnName(identifier);		
+		return delegate==null?null:delegate.getOptimisticLockColumnName(identifier);
 	}
 
 	public boolean useColumnForOptimisticLock(TableIdentifier identifier, String column) {
@@ -126,10 +113,10 @@ public class DelegatingStrategy implements RevengStrategy {
 	}
 
 	/**
-	 * Initialize the settings. 
-	 * 
+	 * Initialize the settings.
+	 *
 	 * If subclasses need to use the Settings then it should keep its own reference, but still remember to initialize the delegates settings by calling super.setSettings(settings).
-	 * 
+	 *
 	 * @see RevengStrategy.setSettings
 	 */
 	public void setSettings(RevengSettings settings) {
@@ -139,10 +126,10 @@ public class DelegatingStrategy implements RevengStrategy {
 	public boolean isManyToManyTable(Table table) {
 		return delegate==null?true:delegate.isManyToManyTable( table );
 	}
-	
-	public boolean isOneToOne(ForeignKey foreignKey) { 
+
+	public boolean isOneToOne(ForeignKey foreignKey) {
 		return delegate==null?true:delegate.isOneToOne( foreignKey );
-    }
+	}
 
 
 	public String foreignKeyToManyToManyName(ForeignKey fromKey, TableIdentifier middleTable, ForeignKey toKey, boolean uniqueReference) {
@@ -150,7 +137,7 @@ public class DelegatingStrategy implements RevengStrategy {
 	}
 
 	public Map<String,MetaAttribute> tableToMetaAttributes(TableIdentifier tableIdentifier) {
-		return delegate==null?null:delegate.tableToMetaAttributes( tableIdentifier );		
+		return delegate==null?null:delegate.tableToMetaAttributes( tableIdentifier );
 	}
 
 	public Map<String, MetaAttribute> columnToMetaAttributes(TableIdentifier identifier, String column) {
@@ -160,16 +147,16 @@ public class DelegatingStrategy implements RevengStrategy {
 	public AssociationInfo foreignKeyToAssociationInfo(ForeignKey foreignKey) {
 		return delegate==null?null:delegate.foreignKeyToAssociationInfo(foreignKey);
 	}
-	
+
 	public AssociationInfo foreignKeyToInverseAssociationInfo(ForeignKey foreignKey) {
 		return delegate==null?null:delegate.foreignKeyToInverseAssociationInfo(foreignKey);
 	}
-	
+
 	public String foreignKeyToInverseEntityName(String keyname,
 			TableIdentifier fromTable, List<?> fromColumnNames,
 			TableIdentifier referencedTable, List<?> referencedColumnNames,
 			boolean uniqueReference) {
 		return delegate==null?null:delegate.foreignKeyToInverseEntityName(keyname, fromTable, fromColumnNames, referencedTable, referencedColumnNames, uniqueReference);
-	}	
-	
+	}
+
 }

@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2015-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.core.binder;
 
@@ -39,20 +26,20 @@ class PropertyBinder extends AbstractBinder {
 	private PropertyBinder(BinderContext binderContext) {
 		super(binderContext);
 	}
-	
+
 	Property bind(
 			Table table,
 			String propertyName,
 			Value value,
 			AssociationInfo associationInfo) {
 		return bindMetaAttributes(
-				createProperty(propertyName, value, associationInfo), 
+				createProperty(propertyName, value, associationInfo),
 				table);
 	}
-	
+
 	private Property createProperty(
-			String propertyName, 
-			Value value, 
+			String propertyName,
+			Value value,
 			AssociationInfo associationInfo) {
 		Property result = new Property();
 		result.setName(propertyName);
@@ -71,16 +58,16 @@ class PropertyBinder extends AbstractBinder {
 		return result;
 	}
 
-    private Property bindMetaAttributes(Property property, Table table) {
+	private Property bindMetaAttributes(Property property, Table table) {
 		for (Column col : property.getColumns()) {
 			Map<String,MetaAttribute> map = getColumnToMetaAttributesInRevengStrategy(table, col.getName());
-			if(map!=null) { 
+			if(map!=null) {
 				property.setMetaAttributes(map);
 			}
 		}
 
 		return property;
-    }
+	}
 
 	private Map<String,MetaAttribute> getColumnToMetaAttributesInRevengStrategy(
 			Table table,
@@ -90,12 +77,12 @@ class PropertyBinder extends AbstractBinder {
 		result = getRevengStrategy().columnToMetaAttributes(tableIdentifier, column);
 		if (result == null) {
 			tableIdentifier = RevengUtils.createTableIdentifier(
-					table, 
-					getDefaultCatalog(), 
+					table,
+					getDefaultCatalog(),
 					getDefaultSchema());
 			result = getRevengStrategy().columnToMetaAttributes(tableIdentifier, column);
 		}
 		return result;
 	}
-	
+
 }

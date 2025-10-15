@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.export.doc;
 
@@ -46,7 +33,7 @@ import java.util.Properties;
 /**
  * This helper class is used expose hibernate mapping information to the
  * templates.
- * 
+ *
  * @author Ricardo C. Moral
  * @author <a href="mailto:abhayani@jboss.org">Amit Bhayani</a>
  */
@@ -82,33 +69,33 @@ public final class DocHelper {
 	 * Map with Tables keyed by Schema FQN. The keys are Strings and the values
 	 * are Lists of Tables
 	 */
-	private Map<String, List<Table>> tablesBySchema = 
+	private Map<String, List<Table>> tablesBySchema =
 			new HashMap<String, List<Table>>();
 
 	/**
 	 * Map with classes keyed by package name. PackageName is String key and
 	 * values are List of POJOClass
 	 */
-	private Map<String, List<POJOClass>> classesByPackage = 
+	private Map<String, List<POJOClass>> classesByPackage =
 			new HashMap<String, List<POJOClass>>();
 
 	/**
 	 * Lits of all POJOClass
 	 */
-	private List<POJOClass> classes = 
+	private List<POJOClass> classes =
 			new ArrayList<POJOClass>();
 
 	/**
 	 * Map where the keys are column names (tableFQN.column) and the values are
 	 * lists with the Value instances where those columns referenced.
 	 */
-	private Map<String, List<Value>> valuesByColumn = 
+	private Map<String, List<Value>> valuesByColumn =
 			new HashMap<String, List<Value>>();
 
 	/**
 	 * Holds intances of Property keyed by Value objects.
 	 */
-	private Map<Value, List<Property>> propsByValue = 
+	private Map<Value, List<Property>> propsByValue =
 			new HashMap<Value, List<Property>>();
 
 	/**
@@ -131,7 +118,7 @@ public final class DocHelper {
 		if (metadata == null) {
 			throw new IllegalArgumentException("Hibernate Configuration cannot be null");
 		}
-		
+
 		this.metadata = metadata;
 
 		StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();
@@ -141,7 +128,7 @@ public final class DocHelper {
 		if (defaultSchema == null) {
 			defaultSchema = DEFAULT_NO_SCHEMA_NAME;
 		}
-		
+
 		Iterator<Table> tablesIter = metadata.collectTableMappings().iterator();
 
 		while (tablesIter.hasNext()) {
@@ -224,7 +211,7 @@ public final class DocHelper {
 
 	/**
 	 * Populate classes List and classesByPackage Map
-	 * 
+	 *
 	 * @param pojoClazz
 	 */
 	private void processClass(POJOClass pojoClazz) {
@@ -247,7 +234,7 @@ public final class DocHelper {
 	/**
 	 * Return a Map with the tables keyed by Schema. The keys are the schema
 	 * names and the values are Lists of tables.
-	 * 
+	 *
 	 * @return a Map with the tables keyed by Schema Name.
 	 */
 	public Map<String, List<Table>> getTablesBySchema() {
@@ -257,7 +244,7 @@ public final class DocHelper {
 	/**
 	 * return a Map which has List of POJOClass as value keyed by package name
 	 * as String.
-	 * 
+	 *
 	 * @return
 	 */
 	public Map<String, List<POJOClass>> getClassesByPackage() {
@@ -266,7 +253,7 @@ public final class DocHelper {
 
 	/**
 	 * Returns a list with all the schemas.
-	 * 
+	 *
 	 * @return a list with all the schemas.
 	 */
 	public List<String> getSchemas() {
@@ -277,7 +264,7 @@ public final class DocHelper {
 
 	/**
 	 * Return a sorted List of packages
-	 * 
+	 *
 	 * @return
 	 */
 	public List<String> getPackages() {
@@ -288,10 +275,10 @@ public final class DocHelper {
 
 	/**
 	 * Return the list of tables for a particular schema.
-	 * 
+	 *
 	 * @param schema
 	 *            the name of the schema.
-	 * 
+	 *
 	 * @return a list with all the tables.
 	 */
 	public List<Table> getTables(String schema) {
@@ -301,7 +288,7 @@ public final class DocHelper {
 
 	/**
 	 * return a sorted List of POJOClass corresponding to packageName passed
-	 * 
+	 *
 	 * @param packageName
 	 *            packageName other than DEFAULT_NO_PACKAGE
 	 * @return a sorted List of POJOClass
@@ -315,7 +302,7 @@ public final class DocHelper {
 
 	/**
 	 * Return all the tables.
-	 * 
+	 *
 	 * @return all the tables.
 	 */
 	public List<Table> getTables() {
@@ -324,7 +311,7 @@ public final class DocHelper {
 
 	/**
 	 * Return a sorted List of all POJOClass
-	 * 
+	 *
 	 * @return
 	 */
 	public List<POJOClass> getClasses() {
@@ -336,10 +323,10 @@ public final class DocHelper {
 	/**
 	 * Returns the qualified schema name for a table. The qualified schema name
 	 * will include the catalog name if one is specified.
-	 * 
+	 *
 	 * @param table
 	 *            the table.
-	 * 
+	 *
 	 * @return the qualified schema name for the table.
 	 */
 	public String getQualifiedSchemaName(Table table) {
@@ -349,10 +336,10 @@ public final class DocHelper {
 
 	/**
 	 * Returns the qualified name of a table.
-	 * 
+	 *
 	 * @param table
 	 *            the table.
-	 * 
+	 *
 	 * @return the qualified name of the table.
 	 */
 	public String getQualifiedTableName(Table table) {
@@ -370,7 +357,8 @@ public final class DocHelper {
 			t = v.getType();
 			propertyString = t.getReturnedClass().getName();
 
-		} catch (Exception ex) {
+		}
+		catch (Exception ex) {
 			// TODO we should try to get the value from value here
 			// Eat Exception??
 		}
@@ -380,12 +368,12 @@ public final class DocHelper {
 
 	/**
 	 * Returns the qualified name of a column.
-	 * 
+	 *
 	 * @param table
 	 *            the table.
 	 * @param column
 	 *            the column
-	 * 
+	 *
 	 * @return the FQN of the column.
 	 */
 	public String getQualifiedColumnName(Table table, Column column) {
@@ -395,17 +383,18 @@ public final class DocHelper {
 
 	/**
 	 * Get the SQL type name for a column.
-	 * 
+	 *
 	 * @param column
 	 *            the column.
-	 * 
+	 *
 	 * @return a String with the SQL type name.
 	 */
 	public String getSQLTypeName(Column column) {
 
 		try {
 			return column.getSqlType(metadata);
-		} catch (HibernateException ex) {
+		}
+		catch (HibernateException ex) {
 
 			// TODO: Fix this when we find a way to get the type or
 			// the mapping.
@@ -413,37 +402,37 @@ public final class DocHelper {
 			return "N/D";
 		}
 	}
-	
+
 	public int getLength(Column column) {
-		return column.getLength() == null ? 
-				TypeUtils.DEFAULT_COLUMN_LENGTH : 
+		return column.getLength() == null ?
+				TypeUtils.DEFAULT_COLUMN_LENGTH :
 					column.getLength().intValue();
 	}
 
 	public int getPrecision(Column column) {
-		return column.getPrecision() == null ? 
-				TypeUtils.DEFAULT_COLUMN_PRECISION : 
+		return column.getPrecision() == null ?
+				TypeUtils.DEFAULT_COLUMN_PRECISION :
 					column.getPrecision().intValue();
 	}
 
 	public int getScale(Column column) {
-		return column.getScale() == null ? 
-				TypeUtils.DEFAULT_COLUMN_SCALE : 
+		return column.getScale() == null ?
+				TypeUtils.DEFAULT_COLUMN_SCALE :
 					column.getScale().intValue();
 	}
-	
+
 	public Iterator<Column> getPrimaryKeyColumnIterator(Table table) {
 		return table.getPrimaryKey().getColumns().iterator();
 	}
 
 	/**
 	 * Returns the values that use the specified column.
-	 * 
+	 *
 	 * @param table
 	 *            the table.
 	 * @param column
 	 *            the column.
-	 * 
+	 *
 	 * @return a list with the values.
 	 */
 	public List<Value> getValues(Table table, Column column) {
@@ -451,19 +440,20 @@ public final class DocHelper {
 		List<Value> values = valuesByColumn.get(columnFQN);
 		if (values != null) {
 			return values;
-		} else {
+		}
+		else {
 			return new ArrayList<Value>();
 		}
 	}
 
 	/**
 	 * Returns the properties that map to a column.
-	 * 
+	 *
 	 * @param table
 	 *            the table.
 	 * @param column
 	 *            the column.
-	 * 
+	 *
 	 * @return a list of properties.
 	 */
 	public List<Property> getProperties(Table table, Column column) {
@@ -483,7 +473,7 @@ public final class DocHelper {
 	/**
 	 * Method used in class.vm template to get the ComponentPOJO class
 	 * corresponding to Property if its of Type Component.
-	 * 
+	 *
 	 * @param property
 	 *            Get ComponentPOJO corresponding to this Property
 	 * @return POJOClass for Property
@@ -494,7 +484,8 @@ public final class DocHelper {
 			Component comp = (Component) property.getValue();
 			ComponentPOJOClass componentPOJOClass = new ComponentPOJOClass(comp, new Cfg2JavaTool());
 			return componentPOJOClass;
-		} else {
+		}
+		else {
 			return null;
 		}
 	}
@@ -508,7 +499,8 @@ public final class DocHelper {
 				superClass = superClass.getSuperClass();
 			}
 			return superClasses;
-		} else {
+		}
+		else {
 			return Collections.emptyList();
 		}
 	}
@@ -542,5 +534,5 @@ public final class DocHelper {
 			properties.add(iterator.next());
 		return properties;
 	}
-	
+
 }

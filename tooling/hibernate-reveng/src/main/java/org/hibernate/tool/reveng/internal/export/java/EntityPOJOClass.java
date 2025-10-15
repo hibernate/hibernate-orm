@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.export.java;
 
@@ -178,7 +165,8 @@ public class EntityPOJOClass extends BasicPOJOClass {
 				for(Property p : embeddedProperties) {
 					properties.add(p);
 				}
-			} else {
+			}
+			else {
 				properties.add(element);
 			}
 		}
@@ -261,11 +249,11 @@ public class EntityPOJOClass extends BasicPOJOClass {
 					else if ( "sequence".equals( strategy ) ) {
 						builder.resetAnnotation( importType("jakarta.persistence.GeneratedValue") )
 							.addAttribute( "strategy", staticImport("jakarta.persistence.GenerationType", "SEQUENCE" ) )
-						    .addQuotedAttribute( "generator", clazz.getClassName()+"IdGenerator" );
+							.addQuotedAttribute( "generator", clazz.getClassName()+"IdGenerator" );
 						idResult.append(builder.getResult());
 
 						builder.resetAnnotation( importType("jakarta.persistence.SequenceGenerator") )
-							.addQuotedAttribute( "name", clazz.getClassName()+"IdGenerator" ) 
+							.addQuotedAttribute( "name", clazz.getClassName()+"IdGenerator" )
 							.addQuotedAttribute( "sequenceName", properties.getProperty(  org.hibernate.id.enhanced.SequenceStyleGenerator.SEQUENCE_PARAM, null ) );
 							//	TODO HA does not support initialValue and allocationSize
 						wholeString.append( builder.getResult() );
@@ -273,7 +261,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 					else if ( TableGenerator.class.getName().equals( strategy ) ) {
 						builder.resetAnnotation( importType("jakarta.persistence.GeneratedValue") )
 						.addAttribute( "strategy", staticImport("jakarta.persistence.GenerationType", "TABLE" ) )
-					    .addQuotedAttribute( "generator", clazz.getClassName()+"IdGenerator" );
+						.addQuotedAttribute( "generator", clazz.getClassName()+"IdGenerator" );
 						idResult.append(builder.getResult());
 						buildAnnTableGenerator( wholeString, properties );
 					}
@@ -283,7 +271,8 @@ public class EntityPOJOClass extends BasicPOJOClass {
 						builder.addQuotedAttribute( "generator", clazz.getClassName()+"IdGenerator" );
 						idResult.append(builder.getResult());
 					}
-				} else {
+				}
+				else {
 					builder.resetAnnotation( importType("jakarta.persistence.GeneratedValue") );
 					idResult.append(builder.getResult());
 				}
@@ -394,10 +383,10 @@ public class EntityPOJOClass extends BasicPOJOClass {
 	) {
 		while ( columns.hasNext() ) {
 			Selectable selectable = columns.next();
-            Selectable referencedColumn = null;
-            if(referencedColumnsIterator!=null) {
-            	referencedColumn = referencedColumnsIterator.next();
-            }
+			Selectable referencedColumn = null;
+			if(referencedColumnsIterator!=null) {
+				referencedColumn = referencedColumnsIterator.next();
+			}
 
 			if ( selectable.isFormula() ) {
 				//TODO formula in multicolumns not supported by annotations
@@ -423,9 +412,9 @@ public class EntityPOJOClass extends BasicPOJOClass {
 			annotations.append("@").append( importType("jakarta.persistence.JoinColumn") )
 					.append("(name=\"" ).append( column.getName() ).append( "\"" );
 					//TODO handle referenced column name, this is a hard one
-			        if(referencedColumn!=null) {
-			         annotations.append(", referencedColumnName=\"" ).append( referencedColumn.getText() ).append( "\"" );
-			        }
+					if(referencedColumn!=null) {
+					annotations.append(", referencedColumnName=\"" ).append( referencedColumn.getText() ).append( "\"" );
+					}
 
 					appendCommonColumnInfo(annotations, column, insertable, updatable);
 			//TODO support secondary table
@@ -796,13 +785,17 @@ public class EntityPOJOClass extends BasicPOJOClass {
 			// TODO: if(!field.isGenerated() ) ) {
 			if(field.equals(pc.getIdentifierProperty()) && !isAssignedIdentifier(pc, field)) {
 				continue; // dont add non assigned identifiers
-			} else if(field.equals(pc.getVersion())) {
+			}
+			else if(field.equals(pc.getVersion())) {
 				continue; // version prop
-			} else if(field.isBackRef()) {
+			}
+			else if(field.isBackRef()) {
 				continue;
-			} else if(isFormula(field)) {
+			}
+			else if(isFormula(field)) {
 				continue;
-			} else {
+			}
+			else {
 				result.add( field );
 			}
 		}
@@ -820,11 +813,13 @@ public class EntityPOJOClass extends BasicPOJOClass {
 				Selectable element = selectablesIterator.next();
 				if(!(element instanceof Formula)) {
 					return false;
-				} else {
+				}
+				else {
 					foundFormula = true;
 				}
 			}
-		} else {
+		}
+		else {
 			return false;
 		}
 		return foundFormula;
@@ -870,12 +865,15 @@ public class EntityPOJOClass extends BasicPOJOClass {
 			if(property.equals(pc.getIdentifierProperty())) {
 				if(isAssignedIdentifier(pc, property)) {
 					result.add(property);
-				} else {
+				}
+				else {
 					continue;
 				}
-			} else if (property.equals(pc.getVersion())) {
+			}
+			else if (property.equals(pc.getVersion())) {
 				continue; // the version property should not be in the result.
-			} else if( isRequiredInConstructor(property) ) {
+			}
+			else if( isRequiredInConstructor(property) ) {
 				result.add(property);
 			}
 		}
@@ -890,7 +888,8 @@ public class EntityPOJOClass extends BasicPOJOClass {
 				if("assigned".equals(sv.getIdentifierGeneratorStrategy())) {
 					return true;
 				}
-			} else if (property.getValue().isSimpleValue()) {
+			}
+			else if (property.getValue().isSimpleValue()) {
 				ValueUtil v = new ValueUtil((SimpleValue)property.getValue());
 				if("assigned".equals(v.getIdentifierGeneratorStrategy())) {
 					return true;

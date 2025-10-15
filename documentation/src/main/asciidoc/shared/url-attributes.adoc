@@ -14,9 +14,9 @@ include::./common-attributes.adoc[]
 :doc-user-guide-url: {doc-version-base-url}/userguide/html_single/Hibernate_User_Guide.html
 :doc-javadoc-url: {doc-version-base-url}/javadocs/
 :doc-topical-url: {doc-version-base-url}/topical/html_single/
+:doc-dialect-url: {doc-version-base-url}/dialect/
 
 :report-deprecation-url: {doc-version-base-url}/deprecated/deprecating.txt
-:report-dialect-url: {doc-version-base-url}/dialect/dialect.html
 :report-incubating-url: {doc-version-base-url}/incubating/incubating.txt
 :report-internals-url: {doc-version-base-url}/internals/internal.txt
 :report-logging-url: {doc-version-base-url}/logging/logging.html

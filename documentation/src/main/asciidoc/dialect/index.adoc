@@ -1,0 +1,82 @@
+:shared-attributes-dir: {doc-main-dir}/asciidoc/shared
+:html-meta-canonical-link: https://docs.hibernate.org/stable/orm/dialect/
+
+include::{shared-attributes-dir}/common-attributes.adoc[]
+include::{shared-attributes-dir}/url-attributes.adoc[]
+include::{shared-attributes-dir}/filesystem-attributes.adoc[]
+include::{shared-attributes-dir}/renderer-attributes.adoc[]
+
+= Dialects
+:toc2:
+:toclevels: 1
+:sectanchors:
+
+A dialect is a class that provides information about the specifics of a database and translators for the SQL dialect of the database.
+
+== Supported dialects
+
+Hibernate ORM supports a wide range of dialects out of the box.
+
+Usually, Hibernate supports at least the database version that is also still supported by the respective vendor.
+In many cases though, Hibernate supports even older versions of the databases,
+but the support for these versions is not guaranteed.
+
+Below is a list of supported dialects and the minimum required version of the database.
+
+include::{generated-report-dir}/dialect/dialect-table.adoc[]
+
+== Community dialects
+
+Community dialects are not included in `org.hibernate.orm:hibernate-core` and require an additional dependency to `org.hibernate.orm:hibernate-community-dialects`.
+
+These dialects are not directly supported by the Hibernate team:
+
+* The Hibernate ORM CI does not run any test against these dialects.
+* The Hibernate team will not address issues reported against these dialect.
+
+Instead, the dialects are maintained on a best-effort basis by vendors or individuals.
+
+// TODO:
+// Below is a list of community dialects and the minimum required version of the database.
+// include::{generated-report-dir}/dialect/dialect-table-community.adoc[]
+
+[NOTE]
+====
+Community dialects were introduced in Hibernate ORM 6.0.
+
+The `hibernate-core` artifact had many legacy dialects before 6.0 that were only tested and maintained on a best effort basis.
+More and more database vendors requested to integrate a dialect for their database and even provided a PR with a dialect,
+but the Hibernate team didn't want to add new dialects for databases that might not have a wide adoption
+or any automated testing into the `hibernate-core` artifact. Even though the dialect was supposedly maintained by the vendor,
+the Hibernate team was burdened with reviewing questions, issues and PRs that relate to these dialects.
+
+To give database vendors and the community a clear way forward, the Hibernate team decided to introduce a new artifact,
+called `hibernate-community-dialects` which is the new home for dialects that are maintained by vendors or individuals.
+
+Moving forward, the `hibernate-core` artifact will only contain dialects that are supported and tested by the Hibernate team.
+All the legacy dialects were moved to the `hibernate-community-dialects` artifact to have a clear separation based on the quality of the dialect.
+====
+
+== Requirements for moving from `hibernate-community-dialects` to `hibernate-core`
+
+If a database vendor wants their database dialect to be included in the `hibernate-core` artifact,
+several requirements have to be fulfilled:
+
+* The vendor must provide access to a dedicated database server that can be used for testing
+* The vendor must provide contact details to at least one employee who is mainly responsible for the maintenance of the dialect
+* The responsible employee of the vendor must actively monitor and react to failures of the testsuite against the respective database
+* The responsible employee of the vendor must ensure the testsuite is configured correctly in order for it to succeed on the respective database
+* If the responsible employee of the vendor leaves the company, the vendor must provide contact details to a new responsible employee
+
+In case the responsible employee is unreachable for a longer period or issues with the dialect are not attended to in a timely manner,
+the Hibernate team will move the dialect back to the `hibernate-community-dialects` artifact.
+
+The requirements for the database server are:
+
+* JDK 17 installed
+* Git installed
+* Access to the database through non-confidential credentials
+* Access via SSH through confidential credentials
+
+Get in touch with the Hibernate team on https://hibernate.zulipchat.com/#narrow/stream/132096-hibernate-user[Zulip]
+if you want to request the move of your dialect to hibernate-core.

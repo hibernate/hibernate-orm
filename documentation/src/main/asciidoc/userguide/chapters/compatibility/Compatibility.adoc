@@ -70,7 +70,7 @@ Maven::
 [[compatibility-database]]
 === Database
 
-Hibernate {fullVersion} is compatible with the following database versions,
-provided you use the corresponding <<database-dialect,dialects>>:
+Hibernate {fullVersion}'s compatibility with a given database and version
+depends on the dialect being used.
 
-include::{generated-report-dir}/dialect/dialect-table.adoc[]
+Refer to the link:{doc-dialect-url}[Dialects] guide for details about both dialects and supported databases.

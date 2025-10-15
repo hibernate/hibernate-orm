@@ -62,7 +62,20 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 				DialectReportTask.class,
 				(task) -> {
 					task.dependsOn( indexerTask );
+					task.setProperty( "sourceProject", "hibernate-core" );
+					task.setProperty( "sourcePackage", "org.hibernate.dialect" );
 					task.setProperty( "reportFile", project.getLayout().getBuildDirectory().file( "orm/generated/dialect/dialect-table.adoc" ) );
+				}
+		);
+
+		final TaskProvider<DialectReportTask> communityDialectTableTask = project.getTasks().register(
+				"generateCommunityDialectTableReport",
+				DialectReportTask.class,
+				(task) -> {
+					task.dependsOn( indexerTask );
+					task.setProperty( "sourceProject", "hibernate-community-dialects" );
+					task.setProperty( "sourcePackage", "org.hibernate.community.dialect" );
+					task.setProperty( "reportFile", project.getLayout().getBuildDirectory().file( "orm/generated/dialect/dialect-table-community.adoc" ) );
 				}
 		);
 
@@ -74,5 +87,6 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 		groupingTask.dependsOn( internalsTask );
 		groupingTask.dependsOn( loggingTask );
 		groupingTask.dependsOn( dialectTableTask );
+		groupingTask.dependsOn( communityDialectTableTask );
 	}
 }

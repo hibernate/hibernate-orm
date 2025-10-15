@@ -35,9 +35,9 @@ These dialects are not directly supported by the Hibernate team:
 
 Instead, the dialects are maintained on a best-effort basis by vendors or individuals.
 
-// TODO:
-// Below is a list of community dialects and the minimum required version of the database.
-// include::{generated-report-dir}/dialect/dialect-table-community.adoc[]
+Below is a list of community dialects and the minimum required version of the database.
+
+include::{generated-report-dir}/dialect/dialect-table-community.adoc[]
 
 [NOTE]
 ====

@@ -22,6 +22,7 @@ import org.gradle.api.Project;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
@@ -36,11 +37,25 @@ import org.jboss.jandex.Index;
  * @author Steve Ebersole
  */
 public abstract class DialectReportTask extends AbstractJandexAwareTask {
+	private final Property<String> sourceProject;
+	private final Property<String> sourcePackage;
 	private final Property<RegularFile> reportFile;
 
 	public DialectReportTask() {
-		setDescription( "Generates a report of the supported Dialects" );
+		setDescription( "Generates a report of Dialects" );
+		sourceProject = getProject().getObjects().property(String.class);
+		sourcePackage = getProject().getObjects().property(String.class);
 		reportFile = getProject().getObjects().fileProperty();
+	}
+
+	@Input
+	public Property<String> getSourceProject() {
+		return sourceProject;
+	}
+
+	@Input
+	public Property<String> getSourcePackage() {
+		return sourcePackage;
 	}
 
 	@OutputFile
@@ -55,16 +70,19 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 
 	@TaskAction
 	public void generateDialectReport() {
-		// the ones we want are all in the hibernate-core project
-		final Project coreProject = getProject().getRootProject().project( "hibernate-core" );
-		final SourceSetContainer sourceSets = coreProject.getExtensions().getByType( SourceSetContainer.class );
+		// TODO this probably messes up the cache since we don't declare an explicit dependency to a source set
+		//   but the problem is pre-existing and I don't have time to investigate.
+		Project sourceProject = getProject().getRootProject().project( this.sourceProject.get() );
+		final SourceSetContainer sourceSets = sourceProject.getExtensions().getByType( SourceSetContainer.class );
 		final SourceSet sourceSet = sourceSets.getByName( SourceSet.MAIN_SOURCE_SET_NAME );
-		final ClassLoader classLoader = Helper.asClassLoader( sourceSet, coreProject.getConfigurations().getByName( "testRuntimeClasspath" ) );
+		final ClassLoader classLoader = Helper.asClassLoader( sourceSet, sourceProject.getConfigurations().getByName( "testRuntimeClasspath" ) );
 
 		final DialectClassDelegate dialectClassDelegate = new DialectClassDelegate( classLoader );
 
 		final Index index = getIndexManager().getIndex();
 		final Collection<ClassInfo> allDialectClasses = index.getAllKnownSubclasses( DialectClassDelegate.DIALECT_CLASS_NAME );
+		String sourcePackagePrefix = this.sourcePackage.get() + ".";
+		allDialectClasses.removeIf( c -> !c.name().toString().startsWith( sourcePackagePrefix ) );
 		if ( allDialectClasses.isEmpty() ) {
 			throw new RuntimeException( "Unable to find Dialects" );
 		}

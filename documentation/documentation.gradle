@@ -134,6 +134,7 @@ dependencies {
 	reportAggregation project(':hibernate-ant')
 	reportAggregation project(':hibernate-maven-plugin')
 	reportAggregation project(':hibernate-processor')
+    reportAggregation project(':hibernate-community-dialects')
 
 	asciidoctorGems 'rubygems:rouge:4.1.1'
 
@@ -823,7 +824,7 @@ def renderDialectGuideTask = tasks.register( 'renderDialectGuide', AsciidoctorTa
     group = "Documentation"
     description = 'Renders the Dialect guide in HTML format using Asciidoctor.'
     inputs.property "hibernate-version", hibernateVersion
-    dependsOn generateDialectTableReport
+    dependsOn generateDialectTableReport, generateCommunityDialectTableReport
 
     sourceDir = file( 'src/main/asciidoc/dialect' )
     sources 'dialect.adoc'

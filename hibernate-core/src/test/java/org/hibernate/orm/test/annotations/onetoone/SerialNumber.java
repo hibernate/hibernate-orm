@@ -18,13 +18,9 @@ public class SerialNumber {
 
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
-		if ( !( o instanceof SerialNumber ) ) return false;
+		if ( !(o instanceof SerialNumber serialNumber) ) return false;
 
-		final SerialNumber serialNumber = (SerialNumber) o;
-
-		if ( !id.equals( serialNumber.id ) ) return false;
-
-		return true;
+		return id.equals( serialNumber.id );
 	}
 
 	public int hashCode() {

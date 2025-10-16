@@ -5,7 +5,7 @@
 package org.hibernate.build.xjc;
 
 import com.sun.tools.xjc.XJCListener;
-import org.gradle.api.Project;
+import org.gradle.api.logging.Logger;
 import org.xml.sax.SAXParseException;
 
 /**
@@ -15,12 +15,12 @@ import org.xml.sax.SAXParseException;
  */
 public class XjcListenerImpl extends XJCListener {
 	private final String schemaName;
-	private final Project project;
+	private final Logger logger;
 	private boolean hadErrors;
 
-	public XjcListenerImpl(String schemaName, Project project) {
+	public XjcListenerImpl(String schemaName, Logger logger) {
 		this.schemaName = schemaName;
-		this.project = project;
+		this.logger = logger;
 	}
 
 	public boolean hadErrors() {
@@ -29,33 +29,33 @@ public class XjcListenerImpl extends XJCListener {
 
 	@Override
 	public void generatedFile(String fileName, int current, int total) {
-		project.getLogger().info( "XJC generated file ({}) : {}", schemaName, fileName );
+		logger.info( "XJC generated file ({}) : {}", schemaName, fileName );
 	}
 
 	@Override
 	public void message(String msg) {
-		project.getLogger().info( "XJC message ({}) : {}", schemaName, msg );
+		logger.info( "XJC message ({}) : {}", schemaName, msg );
 	}
 
 	@Override
 	public void info(SAXParseException exception) {
-		project.getLogger().info( "XJC info ({})", schemaName, exception );
+		logger.info( "XJC info ({})", schemaName, exception );
 	}
 
 	@Override
 	public void warning(SAXParseException exception) {
-		project.getLogger().warn( "XJC warning ({})",schemaName,  exception );
+		logger.warn( "XJC warning ({})",schemaName,  exception );
 	}
 
 	@Override
 	public void error(SAXParseException exception) {
 		hadErrors = true;
-		project.getLogger().error( "XJC error ({})", schemaName, exception );
+		logger.error( "XJC error ({})", schemaName, exception );
 	}
 
 	@Override
 	public void fatalError(SAXParseException exception) {
 		hadErrors = true;
-		project.getLogger().error( "XJC fatal error ({})", schemaName, exception );
+		logger.error( "XJC fatal error ({})", schemaName, exception );
 	}
 }

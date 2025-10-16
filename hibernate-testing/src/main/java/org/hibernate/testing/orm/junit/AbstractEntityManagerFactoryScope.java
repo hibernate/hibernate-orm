@@ -70,6 +70,7 @@ abstract class AbstractEntityManagerFactoryScope implements EntityManagerFactory
 		releaseEntityManagerFactory();
 	}
 
+	@Override
 	public void releaseEntityManagerFactory() {
 		if ( emf != null ) {
 			log.debug( "Releasing SessionFactory" );

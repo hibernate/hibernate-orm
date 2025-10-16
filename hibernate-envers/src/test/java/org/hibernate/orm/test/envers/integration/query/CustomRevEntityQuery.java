@@ -5,47 +5,48 @@
 package org.hibernate.orm.test.envers.integration.query;
 
 import java.util.List;
-import jakarta.persistence.EntityManager;
 
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrIntTestEntity;
 import org.hibernate.orm.test.envers.entities.reventity.CustomRevEntity;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 @SuppressWarnings("unchecked")
-public class CustomRevEntityQuery extends BaseEnversJPAFunctionalTestCase {
+@Jpa(annotatedClasses = {
+		StrIntTestEntity.class,
+		CustomRevEntity.class
+})
+@EnversTest
+public class CustomRevEntityQuery {
 	private Integer id1;
 	private Integer id2;
 	private Long timestamp;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {StrIntTestEntity.class, CustomRevEntity.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() throws InterruptedException {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) throws InterruptedException {
 		// Revision 1
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
+		scope.inTransaction( em -> {
+			StrIntTestEntity site1 = new StrIntTestEntity( "a", 10 );
+			StrIntTestEntity site2 = new StrIntTestEntity( "b", 15 );
 
-		StrIntTestEntity site1 = new StrIntTestEntity( "a", 10 );
-		StrIntTestEntity site2 = new StrIntTestEntity( "b", 15 );
+			em.persist( site1 );
+			em.persist( site2 );
 
-		em.persist( site1 );
-		em.persist( site2 );
-
-		id1 = site1.getId();
-		id2 = site2.getId();
-
-		em.getTransaction().commit();
+			id1 = site1.getId();
+			id2 = site2.getId();
+		} );
 
 		Thread.sleep( 100 );
 
@@ -54,54 +55,57 @@ public class CustomRevEntityQuery extends BaseEnversJPAFunctionalTestCase {
 		Thread.sleep( 100 );
 
 		// Revision 2
-		em.getTransaction().begin();
-
-		site1 = em.find( StrIntTestEntity.class, id1 );
-
-		site1.setStr1( "c" );
-
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			StrIntTestEntity site1 = em.find( StrIntTestEntity.class, id1 );
+			site1.setStr1( "c" );
+		} );
 	}
 
 	@Test
-	public void testRevisionsOfId1Query() {
-		List<Object[]> result = getAuditReader().createQuery()
-				.forRevisionsOfEntity( StrIntTestEntity.class, false, true )
-				.add( AuditEntity.id().eq( id1 ) )
-				.getResultList();
+	public void testRevisionsOfId1Query(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			List<Object[]> result = AuditReaderFactory.get( em ).createQuery()
+					.forRevisionsOfEntity( StrIntTestEntity.class, false, true )
+					.add( AuditEntity.id().eq( id1 ) )
+					.getResultList();
 
-		assert result.get( 0 )[0].equals( new StrIntTestEntity( "a", 10, id1 ) );
-		assert result.get( 0 )[1] instanceof CustomRevEntity;
-		assert ((CustomRevEntity) result.get( 0 )[1]).getCustomId() == 1;
+			assertEquals( new StrIntTestEntity( "a", 10, id1 ), result.get( 0 )[0] );
+			assertInstanceOf( CustomRevEntity.class, result.get( 0 )[1] );
+			assertEquals( 1, ((CustomRevEntity) result.get( 0 )[1]).getCustomId() );
 
-		assert result.get( 1 )[0].equals( new StrIntTestEntity( "c", 10, id1 ) );
-		assert result.get( 1 )[1] instanceof CustomRevEntity;
-		assert ((CustomRevEntity) result.get( 1 )[1]).getCustomId() == 2;
+			assertEquals( new StrIntTestEntity( "c", 10, id1 ), result.get( 1 )[0] );
+			assertInstanceOf( CustomRevEntity.class, result.get( 1 )[1] );
+			assertEquals( 2, ((CustomRevEntity) result.get( 1 )[1]).getCustomId() );
+		} );
 	}
 
 	@Test
-	public void testRevisionsOfId2Query() {
-		List<Object[]> result = getAuditReader().createQuery()
-				.forRevisionsOfEntity( StrIntTestEntity.class, false, true )
-				.add( AuditEntity.id().eq( id2 ) )
-				.getResultList();
+	public void testRevisionsOfId2Query(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			List<Object[]> result = AuditReaderFactory.get( em ).createQuery()
+					.forRevisionsOfEntity( StrIntTestEntity.class, false, true )
+					.add( AuditEntity.id().eq( id2 ) )
+					.getResultList();
 
-		assert result.get( 0 )[0].equals( new StrIntTestEntity( "b", 15, id2 ) );
-		assert result.get( 0 )[1] instanceof CustomRevEntity;
-		assert ((CustomRevEntity) result.get( 0 )[1]).getCustomId() == 1;
+			assertEquals( new StrIntTestEntity( "b", 15, id2 ), result.get( 0 )[0] );
+			assertInstanceOf( CustomRevEntity.class, result.get( 0 )[1] );
+			assertEquals( 1, ((CustomRevEntity) result.get( 0 )[1]).getCustomId() );
+		} );
 	}
 
 	@Test
-	public void testRevisionPropertyRestriction() {
-		List<Object[]> result = getAuditReader().createQuery()
-				.forRevisionsOfEntity( StrIntTestEntity.class, false, true )
-				.add( AuditEntity.id().eq( id1 ) )
-				.add( AuditEntity.revisionProperty( "customTimestamp" ).ge( timestamp ) )
-				.getResultList();
+	public void testRevisionPropertyRestriction(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			List<Object[]> result = AuditReaderFactory.get( em ).createQuery()
+					.forRevisionsOfEntity( StrIntTestEntity.class, false, true )
+					.add( AuditEntity.id().eq( id1 ) )
+					.add( AuditEntity.revisionProperty( "customTimestamp" ).ge( timestamp ) )
+					.getResultList();
 
-		assert result.get( 0 )[0].equals( new StrIntTestEntity( "c", 10, id1 ) );
-		assert result.get( 0 )[1] instanceof CustomRevEntity;
-		assert ((CustomRevEntity) result.get( 0 )[1]).getCustomId() == 2;
-		assert ((CustomRevEntity) result.get( 0 )[1]).getCustomTimestamp() >= timestamp;
+			assertEquals( new StrIntTestEntity( "c", 10, id1 ), result.get( 0 )[0] );
+			assertInstanceOf( CustomRevEntity.class, result.get( 0 )[1] );
+			assertEquals( 2, ((CustomRevEntity) result.get( 0 )[1]).getCustomId() );
+			assertTrue( ((CustomRevEntity) result.get( 0 )[1]).getCustomTimestamp() >= timestamp );
+		} );
 	}
 }

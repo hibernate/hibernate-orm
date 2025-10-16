@@ -14,8 +14,8 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
-import ee.estonia.entities.Child;
-import ee.estonia.entities.Parent;
+import org.hibernate.orm.test.envers.integration.naming.entities.Child;
+import org.hibernate.orm.test.envers.integration.naming.entities.Parent;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

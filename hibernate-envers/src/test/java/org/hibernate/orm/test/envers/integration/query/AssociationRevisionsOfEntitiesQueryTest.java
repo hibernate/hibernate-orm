@@ -4,11 +4,6 @@
  */
 package org.hibernate.orm.test.envers.integration.query;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
 import java.util.List;
 
 import jakarta.persistence.Entity;
@@ -16,55 +11,63 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.criteria.JoinType;
 
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.junit.Test;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Chris Cranford
  */
-@JiraKey( "HHH-13817" )
-public class AssociationRevisionsOfEntitiesQueryTest extends BaseEnversFunctionalTestCase {
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class<?>[] { Template.class, TemplateType.class };
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		doInHibernate( this::sessionFactory, session -> {
+@JiraKey(value = "HHH-13817")
+@Jpa(annotatedClasses = {
+		AssociationRevisionsOfEntitiesQueryTest.Template.class,
+		AssociationRevisionsOfEntitiesQueryTest.TemplateType.class
+})
+@EnversTest
+public class AssociationRevisionsOfEntitiesQueryTest {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		// Revision 1
+		scope.inTransaction( entityManager -> {
 			final TemplateType type1 = new TemplateType( 1, "Type1" );
 			final TemplateType type2 = new TemplateType( 2, "Type2" );
-			session.persist( type1 );
-			session.persist( type2 );
+			entityManager.persist( type1 );
+			entityManager.persist( type2 );
 
 			final Template template = new Template( 1, "Template1", type1 );
-			session.persist( template );
+			entityManager.persist( template );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			final TemplateType type = session.find( TemplateType.class, 2 );
-			final Template template = session.find( Template.class, 1 );
+		// Revision 2
+		scope.inTransaction( entityManager -> {
+			final TemplateType type = entityManager.find( TemplateType.class, 2 );
+			final Template template = entityManager.find( Template.class, 1 );
 			template.setName( "Template1-Updated" );
 			template.setTemplateType( type );
-			session.merge( template );
+			entityManager.merge( template );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			final Template template = session.find( Template.class, 1 );
-			session.remove( template );
+		// Revision 3
+		scope.inTransaction( entityManager -> {
+			final Template template = entityManager.find( Template.class, 1 );
+			entityManager.remove( template );
 		} );
 	}
 
 	@Test
-	public void testRevisionsOfEntityWithAssociationQueries() {
-		doInHibernate( this::sessionFactory, session -> {
-			List<?> results = getAuditReader().createQuery()
+	public void testRevisionsOfEntityWithAssociationQueries(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
+			List<?> results = AuditReaderFactory.get( entityManager ).createQuery()
 					.forRevisionsOfEntity( Template.class, true, true )
 					.add( AuditEntity.id().eq( 1 ) )
 					.traverseRelation( "templateType", JoinType.INNER )
@@ -75,16 +78,16 @@ public class AssociationRevisionsOfEntitiesQueryTest extends BaseEnversFunctiona
 			assertEquals( "Template1", ( (Template) results.get( 0 ) ).getName() );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			List<?> results = getAuditReader().createQuery()
+		scope.inEntityManager( entityManager -> {
+			List<?> results = AuditReaderFactory.get( entityManager ).createQuery()
 					.forRevisionsOfEntity( Template.class, true, true )
 					.add( AuditEntity.id().eq( 1 ) )
 					.traverseRelation( "templateType", JoinType.INNER )
-					.add( AuditEntity.property("name" ).eq("Type2" ) )
+					.add( AuditEntity.property( "name" ).eq( "Type2" ) )
 					.up()
 					.getResultList();
 
-			assertEquals( getConfiguration().isStoreDataAtDelete() ? 2 : 1, results.size() );
+			assertEquals( isStoreDataAtDelete( scope ) ? 2 : 1, results.size() );
 			for ( Object result : results ) {
 				assertEquals( "Template1-Updated", ( (Template) result ).getName() );
 			}
@@ -92,13 +95,13 @@ public class AssociationRevisionsOfEntitiesQueryTest extends BaseEnversFunctiona
 	}
 
 	@Test
-	public void testAssociationQueriesNotAllowedWhenNotSelectingJustEntities() {
+	public void testAssociationQueriesNotAllowedWhenNotSelectingJustEntities(EntityManagerFactoryScope scope) {
 		try {
-			doInHibernate( this::sessionFactory, session -> {
-				getAuditReader().createQuery()
+			scope.inEntityManager( entityManager -> {
+				AuditReaderFactory.get( entityManager ).createQuery()
 						.forRevisionsOfEntity( Template.class, false, true )
 						.add( AuditEntity.id().eq( 1 ) )
-						.traverseRelation("templateType", JoinType.INNER )
+						.traverseRelation( "templateType", JoinType.INNER )
 						.add( AuditEntity.property( "name" ).eq( "Type1" ) )
 						.up()
 						.getResultList();
@@ -107,8 +110,12 @@ public class AssociationRevisionsOfEntitiesQueryTest extends BaseEnversFunctiona
 			fail( "Test should have thrown IllegalStateException due to selectEntitiesOnly=false" );
 		}
 		catch ( Exception e ) {
-			assertTyping( IllegalStateException.class, e );
+			assertInstanceOf( IllegalStateException.class, e );
 		}
+	}
+
+	protected boolean isStoreDataAtDelete(EntityManagerFactoryScope scope) {
+		return false;
 	}
 
 	@Entity(name = "TemplateType")

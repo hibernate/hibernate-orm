@@ -4,141 +4,149 @@
  */
 package org.hibernate.orm.test.envers.integration.query;
 
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrIntTestEntity;
 import org.hibernate.orm.test.envers.entities.ids.EmbId;
 import org.hibernate.orm.test.envers.entities.ids.EmbIdTestEntity;
 import org.hibernate.orm.test.envers.entities.ids.MulId;
 import org.hibernate.orm.test.envers.entities.ids.MulIdTestEntity;
-import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
+
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Marco Belladelli
  */
-public class RevisionEntityQueryTest extends BaseEnversJPAFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {StrIntTestEntity.class, MulIdTestEntity.class, EmbIdTestEntity.class};
-	}
+@Jpa(annotatedClasses = {StrIntTestEntity.class, MulIdTestEntity.class, EmbIdTestEntity.class})
+@EnversTest
+public class RevisionEntityQueryTest {
 
-	@Test
-	@Priority(10)
-	public void initData() {
+	private Integer id1;
+	private Integer id2;
+	private Integer id3;
+
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1
-		final EntityManager em = getEntityManager();
-		em.getTransaction().begin();
+		scope.inEntityManager( em -> {
+			em.getTransaction().begin();
 
-		StrIntTestEntity site1 = new StrIntTestEntity( "a", 10 );
-		StrIntTestEntity site2 = new StrIntTestEntity( "a", 10 );
-		StrIntTestEntity site3 = new StrIntTestEntity( "b", 5 );
+			StrIntTestEntity site1 = new StrIntTestEntity( "a", 10 );
+			StrIntTestEntity site2 = new StrIntTestEntity( "a", 10 );
+			StrIntTestEntity site3 = new StrIntTestEntity( "b", 5 );
 
-		em.persist( site1 );
-		em.persist( site2 );
-		em.persist( site3 );
+			em.persist( site1 );
+			em.persist( site2 );
+			em.persist( site3 );
 
-		final Integer id1 = site1.getId();
-		final Integer id2 = site2.getId();
-		final Integer id3 = site3.getId();
+			id1 = site1.getId();
+			id2 = site2.getId();
+			id3 = site3.getId();
 
-		em.getTransaction().commit();
+			em.getTransaction().commit();
 
-		// Revision 2
-		em.getTransaction().begin();
+			// Revision 2
+			em.getTransaction().begin();
 
-		final MulId mulId1 = new MulId( 1, 2 );
-		em.persist( new MulIdTestEntity( mulId1.getId1(), mulId1.getId2(), "data" ) );
+			final MulId mulId1 = new MulId( 1, 2 );
+			em.persist( new MulIdTestEntity( mulId1.getId1(), mulId1.getId2(), "data" ) );
 
-		final EmbId embId1 = new EmbId( 3, 4 );
-		em.persist( new EmbIdTestEntity( embId1, "something" ) );
+			final EmbId embId1 = new EmbId( 3, 4 );
+			em.persist( new EmbIdTestEntity( embId1, "something" ) );
 
-		site1 = em.find( StrIntTestEntity.class, id1 );
-		site2 = em.find( StrIntTestEntity.class, id2 );
+			StrIntTestEntity site1_2 = em.find( StrIntTestEntity.class, id1 );
+			StrIntTestEntity site2_2 = em.find( StrIntTestEntity.class, id2 );
 
-		site1.setStr1( "aBc" );
-		site2.setNumber( 20 );
+			site1_2.setStr1( "aBc" );
+			site2_2.setNumber( 20 );
 
-		em.getTransaction().commit();
+			em.getTransaction().commit();
 
-		// Revision 3
-		em.getTransaction().begin();
+			// Revision 3
+			em.getTransaction().begin();
 
-		site3 = em.find( StrIntTestEntity.class, id3 );
+			StrIntTestEntity site3_3 = em.find( StrIntTestEntity.class, id3 );
 
-		site3.setStr1( "a" );
+			site3_3.setStr1( "a" );
 
-		em.getTransaction().commit();
+			em.getTransaction().commit();
 
-		// Revision 4
-		em.getTransaction().begin();
+			// Revision 4
+			em.getTransaction().begin();
 
-		site1 = em.find( StrIntTestEntity.class, id1 );
+			StrIntTestEntity site1_4 = em.find( StrIntTestEntity.class, id1 );
 
-		em.remove( site1 );
+			em.remove( site1_4 );
 
-		em.getTransaction().commit();
+			em.getTransaction().commit();
+		} );
 	}
 
 	@Test
-	public void testRevisionEntityHqlQuery() {
-		final EntityManager em = getEntityManager();
-		em.getTransaction().begin();
+	public void testRevisionEntityHqlQuery(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			em.getTransaction().begin();
 
-		final List<SequenceIdRevisionEntity> resultList = em.createQuery(
-				"select e from SequenceIdRevisionEntity e",
-				SequenceIdRevisionEntity.class
-		).getResultList();
+			final List<SequenceIdRevisionEntity> resultList = em.createQuery(
+					"select e from SequenceIdRevisionEntity e",
+					SequenceIdRevisionEntity.class
+			).getResultList();
 
-		assertThat( resultList ).hasSize( 4 );
+			assertThat( resultList ).hasSize( 4 );
 
-		assertThat( em.createQuery(
-				String.format( "select e from %s e", SequenceIdRevisionEntity.class.getName() ),
-				SequenceIdRevisionEntity.class
-		).getResultList() ).containsAll( resultList );
+			assertThat( em.createQuery(
+					String.format( "select e from %s e", SequenceIdRevisionEntity.class.getName() ),
+					SequenceIdRevisionEntity.class
+			).getResultList() ).containsAll( resultList );
 
-		em.getTransaction().commit();
+			em.getTransaction().commit();
+		} );
 	}
 
 	@Test
-	public void testRevisionEntityCriteriaQuery() {
-		final EntityManager em = getEntityManager();
-		em.getTransaction().begin();
+	public void testRevisionEntityCriteriaQuery(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			em.getTransaction().begin();
 
-		final CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
-		final CriteriaQuery<Integer> query = criteriaBuilder.createQuery( Integer.class );
-		final Root<?> from = query.from( SequenceIdRevisionEntity.class );
-		final List<Integer> resultList = em.createQuery( query.select( from.get( "id" ) ) ).getResultList();
+			final CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+			final CriteriaQuery<Integer> query = criteriaBuilder.createQuery( Integer.class );
+			final Root<?> from = query.from( SequenceIdRevisionEntity.class );
+			final List<Integer> resultList = em.createQuery( query.select( from.get( "id" ) ) ).getResultList();
 
-		assertThat( resultList ).hasSize( 4 ).allSatisfy( Assertions::assertNotNull );
+			assertThat( resultList ).hasSize( 4 ).allSatisfy( r -> assertNotNull( r ) );
 
-		em.getTransaction().commit();
+			em.getTransaction().commit();
+		} );
 	}
 
 	@Test
-	public void testQueryForRevisionsOfEntity() {
-		final EntityManager em = getEntityManager();
-		em.getTransaction().begin();
+	public void testQueryForRevisionsOfEntity(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			em.getTransaction().begin();
 
-		//noinspection unchecked
-		final List<Object> resultList = getAuditReader().createQuery()
-				.forRevisionsOfEntity( StrIntTestEntity.class, true )
-				.add( AuditEntity.id().eq( 1 ) )
-				.add( AuditEntity.revisionNumber().between( 1, 3 ) )
-				.getResultList();
+			//noinspection unchecked
+			final List<Object> resultList = AuditReaderFactory.get( em ).createQuery()
+					.forRevisionsOfEntity( StrIntTestEntity.class, true )
+					.add( AuditEntity.id().eq( id1 ) )
+					.add( AuditEntity.revisionNumber().between( 1, 3 ) )
+					.getResultList();
 
-		assertThat( resultList ).hasSize( 2 ).allMatch( r -> r instanceof SequenceIdRevisionEntity );
+			assertThat( resultList ).hasSize( 2 ).allMatch( r -> r instanceof SequenceIdRevisionEntity );
 
-		em.getTransaction().commit();
+			em.getTransaction().commit();
+		} );
 	}
 }

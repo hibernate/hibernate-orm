@@ -194,3 +194,7 @@ publishingExtension.publications.register("renameRelocation", MavenPublication) 
 		}
 	}
 }
+
+tasks.named( "compileJava", JavaCompile ) {
+    notCompatibleWithConfigurationCache( "org.hibernate.build.version-injection plugin call project in execution time" )
+}

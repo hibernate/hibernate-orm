@@ -118,6 +118,7 @@ and `com.github.ben-manes.caffeine:jcache`
 or `org.eclipse:yasson`
 | <<spatial,Hibernate Spatial>> | `org.hibernate.orm:hibernate-spatial`
 | <<envers,Envers>>, for auditing historical data | `org.hibernate.orm:hibernate-envers`
+| link:{doc-dialect-url}#community-dialects[Community dialects] | `org.hibernate.orm:hibernate-community-dialects`
 |===
 
 You might also add the Hibernate {enhancer}[bytecode enhancer] to your

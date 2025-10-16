@@ -57,19 +57,25 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 				(task) -> task.dependsOn( indexerTask )
 		);
 
-		final TaskProvider<DialectReportTask> dialectTask = project.getTasks().register(
-				"generateDialectReport",
-				DialectReportTask.class,
-				(task) -> task.dependsOn( indexerTask )
-		);
-
 		final TaskProvider<DialectReportTask> dialectTableTask = project.getTasks().register(
 				"generateDialectTableReport",
 				DialectReportTask.class,
 				(task) -> {
 					task.dependsOn( indexerTask );
-					task.setProperty( "generateHeading", false );
+					task.setProperty( "sourceProject", "hibernate-core" );
+					task.setProperty( "sourcePackage", "org.hibernate.dialect" );
 					task.setProperty( "reportFile", project.getLayout().getBuildDirectory().file( "orm/generated/dialect/dialect-table.adoc" ) );
+				}
+		);
+
+		final TaskProvider<DialectReportTask> communityDialectTableTask = project.getTasks().register(
+				"generateCommunityDialectTableReport",
+				DialectReportTask.class,
+				(task) -> {
+					task.dependsOn( indexerTask );
+					task.setProperty( "sourceProject", "hibernate-community-dialects" );
+					task.setProperty( "sourcePackage", "org.hibernate.community.dialect" );
+					task.setProperty( "reportFile", project.getLayout().getBuildDirectory().file( "orm/generated/dialect/dialect-table-community.adoc" ) );
 				}
 		);
 
@@ -80,7 +86,7 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 		groupingTask.dependsOn( deprecationTask );
 		groupingTask.dependsOn( internalsTask );
 		groupingTask.dependsOn( loggingTask );
-		groupingTask.dependsOn( dialectTask );
 		groupingTask.dependsOn( dialectTableTask );
+		groupingTask.dependsOn( communityDialectTableTask );
 	}
 }

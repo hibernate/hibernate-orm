@@ -28,8 +28,6 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
 
-import org.hibernate.orm.env.HibernateVersion;
-
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Index;
 
@@ -39,24 +37,30 @@ import org.jboss.jandex.Index;
  * @author Steve Ebersole
  */
 public abstract class DialectReportTask extends AbstractJandexAwareTask {
+	private final Property<String> sourceProject;
+	private final Property<String> sourcePackage;
 	private final Property<RegularFile> reportFile;
-	private final Property<Boolean> generateHeading;
 
 	public DialectReportTask() {
-		setDescription( "Generates a report of the supported Dialects" );
+		setDescription( "Generates a report of Dialects" );
+		sourceProject = getProject().getObjects().property(String.class);
+		sourcePackage = getProject().getObjects().property(String.class);
 		reportFile = getProject().getObjects().fileProperty();
-		reportFile.convention( getProject().getLayout().getBuildDirectory().file( "orm/generated/dialect/dialect.adoc" ) );
-		generateHeading = getProject().getObjects().property( Boolean.class ).convention( true );
+	}
+
+	@Input
+	public Property<String> getSourceProject() {
+		return sourceProject;
+	}
+
+	@Input
+	public Property<String> getSourcePackage() {
+		return sourcePackage;
 	}
 
 	@OutputFile
 	public Property<RegularFile> getReportFile() {
 		return reportFile;
-	}
-
-	@Input
-	public Property<Boolean> getGenerateHeading() {
-		return generateHeading;
 	}
 
 	@Override
@@ -66,16 +70,19 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 
 	@TaskAction
 	public void generateDialectReport() {
-		// the ones we want are all in the hibernate-core project
-		final Project coreProject = getProject().getRootProject().project( "hibernate-core" );
-		final SourceSetContainer sourceSets = coreProject.getExtensions().getByType( SourceSetContainer.class );
+		// TODO this probably messes up the cache since we don't declare an explicit dependency to a source set
+		//   but the problem is pre-existing and I don't have time to investigate.
+		Project sourceProject = getProject().getRootProject().project( this.sourceProject.get() );
+		final SourceSetContainer sourceSets = sourceProject.getExtensions().getByType( SourceSetContainer.class );
 		final SourceSet sourceSet = sourceSets.getByName( SourceSet.MAIN_SOURCE_SET_NAME );
-		final ClassLoader classLoader = Helper.asClassLoader( sourceSet, coreProject.getConfigurations().getByName( "testRuntimeClasspath" ) );
+		final ClassLoader classLoader = Helper.asClassLoader( sourceSet, sourceProject.getConfigurations().getByName( "testRuntimeClasspath" ) );
 
 		final DialectClassDelegate dialectClassDelegate = new DialectClassDelegate( classLoader );
 
 		final Index index = getIndexManager().getIndex();
 		final Collection<ClassInfo> allDialectClasses = index.getAllKnownSubclasses( DialectClassDelegate.DIALECT_CLASS_NAME );
+		String sourcePackagePrefix = this.sourcePackage.get() + ".";
+		allDialectClasses.removeIf( c -> !c.name().toString().startsWith( sourcePackagePrefix ) );
 		if ( allDialectClasses.isEmpty() ) {
 			throw new RuntimeException( "Unable to find Dialects" );
 		}
@@ -128,15 +135,6 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 
 	private void writeDialectReportHeader(OutputStreamWriter fileWriter) {
 		try {
-			if ( this.generateHeading.get() ) {
-				fileWriter.write( "= Supported Dialects\n\n" );
-				fileWriter.write(
-						"Supported Dialects along with the minimum supported version of the underlying database.\n\n\n" );
-
-				HibernateVersion ormVersion = (HibernateVersion) getProject().getRootProject().getExtensions().getByName( "ormVersion" );
-				fileWriter.write( "NOTE: Hibernate version " + ormVersion.getFamily() + "\n\n" );
-			}
-
 			fileWriter.write( "[cols=\"a,a\", options=\"header\"]\n" );
 			fileWriter.write( "|===\n" );
 			fileWriter.write( "|Dialect |Minimum Database Version\n" );
@@ -148,7 +146,10 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 
 	private void writeDialectReportEntry(DialectDelegate dialectDelegate, OutputStreamWriter fileWriter) {
 		try {
-			final String version = dialectDelegate.getMinimumVersion();
+			String version = dialectDelegate.getMinimumVersion();
+			if ( "0.0".equals( version ) ) {
+				version = "N/A";
+			}
 			fileWriter.write( '|' );
 			fileWriter.write( dialectDelegate.getDialectImplClass().getSimpleName() );
 			fileWriter.write( '|' );

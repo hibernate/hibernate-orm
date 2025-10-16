@@ -28,16 +28,18 @@ public final class ToOneEntityLoader {
 			Object entityId,
 			Number revision,
 			boolean removed,
-			EnversService enversService) {
-		if ( enversService.getEntitiesConfigurations().getNotVersionEntityConfiguration( entityName ) == null ) {
+			EnversService enversService,
+			boolean isTargetNotAudited) {
+
+		if ( isTargetNotAudited || enversService.getEntitiesConfigurations().getNotVersionEntityConfiguration( entityName ) != null ) {
+			// Not audited relation, look up entity with Hibernate.
+			return versionsReader.getSessionImplementor().immediateLoad( entityName, entityId );
+		}
+		else {
 			// Audited relation, look up entity with Envers.
 			// When user traverses removed entities graph, do not restrict revision type of referencing objects
 			// to ADD or MOD (DEL possible). See HHH-5845.
 			return versionsReader.find( entityClass, entityName, entityId, revision, removed );
-		}
-		else {
-			// Not audited relation, look up entity with Hibernate.
-			return versionsReader.getSessionImplementor().immediateLoad( entityName, entityId );
 		}
 	}
 
@@ -51,14 +53,15 @@ public final class ToOneEntityLoader {
 			Object entityId,
 			Number revision,
 			boolean removed,
-			EnversService enversService) {
+			EnversService enversService,
+			boolean isTargetNotAudited) {
 		final EntityPersister persister = versionsReader.getSessionImplementor()
 				.getFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityName );
 		return persister.createProxy(
 				entityId,
-				new ToOneDelegateSessionImplementor( versionsReader, entityClass, entityId, revision, removed, enversService )
+				new ToOneDelegateSessionImplementor( versionsReader, entityClass, entityId, revision, removed, enversService, isTargetNotAudited )
 		);
 	}
 
@@ -73,14 +76,15 @@ public final class ToOneEntityLoader {
 			Object entityId,
 			Number revision,
 			boolean removed,
-			EnversService enversService) {
+			EnversService enversService,
+			boolean isTargetNotAudited) {
 		final EntityPersister persister = versionsReader.getSessionImplementor()
 				.getFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityName );
 		if ( persister.hasProxy() ) {
-			return createProxy( versionsReader, entityClass, entityName, entityId, revision, removed, enversService );
+			return createProxy( versionsReader, entityClass, entityName, entityId, revision, removed, enversService, isTargetNotAudited );
 		}
-		return loadImmediate( versionsReader, entityClass, entityName, entityId, revision, removed, enversService );
+		return loadImmediate( versionsReader, entityClass, entityName, entityId, revision, removed, enversService, isTargetNotAudited );
 	}
 }

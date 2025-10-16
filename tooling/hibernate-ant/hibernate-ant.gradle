@@ -12,3 +12,7 @@ dependencies {
     implementation project( ':hibernate-core' )
     testImplementation libs.ant
 }
+
+tasks.named( "compileJava", JavaCompile ) {
+    notCompatibleWithConfigurationCache( "org.hibernate.build.version-injection plugin call project in execution time" )
+}

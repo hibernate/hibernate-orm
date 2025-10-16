@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.antlr;
 
-import javax.inject.Inject;
-
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -25,12 +23,7 @@ public class AntlrSpec {
 
 	private final NamedDomainObjectContainer<SplitGrammarDescriptor> grammarDescriptors;
 
-	@Inject
-	@SuppressWarnings("UnstableApiUsage")
-	public AntlrSpec(Project project, TaskProvider<Task> groupingTask) {
-		final ObjectFactory objectFactory = project.getObjects();
-		final ProjectLayout layout = project.getLayout();
-
+	public AntlrSpec(ProjectLayout layout, ObjectFactory objectFactory, TaskProvider<Task> groupingTask, Project project) {
 		grammarBaseDirectory = objectFactory.directoryProperty();
 		grammarBaseDirectory.convention( layout.getProjectDirectory().dir( "src/main/antlr" ) );
 

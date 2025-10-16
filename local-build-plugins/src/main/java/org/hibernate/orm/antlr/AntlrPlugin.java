@@ -37,12 +37,8 @@ public class AntlrPlugin implements Plugin<Project> {
 			task.setGroup( ANTLR );
 		} );
 
-		final AntlrSpec antlrSpec = project.getExtensions().create(
-				AntlrSpec.REGISTRATION_NAME,
-				AntlrSpec.class,
-				project,
-				groupingTask
-		);
+		final AntlrSpec antlrSpec = new AntlrSpec( project.getLayout(), project.getObjects(), groupingTask, project );
+		project.getExtensions().add( AntlrSpec.class, AntlrSpec.REGISTRATION_NAME, antlrSpec );
 
 		final Configuration antlrDependencies = project.getConfigurations().maybeCreate( ANTLR );
 

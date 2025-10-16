@@ -25,16 +25,19 @@ public class GrammarDescriptorFactory implements NamedDomainObjectFactory<SplitG
 
 	@Override
 	public SplitGrammarDescriptor create(String name) {
-		final SplitGrammarDescriptor descriptor = new SplitGrammarDescriptor( name, antlrSpec, project.getObjects() );
+		final SplitGrammarDescriptor descriptor = new SplitGrammarDescriptor( name, project.getObjects() );
 
-		final SplitGrammarGenerationTask generatorTask = project.getTasks().create(
+		final TaskProvider<SplitGrammarGenerationTask> generatorTask = project.getTasks().register(
 				determineTaskName( name ),
 				SplitGrammarGenerationTask.class,
 				descriptor,
 				antlrSpec
 		);
-		generatorTask.setDescription( "Performs Antlr grammar generation for the `" + name + "` grammar" );
-		generatorTask.setGroup( "antlr" );
+		generatorTask.configure( (task) -> {
+			task.setDescription( "Performs Antlr grammar generation for the `" + name + "` grammar" );
+			task.setGroup( AntlrPlugin.ANTLR );
+			task.getAntlrClasspath().from( project.getConfigurations().named( "antlr" ) );
+		} );
 		groupingTask.configure( (task) -> task.dependsOn( generatorTask ) );
 
 		return descriptor;

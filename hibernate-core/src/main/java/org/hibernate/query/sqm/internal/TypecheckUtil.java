@@ -11,6 +11,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tuple.TupleType;
 import org.hibernate.metamodel.model.domain.internal.EntityDiscriminatorSqmPathSource;
@@ -329,10 +330,13 @@ public class TypecheckUtil {
 		}
 
 		// entities can be assigned if they belong to the same inheritance hierarchy
-
 		if ( targetType instanceof EntityType<?> targetEntity
 				&& expressionType instanceof EntityType<?> expressionEntity ) {
-			return isEntityTypeAssignable( targetEntity, expressionEntity, bindingContext);
+			return isEntityTypeAssignable( targetEntity, expressionEntity, bindingContext );
+		}
+		if ( targetType instanceof MappedSuperclassDomainType<?> expressionMappedSuperclass
+				&& expressionType instanceof EntityType<?> expressionEntity ) {
+			return isMappedSuperclassTypeAssignable( expressionMappedSuperclass, expressionEntity, bindingContext );
 		}
 
 		// Treat the expression as assignable to the target path if they belong
@@ -392,6 +396,23 @@ public class TypecheckUtil {
 		};
 	}
 
+	private static boolean isMappedSuperclassTypeAssignable(
+			MappedSuperclassDomainType<?> lhsType,
+			EntityType<?> rhsType,
+			BindingContext bindingContext) {
+
+		for ( ManagedDomainType<?> candidate : lhsType.getSubTypes() ) {
+			if ( candidate instanceof EntityType<?> candidateEntityType
+					&& isEntityTypeAssignable( candidateEntityType, rhsType, bindingContext ) ) {
+				return true;
+			}
+			else if ( candidate instanceof MappedSuperclassDomainType<?> candidateMappedSuperclass
+					&& isMappedSuperclassTypeAssignable( candidateMappedSuperclass, rhsType, bindingContext ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
 	private static boolean isEntityTypeAssignable(
 			EntityType<?> lhsType, EntityType<?> rhsType,
 			BindingContext bindingContext) {

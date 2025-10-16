@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.target;
+
 import java.util.HashMap;
 import java.util.Map;
 import jakarta.persistence.ElementCollection;
@@ -24,12 +25,12 @@ public class Brand {
 
 	@ManyToMany(targetEntity = LuggageImpl.class)
 	@MapKeyClass(SizeImpl.class)
-	private Map<Size, Luggage> luggagesBySize = new HashMap<Size, Luggage>();
+	private Map<Size, Luggage> luggagesBySize = new HashMap<>();
 
 	@ElementCollection(targetClass = SizeImpl.class)
 	@MapKeyClass(LuggageImpl.class)
 	@MapKeyJoinColumn
-	private Map<Luggage, Size> sizePerLuggage = new HashMap<Luggage, Size>();
+	private Map<Luggage, Size> sizePerLuggage = new HashMap<>();
 
 
 	public Long getId() {

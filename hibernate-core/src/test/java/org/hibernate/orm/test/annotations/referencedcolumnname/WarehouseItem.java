@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.referencedcolumnname;
+
 import java.math.BigDecimal;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

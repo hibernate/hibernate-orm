@@ -291,7 +291,10 @@ tasks.withType(Jar).configureEach {
     }
 }
 
-tasks.named("jar") {
+tasks.named( "jar", Jar ) {
+    // Remove when https://github.com/bndtools/bnd/issues/6346 is fixed
+    notCompatibleWithConfigurationCache( "Bnd plugin access to project at execution time" )
+
     manifest {
         attributes(
                 // Java 9 module name

@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.referencedcolumnname;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -20,7 +21,7 @@ import jakarta.persistence.OneToMany;
 public class Rambler implements Serializable {
 	private Integer id;
 	private String name;
-	private Set<Bag> bags = new HashSet<Bag>();
+	private Set<Bag> bags = new HashSet<>();
 
 	public Rambler() {
 	}

@@ -4,58 +4,43 @@
  */
 package org.hibernate.orm.test.tool.schema.scripts;
 
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
 import java.util.List;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_IMPORT_FILES;
 
 /**
  * @author Emmanuel Bernard
  */
-public class SingleLineImportFileTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public void configure(Configuration cfg) {
-		cfg.setProperty(
-				Environment.HBM2DDL_IMPORT_FILES,
-				"/org/hibernate/orm/test/tool/schema/scripts/dogs.sql"
-		);
-	}
-
-	@Override
-	protected String getBaseForMappings() {
-		return "";
-	}
-
-	@Override
-	public String[] getMappings() {
-		return new String[] {
-				"/org/hibernate/orm/test/tool/schema/scripts/Human.hbm.xml",
-				"/org/hibernate/orm/test/tool/schema/scripts/Dog.hbm.xml"
-		};
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ServiceRegistry( settings = @Setting( name = HBM2DDL_IMPORT_FILES, value = "/org/hibernate/orm/test/tool/schema/scripts/dogs.sql" ) )
+@DomainModel(xmlMappings = {
+		"/org/hibernate/orm/test/tool/schema/scripts/Human.hbm.xml",
+		"/org/hibernate/orm/test/tool/schema/scripts/Dog.hbm.xml"
+})
+@SessionFactory
+public class SingleLineImportFileTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testImportFile() throws Exception {
-		Session s = openSession();
+	public void testImportFile(SessionFactoryScope factoryScope) throws Exception {
+		factoryScope.inTransaction( (session) -> {
+			final List<?> humans = session.createQuery( "from " + Human.class.getName() ).list();
+			Assertions.assertEquals( 3, humans.size(), "humans.sql not imported" );
 
-		final Transaction tx = s.beginTransaction();
-		final List<?> humans = s.createQuery( "from " + Human.class.getName() ).list();
-		assertEquals( "humans.sql not imported", 3, humans.size() );
-
-		final List<?> dogs = s.createQuery( "from " + Dog.class.getName() ).list();
-		assertEquals( "dogs.sql not imported", 3, dogs.size() );
-
-		s.createQuery( "delete Dog" ).executeUpdate();
-		s.createQuery( "delete Human" ).executeUpdate();
-
-		tx.commit();
-		s.close();
+			final List<?> dogs = session.createQuery( "from " + Dog.class.getName() ).list();
+			Assertions.assertEquals( 3, dogs.size(), "dogs.sql not imported" );
+		} );
 	}
 }

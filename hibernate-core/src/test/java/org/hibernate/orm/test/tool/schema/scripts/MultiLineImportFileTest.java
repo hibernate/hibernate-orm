@@ -4,67 +4,49 @@
  */
 package org.hibernate.orm.test.tool.schema.scripts;
 
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 
-import org.hibernate.testing.AfterClassOnce;
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_IMPORT_FILES;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR;
 
 /**
  * @author Lukasz Antoniak
  */
-@JiraKey(value = "HHH-2403")
+@SuppressWarnings("JUnitMalformedDeclaration")
+@JiraKey("HHH-2403")
+@JiraKey("HHH-6286")
 @RequiresDialect(value = H2Dialect.class,
-		jiraKey = "HHH-6286",
 		comment = "Only running the tests against H2, because the sql statements in the import file are not generic. " +
 				"This test should actually not test directly against the db")
-public class MultiLineImportFileTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public void configure(Configuration cfg) {
-		cfg.setProperty(
-				Environment.HBM2DDL_IMPORT_FILES,
-				"/org/hibernate/orm/test/tool/schema/scripts/multi-line-statements.sql"
-		);
-		cfg.setProperty(
-				Environment.HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR,
-				MultiLineSqlScriptExtractor.class.getName()
-		);
-	}
-
-
-	@Override
-	protected String getBaseForMappings() {
-		return "";
-	}
-
-	@Override
-	public String[] getMappings() {
-		return new String[] {
-				"/org/hibernate/orm/test/tool/schema/scripts/Human.hbm.xml"
-		};
-	}
+@ServiceRegistry(settings = {
+		@Setting(name = HBM2DDL_IMPORT_FILES, value = "/org/hibernate/orm/test/tool/schema/scripts/multi-line-statements.sql"),
+		@Setting(name = HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR, value = "org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor"),
+})
+@DomainModel(xmlMappings = "/org/hibernate/orm/test/tool/schema/scripts/Human.hbm.xml")
+@SessionFactory
+public class MultiLineImportFileTest {
 
 	@Test
-	public void testImportFile() throws Exception {
-		inTransaction(
-				session -> {
-					final Long count = session.createQuery( "select count(h.id) from Human h", Long.class ).uniqueResult();
-					assertEquals( "Incorrect row count", 3L, count.longValue() );
-				}
-		);
+	public void testImportFile(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction(session -> {
+			final Long count = session.createQuery( "select count(h.id) from Human h", Long.class ).uniqueResult();
+			Assertions.assertEquals( 3L, count.longValue(), "Incorrect row count" );
+		} );
 	}
 
-	@AfterClassOnce
-	public void tearDown() {
-		inTransaction(
-				session -> session.createQuery( "delete Human" ).executeUpdate()
-		);
+	@AfterEach
+	public void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 }

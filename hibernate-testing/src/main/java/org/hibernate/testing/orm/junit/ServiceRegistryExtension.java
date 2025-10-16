@@ -201,11 +201,6 @@ public class ServiceRegistryExtension
 
 			return ssrb.build();
 		}
-
-		@Override
-		public void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder bsrb) {
-
-		}
 	}
 
 	private static void configureIntegrators(

@@ -4,20 +4,17 @@
  */
 package org.hibernate.orm.test.tool.schema;
 
-import java.util.Collections;
-import java.util.EnumSet;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.transaction.SystemException;
-import jakarta.transaction.Transaction;
-
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
-import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
+import org.hibernate.testing.jta.TestingJtaBootstrap;
+import org.hibernate.testing.jta.TestingJtaPlatformImpl;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.SettingConfiguration;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
@@ -29,19 +26,17 @@ import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.jta.TestingJtaBootstrap;
-import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
-
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.MatcherAssert.assertThat;
+import java.util.Collections;
+import java.util.EnumSet;
 
 /**
  * @author Steve Ebersole
  */
-public class SchemaToolTransactionHandlingTest extends BaseUnitTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ServiceRegistry(settingConfigurations = @SettingConfiguration(configurer = TestingJtaBootstrap.class))
+public class SchemaToolTransactionHandlingTest {
 	// for each case we want to run these tool delegates in a matrix of:
 	//		1) JTA versus JDBC transaction handling
 	//		2) existing transaction versus not
@@ -59,8 +54,9 @@ public class SchemaToolTransactionHandlingTest extends BaseUnitTestCase {
 	//			1.1) JDBC transaction handling
 	//				- there really cannot be an "existing transaction" case...
 
+
 	@Test
-	public void testDropCreateDropInExistingJtaTransaction() {
+	public void testDropCreateDropInExistingJtaTransaction(ServiceRegistryScope registryScope) {
 		// test for 1.1.1 - create-drop + JTA handling + existing
 
 		// start a JTA transaction...
@@ -71,19 +67,10 @@ public class SchemaToolTransactionHandlingTest extends BaseUnitTestCase {
 			throw new RuntimeException( "Unable to being JTA transaction prior to starting test", e );
 		}
 
-		// hold reference to Transaction object
-		final Transaction jtaTransaction;
-		try {
-			jtaTransaction = TestingJtaPlatformImpl.INSTANCE.getTransactionManager().getTransaction();
-		}
-		catch (SystemException e) {
-			throw new RuntimeException( "Unable to access JTA Transaction prior to starting test", e );
-		}
-
-		final StandardServiceRegistry registry = buildJtaStandardServiceRegistry();
+		final StandardServiceRegistry registry = registryScope.getRegistry();
 		// perform the test...
 		try {
-			final SchemaManagementTool smt = registry.getService( SchemaManagementTool.class );
+			final SchemaManagementTool smt = registry.requireService( SchemaManagementTool.class );
 			final SchemaDropper schemaDropper = smt.getSchemaDropper( Collections.emptyMap() );
 			final SchemaCreator schemaCreator = smt.getSchemaCreator( Collections.emptyMap() );
 
@@ -97,7 +84,8 @@ public class SchemaToolTransactionHandlingTest extends BaseUnitTestCase {
 							SourceDescriptorImpl.INSTANCE,
 							TargetDescriptorImpl.INSTANCE
 					);
-				}catch (CommandAcceptanceException e){
+				}
+				catch (CommandAcceptanceException e){
 					//ignore may happen if sql drop does not support if exist
 				}
 				schemaCreator.doCreation(
@@ -125,8 +113,7 @@ public class SchemaToolTransactionHandlingTest extends BaseUnitTestCase {
 		}
 		finally {
 			try {
-				jtaTransaction.commit();
-				((StandardServiceRegistryImpl) registry).destroy();
+				TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 			}
 			catch (Exception e) {
 				// not much we can do...
@@ -135,7 +122,7 @@ public class SchemaToolTransactionHandlingTest extends BaseUnitTestCase {
 
 	}
 	@Test
-	public void testValidateInExistingJtaTransaction() {
+	public void testValidateInExistingJtaTransaction(ServiceRegistryScope registryScope) {
 		// test for 1.1.1 - create-drop + JTA handling + existing
 
 		// start a JTA transaction...
@@ -146,16 +133,7 @@ public class SchemaToolTransactionHandlingTest extends BaseUnitTestCase {
 			throw new RuntimeException( "Unable to being JTA transaction prior to starting test", e );
 		}
 
-		// hold reference to Transaction object
-		final Transaction jtaTransaction;
-		try {
-			jtaTransaction = TestingJtaPlatformImpl.INSTANCE.getTransactionManager().getTransaction();
-		}
-		catch (SystemException e) {
-			throw new RuntimeException( "Unable to access JTA Transaction prior to starting test", e );
-		}
-
-		final StandardServiceRegistry registry = buildJtaStandardServiceRegistry();
+		final StandardServiceRegistry registry = registryScope.getRegistry();
 		// perform the test...
 		try {
 			final SchemaManagementTool smt = registry.getService( SchemaManagementTool.class );
@@ -200,8 +178,7 @@ public class SchemaToolTransactionHandlingTest extends BaseUnitTestCase {
 		}
 		finally {
 			try {
-				jtaTransaction.commit();
-				((StandardServiceRegistryImpl) registry).destroy();
+				TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 			}
 			catch (Exception e) {
 				// not much we can do...
@@ -216,11 +193,6 @@ public class SchemaToolTransactionHandlingTest extends BaseUnitTestCase {
 				.buildMetadata();
 	}
 
-	protected StandardServiceRegistry buildJtaStandardServiceRegistry() {
-		StandardServiceRegistry registry = TestingJtaBootstrap.prepare().build();
-		assertThat( registry.getService( TransactionCoordinatorBuilder.class ), instanceOf( JtaTransactionCoordinatorBuilderImpl.class ) );
-		return registry;
-	}
 
 	@Entity( name = "MyEntity" )
 	@Table( name = "MyEntity" )

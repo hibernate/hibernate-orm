@@ -7,7 +7,6 @@ package org.hibernate.orm.test.id.sequence;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -88,10 +87,6 @@ public class SequenceExportTest implements ServiceRegistryProducer {
 	@Override
 	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder) {
 		return ServiceRegistryUtil.applySettings( builder ).build();
-	}
-
-	@Override
-	public void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder bsrb) {
 	}
 
 	@Entity( name = "Entity1" )

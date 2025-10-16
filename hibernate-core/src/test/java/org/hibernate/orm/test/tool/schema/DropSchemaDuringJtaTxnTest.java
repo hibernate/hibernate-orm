@@ -4,38 +4,33 @@
  */
 package org.hibernate.orm.test.tool.schema;
 
-import java.util.HashMap;
-import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
-
-import org.hibernate.internal.util.PropertiesHelper;
-import org.hibernate.testing.jta.TestingJtaBootstrap;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-
 import org.hibernate.orm.test.resource.transaction.jta.JtaPlatformStandardTestingImpl;
-import org.junit.Test;
+import org.hibernate.testing.jta.TestingJtaBootstrap;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.SettingConfiguration;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Steve Ebersole
  */
-public class DropSchemaDuringJtaTxnTest extends BaseUnitTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ServiceRegistry(settingConfigurations = @SettingConfiguration( configurer = TestingJtaBootstrap.class ))
+public class DropSchemaDuringJtaTxnTest {
 	@Test
-	public void testDrop() {
-		final SessionFactory sessionFactory = buildSessionFactory();
+	public void testDrop(ServiceRegistryScope registryScope) {
+		final SessionFactory sessionFactory = buildSessionFactory( registryScope );
 		sessionFactory.close();
 	}
+
 	@Test
-	public void testDropDuringActiveJtaTransaction() throws Exception {
-		final SessionFactory sessionFactory = buildSessionFactory();
+	public void testDropDuringActiveJtaTransaction(ServiceRegistryScope registryScope) throws Exception {
+		final SessionFactory sessionFactory = buildSessionFactory( registryScope );
 
 		JtaPlatformStandardTestingImpl.INSTANCE.transactionManager().begin();
 		try {
@@ -46,22 +41,11 @@ public class DropSchemaDuringJtaTxnTest extends BaseUnitTestCase {
 		}
 	}
 
-	private SessionFactory buildSessionFactory() {
-		Map<String, Object> settings = new HashMap<>( PropertiesHelper.map( Environment.getProperties() ) );
-		TestingJtaBootstrap.prepare( settings );
-		settings.put( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta" );
-
-		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder().applySettings( settings ).build();
-		try {
-			return new MetadataSources( ssr )
-					.addAnnotatedClass( TestEntity.class )
-					.buildMetadata()
-					.buildSessionFactory();
-		}
-		catch (Throwable t) {
-			ssr.close();
-			throw t;
-		}
+	private SessionFactory buildSessionFactory(ServiceRegistryScope registryScope) {
+		return new MetadataSources( registryScope.getRegistry() )
+				.addAnnotatedClass( TestEntity.class )
+				.buildMetadata()
+				.buildSessionFactory();
 	}
 
 

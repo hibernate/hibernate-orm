@@ -19,66 +19,52 @@ import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.Table;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
 import org.hibernate.query.NativeQuery;
 
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static junit.framework.Assert.assertNotNull;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Test AttributeConverter functioning in various Query scenarios.
  *
  * @author Steve Ebersole
  */
-public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = {QueryTest.Employee.class, QueryTest.SalaryConverter.class})
+@SessionFactory
+public class QueryTest {
 
-	public static final float SALARY = 267.89f;
+	private static final float SALARY = 267.89f;
+	private static final float EXPECTED_NON_CONVERTED = 26789f;
 
 	@Test
-	public void testJpqlFloatLiteral() {
-		Session session = openSession();
-		session.getTransaction().begin();
-		Employee jDoe = (Employee) session.createQuery( "from Employee e where e.salary = " + SALARY + "f" ).uniqueResult();
-		assertNotNull( jDoe );
-		session.getTransaction().commit();
-		session.close();
+	public void testJpqlFloatLiteral(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			Employee jDoe = session.createQuery( "from Employee e where e.salary = " + SALARY + "f", Employee.class ).uniqueResult();
+			assertNotNull( jDoe );
+		} );
 	}
 
 	@Test
-	public void testJpqlBooleanLiteral() {
-		Session session = openSession();
-		session.getTransaction().begin();
-		assertNotNull( session.createQuery( "from Employee e where e.active = true" ).uniqueResult() );
-		assertNull( session.createQuery( "from Employee e where e.active = false" ).uniqueResult() );
-		session.getTransaction().commit();
-		session.close();
+	public void testJpqlBooleanLiteral(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertNotNull( session.createQuery( "from Employee e where e.active = true", Employee.class ).uniqueResult() );
+			assertNull( session.createQuery( "from Employee e where e.active = false", Employee.class ).uniqueResult() );
+		} );
 	}
 
 	@Test
 	@JiraKey( "HHH-13082" )
-	public void testNativeQueryResult() {
-		inTransaction( (session) -> {
-			final NativeQuery<Object[]> query = session.createNativeQuery( "select id, salary from EMP", "emp_id_salary" );
-
-			final List<Object[]> results = query.list();
-			assertThat( results ).hasSize( 1 );
-
-			final Object[] values = results.get( 0 );
-			assertThat( values[0] ).isEqualTo( 1 );
-			assertThat( values[1] ).isEqualTo( SALARY );
-		} );
-	}
-
-	public void testNativeQueryResultWithResultClass() {
-		inTransaction( (session) -> {
+	public void testNativeQueryResult(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			final NativeQuery<Object[]> query = session.createNativeQuery( "select id, salary from EMP", "emp_id_salary", Object[].class );
 
 			final List<Object[]> results = query.list();
@@ -91,11 +77,9 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-14975", message = "Not yet implemented" )
-	@JiraKey( "HHH-14975" )
-	public void testAutoAppliedConverterAsNativeQueryResult() {
-		inTransaction( (session) -> {
-			final NativeQuery<Object[]> query = session.createNativeQuery( "select id, salary from EMP", "emp_id_salary2" );
+	public void testNativeQueryResultWithResultClass(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final NativeQuery<Object[]> query = session.createNativeQuery( "select id, salary from EMP", "emp_id_salary", Object[].class );
 
 			final List<Object[]> results = query.list();
 			assertThat( results ).hasSize( 1 );
@@ -106,27 +90,29 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 		} );
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Employee.class, SalaryConverter.class };
+	@Test
+	@JiraKey( "HHH-14975" )
+	public void testAutoAppliedConverterAsNativeQueryResult(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final NativeQuery<Object[]> query = session.createNativeQuery( "select id, salary from EMP", "emp_id_salary2", Object[].class );
+
+			final List<Object[]> results = query.list();
+			assertThat( results ).hasSize( 1 );
+
+			final Object[] values = results.get( 0 );
+			assertThat( values[0] ).isEqualTo( 1 );
+			assertThat( values[1] ).isEqualTo( EXPECTED_NON_CONVERTED );
+		} );
 	}
 
-	@Before
-	public void setUpTestData() {
-		Session session = openSession();
-		session.getTransaction().begin();
-		session.persist( new Employee( 1, new Name( "John", "Q.", "Doe" ), SALARY ) );
-		session.getTransaction().commit();
-		session.close();
+	@BeforeEach
+	public void setUpTestData(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist(new Employee(1, new Name("John", "Q.", "Doe" ), SALARY)) );
 	}
 
-	@After
-	public void cleanUpTestData() {
-		Session session = openSession();
-		session.getTransaction().begin();
-		session.createQuery( "delete Employee" ).executeUpdate();
-		session.getTransaction().commit();
-		session.close();
+	@AfterEach
+	public void cleanUpTestData(SessionFactoryScope scope) {
+		scope.inTransaction( session -> scope.dropData() );
 	}
 
 	@Entity( name = "Employee" )
@@ -191,7 +177,7 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 				return null;
 			}
 
-			return new Long( (long)(attribute*100) );
+			return Long.valueOf( (long)(attribute*100) );
 		}
 
 		@Override
@@ -201,7 +187,7 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 				return null;
 			}
 
-			return new Float( ( dbData.floatValue() ) / 100 );
+			return Float.valueOf( (dbData.floatValue()) / 100);
 		}
 	}
 

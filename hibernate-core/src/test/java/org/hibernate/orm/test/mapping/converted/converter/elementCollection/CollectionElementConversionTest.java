@@ -25,7 +25,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Steve Ebersole
@@ -56,7 +56,7 @@ public class CollectionElementConversionTest {
 
 		scope.inTransaction(
 				(session) -> {
-					final Customer customer = session.get( Customer.class, 1 );
+					final Customer customer = session.find( Customer.class, 1 );
 					assertEquals( customer.set, customer.set );
 					assertEquals( customer.map, customer.map );
 				}

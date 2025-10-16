@@ -40,10 +40,9 @@ import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ExceptionUtil;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Column;
@@ -58,18 +57,18 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.fail;
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests the principle of adding "AttributeConverter" to the mix of {@link Type} resolution
  *
  * @author Steve Ebersole
  */
-public class AttributeConverterTest extends BaseUnitTestCase {
+public class AttributeConverterTest {
 	@Test
 	public void testErrorInstantiatingConverterClass() {
 		Configuration cfg = new Configuration();
@@ -313,21 +312,21 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			sf.getStatistics().clear();
 			session = sf.openSession();
 			session.beginTransaction();
-			session.get( Tester4.class, 1L );
+			session.find( Tester4.class, 1L );
 			session.getTransaction().commit();
 			session.close();
 			assertEquals( 0, sf.getStatistics().getEntityUpdateCount() );
 
 			session = sf.openSession();
 			session.beginTransaction();
-			Tester4 t4 = (Tester4) session.get( Tester4.class, 1L );
+			Tester4 t4 = session.find( Tester4.class, 1L );
 			t4.code = 300;
 			session.getTransaction().commit();
 			session.close();
 
 			session = sf.openSession();
 			session.beginTransaction();
-			t4 = session.get( Tester4.class, 1L );
+			t4 = session.find( Tester4.class, 1L );
 			assertEquals( 300, t4.code.longValue() );
 			session.remove( t4 );
 			session.getTransaction().commit();
@@ -386,7 +385,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			sf.getStatistics().clear();
 			session = sf.openSession();
 			session.beginTransaction();
-			IrrelevantInstantEntity e = (IrrelevantInstantEntity) session.get( IrrelevantInstantEntity.class, 1L );
+			IrrelevantInstantEntity e = session.find( IrrelevantInstantEntity.class, 1L );
 			session.getTransaction().commit();
 			session.close();
 			assertEquals( 0, sf.getStatistics().getEntityUpdateCount() );

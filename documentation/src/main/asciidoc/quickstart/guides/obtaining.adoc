@@ -55,7 +55,7 @@ transitive dependencies based on the features being used or not.
 |hibernate-jcache| Integration with https://jcp.org/en/jsr/detail?id=107$$[JCache], allowing any compliant implementation as a second-level cache provider
 |hibernate-graalvm| Experimental extension to make it easier to compile applications as a https://www.graalvm.org/[GraalVM] native image
 |hibernate-micrometer| Integration with https://micrometer.io[Micrometer] metrics
-|hibernate-community-dialects| Additional community-supported SQL dialects
+|hibernate-community-dialects| Additional link:{doc-dialect-url}#community-dialects[community-supported SQL dialects]
 |===
 
 [cols="40m,~"]

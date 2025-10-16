@@ -121,6 +121,7 @@ or `org.eclipse:yasson`
 | <<envers,Envers>>, for auditing historical data | `org.hibernate.orm:hibernate-envers`
 | <<jfr,Hibernate JFR>>, for monitoring via Java Flight Recorder | `org.hibernate.orm:hibernate-jfr`
 | Hibernate Jandex integration, for <<entity-discovery,entity discovery>> | `org.hibernate.orm:hibernate-scan-jandex`
+| link:{doc-dialect-url}#community-dialects[Community dialects] | `org.hibernate.orm:hibernate-community-dialects`
 |===
 
 You might also add the Hibernate {enhancer}[bytecode enhancer] to your

@@ -24,6 +24,7 @@ public interface SessionFactoryScope {
 	StatementInspector getStatementInspector();
 	<T extends StatementInspector> T getStatementInspector(Class<T> type);
 	SQLStatementInspector getCollectingStatementInspector();
+	void releaseSessionFactory();
 
 	default void withSessionFactory(Consumer<SessionFactoryImplementor> action) {
 		action.accept( getSessionFactory() );

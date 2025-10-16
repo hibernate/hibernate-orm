@@ -14,37 +14,31 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.tools.TestTools;
-import org.junit.Test;
-
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Chris Cranford
  */
-@JiraKey( value = "HHH-8058" )
-public abstract class AbstractEntityWithChangesQueryTest extends BaseEnversJPAFunctionalTestCase {
+@JiraKey(value = "HHH-8058")
+public abstract class AbstractEntityWithChangesQueryTest {
 	private Integer simpleId;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Simple.class };
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1
-		simpleId = doInJPA( this::entityManagerFactory, entityManager -> {
+		simpleId = scope.fromTransaction( entityManager -> {
 			final Simple simple = new Simple();
 			simple.setName( "Name" );
 			simple.setValue( 25 );
@@ -53,14 +47,14 @@ public abstract class AbstractEntityWithChangesQueryTest extends BaseEnversJPAFu
 		} );
 
 		// Revision 2
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final Simple simple = entityManager.find( Simple.class, simpleId );
 			simple.setName( "Name-Modified2" );
 			entityManager.merge( simple );
 		} );
 
 		// Revision 3
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final Simple simple = entityManager.find( Simple.class, simpleId );
 			simple.setName( "Name-Modified3" );
 			simple.setValue( 100 );
@@ -68,33 +62,39 @@ public abstract class AbstractEntityWithChangesQueryTest extends BaseEnversJPAFu
 		} );
 
 		// Revision 4
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final Simple simple = entityManager.find( Simple.class, simpleId );
 			entityManager.remove( simple );
 		} );
 	}
 
 	@Test
-	public void testRevisionCount() {
-		assertEquals( Arrays.asList( 1, 2, 3, 4 ), getAuditReader().getRevisions( Simple.class, simpleId ) );
+	public void testRevisionCount(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			assertEquals( Arrays.asList( 1, 2, 3, 4 ), AuditReaderFactory.get( em ).getRevisions( Simple.class, simpleId ) );
+		} );
 	}
 
 	@Test
-	public void testEntityRevisionsWithChangesQueryNoDeletions() {
-		List results = getAuditReader().createQuery()
-				.forRevisionsOfEntityWithChanges( Simple.class, false )
-				.add( AuditEntity.id().eq( simpleId ) )
-				.getResultList();
-		compareResults( getExpectedResults( false ), results );
+	public void testEntityRevisionsWithChangesQueryNoDeletions(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			List results = AuditReaderFactory.get( em ).createQuery()
+					.forRevisionsOfEntityWithChanges( Simple.class, false )
+					.add( AuditEntity.id().eq( simpleId ) )
+					.getResultList();
+			compareResults( getExpectedResults( scope, false ), results );
+		} );
 	}
 
 	@Test
-	public void testEntityRevisionsWithChangesQuery() {
-		List results = getAuditReader().createQuery()
-				.forRevisionsOfEntityWithChanges( Simple.class, true )
-				.add( AuditEntity.id().eq( simpleId ) )
-				.getResultList();
-		compareResults( getExpectedResults( true ), results );
+	public void testEntityRevisionsWithChangesQuery(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			List results = AuditReaderFactory.get( em ).createQuery()
+					.forRevisionsOfEntityWithChanges( Simple.class, true )
+					.add( AuditEntity.id().eq( simpleId ) )
+					.getResultList();
+			compareResults( getExpectedResults( scope, true ), results );
+		} );
 	}
 
 	private void compareResults(List<Object[]> expectedResults, List results) {
@@ -111,11 +111,11 @@ public abstract class AbstractEntityWithChangesQueryTest extends BaseEnversJPAFu
 		}
 	}
 
-	protected List<Object[]> getExpectedResults(boolean includeDeletions) {
+	protected List<Object[]> getExpectedResults(EntityManagerFactoryScope scope, boolean includeDeletions) {
 
 		String deleteName = null;
 		Integer deleteValue = null;
-		if ( getConfig().get( EnversSettings.STORE_DATA_AT_DELETE ) == Boolean.TRUE ) {
+		if ( Boolean.TRUE.toString().equals( scope.getEntityManagerFactory().getProperties().get( EnversSettings.STORE_DATA_AT_DELETE ) ) ) {
 			deleteName = "Name-Modified3";
 			deleteValue = 100;
 		}

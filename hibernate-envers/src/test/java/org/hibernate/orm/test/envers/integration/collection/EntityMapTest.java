@@ -15,15 +15,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.orm.test.envers.tools.TestTools;
-import org.junit.Test;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests an entity mapping using an entity as a map-key and map-value.
@@ -36,18 +37,19 @@ import static org.junit.Assert.assertEquals;
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-11892")
-public class EntityMapTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {
+		EntityMapTest.A.class,
+		EntityMapTest.B.class,
+		EntityMapTest.C.class
+})
+public class EntityMapTest {
 
-	private A a;
+	private Integer aId;
 	private B b1;
 	private B b2;
 	private C c1;
 	private C c2;
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { A.class, B.class, C.class };
-	}
 
 	@MappedSuperclass
 	public static abstract class AbstractEntity {
@@ -110,11 +112,10 @@ public class EntityMapTest extends BaseEnversJPAFunctionalTestCase {
 
 	}
 
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// add b/c key-pair to the map and save a entity.
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final A a = new A();
 
 			final B b = new B();
@@ -125,14 +126,14 @@ public class EntityMapTest extends BaseEnversJPAFunctionalTestCase {
 			a.getMap().put( b, c );
 			entityManager.persist( a );
 
-			this.a = a;
+			this.aId = a.getId();
 			this.b1 = b;
 			this.c1 = c;
 		} );
 
 		// add a new b/c key-pair to the map
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			final A a = entityManager.find( A.class, this.a.getId() );
+		scope.inTransaction( entityManager -> {
+			final A a = entityManager.find( A.class, this.aId );
 
 			final B b = new B();
 			final C c = new C();
@@ -147,45 +148,54 @@ public class EntityMapTest extends BaseEnversJPAFunctionalTestCase {
 		} );
 
 		// Remove b1 from the map
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			final A a = entityManager.find( A.class, this.a.getId() );
+		scope.inTransaction( entityManager -> {
+			final A a = entityManager.find( A.class, this.aId );
 			a.getMap().remove( this.b1 );
 			entityManager.merge( a );
 		} );
 	}
 
 	@Test
-	public void testRevisionHistory() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			assertEquals( Arrays.asList( 1, 2, 3 ), getAuditReader().getRevisions( A.class, a.getId() ) );
+	public void testRevisionHistory(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
+			final var auditReader = AuditReaderFactory.get( entityManager );
+			assertEquals( Arrays.asList( 1, 2, 3 ), auditReader.getRevisions( A.class, aId ) );
 
-			assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( B.class, b1.getId() ) );
-			assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( C.class, c1.getId() ) );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( B.class, b1.getId() ) );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( C.class, c1.getId() ) );
 
-			assertEquals( Arrays.asList( 2 ), getAuditReader().getRevisions( B.class, b2.getId() ) );
-			assertEquals( Arrays.asList( 2 ), getAuditReader().getRevisions( C.class, c2.getId() ) );
+			assertEquals( Arrays.asList( 2 ), auditReader.getRevisions( B.class, b2.getId() ) );
+			assertEquals( Arrays.asList( 2 ), auditReader.getRevisions( C.class, c2.getId() ) );
 		} );
 	}
 
 	@Test
-	public void testRevision1() {
-		final A rev1 = getAuditReader().find( A.class, this.a.getId(), 1 );
-		assertEquals( 1, rev1.getMap().size() );
-		assertEquals( TestTools.makeMap( this.b1, this.c1 ), rev1.getMap() );
+	public void testRevision1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			final A rev1 = auditReader.find( A.class, this.aId, 1 );
+			assertEquals( 1, rev1.getMap().size() );
+			assertEquals( TestTools.makeMap( this.b1, this.c1 ), rev1.getMap() );
+		} );
 	}
 
 	@Test
-	public void testRevision2() {
-		final A rev2 = getAuditReader().find( A.class, this.a.getId(), 2 );
-		assertEquals( 2, rev2.getMap().size() );
-		assertEquals( TestTools.makeMap( this.b1, this.c1, this.b2, this.c2 ), rev2.getMap() );
+	public void testRevision2(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			final A rev2 = auditReader.find( A.class, this.aId, 2 );
+			assertEquals( 2, rev2.getMap().size() );
+			assertEquals( TestTools.makeMap( this.b1, this.c1, this.b2, this.c2 ), rev2.getMap() );
+		} );
 	}
 
 	@Test
-	public void testRevision3() {
-		final A rev3 = getAuditReader().find( A.class, this.a.getId(), 3 );
-		assertEquals( 1, rev3.getMap().size() );
-		assertEquals( TestTools.makeMap( this.b2, this.c2 ), rev3.getMap() );
+	public void testRevision3(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			final A rev3 = auditReader.find( A.class, this.aId, 3 );
+			assertEquals( 1, rev3.getMap().size() );
+			assertEquals( TestTools.makeMap( this.b2, this.c2 ), rev3.getMap() );
+		} );
 	}
-
 }

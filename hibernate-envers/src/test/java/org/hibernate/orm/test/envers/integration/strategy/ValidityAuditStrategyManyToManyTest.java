@@ -6,18 +6,19 @@ package org.hibernate.orm.test.envers.integration.strategy;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Map;
-import jakarta.persistence.EntityManager;
 
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.manytomany.SetOwnedEntity;
 import org.hibernate.orm.test.envers.entities.manytomany.SetOwningEntity;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests the ValidityAuditStrategy on many-to-many Sets.
@@ -28,143 +29,125 @@ import static org.junit.Assert.assertEquals;
  * @author Oliver Lorenz
  * @since 3.6.5
  */
-public class ValidityAuditStrategyManyToManyTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {SetOwningEntity.class, SetOwnedEntity.class},
+		integrationSettings = @Setting(name = EnversSettings.AUDIT_STRATEGY, value = "org.hibernate.envers.strategy.ValidityAuditStrategy"))
+public class ValidityAuditStrategyManyToManyTest {
 
 	private Integer ing_id;
-
 	private Integer ed_id;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {SetOwningEntity.class, SetOwnedEntity.class};
-	}
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		options.put( EnversSettings.AUDIT_STRATEGY, "org.hibernate.envers.strategy.ValidityAuditStrategy" );
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		final EntityManager em = getEntityManager();
-
-		final SetOwningEntity setOwningEntity = new SetOwningEntity( 1, "parent" );
-		final SetOwnedEntity setOwnedEntity = new SetOwnedEntity( 2, "child" );
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		final SetOwningEntity setOwningEntity = new SetOwningEntity(1, "parent");
+		final SetOwnedEntity setOwnedEntity = new SetOwnedEntity(2, "child");
 
 		// Revision 1: Initial persist
-		em.getTransaction().begin();
-
-		em.persist( setOwningEntity );
-		em.persist( setOwnedEntity );
-
-		em.getTransaction().commit();
-		em.clear();
+		scope.inTransaction(em -> {
+			em.persist(setOwningEntity);
+			em.persist(setOwnedEntity);
+		});
 
 		ing_id = setOwningEntity.getId();
 		ed_id = setOwnedEntity.getId();
-	}
-
-	@Test
-	@Priority(5)
-	public void testMultipleAddAndRemove() {
-		final EntityManager em = getEntityManager();
 
 		// Revision 2: add child for first time
-		em.getTransaction().begin();
+		scope.inTransaction(em -> {
+			SetOwningEntity owningEntity = em.find(SetOwningEntity.class, ing_id);
+			SetOwnedEntity ownedEntity = em.find(SetOwnedEntity.class, ed_id);
 
-		SetOwningEntity owningEntity = getEntityManager().find( SetOwningEntity.class, ing_id );
-		SetOwnedEntity ownedEntity = getEntityManager().find( SetOwnedEntity.class, ed_id );
-
-		owningEntity.setReferences( new HashSet<SetOwnedEntity>() );
-		owningEntity.getReferences().add( ownedEntity );
-
-		em.getTransaction().commit();
-		em.clear();
+			owningEntity.setReferences(new HashSet<SetOwnedEntity>());
+			owningEntity.getReferences().add(ownedEntity);
+		});
 
 		// Revision 3: remove child
-		em.getTransaction().begin();
+		scope.inTransaction(em -> {
+			SetOwningEntity owningEntity = em.find(SetOwningEntity.class, ing_id);
+			SetOwnedEntity ownedEntity = em.find(SetOwnedEntity.class, ed_id);
 
-		owningEntity = getEntityManager().find( SetOwningEntity.class, ing_id );
-		ownedEntity = getEntityManager().find( SetOwnedEntity.class, ed_id );
-
-		owningEntity.getReferences().remove( ownedEntity );
-
-		em.getTransaction().commit();
-		em.clear();
+			owningEntity.getReferences().remove(ownedEntity);
+		});
 
 		// Revision 4: add child again
-		em.getTransaction().begin();
+		scope.inTransaction(em -> {
+			SetOwningEntity owningEntity = em.find(SetOwningEntity.class, ing_id);
+			SetOwnedEntity ownedEntity = em.find(SetOwnedEntity.class, ed_id);
 
-		owningEntity = getEntityManager().find( SetOwningEntity.class, ing_id );
-		ownedEntity = getEntityManager().find( SetOwnedEntity.class, ed_id );
-
-		owningEntity.getReferences().add( ownedEntity );
-
-		em.getTransaction().commit();
-		em.clear();
+			owningEntity.getReferences().add(ownedEntity);
+		});
 
 		// Revision 5: remove child again
-		em.getTransaction().begin();
+		scope.inTransaction(em -> {
+			SetOwningEntity owningEntity = em.find(SetOwningEntity.class, ing_id);
+			SetOwnedEntity ownedEntity = em.find(SetOwnedEntity.class, ed_id);
 
-		owningEntity = getEntityManager().find( SetOwningEntity.class, ing_id );
-		ownedEntity = getEntityManager().find( SetOwnedEntity.class, ed_id );
+			owningEntity.getReferences().remove(ownedEntity);
+		});
+	}
 
-		owningEntity.getReferences().remove( ownedEntity );
-
-		em.getTransaction().commit();
-		em.clear();
-
+	@Test
+	public void testMultipleAddAndRemove(EntityManagerFactoryScope scope) {
 		// now the set owning entity list should be empty again
-		owningEntity = getEntityManager().find( SetOwningEntity.class, ing_id );
-		assertEquals( owningEntity.getReferences().size(), 0 );
+		scope.inEntityManager(em -> {
+			SetOwningEntity owningEntity = em.find(SetOwningEntity.class, ing_id);
+			assertEquals(0, owningEntity.getReferences().size());
+		});
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		assertEquals( getAuditReader().getRevisions( SetOwningEntity.class, ing_id ), Arrays.asList( 1, 2, 3, 4, 5 ) );
-		assertEquals( getAuditReader().getRevisions( SetOwnedEntity.class, ed_id ), Arrays.asList( 1, 2, 3, 4, 5 ) );
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(em -> {
+			final var auditReader = AuditReaderFactory.get(em);
+			assertEquals(Arrays.asList(1, 2, 3, 4, 5), auditReader.getRevisions(SetOwningEntity.class, ing_id));
+			assertEquals(Arrays.asList(1, 2, 3, 4, 5), auditReader.getRevisions(SetOwnedEntity.class, ed_id));
+		});
 	}
 
 	@Test
-	public void testHistoryOfIng1() {
-		SetOwningEntity ver_empty = createOwningEntity();
-		SetOwningEntity ver_child = createOwningEntity( new SetOwnedEntity( ed_id, "child" ) );
+	public void testHistoryOfIng1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(em -> {
+			final var auditReader = AuditReaderFactory.get(em);
+			SetOwningEntity ver_empty = createOwningEntity();
+			SetOwningEntity ver_child = createOwningEntity(new SetOwnedEntity(ed_id, "child"));
 
-		assertEquals( getAuditReader().find( SetOwningEntity.class, ing_id, 1 ), ver_empty );
-		assertEquals( getAuditReader().find( SetOwningEntity.class, ing_id, 2 ), ver_child );
-		assertEquals( getAuditReader().find( SetOwningEntity.class, ing_id, 3 ), ver_empty );
-		assertEquals( getAuditReader().find( SetOwningEntity.class, ing_id, 4 ), ver_child );
-		assertEquals( getAuditReader().find( SetOwningEntity.class, ing_id, 5 ), ver_empty );
+			assertEquals(ver_empty, auditReader.find(SetOwningEntity.class, ing_id, 1));
+			assertEquals(ver_child, auditReader.find(SetOwningEntity.class, ing_id, 2));
+			assertEquals(ver_empty, auditReader.find(SetOwningEntity.class, ing_id, 3));
+			assertEquals(ver_child, auditReader.find(SetOwningEntity.class, ing_id, 4));
+			assertEquals(ver_empty, auditReader.find(SetOwningEntity.class, ing_id, 5));
+		});
 	}
 
 	@Test
-	public void testHistoryOfEd1() {
-		SetOwnedEntity ver_empty = createOwnedEntity();
-		SetOwnedEntity ver_child = createOwnedEntity( new SetOwningEntity( ing_id, "parent" ) );
+	public void testHistoryOfEd1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(em -> {
+			final var auditReader = AuditReaderFactory.get(em);
+			SetOwnedEntity ver_empty = createOwnedEntity();
+			SetOwnedEntity ver_child = createOwnedEntity(new SetOwningEntity(ing_id, "parent"));
 
-		assertEquals( getAuditReader().find( SetOwnedEntity.class, ed_id, 1 ), ver_empty );
-		assertEquals( getAuditReader().find( SetOwnedEntity.class, ed_id, 2 ), ver_child );
-		assertEquals( getAuditReader().find( SetOwnedEntity.class, ed_id, 3 ), ver_empty );
-		assertEquals( getAuditReader().find( SetOwnedEntity.class, ed_id, 4 ), ver_child );
-		assertEquals( getAuditReader().find( SetOwnedEntity.class, ed_id, 5 ), ver_empty );
+			assertEquals(ver_empty, auditReader.find(SetOwnedEntity.class, ed_id, 1));
+			assertEquals(ver_child, auditReader.find(SetOwnedEntity.class, ed_id, 2));
+			assertEquals(ver_empty, auditReader.find(SetOwnedEntity.class, ed_id, 3));
+			assertEquals(ver_child, auditReader.find(SetOwnedEntity.class, ed_id, 4));
+			assertEquals(ver_empty, auditReader.find(SetOwnedEntity.class, ed_id, 5));
+		});
 	}
 
 	private SetOwningEntity createOwningEntity(SetOwnedEntity... owned) {
-		SetOwningEntity result = new SetOwningEntity( ing_id, "parent" );
-		result.setReferences( new HashSet<SetOwnedEntity>() );
-		for ( SetOwnedEntity setOwnedEntity : owned ) {
-			result.getReferences().add( setOwnedEntity );
+		SetOwningEntity result = new SetOwningEntity(ing_id, "parent");
+		result.setReferences(new HashSet<SetOwnedEntity>());
+		for (SetOwnedEntity setOwnedEntity : owned) {
+			result.getReferences().add(setOwnedEntity);
 		}
 
 		return result;
 	}
 
 	private SetOwnedEntity createOwnedEntity(SetOwningEntity... owning) {
-		SetOwnedEntity result = new SetOwnedEntity( ed_id, "child" );
-		result.setReferencing( new HashSet<SetOwningEntity>() );
-		for ( SetOwningEntity setOwningEntity : owning ) {
-			result.getReferencing().add( setOwningEntity );
+		SetOwnedEntity result = new SetOwnedEntity(ed_id, "child");
+		result.setReferencing(new HashSet<SetOwningEntity>());
+		for (SetOwningEntity setOwningEntity : owning) {
+			result.getReferencing().add(setOwningEntity);
 		}
 
 		return result;

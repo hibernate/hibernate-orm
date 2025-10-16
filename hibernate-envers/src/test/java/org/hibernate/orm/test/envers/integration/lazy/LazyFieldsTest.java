@@ -8,6 +8,7 @@ import org.hibernate.annotations.LazyGroup;
 import org.hibernate.envers.Audited;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.envers.junit.EnversTest;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -20,7 +21,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 
-@JiraKey("")
+@JiraKey("HHH-19220")
+@EnversTest
 @BytecodeEnhanced
 @DomainModel(
 		annotatedClasses = {

@@ -12,10 +12,13 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.envers.Audited;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -27,7 +30,10 @@ import static org.junit.Assert.assertTrue;
  * @author Armin Krezović (armin.krezovic at ziragroup dot com)
  */
 @JiraKey(value = "HHH-16253")
-public class LargeObjectMappingTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@DomainModel(annotatedClasses = { LargeObjectMappingTest.LargeObjectTestEntity.class })
+@SessionFactory
+public class LargeObjectMappingTest {
 
 	@Entity
 	@Audited
@@ -73,14 +79,10 @@ public class LargeObjectMappingTest extends BaseEnversJPAFunctionalTestCase {
 		}
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { LargeObjectTestEntity.class };
-	}
-
 	@Test
-	public void testLobTypeMapping() {
-		PersistentClass entityBinding = metadata().getEntityBinding( LargeObjectTestEntity.class.getName() + "_AUD" );
+	public void testLobTypeMapping(DomainModelScope scope) {
+		PersistentClass entityBinding = scope.getDomainModel()
+				.getEntityBinding( LargeObjectTestEntity.class.getName() + "_AUD" );
 
 		Property blobProperty = entityBinding.getProperty( "blob" );
 		Property clobProperty = entityBinding.getProperty( "clob" );

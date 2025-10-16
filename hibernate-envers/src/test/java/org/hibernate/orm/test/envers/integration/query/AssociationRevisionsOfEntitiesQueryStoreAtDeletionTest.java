@@ -4,20 +4,30 @@
  */
 package org.hibernate.orm.test.envers.integration.query;
 
-import java.util.Map;
-
 import org.hibernate.envers.configuration.EnversSettings;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
 
 /**
  * @author Chris Cranford
  */
-@JiraKey( value = "HHH-13817" )
+@JiraKey(value = "HHH-13817")
+@Jpa(
+		annotatedClasses = {
+				AssociationRevisionsOfEntitiesQueryTest.Template.class,
+				AssociationRevisionsOfEntitiesQueryTest.TemplateType.class
+		},
+		integrationSettings = {
+				@Setting(name = EnversSettings.STORE_DATA_AT_DELETE, value = "true")
+		}
+)
+@EnversTest
 public class AssociationRevisionsOfEntitiesQueryStoreAtDeletionTest extends AssociationRevisionsOfEntitiesQueryTest {
 	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		super.addSettings( settings );
-		settings.put( EnversSettings.STORE_DATA_AT_DELETE, true );
+	protected boolean isStoreDataAtDelete(EntityManagerFactoryScope scope) {
+		return true;
 	}
 }

@@ -4,20 +4,26 @@
  */
 package org.hibernate.orm.test.envers.integration.reventity;
 
-import java.util.Arrays;
-import java.util.Map;
-import jakarta.persistence.EntityManager;
-
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.orm.test.envers.entities.StrTestEntity;
 import org.hibernate.mapping.Table;
+import org.hibernate.orm.test.envers.entities.StrTestEntity;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.AfterClassTemplate;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Test;
+import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests simple auditing process (read and write operations) when <i>REVINFO</i> and audit tables
@@ -26,64 +32,63 @@ import org.junit.Test;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @RequiresDialect(H2Dialect.class)
-public class DifferentDBSchemaTest extends BaseEnversJPAFunctionalTestCase {
-	private static final String SCHEMA_NAME = "ENVERS_AUDIT";
+@EnversTest
+@DomainModel(annotatedClasses = {StrTestEntity.class})
+@ServiceRegistry(settings = @Setting(name = EnversSettings.DEFAULT_SCHEMA, value = DifferentDBSchemaTest.SCHEMA_NAME))
+@SessionFactory(exportSchema = false)
+public class DifferentDBSchemaTest {
+	static final String SCHEMA_NAME = "ENVERS_AUDIT";
 	private Integer steId = null;
 
-	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		// Creates new schema after establishing connection
-		options.putAll( Environment.getProperties() );
-		options.put( EnversSettings.DEFAULT_SCHEMA, SCHEMA_NAME );
-	}
+	@BeforeClassTemplate
+	public void initData(SessionFactoryScope scope) {
+		// Create the schema used for audit tables as well
+		scope.getSessionFactory().getSchemaManager().create( true );
 
-	@Override
-	protected String createSecondSchema() {
-		return SCHEMA_NAME;
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {StrTestEntity.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() throws InterruptedException {
 		// Revision 1
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
-		StrTestEntity ste = new StrTestEntity( "x" );
-		em.persist( ste );
-		steId = ste.getId();
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			StrTestEntity ste = new StrTestEntity( "x" );
+			em.persist( ste );
+			steId = ste.getId();
+		} );
 
 		// Revision 2
-		em.getTransaction().begin();
-		ste = em.find( StrTestEntity.class, steId );
-		ste.setStr( "y" );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			StrTestEntity ste = em.find( StrTestEntity.class, steId );
+			ste.setStr( "y" );
+		} );
+	}
+
+	@AfterClassTemplate
+	public void cleanUp(SessionFactoryScope scope) {
+		// Drop the schema used for audit tables as well
+		scope.getSessionFactory().getSchemaManager().dropMappedObjects( true );
 	}
 
 	@Test
-	public void testRevinfoSchemaName() {
-		Table revisionTable = metadata().getEntityBinding( "org.hibernate.envers.enhanced.SequenceIdRevisionEntity" )
-				.getTable();
-		assert SCHEMA_NAME.equals( revisionTable.getSchema() );
+	public void testRevinfoSchemaName(DomainModelScope scope) {
+		Table revisionTable = scope.getDomainModel()
+				.getEntityBinding( "org.hibernate.envers.enhanced.SequenceIdRevisionEntity" ).getTable();
+		assertEquals( SCHEMA_NAME, revisionTable.getSchema() );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		assert Arrays.asList( 1, 2 ).equals( getAuditReader().getRevisions( StrTestEntity.class, steId ) );
+	public void testRevisionsCounts(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			assertEquals( Arrays.asList( 1, 2 ),
+					AuditReaderFactory.get( em ).getRevisions( StrTestEntity.class, steId ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfId1() {
-		StrTestEntity ver1 = new StrTestEntity( "x", steId );
-		StrTestEntity ver2 = new StrTestEntity( "y", steId );
+	public void testHistoryOfId1(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			StrTestEntity ver1 = new StrTestEntity( "x", steId );
+			StrTestEntity ver2 = new StrTestEntity( "y", steId );
 
-		assert getAuditReader().find( StrTestEntity.class, steId, 1 ).equals( ver1 );
-		assert getAuditReader().find( StrTestEntity.class, steId, 2 ).equals( ver2 );
+			assertEquals( ver1, auditReader.find( StrTestEntity.class, steId, 1 ) );
+			assertEquals( ver2, auditReader.find( StrTestEntity.class, steId, 2 ) );
+		} );
 	}
 }

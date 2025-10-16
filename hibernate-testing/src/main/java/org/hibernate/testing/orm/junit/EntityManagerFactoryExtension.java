@@ -51,6 +51,7 @@ public class EntityManagerFactoryExtension
 
 	private static final Logger log = Logger.getLogger( EntityManagerFactoryExtension.class );
 	private static final String EMF_KEY = EntityManagerFactoryScope.class.getName();
+	private static final String INTEGRATION_SETTINGS_KEY = EntityManagerFactoryScope.class.getName() + "#INTEGRATION_SETTINGS";
 
 	private static ExtensionContext.Store locateExtensionStore(Object testScope, ExtensionContext context) {
 		return JUnitHelper.locateExtensionStore( EntityManagerFactoryExtension.class, context, testScope );
@@ -58,7 +59,6 @@ public class EntityManagerFactoryExtension
 
 	public static EntityManagerFactoryScope findEntityManagerFactoryScope(
 			Object testScope, Optional<Jpa> optionalJpa, ExtensionContext context) {
-
 		if ( optionalJpa.isEmpty() ) {
 			// No annotation on the test class, should be on the test methods
 			return null;
@@ -79,6 +79,8 @@ public class EntityManagerFactoryExtension
 		collectProperties( pui, jpa );
 		managedClassesAndMappings( jpa, pui );
 		final Map<String, Object> integrationSettings = collectIntegrationSettings( jpa );
+		// Make the integration settings available in the store for other extensions
+		store.put( INTEGRATION_SETTINGS_KEY, integrationSettings );
 		// statement inspector
 		setupStatementInspector( jpa, integrationSettings );
 		ServiceRegistryUtil.applySettings( integrationSettings );
@@ -86,6 +88,12 @@ public class EntityManagerFactoryExtension
 				new EntityManagerFactoryScopeImpl( pui, integrationSettings );
 		store.put( EMF_KEY, scope );
 		return scope;
+	}
+
+	public static Map<String, Object> getIntegrationSettings(Object testScope, ExtensionContext context) {
+		final ExtensionContext.Store store = locateExtensionStore( testScope, context );
+		//noinspection unchecked
+		return (Map<String, Object>) store.get( INTEGRATION_SETTINGS_KEY, Map.class );
 	}
 
 	private static void collectProperties(PersistenceUnitInfoImpl pui, Jpa jpa) {
@@ -174,6 +182,17 @@ public class EntityManagerFactoryExtension
 			}
 			catch (Exception e) {
 				log.error( "Error obtaining setting provider for " + providerImpl.getName(), e );
+			}
+		}
+		for ( SettingConfiguration settingConfiguration : jpa.settingConfigurations() ) {
+			try {
+				final SettingConfiguration.Configurer configurer = settingConfiguration.configurer()
+						.getDeclaredConstructor().newInstance();
+				configurer.applySettings( integrationSettings );
+			}
+			catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+				NoSuchMethodException e) {
+				throw new RuntimeException( e );
 			}
 		}
 		return integrationSettings;

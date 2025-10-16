@@ -11,52 +11,59 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.MappingException;
-import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.strategy.internal.DefaultAuditStrategy;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-import junit.framework.Assert;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
+
+import static org.hibernate.testing.envers.EnversEntityManagerFactoryScope.getAuditStrategy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Lukasz Zuchowski (author at zuchos dot com)
  */
 @JiraKey("HHH-8049")
-public class AuditedDynamicComponentTest extends BaseEnversFunctionalTestCase {
-
-	@Override
-	protected String[] getMappings() {
-		return new String[] { "mappings/dynamicComponents/mapAudited.hbm.xml" };
-	}
+@EnversTest
+@Jpa(
+		xmlMappings = "mappings/dynamicComponents/mapAudited.hbm.xml",
+		annotatedClasses = {AuditedDynamicComponentEntity.class, SimpleEntity.class}
+)
+public class AuditedDynamicComponentTest {
 
 	//@Test
-	public void testAuditedDynamicComponentFailure() throws URISyntaxException {
+	public void testAuditedDynamicComponentFailure(EntityManagerFactoryScope scope) throws URISyntaxException {
 		final Configuration config = new Configuration();
 		final URL hbm = Thread.currentThread().getContextClassLoader().getResource(
 				"mappings/dynamicComponents/mapAudited.hbm.xml"
 		);
 		config.addFile( new File( hbm.toURI() ) );
 
-		final String auditStrategy = getAuditStrategy();
-		if ( !StringTools.isEmpty( auditStrategy ) ) {
-			config.setProperty( EnversSettings.AUDIT_STRATEGY, auditStrategy );
-		}
+		scope.inEntityManager( em -> {
+			final var auditStrategyClass = getAuditStrategy( em ).getClass();
+			if ( auditStrategyClass != DefaultAuditStrategy.class ) {
+				config.setProperty( EnversSettings.AUDIT_STRATEGY, auditStrategyClass.getName() );
+			}
+		} );
 
 		final ServiceRegistry serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( config.getProperties() );
 		try {
 			config.buildSessionFactory( serviceRegistry ).close();
-			Assert.fail( "MappingException expected" );
+			fail( "MappingException expected" );
 		}
 		catch ( MappingException e ) {
-			Assert.assertEquals(
+			assertEquals(
 					"Audited dynamic-component properties are not supported. Consider applying @NotAudited annotation to "
 							+ AuditedDynamicComponentEntity.class.getName() + "#customFields.",
 					e.getMessage()
@@ -67,172 +74,176 @@ public class AuditedDynamicComponentTest extends BaseEnversFunctionalTestCase {
 		}
 	}
 
-	@Test
-	@Priority(10)
-	public void initData() {
-		Session session = openSession();
-
-		SimpleEntity simpleEntity = new SimpleEntity( 1L, "Very simple entity" );
-
-		// Revision 1
-		session.getTransaction().begin();
-		session.persist( simpleEntity );
-		session.getTransaction().commit();
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			SimpleEntity simpleEntity = new SimpleEntity( 1L, "Very simple entity" );
+			em.persist( simpleEntity );
+		} );
 
 		// Revision 2
-		session.getTransaction().begin();
-		AuditedDynamicComponentEntity entity = new AuditedDynamicComponentEntity( 1L, "static field value" );
-		entity.getCustomFields().put( "prop1", 13 );
-		entity.getCustomFields().put( "prop2", 0.1f );
-		entity.getCustomFields().put( "prop3", simpleEntity );
-		entity.getCustomFields().put( "prop4", true );
-		session.persist( entity );
-		session.getTransaction().commit();
+		scope.inTransaction( em -> {
+			SimpleEntity simpleEntity = em.find( SimpleEntity.class, 1L );
+			AuditedDynamicComponentEntity entity = new AuditedDynamicComponentEntity( 1L, "static field value" );
+			entity.getCustomFields().put( "prop1", 13 );
+			entity.getCustomFields().put( "prop2", 0.1f );
+			entity.getCustomFields().put( "prop3", simpleEntity );
+			entity.getCustomFields().put( "prop4", true );
+			em.persist( entity );
+		} );
 
 		// revision 3
-		session.getTransaction().begin();
-		SimpleEntity simpleEntity2 = new SimpleEntity( 2L, "Not so simple entity" );
-		session.persist( simpleEntity2 );
-		entity = session.get( AuditedDynamicComponentEntity.class, entity.getId() );
-		entity.getCustomFields().put( "prop3", simpleEntity2 );
-		session.merge( entity );
-		session.getTransaction().commit();
+		scope.inTransaction( em -> {
+			SimpleEntity simpleEntity2 = new SimpleEntity( 2L, "Not so simple entity" );
+			em.persist( simpleEntity2 );
+			AuditedDynamicComponentEntity entity = em.find( AuditedDynamicComponentEntity.class, 1L );
+			entity.getCustomFields().put( "prop3", simpleEntity2 );
+			em.merge( entity );
+		} );
 
 		// Revision 4
-		session.getTransaction().begin();
-		entity = session.get( AuditedDynamicComponentEntity.class, entity.getId() );
-		entity.getCustomFields().put( "prop1", 2 );
-		entity.getCustomFields().put( "prop4", false );
-		session.merge( entity );
-		session.getTransaction().commit();
+		scope.inTransaction( em -> {
+			AuditedDynamicComponentEntity entity = em.find( AuditedDynamicComponentEntity.class, 1L );
+			entity.getCustomFields().put( "prop1", 2 );
+			entity.getCustomFields().put( "prop4", false );
+			em.merge( entity );
+		} );
 
 		// Revision 5
-		session.getTransaction().begin();
-		entity = session.getReference( AuditedDynamicComponentEntity.class, entity.getId() );
-		entity.getCustomFields().remove( "prop2" );
-		session.merge( entity );
-		session.getTransaction().commit();
+		scope.inTransaction( em -> {
+			AuditedDynamicComponentEntity entity = em.getReference( AuditedDynamicComponentEntity.class, 1L );
+			entity.getCustomFields().remove( "prop2" );
+			em.merge( entity );
+		} );
 
 		// Revision 6
-		session.getTransaction().begin();
-		entity = session.getReference( AuditedDynamicComponentEntity.class, entity.getId() );
-		entity.getCustomFields().clear();
-		session.merge( entity );
-		session.getTransaction().commit();
+		scope.inTransaction( em -> {
+			AuditedDynamicComponentEntity entity = em.getReference( AuditedDynamicComponentEntity.class, 1L );
+			entity.getCustomFields().clear();
+			em.merge( entity );
+		} );
 
 		// Revision 7
-		session.getTransaction().begin();
-		entity = session.getReference( AuditedDynamicComponentEntity.class, entity.getId() );
-		session.remove( entity );
-		session.getTransaction().commit();
-
-		session.close();
+		scope.inTransaction( em -> {
+			AuditedDynamicComponentEntity entity = em.getReference( AuditedDynamicComponentEntity.class, 1L );
+			em.remove( entity );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		Assert.assertEquals(
-				Arrays.asList( 2, 3, 4, 5, 6, 7 ),
-				getAuditReader().getRevisions( AuditedDynamicComponentEntity.class, 1L )
-		);
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			assertEquals(
+					Arrays.asList( 2, 3, 4, 5, 6, 7 ),
+					AuditReaderFactory.get( em ).getRevisions( AuditedDynamicComponentEntity.class, 1L )
+			);
+		} );
 	}
 
 	@Test
-	public void testHistoryOfId1() {
-		// Revision 2
-		AuditedDynamicComponentEntity entity = new AuditedDynamicComponentEntity( 1L, "static field value" );
-		entity.getCustomFields().put( "prop1", 13 );
-		entity.getCustomFields().put( "prop2", 0.1f );
-		entity.getCustomFields().put( "prop3", new SimpleEntity( 1L, "Very simple entity" ) );
-		entity.getCustomFields().put( "prop4", true );
-		AuditedDynamicComponentEntity ver2 = getAuditReader().find(
-				AuditedDynamicComponentEntity.class,
-				entity.getId(),
-				2
-		);
-		Assert.assertEquals( entity, ver2 );
+	public void testHistoryOfId1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
 
-		// Revision 3
-		SimpleEntity simpleEntity2 = new SimpleEntity( 2L, "Not so simple entity" );
-		entity.getCustomFields().put( "prop3", simpleEntity2 );
-		AuditedDynamicComponentEntity ver3 = getAuditReader().find(
-				AuditedDynamicComponentEntity.class,
-				entity.getId(),
-				3
-		);
-		Assert.assertEquals( entity, ver3 );
+			// Revision 2
+			AuditedDynamicComponentEntity entity = new AuditedDynamicComponentEntity( 1L, "static field value" );
+			entity.getCustomFields().put( "prop1", 13 );
+			entity.getCustomFields().put( "prop2", 0.1f );
+			entity.getCustomFields().put( "prop3", new SimpleEntity( 1L, "Very simple entity" ) );
+			entity.getCustomFields().put( "prop4", true );
+			AuditedDynamicComponentEntity ver2 = auditReader.find(
+					AuditedDynamicComponentEntity.class,
+					entity.getId(),
+					2
+			);
+			assertEquals( entity, ver2 );
 
-		// Revision 4
-		entity.getCustomFields().put( "prop1", 2 );
-		entity.getCustomFields().put( "prop4", false );
-		AuditedDynamicComponentEntity ver4 = getAuditReader().find(
-				AuditedDynamicComponentEntity.class,
-				entity.getId(),
-				4
-		);
-		Assert.assertEquals( entity, ver4 );
+			// Revision 3
+			SimpleEntity simpleEntity2 = new SimpleEntity( 2L, "Not so simple entity" );
+			entity.getCustomFields().put( "prop3", simpleEntity2 );
+			AuditedDynamicComponentEntity ver3 = auditReader.find(
+					AuditedDynamicComponentEntity.class,
+					entity.getId(),
+					3
+			);
+			assertEquals( entity, ver3 );
 
-		// Revision 5
-		entity.getCustomFields().put( "prop2", null );
-		AuditedDynamicComponentEntity ver5 = getAuditReader().find(
-				AuditedDynamicComponentEntity.class,
-				entity.getId(),
-				5
-		);
-		Assert.assertEquals( entity, ver5 );
+			// Revision 4
+			entity.getCustomFields().put( "prop1", 2 );
+			entity.getCustomFields().put( "prop4", false );
+			AuditedDynamicComponentEntity ver4 = auditReader.find(
+					AuditedDynamicComponentEntity.class,
+					entity.getId(),
+					4
+			);
+			assertEquals( entity, ver4 );
 
-		// Revision 5
-		entity.getCustomFields().put( "prop1", null );
-		entity.getCustomFields().put( "prop2", null );
-		entity.getCustomFields().put( "prop3", null );
-		entity.getCustomFields().put( "prop4", null );
-		AuditedDynamicComponentEntity ver6 = getAuditReader().find(
-				AuditedDynamicComponentEntity.class,
-				entity.getId(),
-				6
-		);
-		Assert.assertEquals( entity, ver6 );
+			// Revision 5
+			entity.getCustomFields().put( "prop2", null );
+			AuditedDynamicComponentEntity ver5 = auditReader.find(
+					AuditedDynamicComponentEntity.class,
+					entity.getId(),
+					5
+			);
+			assertEquals( entity, ver5 );
+
+			// Revision 6
+			entity.getCustomFields().put( "prop1", null );
+			entity.getCustomFields().put( "prop2", null );
+			entity.getCustomFields().put( "prop3", null );
+			entity.getCustomFields().put( "prop4", null );
+			AuditedDynamicComponentEntity ver6 = auditReader.find(
+					AuditedDynamicComponentEntity.class,
+					entity.getId(),
+					6
+			);
+			assertEquals( entity, ver6 );
+		} );
 	}
 
 
 	@Test
-	public void testOfQueryOnDynamicComponent() {
-		//given (and result of initData()
-		AuditedDynamicComponentEntity entity = new AuditedDynamicComponentEntity( 1L, "static field value" );
-		entity.getCustomFields().put( "prop1", 13 );
-		entity.getCustomFields().put( "prop2", 0.1f );
-		entity.getCustomFields().put( "prop3", new SimpleEntity( 1L, "Very simple entity" ) );
-		entity.getCustomFields().put( "prop4", true );
+	public void testOfQueryOnDynamicComponent(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
 
-		//when
-		List resultList = getAuditReader().createQuery()
-				.forEntitiesAtRevision( AuditedDynamicComponentEntity.class, 2 )
-				.add( AuditEntity.property( "customFields_prop1" ).le( 20 ) )
-				.getResultList();
+			//given (and result of initData()
+			AuditedDynamicComponentEntity entity = new AuditedDynamicComponentEntity( 1L, "static field value" );
+			entity.getCustomFields().put( "prop1", 13 );
+			entity.getCustomFields().put( "prop2", 0.1f );
+			entity.getCustomFields().put( "prop3", new SimpleEntity( 1L, "Very simple entity" ) );
+			entity.getCustomFields().put( "prop4", true );
 
-		//then
-		Assert.assertEquals( entity, resultList.get( 0 ) );
+			//when
+			List resultList = auditReader.createQuery()
+					.forEntitiesAtRevision( AuditedDynamicComponentEntity.class, 2 )
+					.add( AuditEntity.property( "customFields_prop1" ).le( 20 ) )
+					.getResultList();
 
-		//when
-		resultList = getAuditReader().createQuery()
-				.forEntitiesAtRevision( AuditedDynamicComponentEntity.class, 2 )
-				.add( AuditEntity.property( "customFields_prop3" ).eq( new SimpleEntity( 1L, "Very simple entity" ) ) )
-				.getResultList();
+			//then
+			assertEquals( entity, resultList.get( 0 ) );
+
+			//when
+			resultList = auditReader.createQuery()
+					.forEntitiesAtRevision( AuditedDynamicComponentEntity.class, 2 )
+					.add( AuditEntity.property( "customFields_prop3" ).eq( new SimpleEntity( 1L, "Very simple entity" ) ) )
+					.getResultList();
 
 
-		//then
-		entity = (AuditedDynamicComponentEntity) getAuditReader().createQuery()
-				.forEntitiesAtRevision( AuditedDynamicComponentEntity.class, 4 )
-				.getResultList().get( 0 );
-		entity.getCustomFields().put( "prop2", null );
+			//then
+			AuditedDynamicComponentEntity entity2 = (AuditedDynamicComponentEntity) auditReader.createQuery()
+					.forEntitiesAtRevision( AuditedDynamicComponentEntity.class, 4 )
+					.getResultList().get( 0 );
+			entity2.getCustomFields().put( "prop2", null );
 
-		resultList = getAuditReader().createQuery()
-				.forEntitiesAtRevision( AuditedDynamicComponentEntity.class, 5 )
-				.add( AuditEntity.property( "customFields_prop2" ).isNull() )
-				.getResultList();
+			resultList = auditReader.createQuery()
+					.forEntitiesAtRevision( AuditedDynamicComponentEntity.class, 5 )
+					.add( AuditEntity.property( "customFields_prop2" ).isNull() )
+					.getResultList();
 
-		//then
-		Assert.assertEquals( entity, resultList.get( 0 ) );
+			//then
+			assertEquals( entity2, resultList.get( 0 ) );
+		} );
 	}
 
 }

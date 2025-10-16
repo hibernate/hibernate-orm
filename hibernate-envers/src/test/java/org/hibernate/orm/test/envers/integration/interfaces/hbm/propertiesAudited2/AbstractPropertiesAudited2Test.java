@@ -4,121 +4,101 @@
  */
 package org.hibernate.orm.test.envers.integration.interfaces.hbm.propertiesAudited2;
 
-import jakarta.persistence.EntityManager;
-
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.exception.NotAuditedException;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * @author Hern�n Chanfreau
+ * @author Hernán Chanfreau
  */
-public abstract class AbstractPropertiesAudited2Test extends BaseEnversJPAFunctionalTestCase {
+public abstract class AbstractPropertiesAudited2Test {
 	private long ai_id;
 	private long nai_id;
 
 	private static int NUMERITO = 555;
 
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
+	protected abstract String[] getMappings();
 
-		AuditedImplementor ai = new AuditedImplementor();
-		ai.setData( "La data" );
-		ai.setAuditedImplementorData( "audited implementor data" );
-		ai.setNumerito( NUMERITO );
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			AuditedImplementor ai = new AuditedImplementor();
+			ai.setData( "La data" );
+			ai.setAuditedImplementorData( "audited implementor data" );
+			ai.setNumerito( NUMERITO );
 
-		NonAuditedImplementor nai = new NonAuditedImplementor();
-		nai.setData( "info" );
-		nai.setNonAuditedImplementorData( "sttring" );
-		nai.setNumerito( NUMERITO );
+			NonAuditedImplementor nai = new NonAuditedImplementor();
+			nai.setData( "info" );
+			nai.setNonAuditedImplementorData( "sttring" );
+			nai.setNumerito( NUMERITO );
 
-		// Revision 1
-		em.getTransaction().begin();
+			em.persist( ai );
+			em.persist( nai );
 
-		em.persist( ai );
-
-		em.persist( nai );
-
-		em.getTransaction().commit();
-
-		// Revision 2
-
-		// Revision 3
-
-		ai_id = ai.getId();
-		nai_id = nai.getId();
+			ai_id = ai.getId();
+			nai_id = nai.getId();
+		} );
 	}
 
 	@Test
-	public void testRetrieveAudited() {
-		// levanto las versiones actuales
-		AuditedImplementor ai = getEntityManager().find(
-				AuditedImplementor.class, ai_id
-		);
-		assert ai != null;
-		SimpleInterface si = getEntityManager().find(
-				SimpleInterface.class,
-				ai_id
-		);
-		assert si != null;
+	public void testRetrieveAudited(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
 
-		// levanto las de la revisi�n 1, ninguna debe ser null
-		AuditedImplementor ai_rev1 = getAuditReader().find(
-				AuditedImplementor.class, ai_id, 1
-		);
-		assert ai_rev1 != null;
-		SimpleInterface si_rev1 = getAuditReader().find(
-				SimpleInterface.class,
-				ai_id, 1
-		);
-		assert si_rev1 != null;
+			// levanto las versiones actuales
+			AuditedImplementor ai = em.find( AuditedImplementor.class, ai_id );
+			assertNotNull( ai );
+			SimpleInterface si = em.find( SimpleInterface.class, ai_id );
+			assertNotNull( si );
 
-		// data de las actuales no debe ser null
-		assert ai.getData() != null;
-		assert si.getData() != null;
-		// data de las revisiones est� auditada
-		assert ai_rev1.getData() != null;
-		assert si_rev1.getData() != null;
-		// numerito de las revisiones est� auditada, debe ser igual a NUMERITO
-		assert ai_rev1.getNumerito() == NUMERITO;
-		assert si_rev1.getNumerito() == NUMERITO;
+			// levanto las de la revisión 1, ninguna debe ser null
+			AuditedImplementor ai_rev1 = auditReader.find( AuditedImplementor.class, ai_id, 1 );
+			assertNotNull( ai_rev1 );
+			SimpleInterface si_rev1 = auditReader.find( SimpleInterface.class, ai_id, 1 );
+			assertNotNull( si_rev1 );
+
+			// data de las actuales no debe ser null
+			assertNotNull( ai.getData() );
+			assertNotNull( si.getData() );
+			// data de las revisiones está auditada
+			assertNotNull( ai_rev1.getData() );
+			assertNotNull( si_rev1.getData() );
+			// numerito de las revisiones está auditada, debe ser igual a NUMERITO
+			assertEquals( NUMERITO, ai_rev1.getNumerito() );
+			assertEquals( NUMERITO, si_rev1.getNumerito() );
+		} );
 	}
 
 	@Test
-	public void testRetrieveNonAudited() {
-		// levanto las versiones actuales
-		NonAuditedImplementor nai = getEntityManager().find(
-				NonAuditedImplementor.class, nai_id
-		);
-		assert nai != null;
-		SimpleInterface si = getEntityManager().find(
-				SimpleInterface.class,
-				nai_id
-		);
-		assert si != null;
+	public void testRetrieveNonAudited(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
 
-		assert si.getData().equals( nai.getData() );
+			// levanto las versiones actuales
+			NonAuditedImplementor nai = em.find( NonAuditedImplementor.class, nai_id );
+			assertNotNull( nai );
+			SimpleInterface si = em.find( SimpleInterface.class, nai_id );
+			assertNotNull( si );
 
-		try {
-			// levanto la revision
-			getAuditReader().find( NonAuditedImplementor.class, nai_id, 1 );
-			assert false;
-		}
-		catch (Exception e) {
-			// no es auditable!!!
-			assert (e instanceof NotAuditedException);
-		}
+			assertEquals( nai.getData(), si.getData() );
 
-		// levanto la revision que no es auditable pero con la interfaz, el
-		// resultado debe ser null
-		SimpleInterface si_rev1 = getAuditReader().find(
-				SimpleInterface.class,
-				nai_id, 1
-		);
-		assert si_rev1 == null;
+			// levanto la revision - no es auditable!!!
+			assertThrows( NotAuditedException.class, () -> {
+				auditReader.find( NonAuditedImplementor.class, nai_id, 1 );
+			} );
+
+			// levanto la revision que no es auditable pero con la interfaz, el
+			// resultado debe ser null
+			SimpleInterface si_rev1 = auditReader.find( SimpleInterface.class, nai_id, 1 );
+			assertNull( si_rev1 );
+		} );
 	}
 }

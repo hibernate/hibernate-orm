@@ -4,107 +4,86 @@
  */
 package org.hibernate.orm.test.envers.integration.reventity.removal;
 
-import java.util.ArrayList;
-import java.util.Map;
-import jakarta.persistence.EntityManager;
-
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 import org.hibernate.orm.test.envers.entities.manytomany.ListOwnedEntity;
 import org.hibernate.orm.test.envers.entities.manytomany.ListOwningEntity;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@JiraKey( value = "HHH-7807" )
-@RequiresDialectFeature(DialectChecks.SupportsCascadeDeleteCheck.class)
-public abstract class AbstractRevisionEntityRemovalTest extends BaseEnversJPAFunctionalTestCase {
-	@Override
-	protected void addConfigOptions(Map options) {
-		options.put( "org.hibernate.envers.cascade_delete_revision", "true" );
-	}
+@JiraKey(value = "HHH-7807")
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCascadeDeleteCheck.class)
+@EnversTest
+public abstract class AbstractRevisionEntityRemovalTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				StrTestEntity.class, ListOwnedEntity.class, ListOwningEntity.class
-		};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		// Initial state - no revisions
+		scope.inTransaction( em -> {
+			assertEquals( 0, countRecords( em, "STR_TEST_AUD" ) );
+			assertEquals( 0, countRecords( em, "ListOwned_AUD" ) );
+			assertEquals( 0, countRecords( em, "ListOwning_AUD" ) );
+			assertEquals( 0, countRecords( em, "ListOwning_ListOwned_AUD" ) );
+		} );
 
 		// Revision 1 - simple entity
-		em.getTransaction().begin();
-		em.persist( new StrTestEntity( "data" ) );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			em.persist( new StrTestEntity( "data" ) );
+		} );
 
 		// Revision 2 - many-to-many relation
-		em.getTransaction().begin();
-		ListOwnedEntity owned = new ListOwnedEntity( 1, "data" );
-		ListOwningEntity owning = new ListOwningEntity( 1, "data" );
-		owned.setReferencing( new ArrayList<ListOwningEntity>() );
-		owning.setReferences( new ArrayList<ListOwnedEntity>() );
-		owned.getReferencing().add( owning );
-		owning.getReferences().add( owned );
-		em.persist( owned );
-		em.persist( owning );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			ListOwnedEntity owned = new ListOwnedEntity( 1, "data" );
+			ListOwningEntity owning = new ListOwningEntity( 1, "data" );
+			owned.setReferencing( new ArrayList<ListOwningEntity>() );
+			owning.setReferences( new ArrayList<ListOwnedEntity>() );
+			owned.getReferencing().add( owning );
+			owning.getReferences().add( owned );
+			em.persist( owned );
+			em.persist( owning );
+		} );
 
-		em.getTransaction().begin();
-		Assert.assertEquals( 1, countRecords( em, "STR_TEST_AUD" ) );
-		Assert.assertEquals( 1, countRecords( em, "ListOwned_AUD" ) );
-		Assert.assertEquals( 1, countRecords( em, "ListOwning_AUD" ) );
-		Assert.assertEquals( 1, countRecords( em, "ListOwning_ListOwned_AUD" ) );
-		em.getTransaction().commit();
-
-		em.close();
+		scope.inTransaction( em -> {
+			assertEquals( 1, countRecords( em, "STR_TEST_AUD" ) );
+			assertEquals( 1, countRecords( em, "ListOwned_AUD" ) );
+			assertEquals( 1, countRecords( em, "ListOwning_AUD" ) );
+			assertEquals( 1, countRecords( em, "ListOwning_ListOwned_AUD" ) );
+		} );
 	}
 
 	@Test
-	@Priority(9)
-	public void testRemoveExistingRevisions() {
-		EntityManager em = getEntityManager();
-		removeRevision( em, 1 );
-		removeRevision( em, 2 );
-		em.close();
+	public void testRemoveExistingRevisions(EntityManagerFactoryScope scope) {
+		removeRevision( scope, 1 );
+		removeRevision( scope, 2 );
 	}
 
-	@Test
-	@Priority(8)
-	public void testEmptyAuditTables() {
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
-
-		Assert.assertEquals( 0, countRecords( em, "STR_TEST_AUD" ) );
-		Assert.assertEquals( 0, countRecords( em, "ListOwned_AUD" ) );
-		Assert.assertEquals( 0, countRecords( em, "ListOwning_AUD" ) );
-		Assert.assertEquals( 0, countRecords( em, "ListOwning_ListOwned_AUD" ) );
-
-		em.getTransaction().commit();
-		em.close();
+	private int countRecords(jakarta.persistence.EntityManager em, String tableName) {
+		return ((Number) em.createNativeQuery( "SELECT COUNT(*) FROM " + tableName ).getSingleResult()).intValue();
 	}
 
-	private int countRecords(EntityManager em, String tableName) {
-		return ( (Number) em.createNativeQuery( "SELECT COUNT(*) FROM " + tableName ).getSingleResult() ).intValue();
-	}
+	private void removeRevision(EntityManagerFactoryScope scope, Number number) {
+		scope.inTransaction( em -> {
+			Object entity = em.find( getRevisionEntityClass(), number );
+			assertNotNull( entity );
+			em.remove( entity );
+		} );
 
-	private void removeRevision(EntityManager em, Number number) {
-		em.getTransaction().begin();
-		Object entity = em.find( getRevisionEntityClass(), number );
-		Assert.assertNotNull( entity );
-		em.remove( entity );
-		em.getTransaction().commit();
-		Assert.assertNull( em.find( getRevisionEntityClass(), number ) );
+		scope.inEntityManager( em -> {
+			assertNull( em.find( getRevisionEntityClass(), number ) );
+		} );
 	}
 
 	protected abstract Class<?> getRevisionEntityClass();

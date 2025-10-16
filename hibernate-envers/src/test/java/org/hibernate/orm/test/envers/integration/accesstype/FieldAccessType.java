@@ -4,52 +4,54 @@
  */
 package org.hibernate.orm.test.envers.integration.accesstype;
 
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
+
 import java.util.Arrays;
-import jakarta.persistence.EntityManager;
 
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class FieldAccessType extends BaseEnversJPAFunctionalTestCase {
+@Jpa(annotatedClasses = {FieldAccessTypeEntity.class})
+@EnversTest
+public class FieldAccessType {
 	private Integer id1;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {FieldAccessTypeEntity.class};
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			FieldAccessTypeEntity fate = new FieldAccessTypeEntity( "data" );
+			em.persist( fate );
+			id1 = fate.readId();
+		} );
+
+		scope.inTransaction( em -> {
+			FieldAccessTypeEntity fate = em.find( FieldAccessTypeEntity.class, id1 );
+			fate.writeData( "data2" );
+		} );
 	}
 
 	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
-		FieldAccessTypeEntity fate = new FieldAccessTypeEntity( "data" );
-		em.persist( fate );
-		id1 = fate.readId();
-		em.getTransaction().commit();
-
-		em.getTransaction().begin();
-		fate = em.find( FieldAccessTypeEntity.class, id1 );
-		fate.writeData( "data2" );
-		em.getTransaction().commit();
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			assertEquals( Arrays.asList( 1, 2 ),
+					AuditReaderFactory.get( em ).getRevisions( FieldAccessTypeEntity.class, id1 ) );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		Assert.assertEquals( Arrays.asList( 1, 2 ), getAuditReader().getRevisions( FieldAccessTypeEntity.class, id1 ) );
-	}
-
-	@Test
-	public void testHistoryOfId1() {
-		FieldAccessTypeEntity ver1 = new FieldAccessTypeEntity( id1, "data" );
-		FieldAccessTypeEntity ver2 = new FieldAccessTypeEntity( id1, "data2" );
-		Assert.assertEquals( ver1, getAuditReader().find( FieldAccessTypeEntity.class, id1, 1 ) );
-		Assert.assertEquals( ver2, getAuditReader().find( FieldAccessTypeEntity.class, id1, 2 ) );
+	public void testHistoryOfId1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			FieldAccessTypeEntity ver1 = new FieldAccessTypeEntity( id1, "data" );
+			FieldAccessTypeEntity ver2 = new FieldAccessTypeEntity( id1, "data2" );
+			assertEquals( ver1, AuditReaderFactory.get( em ).find( FieldAccessTypeEntity.class, id1, 1 ) );
+			assertEquals( ver2, AuditReaderFactory.get( em ).find( FieldAccessTypeEntity.class, id1, 2 ) );
+		} );
 	}
 }

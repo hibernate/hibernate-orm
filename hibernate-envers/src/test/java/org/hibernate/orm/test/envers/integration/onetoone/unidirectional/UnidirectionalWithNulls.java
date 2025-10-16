@@ -5,113 +5,109 @@
 package org.hibernate.orm.test.envers.integration.onetoone.unidirectional;
 
 import java.util.Arrays;
-import jakarta.persistence.EntityManager;
 
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class UnidirectionalWithNulls extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {UniRefEdEntity.class, UniRefIngEntity.class})
+public class UnidirectionalWithNulls {
 	private Integer ed1_id;
 	private Integer ed2_id;
 
 	private Integer ing1_id;
 	private Integer ing2_id;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {UniRefEdEntity.class, UniRefIngEntity.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		UniRefEdEntity ed1 = new UniRefEdEntity( 1, "data_ed_1" );
-		UniRefEdEntity ed2 = new UniRefEdEntity( 2, "data_ed_2" );
-
-		UniRefIngEntity ing1 = new UniRefIngEntity( 3, "data_ing_1", ed1 );
-		UniRefIngEntity ing2 = new UniRefIngEntity( 4, "data_ing_2", null );
-
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
+		scope.inTransaction( em -> {
+			UniRefEdEntity ed1 = new UniRefEdEntity( 1, "data_ed_1" );
+			UniRefEdEntity ed2 = new UniRefEdEntity( 2, "data_ed_2" );
 
-		em.persist( ed1 );
-		em.persist( ed2 );
+			UniRefIngEntity ing1 = new UniRefIngEntity( 3, "data_ing_1", ed1 );
+			UniRefIngEntity ing2 = new UniRefIngEntity( 4, "data_ing_2", null );
 
-		em.persist( ing1 );
-		em.persist( ing2 );
+			em.persist( ed1 );
+			em.persist( ed2 );
 
-		em.getTransaction().commit();
+			em.persist( ing1 );
+			em.persist( ing2 );
+
+			ed1_id = ed1.getId();
+			ed2_id = ed2.getId();
+
+			ing1_id = ing1.getId();
+			ing2_id = ing2.getId();
+		} );
 
 		// Revision 2
-
-		em = getEntityManager();
-		em.getTransaction().begin();
-
-		ing1 = em.find( UniRefIngEntity.class, ing1.getId() );
-
-		ing1.setReference( null );
-
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			UniRefIngEntity ing1 = em.find( UniRefIngEntity.class, ing1_id );
+			ing1.setReference( null );
+		} );
 
 		// Revision 3
+		scope.inTransaction( em -> {
+			UniRefIngEntity ing2 = em.find( UniRefIngEntity.class, ing2_id );
+			UniRefEdEntity ed2 = em.find( UniRefEdEntity.class, ed2_id );
 
-		em = getEntityManager();
-		em.getTransaction().begin();
-
-		ing2 = em.find( UniRefIngEntity.class, ing2.getId() );
-		ed2 = em.find( UniRefEdEntity.class, ed2.getId() );
-
-		ing2.setReference( ed2 );
-
-		em.getTransaction().commit();
-
-		//
-
-		ed1_id = ed1.getId();
-		ed2_id = ed2.getId();
-
-		ing1_id = ing1.getId();
-		ing2_id = ing2.getId();
+			ing2.setReference( ed2 );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		assert Arrays.asList( 1 ).equals( getAuditReader().getRevisions( UniRefEdEntity.class, ed1_id ) );
-		assert Arrays.asList( 1 ).equals( getAuditReader().getRevisions( UniRefEdEntity.class, ed2_id ) );
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( UniRefEdEntity.class, ed1_id ) );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( UniRefEdEntity.class, ed2_id ) );
 
-		assert Arrays.asList( 1, 2 ).equals( getAuditReader().getRevisions( UniRefIngEntity.class, ing1_id ) );
-		assert Arrays.asList( 1, 3 ).equals( getAuditReader().getRevisions( UniRefIngEntity.class, ing2_id ) );
+			assertEquals( Arrays.asList( 1, 2 ), auditReader.getRevisions( UniRefIngEntity.class, ing1_id ) );
+			assertEquals( Arrays.asList( 1, 3 ), auditReader.getRevisions( UniRefIngEntity.class, ing2_id ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfIngId1() {
-		UniRefEdEntity ed1 = getEntityManager().find( UniRefEdEntity.class, ed1_id );
+	public void testHistoryOfIngId1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			UniRefEdEntity ed1 = em.find( UniRefEdEntity.class, ed1_id );
 
-		UniRefIngEntity rev1 = getAuditReader().find( UniRefIngEntity.class, ing1_id, 1 );
-		UniRefIngEntity rev2 = getAuditReader().find( UniRefIngEntity.class, ing1_id, 2 );
-		UniRefIngEntity rev3 = getAuditReader().find( UniRefIngEntity.class, ing1_id, 3 );
+			UniRefIngEntity rev1 = auditReader.find( UniRefIngEntity.class, ing1_id, 1 );
+			UniRefIngEntity rev2 = auditReader.find( UniRefIngEntity.class, ing1_id, 2 );
+			UniRefIngEntity rev3 = auditReader.find( UniRefIngEntity.class, ing1_id, 3 );
 
-		assert rev1.getReference().equals( ed1 );
-		assert rev2.getReference() == null;
-		assert rev3.getReference() == null;
+			assertEquals( ed1, rev1.getReference() );
+			assertNull( rev2.getReference() );
+			assertNull( rev3.getReference() );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfIngId2() {
-		UniRefEdEntity ed2 = getEntityManager().find( UniRefEdEntity.class, ed2_id );
+	public void testHistoryOfIngId2(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			UniRefEdEntity ed2 = em.find( UniRefEdEntity.class, ed2_id );
 
-		UniRefIngEntity rev1 = getAuditReader().find( UniRefIngEntity.class, ing2_id, 1 );
-		UniRefIngEntity rev2 = getAuditReader().find( UniRefIngEntity.class, ing2_id, 2 );
-		UniRefIngEntity rev3 = getAuditReader().find( UniRefIngEntity.class, ing2_id, 3 );
+			UniRefIngEntity rev1 = auditReader.find( UniRefIngEntity.class, ing2_id, 1 );
+			UniRefIngEntity rev2 = auditReader.find( UniRefIngEntity.class, ing2_id, 2 );
+			UniRefIngEntity rev3 = auditReader.find( UniRefIngEntity.class, ing2_id, 3 );
 
-		assert rev1.getReference() == null;
-		assert rev2.getReference() == null;
-		assert rev3.getReference().equals( ed2 );
+			assertNull( rev1.getReference() );
+			assertNull( rev2.getReference() );
+			assertEquals( ed2, rev3.getReference() );
+		} );
 	}
 }

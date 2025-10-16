@@ -4,6 +4,7 @@
  */
 package org.hibernate.testing.orm.junit;
 
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -23,11 +24,23 @@ public interface ServiceRegistryScope {
 	 */
 	static void using(Supplier<StandardServiceRegistry> ssrProducer, Consumer<ServiceRegistryScope> action) {
 		try (final StandardServiceRegistry ssr = ssrProducer.get()) {
-			action.accept( () -> ssr );
+			action.accept( new ServiceRegistryScope() {
+				@Override
+				public StandardServiceRegistry getRegistry() {
+					return ssr;
+				}
+
+				@Override
+				public void releaseRegistry() {
+					ssr.close();
+				}
+			} );
 		}
 	}
 
 	StandardServiceRegistry getRegistry();
+
+	void releaseRegistry();
 
 	default <S extends Service> void withService(Class<S> role, Consumer<S> action) {
 		assert role != null;
@@ -63,4 +76,7 @@ public interface ServiceRegistryScope {
 		return configuration;
 	}
 
+	default Map<String, Object> getAdditionalSettings() {
+		throw new UnsupportedOperationException( "This service registry scope doesn't support additional settings." );
+	}
 }

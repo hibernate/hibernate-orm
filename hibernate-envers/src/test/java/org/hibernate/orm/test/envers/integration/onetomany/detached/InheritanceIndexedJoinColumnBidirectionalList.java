@@ -5,18 +5,20 @@
 package org.hibernate.orm.test.envers.integration.onetomany.detached;
 
 import java.util.Arrays;
-import jakarta.persistence.EntityManager;
 
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.orm.test.envers.entities.onetomany.detached.inheritance.ChildIndexedListJoinColumnBidirectionalRefIngEntity;
 import org.hibernate.orm.test.envers.entities.onetomany.detached.inheritance.ParentIndexedListJoinColumnBidirectionalRefIngEntity;
 import org.hibernate.orm.test.envers.entities.onetomany.detached.inheritance.ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test for a "fake" bidirectional mapping where one side uses @OneToMany+@JoinColumn (and thus owns the relation),
@@ -24,7 +26,13 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Adam Warski (adam at warski dot org)
  */
-public class InheritanceIndexedJoinColumnBidirectionalList extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {
+		ParentIndexedListJoinColumnBidirectionalRefIngEntity.class,
+		ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
+		ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class
+})
+public class InheritanceIndexedJoinColumnBidirectionalList {
 	private Integer ed1_id;
 	private Integer ed2_id;
 	private Integer ed3_id;
@@ -32,356 +40,333 @@ public class InheritanceIndexedJoinColumnBidirectionalList extends BaseEnversJPA
 	private Integer ing1_id;
 	private Integer ing2_id;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				ParentIndexedListJoinColumnBidirectionalRefIngEntity.class,
-				ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
-				ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class
-		};
-	}
-
-	@Test
-	@Priority(10)
-	public void createData() {
-		EntityManager em = getEntityManager();
-
-		ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity ed1 = new ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity(
-				"ed1",
-				null
-		);
-		ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity ed2 = new ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity(
-				"ed2",
-				null
-		);
-		ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity ed3 = new ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity(
-				"ed3",
-				null
-		);
-
-		ChildIndexedListJoinColumnBidirectionalRefIngEntity ing1 = new ChildIndexedListJoinColumnBidirectionalRefIngEntity(
-				"coll1",
-				"coll1bis",
-				ed1,
-				ed2,
-				ed3
-		);
-		ChildIndexedListJoinColumnBidirectionalRefIngEntity ing2 = new ChildIndexedListJoinColumnBidirectionalRefIngEntity(
-				"coll1",
-				"coll1bis"
-		);
-
+	@BeforeClassTemplate
+	public void createData(EntityManagerFactoryScope scope) {
 		// Revision 1 (ing1: ed1, ed2, ed3)
-		em.getTransaction().begin();
+		scope.inTransaction( em -> {
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity ed1 = new ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity(
+					"ed1",
+					null
+			);
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity ed2 = new ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity(
+					"ed2",
+					null
+			);
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity ed3 = new ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity(
+					"ed3",
+					null
+			);
 
-		em.persist( ed1 );
-		em.persist( ed2 );
-		em.persist( ed3 );
-		em.persist( ing1 );
-		em.persist( ing2 );
+			ChildIndexedListJoinColumnBidirectionalRefIngEntity ing1 = new ChildIndexedListJoinColumnBidirectionalRefIngEntity(
+					"coll1",
+					"coll1bis",
+					ed1,
+					ed2,
+					ed3
+			);
+			ChildIndexedListJoinColumnBidirectionalRefIngEntity ing2 = new ChildIndexedListJoinColumnBidirectionalRefIngEntity(
+					"coll1",
+					"coll1bis"
+			);
 
-		em.getTransaction().commit();
+			em.persist( ed1 );
+			em.persist( ed2 );
+			em.persist( ed3 );
+			em.persist( ing1 );
+			em.persist( ing2 );
+
+			ed1_id = ed1.getId();
+			ed2_id = ed2.getId();
+			ed3_id = ed3.getId();
+			ing1_id = ing1.getId();
+			ing2_id = ing2.getId();
+		} );
 
 		// Revision 2 (ing1: ed1, ed3, ing2: ed2)
-		em.getTransaction().begin();
+		scope.inTransaction( em -> {
+			ChildIndexedListJoinColumnBidirectionalRefIngEntity ing1 = em.find( ChildIndexedListJoinColumnBidirectionalRefIngEntity.class, ing1_id );
+			ChildIndexedListJoinColumnBidirectionalRefIngEntity ing2 = em.find( ChildIndexedListJoinColumnBidirectionalRefIngEntity.class, ing2_id );
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity ed2 = em.find( ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class, ed2_id );
 
-		ing1 = em.find( ChildIndexedListJoinColumnBidirectionalRefIngEntity.class, ing1.getId() );
-		ing2 = em.find( ChildIndexedListJoinColumnBidirectionalRefIngEntity.class, ing2.getId() );
-		ed2 = em.find( ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class, ed2.getId() );
-
-		ing1.getReferences().remove( ed2 );
-		ing2.getReferences().add( ed2 );
-
-		em.getTransaction().commit();
-		em.clear();
+			ing1.getReferences().remove( ed2 );
+			ing2.getReferences().add( ed2 );
+		} );
 
 		// Revision 3 (ing1: ed3, ed1, ing2: ed2)
-		em.getTransaction().begin();
+		scope.inTransaction( em -> {
+			ChildIndexedListJoinColumnBidirectionalRefIngEntity ing1 = em.find( ChildIndexedListJoinColumnBidirectionalRefIngEntity.class, ing1_id );
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity ed3 = em.find( ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class, ed3_id );
 
-		ing1 = em.find( ChildIndexedListJoinColumnBidirectionalRefIngEntity.class, ing1.getId() );
-		ing2 = em.find( ChildIndexedListJoinColumnBidirectionalRefIngEntity.class, ing2.getId() );
-		ed1 = em.find( ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class, ed1.getId() );
-		ed2 = em.find( ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class, ed2.getId() );
-		ed3 = em.find( ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class, ed3.getId() );
-
-		ing1.getReferences().remove( ed3 );
-		ing1.getReferences().add( 0, ed3 );
-
-		em.getTransaction().commit();
-		em.clear();
+			ing1.getReferences().remove( ed3 );
+			ing1.getReferences().add( 0, ed3 );
+		} );
 
 		// Revision 4 (ing1: ed2, ed3, ed1)
-		em.getTransaction().begin();
+		scope.inTransaction( em -> {
+			ChildIndexedListJoinColumnBidirectionalRefIngEntity ing1 = em.find( ChildIndexedListJoinColumnBidirectionalRefIngEntity.class, ing1_id );
+			ChildIndexedListJoinColumnBidirectionalRefIngEntity ing2 = em.find( ChildIndexedListJoinColumnBidirectionalRefIngEntity.class, ing2_id );
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity ed2 = em.find( ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class, ed2_id );
 
-		ing1 = em.find( ChildIndexedListJoinColumnBidirectionalRefIngEntity.class, ing1.getId() );
-		ing2 = em.find( ChildIndexedListJoinColumnBidirectionalRefIngEntity.class, ing2.getId() );
-		ed1 = em.find( ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class, ed1.getId() );
-		ed2 = em.find( ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class, ed2.getId() );
-		ed3 = em.find( ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class, ed3.getId() );
-
-		ing2.getReferences().remove( ed2 );
-		ing1.getReferences().add( 0, ed2 );
-
-		em.getTransaction().commit();
-		em.clear();
-
-		//
-
-		ing1_id = ing1.getId();
-		ing2_id = ing2.getId();
-
-		ed1_id = ed1.getId();
-		ed2_id = ed2.getId();
-		ed3_id = ed3.getId();
+			ing2.getReferences().remove( ed2 );
+			ing1.getReferences().add( 0, ed2 );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		assertEquals(
-				Arrays.asList( 1, 2, 3, 4 ), getAuditReader().getRevisions(
-				ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
-				ing1_id
-		)
-		);
-		assertEquals(
-				Arrays.asList( 1, 2, 4 ), getAuditReader().getRevisions(
-				ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
-				ing2_id
-		)
-		);
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals(
+					Arrays.asList( 1, 2, 3, 4 ),
+					auditReader.getRevisions( ChildIndexedListJoinColumnBidirectionalRefIngEntity.class, ing1_id )
+			);
+			assertEquals(
+					Arrays.asList( 1, 2, 4 ),
+					auditReader.getRevisions( ChildIndexedListJoinColumnBidirectionalRefIngEntity.class, ing2_id )
+			);
 
-		assertEquals(
-				Arrays.asList( 1, 3, 4 ), getAuditReader().getRevisions(
-				ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
-				ed1_id
-		)
-		);
-		assertEquals(
-				Arrays.asList( 1, 2, 4 ), getAuditReader().getRevisions(
-				ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
-				ed2_id
-		)
-		);
-		assertEquals(
-				Arrays.asList( 1, 2, 3, 4 ), getAuditReader().getRevisions(
-				ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
-				ed3_id
-		)
-		);
+			assertEquals(
+					Arrays.asList( 1, 3, 4 ),
+					auditReader.getRevisions( ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class, ed1_id )
+			);
+			assertEquals(
+					Arrays.asList( 1, 2, 4 ),
+					auditReader.getRevisions( ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class, ed2_id )
+			);
+			assertEquals(
+					Arrays.asList( 1, 2, 3, 4 ),
+					auditReader.getRevisions( ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class, ed3_id )
+			);
+		} );
 	}
 
 	@Test
-	public void testHistoryOfIng1() {
-		ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity ed1 = getEntityManager().find(
-				ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
-				ed1_id
-		);
-		ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity ed2 = getEntityManager().find(
-				ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
-				ed2_id
-		);
-		ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity ed3 = getEntityManager().find(
-				ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
-				ed3_id
-		);
+	public void testHistoryOfIng1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity ed1 = em.find(
+					ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
+					ed1_id
+			);
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity ed2 = em.find(
+					ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
+					ed2_id
+			);
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity ed3 = em.find(
+					ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
+					ed3_id
+			);
 
-		ChildIndexedListJoinColumnBidirectionalRefIngEntity rev1 = getAuditReader().find(
-				ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
-				ing1_id,
-				1
-		);
-		ChildIndexedListJoinColumnBidirectionalRefIngEntity rev2 = getAuditReader().find(
-				ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
-				ing1_id,
-				2
-		);
-		ChildIndexedListJoinColumnBidirectionalRefIngEntity rev3 = getAuditReader().find(
-				ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
-				ing1_id,
-				3
-		);
-		ChildIndexedListJoinColumnBidirectionalRefIngEntity rev4 = getAuditReader().find(
-				ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
-				ing1_id,
-				4
-		);
+			final var auditReader = AuditReaderFactory.get( em );
+			ChildIndexedListJoinColumnBidirectionalRefIngEntity rev1 = auditReader.find(
+					ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
+					ing1_id,
+					1
+			);
+			ChildIndexedListJoinColumnBidirectionalRefIngEntity rev2 = auditReader.find(
+					ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
+					ing1_id,
+					2
+			);
+			ChildIndexedListJoinColumnBidirectionalRefIngEntity rev3 = auditReader.find(
+					ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
+					ing1_id,
+					3
+			);
+			ChildIndexedListJoinColumnBidirectionalRefIngEntity rev4 = auditReader.find(
+					ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
+					ing1_id,
+					4
+			);
 
-		assertEquals( rev1.getReferences().size(), 3 );
-		assertEquals( rev1.getReferences().get( 0 ), ed1 );
-		assertEquals( rev1.getReferences().get( 1 ), ed2 );
-		assertEquals( rev1.getReferences().get( 2 ), ed3 );
+			assertEquals( rev1.getReferences().size(), 3 );
+			assertEquals( rev1.getReferences().get( 0 ), ed1 );
+			assertEquals( rev1.getReferences().get( 1 ), ed2 );
+			assertEquals( rev1.getReferences().get( 2 ), ed3 );
 
-		assertEquals( rev2.getReferences().size(), 2 );
-		assertEquals( rev2.getReferences().get( 0 ), ed1 );
-		assertEquals( rev2.getReferences().get( 1 ), ed3 );
+			assertEquals( rev2.getReferences().size(), 2 );
+			assertEquals( rev2.getReferences().get( 0 ), ed1 );
+			assertEquals( rev2.getReferences().get( 1 ), ed3 );
 
-		assertEquals( rev3.getReferences().size(), 2 );
-		assertEquals( rev3.getReferences().get( 0 ), ed3 );
-		assertEquals( rev3.getReferences().get( 1 ), ed1 );
+			assertEquals( rev3.getReferences().size(), 2 );
+			assertEquals( rev3.getReferences().get( 0 ), ed3 );
+			assertEquals( rev3.getReferences().get( 1 ), ed1 );
 
-		assertEquals( rev4.getReferences().size(), 3 );
-		assertEquals( rev4.getReferences().get( 0 ), ed2 );
-		assertEquals( rev4.getReferences().get( 1 ), ed3 );
-		assertEquals( rev4.getReferences().get( 2 ), ed1 );
+			assertEquals( rev4.getReferences().size(), 3 );
+			assertEquals( rev4.getReferences().get( 0 ), ed2 );
+			assertEquals( rev4.getReferences().get( 1 ), ed3 );
+			assertEquals( rev4.getReferences().get( 2 ), ed1 );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfIng2() {
-		ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity ed2 = getEntityManager().find(
-				ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
-				ed2_id
-		);
+	public void testHistoryOfIng2(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity ed2 = em.find(
+					ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
+					ed2_id
+			);
 
-		ChildIndexedListJoinColumnBidirectionalRefIngEntity rev1 = getAuditReader().find(
-				ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
-				ing2_id,
-				1
-		);
-		ChildIndexedListJoinColumnBidirectionalRefIngEntity rev2 = getAuditReader().find(
-				ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
-				ing2_id,
-				2
-		);
-		ChildIndexedListJoinColumnBidirectionalRefIngEntity rev3 = getAuditReader().find(
-				ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
-				ing2_id,
-				3
-		);
-		ChildIndexedListJoinColumnBidirectionalRefIngEntity rev4 = getAuditReader().find(
-				ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
-				ing2_id,
-				4
-		);
+			final var auditReader = AuditReaderFactory.get( em );
+			ChildIndexedListJoinColumnBidirectionalRefIngEntity rev1 = auditReader.find(
+					ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
+					ing2_id,
+					1
+			);
+			ChildIndexedListJoinColumnBidirectionalRefIngEntity rev2 = auditReader.find(
+					ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
+					ing2_id,
+					2
+			);
+			ChildIndexedListJoinColumnBidirectionalRefIngEntity rev3 = auditReader.find(
+					ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
+					ing2_id,
+					3
+			);
+			ChildIndexedListJoinColumnBidirectionalRefIngEntity rev4 = auditReader.find(
+					ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
+					ing2_id,
+					4
+			);
 
-		assertEquals( rev1.getReferences().size(), 0 );
+			assertEquals( rev1.getReferences().size(), 0 );
 
-		assertEquals( rev2.getReferences().size(), 1 );
-		assertEquals( rev2.getReferences().get( 0 ), ed2 );
+			assertEquals( rev2.getReferences().size(), 1 );
+			assertEquals( rev2.getReferences().get( 0 ), ed2 );
 
-		assertEquals( rev3.getReferences().size(), 1 );
-		assertEquals( rev3.getReferences().get( 0 ), ed2 );
+			assertEquals( rev3.getReferences().size(), 1 );
+			assertEquals( rev3.getReferences().get( 0 ), ed2 );
 
-		assertEquals( rev4.getReferences().size(), 0 );
+			assertEquals( rev4.getReferences().size(), 0 );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfEd1() {
-		ChildIndexedListJoinColumnBidirectionalRefIngEntity ing1 = getEntityManager().find(
-				ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
-				ing1_id
-		);
+	public void testHistoryOfEd1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			ChildIndexedListJoinColumnBidirectionalRefIngEntity ing1 = em.find(
+					ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
+					ing1_id
+			);
 
-		ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev1 = getAuditReader().find(
-				ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
-				ed1_id,
-				1
-		);
-		ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev2 = getAuditReader().find(
-				ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
-				ed1_id,
-				2
-		);
-		ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev3 = getAuditReader().find(
-				ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
-				ed1_id,
-				3
-		);
-		ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev4 = getAuditReader().find(
-				ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
-				ed1_id,
-				4
-		);
+			final var auditReader = AuditReaderFactory.get( em );
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev1 = auditReader.find(
+					ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
+					ed1_id,
+					1
+			);
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev2 = auditReader.find(
+					ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
+					ed1_id,
+					2
+			);
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev3 = auditReader.find(
+					ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
+					ed1_id,
+					3
+			);
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev4 = auditReader.find(
+					ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
+					ed1_id,
+					4
+			);
 
-		assertTrue( rev1.getOwner().equals( ing1 ) );
-		assertTrue( rev2.getOwner().equals( ing1 ) );
-		assertTrue( rev3.getOwner().equals( ing1 ) );
-		assertTrue( rev4.getOwner().equals( ing1 ) );
+			assertTrue( rev1.getOwner().equals( ing1 ) );
+			assertTrue( rev2.getOwner().equals( ing1 ) );
+			assertTrue( rev3.getOwner().equals( ing1 ) );
+			assertTrue( rev4.getOwner().equals( ing1 ) );
 
-		assertEquals( rev1.getPosition(), Integer.valueOf( 0 ) );
-		assertEquals( rev2.getPosition(), Integer.valueOf( 0 ) );
-		assertEquals( rev3.getPosition(), Integer.valueOf( 1 ) );
-		assertEquals( rev4.getPosition(), Integer.valueOf( 2 ) );
+			assertEquals( rev1.getPosition(), Integer.valueOf( 0 ) );
+			assertEquals( rev2.getPosition(), Integer.valueOf( 0 ) );
+			assertEquals( rev3.getPosition(), Integer.valueOf( 1 ) );
+			assertEquals( rev4.getPosition(), Integer.valueOf( 2 ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfEd2() {
-		ChildIndexedListJoinColumnBidirectionalRefIngEntity ing1 = getEntityManager().find(
-				ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
-				ing1_id
-		);
-		ChildIndexedListJoinColumnBidirectionalRefIngEntity ing2 = getEntityManager().find(
-				ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
-				ing2_id
-		);
+	public void testHistoryOfEd2(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			ChildIndexedListJoinColumnBidirectionalRefIngEntity ing1 = em.find(
+					ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
+					ing1_id
+			);
+			ChildIndexedListJoinColumnBidirectionalRefIngEntity ing2 = em.find(
+					ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
+					ing2_id
+			);
 
-		ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev1 = getAuditReader().find(
-				ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
-				ed2_id,
-				1
-		);
-		ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev2 = getAuditReader().find(
-				ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
-				ed2_id,
-				2
-		);
-		ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev3 = getAuditReader().find(
-				ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
-				ed2_id,
-				3
-		);
-		ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev4 = getAuditReader().find(
-				ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
-				ed2_id,
-				4
-		);
+			final var auditReader = AuditReaderFactory.get( em );
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev1 = auditReader.find(
+					ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
+					ed2_id,
+					1
+			);
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev2 = auditReader.find(
+					ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
+					ed2_id,
+					2
+			);
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev3 = auditReader.find(
+					ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
+					ed2_id,
+					3
+			);
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev4 = auditReader.find(
+					ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
+					ed2_id,
+					4
+			);
 
-		assertTrue( rev1.getOwner().equals( ing1 ) );
-		assertTrue( rev2.getOwner().equals( ing2 ) );
-		assertTrue( rev3.getOwner().equals( ing2 ) );
-		assertTrue( rev4.getOwner().equals( ing1 ) );
+			assertTrue( rev1.getOwner().equals( ing1 ) );
+			assertTrue( rev2.getOwner().equals( ing2 ) );
+			assertTrue( rev3.getOwner().equals( ing2 ) );
+			assertTrue( rev4.getOwner().equals( ing1 ) );
 
-		assertEquals( rev1.getPosition(), Integer.valueOf( 1 ) );
-		assertEquals( rev2.getPosition(), Integer.valueOf( 0 ) );
-		assertEquals( rev3.getPosition(), Integer.valueOf( 0 ) );
-		assertEquals( rev4.getPosition(), Integer.valueOf( 0 ) );
+			assertEquals( rev1.getPosition(), Integer.valueOf( 1 ) );
+			assertEquals( rev2.getPosition(), Integer.valueOf( 0 ) );
+			assertEquals( rev3.getPosition(), Integer.valueOf( 0 ) );
+			assertEquals( rev4.getPosition(), Integer.valueOf( 0 ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfEd3() {
-		ChildIndexedListJoinColumnBidirectionalRefIngEntity ing1 = getEntityManager().find(
-				ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
-				ing1_id
-		);
+	public void testHistoryOfEd3(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			ChildIndexedListJoinColumnBidirectionalRefIngEntity ing1 = em.find(
+					ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
+					ing1_id
+			);
 
-		ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev1 = getAuditReader().find(
-				ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
-				ed3_id,
-				1
-		);
-		ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev2 = getAuditReader().find(
-				ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
-				ed3_id,
-				2
-		);
-		ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev3 = getAuditReader().find(
-				ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
-				ed3_id,
-				3
-		);
-		ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev4 = getAuditReader().find(
-				ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
-				ed3_id,
-				4
-		);
+			final var auditReader = AuditReaderFactory.get( em );
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev1 = auditReader.find(
+					ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
+					ed3_id,
+					1
+			);
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev2 = auditReader.find(
+					ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
+					ed3_id,
+					2
+			);
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev3 = auditReader.find(
+					ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
+					ed3_id,
+					3
+			);
+			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity rev4 = auditReader.find(
+					ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class,
+					ed3_id,
+					4
+			);
 
-		assertTrue( rev1.getOwner().equals( ing1 ) );
-		assertTrue( rev2.getOwner().equals( ing1 ) );
-		assertTrue( rev3.getOwner().equals( ing1 ) );
-		assertTrue( rev4.getOwner().equals( ing1 ) );
+			assertTrue( rev1.getOwner().equals( ing1 ) );
+			assertTrue( rev2.getOwner().equals( ing1 ) );
+			assertTrue( rev3.getOwner().equals( ing1 ) );
+			assertTrue( rev4.getOwner().equals( ing1 ) );
 
-		assertEquals( rev1.getPosition(), Integer.valueOf( 2 ) );
-		assertEquals( rev2.getPosition(), Integer.valueOf( 1 ) );
-		assertEquals( rev3.getPosition(), Integer.valueOf( 0 ) );
-		assertEquals( rev4.getPosition(), Integer.valueOf( 1 ) );
+			assertEquals( rev1.getPosition(), Integer.valueOf( 2 ) );
+			assertEquals( rev2.getPosition(), Integer.valueOf( 1 ) );
+			assertEquals( rev3.getPosition(), Integer.valueOf( 0 ) );
+			assertEquals( rev4.getPosition(), Integer.valueOf( 1 ) );
+		} );
 	}
 }

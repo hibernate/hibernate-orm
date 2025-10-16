@@ -5,85 +5,104 @@
 package org.hibernate.orm.test.envers.integration.inheritance.joined.primarykeyjoin;
 
 import java.util.Arrays;
+import java.util.List;
 
-import jakarta.persistence.EntityManager;
-
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.orm.test.envers.integration.inheritance.joined.ParentEntity;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SessionFactory;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class ChildPrimaryKeyJoinAuditing extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@DomainModel(annotatedClasses = {ChildPrimaryKeyJoinEntity.class, ParentEntity.class})
+@SessionFactory
+public class ChildPrimaryKeyJoinAuditing {
 	private Integer id1;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {ChildPrimaryKeyJoinEntity.class, ParentEntity.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-
+	@BeforeClassTemplate
+	public void initData(SessionFactoryScope scope) {
 		id1 = 1;
 
 		// Rev 1
-		em.getTransaction().begin();
-		ChildPrimaryKeyJoinEntity ce = new ChildPrimaryKeyJoinEntity( id1, "x", 1l );
-		em.persist( ce );
-		em.getTransaction().commit();
+		scope.inTransaction( session -> {
+			ChildPrimaryKeyJoinEntity ce = new ChildPrimaryKeyJoinEntity( id1, "x", 1l );
+			session.persist( ce );
+		} );
 
 		// Rev 2
-		em.getTransaction().begin();
-		ce = em.find( ChildPrimaryKeyJoinEntity.class, id1 );
-		ce.setData( "y" );
-		ce.setNumVal( 2l );
-		em.getTransaction().commit();
+		scope.inTransaction( session -> {
+			ChildPrimaryKeyJoinEntity ce = session.find( ChildPrimaryKeyJoinEntity.class, id1 );
+			ce.setData( "y" );
+			ce.setNumVal( 2l );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		assert Arrays.asList( 1, 2 ).equals( getAuditReader().getRevisions( ChildPrimaryKeyJoinEntity.class, id1 ) );
+	public void testRevisionsCounts(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			assertEquals( Arrays.asList( 1, 2 ), AuditReaderFactory.get( session ).getRevisions( ChildPrimaryKeyJoinEntity.class, id1 ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfChildId1() {
+	public void testHistoryOfChildId1(SessionFactoryScope scope) {
 		ChildPrimaryKeyJoinEntity ver1 = new ChildPrimaryKeyJoinEntity( id1, "x", 1l );
 		ChildPrimaryKeyJoinEntity ver2 = new ChildPrimaryKeyJoinEntity( id1, "y", 2l );
 
-		assert getAuditReader().find( ChildPrimaryKeyJoinEntity.class, id1, 1 ).equals( ver1 );
-		assert getAuditReader().find( ChildPrimaryKeyJoinEntity.class, id1, 2 ).equals( ver2 );
+		scope.inSession( session -> {
+			final var auditReader = AuditReaderFactory.get( session );
+			assertEquals( ver1, auditReader.find( ChildPrimaryKeyJoinEntity.class, id1, 1 ) );
+			assertEquals( ver2, auditReader.find( ChildPrimaryKeyJoinEntity.class, id1, 2 ) );
 
-		assert getAuditReader().find( ParentEntity.class, id1, 1 ).equals( ver1 );
-		assert getAuditReader().find( ParentEntity.class, id1, 2 ).equals( ver2 );
+			assertEquals( ver1, auditReader.find( ParentEntity.class, id1, 1 ) );
+			assertEquals( ver2, auditReader.find( ParentEntity.class, id1, 2 ) );
+		} );
 	}
 
 	@Test
-	public void testPolymorphicQuery() {
+	public void testPolymorphicQuery(SessionFactoryScope scope) {
 		ChildPrimaryKeyJoinEntity childVer1 = new ChildPrimaryKeyJoinEntity( id1, "x", 1l );
 
-		assert getAuditReader().createQuery()
-				.forEntitiesAtRevision( ChildPrimaryKeyJoinEntity.class, 1 )
-				.getSingleResult()
-				.equals( childVer1 );
+		scope.inSession( session -> {
+			final var auditReader = AuditReaderFactory.get( session );
+			assertEquals( childVer1, auditReader.createQuery()
+					.forEntitiesAtRevision( ChildPrimaryKeyJoinEntity.class, 1 )
+					.getSingleResult() );
 
-		assert getAuditReader().createQuery().forEntitiesAtRevision( ParentEntity.class, 1 ).getSingleResult()
-				.equals( childVer1 );
+			assertEquals( childVer1, auditReader.createQuery().forEntitiesAtRevision( ParentEntity.class, 1 ).getSingleResult() );
+		} );
 	}
 
 	@Test
-	public void testChildIdColumnName() {
+	public void testChildIdColumnName(DomainModelScope scope) {
 		// Hibernate now sorts columns that are part of the key and therefore this test needs to test
 		// for the existence of the specific key column rather than the expectation that is exists at
 		// a specific order in the iterator.
-		final PersistentClass persistentClass = metadata().getEntityBinding( ChildPrimaryKeyJoinEntity.class.getName() + "_AUD" );
-		Assert.assertNotNull( getColumnFromIteratorByName( persistentClass.getKey().getSelectables(), "other_id" ) );
+		final PersistentClass persistentClass = scope.getDomainModel().getEntityBinding( ChildPrimaryKeyJoinEntity.class.getName() + "_AUD" );
+		Assertions.assertNotNull( getColumnFromIteratorByName( persistentClass.getKey().getSelectables(), "other_id" ) );
+	}
+
+	private static Column getColumnFromIteratorByName(List<Selectable> selectables, String columnName) {
+		for ( Selectable s : selectables ) {
+			Column column = (Column) s;
+			if ( column.getName().equals( columnName) ) {
+				return column;
+			}
+		}
+		return null;
 	}
 }

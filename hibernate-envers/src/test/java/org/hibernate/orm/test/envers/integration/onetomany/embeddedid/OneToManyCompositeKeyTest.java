@@ -27,49 +27,54 @@ import jakarta.persistence.Transient;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.envers.AuditReader;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.junit.Test;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-11770")
-public class OneToManyCompositeKeyTest extends BaseEnversJPAFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{ Contract.class, Design.class, DesignContract.class };
-	}
-
-	@Test
-	public void initData() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+@EnversTest
+@Jpa(annotatedClasses = {
+		OneToManyCompositeKeyTest.Contract.class,
+		OneToManyCompositeKeyTest.Design.class,
+		OneToManyCompositeKeyTest.DesignContract.class
+})
+public class OneToManyCompositeKeyTest {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
 			final Contract contract = new Contract( 1 );
 			final Design design = new Design( 1 );
 			final DesignContract designContract = new DesignContract( contract, design );
 			designContract.setGoal( 25d );
 			contract.getDesigns().add( designContract );
-			entityManager.persist( design );
-			entityManager.persist( contract );
+			em.persist( design );
+			em.persist( contract );
 		} );
 	}
 
 	@Test
-	public void testRevisionCounts() {
-		assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( Contract.class, 1 ) );
-		assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( Design.class, 1 ) );
+	public void testRevisionCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( Contract.class, 1 ) );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( Design.class, 1 ) );
+		} );
 	}
 
 	@Test
-	public void testOneToManyAssociationAuditQuery() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			final AuditReader auditReader = getAuditReader();
+	public void testOneToManyAssociationAuditQuery(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
 			final Contract contract = auditReader.find( Contract.class, 1, 1 );
 			final Design design = auditReader.find( Design.class, 1, 1 );
 			assertEquals( 1, contract.getDesigns().size() );

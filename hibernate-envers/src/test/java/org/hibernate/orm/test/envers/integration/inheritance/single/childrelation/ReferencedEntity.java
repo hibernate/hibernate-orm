@@ -58,7 +58,7 @@ public class ReferencedEntity {
 
 		ReferencedEntity that = (ReferencedEntity) o;
 
-		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+		if ( id != null ? !id.equals( that.getId() ) : that.getId() != null ) {
 			return false;
 		}
 

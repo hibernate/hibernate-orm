@@ -5,54 +5,60 @@
 package org.hibernate.orm.test.envers.integration.flush;
 
 import java.util.Arrays;
-import jakarta.persistence.EntityManager;
 
 import org.hibernate.FlushMode;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class DoubleFlushAddDel extends AbstractFlushTest {
+@EnversTest
+@DomainModel(annotatedClasses = {StrTestEntity.class})
+@SessionFactory
+public class DoubleFlushAddDel {
 	private Integer id;
 
-	public FlushMode getFlushMode() {
-		return FlushMode.MANUAL;
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(SessionFactoryScope scope) {
 		// Revision 1
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
+		scope.inTransaction( session -> {
+			session.setHibernateFlushMode( FlushMode.MANUAL );
 
-		StrTestEntity fe = new StrTestEntity( "x" );
-		em.persist( fe );
+			StrTestEntity fe = new StrTestEntity( "x" );
+			session.persist( fe );
 
-		em.flush();
+			session.flush();
 
-		em.remove( em.find( StrTestEntity.class, fe.getId() ) );
+			session.remove( session.find( StrTestEntity.class, fe.getId() ) );
 
-		em.flush();
+			session.flush();
 
-		em.getTransaction().commit();
-
-		//
-
-		id = fe.getId();
+			id = fe.getId();
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		assert Arrays.asList().equals( getAuditReader().getRevisions( StrTestEntity.class, id ) );
+	public void testRevisionsCounts(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			assertEquals( Arrays.asList(),
+					AuditReaderFactory.get( session ).getRevisions( StrTestEntity.class, id ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfId() {
-		assert getAuditReader().find( StrTestEntity.class, id, 1 ) == null;
+	public void testHistoryOfId(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			assertNull( AuditReaderFactory.get( session ).find( StrTestEntity.class, id, 1 ) );
+		} );
 	}
 }

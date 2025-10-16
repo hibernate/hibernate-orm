@@ -68,10 +68,10 @@ public class IntTestPrivSeqEntity {
 
 		IntTestPrivSeqEntity that = (IntTestPrivSeqEntity) o;
 
-		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+		if ( id != null ? !id.equals( that.getId() ) : that.getId() != null ) {
 			return false;
 		}
-		if ( number != null ? !number.equals( that.number ) : that.number != null ) {
+		if ( number != null ? !number.equals( that.getNumber() ) : that.getNumber() != null ) {
 			return false;
 		}
 

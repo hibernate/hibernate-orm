@@ -4,41 +4,42 @@
  */
 package org.hibernate.orm.test.envers.integration.reventity;
 
-import jakarta.persistence.EntityManager;
-
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class ExceptionListener extends BaseEnversJPAFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {StrTestEntity.class, ExceptionListenerRevEntity.class};
-	}
+@EnversTest
+@Jpa(annotatedClasses = {StrTestEntity.class, ExceptionListenerRevEntity.class})
+public class ExceptionListener {
 
-	@Test(expected = RuntimeException.class)
-	public void testTransactionRollback() throws InterruptedException {
+	@Test
+	public void testTransactionRollback(EntityManagerFactoryScope scope) {
 		// Trying to persist an entity - however the listener should throw an exception, so the entity
 		// shouldn't be persisted
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
-		StrTestEntity te = new StrTestEntity( "x" );
-		em.persist( te );
-		em.getTransaction().commit();
+		assertThrows( RuntimeException.class, () -> {
+			scope.inTransaction( em -> {
+				StrTestEntity te = new StrTestEntity( "x" );
+				em.persist( te );
+			} );
+		} );
 	}
 
 	@Test
-	public void testDataNotPersisted() {
+	public void testDataNotPersisted(EntityManagerFactoryScope scope) {
 		// Checking if the entity became persisted
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
-		Long count = (Long) em.createQuery( "select count(s) from StrTestEntity s where s.str = 'x'" )
-				.getSingleResult();
-		assert count == 0l;
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			Long count = (Long) em.createQuery( "select count(s) from StrTestEntity s where s.str = 'x'" )
+					.getSingleResult();
+			assertEquals( 0L, count );
+		} );
 	}
 }

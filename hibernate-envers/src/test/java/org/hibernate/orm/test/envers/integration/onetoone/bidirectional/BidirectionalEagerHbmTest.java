@@ -4,53 +4,49 @@
  */
 package org.hibernate.orm.test.envers.integration.onetoone.bidirectional;
 
-import jakarta.persistence.EntityManager;
-
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.orm.test.envers.entities.onetoone.BidirectionalEagerHbmRefEdPK;
 import org.hibernate.orm.test.envers.entities.onetoone.BidirectionalEagerHbmRefIngPK;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
 
-import static org.junit.Assert.assertNotNull;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Erik-Berndt Scheper, Amar Singh
  */
 @JiraKey(value = "HHH-3854")
-public class BidirectionalEagerHbmTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(xmlMappings = "mappings/oneToOne/bidirectional/eagerLoading.hbm.xml")
+public class BidirectionalEagerHbmTest {
 	private Long refIngId1 = null;
 
-	@Override
-	protected String[] getMappings() {
-		return new String[] {"mappings/oneToOne/bidirectional/eagerLoading.hbm.xml"};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1
-		em.getTransaction().begin();
-		BidirectionalEagerHbmRefEdPK ed1 = new BidirectionalEagerHbmRefEdPK( "data_ed_1" );
-		BidirectionalEagerHbmRefIngPK ing1 = new BidirectionalEagerHbmRefIngPK( "data_ing_1" );
-		ing1.setReference( ed1 );
-		em.persist( ed1 );
-		em.persist( ing1 );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			BidirectionalEagerHbmRefEdPK ed1 = new BidirectionalEagerHbmRefEdPK( "data_ed_1" );
+			BidirectionalEagerHbmRefIngPK ing1 = new BidirectionalEagerHbmRefIngPK( "data_ing_1" );
+			ing1.setReference( ed1 );
+			em.persist( ed1 );
+			em.persist( ing1 );
 
-		refIngId1 = ing1.getId();
-
-		em.close();
+			refIngId1 = ing1.getId();
+		} );
 	}
 
 	@Test
-	public void testNonProxyObjectTraversing() {
-		BidirectionalEagerHbmRefIngPK referencing =
-				getAuditReader().find( BidirectionalEagerHbmRefIngPK.class, refIngId1, 1 );
-		assertNotNull( referencing.getReference().getData() );
+	public void testNonProxyObjectTraversing(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			BidirectionalEagerHbmRefIngPK referencing =
+					auditReader.find( BidirectionalEagerHbmRefIngPK.class, refIngId1, 1 );
+			assertNotNull( referencing.getReference().getData() );
+		} );
 	}
 }

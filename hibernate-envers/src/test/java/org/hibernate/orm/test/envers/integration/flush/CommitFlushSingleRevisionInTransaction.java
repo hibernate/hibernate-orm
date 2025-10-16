@@ -4,52 +4,58 @@
  */
 package org.hibernate.orm.test.envers.integration.flush;
 
-import static org.junit.Assert.assertEquals;
-
-import jakarta.persistence.EntityManager;
-
 import org.hibernate.FlushMode;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Felix Feisst (feisst dot felix at gmail dot com)
  */
-public class CommitFlushSingleRevisionInTransaction extends AbstractFlushTest {
-
-	@Override
-	public FlushMode getFlushMode() {
-		return FlushMode.COMMIT;
-	}
+@EnversTest
+@DomainModel(annotatedClasses = StrTestEntity.class)
+@SessionFactory
+public class CommitFlushSingleRevisionInTransaction {
 
 	@Test
 	@JiraKey(value = "HHH-11575")
-	public void testSingleRevisionInTransaction() {
-		EntityManager em = getEntityManager();
+	public void testSingleRevisionInTransaction(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			session.setHibernateFlushMode( FlushMode.COMMIT );
+			session.getTransaction().begin();
 
-		em.getTransaction().begin();
+			final var auditReader = AuditReaderFactory.get( session );
+			SequenceIdRevisionEntity revisionBeforeFlush = auditReader.getCurrentRevision(
+					SequenceIdRevisionEntity.class, true );
+			int revisionNumberBeforeFlush = revisionBeforeFlush.getId();
 
-		SequenceIdRevisionEntity revisionBeforeFlush = getAuditReader().getCurrentRevision( SequenceIdRevisionEntity.class, true );
-		int revisionNumberBeforeFlush = revisionBeforeFlush.getId();
+			session.flush();
 
-		em.flush();
+			StrTestEntity entity = new StrTestEntity( "entity" );
+			session.persist( entity );
 
-		StrTestEntity entity = new StrTestEntity( "entity" );
-		em.persist( entity );
+			session.getTransaction().commit();
 
-		em.getTransaction().commit();
+			SequenceIdRevisionEntity entity2Revision = (SequenceIdRevisionEntity) ((Object[]) auditReader.createQuery()
+					.forRevisionsOfEntity( StrTestEntity.class, false, false )
+					.add( AuditEntity.id().eq( entity.getId() ) )
+					.getSingleResult())[1];
 
-		SequenceIdRevisionEntity entity2Revision = (SequenceIdRevisionEntity) ( (Object[]) getAuditReader().createQuery()
-				.forRevisionsOfEntity( StrTestEntity.class, false, false ).add( AuditEntity.id().eq( entity.getId() ) ).getSingleResult() )[1];
 
-		assertEquals(
-				"The revision number obtained before the flush and the persisting of the entity should be the same as the revision number of the entity because there should only be one revision number per transaction",
-				revisionNumberBeforeFlush,
-				entity2Revision.getId() );
-
+			assertEquals(
+					revisionNumberBeforeFlush,
+					entity2Revision.getId(),
+					"The revision number obtained before the flush and the persisting of the entity should be the same as the revision number of the entity because there should only be one revision number per transaction"
+			);
+		} );
 	}
-
 }

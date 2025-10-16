@@ -8,12 +8,13 @@ import java.util.List;
 
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
 
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -21,35 +22,31 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Chris Cranford
  */
 @JiraKey("HHH-17189")
-public class AuditedEmbeddableWithDeclaredDataTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {
+		EntityWithAuditedEmbeddableWithDeclaredData.class,
+		AbstractAuditedEmbeddable.class,
+		AuditedEmbeddableWithDeclaredData.class
+})
+public class AuditedEmbeddableWithDeclaredDataTest {
 
 	private long id;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				EntityWithAuditedEmbeddableWithDeclaredData.class,
-				AbstractAuditedEmbeddable.class,
-				AuditedEmbeddableWithDeclaredData.class
-		};
-	}
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		this.id = scope.fromTransaction( entityManager -> {
+			final EntityWithAuditedEmbeddableWithDeclaredData entity = new EntityWithAuditedEmbeddableWithDeclaredData();
+			entity.setName( "Entity 1" );
+			entity.setValue( new AuditedEmbeddableWithDeclaredData( 42, "Data" ) );
 
-	@Test
-	@Priority(10)
-	public void initData() {
-		this.id = TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-		final EntityWithAuditedEmbeddableWithDeclaredData entity = new EntityWithAuditedEmbeddableWithDeclaredData();
-		entity.setName( "Entity 1" );
-		entity.setValue( new AuditedEmbeddableWithDeclaredData( 42, "Data" ) );
-
-		entityManager.persist(entity);
-		return entity.getId();
+			entityManager.persist( entity );
+			return entity.getId();
 		} );
 	}
 
 	@Test
-	public void testEmbeddableThatExtendsAuditedMappedSuperclass() {
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testEmbeddableThatExtendsAuditedMappedSuperclass(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
 			final EntityWithAuditedEmbeddableWithDeclaredData entity = entityManager.find(
 					EntityWithAuditedEmbeddableWithDeclaredData.class,
 					id

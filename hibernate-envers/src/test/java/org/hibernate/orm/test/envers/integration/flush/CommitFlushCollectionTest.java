@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.envers.integration.flush;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -14,7 +14,6 @@ import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.GeneratedValue;
@@ -27,11 +26,14 @@ import jakarta.persistence.Version;
 
 import org.hibernate.envers.AuditMappedBy;
 import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.JiraKeyGroup;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Chris Cranford
@@ -40,7 +42,9 @@ import org.junit.Test;
 		@JiraKey(value = "HHH-12826"),
 		@JiraKey(value = "HHH-12846")
 } )
-public class CommitFlushCollectionTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {CommitFlushCollectionTest.DocumentA.class, CommitFlushCollectionTest.DocumentLineA.class})
+public class CommitFlushCollectionTest {
 
 	@MappedSuperclass
 	public static abstract class AbstractEntity {
@@ -147,17 +151,28 @@ public class CommitFlushCollectionTest extends BaseEnversJPAFunctionalTestCase {
 		}
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { DocumentA.class, DocumentLineA.class };
+	private Long entityId1;
+	private Long entityId2;
+
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		// This failed when using Envers.
+		entityId1 = persistDocument( scope, FlushModeType.COMMIT );
+
+		// This worked
+		entityId2 = persistDocument( scope, FlushModeType.AUTO );
+
+		// This failed
+		mergeDocument( scope, FlushModeType.COMMIT, entityId1 );
+
+		// This worked
+		mergeDocument( scope, FlushModeType.AUTO, entityId2 );
 	}
 
-	private Long persistDocument(FlushModeType flushModeType) {
-		final EntityManager entityManager = getOrCreateEntityManager();
-		try {
-			entityManager.setFlushMode( flushModeType );
+	private Long persistDocument(EntityManagerFactoryScope scope, FlushModeType flushModeType) {
+		return scope.fromTransaction( em -> {
+			em.setFlushMode( flushModeType );
 
-			entityManager.getTransaction().begin();
 			DocumentA doc = new DocumentA();
 			doc.setNumber( "1" );
 			doc.setDate( new Date() );
@@ -166,31 +181,16 @@ public class CommitFlushCollectionTest extends BaseEnversJPAFunctionalTestCase {
 			line.setText( "line1" );
 			doc.addLine( line );
 
-			entityManager.persist( doc );
-			entityManager.getTransaction().commit();
-
+			em.persist( doc );
 			return doc.getId();
-		}
-		catch ( Exception e ) {
-			if ( entityManager != null && entityManager.getTransaction().isActive() ) {
-				entityManager.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			if ( entityManager != null && entityManager.isOpen() ) {
-				entityManager.close();
-			}
-		}
+		} );
 	}
 
-	private void mergeDocument(FlushModeType flushModeType, Long id) {
-		final EntityManager entityManager = getOrCreateEntityManager();
-		try {
-			entityManager.setFlushMode( flushModeType );
+	private void mergeDocument(EntityManagerFactoryScope scope, FlushModeType flushModeType, Long id) {
+		scope.inTransaction( em -> {
+			em.setFlushMode( flushModeType );
 
-			entityManager.getTransaction().begin();
-			DocumentA doc = entityManager.find( DocumentA.class, id );
+			DocumentA doc = em.find( DocumentA.class, id );
 			doc.setDate( new Date() );
 			for ( DocumentLineA line : doc.getLines() ) {
 				line.setText( "Updated" );
@@ -200,49 +200,23 @@ public class CommitFlushCollectionTest extends BaseEnversJPAFunctionalTestCase {
 			line.setText( "line2" );
 			doc.addLine( line );
 
-			entityManager.merge( doc );
-			entityManager.getTransaction().commit();
-		}
-		catch ( Exception e ) {
-			if ( entityManager != null && entityManager.getTransaction().isActive() ) {
-				entityManager.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			if ( entityManager != null && entityManager.isOpen() ) {
-				entityManager.close();
-			}
-		}
-	}
-
-	private Long entityId1;
-	private Long entityId2;
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		// This failed when using Envers.
-		entityId1 = persistDocument( FlushModeType.COMMIT );
-
-		// This worked
-		entityId2 = persistDocument( FlushModeType.AUTO );
-
-		// This failed
-		mergeDocument( FlushModeType.COMMIT, entityId1 );
-
-		// This worked
-		mergeDocument( FlushModeType.AUTO, entityId2 );
+			em.merge( doc );
+		} );
 	}
 
 	@Test
-	public void testWithFlushModeCommit() {
-		assertEquals( Arrays.asList( 1, 3 ), getAuditReader().getRevisions( DocumentA.class, entityId1 ) );
+	public void testWithFlushModeCommit(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			assertEquals( Arrays.asList( 1, 3 ),
+					AuditReaderFactory.get( em ).getRevisions( DocumentA.class, entityId1 ) );
+		} );
 	}
 
 	@Test
-	@Priority(1)
-	public void testWithFlushModeAuto() {
-		assertEquals( Arrays.asList( 2, 4 ), getAuditReader().getRevisions( DocumentA.class, entityId2 ) );
+	public void testWithFlushModeAuto(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			assertEquals( Arrays.asList( 2, 4 ),
+					AuditReaderFactory.get( em ).getRevisions( DocumentA.class, entityId2 ) );
+		} );
 	}
 }

@@ -4,12 +4,6 @@
  */
 package org.hibernate.testing.orm.junit;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -20,18 +14,24 @@ import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableM
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 import org.hibernate.service.spi.ServiceContributor;
-
 import org.hibernate.testing.boot.ExtraJavaServicesClassLoaderService;
 import org.hibernate.testing.boot.ExtraJavaServicesClassLoaderService.JavaServiceDescriptor;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.jboss.logging.Logger;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 import org.junit.platform.commons.support.AnnotationSupport;
 
-import org.jboss.logging.Logger;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * JUnit extension used to manage the StandardServiceRegistry used by a test including
@@ -43,6 +43,7 @@ public class ServiceRegistryExtension
 		implements TestInstancePostProcessor, BeforeEachCallback, TestExecutionExceptionHandler {
 	private static final Logger log = Logger.getLogger( ServiceRegistryExtension.class );
 	private static final String REGISTRY_KEY = ServiceRegistryScope.class.getName();
+	private static final String ADDITIONAL_SETTINGS_KEY = ServiceRegistryExtension.class.getName() + "#ADDITIONAL_SETTINGS";
 
 	@Override
 	public void postProcessTestInstance(Object testInstance, ExtensionContext context) {
@@ -341,8 +342,9 @@ public class ServiceRegistryExtension
 	}
 
 	private static class ServiceRegistryScopeImpl implements ServiceRegistryScope, AutoCloseable {
-		private BootstrapServiceRegistryProducer bsrProducer;
-		private ServiceRegistryProducer ssrProducer;
+		private final BootstrapServiceRegistryProducer bsrProducer;
+		private final ServiceRegistryProducer ssrProducer;
+		private Map<String, Object> additionalSettings;
 
 		private StandardServiceRegistry registry;
 		private boolean active = true;
@@ -355,13 +357,17 @@ public class ServiceRegistryExtension
 		private StandardServiceRegistry createRegistry() {
 			BootstrapServiceRegistryBuilder bsrb = new BootstrapServiceRegistryBuilder().enableAutoClose();
 			bsrb.applyClassLoader( Thread.currentThread().getContextClassLoader() );
-			ssrProducer.prepareBootstrapRegistryBuilder(bsrb);
+			ssrProducer.prepareBootstrapRegistryBuilder( bsrb );
 
 			final org.hibernate.boot.registry.BootstrapServiceRegistry bsr = bsrProducer.produceServiceRegistry( bsrb );
 			try {
 				final StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder( bsr );
 				// we will close it ourselves explicitly.
 				ssrb.disableAutoClose();
+
+				if ( additionalSettings != null ) {
+					ssrb.applySettings( additionalSettings );
+				}
 
 				return registry = ssrProducer.produceServiceRegistry( ssrb );
 			}
@@ -390,7 +396,7 @@ public class ServiceRegistryExtension
 
 		@Override
 		public void close() {
-			if ( ! active ) {
+			if ( !active ) {
 				return;
 			}
 
@@ -404,7 +410,8 @@ public class ServiceRegistryExtension
 			}
 		}
 
-		private void releaseRegistry() {
+		@Override
+		public void releaseRegistry() {
 			if ( registry == null ) {
 				return;
 			}
@@ -418,7 +425,14 @@ public class ServiceRegistryExtension
 			}
 			finally {
 				registry = null;
+				additionalSettings = null;
 			}
+		}
+
+		@Override
+		public Map<String, Object> getAdditionalSettings() {
+			final Map<String, Object> s;
+			return (s = additionalSettings) == null ? (additionalSettings = new HashMap<>()) : s;
 		}
 	}
 }

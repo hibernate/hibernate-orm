@@ -17,75 +17,74 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
-import jakarta.persistence.Query;
 
-import org.hibernate.Session;
 import org.hibernate.envers.AuditMappedBy;
 import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.type.StandardBasicTypes;
 
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-7681")
-public class GroupMemberTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {
+		GroupMemberTest.GroupMember.class,
+		GroupMemberTest.MultiGroup.class,
+		GroupMemberTest.UniqueGroup.class
+})
+public class GroupMemberTest {
 	private Integer uniqueGroupId;
 	private Integer groupMemberId;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { GroupMember.class, MultiGroup.class, UniqueGroup.class };
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( em -> {
 			final UniqueGroup uniqueGroup = new UniqueGroup();
 			final GroupMember groupMember = new GroupMember();
 			uniqueGroup.addMember( groupMember );
-			entityManager.persist( uniqueGroup );
-			entityManager.persist( groupMember );
+			em.persist( uniqueGroup );
+			em.persist( groupMember );
 			uniqueGroupId = uniqueGroup.getId();
 			groupMemberId = groupMember.getId();
 		} );
 		// Revision 2
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-			final GroupMember groupMember = entityManager.find( GroupMember.class, groupMemberId );
+		scope.inTransaction( em -> {
+			final GroupMember groupMember = em.find( GroupMember.class, groupMemberId );
 			final MultiGroup multiGroup = new MultiGroup();
 			groupMember.addMultiGroup( multiGroup );
-			entityManager.persist( multiGroup );
+			em.persist( multiGroup );
 		} );
 	}
 
 	@Test
-	public void testUniqueGroupFound() {
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-			final GroupMember groupMember = entityManager.find( GroupMember.class, groupMemberId );
+	public void testUniqueGroupFound(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			final GroupMember groupMember = em.find( GroupMember.class, groupMemberId );
 			assertNotNull( groupMember );
 			assertNotNull( groupMember.getUniqueGroup() );
 		} );
 	}
 
 	@Test
-	public void testUniqueGroupFromAuditHistory() {
-		assertEquals( uniqueGroupId, getCurrentAuditUniqueGroupId() );
+	public void testUniqueGroupFromAuditHistory(EntityManagerFactoryScope scope) {
+		assertEquals( uniqueGroupId, getCurrentAuditUniqueGroupId( scope ) );
 	}
 
-	private Integer getCurrentAuditUniqueGroupId() {
-		return TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-			final Session session = entityManager.unwrap( Session.class );
-			final Query query = session.createNativeQuery(
+	private Integer getCurrentAuditUniqueGroupId(EntityManagerFactoryScope scope) {
+		return scope.fromTransaction( em -> {
+			final var session = em.unwrap( org.hibernate.Session.class );
+			final var query = session.createNativeQuery(
 							"SELECT unique_group_id FROM GroupMember_AUD ORDER BY REV DESC"
 					)
 					.addScalar( "unique_group_id", StandardBasicTypes.INTEGER )

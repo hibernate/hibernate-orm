@@ -8,87 +8,79 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import jakarta.persistence.EntityManager;
 
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.orm.test.envers.entities.ids.MulId;
 import org.hibernate.orm.test.envers.entities.onetomany.ids.SetRefEdMulIdEntity;
 import org.hibernate.orm.test.envers.entities.onetomany.ids.SetRefIngMulIdEntity;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class BasicSetWithMulId extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {SetRefEdMulIdEntity.class, SetRefIngMulIdEntity.class})
+public class BasicSetWithMulId {
 	private MulId ed1_id;
 	private MulId ed2_id;
 
 	private MulId ing1_id;
 	private MulId ing2_id;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {SetRefEdMulIdEntity.class, SetRefIngMulIdEntity.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		ed1_id = new MulId( 0, 1 );
 		ed2_id = new MulId( 2, 3 );
 
 		ing2_id = new MulId( 4, 5 );
 		ing1_id = new MulId( 6, 7 );
 
-		EntityManager em = getEntityManager();
+		scope.inTransaction( em -> {
+			SetRefEdMulIdEntity ed1 = new SetRefEdMulIdEntity( ed1_id.getId1(), ed1_id.getId2(), "data_ed_1" );
+			SetRefEdMulIdEntity ed2 = new SetRefEdMulIdEntity( ed2_id.getId1(), ed2_id.getId2(), "data_ed_2" );
 
-		SetRefEdMulIdEntity ed1 = new SetRefEdMulIdEntity( ed1_id.getId1(), ed1_id.getId2(), "data_ed_1" );
-		SetRefEdMulIdEntity ed2 = new SetRefEdMulIdEntity( ed2_id.getId1(), ed2_id.getId2(), "data_ed_2" );
+			SetRefIngMulIdEntity ing1 = new SetRefIngMulIdEntity( ing1_id.getId1(), ing1_id.getId2(), "data_ing_1", ed1 );
+			SetRefIngMulIdEntity ing2 = new SetRefIngMulIdEntity( ing2_id.getId1(), ing2_id.getId2(), "data_ing_2", ed1 );
 
-		SetRefIngMulIdEntity ing1 = new SetRefIngMulIdEntity( ing1_id.getId1(), ing1_id.getId2(), "data_ing_1", ed1 );
-		SetRefIngMulIdEntity ing2 = new SetRefIngMulIdEntity( ing2_id.getId1(), ing2_id.getId2(), "data_ing_2", ed1 );
+			em.persist( ed1 );
+			em.persist( ed2 );
 
-		// Revision 1
-		em.getTransaction().begin();
+			em.persist( ing1 );
+			em.persist( ing2 );
+		} );
 
-		em.persist( ed1 );
-		em.persist( ed2 );
+		scope.inTransaction( em -> {
+			SetRefIngMulIdEntity ing1 = em.find( SetRefIngMulIdEntity.class, ing1_id );
+			SetRefEdMulIdEntity ed2 = em.find( SetRefEdMulIdEntity.class, ed2_id );
 
-		em.persist( ing1 );
-		em.persist( ing2 );
+			ing1.setReference( ed2 );
+		} );
 
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			SetRefIngMulIdEntity ing2 = em.find( SetRefIngMulIdEntity.class, ing2_id );
+			SetRefEdMulIdEntity ed2 = em.find( SetRefEdMulIdEntity.class, ed2_id );
 
-		// Revision 2
-		em.getTransaction().begin();
-
-		ing1 = em.find( SetRefIngMulIdEntity.class, ing1_id );
-		ed2 = em.find( SetRefEdMulIdEntity.class, ed2_id );
-
-		ing1.setReference( ed2 );
-
-		em.getTransaction().commit();
-
-		// Revision 3
-		em.getTransaction().begin();
-
-		ing2 = em.find( SetRefIngMulIdEntity.class, ing2_id );
-		ed2 = em.find( SetRefEdMulIdEntity.class, ed2_id );
-
-		ing2.setReference( ed2 );
-
-		em.getTransaction().commit();
+			ing2.setReference( ed2 );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		assert Arrays.asList( 1, 2, 3 ).equals( getAuditReader().getRevisions( SetRefEdMulIdEntity.class, ed1_id ) );
-		assert Arrays.asList( 1, 2, 3 ).equals( getAuditReader().getRevisions( SetRefEdMulIdEntity.class, ed2_id ) );
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1, 2, 3 ), auditReader.getRevisions( SetRefEdMulIdEntity.class, ed1_id ) );
+			assertEquals( Arrays.asList( 1, 2, 3 ), auditReader.getRevisions( SetRefEdMulIdEntity.class, ed2_id ) );
 
-		assert Arrays.asList( 1, 2 ).equals( getAuditReader().getRevisions( SetRefIngMulIdEntity.class, ing1_id ) );
-		assert Arrays.asList( 1, 3 ).equals( getAuditReader().getRevisions( SetRefIngMulIdEntity.class, ing2_id ) );
+			assertEquals( Arrays.asList( 1, 2 ), auditReader.getRevisions( SetRefIngMulIdEntity.class, ing1_id ) );
+			assertEquals( Arrays.asList( 1, 3 ), auditReader.getRevisions( SetRefIngMulIdEntity.class, ing2_id ) );
+		} );
 	}
 
 	private <T> Set<T> makeSet(T... objects) {
@@ -101,58 +93,70 @@ public class BasicSetWithMulId extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	public void testHistoryOfEdId1() {
-		SetRefIngMulIdEntity ing1 = getEntityManager().find( SetRefIngMulIdEntity.class, ing1_id );
-		SetRefIngMulIdEntity ing2 = getEntityManager().find( SetRefIngMulIdEntity.class, ing2_id );
+	public void testHistoryOfEdId1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			SetRefIngMulIdEntity ing1 = em.find( SetRefIngMulIdEntity.class, ing1_id );
+			SetRefIngMulIdEntity ing2 = em.find( SetRefIngMulIdEntity.class, ing2_id );
 
-		SetRefEdMulIdEntity rev1 = getAuditReader().find( SetRefEdMulIdEntity.class, ed1_id, 1 );
-		SetRefEdMulIdEntity rev2 = getAuditReader().find( SetRefEdMulIdEntity.class, ed1_id, 2 );
-		SetRefEdMulIdEntity rev3 = getAuditReader().find( SetRefEdMulIdEntity.class, ed1_id, 3 );
+			SetRefEdMulIdEntity rev1 = auditReader.find( SetRefEdMulIdEntity.class, ed1_id, 1 );
+			SetRefEdMulIdEntity rev2 = auditReader.find( SetRefEdMulIdEntity.class, ed1_id, 2 );
+			SetRefEdMulIdEntity rev3 = auditReader.find( SetRefEdMulIdEntity.class, ed1_id, 3 );
 
-		assert rev1.getReffering().equals( makeSet( ing1, ing2 ) );
-		assert rev2.getReffering().equals( makeSet( ing2 ) );
-		assert rev3.getReffering().equals( Collections.EMPTY_SET );
+			assertEquals( makeSet( ing1, ing2 ), rev1.getReffering() );
+			assertEquals( makeSet( ing2 ), rev2.getReffering() );
+			assertEquals( Collections.EMPTY_SET, rev3.getReffering() );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfEdId2() {
-		SetRefIngMulIdEntity ing1 = getEntityManager().find( SetRefIngMulIdEntity.class, ing1_id );
-		SetRefIngMulIdEntity ing2 = getEntityManager().find( SetRefIngMulIdEntity.class, ing2_id );
+	public void testHistoryOfEdId2(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			SetRefIngMulIdEntity ing1 = em.find( SetRefIngMulIdEntity.class, ing1_id );
+			SetRefIngMulIdEntity ing2 = em.find( SetRefIngMulIdEntity.class, ing2_id );
 
-		SetRefEdMulIdEntity rev1 = getAuditReader().find( SetRefEdMulIdEntity.class, ed2_id, 1 );
-		SetRefEdMulIdEntity rev2 = getAuditReader().find( SetRefEdMulIdEntity.class, ed2_id, 2 );
-		SetRefEdMulIdEntity rev3 = getAuditReader().find( SetRefEdMulIdEntity.class, ed2_id, 3 );
+			SetRefEdMulIdEntity rev1 = auditReader.find( SetRefEdMulIdEntity.class, ed2_id, 1 );
+			SetRefEdMulIdEntity rev2 = auditReader.find( SetRefEdMulIdEntity.class, ed2_id, 2 );
+			SetRefEdMulIdEntity rev3 = auditReader.find( SetRefEdMulIdEntity.class, ed2_id, 3 );
 
-		assert rev1.getReffering().equals( Collections.EMPTY_SET );
-		assert rev2.getReffering().equals( makeSet( ing1 ) );
-		assert rev3.getReffering().equals( makeSet( ing1, ing2 ) );
+			assertEquals( Collections.EMPTY_SET, rev1.getReffering() );
+			assertEquals( makeSet( ing1 ), rev2.getReffering() );
+			assertEquals( makeSet( ing1, ing2 ), rev3.getReffering() );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfEdIng1() {
-		SetRefEdMulIdEntity ed1 = getEntityManager().find( SetRefEdMulIdEntity.class, ed1_id );
-		SetRefEdMulIdEntity ed2 = getEntityManager().find( SetRefEdMulIdEntity.class, ed2_id );
+	public void testHistoryOfEdIng1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			SetRefEdMulIdEntity ed1 = em.find( SetRefEdMulIdEntity.class, ed1_id );
+			SetRefEdMulIdEntity ed2 = em.find( SetRefEdMulIdEntity.class, ed2_id );
 
-		SetRefIngMulIdEntity rev1 = getAuditReader().find( SetRefIngMulIdEntity.class, ing1_id, 1 );
-		SetRefIngMulIdEntity rev2 = getAuditReader().find( SetRefIngMulIdEntity.class, ing1_id, 2 );
-		SetRefIngMulIdEntity rev3 = getAuditReader().find( SetRefIngMulIdEntity.class, ing1_id, 3 );
+			SetRefIngMulIdEntity rev1 = auditReader.find( SetRefIngMulIdEntity.class, ing1_id, 1 );
+			SetRefIngMulIdEntity rev2 = auditReader.find( SetRefIngMulIdEntity.class, ing1_id, 2 );
+			SetRefIngMulIdEntity rev3 = auditReader.find( SetRefIngMulIdEntity.class, ing1_id, 3 );
 
-		assert rev1.getReference().equals( ed1 );
-		assert rev2.getReference().equals( ed2 );
-		assert rev3.getReference().equals( ed2 );
+			assertEquals( ed1, rev1.getReference() );
+			assertEquals( ed2, rev2.getReference() );
+			assertEquals( ed2, rev3.getReference() );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfEdIng2() {
-		SetRefEdMulIdEntity ed1 = getEntityManager().find( SetRefEdMulIdEntity.class, ed1_id );
-		SetRefEdMulIdEntity ed2 = getEntityManager().find( SetRefEdMulIdEntity.class, ed2_id );
+	public void testHistoryOfEdIng2(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			SetRefEdMulIdEntity ed1 = em.find( SetRefEdMulIdEntity.class, ed1_id );
+			SetRefEdMulIdEntity ed2 = em.find( SetRefEdMulIdEntity.class, ed2_id );
 
-		SetRefIngMulIdEntity rev1 = getAuditReader().find( SetRefIngMulIdEntity.class, ing2_id, 1 );
-		SetRefIngMulIdEntity rev2 = getAuditReader().find( SetRefIngMulIdEntity.class, ing2_id, 2 );
-		SetRefIngMulIdEntity rev3 = getAuditReader().find( SetRefIngMulIdEntity.class, ing2_id, 3 );
+			SetRefIngMulIdEntity rev1 = auditReader.find( SetRefIngMulIdEntity.class, ing2_id, 1 );
+			SetRefIngMulIdEntity rev2 = auditReader.find( SetRefIngMulIdEntity.class, ing2_id, 2 );
+			SetRefIngMulIdEntity rev3 = auditReader.find( SetRefIngMulIdEntity.class, ing2_id, 3 );
 
-		assert rev1.getReference().equals( ed1 );
-		assert rev2.getReference().equals( ed1 );
-		assert rev3.getReference().equals( ed2 );
+			assertEquals( ed1, rev1.getReference() );
+			assertEquals( ed1, rev2.getReference() );
+			assertEquals( ed2, rev3.getReference() );
+		} );
 	}
 }

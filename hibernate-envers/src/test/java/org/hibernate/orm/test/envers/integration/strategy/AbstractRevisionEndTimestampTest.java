@@ -4,43 +4,36 @@
  */
 package org.hibernate.orm.test.envers.integration.strategy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Chris Cranford
  */
-public abstract class AbstractRevisionEndTimestampTest extends BaseEnversJPAFunctionalTestCase {
+public abstract class AbstractRevisionEndTimestampTest {
 
-	private static final String TIMESTAMP_FIELD = "REVEND_TSTMP";
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void addConfigOptions(Map options) {
-		options.put( EnversSettings.AUDIT_TABLE_SUFFIX, "_AUD" );
-		options.put( EnversSettings.AUDIT_STRATEGY_VALIDITY_REVEND_TIMESTAMP_FIELD_NAME, TIMESTAMP_FIELD );
-		options.put( EnversSettings.AUDIT_STRATEGY_VALIDITY_STORE_REVEND_TIMESTAMP, "true" );
-		options.put( EnversSettings.AUDIT_STRATEGY_VALIDITY_REVEND_TIMESTAMP_LEGACY_PLACEMENT, "false" );
-	}
+	protected static final String TIMESTAMP_FIELD = "REVEND_TSTMP";
 
 	@SuppressWarnings("unchecked")
-	protected List<Map<String, Object>> getRevisions(Class<?> clazz, Integer id) {
+	protected List<Map<String, Object>> getRevisions(EntityManagerFactoryScope scope, Class<?> clazz, Integer id) {
 		String sql = String.format( "SELECT e FROM %s_AUD e WHERE e.originalId.id = :id", clazz.getName() );
-		return getEntityManager().createQuery( sql ).setParameter( "id", id ).getResultList();
+		return scope.fromEntityManager( em ->
+				em.createQuery( sql ).setParameter( "id", id ).getResultList()
+		);
 	}
 
-	protected void verifyRevisionEndTimestampsInSubclass(Class<?> clazz, Integer id) {
-		final List<Map<String, Object>> entities = getRevisions( clazz, id );
+	protected void verifyRevisionEndTimestampsInSubclass(EntityManagerFactoryScope scope, Class<?> clazz, Integer id) {
+		final List<Map<String, Object>> entities = getRevisions( scope, clazz, id );
 		for ( Map<String, Object> entity : entities ) {
 			Object timestampParentClass = entity.get( TIMESTAMP_FIELD );
 			Object timestampSubclass = entity.get( TIMESTAMP_FIELD + "_" + clazz.getSimpleName() + "_AUD" );
@@ -55,7 +48,8 @@ public abstract class AbstractRevisionEndTimestampTest extends BaseEnversJPAFunc
 				// Verify that the timestamp in the revision entity matches that in the parent entity's
 				// revision end timestamp field as well.
 				final Date timestamp = (Date) timestampParentClass;
-				final Dialect dialect = getDialect();
+				final var dialect = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class )
+						.getServiceRegistry().getService( JdbcServices.class ).getDialect();
 				if ( dialect instanceof SybaseDialect ) {
 					// Sybase DATETIME are accurate to 1/300 second on platforms that support that level of
 					// granularity.

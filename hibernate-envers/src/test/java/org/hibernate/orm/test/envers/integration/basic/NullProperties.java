@@ -5,80 +5,87 @@
 package org.hibernate.orm.test.envers.integration.basic;
 
 import java.util.Arrays;
-import jakarta.persistence.EntityManager;
 
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class NullProperties extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {BasicTestEntity1.class})
+public class NullProperties {
 	private Integer id1;
 	private Integer id2;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {BasicTestEntity1.class};
-	}
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		id1 = scope.fromTransaction( em -> {
+			BasicTestEntity1 bte1 = new BasicTestEntity1( "x", 1 );
+			em.persist( bte1 );
+			return bte1.getId();
+		} );
 
-	private Integer addNewEntity(String str, long lng) {
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
-		BasicTestEntity1 bte1 = new BasicTestEntity1( str, lng );
-		em.persist( bte1 );
-		em.getTransaction().commit();
+		id2 = scope.fromTransaction( em -> {
+			BasicTestEntity1 bte2 = new BasicTestEntity1( null, 20 );
+			em.persist( bte2 );
+			return bte2.getId();
+		} );
 
-		return bte1.getId();
-	}
+		scope.inTransaction( em -> {
+			BasicTestEntity1 bte1 = em.find( BasicTestEntity1.class, id1 );
+			bte1.setLong1( 1 );
+			bte1.setStr1( null );
+		} );
 
-	private void modifyEntity(Integer id, String str, long lng) {
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
-		BasicTestEntity1 bte1 = em.find( BasicTestEntity1.class, id );
-		bte1.setLong1( lng );
-		bte1.setStr1( str );
-		em.getTransaction().commit();
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		id1 = addNewEntity( "x", 1 ); // rev 1
-		id2 = addNewEntity( null, 20 ); // rev 2
-
-		modifyEntity( id1, null, 1 ); // rev 3
-		modifyEntity( id2, "y2", 20 ); // rev 4
+		scope.inTransaction( em -> {
+			BasicTestEntity1 bte2 = em.find( BasicTestEntity1.class, id2 );
+			bte2.setLong1( 20 );
+			bte2.setStr1( "y2" );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		assert Arrays.asList( 1, 3 ).equals( getAuditReader().getRevisions( BasicTestEntity1.class, id1 ) );
-
-		assert Arrays.asList( 2, 4 ).equals( getAuditReader().getRevisions( BasicTestEntity1.class, id2 ) );
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1, 3 ), auditReader.getRevisions( BasicTestEntity1.class, id1 ) );
+			assertEquals( Arrays.asList( 2, 4 ), auditReader.getRevisions( BasicTestEntity1.class, id2 ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfId1() {
-		BasicTestEntity1 ver1 = new BasicTestEntity1( id1, "x", 1 );
-		BasicTestEntity1 ver2 = new BasicTestEntity1( id1, null, 1 );
+	public void testHistoryOfId1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			BasicTestEntity1 ver1 = new BasicTestEntity1( id1, "x", 1 );
+			BasicTestEntity1 ver2 = new BasicTestEntity1( id1, null, 1 );
 
-		assert getAuditReader().find( BasicTestEntity1.class, id1, 1 ).equals( ver1 );
-		assert getAuditReader().find( BasicTestEntity1.class, id1, 2 ).equals( ver1 );
-		assert getAuditReader().find( BasicTestEntity1.class, id1, 3 ).equals( ver2 );
-		assert getAuditReader().find( BasicTestEntity1.class, id1, 4 ).equals( ver2 );
+			assertEquals( ver1, auditReader.find( BasicTestEntity1.class, id1, 1 ) );
+			assertEquals( ver1, auditReader.find( BasicTestEntity1.class, id1, 2 ) );
+			assertEquals( ver2, auditReader.find( BasicTestEntity1.class, id1, 3 ) );
+			assertEquals( ver2, auditReader.find( BasicTestEntity1.class, id1, 4 ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfId2() {
-		BasicTestEntity1 ver1 = new BasicTestEntity1( id2, null, 20 );
-		BasicTestEntity1 ver2 = new BasicTestEntity1( id2, "y2", 20 );
+	public void testHistoryOfId2(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			BasicTestEntity1 ver1 = new BasicTestEntity1( id2, null, 20 );
+			BasicTestEntity1 ver2 = new BasicTestEntity1( id2, "y2", 20 );
 
-		assert getAuditReader().find( BasicTestEntity1.class, id2, 1 ) == null;
-		assert getAuditReader().find( BasicTestEntity1.class, id2, 2 ).equals( ver1 );
-		assert getAuditReader().find( BasicTestEntity1.class, id2, 3 ).equals( ver1 );
-		assert getAuditReader().find( BasicTestEntity1.class, id2, 4 ).equals( ver2 );
+			assertNull( auditReader.find( BasicTestEntity1.class, id2, 1 ) );
+			assertEquals( ver1, auditReader.find( BasicTestEntity1.class, id2, 2 ) );
+			assertEquals( ver1, auditReader.find( BasicTestEntity1.class, id2, 3 ) );
+			assertEquals( ver2, auditReader.find( BasicTestEntity1.class, id2, 4 ) );
+		} );
 	}
 }

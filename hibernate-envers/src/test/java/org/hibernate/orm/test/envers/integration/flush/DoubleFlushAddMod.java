@@ -6,84 +6,93 @@ package org.hibernate.orm.test.envers.integration.flush;
 
 import java.util.Arrays;
 import java.util.List;
-import jakarta.persistence.EntityManager;
 
 import org.hibernate.FlushMode;
+import org.hibernate.Session;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class DoubleFlushAddMod extends AbstractFlushTest {
+@EnversTest
+@Jpa(annotatedClasses = {StrTestEntity.class})
+public class DoubleFlushAddMod {
 	private Integer id;
 
-	public FlushMode getFlushMode() {
-		return FlushMode.MANUAL;
-	}
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		// Set flush mode to MANUAL
+		scope.inTransaction( em -> {
+			Session session = em.unwrap( Session.class );
+			session.setHibernateFlushMode( FlushMode.MANUAL );
 
-	@Test
-	@Priority(10)
-	public void initData() {
-		// Revision 1
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
+			// Revision 1
+			StrTestEntity fe = new StrTestEntity( "x" );
+			em.persist( fe );
 
-		StrTestEntity fe = new StrTestEntity( "x" );
-		em.persist( fe );
+			em.flush();
 
-		em.flush();
+			fe.setStr( "y" );
 
-		fe.setStr( "y" );
+			em.flush();
 
-		em.flush();
-
-		em.getTransaction().commit();
+			id = fe.getId();
+		} );
 
 		// Revision 2
-		em.getTransaction().begin();
+		scope.inTransaction( em -> {
+			Session session = em.unwrap( Session.class );
+			session.setHibernateFlushMode( FlushMode.MANUAL );
 
-		fe = em.find( StrTestEntity.class, fe.getId() );
+			StrTestEntity fe = em.find( StrTestEntity.class, id );
 
-		fe.setStr( "z" );
-		em.flush();
-
-		em.getTransaction().commit();
-
-		//
-
-		id = fe.getId();
+			fe.setStr( "z" );
+			em.flush();
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		assert Arrays.asList( 1, 2 ).equals( getAuditReader().getRevisions( StrTestEntity.class, id ) );
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			assertEquals( Arrays.asList( 1, 2 ),
+					AuditReaderFactory.get( em ).getRevisions( StrTestEntity.class, id ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfId() {
-		StrTestEntity ver1 = new StrTestEntity( "y", id );
-		StrTestEntity ver2 = new StrTestEntity( "z", id );
+	public void testHistoryOfId(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			StrTestEntity ver1 = new StrTestEntity( "y", id );
+			StrTestEntity ver2 = new StrTestEntity( "z", id );
 
-		assert getAuditReader().find( StrTestEntity.class, id, 1 ).equals( ver1 );
-		assert getAuditReader().find( StrTestEntity.class, id, 2 ).equals( ver2 );
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( ver1, auditReader.find( StrTestEntity.class, id, 1 ) );
+			assertEquals( ver2, auditReader.find( StrTestEntity.class, id, 2 ) );
+		} );
 	}
 
 	@Test
-	public void testRevisionTypes() {
-		@SuppressWarnings("unchecked") List<Object[]> results =
-				getAuditReader().createQuery()
-						.forRevisionsOfEntity( StrTestEntity.class, false, true )
-						.add( AuditEntity.id().eq( id ) )
-						.getResultList();
+	public void testRevisionTypes(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			@SuppressWarnings("unchecked") List<Object[]> results =
+					AuditReaderFactory.get( em ).createQuery()
+							.forRevisionsOfEntity( StrTestEntity.class, false, true )
+							.add( AuditEntity.id().eq( id ) )
+							.getResultList();
 
-		assertEquals( results.get( 0 )[2], RevisionType.ADD );
-		assertEquals( results.get( 1 )[2], RevisionType.MOD );
+			assertEquals( RevisionType.ADD, results.get( 0 )[2] );
+			assertEquals( RevisionType.MOD, results.get( 1 )[2] );
+		} );
 	}
 }

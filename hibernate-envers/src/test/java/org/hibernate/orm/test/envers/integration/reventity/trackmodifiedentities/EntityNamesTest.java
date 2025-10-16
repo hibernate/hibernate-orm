@@ -4,82 +4,81 @@
  */
 package org.hibernate.orm.test.envers.integration.reventity.trackmodifiedentities;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
+import org.hibernate.Session;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.tools.Pair;
 import org.hibernate.orm.test.envers.integration.entityNames.manyToManyAudited.Car;
 import org.hibernate.orm.test.envers.integration.entityNames.manyToManyAudited.Person;
 import org.hibernate.orm.test.envers.tools.TestTools;
-import org.hibernate.envers.tools.Pair;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class EntityNamesTest extends BaseEnversFunctionalTestCase {
-	@Override
-	protected String[] getMappings() {
-		return new String[] {"mappings/entityNames/manyToManyAudited/mappings.hbm.xml"};
-	}
+@EnversTest
+@Jpa(xmlMappings = "mappings/entityNames/manyToManyAudited/mappings.hbm.xml",
+		integrationSettings = @Setting(name = EnversSettings.TRACK_ENTITIES_CHANGED_IN_REVISION, value = "true"))
+public class EntityNamesTest {
+	private Long person1Id;
 
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		super.addSettings( settings );
-
-		settings.put( EnversSettings.TRACK_ENTITIES_CHANGED_IN_REVISION, "true" );
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		Person pers1 = new Person( "Hernan", 28 );
 		Person pers2 = new Person( "Leandro", 29 );
 		Person pers3 = new Person( "Barba", 32 );
 		Person pers4 = new Person( "Camomo", 15 );
 
-		// Revision 1
-		getSession().getTransaction().begin();
-		List<Person> owners = new ArrayList<Person>();
-		owners.add( pers1 );
-		owners.add( pers2 );
-		owners.add( pers3 );
-		Car car1 = new Car( 5, owners );
-		getSession().persist( car1 );
-		getSession().getTransaction().commit();
-		long person1Id = pers1.getId();
+		scope.inEntityManager( em -> {
+			// Revision 1
+			em.getTransaction().begin();
+			List<Person> owners = new ArrayList<Person>();
+			owners.add( pers1 );
+			owners.add( pers2 );
+			owners.add( pers3 );
+			Car car1 = new Car( 5, owners );
+			em.persist( car1 );
+			em.getTransaction().commit();
+			long person1Id = pers1.getId();
 
-		// Revision 2
-		owners = new ArrayList<Person>();
-		owners.add( pers2 );
-		owners.add( pers3 );
-		owners.add( pers4 );
-		Car car2 = new Car( 27, owners );
-		getSession().getTransaction().begin();
-		Person person1 = (Person) getSession().get( "Personaje", person1Id );
-		person1.setName( "Hernan David" );
-		person1.setAge( 40 );
-		getSession().persist( car1 );
-		getSession().persist( car2 );
-		getSession().getTransaction().commit();
+			// Revision 2
+			owners = new ArrayList<Person>();
+			owners.add( pers2 );
+			owners.add( pers3 );
+			owners.add( pers4 );
+			Car car2 = new Car( 27, owners );
+			em.getTransaction().begin();
+			Person person1 = (Person) em.unwrap( Session.class ).get( "Personaje", person1Id );
+			person1.setName( "Hernan David" );
+			person1.setAge( 40 );
+			em.persist( car1 );
+			em.persist( car2 );
+			em.getTransaction().commit();
+		} );
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void testModifiedEntityTypes() {
-		assert TestTools.makeSet(
-				Pair.make( Car.class.getName(), Car.class ),
-				Pair.make( "Personaje", Person.class )
-		)
-				.equals( getAuditReader().getCrossTypeRevisionChangesReader().findEntityTypes( 1 ) );
-		assert TestTools.makeSet(
-				Pair.make( Car.class.getName(), Car.class ),
-				Pair.make( "Personaje", Person.class )
-		)
-				.equals( getAuditReader().getCrossTypeRevisionChangesReader().findEntityTypes( 2 ) );
+	public void testModifiedEntityTypes(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			assertEquals( TestTools.makeSet(
+					Pair.make( Car.class.getName(), Car.class ),
+					Pair.make( "Personaje", Person.class )
+			), AuditReaderFactory.get( em ).getCrossTypeRevisionChangesReader().findEntityTypes( 1 ) );
+
+			assertEquals( TestTools.makeSet(
+					Pair.make( Car.class.getName(), Car.class ),
+					Pair.make( "Personaje", Person.class )
+			), AuditReaderFactory.get( em ).getCrossTypeRevisionChangesReader().findEntityTypes( 2 ) );
+		} );
 	}
 }

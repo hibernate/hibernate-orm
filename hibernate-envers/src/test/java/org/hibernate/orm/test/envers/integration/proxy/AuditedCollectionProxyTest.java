@@ -4,15 +4,16 @@
  */
 package org.hibernate.orm.test.envers.integration.proxy;
 
-import jakarta.persistence.EntityManager;
-
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.onetomany.ListRefEdEntity;
 import org.hibernate.orm.test.envers.entities.onetomany.ListRefIngEntity;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 /**
  * Test case for HHH-5750: Proxied objects lose the temporary session used to
@@ -20,20 +21,14 @@ import org.junit.Test;
  *
  * @author Erik-Berndt Scheper
  */
-public class AuditedCollectionProxyTest extends BaseEnversJPAFunctionalTestCase {
+@Jpa(annotatedClasses = {ListRefEdEntity.class, ListRefIngEntity.class})
+@EnversTest
+public class AuditedCollectionProxyTest {
 
 	Integer id_ListRefEdEntity1;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {ListRefEdEntity.class, ListRefIngEntity.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		ListRefEdEntity listReferencedEntity1 = new ListRefEdEntity(
 				Integer.valueOf( 1 ), "str1"
 		);
@@ -42,10 +37,10 @@ public class AuditedCollectionProxyTest extends BaseEnversJPAFunctionalTestCase 
 		);
 
 		// Revision 1
-		em.getTransaction().begin();
-		em.persist( listReferencedEntity1 );
-		em.persist( refingEntity1 );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			em.persist( listReferencedEntity1 );
+			em.persist( refingEntity1 );
+		} );
 
 		id_ListRefEdEntity1 = listReferencedEntity1.getId();
 
@@ -54,32 +49,29 @@ public class AuditedCollectionProxyTest extends BaseEnversJPAFunctionalTestCase 
 				Integer.valueOf( 2 ), "refing2", listReferencedEntity1
 		);
 
-		em.getTransaction().begin();
-		em.persist( refingEntity2 );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			em.persist( refingEntity2 );
+		} );
 	}
 
 	@Test
-	public void testProxyIdentifier() {
-		EntityManager em = getEntityManager();
+	public void testProxyIdentifier(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			ListRefEdEntity listReferencedEntity1 = em.getReference(
+					ListRefEdEntity.class, id_ListRefEdEntity1
+			);
 
-		em.getTransaction().begin();
+			assertInstanceOf( HibernateProxy.class, listReferencedEntity1 );
 
-		ListRefEdEntity listReferencedEntity1 = em.getReference(
-				ListRefEdEntity.class, id_ListRefEdEntity1
-		);
+			// Revision 3
+			ListRefIngEntity refingEntity3 = new ListRefIngEntity(
+					Integer.valueOf( 3 ), "refing3", listReferencedEntity1
+			);
 
-		assert listReferencedEntity1 instanceof HibernateProxy;
+			em.persist( refingEntity3 );
 
-		// Revision 3
-		ListRefIngEntity refingEntity3 = new ListRefIngEntity(
-				Integer.valueOf( 3 ), "refing3", listReferencedEntity1
-		);
-
-		em.persist( refingEntity3 );
-
-		listReferencedEntity1.getReffering().size();
-		em.getTransaction().commit();
+			listReferencedEntity1.getReffering().size();
+		} );
 	}
 
 }

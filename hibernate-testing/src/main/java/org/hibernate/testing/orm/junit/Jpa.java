@@ -54,6 +54,8 @@ public @interface Jpa {
 
 	SettingProvider[] settingProviders() default {};
 
+	SettingConfiguration[] settingConfigurations() default {};
+
 	boolean generateStatistics() default false;
 	boolean exportSchema() default true;
 

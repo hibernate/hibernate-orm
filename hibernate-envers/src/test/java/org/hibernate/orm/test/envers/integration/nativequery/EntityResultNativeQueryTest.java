@@ -7,43 +7,37 @@ package org.hibernate.orm.test.envers.integration.nativequery;
 import java.util.List;
 import jakarta.persistence.Query;
 
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.core.Is.is;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Andrea Boriero
  */
-public class EntityResultNativeQueryTest extends BaseEnversJPAFunctionalTestCase {
+@JiraKey(value = "HHH-12776")
+@EnversTest
+@Jpa(annotatedClasses = {SimpleEntity.class, SecondSimpleEntity.class})
+public class EntityResultNativeQueryTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { SimpleEntity.class, SecondSimpleEntity.class };
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.persist( new SimpleEntity( "Hibernate" ) );
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			em.persist( new SimpleEntity( "Hibernate" ) );
 		} );
 	}
 
 	@Test
-	@JiraKey(value = "HHH-12776")
-	public void testNativeQueryResultHandling() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Query query = entityManager.createNativeQuery( "select * from SimpleEntity", SimpleEntity.class );
+	public void testNativeQueryResultHandling(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			Query query = em.createNativeQuery( "select * from SimpleEntity", SimpleEntity.class );
 			List results = query.getResultList();
 			SimpleEntity result = (SimpleEntity) results.get( 0 );
-			assertThat( result.getStringField(), is( "Hibernate" ) );
+			assertEquals( "Hibernate", result.getStringField() );
 		} );
 	}
-
 }

@@ -13,48 +13,50 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.criteria.JoinType;
 
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.junit.Test;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.transaction.TransactionUtil;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-11416")
-public class JoinedInheritancePropertyJoinTest extends BaseEnversJPAFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { EntityA.class, EntityB.class, EntityC.class };
-	}
+@Jpa(annotatedClasses = {
+		JoinedInheritancePropertyJoinTest.EntityA.class,
+		JoinedInheritancePropertyJoinTest.EntityB.class,
+		JoinedInheritancePropertyJoinTest.EntityC.class
+})
+@EnversTest
+public class JoinedInheritancePropertyJoinTest {
 
-	@Test
-	@Priority(10)
-	public void initData() {
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
 			final EntityC c1 = new EntityC();
 			c1.setId( 1 );
 			c1.setName( "c1" );
 			c1.setFoo( "foo" );
 			c1.setPropB( "propB" );
 			c1.setPropC( "propC" );
-			entityManager.persist( c1 );
+			em.persist( c1 );
 
 			final EntityA a1 = new EntityA();
 			a1.setId( 1 );
 			a1.setRelationToC( c1 );
 			a1.setPropA( "propC" );
-			entityManager.persist( a1 );
+			em.persist( a1 );
 		} );
 	}
 
 	@Test
-	public void testAuditQueryWithJoinedInheritanceUnrelatedPropertyJoin() {
+	public void testAuditQueryWithJoinedInheritanceUnrelatedPropertyJoin(EntityManagerFactoryScope scope) {
 		// The problem is that this query succeeds on DefaultAuditStrategy, fails on ValidityAuditStrategy
 		//
 		// ValidityAuditStrategy
@@ -84,17 +86,19 @@ public class JoinedInheritancePropertyJoinTest extends BaseEnversJPAFunctionalTe
 		// Error: SQL Error: 42122, SQLState: 42S22
 		// Column "JOINEDINHE1_1_.REVEND" not found
 		//
-		List results = getAuditReader().createQuery().forEntitiesAtRevision( EntityA.class, 1 )
-				.traverseRelation( "relationToC", JoinType.INNER )
-				.getResultList();
-		assertEquals( 1, results.size() );
+		scope.inEntityManager( em -> {
+			List results = AuditReaderFactory.get( em ).createQuery().forEntitiesAtRevision( EntityA.class, 1 )
+					.traverseRelation( "relationToC", JoinType.INNER )
+					.getResultList();
+			assertEquals( 1, results.size() );
+		} );
 	}
 
 	@Test
-	public void testHibernateUnrelatedPropertyQuery() {
+	public void testHibernateUnrelatedPropertyQuery(EntityManagerFactoryScope scope) {
 		final String queryString = "FROM EntityA a Inner Join EntityC c ON a.propA = c.propC Where c.propB = :propB";
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-			List results = entityManager.createQuery( queryString ).setParameter( "propB", "propB" ).getResultList();
+		scope.inEntityManager( em -> {
+			List results = em.createQuery( queryString ).setParameter( "propB", "propB" ).getResultList();
 			assertEquals( 1, results.size() );
 		} );
 	}

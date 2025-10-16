@@ -602,6 +602,11 @@ public class OverrideRepository  {
 		return result;
  	}
 
+    /**
+     * @deprecated Use {@link #getReverseEngineeringStrategy(RevengStrategy)}
+     *     with {@code delegate=null} to explicitly ignore the delegate.
+     */
+     @Deprecated
 	public RevengStrategy getReverseEngineeringStrategy() {
 		return getReverseEngineeringStrategy(null);
 	}

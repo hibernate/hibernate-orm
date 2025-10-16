@@ -78,12 +78,8 @@ public class JDBCConfigurationTask extends ConfigurationTask {
 
 		RevengStrategy strategy = 
 				RevengStrategyFactory.createReverseEngineeringStrategy(
-						null, revengFileList);
-		
-		if(reverseEngineeringStrategyClass!=null) {
-			strategy = loadreverseEngineeringStrategy(reverseEngineeringStrategyClass, strategy);			
-		}
-		
+                        reverseEngineeringStrategyClass, revengFileList);
+
 		RevengSettings qqsettings = 
 			new RevengSettings(strategy).setDefaultPackageName(packageName)
 			.setDetectManyToMany( detectManyToMany )
@@ -123,31 +119,6 @@ public class JDBCConfigurationTask extends ConfigurationTask {
 	public void setDetectOptimisticLock(boolean b) {
 		detectOptimisticLock = b;
 	}
-
-    private RevengStrategy loadreverseEngineeringStrategy(final String className, RevengStrategy delegate)
-    throws BuildException {
-        try {
-            Class<?> clazz = ReflectionUtil.classForName(className);			
-			Constructor<?> constructor = clazz.getConstructor(new Class[] { RevengStrategy.class });
-            return (RevengStrategy) constructor.newInstance(new Object[] { delegate }); 
-        } 
-        catch (NoSuchMethodException e) {
-			try {
-				getProject().log("Could not find public " + className + "(ReverseEngineeringStrategy delegate) constructor on ReverseEngineeringStrategy. Trying no-arg version.",Project.MSG_VERBOSE);			
-				Class<?> clazz = ReflectionUtil.classForName(className);	
-				Constructor<?> constructor = clazz.getConstructor(new Class[] {});
-				RevengStrategy rev = (RevengStrategy) constructor.newInstance();
-				getProject().log("Using non-delegating strategy, thus packagename and revengfile will be ignored.", Project.MSG_INFO);
-				return rev;
-			} 
-			catch (Exception eq) {
-				throw new BuildException("Could not create or find " + className + " with default no-arg constructor", eq);
-			}
-		} 
-        catch (Exception e) {
-			throw new BuildException("Could not create or find " + className + " with one argument delegate constructor", e);
-		} 
-    }
 
 	private Map<String, Object> loadCfgXmlFile() {
 		return new ConfigLoader(new BootstrapServiceRegistryBuilder().build())

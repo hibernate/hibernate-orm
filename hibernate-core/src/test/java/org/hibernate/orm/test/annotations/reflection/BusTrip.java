@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.reflection;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Map;

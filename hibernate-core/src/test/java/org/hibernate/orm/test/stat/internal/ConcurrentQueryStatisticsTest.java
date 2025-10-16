@@ -5,16 +5,16 @@
 package org.hibernate.orm.test.stat.internal;
 
 import org.hibernate.stat.internal.QueryStatisticsImpl;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class ConcurrentQueryStatisticsTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class ConcurrentQueryStatisticsTest {
 
 	private QueryStatisticsImpl stats = new QueryStatisticsImpl( "test" );
 

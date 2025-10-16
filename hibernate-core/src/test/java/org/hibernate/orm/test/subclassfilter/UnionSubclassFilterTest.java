@@ -4,26 +4,25 @@
  */
 package org.hibernate.orm.test.subclassfilter;
 
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-
-import org.hibernate.Session;
-
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/subclassfilter/union-subclass.hbm.xml"
-)
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/subclassfilter/union-subclass.hbm.xml")
 @SessionFactory
 public class UnionSubclassFilterTest {
 
@@ -35,11 +34,8 @@ public class UnionSubclassFilterTest {
 				s -> {
 					s.enableFilter( "region" ).setParameter( "userRegion", "US" );
 
-					prepareTestData( s );
-					s.clear();
-
-					List results;
-					Iterator itr;
+					List<?> results;
+					Iterator<?> itr;
 
 					results = s.createQuery( "from Person" ).list();
 					assertEquals( 4, results.size(), "Incorrect qry result count" );
@@ -79,55 +75,51 @@ public class UnionSubclassFilterTest {
 					}
 				}
 		);
+	}
 
-
-		scope.inTransaction(
-				s -> {
-					for ( Object entity : s.createQuery( "from Person" ).list() ) {
-						s.remove( entity );
-					}
-				}
-		);
-
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@SuppressWarnings("unchecked")
-	private void prepareTestData(Session s) {
-		Employee john = new Employee( "John Doe" );
-		john.setCompany( "JBoss" );
-		john.setDepartment( "hr" );
-		john.setTitle( "hr guru" );
-		john.setRegion( "US" );
+	@BeforeEach
+	void prepareTestData(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (s) -> {
+			Employee john = new Employee( "John Doe" );
+			john.setCompany( "JBoss" );
+			john.setDepartment( "hr" );
+			john.setTitle( "hr guru" );
+			john.setRegion( "US" );
 
-		Employee polli = new Employee( "Polli Wog" );
-		polli.setCompany( "JBoss" );
-		polli.setDepartment( "hr" );
-		polli.setTitle( "hr novice" );
-		polli.setRegion( "US" );
-		polli.setManager( john );
-		john.getMinions().add( polli );
+			Employee polli = new Employee( "Polli Wog" );
+			polli.setCompany( "JBoss" );
+			polli.setDepartment( "hr" );
+			polli.setTitle( "hr novice" );
+			polli.setRegion( "US" );
+			polli.setManager( john );
+			john.getMinions().add( polli );
 
-		Employee suzie = new Employee( "Suzie Q" );
-		suzie.setCompany( "JBoss" );
-		suzie.setDepartment( "hr" );
-		suzie.setTitle( "hr novice" );
-		suzie.setRegion( "EMEA" );
-		suzie.setManager( john );
-		john.getMinions().add( suzie );
+			Employee suzie = new Employee( "Suzie Q" );
+			suzie.setCompany( "JBoss" );
+			suzie.setDepartment( "hr" );
+			suzie.setTitle( "hr novice" );
+			suzie.setRegion( "EMEA" );
+			suzie.setManager( john );
+			john.getMinions().add( suzie );
 
-		Customer cust = new Customer( "John Q Public" );
-		cust.setCompany( "Acme" );
-		cust.setRegion( "US" );
-		cust.setContactOwner( john );
+			Customer cust = new Customer( "John Q Public" );
+			cust.setCompany( "Acme" );
+			cust.setRegion( "US" );
+			cust.setContactOwner( john );
 
-		Person ups = new Person( "UPS guy" );
-		ups.setCompany( "UPS" );
-		ups.setRegion( "US" );
+			Person ups = new Person( "UPS guy" );
+			ups.setCompany( "UPS" );
+			ups.setRegion( "US" );
 
-		s.persist( john );
-		s.persist( cust );
-		s.persist( ups );
-
-		s.flush();
+			s.persist( john );
+			s.persist( cust );
+			s.persist( ups );
+		} );
 	}
 }

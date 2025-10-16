@@ -4,41 +4,43 @@
  */
 package org.hibernate.orm.test.unidir;
 
-import java.io.Serializable;
-import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import java.io.Serializable;
+import java.util.List;
 
 /**
  * @author Vlad Mihalcea
  */
-public class UnidirectionalOneToManyNonPkJoinColumnTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Customer.class,
-			Order.class
-		};
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = {
+		UnidirectionalOneToManyNonPkJoinColumnTest.Customer.class,
+		UnidirectionalOneToManyNonPkJoinColumnTest.Order.class
+})
+@SessionFactory
+public class UnidirectionalOneToManyNonPkJoinColumnTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	@JiraKey( value = "HHH-12064" )
-	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	@JiraKey("HHH-12064")
+	public void test(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			// Save the entity on the One side
 			Customer customer = new Customer();
 			customer.idCode = "ABC";
@@ -46,7 +48,8 @@ public class UnidirectionalOneToManyNonPkJoinColumnTest extends BaseEntityManage
 
 			entityManager.persist(customer);
 		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
+
+		factoryScope.inTransaction( entityManager -> {
 			// Attempt to load the entity saved in the previous session
 			entityManager.find(Customer.class, "ABC");
 		} );

@@ -7,7 +7,6 @@ package org.hibernate.orm.test.envers.integration.data;
 import java.util.Arrays;
 import jakarta.persistence.EntityManager;
 
-import org.hibernate.envers.test.integration.data.EnumTestEntity;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 

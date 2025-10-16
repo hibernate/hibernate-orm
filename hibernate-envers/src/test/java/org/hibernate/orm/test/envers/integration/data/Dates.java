@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.Date;
 import jakarta.persistence.EntityManager;
 
-import org.hibernate.envers.test.integration.data.DateTestEntity;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 

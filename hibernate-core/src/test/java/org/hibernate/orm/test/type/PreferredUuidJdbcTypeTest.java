@@ -34,7 +34,8 @@ import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SessionFactory
+@SuppressWarnings("JUnitMalformedDeclaration")
+@SessionFactory(exportSchema = false)
 @DomainModel(annotatedClasses = { PreferredUuidJdbcTypeTest.EntityWithUuid.class })
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.PREFERRED_UUID_JDBC_TYPE, value = "CHAR"))
 @RequiresDialect(H2Dialect.class)

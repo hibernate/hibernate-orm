@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
 @DomainModel(annotatedClasses = {OracleNestedTableTest.Container.class})
 @RequiresDialect(OracleDialect.class)
@@ -43,9 +44,9 @@ public class OracleNestedTableTest {
 		container.strings = new String[] { "hello", "world" };
 		scope.inTransaction( s -> s.persist( container ) );
 		Container c = scope.fromTransaction( s-> s.createQuery("from ContainerWithArrays where strings = ?1", Container.class ).setParameter(1, new String[] { "hello", "world" }).getSingleResult() );
-		assertArrayEquals( c.activityTypes, new ActivityType[] { ActivityType.Work, ActivityType.Play } );
-		assertArrayEquals( c.strings, new String[] { "hello", "world" } );
-		c = scope.fromTransaction( s-> s.createQuery("from ContainerWithArrays where activityTypes = ?1", Container.class ).setParameter(1, new ActivityType[] { ActivityType.Work, ActivityType.Play }).getSingleResult() );
+		assertArrayEquals( new ActivityType[] { ActivityType.Work, ActivityType.Play }, c.activityTypes );
+		assertArrayEquals( new String[] { "hello", "world" }, c.strings );
+		scope.inTransaction( s-> s.createQuery("from ContainerWithArrays where activityTypes = ?1", Container.class ).setParameter(1, new ActivityType[] { ActivityType.Work, ActivityType.Play }).getSingleResult() );
 	}
 
 	@Test public void testSchema(SessionFactoryScope scope) {

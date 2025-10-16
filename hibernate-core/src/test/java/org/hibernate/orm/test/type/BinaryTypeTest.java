@@ -7,62 +7,39 @@ package org.hibernate.orm.test.type;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.Session;
-import org.hibernate.resource.transaction.spi.TransactionStatus;
-
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 /**
  * @author Vlad MIhalcea
  */
-public class BinaryTypeTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {Image.class};
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = BinaryTypeTest.Image.class)
+@SessionFactory
+public class BinaryTypeTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testByteArrayStringRepresentation() {
-		Session s = openSession();
-		s.getTransaction().begin();
-		try {
+	public void testByteArrayStringRepresentation(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
 			Image image = new Image();
 			image.id = 1L;
 			image.content = new byte[] {1, 2, 3};
 
-			s.persist( image );
-			s.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( s.getTransaction() != null && s.getTransaction().getStatus() == TransactionStatus.ACTIVE ) {
-				s.getTransaction().rollback();
-			}
-			fail( e.getMessage() );
-		}
-		finally {
-			s.close();
-		}
+			session.persist( image );
+		} );
 
-		s = openSession();
-		s.getTransaction().begin();
-		try {
-			assertArrayEquals( new byte[] {1, 2, 3}, s.find( Image.class, 1L ).content );
-			s.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( s.getTransaction() != null && s.getTransaction().getStatus() == TransactionStatus.ACTIVE ) {
-				s.getTransaction().rollback();
-			}
-			fail( e.getMessage() );
-		}
-		finally {
-			s.close();
-		}
+		factoryScope.inTransaction( (session) -> {
+			assertArrayEquals( new byte[] {1, 2, 3}, session.find( Image.class, 1L ).content );
+		} );
 	}
 
 	@Entity(name = "Image")
@@ -73,10 +50,5 @@ public class BinaryTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		@Column(name = "content")
 		private byte[] content;
-	}
-
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
 	}
 }

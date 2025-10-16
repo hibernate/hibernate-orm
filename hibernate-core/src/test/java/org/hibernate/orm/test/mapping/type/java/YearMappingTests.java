@@ -22,10 +22,15 @@ import org.junit.jupiter.api.Test;
 import java.sql.Types;
 import java.time.Year;
 import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = YearMappingTests.YearMappingTestEntity.class )
 @SessionFactory
 @JiraKey( "HHH-10558" )

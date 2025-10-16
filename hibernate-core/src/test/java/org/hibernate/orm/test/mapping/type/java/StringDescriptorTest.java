@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.mapping.type.java;
 
-
 import org.hibernate.type.descriptor.java.StringJavaType;
 
 /**

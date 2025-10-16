@@ -31,6 +31,7 @@ import jakarta.persistence.Table;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator.safeRandomUUID;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
 @DomainModel( annotatedClasses = { H2JsonListTest.Path.class, H2JsonListTest.PathClob.class } )
 @RequiresDialect( value = H2Dialect.class )
@@ -46,10 +47,7 @@ public class H2JsonListTest {
 
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from Path" ).executeUpdate();
-			session.createMutationQuery( "delete from PathClob" ).executeUpdate();
-		} );
+		scope.dropData();
 	}
 
 	@Test

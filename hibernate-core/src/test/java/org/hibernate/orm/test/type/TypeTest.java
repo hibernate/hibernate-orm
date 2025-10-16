@@ -4,10 +4,19 @@
  */
 package org.hibernate.orm.test.type;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.internal.SessionImpl;
+import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.type.BasicTypeReference;
+import org.hibernate.type.SerializableType;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.Type;
+import org.hibernate.type.TypeHelper;
+import org.hibernate.type.spi.TypeConfiguration;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -21,24 +30,16 @@ import java.util.Locale;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 
-import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.internal.SessionImpl;
-import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.type.BasicTypeReference;
-import org.hibernate.type.SerializableType;
-import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
-import org.hibernate.type.TypeHelper;
-import org.hibernate.type.spi.TypeConfiguration;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Test;
 
 /**
  * @author Steve Ebersole
  */
-public class TypeTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class TypeTest {
 
 	@Test
 	public void testBigDecimalType() {
@@ -70,9 +71,9 @@ public class TypeTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"BooleanConstructorCall"})
 	public void testBooleanType() {
 		final Boolean original = Boolean.TRUE;
+		//noinspection UnnecessaryBoxing,removal,BooleanConstructorCall
 		final Boolean copy = new Boolean( true );
 		final Boolean different = Boolean.FALSE;
 
@@ -85,6 +86,7 @@ public class TypeTest extends BaseUnitTestCase {
 	@Test
 	public void testByteType() {
 		final Byte original = 0;
+		//noinspection removal,UnnecessaryBoxing,CachedNumberConstructorCall
 		final Byte copy = new Byte( (byte) 0 );
 		final Byte different = 9;
 
@@ -135,6 +137,7 @@ public class TypeTest extends BaseUnitTestCase {
 	@Test
 	public void testCharacterType() {
 		final Character original = 'a';
+		//noinspection UnnecessaryBoxing,removal
 		final Character copy = new Character( 'a' );
 		final Character different = 'b';
 
@@ -153,9 +156,9 @@ public class TypeTest extends BaseUnitTestCase {
 
 	@Test
 	public void testClassType() {
-		final Class original = TypeTest.class;
-		final Class copy = (Class) SerializationHelper.clone( original );
-		final Class different = String.class;
+		final Class<?> original = TypeTest.class;
+		final Class<?> copy = (Class<?>) SerializationHelper.clone( original );
+		final Class<?> different = String.class;
 
 		runBasicTests( StandardBasicTypes.CLASS, original, copy, different );
 	}
@@ -185,18 +188,18 @@ public class TypeTest extends BaseUnitTestCase {
 
 	@Test
 	public void testDoubleType() {
-		final Double original = Double.valueOf( 100 );
-		final Double copy = Double.valueOf( 100 );
-		final Double different = Double.valueOf( 999 );
+		final Double original = 100.0;
+		final Double copy = 100.0;
+		final Double different = 999.0;
 
 		runBasicTests( StandardBasicTypes.DOUBLE, original, copy, different );
 	}
 
 	@Test
 	public void testFloatType() {
-		final Float original = Float.valueOf( 100 );
-		final Float copy = Float.valueOf( 100 );
-		final Float different = Float.valueOf( 999 );
+		final Float original = 100F;
+		final Float copy = 100F;
+		final Float different = 999F;
 
 		runBasicTests( StandardBasicTypes.FLOAT, original, copy, different );
 	}
@@ -204,6 +207,7 @@ public class TypeTest extends BaseUnitTestCase {
 	@Test
 	public void testIntegerType() {
 		final Integer original = 100;
+		//noinspection UnnecessaryBoxing,removal,CachedNumberConstructorCall
 		final Integer copy = new Integer( 100 );
 		final Integer different = 999;
 
@@ -222,6 +226,7 @@ public class TypeTest extends BaseUnitTestCase {
 	@Test
 	public void testLongType() {
 		final Long original = 100L;
+		//noinspection UnnecessaryBoxing,CachedNumberConstructorCall,removal
 		final Long copy = new Long( 100L );
 		final Long different = 999L;
 
@@ -246,12 +251,13 @@ public class TypeTest extends BaseUnitTestCase {
 		final SerializableImpl different = new SerializableImpl(2);
 
 		runBasicTests( StandardBasicTypes.SERIALIZABLE, original, copy, different );
-		runBasicTests( new SerializableType<SerializableImpl>( SerializableImpl.class ), original, copy, different );
+		runBasicTests( new SerializableType<>( SerializableImpl.class ), original, copy, different );
 	}
 
 	@Test
 	public void testShortType() {
 		final Short original = 100;
+		//noinspection UnnecessaryBoxing,CachedNumberConstructorCall,removal
 		final Short copy = new Short( (short) 100 );
 		final Short different = 999;
 
@@ -327,19 +333,19 @@ public class TypeTest extends BaseUnitTestCase {
 
 	protected <T> void runBasicTests(Type type, T original, T copy, T different) {
 		final SessionImpl session = null; //Not really used
-		final boolean nonCopyable = Class.class.isInstance( original ) || Currency.class.isInstance( original );
+		final boolean nonCopyable = original instanceof Class || original instanceof Currency;
 		if ( ! nonCopyable ) {
 			// these checks exclude classes which cannot really be cloned (singetons/enums)
-			assertFalse( original == copy );
+			assertNotSame( original, copy );
 		}
 
-		assertTrue( original == type.replace( original, copy, null, null, null ) );
+		Assertions.assertSame( original, type.replace( original, copy, null, null, null ) );
 
 		// following tests assert that types work with properties not yet loaded in bytecode enhanced entities
 		Type[] types = new Type[]{ type };
-		assertSame( copy, TypeHelper.replace( new Object[]{ LazyPropertyInitializer.UNFETCHED_PROPERTY },
+		Assertions.assertSame( copy, TypeHelper.replace( new Object[]{ LazyPropertyInitializer.UNFETCHED_PROPERTY },
 				new Object[]{ copy }, types, null, null, null )[0] );
-		assertNotEquals( LazyPropertyInitializer.UNFETCHED_PROPERTY, TypeHelper.replace( new Object[]{ original },
+		Assertions.assertNotEquals( LazyPropertyInitializer.UNFETCHED_PROPERTY, TypeHelper.replace( new Object[]{ original },
 				new Object[]{ LazyPropertyInitializer.UNFETCHED_PROPERTY }, types, null, null, null )[0] );
 
 		assertTrue( type.isSame( original, copy ) );

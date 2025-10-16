@@ -38,8 +38,10 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey("HHH-12555")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class)
 @DomainModel(
@@ -50,6 +52,10 @@ import org.junit.jupiter.api.Test;
 @SessionFactory
 @BytecodeEnhanced
 public class LobUnfetchedPropertyTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
 	public void testBlob(SessionFactoryScope scope) throws SQLException {

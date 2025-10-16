@@ -4,6 +4,22 @@
  */
 package org.hibernate.orm.test.type;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.type.AbstractStandardBasicType;
+import org.hibernate.type.SerializableType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -13,71 +29,46 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
-import org.hibernate.Session;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.type.AbstractStandardBasicType;
-import org.hibernate.type.SerializableType;
-import org.hibernate.type.descriptor.java.JavaType;
-
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Steve Ebersole
  */
-public class Java8DateTimeTests extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { TheEntity.class };
-	}
-
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = Java8DateTimeTests.TheEntity.class)
+@SessionFactory
+public class Java8DateTimeTests {
 	@Test
-	public void basicTests() {
-		final PersistentClass entityBinding = metadata().getEntityBinding( TheEntity.class.getName() );
+	public void test(DomainModelScope modelScope, SessionFactoryScope factoryScope) {
+		var entityBinding = modelScope.getDomainModel().getEntityBinding( TheEntity.class.getName() );
 		for ( Property propertyBinding : entityBinding.getPropertyClosure() ) {
-			assertFalse(
-					"Found property bound as Serializable : " + propertyBinding.getName(),
-					propertyBinding.getType() instanceof SerializableType
-			);
+			Assertions.assertFalse( propertyBinding.getType() instanceof SerializableType,
+					"Found property bound as Serializable : " + propertyBinding.getName() );
 		}
 
-		TheEntity theEntity = new TheEntity( 1 );
+		factoryScope.inTransaction( (session) -> {
+			var theEntity = new TheEntity( 1 );
+			session.persist( theEntity );
+		} );
 
-		try ( Session s = openSession() ) {
-			s.beginTransaction();
-			s.persist( theEntity );
-			s.getTransaction().commit();
-		}
-
-		try ( Session s = openSession() ) {
-			s.beginTransaction();
-			theEntity = s.get( TheEntity.class, 1 );
+		factoryScope.inTransaction( (session) -> {
+			var theEntity = session.find( TheEntity.class, 1 );
 			dump( entityBinding, theEntity );
 			assertNotNull( theEntity );
-			s.remove( theEntity );
-			s.getTransaction().commit();
-		}
+			session.remove( theEntity );
+		} );
 	}
 
+	@SuppressWarnings({"rawtypes", "unchecked"})
 	private void dump(PersistentClass entityBinding, TheEntity theEntity) {
 		for ( Property propertyBinding : entityBinding.getPropertyClosure() ) {
 			final JavaType javaType = ( (AbstractStandardBasicType) propertyBinding.getType() ).getJavaTypeDescriptor();
-			System.out.println(
-					String.format(
-							"%s (%s) -> %s",
-							propertyBinding.getName(),
-							javaType.getJavaTypeClass().getSimpleName(),
-							javaType.toString(propertyBinding.getGetter(TheEntity.class).get(theEntity))
-					)
+			System.out.printf(
+					"%s (%s) -> %s%n",
+					propertyBinding.getName(),
+					javaType.getJavaTypeClass().getSimpleName(),
+					javaType.toString(propertyBinding.getGetter(TheEntity.class).get(theEntity))
 			);
 		}
 	}

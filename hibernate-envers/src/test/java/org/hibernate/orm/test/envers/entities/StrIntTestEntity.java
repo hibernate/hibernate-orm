@@ -75,13 +75,13 @@ public class StrIntTestEntity {
 
 		StrIntTestEntity that = (StrIntTestEntity) o;
 
-		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+		if ( id != null ? !id.equals( that.getId() ) : that.getId() != null ) {
 			return false;
 		}
-		if ( number != null ? !number.equals( that.number ) : that.number != null ) {
+		if ( number != null ? !number.equals( that.getNumber() ) : that.getNumber() != null ) {
 			return false;
 		}
-		if ( str1 != null ? !str1.equals( that.str1 ) : that.str1 != null ) {
+		if ( str1 != null ? !str1.equals( that.getStr1() ) : that.getStr1() != null ) {
 			return false;
 		}
 

@@ -6,7 +6,6 @@ package org.hibernate.orm.test.envers.integration.manytoone.bidirectional;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -14,6 +13,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import org.hibernate.envers.AuditReader;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.EntityTrackingRevisionListener;
 import org.hibernate.envers.RevisionEntity;
@@ -21,10 +21,12 @@ import org.hibernate.envers.RevisionListener;
 import org.hibernate.envers.RevisionNumber;
 import org.hibernate.envers.RevisionTimestamp;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jira;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,51 +34,48 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17652" )
-public class ManyToOneCustomRevisionListenerTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {
+		ManyToOneCustomRevisionListenerTest.Document.class,
+		ManyToOneCustomRevisionListenerTest.DocumentAuthorEmployee.class,
+		ManyToOneCustomRevisionListenerTest.Employee.class,
+		ManyToOneCustomRevisionListenerTest.CustomRevisionEntity.class,
+})
+public class ManyToOneCustomRevisionListenerTest {
 	private static final ThreadLocal<AuditReader> auditReader = ThreadLocal.withInitial( () -> null );
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Document.class,
-				DocumentAuthorEmployee.class,
-				Employee.class,
-				CustomRevisionEntity.class,
-		};
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			// store in thread-local to use it in custom revision listener
+			auditReader.set( AuditReaderFactory.get( em ) );
+
+			final Employee bilbo = new Employee( "Bilbo Baggins" );
+			em.persist( bilbo );
+			final Employee frodo = new Employee( "Frodo Baggins" );
+			em.persist( frodo );
+		} );
+
+		scope.inTransaction( em -> {
+			auditReader.set( AuditReaderFactory.get( em ) );
+
+			final Employee bilbo = em.createQuery( "from Employee where name = 'Bilbo Baggins'", Employee.class ).getSingleResult();
+			final Employee frodo = em.createQuery( "from Employee where name = 'Frodo Baggins'", Employee.class ).getSingleResult();
+
+			final Document document = new Document( "The Hobbit" );
+			document.getAuthors().add( new DocumentAuthorEmployee( 1L, document, bilbo ) );
+			document.getAuthors().add( new DocumentAuthorEmployee( 2L, document, frodo ) );
+			em.persist( document );
+		} );
 	}
 
 	@Test
-	@Priority(10)
-	public void initData() {
-		// store in thread-local to use it in custom revision listener
-		auditReader.set( getAuditReader() );
-
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
-
-		final Employee bilbo = new Employee( "Bilbo Baggins" );
-		em.persist( bilbo );
-		final Employee frodo = new Employee( "Frodo Baggins" );
-		em.persist( frodo );
-
-		em.getTransaction().commit();
-
-		em.getTransaction().begin();
-
-		final Document document = new Document( "The Hobbit" );
-		document.getAuthors().add( new DocumentAuthorEmployee( 1L, document, bilbo ) );
-		document.getAuthors().add( new DocumentAuthorEmployee( 2L, document, frodo ) );
-		em.persist( document );
-
-		em.getTransaction().commit();
-	}
-
-	@Test
-	public void testDocumentAuthorEmployeeRevisions() {
-		final AuditReader reader = getAuditReader();
-		assertLastRevision( reader, 1L, "Bilbo Baggins" );
-		assertLastRevision( reader, 2L, "Frodo Baggins" );
-		getEntityManager().close();
+	public void testDocumentAuthorEmployeeRevisions(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final AuditReader reader = AuditReaderFactory.get( em );
+			assertLastRevision( reader, 1L, "Bilbo Baggins" );
+			assertLastRevision( reader, 2L, "Frodo Baggins" );
+		} );
 	}
 
 	private static void assertLastRevision(AuditReader reader, Long id, String employee) {

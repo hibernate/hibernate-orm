@@ -5,13 +5,13 @@
 package org.hibernate.orm.test.envers.integration.interfaces.hbm.allAudited.subclass;
 
 import org.hibernate.orm.test.envers.integration.interfaces.hbm.allAudited.AbstractAllAuditedTest;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.Jpa;
 
 /**
- * @author Hern�n Chanfreau
+ * @author Hernán Chanfreau
  */
+@EnversTest
+@Jpa(xmlMappings = "mappings/interfaces/subclassAllAuditedMappings.hbm.xml")
 public class SubclassAllAuditedTest extends AbstractAllAuditedTest {
-	@Override
-	protected String[] getMappings() {
-		return new String[] {"mappings/interfaces/subclassAllAuditedMappings.hbm.xml"};
-	}
 }

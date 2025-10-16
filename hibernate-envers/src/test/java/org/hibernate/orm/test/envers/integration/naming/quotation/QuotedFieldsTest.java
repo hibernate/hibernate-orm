@@ -4,98 +4,110 @@
  */
 package org.hibernate.orm.test.envers.integration.naming.quotation;
 
-import java.util.Arrays;
-import java.util.Collection;
-import jakarta.persistence.EntityManager;
-
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
+import java.util.Arrays;
+import java.util.Collection;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class QuotedFieldsTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@DomainModel(annotatedClasses = {QuotedFieldsEntity.class})
+@SessionFactory
+public class QuotedFieldsTest {
 	private Long qfeId1 = null;
 	private Long qfeId2 = null;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {QuotedFieldsEntity.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		QuotedFieldsEntity qfe1 = new QuotedFieldsEntity( "data1", 1 );
-		QuotedFieldsEntity qfe2 = new QuotedFieldsEntity( "data2", 2 );
-
+	@BeforeClassTemplate
+	public void initData(SessionFactoryScope scope) {
 		// Revision 1
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
-		em.persist( qfe1 );
-		em.persist( qfe2 );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			QuotedFieldsEntity qfe1 = new QuotedFieldsEntity( "data1", 1 );
+			QuotedFieldsEntity qfe2 = new QuotedFieldsEntity( "data2", 2 );
+			em.persist( qfe1 );
+			em.persist( qfe2 );
+			qfeId1 = qfe1.getId();
+			qfeId2 = qfe2.getId();
+		} );
 
 		// Revision 2
-		em.getTransaction().begin();
-		qfe1 = em.find( QuotedFieldsEntity.class, qfe1.getId() );
-		qfe1.setData1( "data1 changed" );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			QuotedFieldsEntity qfe1 = em.find( QuotedFieldsEntity.class, qfeId1 );
+			qfe1.setData1( "data1 changed" );
+		} );
 
 		// Revision 3
-		em.getTransaction().begin();
-		qfe2 = em.find( QuotedFieldsEntity.class, qfe2.getId() );
-		qfe2.setData2( 3 );
-		em.getTransaction().commit();
-
-		qfeId1 = qfe1.getId();
-		qfeId2 = qfe2.getId();
+		scope.inTransaction( em -> {
+			QuotedFieldsEntity qfe2 = em.find( QuotedFieldsEntity.class, qfeId2 );
+			qfe2.setData2( 3 );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		assert Arrays.asList( 1, 2 ).equals( getAuditReader().getRevisions( QuotedFieldsEntity.class, qfeId1 ) );
-		assert Arrays.asList( 1, 3 ).equals( getAuditReader().getRevisions( QuotedFieldsEntity.class, qfeId2 ) );
+	public void testRevisionsCounts(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1, 2 ), auditReader.getRevisions( QuotedFieldsEntity.class, qfeId1 ) );
+			assertEquals( Arrays.asList( 1, 3 ), auditReader.getRevisions( QuotedFieldsEntity.class, qfeId2 ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfId1() {
-		QuotedFieldsEntity ver1 = new QuotedFieldsEntity( qfeId1, "data1", 1 );
-		QuotedFieldsEntity ver2 = new QuotedFieldsEntity( qfeId1, "data1 changed", 1 );
+	public void testHistoryOfId1(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			QuotedFieldsEntity ver1 = new QuotedFieldsEntity( qfeId1, "data1", 1 );
+			QuotedFieldsEntity ver2 = new QuotedFieldsEntity( qfeId1, "data1 changed", 1 );
 
-		assert getAuditReader().find( QuotedFieldsEntity.class, qfeId1, 1 ).equals( ver1 );
-		assert getAuditReader().find( QuotedFieldsEntity.class, qfeId1, 2 ).equals( ver2 );
-		assert getAuditReader().find( QuotedFieldsEntity.class, qfeId1, 3 ).equals( ver2 );
+			assertEquals( ver1, auditReader.find( QuotedFieldsEntity.class, qfeId1, 1 ) );
+			assertEquals( ver2, auditReader.find( QuotedFieldsEntity.class, qfeId1, 2 ) );
+			assertEquals( ver2, auditReader.find( QuotedFieldsEntity.class, qfeId1, 3 ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfId2() {
-		QuotedFieldsEntity ver1 = new QuotedFieldsEntity( qfeId2, "data2", 2 );
-		QuotedFieldsEntity ver2 = new QuotedFieldsEntity( qfeId2, "data2", 3 );
+	public void testHistoryOfId2(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			QuotedFieldsEntity ver1 = new QuotedFieldsEntity( qfeId2, "data2", 2 );
+			QuotedFieldsEntity ver2 = new QuotedFieldsEntity( qfeId2, "data2", 3 );
 
-		assert getAuditReader().find( QuotedFieldsEntity.class, qfeId2, 1 ).equals( ver1 );
-		assert getAuditReader().find( QuotedFieldsEntity.class, qfeId2, 2 ).equals( ver1 );
-		assert getAuditReader().find( QuotedFieldsEntity.class, qfeId2, 3 ).equals( ver2 );
+			assertEquals( ver1, auditReader.find( QuotedFieldsEntity.class, qfeId2, 1 ) );
+			assertEquals( ver1, auditReader.find( QuotedFieldsEntity.class, qfeId2, 2 ) );
+			assertEquals( ver2, auditReader.find( QuotedFieldsEntity.class, qfeId2, 3 ) );
+		} );
 	}
 
 	@Test
-	public void testEscapeEntityField() {
-		Table table = metadata().getEntityBinding(
-				"org.hibernate.orm.test.envers.integration.naming.quotation.QuotedFieldsEntity_AUD"
-		).getTable();
+	public void testEscapeEntityField(DomainModelScope scope) {
+		Table table = scope.getDomainModel()
+				.getEntityBinding( "org.hibernate.orm.test.envers.integration.naming.quotation.QuotedFieldsEntity_AUD" )
+				.getTable();
+
 		Column column1 = getColumnByName( table, "id" );
 		Column column2 = getColumnByName( table, "data1" );
 		Column column3 = getColumnByName( table, "data2" );
-		assert column1 != null;
-		assert column2 != null;
-		assert column3 != null;
-		assert column1.isQuoted();
-		assert column2.isQuoted();
-		assert column3.isQuoted();
+
+		assertNotNull( column1 );
+		assertNotNull( column2 );
+		assertNotNull( column3 );
+		assertTrue( column1.isQuoted() );
+		assertTrue( column2.isQuoted() );
+		assertTrue( column3.isQuoted() );
 	}
 
 	private Column getColumnByName(Table table, String columnName) {

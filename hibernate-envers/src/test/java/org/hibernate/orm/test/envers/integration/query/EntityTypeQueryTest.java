@@ -15,21 +15,27 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 
 import org.hibernate.envers.Audited;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.junit.Test;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Felix Feisst (feisst dot felix at gmail dot com)
  */
 @JiraKey(value = "HHH-11573")
-public class EntityTypeQueryTest extends BaseEnversJPAFunctionalTestCase {
+@Jpa(annotatedClasses = {
+		EntityTypeQueryTest.EntityA.class,
+		EntityTypeQueryTest.EntityB.class
+})
+@EnversTest
+public class EntityTypeQueryTest {
 
 	@Entity(name = "EntityA")
 	@Audited
@@ -70,51 +76,49 @@ public class EntityTypeQueryTest extends BaseEnversJPAFunctionalTestCase {
 	private EntityB b1;
 	private EntityB b2;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{ EntityA.class, EntityB.class };
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
 			a1 = new EntityA();
 			a1.setName( "a1" );
-			entityManager.persist( a1 );
+			em.persist( a1 );
 
 			a2 = new EntityA();
 			a2.setName( "a2" );
-			entityManager.persist( a2 );
+			em.persist( a2 );
 
 			b1 = new EntityB();
 			b1.setName( "b1" );
-			entityManager.persist( b1 );
+			em.persist( b1 );
 
 			b2 = new EntityB();
 			b2.setName( "b2" );
-			entityManager.persist( b2 );
+			em.persist( b2 );
 		} );
 	}
 
 	@Test
-	public void testRestrictToSubType() {
-		List<?> list = getAuditReader().createQuery().forEntitiesAtRevision( EntityA.class, 1 )
-				.add( AuditEntity.entityType( EntityB.class ) )
-				.addProjection( AuditEntity.property( "name" ) )
-				.addOrder( AuditEntity.property( "name" ).asc() )
-				.getResultList();
-		assertEquals( "Expected only entities of type EntityB to be selected", list( "b1", "b2" ), list );
+	public void testRestrictToSubType(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			List<?> list = AuditReaderFactory.get( em ).createQuery().forEntitiesAtRevision( EntityA.class, 1 )
+					.add( AuditEntity.entityType( EntityB.class ) )
+					.addProjection( AuditEntity.property( "name" ) )
+					.addOrder( AuditEntity.property( "name" ).asc() )
+					.getResultList();
+			assertEquals( list( "b1", "b2" ), list, "Expected only entities of type EntityB to be selected" );
+		} );
 	}
 
 	@Test
-	public void testRestrictToSuperType() {
-		List<?> list = getAuditReader().createQuery().forEntitiesAtRevision( EntityA.class, 1 )
-				.add( AuditEntity.entityType( EntityA.class ) )
-				.addProjection( AuditEntity.property( "name" ) )
-				.addOrder( AuditEntity.property( "name" ).asc() )
-				.getResultList();
-		assertEquals( "Expected only entities of type EntityA to be selected", list( "a1", "a2" ), list );
+	public void testRestrictToSuperType(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			List<?> list = AuditReaderFactory.get( em ).createQuery().forEntitiesAtRevision( EntityA.class, 1 )
+					.add( AuditEntity.entityType( EntityA.class ) )
+					.addProjection( AuditEntity.property( "name" ) )
+					.addOrder( AuditEntity.property( "name" ).asc() )
+					.getResultList();
+			assertEquals( list( "a1", "a2" ), list, "Expected only entities of type EntityA to be selected" );
+		} );
 	}
 
 	private List<String> list(final String... elements) {

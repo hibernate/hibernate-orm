@@ -10,18 +10,18 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import org.hibernate.envers.AuditReader;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.NotAudited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -30,117 +30,69 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-11063")
-public class SetHashcodeChangeTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {SetHashcodeChangeTest.Author.class, SetHashcodeChangeTest.Book.class})
+public class SetHashcodeChangeTest {
 	private Integer authorId;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Author.class, Book.class };
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1
-		EntityManager entityManager = getEntityManager();
-		try {
-			entityManager.getTransaction().begin();
+		scope.inTransaction( em -> {
 			final Author author = new Author();
 			author.setFirstName( "TestFirstName" );
 			author.setLastName( "lastName" );
 			author.addBook( createBook1() );
 			author.addBook( createBook2() );
-			entityManager.persist( author );
+			em.persist( author );
 			authorId = author.getId();
-			entityManager.getTransaction().commit();
-		}
-		catch ( Exception e ) {
-			if ( entityManager.getTransaction().isActive() ) {
-				entityManager.getTransaction().rollback();
-			}
-		}
-		finally {
-			entityManager.close();
-		}
+		} );
+
 		// Revision 2
 		// Removes all books and re-adds original 2 plus one new book
-		entityManager = getEntityManager();
-		try {
-			entityManager.getTransaction().begin();
-			final Author author = entityManager.find( Author.class, authorId );
+		scope.inTransaction( em -> {
+			final Author author = em.find( Author.class, authorId );
 			author.removeAllBooks();
 			author.addBook( createBook1() );
 			author.addBook( createBook2() );
 			author.addBook( createBook3() );
-			entityManager.merge( author );
-			entityManager.getTransaction().commit();
-		}
-		catch ( Exception e ) {
-			if( entityManager.getTransaction().isActive() ) {
-				entityManager.getTransaction().rollback();
-			}
-		}
-		finally {
-			entityManager.close();
-		}
-	}
-
-	@Test
-	public void testRevisionCounts() {
-
+			em.merge( author );
+		} );
 	}
 
 	@Test
 	// tests that Author has 3 books.
-	public void testAuthorState() {
-		EntityManager entityManager = getEntityManager();
-		try {
-			final Author author = entityManager.find( Author.class, authorId );
+	public void testAuthorState(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final Author author = em.find( Author.class, authorId );
 			assertNotNull( author );
 			assertEquals( 3, author.getBooks().size() );
-		}
-		catch ( Exception e ) {
-			if ( entityManager.getTransaction().isActive() ) {
-				entityManager.getTransaction().rollback();
-			}
-		}
-		finally {
-			entityManager.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testAuthorLastRevision() {
+	public void testAuthorLastRevision(EntityManagerFactoryScope scope) {
 		// tests that Author has 3 books, Book1, Book2, and Book3.
 		// where Book1 and Book2 were removed and re-added with the addition of Book3.
-		EntityManager entityManager = getEntityManager();
-		try {
-			final AuditReader reader = getAuditReader();
-			final List<Number> revisions = reader.getRevisions( Author.class, authorId );
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			final List<Number> revisions = auditReader.getRevisions( Author.class, authorId );
 			final Number lastRevision = revisions.get( revisions.size() - 1 );
 
-			final Author author = (Author) reader.createQuery()
+			final Author author = (Author) auditReader.createQuery()
 					.forEntitiesAtRevision( Author.class, lastRevision )
 					.getSingleResult();
 
 			assertNotNull( author );
 			assertEquals( 3, author.getBooks().size() );
-		}
-		catch ( Exception e ) {
-			if ( entityManager.getTransaction().isActive() ) {
-				entityManager.getTransaction().rollback();
-			}
-		}
-		finally {
-			entityManager.close();
-		}
+		} );
 	}
 
 	private Book createBook1() {
@@ -256,7 +208,6 @@ public class SetHashcodeChangeTest extends BaseEnversJPAFunctionalTestCase {
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinTable(name = "author_book",
 				joinColumns = @JoinColumn(name = "book_id"), inverseJoinColumns = @JoinColumn(name="author_id",nullable = false))
-		@NotAudited
 		private Author author;
 
 		public Integer getId() {

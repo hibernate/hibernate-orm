@@ -4,32 +4,29 @@
  */
 package org.hibernate.orm.test.envers.integration.dynamicmodel;
 
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.EntityManager;
-
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Felix Feisst (feisst dot felix at gmail dot com)
  */
 @JiraKey(value = "HHH-8769")
-public class DynamicModelTest extends BaseEnversJPAFunctionalTestCase {
-
-	@Override
-	protected String[] getMappings() {
-		return new String[] { "mappings/dynamicmodel/dynamicModel.hbm.xml" };
-	}
+@EnversTest
+@Jpa(xmlMappings = "mappings/dynamicmodel/dynamicModel.hbm.xml")
+public class DynamicModelTest {
 
 	/**
 	 * Tests that an EntityManager can be created when using a dynamic model mapping.
 	 */
 	@Test
-	public void testDynamicModelMapping() {
-		EntityManager entityManager = getOrCreateEntityManager();
-		assertNotNull( "Expected an entity manager to be returned", entityManager );
+	public void testDynamicModelMapping(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			assertNotNull( em, "Expected an entity manager to be returned" );
+		} );
 	}
-
 }

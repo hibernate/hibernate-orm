@@ -8,77 +8,84 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.AuditReader;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class LongRevNumber extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {StrTestEntity.class, LongRevNumberRevEntity.class})
+public class LongRevNumber {
 	private Integer id;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {StrTestEntity.class, LongRevNumberRevEntity.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() throws InterruptedException {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
-		StrTestEntity te = new StrTestEntity( "x" );
-		em.persist( te );
-		id = te.getId();
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			StrTestEntity te = new StrTestEntity( "x" );
+			em.persist( te );
+			id = te.getId();
+		} );
 
 		// Revision 2
-		em.getTransaction().begin();
-		te = em.find( StrTestEntity.class, id );
-		te.setStr( "y" );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			StrTestEntity te = em.find( StrTestEntity.class, id );
+			te.setStr( "y" );
+		} );
 	}
 
 	@Test
-	public void testFindRevision() {
-		AuditReader vr = getAuditReader();
+	public void testFindRevision(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			AuditReader vr = AuditReaderFactory.get( em );
 
-		assert vr.findRevision( LongRevNumberRevEntity.class, 1l ).getCustomId() == 1l;
-		assert vr.findRevision( LongRevNumberRevEntity.class, 2l ).getCustomId() == 2l;
+			assertEquals( 1l, vr.findRevision( LongRevNumberRevEntity.class, 1l ).getCustomId() );
+			assertEquals( 2l, vr.findRevision( LongRevNumberRevEntity.class, 2l ).getCustomId() );
+		} );
 	}
 
 	@Test
-	public void testFindRevisions() {
-		AuditReader vr = getAuditReader();
+	public void testFindRevisions(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			AuditReader vr = AuditReaderFactory.get( em );
 
-		Set<Number> revNumbers = new HashSet<Number>();
-		revNumbers.add( 1l );
-		revNumbers.add( 2l );
+			Set<Number> revNumbers = new HashSet<Number>();
+			revNumbers.add( 1l );
+			revNumbers.add( 2l );
 
-		Map<Number, LongRevNumberRevEntity> revisionMap = vr.findRevisions( LongRevNumberRevEntity.class, revNumbers );
-		assert (revisionMap.size() == 2);
-		assert (revisionMap.get( 1l ).equals( vr.findRevision( LongRevNumberRevEntity.class, 1l ) ));
-		assert (revisionMap.get( 2l ).equals( vr.findRevision( LongRevNumberRevEntity.class, 2l ) ));
+			Map<Number, LongRevNumberRevEntity> revisionMap = vr.findRevisions( LongRevNumberRevEntity.class, revNumbers );
+			assertEquals( 2, revisionMap.size() );
+			assertEquals( vr.findRevision( LongRevNumberRevEntity.class, 1l ), revisionMap.get( 1l ) );
+			assertEquals( vr.findRevision( LongRevNumberRevEntity.class, 2l ), revisionMap.get( 2l ) );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		assert Arrays.asList( 1l, 2l ).equals( getAuditReader().getRevisions( StrTestEntity.class, id ) );
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			assertEquals( Arrays.asList( 1l, 2l ), AuditReaderFactory.get( em ).getRevisions( StrTestEntity.class, id ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfId1() {
-		StrTestEntity ver1 = new StrTestEntity( "x", id );
-		StrTestEntity ver2 = new StrTestEntity( "y", id );
+	public void testHistoryOfId1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			StrTestEntity ver1 = new StrTestEntity( "x", id );
+			StrTestEntity ver2 = new StrTestEntity( "y", id );
 
-		assert getAuditReader().find( StrTestEntity.class, id, 1l ).equals( ver1 );
-		assert getAuditReader().find( StrTestEntity.class, id, 2l ).equals( ver2 );
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( ver1, auditReader.find( StrTestEntity.class, id, 1l ) );
+			assertEquals( ver2, auditReader.find( StrTestEntity.class, id, 2l ) );
+		} );
 	}
 }

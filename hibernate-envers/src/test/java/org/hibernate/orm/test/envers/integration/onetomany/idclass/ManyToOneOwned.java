@@ -45,7 +45,7 @@ public class ManyToOneOwned {
 		}
 
 		ManyToOneOwned that = (ManyToOneOwned) o;
-		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
+		if ( data != null ? !data.equals( that.getData() ) : that.getData() != null ) {
 			return false;
 		}
 		return true;

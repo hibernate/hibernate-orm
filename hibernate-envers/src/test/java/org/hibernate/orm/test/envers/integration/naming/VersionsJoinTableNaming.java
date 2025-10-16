@@ -7,98 +7,98 @@ package org.hibernate.orm.test.envers.integration.naming;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
-import jakarta.persistence.EntityManager;
 
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.mapping.Column;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 import org.hibernate.orm.test.envers.tools.TestTools;
-import org.hibernate.mapping.Column;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class VersionsJoinTableNaming extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@DomainModel(annotatedClasses = {VersionsJoinTableTestEntity.class, StrTestEntity.class})
+@SessionFactory
+public class VersionsJoinTableNaming {
 	private Integer uni1_id;
 	private Integer str1_id;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {VersionsJoinTableTestEntity.class, StrTestEntity.class};
-	}
+	private static final String MIDDLE_VERSIONS_ENTITY_NAME = "VERSIONS_JOIN_TABLE_TEST";
 
-	@Test
-	@Priority(10)
-	public void initData() {
-		VersionsJoinTableTestEntity uni1 = new VersionsJoinTableTestEntity( 1, "data1" );
-		StrTestEntity str1 = new StrTestEntity( "str1" );
-
+	@BeforeClassTemplate
+	public void initData(SessionFactoryScope scope) {
 		// Revision 1
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
+		scope.inTransaction( em -> {
+			VersionsJoinTableTestEntity uni1 = new VersionsJoinTableTestEntity( 1, "data1" );
+			StrTestEntity str1 = new StrTestEntity( "str1" );
 
-		uni1.setCollection( new HashSet<StrTestEntity>() );
-		em.persist( uni1 );
-		em.persist( str1 );
+			uni1.setCollection( new HashSet<>() );
+			em.persist( uni1 );
+			em.persist( str1 );
 
-		em.getTransaction().commit();
+			uni1_id = uni1.getId();
+			str1_id = str1.getId();
+		} );
 
 		// Revision 2
-		em.getTransaction().begin();
-
-		uni1 = em.find( VersionsJoinTableTestEntity.class, uni1.getId() );
-		str1 = em.find( StrTestEntity.class, str1.getId() );
-		uni1.getCollection().add( str1 );
-
-		em.getTransaction().commit();
-
-		//
-
-		uni1_id = uni1.getId();
-		str1_id = str1.getId();
+		scope.inTransaction( em -> {
+			VersionsJoinTableTestEntity uni1 = em.find( VersionsJoinTableTestEntity.class, uni1_id );
+			StrTestEntity str1 = em.find( StrTestEntity.class, str1_id );
+			uni1.getCollection().add( str1 );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		assert Arrays.asList( 1, 2 ).equals(
-				getAuditReader().getRevisions(
-						VersionsJoinTableTestEntity.class,
-						uni1_id
-				)
-		);
-		assert Arrays.asList( 1 ).equals( getAuditReader().getRevisions( StrTestEntity.class, str1_id ) );
+	public void testRevisionsCounts(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1, 2 ), auditReader.getRevisions( VersionsJoinTableTestEntity.class, uni1_id ) );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( StrTestEntity.class, str1_id ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfUniId1() {
-		StrTestEntity str1 = getEntityManager().find( StrTestEntity.class, str1_id );
+	public void testHistoryOfUniId1(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			StrTestEntity str1 = em.find( StrTestEntity.class, str1_id );
 
-		VersionsJoinTableTestEntity rev1 = getAuditReader().find( VersionsJoinTableTestEntity.class, uni1_id, 1 );
-		VersionsJoinTableTestEntity rev2 = getAuditReader().find( VersionsJoinTableTestEntity.class, uni1_id, 2 );
+			VersionsJoinTableTestEntity rev1 = auditReader.find( VersionsJoinTableTestEntity.class, uni1_id, 1 );
+			VersionsJoinTableTestEntity rev2 = auditReader.find( VersionsJoinTableTestEntity.class, uni1_id, 2 );
 
-		assert rev1.getCollection().equals( TestTools.makeSet() );
-		assert rev2.getCollection().equals( TestTools.makeSet( str1 ) );
+			assertEquals( TestTools.makeSet(), rev1.getCollection() );
+			assertEquals( TestTools.makeSet( str1 ), rev2.getCollection() );
 
-		assert "data1".equals( rev1.getData() );
-		assert "data1".equals( rev2.getData() );
+			assertEquals( "data1", rev1.getData() );
+			assertEquals( "data1", rev2.getData() );
+		} );
 	}
 
-	private final static String MIDDLE_VERSIONS_ENTITY_NAME = "VERSIONS_JOIN_TABLE_TEST";
-
 	@Test
-	public void testTableName() {
-		assert MIDDLE_VERSIONS_ENTITY_NAME.equals(
-				metadata().getEntityBinding( MIDDLE_VERSIONS_ENTITY_NAME ).getTable().getName()
+	public void testTableName(DomainModelScope scope) {
+		assertEquals(
+				MIDDLE_VERSIONS_ENTITY_NAME,
+				scope.getDomainModel().getEntityBinding( MIDDLE_VERSIONS_ENTITY_NAME ).getTable().getName()
 		);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
-	public void testJoinColumnName() {
-		Iterator<Column> columns =
-				metadata().getEntityBinding( MIDDLE_VERSIONS_ENTITY_NAME ).getTable().getColumns().iterator();
+	public void testJoinColumnName(DomainModelScope scope) {
+		Iterator<Column> columns = scope.getDomainModel()
+				.getEntityBinding( MIDDLE_VERSIONS_ENTITY_NAME )
+				.getTable()
+				.getColumns()
+				.iterator();
 
 		boolean id1Found = false;
 		boolean id2Found = false;
@@ -108,12 +108,11 @@ public class VersionsJoinTableNaming extends BaseEnversJPAFunctionalTestCase {
 			if ( "VJT_ID".equals( column.getName() ) ) {
 				id1Found = true;
 			}
-
 			if ( "STR_ID".equals( column.getName() ) ) {
 				id2Found = true;
 			}
 		}
 
-		assert id1Found && id2Found;
+		assertTrue( id1Found && id2Found );
 	}
 }

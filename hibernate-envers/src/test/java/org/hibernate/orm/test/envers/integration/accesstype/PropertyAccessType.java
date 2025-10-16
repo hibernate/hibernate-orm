@@ -4,61 +4,65 @@
  */
 package org.hibernate.orm.test.envers.integration.accesstype;
 
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
+
 import java.util.Arrays;
-import jakarta.persistence.EntityManager;
 
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class PropertyAccessType extends BaseEnversJPAFunctionalTestCase {
+@Jpa(annotatedClasses = {PropertyAccessTypeEntity.class})
+@EnversTest
+public class PropertyAccessType {
 	private Integer id1;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {PropertyAccessTypeEntity.class};
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			PropertyAccessTypeEntity pate = new PropertyAccessTypeEntity( "data" );
+			em.persist( pate );
+			id1 = pate.getId();
+		} );
+
+		scope.inTransaction( em -> {
+			PropertyAccessTypeEntity pate = em.find( PropertyAccessTypeEntity.class, id1 );
+			pate.writeData( "data2" );
+		} );
 	}
 
 	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
-		PropertyAccessTypeEntity pate = new PropertyAccessTypeEntity( "data" );
-		em.persist( pate );
-		id1 = pate.getId();
-		em.getTransaction().commit();
-
-		em.getTransaction().begin();
-		pate = em.find( PropertyAccessTypeEntity.class, id1 );
-		pate.writeData( "data2" );
-		em.getTransaction().commit();
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			assertEquals( Arrays.asList( 1, 2 ),
+					AuditReaderFactory.get( em ).getRevisions( PropertyAccessTypeEntity.class, id1 ) );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		assert Arrays.asList( 1, 2 ).equals( getAuditReader().getRevisions( PropertyAccessTypeEntity.class, id1 ) );
-	}
+	public void testHistoryOfId1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			PropertyAccessTypeEntity ver1 = new PropertyAccessTypeEntity( id1, "data" );
+			PropertyAccessTypeEntity ver2 = new PropertyAccessTypeEntity( id1, "data2" );
 
-	@Test
-	public void testHistoryOfId1() {
-		PropertyAccessTypeEntity ver1 = new PropertyAccessTypeEntity( id1, "data" );
-		PropertyAccessTypeEntity ver2 = new PropertyAccessTypeEntity( id1, "data2" );
+			PropertyAccessTypeEntity rev1 = AuditReaderFactory.get( em ).find( PropertyAccessTypeEntity.class, id1, 1 );
+			PropertyAccessTypeEntity rev2 = AuditReaderFactory.get( em ).find( PropertyAccessTypeEntity.class, id1, 2 );
 
-		PropertyAccessTypeEntity rev1 = getAuditReader().find( PropertyAccessTypeEntity.class, id1, 1 );
-		PropertyAccessTypeEntity rev2 = getAuditReader().find( PropertyAccessTypeEntity.class, id1, 2 );
+			assertTrue( rev1.isIdSet() );
+			assertTrue( rev2.isIdSet() );
 
-		assert rev1.isIdSet();
-		assert rev2.isIdSet();
+			assertTrue( rev1.isDataSet() );
+			assertTrue( rev2.isDataSet() );
 
-		assert rev1.isDataSet();
-		assert rev2.isDataSet();
-
-		assert rev1.equals( ver1 );
-		assert rev2.equals( ver2 );
+			assertEquals( ver1, rev1 );
+			assertEquals( ver2, rev2 );
+		} );
 	}
 }

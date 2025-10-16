@@ -6,64 +6,67 @@ package org.hibernate.orm.test.envers.integration.inheritance.joined.relation.un
 
 import java.util.Arrays;
 import java.util.Set;
-import jakarta.persistence.EntityManager;
 
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class UnidirectionalDoubleAbstract extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {
+		AbstractContainedEntity.class,
+		AbstractSetEntity.class,
+		ContainedEntity.class,
+		SetEntity.class
+})
+public class UnidirectionalDoubleAbstract {
 	private Long cce1_id;
 	private Integer cse1_id;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				AbstractContainedEntity.class,
-				AbstractSetEntity.class,
-				ContainedEntity.class,
-				SetEntity.class
-		};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Rev 1
-		em.getTransaction().begin();
+		scope.inTransaction( em -> {
+			ContainedEntity cce1 = new ContainedEntity();
+			em.persist( cce1 );
 
-		ContainedEntity cce1 = new ContainedEntity();
-		em.persist( cce1 );
+			SetEntity cse1 = new SetEntity();
+			cse1.getEntities().add( cce1 );
+			em.persist( cse1 );
 
-		SetEntity cse1 = new SetEntity();
-		cse1.getEntities().add( cce1 );
-		em.persist( cse1 );
-
-		em.getTransaction().commit();
-
-		cce1_id = cce1.getId();
-		cse1_id = cse1.getId();
+			cce1_id = cce1.getId();
+			cse1_id = cse1.getId();
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		assert Arrays.asList( 1 ).equals( getAuditReader().getRevisions( ContainedEntity.class, cce1_id ) );
-		assert Arrays.asList( 1 ).equals( getAuditReader().getRevisions( SetEntity.class, cse1_id ) );
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( ContainedEntity.class, cce1_id ) );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( SetEntity.class, cse1_id ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfReferencedCollection() {
-		ContainedEntity cce1 = getEntityManager().find( ContainedEntity.class, cce1_id );
+	public void testHistoryOfReferencedCollection(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			ContainedEntity cce1 = em.find( ContainedEntity.class, cce1_id );
 
-		Set<AbstractContainedEntity> entities = getAuditReader().find( SetEntity.class, cse1_id, 1 ).getEntities();
-		assert entities.size() == 1;
-		assert entities.iterator().next() instanceof ContainedEntity;
-		assert entities.contains( cce1 );
+			final var auditReader = AuditReaderFactory.get( em );
+			Set<AbstractContainedEntity> entities = auditReader.find( SetEntity.class, cse1_id, 1 ).getEntities();
+			assertEquals( 1, entities.size() );
+			assertTrue( entities.iterator().next() instanceof ContainedEntity );
+			assertTrue( entities.contains( cce1 ) );
+		} );
 	}
 }

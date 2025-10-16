@@ -5,69 +5,73 @@
 package org.hibernate.orm.test.envers.integration.inheritance.joined.emptychild;
 
 import java.util.Arrays;
-import jakarta.persistence.EntityManager;
 
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class EmptyChildAuditing extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {EmptyChildEntity.class, ParentEntity.class})
+public class EmptyChildAuditing {
 	private Integer id1;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {EmptyChildEntity.class, ParentEntity.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		id1 = 1;
 
 		// Rev 1
-		em.getTransaction().begin();
-		EmptyChildEntity pe = new EmptyChildEntity( id1, "x" );
-		em.persist( pe );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			EmptyChildEntity pe = new EmptyChildEntity( id1, "x" );
+			em.persist( pe );
+		} );
 
 		// Rev 2
-		em.getTransaction().begin();
-		pe = em.find( EmptyChildEntity.class, id1 );
-		pe.setData( "y" );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			EmptyChildEntity pe = em.find( EmptyChildEntity.class, id1 );
+			pe.setData( "y" );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		assert Arrays.asList( 1, 2 ).equals( getAuditReader().getRevisions( EmptyChildEntity.class, id1 ) );
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			assertEquals( Arrays.asList( 1, 2 ), AuditReaderFactory.get( em ).getRevisions( EmptyChildEntity.class, id1 ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfChildId1() {
+	public void testHistoryOfChildId1(EntityManagerFactoryScope scope) {
 		EmptyChildEntity ver1 = new EmptyChildEntity( id1, "x" );
 		EmptyChildEntity ver2 = new EmptyChildEntity( id1, "y" );
 
-		assert getAuditReader().find( EmptyChildEntity.class, id1, 1 ).equals( ver1 );
-		assert getAuditReader().find( EmptyChildEntity.class, id1, 2 ).equals( ver2 );
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( ver1, auditReader.find( EmptyChildEntity.class, id1, 1 ) );
+			assertEquals( ver2, auditReader.find( EmptyChildEntity.class, id1, 2 ) );
 
-		assert getAuditReader().find( ParentEntity.class, id1, 1 ).equals( ver1 );
-		assert getAuditReader().find( ParentEntity.class, id1, 2 ).equals( ver2 );
+			assertEquals( ver1, auditReader.find( ParentEntity.class, id1, 1 ) );
+			assertEquals( ver2, auditReader.find( ParentEntity.class, id1, 2 ) );
+		} );
 	}
 
 	@Test
-	public void testPolymorphicQuery() {
+	public void testPolymorphicQuery(EntityManagerFactoryScope scope) {
 		EmptyChildEntity childVer1 = new EmptyChildEntity( id1, "x" );
 
-		assert getAuditReader().createQuery().forEntitiesAtRevision( EmptyChildEntity.class, 1 ).getSingleResult()
-				.equals( childVer1 );
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( childVer1, auditReader.createQuery().forEntitiesAtRevision( EmptyChildEntity.class, 1 ).getSingleResult() );
 
-		assert getAuditReader().createQuery().forEntitiesAtRevision( ParentEntity.class, 1 ).getSingleResult()
-				.equals( childVer1 );
+			assertEquals( childVer1, auditReader.createQuery().forEntitiesAtRevision( ParentEntity.class, 1 ).getSingleResult() );
+		} );
 	}
 }

@@ -11,36 +11,34 @@ import java.util.Set;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.tools.TestTools;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-11063")
-public class ComponentCollectionHashcodeChangeTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {ComponentCollectionHashcodeChangeTest.ComponentEntity.class, ComponentCollectionHashcodeChangeTest.Component.class})
+public class ComponentCollectionHashcodeChangeTest {
 	private Integer id;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { ComponentEntity.class, Component.class };
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager entityManager = getEntityManager();
-		try {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
 			// Revision 1 - Create entity with 2 components
 			entityManager.getTransaction().begin();
 			Component component1 = new Component();
@@ -72,53 +70,52 @@ public class ComponentCollectionHashcodeChangeTest extends BaseEnversJPAFunction
 			entity.getComponents().add( component3 );
 			entityManager.merge( entity );
 			entityManager.getTransaction().commit();
-		}
-		catch ( Exception e ) {
-			if ( entityManager.getTransaction().isActive() ) {
-				entityManager.getTransaction().rollback();
-			}
-		}
-		finally {
-			entityManager.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testRevisionCounts() {
-		assertEquals( Arrays.asList( 1, 2, 3 ), getAuditReader().getRevisions( ComponentEntity.class, id ) );
+	public void testRevisionCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1, 2, 3 ), auditReader.getRevisions( ComponentEntity.class, id ) );
+		} );
 	}
 
 	@Test
-	public void testCollectionHistory() {
-		final ComponentEntity rev1 = getAuditReader().find( ComponentEntity.class, id, 1 );
-		assertEquals( 2, rev1.getComponents().size() );
-		assertEquals(
-				TestTools.makeSet(
-						new Component( "User1", "Test1" ),
-						new Component( "User2", "Test2" )
-				),
-				rev1.getComponents()
-		);
+	public void testCollectionHistory(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
 
-		final ComponentEntity rev2 = getAuditReader().find( ComponentEntity.class, id, 2 );
-		assertEquals( 2, rev2.getComponents().size() );
-		assertEquals(
-				TestTools.makeSet(
-						new Component( "User1-Inline", "Test1" ),
-						new Component( "User2", "Test2" )
-				),
-				rev2.getComponents()
-		);
+			final ComponentEntity rev1 = auditReader.find( ComponentEntity.class, id, 1 );
+			assertEquals( 2, rev1.getComponents().size() );
+			assertEquals(
+					TestTools.makeSet(
+							new Component( "User1", "Test1" ),
+							new Component( "User2", "Test2" )
+					),
+					rev1.getComponents()
+			);
 
-		final ComponentEntity rev3 = getAuditReader().find( ComponentEntity.class, id, 3 );
-		assertEquals( 2, rev3.getComponents().size() );
-		assertEquals(
-				TestTools.makeSet(
-						new Component( "User1-Inline", "Test1" ),
-						new Component( "User2", "Test3" )
-				),
-				rev3.getComponents()
-		);
+			final ComponentEntity rev2 = auditReader.find( ComponentEntity.class, id, 2 );
+			assertEquals( 2, rev2.getComponents().size() );
+			assertEquals(
+					TestTools.makeSet(
+							new Component( "User1-Inline", "Test1" ),
+							new Component( "User2", "Test2" )
+					),
+					rev2.getComponents()
+			);
+
+			final ComponentEntity rev3 = auditReader.find( ComponentEntity.class, id, 3 );
+			assertEquals( 2, rev3.getComponents().size() );
+			assertEquals(
+					TestTools.makeSet(
+							new Component( "User1-Inline", "Test1" ),
+							new Component( "User2", "Test3" )
+					),
+					rev3.getComponents()
+			);
+		} );
 	}
 
 	@Entity(name = "ComponentEntity")

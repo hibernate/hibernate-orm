@@ -5,17 +5,24 @@
 package org.hibernate.orm.test.envers.integration.superclass.auditparents;
 
 import java.util.Set;
-import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.orm.test.envers.tools.TestTools;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Tests mapping of child entity which parent declares one of its ancestors as audited with {@link Audited#auditParents()}
@@ -23,69 +30,65 @@ import org.junit.Test;
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class TransitiveAuditParentsTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@DomainModel(annotatedClasses = {
+		MappedGrandparentEntity.class,
+		TransitiveParentEntity.class,
+		ImplicitTransitiveChildEntity.class,
+		ExplicitTransitiveChildEntity.class
+})
+@SessionFactory
+public class TransitiveAuditParentsTest {
 	private long childImpTransId = 1L;
 	private long childExpTransId = 2L;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				MappedGrandparentEntity.class,
-				TransitiveParentEntity.class,
-				ImplicitTransitiveChildEntity.class,
-				ExplicitTransitiveChildEntity.class
-		};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-
+	@BeforeClassTemplate
+	public void initData(SessionFactoryScope scope) {
 		// Revision 1
-		em.getTransaction().begin();
-		em.persist(
-				new ImplicitTransitiveChildEntity(
-						childImpTransId,
-						"grandparent 1",
-						"notAudited 1",
-						"parent 1",
-						"child 1"
-				)
-		);
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			em.persist(
+					new ImplicitTransitiveChildEntity(
+							childImpTransId,
+							"grandparent 1",
+							"notAudited 1",
+							"parent 1",
+							"child 1"
+					)
+			);
+		} );
 
 		// Revision 2
-		em.getTransaction().begin();
-		em.persist(
-				new ExplicitTransitiveChildEntity(
-						childExpTransId,
-						"grandparent 2",
-						"notAudited 2",
-						"parent 2",
-						"child 2"
-				)
-		);
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			em.persist(
+					new ExplicitTransitiveChildEntity(
+							childExpTransId,
+							"grandparent 2",
+							"notAudited 2",
+							"parent 2",
+							"child 2"
+					)
+			);
+		} );
 	}
 
 	@Test
-	public void testCreatedAuditTables() {
-		Table explicitTransChildTable = metadata().getEntityBinding(
+	public void testCreatedAuditTables(DomainModelScope scope) {
+		final var domainModel = scope.getDomainModel();
+		final var explicitTransChildTable = domainModel.getEntityBinding(
 				"org.hibernate.orm.test.envers.integration.superclass.auditparents.ExplicitTransitiveChildEntity_AUD"
 		).getTable();
 		checkTableColumns(
-				TestTools.makeSet( "child", "parent", "grandparent", "id" ),
-				TestTools.makeSet( "notAudited" ),
+				Set.of( "child", "parent", "grandparent", "id" ),
+				Set.of( "notAudited" ),
 				explicitTransChildTable
 		);
 
-		Table implicitTransChildTable = metadata().getEntityBinding(
+		final var implicitTransChildTable = domainModel.getEntityBinding(
 				"org.hibernate.orm.test.envers.integration.superclass.auditparents.ImplicitTransitiveChildEntity_AUD"
 		).getTable();
 		checkTableColumns(
-				TestTools.makeSet( "child", "parent", "grandparent", "id" ),
-				TestTools.makeSet( "notAudited" ),
+				Set.of( "child", "parent", "grandparent", "id" ),
+				Set.of( "notAudited" ),
 				implicitTransChildTable
 		);
 	}
@@ -93,47 +96,51 @@ public class TransitiveAuditParentsTest extends BaseEnversJPAFunctionalTestCase 
 	private void checkTableColumns(Set<String> expectedColumns, Set<String> unexpectedColumns, Table table) {
 		for ( String columnName : expectedColumns ) {
 			// Check whether expected column exists.
-			Assert.assertNotNull( table.getColumn( new Column( columnName ) ) );
+			assertNotNull( table.getColumn( new Column( columnName ) ) );
 		}
 		for ( String columnName : unexpectedColumns ) {
 			// Check whether unexpected column does not exist.
-			Assert.assertNull( table.getColumn( new Column( columnName ) ) );
+			assertNull( table.getColumn( new Column( columnName ) ) );
 		}
 	}
 
 	@Test
-	public void testImplicitTransitiveAuditParents() {
-		// expectedChild.notAudited shall be null, because it is not audited.
-		ImplicitTransitiveChildEntity expectedChild = new ImplicitTransitiveChildEntity(
-				childImpTransId,
-				"grandparent 1",
-				null,
-				"parent 1",
-				"child 1"
-		);
-		ImplicitTransitiveChildEntity child = getAuditReader().find(
-				ImplicitTransitiveChildEntity.class,
-				childImpTransId,
-				1
-		);
-		Assert.assertEquals( expectedChild, child );
+	public void testImplicitTransitiveAuditParents(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			// expectedChild.notAudited shall be null, because it is not audited.
+			ImplicitTransitiveChildEntity expectedChild = new ImplicitTransitiveChildEntity(
+					childImpTransId,
+					"grandparent 1",
+					null,
+					"parent 1",
+					"child 1"
+			);
+			ImplicitTransitiveChildEntity child = AuditReaderFactory.get( em ).find(
+					ImplicitTransitiveChildEntity.class,
+					childImpTransId,
+					1
+			);
+			assertEquals( expectedChild, child );
+		} );
 	}
 
 	@Test
-	public void testExplicitTransitiveAuditParents() {
-		// expectedChild.notAudited shall be null, because it is not audited.
-		ExplicitTransitiveChildEntity expectedChild = new ExplicitTransitiveChildEntity(
-				childExpTransId,
-				"grandparent 2",
-				null,
-				"parent 2",
-				"child 2"
-		);
-		ExplicitTransitiveChildEntity child = getAuditReader().find(
-				ExplicitTransitiveChildEntity.class,
-				childExpTransId,
-				2
-		);
-		Assert.assertEquals( expectedChild, child );
+	public void testExplicitTransitiveAuditParents(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			// expectedChild.notAudited shall be null, because it is not audited.
+			ExplicitTransitiveChildEntity expectedChild = new ExplicitTransitiveChildEntity(
+					childExpTransId,
+					"grandparent 2",
+					null,
+					"parent 2",
+					"child 2"
+			);
+			ExplicitTransitiveChildEntity child = AuditReaderFactory.get( em ).find(
+					ExplicitTransitiveChildEntity.class,
+					childExpTransId,
+					2
+			);
+			assertEquals( expectedChild, child );
+		} );
 	}
 }

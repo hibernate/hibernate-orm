@@ -6,44 +6,43 @@ package org.hibernate.orm.test.envers.integration.tools;
 
 import java.util.Arrays;
 
-import org.hibernate.Session;
-import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @JiraKey(value = "HHH-7106")
-public class SchemaExportTest extends BaseEnversFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {StrTestEntity.class})
+public class SchemaExportTest {
 	private Integer id = null;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {StrTestEntity.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void testSchemaCreation() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Populate database with test data.
-		Session session = getSession();
-		session.getTransaction().begin();
-		StrTestEntity entity = new StrTestEntity( "data" );
-		session.persist( entity );
-		session.getTransaction().commit();
-
-		id = entity.getId();
+		scope.inTransaction(em -> {
+			StrTestEntity entity = new StrTestEntity("data");
+			em.persist(entity);
+			id = entity.getId();
+		});
 	}
 
 	@Test
-	@Priority(9)
-	public void testAuditDataRetrieval() {
-		Assert.assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( StrTestEntity.class, id ) );
-		Assert.assertEquals( new StrTestEntity( "data", id ), getAuditReader().find( StrTestEntity.class, id, 1 ) );
+	public void testAuditDataRetrieval(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(em -> {
+			final var auditReader = AuditReaderFactory.get(em);
+			assertEquals(Arrays.asList(1), auditReader.getRevisions(StrTestEntity.class, id));
+			assertEquals(new StrTestEntity("data", id), auditReader.find(StrTestEntity.class, id, 1));
+		});
 	}
 }

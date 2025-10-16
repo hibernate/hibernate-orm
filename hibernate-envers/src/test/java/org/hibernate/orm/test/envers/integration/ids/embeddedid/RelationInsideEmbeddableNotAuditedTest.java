@@ -19,17 +19,18 @@ import jakarta.persistence.ManyToOne;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.junit.Test;
-
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test an audited entity with an embeddable composite key that has an association
@@ -38,21 +39,18 @@ import static org.junit.Assert.assertTrue;
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-12498")
-public class RelationInsideEmbeddableNotAuditedTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {RelationInsideEmbeddableNotAuditedTest.Book.class,
+						RelationInsideEmbeddableNotAuditedTest.Author.class})
+public class RelationInsideEmbeddableNotAuditedTest {
 	private Integer authorId;
 	private BookId bookId1;
 	private BookId bookId2;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{ Book.class, Author.class };
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1, persist author and book
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final Author author = new Author();
 			author.setName( "Stephen King" );
 			entityManager.persist( author );
@@ -69,7 +67,7 @@ public class RelationInsideEmbeddableNotAuditedTest extends BaseEnversJPAFunctio
 		} );
 
 		// Revision 2, persist new book
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final Author author = entityManager.find( Author.class, authorId );
 
 			final Book book = new Book();
@@ -83,20 +81,20 @@ public class RelationInsideEmbeddableNotAuditedTest extends BaseEnversJPAFunctio
 		} );
 
 		// Modify books
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final Book book1 = entityManager.find( Book.class, bookId1 );
 			book1.setName( "Gunslinger: Dark Tower" );
 			entityManager.merge( book1 );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final Book book2 = entityManager.find( Book.class, bookId2 );
 			book2.setName( "Gunslinger: Dark Tower" );
 			entityManager.merge( book2 );
 		} );
 
 		//! Delete books
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final Book book1 = entityManager.find( Book.class, bookId1 );
 			entityManager.remove( book1 );
 
@@ -106,67 +104,83 @@ public class RelationInsideEmbeddableNotAuditedTest extends BaseEnversJPAFunctio
 	}
 
 	@Test
-	public void tesRevisionCounts() {
-		assertEquals( Arrays.asList( 1, 3, 5 ), getAuditReader().getRevisions( Book.class, bookId1 ) );
-		assertEquals( Arrays.asList( 2, 4, 5 ), getAuditReader().getRevisions( Book.class, bookId2 ) );
+	public void tesRevisionCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			assertEquals( Arrays.asList( 1, 3, 5 ),
+					AuditReaderFactory.get( em ).getRevisions( Book.class, bookId1 ) );
+			assertEquals( Arrays.asList( 2, 4, 5 ),
+					AuditReaderFactory.get( em ).getRevisions( Book.class, bookId2 ) );
+		} );
 	}
 
 	@Test
-	public void testRevisionHistoryBook1() {
-		final Book rev1 = getAuditReader().find( Book.class, bookId1, 1 );
-		assertNotNull( rev1.getId().getAuthor() );
+	public void testRevisionHistoryBook1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
 
-		final Book rev3 = getAuditReader().find( Book.class, bookId1, 3 );
-		assertNotNull( rev3.getId().getAuthor() );
+			final Book rev1 = auditReader.find( Book.class, bookId1, 1 );
+			assertNotNull( rev1.getId().getAuthor() );
 
-		final Book rev5 = getAuditReader().find( Book.class, bookId1, 5 );
-		assertNull( rev5 );
+			final Book rev3 = auditReader.find( Book.class, bookId1, 3 );
+			assertNotNull( rev3.getId().getAuthor() );
+
+			final Book rev5 = auditReader.find( Book.class, bookId1, 5 );
+			assertNull( rev5 );
+		} );
 	}
 
 	@Test
-	public void testRevisionHistoryBook2() {
-		final Book rev2 = getAuditReader().find( Book.class, bookId2, 2 );
-		assertNotNull( rev2.getId().getAuthor() );
+	public void testRevisionHistoryBook2(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
 
-		final Book rev4 = getAuditReader().find( Book.class, bookId2, 4 );
-		assertNotNull( rev4.getId().getAuthor() );
+			final Book rev2 = auditReader.find( Book.class, bookId2, 2 );
+			assertNotNull( rev2.getId().getAuthor() );
 
-		final Book rev5 = getAuditReader().find( Book.class, bookId2, 5 );
-		assertNull( rev5 );
-	}
+			final Book rev4 = auditReader.find( Book.class, bookId2, 4 );
+			assertNotNull( rev4.getId().getAuthor() );
 
-	@Test
-	@SuppressWarnings("unchecked")
-	public void testSelectDeletedEntitiesBook1() {
-		List<Book> books = (List<Book>) getAuditReader().createQuery()
-				.forRevisionsOfEntity( Book.class, true, true )
-				.add( AuditEntity.id().eq( bookId1 ) )
-				.add( AuditEntity.revisionType().eq( RevisionType.DEL ) )
-				.getResultList();
-
-		assertTrue( !books.isEmpty() );
-
-		final Book book = books.get( 0 );
-		assertNotNull( book.getId() );
-		assertNotNull( book.getId().getAuthor() );
-		assertEquals( authorId, book.getId().getAuthor().getId() );
+			final Book rev5 = auditReader.find( Book.class, bookId2, 5 );
+			assertNull( rev5 );
+		} );
 	}
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void testSelectDeletedEntitiesBook2() {
-		List<Book> books = (List<Book>) getAuditReader().createQuery()
-				.forRevisionsOfEntity( Book.class, true, true )
-				.add( AuditEntity.id().eq( bookId2 ) )
-				.add( AuditEntity.revisionType().eq( RevisionType.DEL ) )
-				.getResultList();
+	public void testSelectDeletedEntitiesBook1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			List<Book> books = (List<Book>) AuditReaderFactory.get( em ).createQuery()
+					.forRevisionsOfEntity( Book.class, true, true )
+					.add( AuditEntity.id().eq( bookId1 ) )
+					.add( AuditEntity.revisionType().eq( RevisionType.DEL ) )
+					.getResultList();
 
-		assertTrue( !books.isEmpty() );
+			assertTrue( !books.isEmpty() );
 
-		final Book book = books.get( 0 );
-		assertNotNull( book.getId() );
-		assertNotNull( book.getId().getAuthor() );
-		assertEquals( authorId, book.getId().getAuthor().getId() );
+			final Book book = books.get( 0 );
+			assertNotNull( book.getId() );
+			assertNotNull( book.getId().getAuthor() );
+			assertEquals( authorId, book.getId().getAuthor().getId() );
+		} );
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testSelectDeletedEntitiesBook2(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			List<Book> books = (List<Book>) AuditReaderFactory.get( em ).createQuery()
+					.forRevisionsOfEntity( Book.class, true, true )
+					.add( AuditEntity.id().eq( bookId2 ) )
+					.add( AuditEntity.revisionType().eq( RevisionType.DEL ) )
+					.getResultList();
+
+			assertTrue( !books.isEmpty() );
+
+			final Book book = books.get( 0 );
+			assertNotNull( book.getId() );
+			assertNotNull( book.getId().getAuthor() );
+			assertEquals( authorId, book.getId().getAuthor().getId() );
+		} );
 	}
 
 	@Audited

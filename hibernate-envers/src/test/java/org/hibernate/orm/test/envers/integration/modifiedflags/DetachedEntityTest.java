@@ -10,16 +10,17 @@ import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.Session;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.junit.Test;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Test that an updated detached entity will still properly track {@code withModifiedFlag}
@@ -29,84 +30,80 @@ import static org.junit.Assert.assertEquals;
  * @author Chris Cranford
  */
 @JiraKey("HHH-8973")
-public class DetachedEntityTest extends BaseEnversFunctionalTestCase {
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class<?>[] { Project.class };
-	}
+@EnversTest
+@Jpa(annotatedClasses = { DetachedEntityTest.Project.class })
+public class DetachedEntityTest {
 
-	@Test
-	@Priority(10)
-	public void initData() {
-		final Session s = openSession();
-		try {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
 			// revision 1 - persist the project entity
-			s.getTransaction().begin();
 			final Project project = new Project( 1, "fooName" );
-			s.persist( project );
-			s.getTransaction().commit();
+			em.persist( project );
+		} );
 
-			// detach the project entity
-			s.clear();
-
-			// revision 2 to 6 - update the detached project entity.
-			for( int i = 0; i < 5; ++i ) {
-				s.getTransaction().begin();
-				project.setName( "fooName" + ( i + 2 ) );
-				s.merge( project );
-				s.getTransaction().commit();
-				s.clear();
-			}
-		}
-		catch ( Throwable t ) {
-			if ( s.getTransaction().isActive() ) {
-				s.getTransaction().rollback();
-			}
-			throw t;
-		}
-		finally {
-			s.close();
+		// revision 2 to 6 - update the detached project entity.
+		for ( int i = 0; i < 5; ++i ) {
+			final int index = i;
+			scope.inTransaction( em -> {
+				final Project project = em.find( Project.class, 1 );
+				em.detach( project );
+				project.setName( "fooName" + ( index + 2 ) );
+				em.merge( project );
+			} );
 		}
 	}
 
 	@Test
-	public void testRevisionCounts() {
-		assertEquals( Arrays.asList( 1, 2, 3, 4, 5, 6 ), getAuditReader().getRevisions( Project.class, 1 ) );
+	public void testRevisionCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1, 2, 3, 4, 5, 6 ), auditReader.getRevisions( Project.class, 1 ) );
+		} );
 	}
 
 	@Test
-	public void testRevisionHistory() {
-		for ( Integer revision : Arrays.asList( 1, 2, 3, 4, 5, 6 ) ) {
-			final Project project = getAuditReader().find( Project.class, 1, revision );
-			if ( revision == 1 ) {
-				assertEquals( new Project( 1, "fooName" ), project );
+	public void testRevisionHistory(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			for ( Integer revision : Arrays.asList( 1, 2, 3, 4, 5, 6 ) ) {
+				final Project project = auditReader.find( Project.class, 1, revision );
+				if ( revision == 1 ) {
+					assertEquals( new Project( 1, "fooName" ), project );
+				}
+				else {
+					assertEquals( new Project( 1, "fooName" + revision ), project );
+				}
 			}
-			else {
-				assertEquals( new Project( 1, "fooName" + revision ), project );
-			}
-		}
+		} );
 	}
 
 	@Test
-	public void testModifiedFlagChangesForProjectType() {
-		final List results = getAuditReader().createQuery()
-				.forRevisionsOfEntity( Project.class, false, true )
-				.add( AuditEntity.property( "type" ).hasChanged() )
-				.addProjection( AuditEntity.revisionNumber() )
-				.addOrder( AuditEntity.revisionNumber().asc() )
-				.getResultList();
-		assertEquals( Arrays.asList( 1 ), results );
+	public void testModifiedFlagChangesForProjectType(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			final List results = auditReader.createQuery()
+					.forRevisionsOfEntity( Project.class, false, true )
+					.add( AuditEntity.property( "type" ).hasChanged() )
+					.addProjection( AuditEntity.revisionNumber() )
+					.addOrder( AuditEntity.revisionNumber().asc() )
+					.getResultList();
+			assertEquals( Arrays.asList( 1 ), results );
+		} );
 	}
 
 	@Test
-	public void testModifiedFlagChangesForProjectName() {
-		final List results = getAuditReader().createQuery()
-				.forRevisionsOfEntity( Project.class, false, true )
-				.add( AuditEntity.property( "name" ).hasChanged() )
-				.addProjection( AuditEntity.revisionNumber() )
-				.addOrder( AuditEntity.revisionNumber().asc() )
-				.getResultList();
-		assertEquals( Arrays.asList( 1, 2, 3, 4, 5, 6 ), results );
+	public void testModifiedFlagChangesForProjectName(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			final List results = auditReader.createQuery()
+					.forRevisionsOfEntity( Project.class, false, true )
+					.add( AuditEntity.property( "name" ).hasChanged() )
+					.addProjection( AuditEntity.revisionNumber() )
+					.addOrder( AuditEntity.revisionNumber().asc() )
+					.getResultList();
+			assertEquals( Arrays.asList( 1, 2, 3, 4, 5, 6 ), results );
+		} );
 	}
 
 	@Entity(name = "Project")

@@ -6,147 +6,148 @@ package org.hibernate.orm.test.envers.integration.inheritance.mixed;
 
 import java.util.Arrays;
 
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.orm.test.envers.integration.inheritance.mixed.entities.AbstractActivity;
 import org.hibernate.orm.test.envers.integration.inheritance.mixed.entities.AbstractCheckActivity;
 import org.hibernate.orm.test.envers.integration.inheritance.mixed.entities.Activity;
 import org.hibernate.orm.test.envers.integration.inheritance.mixed.entities.ActivityId;
 import org.hibernate.orm.test.envers.integration.inheritance.mixed.entities.CheckInActivity;
 import org.hibernate.orm.test.envers.integration.inheritance.mixed.entities.NormalActivity;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Michal Skowronek (mskowr at o2 pl)
  */
-public class MixedInheritanceStrategiesEntityTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {
+		AbstractActivity.class,
+		AbstractCheckActivity.class,
+		CheckInActivity.class,
+		NormalActivity.class
+})
+public class MixedInheritanceStrategiesEntityTest {
 
 	private ActivityId id2;
 	private ActivityId id1;
 	private ActivityId id3;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				AbstractActivity.class,
-				AbstractCheckActivity.class,
-				CheckInActivity.class,
-				NormalActivity.class
-		};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		NormalActivity normalActivity = new NormalActivity();
 		id1 = new ActivityId( 1, 2 );
 		normalActivity.setId( id1 );
 		normalActivity.setSequenceNumber( 1 );
 
 		// Revision 1
-		getEntityManager().getTransaction().begin();
+		scope.inTransaction( em -> {
+			em.persist( normalActivity );
+		} );
 
-		getEntityManager().persist( normalActivity );
-
-		getEntityManager().getTransaction().commit();
 		// Revision 2
-		getEntityManager().getTransaction().begin();
-
-		normalActivity = getEntityManager().find( NormalActivity.class, id1 );
-		CheckInActivity checkInActivity = new CheckInActivity();
-		id2 = new ActivityId( 2, 3 );
-		checkInActivity.setId( id2 );
-		checkInActivity.setSequenceNumber( 0 );
-		checkInActivity.setDurationInMinutes( 30 );
-		checkInActivity.setRelatedActivity( normalActivity );
-
-		getEntityManager().persist( checkInActivity );
-
-		getEntityManager().getTransaction().commit();
+		scope.inTransaction( em -> {
+			NormalActivity na = em.find( NormalActivity.class, id1 );
+			CheckInActivity checkInActivity = new CheckInActivity();
+			id2 = new ActivityId( 2, 3 );
+			checkInActivity.setId( id2 );
+			checkInActivity.setSequenceNumber( 0 );
+			checkInActivity.setDurationInMinutes( 30 );
+			checkInActivity.setRelatedActivity( na );
+			em.persist( checkInActivity );
+		} );
 
 		// Revision 3
-		normalActivity = new NormalActivity();
+		NormalActivity normalActivity3 = new NormalActivity();
 		id3 = new ActivityId( 3, 4 );
-		normalActivity.setId( id3 );
-		normalActivity.setSequenceNumber( 2 );
+		normalActivity3.setId( id3 );
+		normalActivity3.setSequenceNumber( 2 );
 
-		getEntityManager().getTransaction().begin();
-
-		getEntityManager().persist( normalActivity );
-
-		getEntityManager().getTransaction().commit();
+		scope.inTransaction( em -> {
+			em.persist( normalActivity3 );
+		} );
 
 		// Revision 4
-		getEntityManager().getTransaction().begin();
-
-		normalActivity = getEntityManager().find( NormalActivity.class, id3 );
-		checkInActivity = getEntityManager().find( CheckInActivity.class, id2 );
-		checkInActivity.setRelatedActivity( normalActivity );
-
-		getEntityManager().merge( checkInActivity );
-
-		getEntityManager().getTransaction().commit();
+		scope.inTransaction( em -> {
+			NormalActivity na = em.find( NormalActivity.class, id3 );
+			CheckInActivity checkInActivity = em.find( CheckInActivity.class, id2 );
+			checkInActivity.setRelatedActivity( na );
+			em.merge( checkInActivity );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( NormalActivity.class, id1 ) );
-		assertEquals( Arrays.asList( 3 ), getAuditReader().getRevisions( NormalActivity.class, id3 ) );
-		assertEquals( Arrays.asList( 2, 4 ), getAuditReader().getRevisions( CheckInActivity.class, id2 ) );
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( NormalActivity.class, id1 ) );
+			assertEquals( Arrays.asList( 3 ), auditReader.getRevisions( NormalActivity.class, id3 ) );
+			assertEquals( Arrays.asList( 2, 4 ), auditReader.getRevisions( CheckInActivity.class, id2 ) );
+		} );
 	}
 
 	@Test
-	public void testCurrentStateOfCheckInActivity() {
+	public void testCurrentStateOfCheckInActivity(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final CheckInActivity checkInActivity = em.find( CheckInActivity.class, id2 );
+			final NormalActivity normalActivity = em.find( NormalActivity.class, id3 );
 
-		final CheckInActivity checkInActivity = getEntityManager().find( CheckInActivity.class, id2 );
-		final NormalActivity normalActivity = getEntityManager().find( NormalActivity.class, id3 );
-
-		assertEquals( id2, checkInActivity.getId() );
-		assertEquals( 0, checkInActivity.getSequenceNumber().intValue() );
-		assertEquals( 30, checkInActivity.getDurationInMinutes().intValue() );
-		final Activity relatedActivity = checkInActivity.getRelatedActivity();
-		assertEquals( normalActivity.getId(), relatedActivity.getId() );
-		assertEquals( normalActivity.getSequenceNumber(), relatedActivity.getSequenceNumber() );
+			assertEquals( id2, checkInActivity.getId() );
+			assertEquals( 0, checkInActivity.getSequenceNumber().intValue() );
+			assertEquals( 30, checkInActivity.getDurationInMinutes().intValue() );
+			final Activity relatedActivity = checkInActivity.getRelatedActivity();
+			assertEquals( normalActivity.getId(), relatedActivity.getId() );
+			assertEquals( normalActivity.getSequenceNumber(), relatedActivity.getSequenceNumber() );
+		} );
 	}
 
 	@Test
-	public void testCheckCurrentStateOfNormalActivities() throws Exception {
-		final NormalActivity normalActivity1 = getEntityManager().find( NormalActivity.class, id1 );
-		final NormalActivity normalActivity2 = getEntityManager().find( NormalActivity.class, id3 );
+	public void testCheckCurrentStateOfNormalActivities(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final NormalActivity normalActivity1 = em.find( NormalActivity.class, id1 );
+			final NormalActivity normalActivity2 = em.find( NormalActivity.class, id3 );
 
-		assertEquals( id1, normalActivity1.getId() );
-		assertEquals( 1, normalActivity1.getSequenceNumber().intValue() );
-		assertEquals( id3, normalActivity2.getId() );
-		assertEquals( 2, normalActivity2.getSequenceNumber().intValue() );
+			assertEquals( id1, normalActivity1.getId() );
+			assertEquals( 1, normalActivity1.getSequenceNumber().intValue() );
+			assertEquals( id3, normalActivity2.getId() );
+			assertEquals( 2, normalActivity2.getSequenceNumber().intValue() );
+		} );
 	}
 
 	@Test
-	public void doTestFirstRevisionOfCheckInActivity() throws Exception {
-		CheckInActivity checkInActivity = getAuditReader().find( CheckInActivity.class, id2, 2 );
-		NormalActivity normalActivity = getAuditReader().find( NormalActivity.class, id1, 2 );
+	public void doTestFirstRevisionOfCheckInActivity(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			var auditReader = AuditReaderFactory.get( em );
+			CheckInActivity checkInActivity = auditReader.find( CheckInActivity.class, id2, 2 );
+			NormalActivity normalActivity = auditReader.find( NormalActivity.class, id1, 2 );
 
-		assertEquals( id2, checkInActivity.getId() );
-		assertEquals( 0, checkInActivity.getSequenceNumber().intValue() );
-		assertEquals( 30, checkInActivity.getDurationInMinutes().intValue() );
-		Activity relatedActivity = checkInActivity.getRelatedActivity();
-		assertEquals( normalActivity.getId(), relatedActivity.getId() );
-		assertEquals( normalActivity.getSequenceNumber(), relatedActivity.getSequenceNumber() );
+			assertEquals( id2, checkInActivity.getId() );
+			assertEquals( 0, checkInActivity.getSequenceNumber().intValue() );
+			assertEquals( 30, checkInActivity.getDurationInMinutes().intValue() );
+			Activity relatedActivity = checkInActivity.getRelatedActivity();
+			assertEquals( normalActivity.getId(), relatedActivity.getId() );
+			assertEquals( normalActivity.getSequenceNumber(), relatedActivity.getSequenceNumber() );
+		} );
 	}
 
 	@Test
-	public void doTestSecondRevisionOfCheckInActivity() throws Exception {
-		CheckInActivity checkInActivity = getAuditReader().find( CheckInActivity.class, id2, 4 );
-		NormalActivity normalActivity = getAuditReader().find( NormalActivity.class, id3, 4 );
+	public void doTestSecondRevisionOfCheckInActivity(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			var auditReader = AuditReaderFactory.get( em );
+			CheckInActivity checkInActivity = auditReader.find( CheckInActivity.class, id2, 4 );
+			NormalActivity normalActivity = auditReader.find( NormalActivity.class, id3, 4 );
 
-		assertEquals( id2, checkInActivity.getId() );
-		assertEquals( 0, checkInActivity.getSequenceNumber().intValue() );
-		assertEquals( 30, checkInActivity.getDurationInMinutes().intValue() );
-		Activity relatedActivity = checkInActivity.getRelatedActivity();
-		assertEquals( normalActivity.getId(), relatedActivity.getId() );
-		assertEquals( normalActivity.getSequenceNumber(), relatedActivity.getSequenceNumber() );
+			assertEquals( id2, checkInActivity.getId() );
+			assertEquals( 0, checkInActivity.getSequenceNumber().intValue() );
+			assertEquals( 30, checkInActivity.getDurationInMinutes().intValue() );
+			Activity relatedActivity = checkInActivity.getRelatedActivity();
+			assertEquals( normalActivity.getId(), relatedActivity.getId() );
+			assertEquals( normalActivity.getSequenceNumber(), relatedActivity.getSequenceNumber() );
+		} );
 	}
-
 }

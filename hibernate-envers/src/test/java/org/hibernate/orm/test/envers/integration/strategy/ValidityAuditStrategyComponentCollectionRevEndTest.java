@@ -7,7 +7,6 @@ package org.hibernate.orm.test.envers.integration.strategy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -18,90 +17,95 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OrderColumn;
 
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.envers.strategy.ValidityAuditStrategy;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * A {@link ValidityAuditStrategy} test that verifies that the {@code REVEND} field
+ * A {@link org.hibernate.envers.strategy.ValidityAuditStrategy} test that verifies that the {@code REVEND} field
  * for embedded component collection entries is updated when the component contains
  * {@code null} properties and is removed from the component collection.
  *
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-11214")
-public class ValidityAuditStrategyComponentCollectionRevEndTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {ValidityAuditStrategyComponentCollectionRevEndTest.Product.class},
+		integrationSettings = @Setting(name = EnversSettings.AUDIT_STRATEGY, value = "org.hibernate.envers.strategy.ValidityAuditStrategy"))
+public class ValidityAuditStrategyComponentCollectionRevEndTest {
 	private Integer productId;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Product.class };
-	}
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		options.put( EnversSettings.AUDIT_STRATEGY, ValidityAuditStrategy.class.getName() );
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1
-		this.productId = TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-			Product product = new Product( 1 , "Test" );
-			product.getItems().add( new Item( "bread", null ) );
-			entityManager.persist( product );
+		this.productId = scope.fromTransaction(entityManager -> {
+			Product product = new Product(1, "Test");
+			product.getItems().add(new Item("bread", null));
+			entityManager.persist(product);
 			return product.getId();
-		} );
+		});
 
 		// Revision 2
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-			Product product = entityManager.find( Product.class, productId );
-			product.getItems().add( new Item( "bread2", 2 ) );
-			entityManager.merge( product );
-		} );
+		scope.inTransaction(entityManager -> {
+			Product product = entityManager.find(Product.class, productId);
+			product.getItems().add(new Item("bread2", 2));
+			entityManager.merge(product);
+		});
 
 		// Revision 3
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-			Product product = entityManager.find( Product.class, productId );
-			product.getItems().remove( 0 );
-			entityManager.merge( product );
-		} );
+		scope.inTransaction(entityManager -> {
+			Product product = entityManager.find(Product.class, productId);
+			product.getItems().remove(0);
+			entityManager.merge(product);
+		});
 	}
 
 	@Test
-	public void testRevisionCounts() {
-		assertEquals( Arrays.asList( 1, 2, 3 ), getAuditReader().getRevisions( Product.class, productId ) );
+	public void testRevisionCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(entityManager -> {
+			final var auditReader = AuditReaderFactory.get(entityManager);
+			assertEquals(Arrays.asList(1, 2, 3), auditReader.getRevisions(Product.class, productId));
+		});
 	}
 
 	@Test
-	public void testRevision1() {
-		final Product product = getAuditReader().find( Product.class, productId, 1 );
-		assertEquals( 1, product.getItems().size() );
-		assertEquals( "bread", product.getItems().get( 0 ).getName() );
+	public void testRevision1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(entityManager -> {
+			final var auditReader = AuditReaderFactory.get(entityManager);
+			final Product product = auditReader.find(Product.class, productId, 1);
+			assertEquals(1, product.getItems().size());
+			assertEquals("bread", product.getItems().get(0).getName());
+		});
 	}
 
 	@Test
-	public void testRevision2() {
-		final Product product = getAuditReader().find( Product.class, productId, 2 );
-		assertEquals( 2, product.getItems().size() );
-		assertEquals( "bread", product.getItems().get( 0 ).getName() );
-		assertEquals( "bread2", product.getItems().get( 1 ).getName() );
+	public void testRevision2(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(entityManager -> {
+			final var auditReader = AuditReaderFactory.get(entityManager);
+			final Product product = auditReader.find(Product.class, productId, 2);
+			assertEquals(2, product.getItems().size());
+			assertEquals("bread", product.getItems().get(0).getName());
+			assertEquals("bread2", product.getItems().get(1).getName());
+		});
 	}
 
 	@Test
-	public void testRevision3() {
-		final Product product = getAuditReader().find( Product.class, productId, 3 );
-		assertEquals( 1, product.getItems().size() );
-		assertEquals( "bread2", product.getItems().get( 0 ).getName() );
+	public void testRevision3(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(entityManager -> {
+			final var auditReader = AuditReaderFactory.get(entityManager);
+			final Product product = auditReader.find(Product.class, productId, 3);
+			assertEquals(1, product.getItems().size());
+			assertEquals("bread2", product.getItems().get(0).getName());
+		});
 	}
 
 	@Entity(name = "Product")
@@ -153,28 +157,28 @@ public class ValidityAuditStrategyComponentCollectionRevEndTest extends BaseEnve
 		@Override
 		public int hashCode() {
 			int result = id != null ? id.hashCode() : 0;
-			result = 31 * result + ( name != null ? name.hashCode() : 0 );
-			result = 31 * result + ( items != null ? items.hashCode() : 0 );
+			result = 31 * result + (name != null ? name.hashCode() : 0);
+			result = 31 * result + (items != null ? items.hashCode() : 0);
 			return result;
 		}
 
 		@Override
 		public boolean equals(Object object) {
-			if ( this == object ) {
+			if (this == object) {
 				return true;
 			}
-			if ( object == null | getClass() != object.getClass() ) {
+			if (object == null || getClass() != object.getClass()) {
 				return false;
 			}
 
 			Product that = (Product) object;
-			if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			if (id != null ? !id.equals(that.id) : that.id != null) {
 				return false;
 			}
-			if ( name != null ? !name.equals( that.name ) : that.name != null ) {
+			if (name != null ? !name.equals(that.name) : that.name != null) {
 				return false;
 			}
-			return !( items != null ? !items.equals( that.items ) : that.items != null );
+			return !(items != null ? !items.equals(that.items) : that.items != null);
 		}
 	}
 
@@ -213,24 +217,24 @@ public class ValidityAuditStrategyComponentCollectionRevEndTest extends BaseEnve
 		@Override
 		public int hashCode() {
 			int result = name != null ? name.hashCode() : 0;
-			result = 31 * result + ( value != null ? value.hashCode() : 0 );
+			result = 31 * result + (value != null ? value.hashCode() : 0);
 			return result;
 		}
 
 		@Override
 		public boolean equals(Object object) {
-			if ( this == object ) {
+			if (this == object) {
 				return true;
 			}
-			if ( object == null || getClass() != object.getClass() ) {
+			if (object == null || getClass() != object.getClass()) {
 				return false;
 			}
 
 			Item that = (Item) object;
-			if ( name != null ? !name.equals( that.name ) : that.name != null ) {
+			if (name != null ? !name.equals(that.name) : that.name != null) {
 				return false;
 			}
-			return !( value != null ? !value.equals( that.value ) : that.value != null );
+			return !(value != null ? !value.equals(that.value) : that.value != null);
 		}
 	}
 }

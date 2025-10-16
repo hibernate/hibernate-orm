@@ -4,49 +4,46 @@
  */
 package org.hibernate.orm.test.envers.integration.onetomany.idclass;
 
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.envers.query.AuditEntity;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
+
 import java.util.Arrays;
 
-import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-7625")
-public class OneToManyCompositeKeyTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {OneToManyOwned.class, ManyToManyCompositeKey.class, ManyToOneOwned.class})
+public class OneToManyCompositeKeyTest {
 	private ManyToManyCompositeKey.ManyToManyId owning1Id = null;
 	private ManyToManyCompositeKey.ManyToManyId owning2Id = null;
 	private Long oneToManyId;
 	private Long manyToOne1Id;
 	private Long manyToOne2Id;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { OneToManyOwned.class, ManyToManyCompositeKey.class, ManyToOneOwned.class };
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			OneToManyOwned oneToManyOwned = new OneToManyOwned( "data", null );
 			ManyToOneOwned manyToOneOwned1 = new ManyToOneOwned( "data1" );
 			ManyToOneOwned manyToOneOwned2 = new ManyToOneOwned( "data2" );
 			ManyToManyCompositeKey owning1 = new ManyToManyCompositeKey( oneToManyOwned, manyToOneOwned1 );
 			ManyToManyCompositeKey owning2 = new ManyToManyCompositeKey( oneToManyOwned, manyToOneOwned2 );
 
-			entityManager.persist(oneToManyOwned);
-			entityManager.persist(manyToOneOwned1);
-			entityManager.persist(manyToOneOwned2);
+			entityManager.persist( oneToManyOwned );
+			entityManager.persist( manyToOneOwned1 );
+			entityManager.persist( manyToOneOwned2 );
 			entityManager.persist( owning1 );
 			entityManager.persist( owning2 );
 
@@ -59,93 +56,111 @@ public class OneToManyCompositeKeyTest extends BaseEnversJPAFunctionalTestCase {
 		} );
 
 		// Revision 2
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			ManyToManyCompositeKey owning1 = entityManager.find( ManyToManyCompositeKey.class, owning1Id );
 			entityManager.remove( owning1 );
 		} );
 
 		// Revision 3
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			ManyToManyCompositeKey owning2 = entityManager.find( ManyToManyCompositeKey.class, owning2Id );
 			entityManager.remove( owning2 );
 		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		assertEquals( Arrays.asList( 1, 2 ), getAuditReader().getRevisions( ManyToManyCompositeKey.class, owning1Id ) );
-		assertEquals( Arrays.asList( 1, 3 ), getAuditReader().getRevisions( ManyToManyCompositeKey.class, owning2Id ) );
-		assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( OneToManyOwned.class, oneToManyId ) );
-		assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( ManyToOneOwned.class, manyToOne1Id ) );
-		assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( ManyToOneOwned.class, manyToOne2Id ) );
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1, 2 ), auditReader.getRevisions( ManyToManyCompositeKey.class, owning1Id ) );
+			assertEquals( Arrays.asList( 1, 3 ), auditReader.getRevisions( ManyToManyCompositeKey.class, owning2Id ) );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( OneToManyOwned.class, oneToManyId ) );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( ManyToOneOwned.class, manyToOne1Id ) );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( ManyToOneOwned.class, manyToOne2Id ) );
+		} );
 	}
 
 	@Test
-	public void testOneToManyHistory() {
-		final OneToManyOwned rev1 = getAuditReader().find( OneToManyOwned.class, oneToManyId, 1 );
-		assertEquals( "data", rev1.getData() );
-		assertEquals( 2, rev1.getManyToManyCompositeKeys().size() );
+	public void testOneToManyHistory(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			final OneToManyOwned rev1 = auditReader.find( OneToManyOwned.class, oneToManyId, 1 );
+			assertEquals( "data", rev1.getData() );
+			assertEquals( 2, rev1.getManyToManyCompositeKeys().size() );
+		} );
 	}
 
 	@Test
-	public void testManyToOne1History() {
-		final ManyToOneOwned rev1 = getAuditReader().find( ManyToOneOwned.class, manyToOne1Id, 1 );
-		assertEquals( "data1", rev1.getData() );
+	public void testManyToOne1History(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			final ManyToOneOwned rev1 = auditReader.find( ManyToOneOwned.class, manyToOne1Id, 1 );
+			assertEquals( "data1", rev1.getData() );
+		} );
 	}
 
 	@Test
-	public void testManyToOne2History() {
-		final ManyToOneOwned rev1 = getAuditReader().find( ManyToOneOwned.class, manyToOne2Id, 1 );
-		assertEquals( "data2", rev1.getData() );
+	public void testManyToOne2History(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			final ManyToOneOwned rev1 = auditReader.find( ManyToOneOwned.class, manyToOne2Id, 1 );
+			assertEquals( "data2", rev1.getData() );
+		} );
 	}
 
 	@Test
-	public void testOwning1History() {
-		// objects
-		final OneToManyOwned oneToMany = new OneToManyOwned( 1L, "data", null );
-		final ManyToOneOwned manyToOne = new ManyToOneOwned( 2L, "data1" );
+	public void testOwning1History(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			// objects
+			final OneToManyOwned oneToMany = new OneToManyOwned( 1L, "data", null );
+			final ManyToOneOwned manyToOne = new ManyToOneOwned( 2L, "data1" );
 
-		// insert revision
-		final ManyToManyCompositeKey rev1 = getAuditReader().find( ManyToManyCompositeKey.class, owning1Id, 1 );
-		assertEquals( rev1.getOneToMany(), oneToMany );
-		assertEquals( rev1.getManyToOne(), manyToOne );
+			// insert revision
+			final ManyToManyCompositeKey rev1 = auditReader.find( ManyToManyCompositeKey.class, owning1Id, 1 );
+			assertEquals( oneToMany, rev1.getOneToMany() );
+			assertEquals( manyToOne, rev1.getManyToOne() );
 
-		// removal revision - find returns null for deleted
-		assertNull( getAuditReader().find( ManyToManyCompositeKey.class, owning1Id, 2 ) );
+			// removal revision - find returns null for deleted
+			assertNull( auditReader.find( ManyToManyCompositeKey.class, owning1Id, 2 ) );
 
-		// fetch revision 2 using 'select deletions' api and verify.
-		final ManyToManyCompositeKey rev2 = (ManyToManyCompositeKey) getAuditReader()
-				.createQuery()
-				.forRevisionsOfEntity( ManyToManyCompositeKey.class, true, true )
-				.add( AuditEntity.id().eq( owning1Id ) )
-				.add( AuditEntity.revisionNumber().eq( 2 ) )
-				.getSingleResult();
-		assertEquals( rev2.getOneToMany(), oneToMany );
-		assertEquals( rev2.getManyToOne(), manyToOne );
+			// fetch revision 2 using 'select deletions' api and verify.
+			final ManyToManyCompositeKey rev2 = (ManyToManyCompositeKey) auditReader
+					.createQuery()
+					.forRevisionsOfEntity( ManyToManyCompositeKey.class, true, true )
+					.add( AuditEntity.id().eq( owning1Id ) )
+					.add( AuditEntity.revisionNumber().eq( 2 ) )
+					.getSingleResult();
+			assertEquals( oneToMany, rev2.getOneToMany() );
+			assertEquals( manyToOne, rev2.getManyToOne() );
+		} );
 	}
 
 	@Test
-	public void testOwning2History() {
-		// objects
-		final OneToManyOwned oneToMany = new OneToManyOwned( 1L, "data", null );
-		final ManyToOneOwned manyToOne = new ManyToOneOwned( 3L, "data2" );
+	public void testOwning2History(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			// objects
+			final OneToManyOwned oneToMany = new OneToManyOwned( 1L, "data", null );
+			final ManyToOneOwned manyToOne = new ManyToOneOwned( 3L, "data2" );
 
-		// insert revision
-		final ManyToManyCompositeKey rev1 = getAuditReader().find( ManyToManyCompositeKey.class, owning2Id, 1 );
-		assertEquals( rev1.getOneToMany(), oneToMany );
-		assertEquals( rev1.getManyToOne(), manyToOne );
+			// insert revision
+			final ManyToManyCompositeKey rev1 = auditReader.find( ManyToManyCompositeKey.class, owning2Id, 1 );
+			assertEquals( oneToMany, rev1.getOneToMany() );
+			assertEquals( manyToOne, rev1.getManyToOne() );
 
-		// removal revision - find returns null for deleted
-		assertNull( getAuditReader().find( ManyToManyCompositeKey.class, owning2Id, 3 ) );
+			// removal revision - find returns null for deleted
+			assertNull( auditReader.find( ManyToManyCompositeKey.class, owning2Id, 3 ) );
 
-		// fetch revision 3 using 'select deletions' api and verify.
-		final ManyToManyCompositeKey rev2 = (ManyToManyCompositeKey) getAuditReader()
-				.createQuery()
-				.forRevisionsOfEntity( ManyToManyCompositeKey.class, true, true )
-				.add( AuditEntity.id().eq( owning2Id ) )
-				.add( AuditEntity.revisionNumber().eq( 3 ) )
-				.getSingleResult();
-		assertEquals( rev2.getOneToMany(), oneToMany );
-		assertEquals( rev2.getManyToOne(), manyToOne );
+			// fetch revision 3 using 'select deletions' api and verify.
+			final ManyToManyCompositeKey rev2 = (ManyToManyCompositeKey) auditReader
+					.createQuery()
+					.forRevisionsOfEntity( ManyToManyCompositeKey.class, true, true )
+					.add( AuditEntity.id().eq( owning2Id ) )
+					.add( AuditEntity.revisionNumber().eq( 3 ) )
+					.getSingleResult();
+			assertEquals( oneToMany, rev2.getOneToMany() );
+			assertEquals( manyToOne, rev2.getManyToOne() );
+		} );
 	}
 }

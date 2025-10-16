@@ -18,23 +18,26 @@ import jakarta.persistence.ManyToMany;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.junit.Test;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-12240")
-public class MappedByEmbeddableAttributeTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {MappedByEmbeddableAttributeTest.EntityA.class, MappedByEmbeddableAttributeTest.EntityB.class})
+public class MappedByEmbeddableAttributeTest {
 
 	@Audited
 	@Entity(name = "EntityA")
@@ -163,29 +166,23 @@ public class MappedByEmbeddableAttributeTest extends BaseEnversJPAFunctionalTest
 		}
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { EntityA.class, EntityB.class };
-	}
-
 	private Integer aId;
 	private Integer bId1;
 	private Integer bId2;
 
-	@Test
-	@Priority(10)
-	public void initData() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		aId = scope.fromTransaction( entityManager -> {
 			final EntityA a = new EntityA( "A" );
 			final EntityB b = new EntityB( "B", a );
 			entityManager.persist( a );
 			entityManager.persist( b );
 
-			this.aId = a.getId();
 			this.bId1 = b.getId();
+			return a.getId();
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final EntityA a = entityManager.find( EntityA.class, this.aId );
 			for ( EntityB b : a.getContainer().getbList() ) {
 				b.setName( b.getName() + "-Updated" );
@@ -193,7 +190,7 @@ public class MappedByEmbeddableAttributeTest extends BaseEnversJPAFunctionalTest
 			}
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final EntityA a = entityManager.find( EntityA.class, this.aId );
 			final EntityB b = new EntityB( "B2", a );
 			entityManager.persist( b );
@@ -204,42 +201,47 @@ public class MappedByEmbeddableAttributeTest extends BaseEnversJPAFunctionalTest
 	}
 
 	@Test
-	public void testRevisionHistoryEntityA() {
-		List<Number> aRevisions = getAuditReader().getRevisions( EntityA.class, this.aId );
-		assertEquals( Arrays.asList( 1, 3 ), aRevisions );
+	public void testRevisionHistoryEntityA(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			List<Number> aRevisions = auditReader.getRevisions( EntityA.class, this.aId );
+			assertEquals( Arrays.asList( 1, 3 ), aRevisions );
 
-		EntityA rev1 = getAuditReader().find( EntityA.class, this.aId, 1 );
-		assertEquals( 1, rev1.getContainer().getbList().size() );
-		assertEquals( "B", rev1.getContainer().getbList().get( 0 ).getName() );
+			EntityA rev1 = auditReader.find( EntityA.class, this.aId, 1 );
+			assertEquals( 1, rev1.getContainer().getbList().size() );
+			assertEquals( "B", rev1.getContainer().getbList().get( 0 ).getName() );
 
-		EntityA rev3 = getAuditReader().find( EntityA.class, this.aId, 3 );
-		assertEquals( 2, rev3.getContainer().getbList().size() );
-		assertThat( rev3.getContainer().getbList(), hasItem( new EntityBNameMatcher( "B-Updated" ) ) );
-		assertThat( rev3.getContainer().getbList(), hasItem( new EntityBNameMatcher( "B2" ) ) );
-
+			EntityA rev3 = auditReader.find( EntityA.class, this.aId, 3 );
+			assertEquals( 2, rev3.getContainer().getbList().size() );
+			assertThat( rev3.getContainer().getbList(), hasItem( new EntityBNameMatcher( "B-Updated" ) ) );
+			assertThat( rev3.getContainer().getbList(), hasItem( new EntityBNameMatcher( "B2" ) ) );
+		} );
 	}
 
 	@Test
-	public void testRevisionHistoryEntityB() {
-		List<Number> b1Revisions = getAuditReader().getRevisions( EntityB.class, this.bId1 );
-		assertEquals( Arrays.asList( 1, 2 ), b1Revisions );
+	public void testRevisionHistoryEntityB(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			List<Number> b1Revisions = auditReader.getRevisions( EntityB.class, this.bId1 );
+			assertEquals( Arrays.asList( 1, 2 ), b1Revisions );
 
-		EntityB b1Rev1 = getAuditReader().find( EntityB.class, this.bId1, 1 );
-		assertEquals( "B", b1Rev1.getName() );
-		assertEquals( 1, b1Rev1.getaList().size() );
-		assertEquals( this.aId, b1Rev1.getaList().get( 0 ).getId() );
+			EntityB b1Rev1 = auditReader.find( EntityB.class, this.bId1, 1 );
+			assertEquals( "B", b1Rev1.getName() );
+			assertEquals( 1, b1Rev1.getaList().size() );
+			assertEquals( this.aId, b1Rev1.getaList().get( 0 ).getId() );
 
-		EntityB b1Rev2 = getAuditReader().find( EntityB.class, this.bId1, 2 );
-		assertEquals( "B-Updated", b1Rev2.getName() );
-		assertEquals( 1, b1Rev1.getaList().size() );
-		assertEquals( this.aId, b1Rev1.getaList().get( 0 ).getId() );
+			EntityB b1Rev2 = auditReader.find( EntityB.class, this.bId1, 2 );
+			assertEquals( "B-Updated", b1Rev2.getName() );
+			assertEquals( 1, b1Rev1.getaList().size() );
+			assertEquals( this.aId, b1Rev1.getaList().get( 0 ).getId() );
 
-		List<Number> b2Revisions = getAuditReader().getRevisions( EntityB.class, this.bId2 );
-		assertEquals( Arrays.asList( 3 ), b2Revisions );
+			List<Number> b2Revisions = auditReader.getRevisions( EntityB.class, this.bId2 );
+			assertEquals( Arrays.asList( 3 ), b2Revisions );
 
-		EntityB b2Rev3 = getAuditReader().find( EntityB.class, this.bId2, 3 );
-		assertEquals( "B2", b2Rev3.getName() );
-		assertEquals( 1, b2Rev3.getaList().size() );
-		assertEquals( this.aId, b2Rev3.getaList().get( 0 ).getId() );
+			EntityB b2Rev3 = auditReader.find( EntityB.class, this.bId2, 3 );
+			assertEquals( "B2", b2Rev3.getName() );
+			assertEquals( 1, b2Rev3.getaList().size() );
+			assertEquals( this.aId, b2Rev3.getaList().get( 0 ).getId() );
+		} );
 	}
 }

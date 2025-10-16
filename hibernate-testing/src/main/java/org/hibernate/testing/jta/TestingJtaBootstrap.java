@@ -21,6 +21,7 @@ public final class TestingJtaBootstrap implements SettingConfiguration.Configure
 	public static final TestingJtaBootstrap INSTANCE = new TestingJtaBootstrap();
 
 	public static void prepare(Map<String,Object> configValues) {
+		configValues.put( TRANSACTION_COORDINATOR_STRATEGY, "jta" );
 		configValues.put( AvailableSettings.JTA_PLATFORM, TestingJtaPlatformImpl.INSTANCE );
 		configValues.put( AvailableSettings.CONNECTION_PROVIDER, JtaAwareConnectionProviderImpl.class.getName() );
 		configValues.put(
@@ -52,7 +53,11 @@ public final class TestingJtaBootstrap implements SettingConfiguration.Configure
 
 	@Override
 	public void applySettings(StandardServiceRegistryBuilder registryBuilder) {
-		registryBuilder.applySetting( TRANSACTION_COORDINATOR_STRATEGY, "jta" );
 		prepare( registryBuilder );
+	}
+
+	@Override
+	public void applySettings(Map<String, Object> configValues) {
+		prepare( configValues );
 	}
 }

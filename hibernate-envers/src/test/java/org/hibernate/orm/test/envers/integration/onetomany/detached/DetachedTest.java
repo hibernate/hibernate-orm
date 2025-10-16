@@ -6,84 +6,83 @@ package org.hibernate.orm.test.envers.integration.onetomany.detached;
 
 import java.util.Arrays;
 
-import org.hibernate.Session;
-import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 import org.hibernate.orm.test.envers.entities.onetomany.detached.ListRefCollEntity;
 
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-import junit.framework.Assert;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class DetachedTest extends BaseEnversFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {ListRefCollEntity.class, StrTestEntity.class})
+public class DetachedTest {
 	private Integer parentId = null;
 	private Integer childId = null;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {ListRefCollEntity.class, StrTestEntity.class};
-	}
-
-	@Test
-	@Priority(10)
+	@BeforeClassTemplate
 	@JiraKey(value = "HHH-7543")
-	public void testUpdatingDetachedEntityWithRelation() {
-		Session session = getSession();
-
+	public void testUpdatingDetachedEntityWithRelation(EntityManagerFactoryScope scope) {
 		// Revision 1
-		session.getTransaction().begin();
-		ListRefCollEntity parent = new ListRefCollEntity( 1, "initial data" );
-		StrTestEntity child = new StrTestEntity( "data" );
-		session.persist( child );
-		parent.setCollection( Arrays.asList( child ) );
-		session.persist( parent );
-		session.getTransaction().commit();
+		scope.inTransaction( em -> {
+			ListRefCollEntity parent = new ListRefCollEntity( 1, "initial data" );
+			StrTestEntity child = new StrTestEntity( "data" );
+			em.persist( child );
+			parent.setCollection( Arrays.asList( child ) );
+			em.persist( parent );
 
-		session.close();
-		session = getSession();
+			parentId = parent.getId();
+			childId = child.getId();
+		} );
 
 		// Revision 2 - updating detached entity
-		session.getTransaction().begin();
-		parent.setData( "modified data" );
-		session.merge( parent );
-		session.getTransaction().commit();
-
-		session.close();
-
-		parentId = parent.getId();
-		childId = child.getId();
+		scope.inTransaction( em -> {
+			ListRefCollEntity parent = new ListRefCollEntity( 1, "modified data" );
+			parent.setId( parentId );
+			parent.setCollection( Arrays.asList( new StrTestEntity( "data", childId ) ) );
+			em.merge( parent );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		Assert.assertEquals(
-				Arrays.asList( 1, 2 ), getAuditReader().getRevisions(
-				ListRefCollEntity.class,
-				parentId
-		)
-		);
-		Assert.assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( StrTestEntity.class, childId ) );
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals(
+					Arrays.asList( 1, 2 ),
+					auditReader.getRevisions( ListRefCollEntity.class, parentId )
+			);
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( StrTestEntity.class, childId ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfParent() {
-		ListRefCollEntity parent = new ListRefCollEntity( parentId, "initial data" );
-		parent.setCollection( Arrays.asList( new StrTestEntity( "data", childId ) ) );
+	public void testHistoryOfParent(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
 
-		ListRefCollEntity ver1 = getAuditReader().find( ListRefCollEntity.class, parentId, 1 );
+			ListRefCollEntity parent = new ListRefCollEntity( parentId, "initial data" );
+			parent.setCollection( Arrays.asList( new StrTestEntity( "data", childId ) ) );
 
-		Assert.assertEquals( parent, ver1 );
-		Assert.assertEquals( parent.getCollection(), ver1.getCollection() );
+			ListRefCollEntity ver1 = auditReader.find( ListRefCollEntity.class, parentId, 1 );
 
-		parent.setData( "modified data" );
+			assertEquals( parent, ver1 );
+			assertEquals( parent.getCollection(), ver1.getCollection() );
 
-		ListRefCollEntity ver2 = getAuditReader().find( ListRefCollEntity.class, parentId, 2 );
+			parent.setData( "modified data" );
 
-		Assert.assertEquals( parent, ver2 );
-		Assert.assertEquals( parent.getCollection(), ver2.getCollection() );
+			ListRefCollEntity ver2 = auditReader.find( ListRefCollEntity.class, parentId, 2 );
+
+			assertEquals( parent, ver2 );
+			assertEquals( parent.getCollection(), ver2.getCollection() );
+		} );
 	}
 }

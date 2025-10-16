@@ -20,14 +20,17 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
 import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests that after the removal of an entity that maintains a polymorphic relation that
@@ -40,57 +43,63 @@ import static org.junit.Assert.assertEquals;
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-7249")
-public class PolymorphicRemovalTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {
+		PolymorphicRemovalTest.Employee.class,
+		PolymorphicRemovalTest.EmployeeType.class,
+		PolymorphicRemovalTest.SalaryEmployeeType.class
+})
+public class PolymorphicRemovalTest {
 	private Integer typeId;
 	private Integer employeeId;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Employee.class, EmployeeType.class, SalaryEmployeeType.class };
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// revision 1
-		this.typeId = TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		this.typeId = scope.fromTransaction( em -> {
 			SalaryEmployeeType type = new SalaryEmployeeType();
 			type.setData( "salaried" );
-			entityManager.persist( type );
+			em.persist( type );
 			return type.getId();
 		} );
 		// revision 2
-		this.employeeId = TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-			EmployeeType type = entityManager.find( EmployeeType.class, typeId );
+		this.employeeId = scope.fromTransaction( em -> {
+			EmployeeType type = em.find( EmployeeType.class, typeId );
 			Employee employee = new Employee();
 			employee.setType( type );
-			entityManager.persist( employee );
+			em.persist( employee );
 			return employee.getId();
 		} );
 		// revision 3
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-			Employee employee = entityManager.find( Employee.class, employeeId );
-			entityManager.remove( employee );
+		scope.inTransaction( em -> {
+			Employee employee = em.find( Employee.class, employeeId );
+			em.remove( employee );
 		} );
 	}
 
 	@Test
-	public void testRevisionCounts() {
-		assertEquals(Arrays.asList( 1, 2, 3 ), getAuditReader().getRevisions( EmployeeType.class, typeId ) );
-		assertEquals( Arrays.asList( 2, 3 ), getAuditReader().getRevisions( Employee.class, employeeId ) );
+	public void testRevisionCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1, 2, 3 ), auditReader.getRevisions( EmployeeType.class, typeId ) );
+			assertEquals( Arrays.asList( 2, 3 ), auditReader.getRevisions( Employee.class, employeeId ) );
+		} );
 	}
 
 	@Test
-	public void testRevisionHistoryPayment() {
-		final EmployeeType rev1 = getAuditReader().find( EmployeeType.class, typeId, 1 );
-		assertTyping( SalaryEmployeeType.class, rev1 );
-		assertEquals( "SALARY", rev1.getType() );
-		final EmployeeType rev2 = getAuditReader().find( EmployeeType.class, typeId, 2 );
-		assertTyping( SalaryEmployeeType.class, rev2 );
-		assertEquals( "SALARY", rev2.getType() );
-		final EmployeeType rev3 = getAuditReader().find( EmployeeType.class, typeId, 3 );
-		assertTyping( SalaryEmployeeType.class, rev3 );
-		assertEquals( "SALARY", rev3.getType() );
+	public void testRevisionHistoryPayment(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			final EmployeeType rev1 = auditReader.find( EmployeeType.class, typeId, 1 );
+			assertTyping( SalaryEmployeeType.class, rev1 );
+			assertEquals( "SALARY", rev1.getType() );
+			final EmployeeType rev2 = auditReader.find( EmployeeType.class, typeId, 2 );
+			assertTyping( SalaryEmployeeType.class, rev2 );
+			assertEquals( "SALARY", rev2.getType() );
+			final EmployeeType rev3 = auditReader.find( EmployeeType.class, typeId, 3 );
+			assertTyping( SalaryEmployeeType.class, rev3 );
+			assertEquals( "SALARY", rev3.getType() );
+		} );
 	}
 
 	@Entity(name = "EmployeeType")

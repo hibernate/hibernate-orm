@@ -5,76 +5,83 @@
 package org.hibernate.orm.test.envers.integration.primitive;
 
 import java.util.Arrays;
-import java.util.List;
-import jakarta.persistence.EntityManager;
 
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.orm.test.envers.entities.PrimitiveTestEntity;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class PrimitiveAddDelete extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {PrimitiveTestEntity.class})
+public class PrimitiveAddDelete {
 	private Integer id1;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {PrimitiveTestEntity.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1
-		em.getTransaction().begin();
-		PrimitiveTestEntity pte = new PrimitiveTestEntity( 10, 11 );
-		em.persist( pte );
-		id1 = pte.getId();
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			PrimitiveTestEntity pte = new PrimitiveTestEntity( 10, 11 );
+			em.persist( pte );
+			id1 = pte.getId();
+		} );
 
 		// Revision 2
-		em.getTransaction().begin();
-		pte = em.find( PrimitiveTestEntity.class, id1 );
-		pte.setNumVal1( 20 );
-		pte.setNumVal2( 21 );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			PrimitiveTestEntity pte = em.find( PrimitiveTestEntity.class, id1 );
+			pte.setNumVal1( 20 );
+			pte.setNumVal2( 21 );
+		} );
 
 		// Revision 3
-		em.getTransaction().begin();
-		pte = em.find( PrimitiveTestEntity.class, id1 );
-		em.remove( pte );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			PrimitiveTestEntity pte = em.find( PrimitiveTestEntity.class, id1 );
+			em.remove( pte );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		assert Arrays.asList( 1, 2, 3 ).equals( getAuditReader().getRevisions( PrimitiveTestEntity.class, id1 ) );
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1, 2, 3 ), auditReader.getRevisions( PrimitiveTestEntity.class, id1 ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfId1() {
-		PrimitiveTestEntity ver1 = new PrimitiveTestEntity( id1, 10, 0 );
-		PrimitiveTestEntity ver2 = new PrimitiveTestEntity( id1, 20, 0 );
+	public void testHistoryOfId1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			PrimitiveTestEntity ver1 = new PrimitiveTestEntity( id1, 10, 0 );
+			PrimitiveTestEntity ver2 = new PrimitiveTestEntity( id1, 20, 0 );
 
-		assert getAuditReader().find( PrimitiveTestEntity.class, id1, 1 ).equals( ver1 );
-		assert getAuditReader().find( PrimitiveTestEntity.class, id1, 2 ).equals( ver2 );
-		assert getAuditReader().find( PrimitiveTestEntity.class, id1, 3 ) == null;
+			assertEquals( ver1, auditReader.find( PrimitiveTestEntity.class, id1, 1 ) );
+			assertEquals( ver2, auditReader.find( PrimitiveTestEntity.class, id1, 2 ) );
+			assertNull( auditReader.find( PrimitiveTestEntity.class, id1, 3 ) );
+		} );
 	}
 
 	@Test
-	public void testQueryWithDeleted() {
-		// Selecting all entities, also the deleted ones
-		List entities = getAuditReader().createQuery().forRevisionsOfEntity( PrimitiveTestEntity.class, true, true )
-				.getResultList();
+	public void testQueryWithDeleted(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			// Selecting all entities, also the deleted ones
+			var entities = auditReader.createQuery().forRevisionsOfEntity( PrimitiveTestEntity.class, true, true )
+					.getResultList();
 
-		assert entities.size() == 3;
-		assert entities.get( 0 ).equals( new PrimitiveTestEntity( id1, 10, 0 ) );
-		assert entities.get( 1 ).equals( new PrimitiveTestEntity( id1, 20, 0 ) );
-		assert entities.get( 2 ).equals( new PrimitiveTestEntity( id1, 0, 0 ) );
+			assertEquals( 3, entities.size() );
+			assertEquals( new PrimitiveTestEntity( id1, 10, 0 ), entities.get( 0 ) );
+			assertEquals( new PrimitiveTestEntity( id1, 20, 0 ), entities.get( 1 ) );
+			assertEquals( new PrimitiveTestEntity( id1, 0, 0 ), entities.get( 2 ) );
+		} );
 	}
 }

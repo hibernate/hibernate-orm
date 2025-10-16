@@ -82,13 +82,13 @@ public class BiMulIdRefEdEntity {
 
 		BiMulIdRefEdEntity that = (BiMulIdRefEdEntity) o;
 
-		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
+		if ( data != null ? !data.equals( that.getData() ) : that.getData() != null ) {
 			return false;
 		}
-		if ( id1 != null ? !id1.equals( that.id1 ) : that.id1 != null ) {
+		if ( id1 != null ? !id1.equals( that.getId1() ) : that.getId1() != null ) {
 			return false;
 		}
-		if ( id2 != null ? !id2.equals( that.id2 ) : that.id2 != null ) {
+		if ( id2 != null ? !id2.equals( that.getId2() ) : that.getId2() != null ) {
 			return false;
 		}
 

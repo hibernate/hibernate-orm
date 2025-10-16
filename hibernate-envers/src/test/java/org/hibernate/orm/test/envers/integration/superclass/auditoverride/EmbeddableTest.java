@@ -8,23 +8,26 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
-
 import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.AuditOverrides;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * This class addresses numerous issues with Embeddable annotated classes
@@ -32,7 +35,23 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Chris Cranford
  */
-public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@DomainModel(annotatedClasses = {
+		EmbeddableTest.AuditedEmbeddable.class,
+		EmbeddableTest.AuditedEmbeddableOverrideEntity.class,
+		EmbeddableTest.FullOverrideEmbeddable.class,
+		EmbeddableTest.FullOverrideEmbeddableEntity.class,
+		EmbeddableTest.NotAuditedEmbeddableEntity.class,
+		EmbeddableTest.OverrideEmbeddable.class,
+		EmbeddableTest.OverrideEmbeddableEntity.class,
+		EmbeddableTest.SimpleAbstractMappedSuperclass.class,
+		EmbeddableTest.SimpleEmbeddable.class,
+		EmbeddableTest.SimpleEmbeddableEntity.class,
+		EmbeddableTest.SimpleEmbeddableWithOverrideEntity.class,
+		EmbeddableTest.SimpleEmbeddableWithPropertyOverrideEntity.class
+})
+@SessionFactory
+public class EmbeddableTest {
 	private Integer simpleId;
 	private Integer simpleOverrideId;
 	private Integer simplePropertyId;
@@ -41,30 +60,9 @@ public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer overridedId;
 	private Integer auditedId;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				AuditedEmbeddable.class,
-				AuditedEmbeddableOverrideEntity.class,
-				FullOverrideEmbeddable.class,
-				FullOverrideEmbeddableEntity.class,
-				NotAuditedEmbeddableEntity.class,
-				OverrideEmbeddable.class,
-				OverrideEmbeddableEntity.class,
-				SimpleAbstractMappedSuperclass.class,
-				SimpleEmbeddable.class,
-				SimpleEmbeddableEntity.class,
-				SimpleEmbeddableWithOverrideEntity.class,
-				SimpleEmbeddableWithPropertyOverrideEntity.class
-		};
-	}
-
-	@Test
-	@Priority( 10 )
-	public void initData() {
-		EntityManager entityManager = getEntityManager();
-		try {
-
+	@BeforeClassTemplate
+	public void initData(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
 			// entity 1
 			SimpleEmbeddableEntity simple = new SimpleEmbeddableEntity();
 			simple.setEmbeddable( new SimpleEmbeddable() );
@@ -108,15 +106,13 @@ public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
 			audited.getEmbeddable().setIntValue( 35 );
 			audited.getEmbeddable().setValue( 1024 );
 
-			entityManager.getTransaction().begin();
-			entityManager.persist( simple );
-			entityManager.persist( simpleOverride );
-			entityManager.persist( simpleProperty );
-			entityManager.persist( fullOverride );
-			entityManager.persist( notAudited );
-			entityManager.persist( overrided );
-			entityManager.persist( audited );
-			entityManager.getTransaction().commit();
+			em.persist( simple );
+			em.persist( simpleOverride );
+			em.persist( simpleProperty );
+			em.persist( fullOverride );
+			em.persist( notAudited );
+			em.persist( overrided );
+			em.persist( audited );
 
 			this.simpleId = simple.getId();
 			this.simpleOverrideId = simpleOverride.getId();
@@ -125,16 +121,13 @@ public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
 			this.notAuditedId = notAudited.getId();
 			this.overridedId = overrided.getId();
 			this.auditedId = audited.getId();
-		}
-		finally {
-			entityManager.close();
-		}
+		} );
 	}
 
 	@Test
-	@JiraKey( value = "HHH-9228" )
-	public void testAuditOverrideOnAuditedEmbeddable() {
-		final PersistentClass clazz = getPersistentClass( AuditedEmbeddableOverrideEntity.class, auditedId, 1 );
+	@JiraKey(value = "HHH-9228")
+	public void testAuditOverrideOnAuditedEmbeddable(DomainModelScope dm, SessionFactoryScope sf) {
+		final PersistentClass clazz = getPersistentClass( dm, sf, AuditedEmbeddableOverrideEntity.class, auditedId, 1 );
 		assertTrue( clazz.hasProperty( "name" ) );
 		// verify non-audited fields are excluded from mappings.
 		assertFalse( clazz.hasProperty( "embeddable_value" ) );
@@ -143,42 +136,45 @@ public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-9229" )
-	public void testEmptyEmbeddableWithFullAudit() {
-		final PersistentClass clazz = getPersistentClass( FullOverrideEmbeddableEntity.class, fullOverrideId, 1 );
+	@JiraKey(value = "HHH-9229")
+	public void testEmptyEmbeddableWithFullAudit(DomainModelScope dm, SessionFactoryScope sf) {
+		final PersistentClass clazz = getPersistentClass( dm, sf, FullOverrideEmbeddableEntity.class, fullOverrideId,
+				1 );
 		assertTrue( clazz.hasProperty( "embeddable_intValue" ) );
 		assertTrue( clazz.hasProperty( "embeddable_strValue" ) );
 	}
 
 	@Test
-	@JiraKey( value = "HHH-9229" )
-	public void testEmptyEmbeddableWithNoAudited() {
-		final PersistentClass clazz = getPersistentClass( NotAuditedEmbeddableEntity.class, notAuditedId, 1 );
+	@JiraKey(value = "HHH-9229")
+	public void testEmptyEmbeddableWithNoAudited(DomainModelScope dm, SessionFactoryScope sf) {
+		final PersistentClass clazz = getPersistentClass( dm, sf, NotAuditedEmbeddableEntity.class, notAuditedId, 1 );
 		// not mapped because @NotAudited should override any other behavior.
 		assertFalse( clazz.hasProperty( "embeddable_intValue" ) );
 		assertFalse( clazz.hasProperty( "embeddable_strValue" ) );
 	}
 
 	@Test
-	@JiraKey( value = "HHH-9229" )
-	public void testEmptyEmbeddableWithAuditOverride() {
-		final PersistentClass clazz = getPersistentClass( OverrideEmbeddableEntity.class, overridedId, 1 );
+	@JiraKey(value = "HHH-9229")
+	public void testEmptyEmbeddableWithAuditOverride(DomainModelScope dm, SessionFactoryScope sf) {
+		final PersistentClass clazz = getPersistentClass( dm, sf, OverrideEmbeddableEntity.class, overridedId, 1 );
 		assertFalse( clazz.hasProperty( "embeddable_strValue" ) );
 		assertTrue( clazz.hasProperty( "embeddable_intValue" ) );
 	}
 
 	@Test
-	@JiraKey( value = "HHH-9229" )
-	public void testEmptyEmbeddableNoAuditOverrides() {
-		final PersistentClass clazz = getPersistentClass( SimpleEmbeddableEntity.class, simpleId, 1 );
+	@JiraKey(value = "HHH-9229")
+	public void testEmptyEmbeddableNoAuditOverrides(DomainModelScope dm, SessionFactoryScope sf) {
+		final PersistentClass clazz = getPersistentClass( dm, sf, SimpleEmbeddableEntity.class, simpleId, 1 );
 		assertFalse( clazz.hasProperty( "embeddable_strValue" ) );
 		assertFalse( clazz.hasProperty( "embeddable_intValue" ) );
 	}
 
 	@Test
-	@JiraKey( value = "HHH-9229" )
-	public void testEmptyEmbeddableWithAuditOverrideForMappedSuperclass() {
+	@JiraKey(value = "HHH-9229")
+	public void testEmptyEmbeddableWithAuditOverrideForMappedSuperclass(DomainModelScope dm, SessionFactoryScope sf) {
 		final PersistentClass clazz = getPersistentClass(
+				dm,
+				sf,
 				SimpleEmbeddableWithOverrideEntity.class,
 				simpleOverrideId,
 				1
@@ -188,9 +184,11 @@ public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-9229" )
-	public void testEmptyEmbeddableWithPropertyAuditOverride() {
+	@JiraKey(value = "HHH-9229")
+	public void testEmptyEmbeddableWithPropertyAuditOverride(DomainModelScope dm, SessionFactoryScope sf) {
 		final PersistentClass clazz = getPersistentClass(
+				dm,
+				sf,
 				SimpleEmbeddableWithPropertyOverrideEntity.class,
 				simplePropertyId,
 				1
@@ -456,8 +454,17 @@ public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
 		}
 	}
 
-	private PersistentClass getPersistentClass(Class<?> clazz, Object id, Number revision) {
-		final Object entity = getAuditReader().find( clazz, id, revision );
-		return metadata().getEntityBinding( getAuditReader().getEntityName( id, revision, entity ) + "_AUD" );
+	private PersistentClass getPersistentClass(
+			DomainModelScope dm,
+			SessionFactoryScope sf,
+			Class<?> clazz,
+			Object id,
+			Number revision) {
+		return sf.fromSession( session -> {
+			final var auditReader = AuditReaderFactory.get( session );
+			final Object entity = auditReader.find( clazz, id, revision );
+			return dm.getDomainModel()
+					.getEntityBinding( auditReader.getEntityName( id, revision, entity ) + "_AUD" );
+		} );
 	}
 }

@@ -206,6 +206,6 @@ Hibernate abstracts over variations between dialects of SQL via the class `org.h
 - Additional community-supported ``Dialect``s are available in the separate module `hibernate-community-dialects`.
 
 Starting with Hibernate 6, it's no longer necessary to explicitly specify a dialect using the configuration property `hibernate.dialect`, and so setting that property is now discouraged.
-(An exception is the case of custom user-written ``Dialect``s.)
+An exception is the case of custom or link:{doc-dialect-url}#third-party-dialects[third-party] ``Dialect``s.
 
 NOTE: For information about available dialects and compatible database versions, see the link:{doc-dialect-url}[dialect guide].

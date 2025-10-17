@@ -25,6 +25,33 @@ Below is a list of supported dialects and the minimum required version of the da
 
 include::{generated-report-dir}/dialect/dialect-table.adoc[]
 
+[[third-party-dialects]]
+== Third-party dialects
+
+Third-parties publish additional dialects for Hibernate ORM, providing their own support for more databases, or extended support beyond what is built in Hibernate ORM.
+
+These dialects are not directly supported by the Hibernate team:
+
+* The Hibernate ORM CI does not run any test against these dialects, the dialect's authors have their own test suite.
+* The Hibernate team will not address issues reported against these dialect, but the dialect's authors have their own issue tracker.
+
+[NOTE]
+====
+Third-party dialects may not be compatible with all versions of Hibernate ORM.
+
+Check the dialect's own documentation to know more about its compatibility constraints.
+The https://hibernate.org/orm/releases/#compatibility-matrix[compatibility matrix on the Hibernate website] may also be of help.
+====
+
+Below is a list of third-party dialects with links to relevant websites.
+
+[cols="a,a", options="header"]
+|===
+|Dialect |Website
+|MongoDB| https://github.com/mongodb/mongo-hibernate/[MongoDB extension for Hibernate ORM]
+|Google Spanner| https://github.com/GoogleCloudPlatform/google-cloud-spanner-hibernate[Google Cloud Spanner Dialect for Hibernate ORM]
+|===
+
 [[community-dialects]]
 == Community dialects
 

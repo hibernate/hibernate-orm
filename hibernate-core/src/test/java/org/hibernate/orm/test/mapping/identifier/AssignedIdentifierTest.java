@@ -7,28 +7,20 @@ package org.hibernate.orm.test.mapping.identifier;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class AssignedIdentifierTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(annotatedClasses = {AssignedIdentifierTest.Book.class})
+public class AssignedIdentifierTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Book.class
-		};
-	}
-
-	@Before
-	public void init() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	@BeforeEach
+	public void init(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Book book = new Book();
 			book.setId(1L);
 			book.setTitle("High-Performance Java Persistence");

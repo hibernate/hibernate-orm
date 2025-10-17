@@ -9,29 +9,23 @@ import jakarta.persistence.Id;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * @author Vlad Mihalcea
  */
-public class MutableNaturalIdTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Author.class
-		};
-	}
+@Jpa(annotatedClasses = {MutableNaturalIdTest.Author.class})
+public class MutableNaturalIdTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Author author = new Author();
 			author.setId(1L);
 			author.setName("John Doe");
@@ -39,7 +33,7 @@ public class MutableNaturalIdTest extends BaseEntityManagerFunctionalTestCase {
 
 			entityManager.persist(author);
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::naturalid-mutable-synchronized-example[]
 			//tag::naturalid-mutable-example[]
 			Author author = entityManager

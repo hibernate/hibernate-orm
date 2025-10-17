@@ -36,14 +36,14 @@ public class OptimisticLockAnnotationTest {
 
 					session.clear();
 
-					c = session.get( Conductor.class, c.getId() );
+					c = session.find( Conductor.class, c.getId() );
 					Long version = c.getVersion();
 					c.setName( "Don" );
 					session.flush();
 
 					session.clear();
 
-					c = session.get( Conductor.class, c.getId() );
+					c = session.find( Conductor.class, c.getId() );
 					assertEquals( version, c.getVersion() );
 				}
 		);

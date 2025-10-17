@@ -4,6 +4,9 @@
  */
 package org.hibernate.orm.test.cdi.general.hibernatesearch;
 
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -111,5 +114,12 @@ public final class Monitor {
 
 	public void preDestroyCalled() {
 		preDestroyCount.getAndIncrement();
+	}
+
+	public static class Resetter implements BeforeEachCallback {
+		@Override
+		public void beforeEach(ExtensionContext context) throws Exception {
+			Monitor.reset();
+		}
 	}
 }

@@ -165,7 +165,7 @@ public class ServiceRegistryExtension
 			ssrProducer = (ServiceRegistryProducer) testInstance;
 		}
 		else {
-			ssrProducer = new ServiceRegistryProducerImpl( ssrAnnRef );
+			ssrProducer = new ServiceRegistryProducerImpl( context, ssrAnnRef );
 		}
 
 		final ServiceRegistryScopeImpl scope = new ServiceRegistryScopeImpl( bsrProducer, ssrProducer );
@@ -178,10 +178,12 @@ public class ServiceRegistryExtension
 		return scope;
 	}
 
-	private static class ServiceRegistryProducerImpl implements ServiceRegistryProducer{
+	private static class ServiceRegistryProducerImpl implements ServiceRegistryProducer {
+		private final ExtensionContext extensionContext;
 		private final Optional<ServiceRegistry> ssrAnnRef;
 
-		public ServiceRegistryProducerImpl(Optional<ServiceRegistry> ssrAnnRef) {
+		public ServiceRegistryProducerImpl(ExtensionContext extensionContext, Optional<ServiceRegistry> ssrAnnRef) {
+			this.extensionContext = extensionContext;
 			this.ssrAnnRef = ssrAnnRef;
 		}
 
@@ -195,7 +197,7 @@ public class ServiceRegistryExtension
 
 			if ( ssrAnnRef.isPresent() ) {
 				final ServiceRegistry serviceRegistryAnn = ssrAnnRef.get();
-				configureServices( serviceRegistryAnn, ssrb );
+				configureServices( serviceRegistryAnn, ssrb, extensionContext );
 			}
 			ServiceRegistryUtil.applySettings( ssrb.getSettings() );
 
@@ -252,7 +254,10 @@ public class ServiceRegistryExtension
 		bsrBuilder.applyClassLoaderService( cls );
 	}
 
-	private static void configureServices(ServiceRegistry serviceRegistryAnn, StandardServiceRegistryBuilder ssrb) {
+	private static void configureServices(
+			ServiceRegistry serviceRegistryAnn,
+			StandardServiceRegistryBuilder ssrb,
+			ExtensionContext junitContext) {
 		try {
 			applyConfigurationSets( serviceRegistryAnn, ssrb );
 
@@ -278,6 +283,15 @@ public class ServiceRegistryExtension
 			for ( ServiceRegistry.Service service : serviceRegistryAnn.services() ) {
 				ssrb.addService( (Class) service.role(), service.impl().newInstance() );
 			}
+
+			for ( ServiceRegistry.ResolvableSetting resolvableSetting : serviceRegistryAnn.resolvableSettings() ) {
+				final Class<? extends ServiceRegistry.SettingResolver> resolverClass = resolvableSetting.resolver();
+				ssrb.applySetting(
+						resolvableSetting.settingName(),
+						resolverClass.getDeclaredConstructor().newInstance().resolve( ssrb, junitContext )
+				);
+			}
+
 		}
 		catch (Exception e) {
 			throw new RuntimeException( "Could not configure StandardServiceRegistryBuilder", e );

@@ -20,7 +20,7 @@ import jakarta.persistence.TableGenerator;
 @TableGenerator(name = "generator", table = "this is a broken name with select from and other SQL keywords")
 public class Manufacturer {
 	private Integer id;
-	private Set<Model> models = new HashSet<Model>();
+	private Set<Model> models = new HashSet<>();
 
 	@Id
 	public Integer getId() {

@@ -34,17 +34,17 @@ public class OneOneGeneratedValueTest {
 	public void testIt(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					EntityA entityA = new EntityA( 1l );
+					EntityA entityA = new EntityA( 1L );
 					session.persist( entityA );
 				}
 		);
 		scope.inTransaction(
 				session -> {
-					EntityA entityA = session.get( EntityA.class, 1l );
+					EntityA entityA = session.get( EntityA.class, 1L );
 					assertThat( entityA ).isNotNull();
 					EntityB entityB = entityA.getB();
 					assertThat( entityB ).isNotNull();
-					assertThat( entityB.getB() ).isEqualTo( 5l );
+					assertThat( entityB.getB() ).isEqualTo( 5L );
 				}
 		);
 	}

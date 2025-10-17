@@ -13,7 +13,6 @@ import org.hibernate.boot.internal.Target;
 import org.hibernate.models.spi.MemberDetails;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
@@ -25,11 +24,13 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.UniqueConstraint;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @JiraKey("HHH-14529")
 public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
+
 	@Test
 	public void testNoJoins() {
 		final MemberDetails memberDetails = getAttributeMember( Entity1.class, "field1", "many-to-one.orm1.xml" );

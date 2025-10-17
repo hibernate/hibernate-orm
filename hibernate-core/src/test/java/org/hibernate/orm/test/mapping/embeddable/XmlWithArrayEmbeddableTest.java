@@ -78,12 +78,12 @@ public class XmlWithArrayEmbeddableTest {
 	@Test
 	public void testUpdate(SessionFactoryScope scope) {
 		scope.inTransaction(
-				entityManager -> {
-					XmlHolder XmlHolder = entityManager.find( XmlHolder.class, 1L );
+				session -> {
+					XmlHolder XmlHolder = session.find( XmlHolder.class, 1L );
 					XmlHolder.setAggregate( EmbeddableWithArrayAggregate.createAggregate2() );
-					entityManager.flush();
-					entityManager.clear();
-					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate2(), entityManager.find( XmlHolder.class, 1L ).getAggregate() );
+					session.flush();
+					session.clear();
+					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate2(), session.find( XmlHolder.class, 1L ).getAggregate() );
 				}
 		);
 	}
@@ -91,8 +91,8 @@ public class XmlWithArrayEmbeddableTest {
 	@Test
 	public void testFetch(SessionFactoryScope scope) {
 		scope.inSession(
-				entityManager -> {
-					List<XmlHolder> XmlHolders = entityManager.createQuery( "from XmlHolder b where b.id = 1", XmlHolder.class ).getResultList();
+				session -> {
+					List<XmlHolder> XmlHolders = session.createQuery( "from XmlHolder b where b.id = 1", XmlHolder.class ).getResultList();
 					assertEquals( 1, XmlHolders.size() );
 					assertEquals( 1L, XmlHolders.get( 0 ).getId() );
 					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate1(), XmlHolders.get( 0 ).getAggregate() );
@@ -103,8 +103,8 @@ public class XmlWithArrayEmbeddableTest {
 	@Test
 	public void testFetchNull(SessionFactoryScope scope) {
 		scope.inSession(
-				entityManager -> {
-					List<XmlHolder> XmlHolders = entityManager.createQuery( "from XmlHolder b where b.id = 2", XmlHolder.class ).getResultList();
+				session -> {
+					List<XmlHolder> XmlHolders = session.createQuery( "from XmlHolder b where b.id = 2", XmlHolder.class ).getResultList();
 					assertEquals( 1, XmlHolders.size() );
 					assertEquals( 2L, XmlHolders.get( 0 ).getId() );
 					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate2(), XmlHolders.get( 0 ).getAggregate() );
@@ -115,8 +115,8 @@ public class XmlWithArrayEmbeddableTest {
 	@Test
 	public void testDomainResult(SessionFactoryScope scope) {
 		scope.inSession(
-				entityManager -> {
-					List<EmbeddableWithArrayAggregate> structs = entityManager.createQuery( "select b.aggregate from XmlHolder b where b.id = 1", EmbeddableWithArrayAggregate.class ).getResultList();
+				session -> {
+					List<EmbeddableWithArrayAggregate> structs = session.createQuery( "select b.aggregate from XmlHolder b where b.id = 1", EmbeddableWithArrayAggregate.class ).getResultList();
 					assertEquals( 1, structs.size() );
 					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate1(), structs.get( 0 ) );
 				}
@@ -126,8 +126,8 @@ public class XmlWithArrayEmbeddableTest {
 	@Test
 	public void testSelectionItems(SessionFactoryScope scope) {
 		scope.inSession(
-				entityManager -> {
-					List<Tuple> tuples = entityManager.createQuery(
+				session -> {
+					List<Tuple> tuples = session.createQuery(
 							"select " +
 									"b.aggregate.theInt," +
 									"b.aggregate.theDouble," +
@@ -193,9 +193,9 @@ public class XmlWithArrayEmbeddableTest {
 	@Test
 	public void testDeleteWhere(SessionFactoryScope scope) {
 		scope.inTransaction(
-				entityManager -> {
-					entityManager.createMutationQuery( "delete XmlHolder b where b.aggregate is not null" ).executeUpdate();
-					assertNull( entityManager.find( XmlHolder.class, 1L ) );
+				session -> {
+					session.createMutationQuery( "delete XmlHolder b where b.aggregate is not null" ).executeUpdate();
+					assertNull( session.find( XmlHolder.class, 1L ) );
 
 				}
 		);
@@ -204,9 +204,9 @@ public class XmlWithArrayEmbeddableTest {
 	@Test
 	public void testUpdateAggregate(SessionFactoryScope scope) {
 		scope.inTransaction(
-				entityManager -> {
-					entityManager.createMutationQuery( "update XmlHolder b set b.aggregate = null" ).executeUpdate();
-					assertNull( entityManager.find( XmlHolder.class, 1L ).getAggregate() );
+				session -> {
+					session.createMutationQuery( "update XmlHolder b set b.aggregate = null" ).executeUpdate();
+					assertNull( session.find( XmlHolder.class, 1L ).getAggregate() );
 				}
 		);
 	}
@@ -215,11 +215,11 @@ public class XmlWithArrayEmbeddableTest {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
 	public void testUpdateAggregateMember(SessionFactoryScope scope) {
 		scope.inTransaction(
-				entityManager -> {
-					entityManager.createMutationQuery( "update XmlHolder b set b.aggregate.theString = null" ).executeUpdate();
+				session -> {
+					session.createMutationQuery( "update XmlHolder b set b.aggregate.theString = null" ).executeUpdate();
 					EmbeddableWithArrayAggregate struct = EmbeddableWithArrayAggregate.createAggregate1();
 					struct.setTheString( null );
-					EmbeddableWithArrayAggregate.assertEquals( struct, entityManager.find( XmlHolder.class, 1L ).getAggregate() );
+					EmbeddableWithArrayAggregate.assertEquals( struct, session.find( XmlHolder.class, 1L ).getAggregate() );
 				}
 		);
 	}
@@ -228,12 +228,12 @@ public class XmlWithArrayEmbeddableTest {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
 	public void testUpdateMultipleAggregateMembers(SessionFactoryScope scope) {
 		scope.inTransaction(
-				entityManager -> {
-					entityManager.createMutationQuery( "update XmlHolder b set b.aggregate.theString = null, b.aggregate.theUuid = null" ).executeUpdate();
+				session -> {
+					session.createMutationQuery( "update XmlHolder b set b.aggregate.theString = null, b.aggregate.theUuid = null" ).executeUpdate();
 					EmbeddableWithArrayAggregate struct = EmbeddableWithArrayAggregate.createAggregate1();
 					struct.setTheString( null );
 					struct.setTheUuid( null );
-					EmbeddableWithArrayAggregate.assertEquals( struct, entityManager.find( XmlHolder.class, 1L ).getAggregate() );
+					EmbeddableWithArrayAggregate.assertEquals( struct, session.find( XmlHolder.class, 1L ).getAggregate() );
 				}
 		);
 	}
@@ -243,9 +243,9 @@ public class XmlWithArrayEmbeddableTest {
 	@SkipForDialect( dialectClass = OracleDialect.class, reason = "External driver fix required")
 	public void testUpdateAllAggregateMembers(SessionFactoryScope scope) {
 		scope.inTransaction(
-				entityManager -> {
+				session -> {
 					EmbeddableWithArrayAggregate struct = EmbeddableWithArrayAggregate.createAggregate1();
-					entityManager.createMutationQuery(
+					session.createMutationQuery(
 									"update XmlHolder b set " +
 											"b.aggregate.theInt = :theInt," +
 											"b.aggregate.theDouble = :theDouble," +
@@ -300,7 +300,7 @@ public class XmlWithArrayEmbeddableTest {
 							.setParameter( "theOffsetDateTime", struct.getTheOffsetDateTime() )
 							.setParameter( "mutableValue", struct.getMutableValue() )
 							.executeUpdate();
-					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate1(), entityManager.find( XmlHolder.class, 2L ).getAggregate() );
+					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate1(), session.find( XmlHolder.class, 2L ).getAggregate() );
 				}
 		);
 	}

@@ -50,7 +50,8 @@ public class EntityManagerFactoryExtension
 		implements TestInstancePostProcessor, BeforeEachCallback, TestExecutionExceptionHandler {
 
 	private static final Logger log = Logger.getLogger( EntityManagerFactoryExtension.class );
-	private static final String EMF_KEY = EntityManagerFactoryScope.class.getName();
+	public static final String EMF_KEY = EntityManagerFactoryScope.class.getName();
+	public static final String INTEGRATION_SETTINGS_KEY = "integration_settings";
 
 	private static ExtensionContext.Store locateExtensionStore(Object testScope, ExtensionContext context) {
 		return JUnitHelper.locateExtensionStore( EntityManagerFactoryExtension.class, context, testScope );
@@ -79,6 +80,8 @@ public class EntityManagerFactoryExtension
 		collectProperties( pui, jpa );
 		managedClassesAndMappings( jpa, pui );
 		final Map<String, Object> integrationSettings = collectIntegrationSettings( jpa );
+		// Make the integration settings available in the store for other extensions
+		store.put( INTEGRATION_SETTINGS_KEY, integrationSettings );
 		// statement inspector
 		setupStatementInspector( jpa, integrationSettings );
 		ServiceRegistryUtil.applySettings( integrationSettings );

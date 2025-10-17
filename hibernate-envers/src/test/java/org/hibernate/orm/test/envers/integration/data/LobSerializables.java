@@ -9,8 +9,6 @@ import java.util.Map;
 import jakarta.persistence.EntityManager;
 
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.envers.test.integration.data.LobSerializableTestEntity;
-import org.hibernate.envers.test.integration.data.SerObject;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 
 import org.hibernate.testing.DialectChecks;

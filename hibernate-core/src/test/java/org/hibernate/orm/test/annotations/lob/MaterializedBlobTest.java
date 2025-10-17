@@ -4,66 +4,65 @@
  */
 package org.hibernate.orm.test.annotations.lob;
 
-import java.util.Arrays;
-
-import org.hibernate.Session;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-@RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
-public class MaterializedBlobTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { MaterializedBlobEntity.class };
-	}
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class)
+@DomainModel(
+		annotatedClasses = {
+				MaterializedBlobEntity.class
+		}
+)
+@SessionFactory
+public class MaterializedBlobTest {
 
 	@Test
-	@SkipForDialect(value = CockroachDialect.class, comment = "Blob in CockroachDB is same as a varbinary, to assertions will fail")
-	public void testTypeSelection() {
-		final EntityPersister entityDescriptor = sessionFactory().getRuntimeMetamodels()
+	@SkipForDialect(dialectClass = CockroachDialect.class,
+			reason = "Blob in CockroachDB is same as a varbinary, to assertions will fail")
+	public void testTypeSelection(SessionFactoryScope scope) {
+		final EntityPersister entityDescriptor = scope.getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( MaterializedBlobEntity.class.getName() );
 		final AttributeMapping theBytesAttr = entityDescriptor.findAttributeMapping( "theBytes" );
 		assertThat( theBytesAttr ).isInstanceOf( BasicValuedModelPart.class );
-		final JdbcMapping mapping = ( (BasicValuedModelPart) theBytesAttr ).getJdbcMapping();
-		assertTrue( mapping.getJavaTypeDescriptor() instanceof PrimitiveByteArrayJavaType );
-		assertTrue( mapping.getJdbcType() instanceof BlobJdbcType );
+		final JdbcMapping mapping = ((BasicValuedModelPart) theBytesAttr).getJdbcMapping();
+		assertThat( mapping.getJavaTypeDescriptor() ).isInstanceOf( PrimitiveByteArrayJavaType.class );
+		assertThat( mapping.getJdbcType() ).isInstanceOf( BlobJdbcType.class );
 	}
 
 	@Test
-	public void testSaving() {
+	public void testSaving(SessionFactoryScope scope) {
 		byte[] testData = "test data".getBytes();
 
-		Session session = openSession();
-		session.beginTransaction();
-		MaterializedBlobEntity entity = new MaterializedBlobEntity( "test", testData );
-		session.persist( entity );
-		session.getTransaction().commit();
-		session.close();
+		MaterializedBlobEntity e = new MaterializedBlobEntity( "test", testData );
+		scope.inTransaction(
+				session ->
+						session.persist( e )
+		);
 
-		session = openSession();
-		session.beginTransaction();
-		entity = session.get( MaterializedBlobEntity.class, entity.getId() );
-		assertTrue( Arrays.equals( testData, entity.getTheBytes() ) );
-		session.remove( entity );
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction(
+				session -> {
+					MaterializedBlobEntity entity = session.find( MaterializedBlobEntity.class, e.getId() );
+					assertThat( entity.getTheBytes() ).isEqualTo( testData );
+					session.remove( entity );
+				}
+		);
 	}
 }

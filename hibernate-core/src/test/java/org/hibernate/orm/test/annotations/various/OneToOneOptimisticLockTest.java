@@ -43,7 +43,7 @@ public class OneToOneOptimisticLockTest {
 	public void testUpdateChildDoesNotIncrementParentVersion(SessionFactoryScope scope) {
 		Integer version = scope.fromTransaction(
 				session -> {
-					Parent parent = session.get( Parent.class, PARENT_ID );
+					Parent parent = session.find( Parent.class, PARENT_ID );
 					Integer vers = parent.getVersion();
 
 					Child child = new Child( 2 );
@@ -56,7 +56,7 @@ public class OneToOneOptimisticLockTest {
 
 		scope.inTransaction(
 				session -> {
-					Parent parent = session.get( Parent.class, PARENT_ID );
+					Parent parent = session.find( Parent.class, PARENT_ID );
 					assertThat( parent.getVersion() ).isEqualTo( version );
 				}
 		);

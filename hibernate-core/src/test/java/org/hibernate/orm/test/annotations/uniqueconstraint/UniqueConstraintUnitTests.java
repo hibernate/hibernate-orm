@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.annotations.uniqueconstraint;
 
-import java.util.HashSet;
-import java.util.Set;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -16,29 +14,31 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import java.util.HashSet;
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Fail.fail;
+
 
 /**
  * @author Steve Ebersole
  */
-public class UniqueConstraintUnitTests extends BaseUnitTestCase {
+@BaseUnitTest
+public class UniqueConstraintUnitTests {
 
 	@Test
-	@JiraKey( value = "HHH-8026" )
+	@JiraKey(value = "HHH-8026")
 	public void testUnNamedConstraints() {
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
@@ -59,12 +59,11 @@ public class UniqueConstraintUnitTests extends BaseUnitTestCase {
 				}
 			}
 
-			assertTrue( "Could not find the expected tables.", tableA != null && tableB != null );
-			assertFalse(
-					tableA.getUniqueKeys().values().iterator().next().getName().equals(
-							tableB.getUniqueKeys().values().iterator().next().getName()
-					)
-			);
+			assertThat( tableA != null && tableB != null )
+					.describedAs( "Could not find the expected tables." )
+					.isTrue();
+			assertThat( tableA.getUniqueKeys().values().iterator().next().getName() )
+					.isNotEqualTo( tableB.getUniqueKeys().values().iterator().next().getName() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -72,12 +71,12 @@ public class UniqueConstraintUnitTests extends BaseUnitTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-8537" )
+	@JiraKey(value = "HHH-8537")
 	public void testNonExistentColumn() {
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
-			final Metadata metadata = new MetadataSources( ssr )
+			new MetadataSources( ssr )
 					.addAnnotatedClass( UniqueNoNameA.class )
 					.addAnnotatedClass( UniqueNoNameB.class )
 					.buildMetadata();
@@ -94,8 +93,8 @@ public class UniqueConstraintUnitTests extends BaseUnitTestCase {
 	}
 
 	@Entity
-	@Table( name = "UniqueNoNameA",
-			uniqueConstraints = {@UniqueConstraint(columnNames={"name"})})
+	@Table(name = "UniqueNoNameA",
+			uniqueConstraints = {@UniqueConstraint(columnNames = {"name"})})
 	public static class UniqueNoNameA {
 		@Id
 		@GeneratedValue
@@ -105,8 +104,8 @@ public class UniqueConstraintUnitTests extends BaseUnitTestCase {
 	}
 
 	@Entity
-	@Table( name = "UniqueNoNameB",
-			uniqueConstraints = {@UniqueConstraint(columnNames={"name"})})
+	@Table(name = "UniqueNoNameB",
+			uniqueConstraints = {@UniqueConstraint(columnNames = {"name"})})
 	public static class UniqueNoNameB {
 		@Id
 		@GeneratedValue
@@ -125,9 +124,9 @@ public class UniqueConstraintUnitTests extends BaseUnitTestCase {
 				name = "tbl_strings",
 				joinColumns = @JoinColumn(name = "fk", nullable = false),
 				// the failure required at least 1 columnName to be correct -- all incorrect wouldn't reproduce
-				uniqueConstraints =  @UniqueConstraint(columnNames = { "fk", "doesnotexist" })
+				uniqueConstraints = @UniqueConstraint(columnNames = {"fk", "doesnotexist"})
 		)
 		@Column(name = "string", nullable = false)
-		public Set<String> strings = new HashSet<String>();
+		public Set<String> strings = new HashSet<>();
 	}
 }

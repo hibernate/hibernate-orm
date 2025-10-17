@@ -4,79 +4,76 @@
  */
 package org.hibernate.orm.test.annotations.fetchprofile;
 
+import org.hibernate.Hibernate;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
 import java.util.Date;
 
-import org.junit.Test;
-
-import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
-public class MoreFetchProfileTest extends BaseCoreFunctionalTestCase {
-	@Test
-	public void testFetchWithTwoOverrides() throws Exception {
-		Session s = openSession();
-		s.enableFetchProfile( "customer-with-orders-and-country" );
-		final Transaction transaction = s.beginTransaction();
-		Country ctry = new Country();
-		ctry.setName( "France" );
-		Order o = new Order();
-		o.setCountry( ctry );
-		o.setDeliveryDate( new Date() );
-		o.setOrderNumber( 1 );
-		Order o2 = new Order();
-		o2.setCountry( ctry );
-		o2.setDeliveryDate( new Date() );
-		o2.setOrderNumber( 2 );
-		Customer c = new Customer();
-		c.setCustomerNumber( 1 );
-		c.setName( "Emmanuel" );
-		c.getOrders().add( o );
-		c.setLastOrder( o2 );
-
-		s.persist( ctry );
-		s.persist( o );
-		s.persist( o2 );
-		s.persist( c );
-
-		s.flush();
-
-		s.clear();
-
-		c = ( Customer ) s.get( Customer.class, c.getId() );
-		assertTrue( Hibernate.isInitialized( c.getLastOrder() ) );
-		assertTrue( Hibernate.isInitialized( c.getOrders() ) );
-		for ( Order so : c.getOrders() ) {
-			assertTrue( Hibernate.isInitialized( so.getCountry() ) );
-		}
-		final Order order = c.getOrders().iterator().next();
-		c.getOrders().remove( order );
-		s.remove( c );
-		final Order lastOrder = c.getLastOrder();
-		c.setLastOrder( null );
-		s.remove( order.getCountry() );
-		s.remove( lastOrder );
-		s.remove( order );
-
-		transaction.commit();
-		s.close();
-
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
+@DomainModel(
+		annotatedClasses = {
 				Order.class,
 				Country.class,
 				Customer.class,
 				SupportTickets.class
-		};
+		}
+)
+@SessionFactory
+public class MoreFetchProfileTest {
+
+	@Test
+	public void testFetchWithTwoOverrides(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.enableFetchProfile( "customer-with-orders-and-country" );
+					Country ctry = new Country();
+					ctry.setName( "France" );
+					Order o = new Order();
+					o.setCountry( ctry );
+					o.setDeliveryDate( new Date() );
+					o.setOrderNumber( 1 );
+					Order o2 = new Order();
+					o2.setCountry( ctry );
+					o2.setDeliveryDate( new Date() );
+					o2.setOrderNumber( 2 );
+					Customer c = new Customer();
+					c.setCustomerNumber( 1 );
+					c.setName( "Emmanuel" );
+					c.getOrders().add( o );
+					c.setLastOrder( o2 );
+
+					session.persist( ctry );
+					session.persist( o );
+					session.persist( o2 );
+					session.persist( c );
+
+					session.flush();
+
+					session.clear();
+
+					c = session.find( Customer.class, c.getId() );
+					assertThat( Hibernate.isInitialized( c.getLastOrder() ) ).isTrue();
+					assertThat( Hibernate.isInitialized( c.getOrders() ) ).isTrue();
+					for ( Order so : c.getOrders() ) {
+						assertThat( Hibernate.isInitialized( so.getCountry() ) ).isTrue();
+					}
+					final Order order = c.getOrders().iterator().next();
+					c.getOrders().remove( order );
+					session.remove( c );
+					final Order lastOrder = c.getLastOrder();
+					c.setLastOrder( null );
+					session.remove( order.getCountry() );
+					session.remove( lastOrder );
+					session.remove( order );
+				}
+		);
 	}
 }

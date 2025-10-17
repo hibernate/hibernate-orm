@@ -15,39 +15,34 @@ import jakarta.persistence.ManyToMany;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.JiraKeyGroup;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.hibernate.testing.transaction.TransactionUtil2.fromTransaction;
-import static org.junit.Assert.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@JiraKeyGroup( value = {
-				@JiraKey( value = "HHH-12770" ),
-				@JiraKey( value = "HHH-15545" )
-} )
-public class ManyToManyNotIgnoreLazyFetchingTest extends BaseEntityManagerFunctionalTestCase {
+@JiraKeyGroup(value = {
+		@JiraKey(value = "HHH-12770"),
+		@JiraKey(value = "HHH-15545")
+})
+@Jpa(
+		annotatedClasses = {
+				ManyToManyNotIgnoreLazyFetchingTest.Stock.class,
+				ManyToManyNotIgnoreLazyFetchingTest.StockCode.class,
+		}
+)
+public class ManyToManyNotIgnoreLazyFetchingTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Stock.class,
-				StockCode.class,
-		};
-	}
-
-	@Override
-	protected void afterEntityManagerFactoryBuilt() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	@BeforeAll
+	public void setUp(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			StockCode code = new StockCode();
 			code.setId( 1L );
 			code.setCopeType( CodeType.TYPE_A );
@@ -64,21 +59,23 @@ public class ManyToManyNotIgnoreLazyFetchingTest extends BaseEntityManagerFuncti
 			entityManager.persist( stock2 );
 			entityManager.flush();
 
-			entityManager.remove(code);
+			entityManager.remove( code );
 			stock1.getCodes().remove( code );
 		} );
 	}
 
 	@Test
-	public void testLazyLoading() {
-		List<Stock> stocks = fromTransaction( entityManagerFactory().unwrap( SessionFactoryImplementor.class ), session -> {
-			List<Stock> list = session.createQuery("select s from Stock s order by id", Stock.class).getResultList();
-			for (Stock s: list) {
-				assertFalse( Hibernate.isInitialized( s.getCodes() ) );
-				Hibernate.initialize( s.getCodes() );
-			}
-			return list;
-		} );
+	public void testLazyLoading(EntityManagerFactoryScope scope) {
+		List<Stock> stocks = scope.fromTransaction(
+				entityManager -> {
+					List<Stock> list = entityManager.createQuery( "select s from Stock s order by id", Stock.class )
+							.getResultList();
+					for ( Stock s : list ) {
+						assertThat( Hibernate.isInitialized( s.getCodes() ) ).isFalse();
+						Hibernate.initialize( s.getCodes() );
+					}
+					return list;
+				} );
 
 		assertThat( stocks ).hasSize( 2 );
 
@@ -90,16 +87,17 @@ public class ManyToManyNotIgnoreLazyFetchingTest extends BaseEntityManagerFuncti
 	}
 
 	@Test
-	public void testEagerLoading() {
-		List<Stock> stocks = fromTransaction( entityManagerFactory().unwrap( SessionFactoryImplementor.class ),
-				session -> session.createQuery("select s from Stock s left join fetch s.codes order by s.id", Stock.class)
+	public void testEagerLoading(EntityManagerFactoryScope scope) {
+		List<Stock> stocks = scope.fromTransaction(
+				entityManager -> entityManager
+						.createQuery( "select s from Stock s left join fetch s.codes order by s.id", Stock.class )
 						.getResultList()
 		);
 
 		assertThat( stocks ).hasSize( 2 );
 
-		for (Stock s: stocks) {
-			assertTrue( Hibernate.isInitialized( s.getCodes() ) );
+		for ( Stock s : stocks ) {
+			assertThat( Hibernate.isInitialized( s.getCodes() ) ).isTrue();
 		}
 
 		final Stock firstStock = stocks.get( 0 );
@@ -179,7 +177,7 @@ public class ManyToManyNotIgnoreLazyFetchingTest extends BaseEntityManagerFuncti
 	}
 
 	public enum CodeType {
-		TYPE_A, TYPE_B;
+		TYPE_A, TYPE_B
 	}
 
 }

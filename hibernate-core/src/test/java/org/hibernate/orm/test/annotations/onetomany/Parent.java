@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetomany;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -34,8 +35,8 @@ public class Parent implements Serializable {
 
 	public boolean equals(Object obj) {
 		//a NPE can occurs, but I don't expect equals to be used before pk is set
-		if ( obj != null && obj instanceof Parent ) {
-			return id.equals( ( (Parent) obj ).id );
+		if ( obj instanceof Parent p ) {
+			return id.equals( p.id );
 		}
 		else {
 			return false;
@@ -44,7 +45,7 @@ public class Parent implements Serializable {
 
 	public void addChild(Child child) {
 		if ( children == null ) {
-			children = new HashSet();
+			children = new HashSet<>();
 		}
 		child.parent = this;
 		children.add( child );

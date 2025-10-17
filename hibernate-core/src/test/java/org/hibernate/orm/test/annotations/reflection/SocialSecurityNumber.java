@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.reflection;
+
 import java.io.Serializable;
 import jakarta.persistence.Embeddable;
 
@@ -21,9 +22,7 @@ public class SocialSecurityNumber implements Serializable {
 		final SocialSecurityNumber that = (SocialSecurityNumber) o;
 
 		if ( !countryCode.equals( that.countryCode ) ) return false;
-		if ( !number.equals( that.number ) ) return false;
-
-		return true;
+		return number.equals( that.number );
 	}
 
 	public int hashCode() {

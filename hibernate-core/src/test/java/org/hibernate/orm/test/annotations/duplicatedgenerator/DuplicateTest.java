@@ -12,13 +12,17 @@ import org.hibernate.orm.test.annotations.Company;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Fail.fail;
 
 /**
  * @author Emmanuel Bernard
  */
+@BaseUnitTest
 public class DuplicateTest  {
+
 	@Test
 	public void testDuplicateEntityName() {
 		Configuration cfg = new Configuration();
@@ -33,7 +37,7 @@ public class DuplicateTest  {
 			cfg.addResource( "org/hibernate/orm/test/annotations/duplicatedgenerator/orm.xml" );
 			serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
 			sf = cfg.buildSessionFactory( serviceRegistry );
-			Assert.fail( "Should not be able to map the same entity name twice" );
+			fail( "Should not be able to map the same entity name twice" );
 		}
 		catch (DuplicateMappingException ae) {
 			//success

@@ -4,10 +4,6 @@
  */
 package org.hibernate.orm.test.annotations.onetoone;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.List;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -17,75 +13,91 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.H2Dialect;
-
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @JiraKey(value = "HHH-13959")
-public class OneToOneJoinTableUniquenessTest extends BaseCoreFunctionalTestCase {
-	File output;
+@DomainModel(
+		annotatedClasses = {
+				OneToOneJoinTableUniquenessTest.Profile.class,
+				OneToOneJoinTableUniquenessTest.PersonRole.class
+		}
+)
+@SessionFactory
+@ServiceRegistry(
+		settings = {
+				@Setting(name = AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, value = "create"),
+				@Setting(name = AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop"),
+				@Setting(name = AvailableSettings.FORMAT_SQL, value = "false")
+		},
+		settingProviders = @SettingProvider(
+				settingName = AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET,
+				provider = OneToOneJoinTableUniquenessTest.ScriptCreateTargetProvider.class
+		)
+)
+public class OneToOneJoinTableUniquenessTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Profile.class, PersonRole.class };
+	public static class ScriptCreateTargetProvider implements SettingProvider.Provider<String> {
+		static Path path;
+
+		@Override
+		public String getSetting() {
+			try {
+				File output = File.createTempFile( "update_script", ".sql" );
+				path = output.toPath();
+				return path.toString();
+			}
+			catch (IOException e) {
+				throw new RuntimeException( e );
+			}
+		}
 	}
 
-	@Override
-	protected void configure(Configuration configuration) {
-
-		try {
-			output = File.createTempFile( "update_script", ".sql" );
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-			fail( e.getMessage() );
-		}
-		String value = output.toPath().toString();
-		configuration.setProperty( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, value );
-		configuration.setProperty( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, "create" );
-		configuration.setProperty( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
-		configuration.setProperty( AvailableSettings.FORMAT_SQL, "false" );
-	}
-
-	@After
-	public void tearDown() {
-		inTransaction(
-				session -> {
-					session.createQuery( "delete from PersonRole" ).executeUpdate();
-					session.createQuery( "delete from Profile" ).executeUpdate();
-				}
-		);
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
 	@Test
 	@RequiresDialect(H2Dialect.class)
-	public void testJoinTableColumnAreBothNotNull() throws Exception {
-		List<String> commands = Files.readAllLines( output.toPath() );
+	public void testJoinTableColumnAreBothNotNull(SessionFactoryScope scope) throws Exception {
+		scope.getSessionFactory();
+		List<String> commands = Files.readAllLines( ScriptCreateTargetProvider.path );
 		boolean isJoinTableCreated = false;
 		for ( String command : commands ) {
 			String lowerCaseCommand = command.toLowerCase();
 			if ( lowerCaseCommand.contains( "create table profile_person_role" ) ) {
 				isJoinTableCreated = true;
-				assertTrue( lowerCaseCommand.contains( "personrole_roleid bigint not null" ) );
-				assertTrue( lowerCaseCommand.contains( "id bigint not null" ) );
+				assertThat( lowerCaseCommand ).contains( "personrole_roleid bigint not null" );
+				assertThat( lowerCaseCommand ).contains( "id bigint not null" );
 			}
 		}
-		assertTrue( "The Join table was not created", isJoinTableCreated );
+		assertThat( isJoinTableCreated )
+				.describedAs( "The Join table was not created" )
+				.isTrue();
 	}
 
 	@Test
-	public void testPersistProfile() {
-		inTransaction(
+	public void testPersistProfile(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Profile p = new Profile();
 					session.persist( p );
@@ -94,8 +106,8 @@ public class OneToOneJoinTableUniquenessTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void testPersistPersonRole() {
-		inTransaction(
+	public void testPersistPersonRole(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					PersonRole personRole = new PersonRole();
 					session.persist( personRole );
@@ -104,8 +116,8 @@ public class OneToOneJoinTableUniquenessTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void testPersistBothSameTime() {
-		inTransaction(
+	public void testPersistBothSameTime(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					PersonRole personRole = new PersonRole();
 					Profile profile = new Profile();
@@ -118,8 +130,8 @@ public class OneToOneJoinTableUniquenessTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void testPersistBothAndAssociateLater() {
-		inTransaction(
+	public void testPersistBothAndAssociateLater(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					PersonRole personRole = new PersonRole();
 					Profile profile = new Profile();
@@ -159,7 +171,7 @@ public class OneToOneJoinTableUniquenessTest extends BaseCoreFunctionalTestCase 
 		@OneToOne(fetch = FetchType.LAZY)
 		@JoinTable(
 				name = "profile_person_role",
-				inverseJoinColumns = { @JoinColumn(unique = true, nullable = false) }
+				inverseJoinColumns = {@JoinColumn(unique = true, nullable = false)}
 		)
 		public PersonRole getPersonRole() {
 			return this.personRole;

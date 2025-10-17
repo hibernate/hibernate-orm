@@ -6,6 +6,9 @@ package org.hibernate.build;
 
 import org.gradle.api.Project;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Optional;
 
 /**
  * @author Steve Ebersole
@@ -36,14 +39,17 @@ public class ReleaseDetails {
 		createTagAccess = project.provider( () -> !project.hasProperty( "noTag" ) );
 	}
 
+	@Internal
 	public HibernateVersion getReleaseVersion() {
 		return releaseVersion;
 	}
 
+	@Internal
 	public HibernateVersion getDevelopmentVersion() {
 		return developmentVersion;
 	}
 
+	@Input
 	public Provider<Boolean> getCreateTagAccess() {
 		return createTagAccess;
 	}
@@ -52,10 +58,13 @@ public class ReleaseDetails {
 		return getCreateTagAccess().get();
 	}
 
+	@Input
+	@Optional
 	public Provider<String> getTagNameAccess() {
 		return tagNameAccess;
 	}
 
+	@Internal
 	public String getTagNameToUse() {
 		return getTagNameAccess().get();
 	}

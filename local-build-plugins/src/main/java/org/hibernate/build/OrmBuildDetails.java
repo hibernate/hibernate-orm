@@ -6,6 +6,10 @@ package org.hibernate.build;
 
 import org.gradle.api.Project;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Nested;
 
 import javax.inject.Inject;
 import java.io.File;
@@ -39,43 +43,53 @@ public abstract class OrmBuildDetails {
 		databaseName = (String) project.property( "db" );
 	}
 
+	@InputFile
 	public Provider<File> getVersionFileAccess() {
 		return versionFileAccess;
 	}
 
-	public HibernateVersion getHibernateVersion() {
-		return hibernateVersion;
-	}
-
-	public String getHibernateVersionName() {
-		return getHibernateVersion().getFullName();
-	}
-
-	public String getHibernateVersionFamily() {
-		return getHibernateVersion().getFamily();
-	}
-
-	public String getHibernateVersionNameOsgi() {
-		return getHibernateVersion().getOsgiVersion();
-	}
-
+	@Nested
 	public ReleaseDetails getReleaseDetails() {
 		return releaseDetails;
 	}
 
-	public JpaVersion getJpaVersion() {
-		return jpaVersion;
+	@Input
+	public String getHibernateVersionName() {
+		return getHibernateVersion().getFullName();
 	}
 
+	@Input
+	public String getHibernateVersionFamily() {
+		return getHibernateVersion().getFamily();
+	}
+
+	@Input
+	public String getHibernateVersionNameOsgi() {
+		return getHibernateVersion().getOsgiVersion();
+	}
+
+	@Input
 	public String getJpaVersionName() {
 		return getJpaVersion().getName();
 	}
 
+	@Input
 	public String getJpaVersionNameOsgi() {
 		return getJpaVersion().getOsgiName();
 	}
 
+	@Input
 	public String getDatabaseName() {
 		return databaseName;
+	}
+
+	@Internal
+	public HibernateVersion getHibernateVersion() {
+		return hibernateVersion;
+	}
+
+	@Internal
+	public JpaVersion getJpaVersion() {
+		return jpaVersion;
 	}
 }

@@ -12,9 +12,9 @@ import jakarta.persistence.Id;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
@@ -22,41 +22,25 @@ import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertTrue;
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test simple application of Convert annotation via XML.
  *
  * @author Steve Ebersole
  */
-public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
-	private StandardServiceRegistry ssr;
-
-	@Before
-	public void before() {
-		ssr = ServiceRegistryUtil.serviceRegistry();
-	}
-
-	@After
-	public void after() {
-		if ( ssr != null ) {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
-	}
+@ServiceRegistry
+public class SimpleXmlOverriddenTest {
 
 	/**
 	 * A baseline test, with an explicit @Convert annotation that should be in effect
 	 */
 	@Test
-	public void baseline() {
-		Metadata metadata = new MetadataSources( ssr )
+	public void baseline(ServiceRegistryScope scope) {
+		Metadata metadata = new MetadataSources( scope.getRegistry() )
 				.addAnnotatedClass( TheEntity.class )
 				.buildMetadata();
 
@@ -71,9 +55,9 @@ public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
 	 * Test outcome of applying overrides via orm.xml, specifically at the attribute level
 	 */
 	@Test
-	public void testDefinitionAtAttributeLevel() {
+	public void testDefinitionAtAttributeLevel(ServiceRegistryScope scope) {
 		// NOTE : simple-override.xml applied disable-conversion="true" at the attribute-level
-		Metadata metadata = new MetadataSources( ssr )
+		Metadata metadata = new MetadataSources( scope.getRegistry() )
 				.addAnnotatedClass( TheEntity.class )
 				.addResource( "org/hibernate/test/converter/simple-override.xml" )
 				.buildMetadata();
@@ -90,9 +74,9 @@ public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
 	 * Test outcome of applying overrides via orm.xml, specifically at the entity level
 	 */
 	@Test
-	public void testDefinitionAtEntityLevel() {
+	public void testDefinitionAtEntityLevel(ServiceRegistryScope scope) {
 		// NOTE : simple-override2.xml applied disable-conversion="true" at the entity-level
-		Metadata metadata = new MetadataSources( ssr )
+		Metadata metadata = new MetadataSources( scope.getRegistry() )
 				.addAnnotatedClass( TheEntity2.class )
 				.addResource( "org/hibernate/test/converter/simple-override2.xml" )
 				.buildMetadata();

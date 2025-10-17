@@ -8,27 +8,21 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class AttributeImmutabilityTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Event1.class, Event2.class
-		};
-	}
+@Jpa(annotatedClasses = {AttributeImmutabilityTest.Event1.class, AttributeImmutabilityTest.Event2.class})
+public class AttributeImmutabilityTest {
 
 	@Test
-	public void test1() {
+	public void test1(EntityManagerFactoryScope scope) {
 		//tag::entity-immutability-persist-example[]
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Event1 event = new Event1();
 			event.setId(1L);
 			event.setCreatedOn(new Date());
@@ -38,21 +32,21 @@ public class AttributeImmutabilityTest extends BaseEntityManagerFunctionalTestCa
 		});
 		//end::entity-immutability-persist-example[]
 		//tag::entity-immutability-update-example[]
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Event1 event = entityManager.find(Event1.class, 1L);
-			log.info("Change event message");
+			// "Change event message"
 			event.setMessage("Hibernate User Guide");
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Event1 event = entityManager.find(Event1.class, 1L);
 			assertEquals("Hibernate User Guide rocks!", event.getMessage());
 		});
 	}
 
 	@Test
-	public void test2() {
+	public void test2(EntityManagerFactoryScope scope) {
 		//tag::entity-immutability-persist-example[]
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Event2 event = new Event2();
 			event.setId(1L);
 			event.setCreatedOn(new Date());
@@ -62,12 +56,12 @@ public class AttributeImmutabilityTest extends BaseEntityManagerFunctionalTestCa
 		});
 		//end::entity-immutability-persist-example[]
 		//tag::entity-immutability-update-example[]
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Event2 event = entityManager.find(Event2.class, 1L);
-			log.info("Change event message");
+			// "Change event message"
 			event.setMessage("Hibernate User Guide");
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Event2 event = entityManager.find(Event2.class, 1L);
 			assertEquals("Hibernate User Guide rocks!", event.getMessage());
 		});

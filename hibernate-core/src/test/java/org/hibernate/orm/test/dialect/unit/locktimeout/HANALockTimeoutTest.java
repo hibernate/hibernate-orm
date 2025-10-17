@@ -8,13 +8,12 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.Timeouts.NO_WAIT;
 import static org.hibernate.Timeouts.SKIP_LOCKED;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Expected lock clauses according to the official HANA FOR UPDATE clause documentation:
@@ -24,7 +23,7 @@ import static org.junit.Assert.assertEquals;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(HANADialect.class)
-public class HANALockTimeoutTest extends BaseUnitTestCase {
+public class HANALockTimeoutTest {
 
 	private final Dialect dialect = new HANADialect();
 

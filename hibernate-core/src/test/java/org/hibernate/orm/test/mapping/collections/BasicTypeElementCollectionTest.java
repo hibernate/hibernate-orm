@@ -11,28 +11,22 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OrderColumn;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class BasicTypeElementCollectionTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa( annotatedClasses = {BasicTypeElementCollectionTest.Person.class} )
+public class BasicTypeElementCollectionTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class
-		};
-	}
-
-	@Override
-	public void buildEntityManagerFactory() {
-		super.buildEntityManagerFactory();
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	@BeforeEach
+	public void setup(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Person person = new Person();
 			person.id = 1L;
 			person.phones.add("027-123-4567");
@@ -41,36 +35,39 @@ public class BasicTypeElementCollectionTest extends BaseEntityManagerFunctionalT
 		});
 	}
 
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
+	}
+
 	@Test
-	public void testProxies() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			try {
-				//tag::collections-collection-proxy-usage-example[]
-				Person person = entityManager.find(Person.class, 1L);
-				//Throws java.lang.ClassCastException: org.hibernate.collection.internal.PersistentBag cannot be cast to java.util.ArrayList
-				ArrayList<String> phones = (ArrayList<String>) person.getPhones();
-				//end::collections-collection-proxy-usage-example[]
-			}
-			catch (Exception expected) {
-				log.error("Failure", expected);
-			}
+	public void testProxies(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			Assertions.assertThrows(
+					ClassCastException.class,
+					() -> {
+						//tag::collections-collection-proxy-usage-example[]
+						Person person = entityManager.find(Person.class, 1L);
+						//Throws java.lang.ClassCastException: org.hibernate.collection.internal.PersistentBag cannot be cast to java.util.ArrayList
+						ArrayList<String> phones = (ArrayList<String>) person.getPhones();
+						//end::collections-collection-proxy-usage-example[]
+					}
+			);
 		});
 	}
 
 	@Test
-	public void testLifecycle() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Person person = entityManager.find(Person.class, 1L);
-			log.info("Clear element collection and add element");
 			//tag::ex-collection-elemental-lifecycle[]
 			person.getPhones().clear();
 			person.getPhones().add("123-456-7890");
 			person.getPhones().add("456-000-1234");
 			//end::ex-collection-elemental-lifecycle[]
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Person person = entityManager.find(Person.class, 1L);
-			log.info("Remove one element");
 			//tag::collections-value-type-collection-remove-example[]
 			person.getPhones().remove(0);
 			//end::collections-value-type-collection-remove-example[]

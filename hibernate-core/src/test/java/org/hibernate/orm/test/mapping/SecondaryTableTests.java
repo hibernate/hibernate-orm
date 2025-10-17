@@ -45,7 +45,7 @@ public class SecondaryTableTests {
 					session.flush();
 					session.clear();
 					session.createQuery( "update SimpleEntityWithSecondaryTables e set e.data = 'test'" ).executeUpdate();
-					SimpleEntityWithSecondaryTables entity = session.get( SimpleEntityWithSecondaryTables.class, 1 );
+					SimpleEntityWithSecondaryTables entity = session.find( SimpleEntityWithSecondaryTables.class, 1 );
 					Assertions.assertEquals( "test", entity.data );
 				}
 		);

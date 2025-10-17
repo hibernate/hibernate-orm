@@ -13,7 +13,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.orm.test.annotations.onetoone.Show;
 import org.hibernate.orm.test.annotations.onetoone.ShowDescription;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -31,7 +31,7 @@ public class OneToOneErrorTest {
 		try {
 			serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 			sessionFactory = cfg.buildSessionFactory( serviceRegistry );
-			Assert.fail( "Wrong mappedBy does not fail property" );
+			Assertions.fail( "Wrong mappedBy does not fail property" );
 		}
 		catch (AnnotationException e) {
 			//success

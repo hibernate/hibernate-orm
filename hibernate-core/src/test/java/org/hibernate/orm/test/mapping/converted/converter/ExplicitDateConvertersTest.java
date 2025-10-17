@@ -4,31 +4,33 @@
  */
 package org.hibernate.orm.test.mapping.converted.converter;
 
-import java.net.MalformedURLException;
 import java.util.Date;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.Session;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertTrue;
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
 @JiraKey( value = "HHH-8807" )
-public class ExplicitDateConvertersTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = {ExplicitDateConvertersTest.Entity1.class})
+@SessionFactory
+public class ExplicitDateConvertersTest {
 
 	// NOTE : initially unable to reproduce the reported problem
 
@@ -72,14 +74,9 @@ public class ExplicitDateConvertersTest extends BaseNonConfigCoreFunctionalTestC
 		}
 	}
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Entity1.class };
-	}
-
 	@Test
-	public void testSimpleConvertUsage() throws MalformedURLException {
-		final EntityPersister ep = sessionFactory().getMappingMetamodel().getEntityDescriptor(Entity1.class.getName());
+	public void testSimpleConvertUsage(SessionFactoryScope scope) {
+		final EntityPersister ep = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Entity1.class.getName());
 		final Type theDatePropertyType = ep.getPropertyType( "theDate" );
 		final ConvertedBasicTypeImpl type = assertTyping(
 				ConvertedBasicTypeImpl.class,
@@ -90,27 +87,14 @@ public class ExplicitDateConvertersTest extends BaseNonConfigCoreFunctionalTestC
 
 		resetFlags();
 
-		Session session = openSession();
-		session.getTransaction().begin();
-		session.persist( new Entity1( 1, "1", new Date() ) );
-		session.getTransaction().commit();
-		session.close();
-
+		scope.inTransaction( session -> session.persist(new Entity1(1, "1", new Date())) );
 		assertTrue( convertToDatabaseColumnCalled );
+
 		resetFlags();
 
-		session = openSession();
-		session.getTransaction().begin();
-		session.get( Entity1.class, 1 );
-		session.getTransaction().commit();
-		session.close();
-
+		scope.inTransaction( session -> session.find( Entity1.class, 1 ) );
 		assertTrue( convertToEntityAttributeCalled );
 
-		session = openSession();
-		session.getTransaction().begin();
-		session.createQuery( "delete Entity1" ).executeUpdate();
-		session.getTransaction().commit();
-		session.close();
+		scope.dropData();
 	}
 }

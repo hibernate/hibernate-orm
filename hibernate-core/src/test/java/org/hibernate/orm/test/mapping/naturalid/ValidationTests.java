@@ -36,7 +36,7 @@ public class ValidationTests {
 		final MetadataSources metadataSources = new MetadataSources( registry )
 				.addAnnotatedClass( Thing1.class )
 				.addAnnotatedClass( Thing2.class );
-		try (final SessionFactory sessionFactory = metadataSources.buildMetadata().buildSessionFactory(); ) {
+		try (final SessionFactory sessionFactory = metadataSources.buildMetadata().buildSessionFactory() ) {
 			fail( "Expecting an exception" );
 		}
 		catch (MappingException expected) {
@@ -51,7 +51,7 @@ public class ValidationTests {
 				.addAnnotatedClass( Thing1.class )
 				.addAnnotatedClass( Thing3.class )
 				.addAnnotatedClass( Container.class );
-		try (final SessionFactory sessionFactory = metadataSources.buildMetadata().buildSessionFactory(); ) {
+		try (final SessionFactory sessionFactory = metadataSources.buildMetadata().buildSessionFactory() ) {
 			fail( "Expecting an exception" );
 		}
 		catch (MappingException expected) {

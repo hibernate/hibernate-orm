@@ -13,31 +13,23 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class CalendarWithTemporalTimestampTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				DateEvent.class
-		};
-	}
+@Jpa( annotatedClasses = {CalendarWithTemporalTimestampTest.DateEvent.class} )
+public class CalendarWithTemporalTimestampTest {
 
 	@Test
-	public void testLifecycle() {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
 		final Calendar calendar = new GregorianCalendar();
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			entityManager.persist(new DateEvent(calendar));
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			DateEvent dateEvent = entityManager.createQuery("from DateEvent", DateEvent.class).getSingleResult();
 			//Assert.assertEquals(calendar, dateEvent.getTimestamp());
 		});

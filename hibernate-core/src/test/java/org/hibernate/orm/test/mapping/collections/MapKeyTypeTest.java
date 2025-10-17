@@ -17,10 +17,10 @@ import org.hibernate.annotations.MapKeyJdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -33,12 +33,12 @@ import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.Table;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class MapKeyTypeTest extends BaseEntityManagerFunctionalTestCase {
+public class MapKeyTypeTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

@@ -3,66 +3,54 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.generated;
-import org.junit.Test;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
+
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Implementation of AbstractGeneratedPropertyTest.
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractGeneratedPropertyTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
-	}
+@SessionFactory
+public abstract class AbstractGeneratedPropertyTest {
 
 	@Test
 	@JiraKey( value = "HHH-2627" )
-	public final void testGeneratedProperty() {
+	public final void testGeneratedProperty(SessionFactoryScope scope) {
 		// The following block is repeated 300 times to reproduce HHH-2627.
 		// Without the fix, Oracle will run out of cursors using 10g with
 		// a default installation (ORA-01000: maximum open cursors exceeded).
-		// The number of loops may need to be adjusted depending on the how
+		// The number of loops may need to be adjusted depending on how
 		// Oracle is configured.
 		// Note: The block is not indented to avoid a lot of irrelevant differences.
 		for ( int i=0; i<300; i++ ) {
-			GeneratedPropertyEntity entity = new GeneratedPropertyEntity();
+			final GeneratedPropertyEntity entity = new GeneratedPropertyEntity();
 			entity.setName( "entity-1" );
-			Session s = openSession();
-			Transaction t = s.beginTransaction();
-			s.persist( entity );
-			s.flush();
-			assertNotNull( "no timestamp retrieved", entity.getLastModified() );
-			t.commit();
-			s.close();
+			scope.inTransaction( session -> {
+				session.persist( entity );
+				session.flush();
+				assertNotNull( entity.getLastModified(), "no timestamp retrieved" );
+			} );
 
 			byte[] bytes = entity.getLastModified();
 
-			s = openSession();
-			t = s.beginTransaction();
-			entity = ( GeneratedPropertyEntity ) s.get( GeneratedPropertyEntity.class, entity.getId() );
-			assertTrue( PrimitiveByteArrayJavaType.INSTANCE.areEqual( bytes, entity.getLastModified() ) );
-			t.commit();
-			s.close();
+			scope.inTransaction( session -> {
+				GeneratedPropertyEntity _entity = session.find( GeneratedPropertyEntity.class, entity.getId() );
+				assertTrue( PrimitiveByteArrayJavaType.INSTANCE.areEqual( bytes, _entity.getLastModified() ) );
+			} );
 
 			assertTrue( PrimitiveByteArrayJavaType.INSTANCE.areEqual( bytes, entity.getLastModified() ) );
 
-			s = openSession();
-			t = s.beginTransaction();
-			s.remove( entity );
-			t.commit();
-			s.close();
+			scope.inTransaction( session -> session.remove( entity ) );
 		}
 	}
 }

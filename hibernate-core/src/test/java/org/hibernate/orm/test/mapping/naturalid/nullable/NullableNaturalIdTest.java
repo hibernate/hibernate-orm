@@ -19,9 +19,9 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -154,7 +154,7 @@ public class NullableNaturalIdTest {
 
 		scope.inTransaction(
 				(session) -> {
-					final C c = session.get(C.class, 1);
+					final C c = session.find(C.class, 1);
 					assertThat( c, notNullValue() );
 					assertThat( c.name, nullValue() );
 				}
@@ -174,12 +174,12 @@ public class NullableNaturalIdTest {
 
 		scope.inTransaction(
 				(session) -> {
-					final A a = session.get( A.class, 1 );
+					final A a = session.find( A.class, 1 );
 					assertThat( a, notNullValue() );
 					assertThat( a.assC, nullValue() );
 					assertThat( a.myname, nullValue() );
 
-					final B b = session.get( B.class, 1 );
+					final B b = session.find( B.class, 1 );
 					assertThat( b, notNullValue() );
 					assertThat( b.assA, nullValue() );
 					assertThat( b.naturalid, notNullValue() );
@@ -190,7 +190,7 @@ public class NullableNaturalIdTest {
 
 		scope.inTransaction(
 				(session) -> {
-					final B b = session.get( B.class, 1 );
+					final B b = session.find( B.class, 1 );
 					assertThat( b, notNullValue() );
 					assertThat( b.assA, notNullValue() );
 				}

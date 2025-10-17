@@ -15,30 +15,25 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Vlad Mihalcea
  */
-public class NaturalIdEqualsHashCodeEntityTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(annotatedClasses = {
+		NaturalIdEqualsHashCodeEntityTest.Book.class, NaturalIdEqualsHashCodeEntityTest.Library.class
+})
+public class NaturalIdEqualsHashCodeEntityTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Library.class,
-			Book.class
-		};
-	}
-
-	@Before
-	public void init() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	@BeforeEach
+	public void init(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Library library = new Library();
 			library.setId(1L);
 			library.setName("Amazon");
@@ -48,14 +43,14 @@ public class NaturalIdEqualsHashCodeEntityTest extends BaseEntityManagerFunction
 	}
 
 	@Test
-	public void testPersist() {
+	public void testPersist(EntityManagerFactoryScope scope) {
 
 		//tag::entity-pojo-natural-id-equals-hashcode-persist-example[]
 		Book book1 = new Book();
 		book1.setTitle("High-Performance Java Persistence");
 		book1.setIsbn("978-9730228236");
 
-		Library library = doInJPA(this::entityManagerFactory, entityManager -> {
+		Library library = scope.fromTransaction( entityManager -> {
 			Library _library = entityManager.find(Library.class, 1L);
 
 			_library.getBooks().add(book1);

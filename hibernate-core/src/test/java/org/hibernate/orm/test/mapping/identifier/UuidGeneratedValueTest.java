@@ -10,33 +10,30 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Vlad Mihalcea
  */
-@SkipForDialect( dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Skipped for Sybase to avoid problems with UUIDs potentially ending with a trailing 0 byte")
-public class UuidGeneratedValueTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Book.class
-		};
-	}
+@SkipForDialect(
+		dialectClass = SybaseDialect.class, matchSubTypes = true,
+		reason = "Skipped for Sybase to avoid problems with UUIDs potentially ending with a trailing 0 byte"
+)
+@Jpa(annotatedClasses = {UuidGeneratedValueTest.Book.class})
+public class UuidGeneratedValueTest {
 
 	@Test
-	public void test() {
+	public void test(EntityManagerFactoryScope scope) {
 		Book book = new Book();
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			book.setTitle("High-Performance Java Persistence");
 			book.setAuthor("Vlad Mihalcea");
 
@@ -45,7 +42,7 @@ public class UuidGeneratedValueTest extends BaseEntityManagerFunctionalTestCase 
 
 		assertNotNull(book.getId());
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Book foundBook = entityManager.find( Book.class, book.getId() );
 			assertEquals( book.getAuthor(), foundBook.getAuthor() );
 		});

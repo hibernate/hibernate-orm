@@ -13,18 +13,19 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 
-import org.hibernate.Session;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertTrue;
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Jira HHH-8812 claims that explicit {@link jakarta.persistence.Convert} annotations are not processed when a orm.xml
@@ -33,16 +34,12 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  */
 @JiraKey( value = "HHH-8812" )
-public class XmlWithExplicitConvertAnnotationsTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Entity1.class };
-	}
-
-	@Override
-	protected String[] getXmlFiles() {
-		return new String[] { "org/hibernate/test/converter/mixed.xml" };
-	}
+@DomainModel(
+		annotatedClasses = {XmlWithExplicitConvertAnnotationsTest.Entity1.class},
+		xmlMappings = {"org/hibernate/test/converter/mixed.xml"}
+)
+@SessionFactory
+public class XmlWithExplicitConvertAnnotationsTest {
 
 	// NOTE : essentially the same exact test as ExplicitDateConvertersTest, but here we will mix annotations and xml
 
@@ -95,8 +92,8 @@ public class XmlWithExplicitConvertAnnotationsTest extends BaseNonConfigCoreFunc
 	}
 
 	@Test
-	public void testSimpleConvertUsage() throws MalformedURLException {
-		final EntityPersister ep = sessionFactory().getMappingMetamodel().getEntityDescriptor(Entity1.class.getName());
+	public void testSimpleConvertUsage(SessionFactoryScope scope) throws MalformedURLException {
+		final EntityPersister ep = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Entity1.class.getName());
 		final Type theDatePropertyType = ep.getPropertyType( "theDate" );
 		final ConvertedBasicTypeImpl type = assertTyping(
 				ConvertedBasicTypeImpl.class,
@@ -107,28 +104,15 @@ public class XmlWithExplicitConvertAnnotationsTest extends BaseNonConfigCoreFunc
 
 		resetFlags();
 
-		Session session = openSession();
-		session.getTransaction().begin();
-		session.persist( new Entity1( 1, "1", new Date() ) );
-		session.getTransaction().commit();
-		session.close();
-
+		scope.inTransaction( session -> session.persist(new Entity1(1, "1", new Date())) );
 		assertTrue( convertToDatabaseColumnCalled );
+
 		resetFlags();
 
-		session = openSession();
-		session.getTransaction().begin();
-		session.get( Entity1.class, 1 );
-		session.getTransaction().commit();
-		session.close();
-
+		scope.inTransaction( session -> session.find( Entity1.class, 1 ) );
 		assertTrue( convertToEntityAttributeCalled );
 
-		session = openSession();
-		session.getTransaction().begin();
-		session.createQuery( "delete Entity1" ).executeUpdate();
-		session.getTransaction().commit();
-		session.close();
+		scope.dropData();
 	}
 
 }

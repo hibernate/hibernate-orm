@@ -7,26 +7,38 @@ package org.hibernate.orm.test.annotations;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.orm.test.annotations.inheritance.Carrot;
 import org.hibernate.orm.test.annotations.inheritance.Tomato;
 import org.hibernate.orm.test.annotations.inheritance.Vegetable;
 import org.hibernate.orm.test.annotations.inheritance.VegetablePk;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Emmanuel Bernard
  */
-public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = {
+		Boat.class,
+		Ferry.class,
+		AmericaCupClass.class,
+		Country.class,
+		Vegetable.class,
+		Carrot.class,
+		Tomato.class
+})
+@SessionFactory
+public class JoinedSubclassTest {
 	@Test
-	public void testDefaultValues() {
+	public void testDefaultValues(SessionFactoryScope scope) {
 		Ferry ferry = new Ferry();
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					ferry.setSize( 2 );
 					ferry.setSea( "Channel" );
@@ -34,7 +46,7 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					Ferry f = s.get( Ferry.class, ferry.getId() );
 					assertNotNull( f );
@@ -46,10 +58,10 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testDeclaredValues() {
+	public void testDeclaredValues(SessionFactoryScope scope) {
 		Country country = new Country();
 		AmericaCupClass americaCupClass = new AmericaCupClass();
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					country.setName( "France" );
 					americaCupClass.setSize( 2 );
@@ -59,7 +71,7 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					AmericaCupClass f = s.get( AmericaCupClass.class, americaCupClass.getId() );
 					assertNotNull( f );
@@ -72,8 +84,8 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testCompositePk() {
-		inTransaction(
+	public void testCompositePk(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					Carrot c = new Carrot();
 					VegetablePk pk = new VegetablePk();
@@ -85,30 +97,17 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					CriteriaQuery<Vegetable> criteria = criteriaBuilder.createQuery( Vegetable.class );
 					criteria.from( Vegetable.class );
 					Vegetable v = s.createQuery( criteria ).uniqueResult();
-//					Vegetable v = (Vegetable) s.createCriteria( Vegetable.class ).uniqueResult();
-					assertTrue( v instanceof Carrot );
+					assertInstanceOf( Carrot.class, v );
 					Carrot result = (Carrot) v;
 					assertEquals( 23, result.getLength() );
 				}
 		);
 	}
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Boat.class,
-				Ferry.class,
-				AmericaCupClass.class,
-				Country.class,
-				Vegetable.class,
-				Carrot.class,
-				Tomato.class
-		};
-	}
 }

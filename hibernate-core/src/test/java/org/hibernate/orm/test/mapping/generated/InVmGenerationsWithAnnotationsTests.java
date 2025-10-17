@@ -73,7 +73,7 @@ public class InVmGenerationsWithAnnotationsTests {
 			assertThat( merged.lastUpdatedOn ).isNotEqualTo( merged.createdOn );
 
 			// lastly, make sure we can load it..
-			final AuditedEntity loaded = scope.fromTransaction( session, s -> s.get( AuditedEntity.class, 1 ) );
+			final AuditedEntity loaded = scope.fromTransaction( session, s -> s.find( AuditedEntity.class, 1 ) );
 
 			assertThat( loaded ).isNotNull();
 			assertThat( loaded.createdOn ).isEqualTo( merged.createdOn );

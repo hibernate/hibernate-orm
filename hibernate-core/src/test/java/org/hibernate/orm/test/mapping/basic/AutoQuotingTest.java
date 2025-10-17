@@ -4,39 +4,28 @@
  */
 package org.hibernate.orm.test.mapping.basic;
 
-import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class AutoQuotingTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Product.class
-		};
-	}
-
-	@Override
-	protected Map buildSettings() {
-		Map settings = super.buildSettings();
-		settings.put(AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, true);
-		return settings;
-	}
+@Jpa(
+		annotatedClasses = {AutoQuotingTest.Product.class},
+		integrationSettings = {@Setting(name = AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, value = "true")}
+)
+public class AutoQuotingTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			//tag::basic-auto-quoting-persistence-example[]
 			Product product = new Product();
 			product.setId(1L);

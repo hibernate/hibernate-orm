@@ -9,28 +9,22 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 
 import org.hibernate.annotations.Nationalized;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class NClobCharArrayTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Product.class
-		};
-	}
+@Jpa( annotatedClasses = {NClobCharArrayTest.Product.class} )
+public class NClobCharArrayTest {
 
 	@Test
-	public void test() {
-		Integer productId = doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		Integer productId = scope.fromTransaction( entityManager -> {
 			final Product product = new Product();
 			product.setId(1);
 			product.setName("Mobile phone");
@@ -39,7 +33,7 @@ public class NClobCharArrayTest extends BaseEntityManagerFunctionalTestCase {
 			entityManager.persist(product);
 			return product.getId();
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Product product = entityManager.find(Product.class, productId);
 
 			assertArrayEquals("My product warranty".toCharArray(), product.getWarranty());

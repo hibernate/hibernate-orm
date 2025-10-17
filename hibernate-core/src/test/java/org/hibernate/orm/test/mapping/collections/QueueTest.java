@@ -16,37 +16,30 @@ import jakarta.persistence.OneToMany;
 
 import org.hibernate.annotations.CollectionType;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.orm.test.mapping.collections.type.QueueType;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * @author Vlad Mihalcea
  */
-public class QueueTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class,
-			Phone.class,
-		};
-	}
+@Jpa( annotatedClasses = {QueueTest.Person.class, QueueTest.Phone.class} )
+public class QueueTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Person person = new Person(1L);
 			person.getPhones().add(new Phone(1L, "landline", "028-234-9876"));
 			person.getPhones().add(new Phone(2L, "mobile", "072-122-9876"));
 			entityManager.persist(person);
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::collections-custom-collection-example[]
 			Person person = entityManager.find(Person.class, 1L);
 			Queue<Phone> phones = person.getPhones();
@@ -55,7 +48,7 @@ public class QueueTest extends BaseEntityManagerFunctionalTestCase {
 			assertEquals(1, phones.size());
 			//end::collections-custom-collection-example[]
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Person person = entityManager.find(Person.class, 1L);
 			person.getPhones().clear();
 		});

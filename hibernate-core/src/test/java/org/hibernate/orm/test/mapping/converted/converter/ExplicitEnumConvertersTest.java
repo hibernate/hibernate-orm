@@ -4,30 +4,32 @@
  */
 package org.hibernate.orm.test.mapping.converted.converter;
 
-import java.net.MalformedURLException;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.Session;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertTrue;
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
 @JiraKey( value = "HHH-8809" )
-public class ExplicitEnumConvertersTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = {ExplicitEnumConvertersTest.Entity1.class})
+@SessionFactory
+public class ExplicitEnumConvertersTest {
 
 	// NOTE : initially unable to reproduce the reported problem
 
@@ -38,12 +40,6 @@ public class ExplicitEnumConvertersTest extends BaseNonConfigCoreFunctionalTestC
 		MUSIC_STREAM,
 		VIDEO_STREAM
 	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Entity1.class };
-	}
-
 
 	static boolean convertToDatabaseColumnCalled = false;
 	static boolean convertToEntityAttributeCalled = false;
@@ -86,8 +82,8 @@ public class ExplicitEnumConvertersTest extends BaseNonConfigCoreFunctionalTestC
 	}
 
 	@Test
-	public void testSimpleConvertUsage() throws MalformedURLException {
-		final EntityPersister ep = sessionFactory().getMappingMetamodel().getEntityDescriptor(Entity1.class.getName());
+	public void testSimpleConvertUsage(SessionFactoryScope scope) {
+		final EntityPersister ep = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Entity1.class.getName());
 		final Type theDatePropertyType = ep.getPropertyType( "mediaType" );
 		final ConvertedBasicTypeImpl type = assertTyping(
 				ConvertedBasicTypeImpl.class,
@@ -97,28 +93,16 @@ public class ExplicitEnumConvertersTest extends BaseNonConfigCoreFunctionalTestC
 		assertTrue( MediaTypeConverter.class.isAssignableFrom( converter.getConverterJavaType().getJavaTypeClass() ) );
 
 		resetFlags();
-
-		Session session = openSession();
-		session.getTransaction().begin();
-		session.persist( new Entity1( 1, "300", MediaType.VIDEO ) );
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction( session -> session.persist( new Entity1( 1, "300", MediaType.VIDEO ) ) );
 
 		assertTrue( convertToDatabaseColumnCalled );
 		resetFlags();
 
-		session = openSession();
-		session.getTransaction().begin();
-		session.get( Entity1.class, 1 );
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction( session -> session.find( Entity1.class, 1 ) );
 
 		assertTrue( convertToEntityAttributeCalled );
 
-		session = openSession();
-		session.getTransaction().begin();
-		session.createQuery( "delete Entity1" ).executeUpdate();
-		session.getTransaction().commit();
-		session.close();
+		scope.dropData();
 	}
+
 }

@@ -68,7 +68,7 @@ public class MultiInheritanceDiscriminatorTest {
 
 		scope.inTransaction(
 				session -> {
-					AccountOwner _owner = session.get( AccountOwner.class, ownerId );
+					AccountOwner _owner = session.find( AccountOwner.class, ownerId );
 					assertEquals( 2, _owner.getCreditAccounts().size() );
 					assertEquals( "CreditAccount", _owner.getCreditAccounts().iterator().next().getClass().getSimpleName() );
 
@@ -113,7 +113,7 @@ public class MultiInheritanceDiscriminatorTest {
 
 		scope.inTransaction(
 				session -> {
-					AccOwner _owner = session.get( AccOwner.class, ownerId );
+					AccOwner _owner = session.find( AccOwner.class, ownerId );
 					assertEquals( 2, _owner.getCreditAccs().size() );
 					assertEquals( "CreditAcc", _owner.getCreditAccs().iterator().next().getClass().getSimpleName() );
 

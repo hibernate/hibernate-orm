@@ -7,14 +7,16 @@ package org.hibernate.orm.test.annotations;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.type.BasicType;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
@@ -24,25 +26,25 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Yanming Zhou
  */
 @JiraKey("HHH-18012")
-public class GenericConverterAutoApplyTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(annotatedClasses = {
+		GenericConverterAutoApplyTest.IntegerArrayConverter.class,
+		GenericConverterAutoApplyTest.IntegerListConverter.class,
+		GenericConverterAutoApplyTest.TestEntity.class}
+)
+public class GenericConverterAutoApplyTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{IntegerArrayConverter.class, IntegerListConverter.class, TestEntity.class};
+	@Test
+	public void genericArrayIsAutoApplied(EntityManagerFactoryScope scope) {
+		assertAttributeIsMappingToString( scope.getEntityManagerFactory().createEntityManager(), "integerArray" );
 	}
 
 	@Test
-	public void genericArrayIsAutoApplied() {
-		assertAttributeIsMappingToString("integerArray");
+	public void genericListIsAutoApplied(EntityManagerFactoryScope scope) {
+		assertAttributeIsMappingToString( scope.getEntityManagerFactory().createEntityManager(), "integerList" );
 	}
 
-	@Test
-	public void genericListIsAutoApplied() {
-		assertAttributeIsMappingToString("integerList");
-	}
-
-	private void assertAttributeIsMappingToString(String name) {
-		EntityType<?> entityType = getOrCreateEntityManager().getMetamodel().entity(TestEntity.class);
+	private void assertAttributeIsMappingToString(EntityManager em, String name) {
+		EntityType<?> entityType = em.getMetamodel().entity(TestEntity.class);
 		assertThat(entityType.getAttribute(name)).isInstanceOfSatisfying(SingularAttribute.class,
 				sa -> assertThat(sa.getType()).isInstanceOfSatisfying(BasicType.class,
 						bt -> assertThat(bt.getJdbcJavaType().getJavaType()).isEqualTo(String.class)

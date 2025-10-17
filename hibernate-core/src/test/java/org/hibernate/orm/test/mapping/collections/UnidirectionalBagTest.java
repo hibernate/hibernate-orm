@@ -12,28 +12,19 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class UnidirectionalBagTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				Phone.class,
-		};
-	}
+@Jpa( annotatedClasses = {UnidirectionalBagTest.Person.class, UnidirectionalBagTest.Phone.class} )
+public class UnidirectionalBagTest {
 
 	@Test
-	public void testLifecycle() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			//tag::collections-unidirectional-bag-lifecycle-example[]
 			Person person = new Person(1L);
 			person.getPhones().add(new Phone(1L, "landline", "028-234-9876"));
@@ -41,7 +32,7 @@ public class UnidirectionalBagTest extends BaseEntityManagerFunctionalTestCase {
 			entityManager.persist(person);
 			//end::collections-unidirectional-bag-lifecycle-example[]
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Person person = entityManager.find(Person.class, 1L);
 			person.getPhones().remove(0);
 		});

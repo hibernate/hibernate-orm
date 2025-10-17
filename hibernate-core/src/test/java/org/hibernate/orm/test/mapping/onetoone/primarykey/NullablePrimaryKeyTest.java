@@ -20,8 +20,8 @@ import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Test harness for ANN-742.
@@ -53,7 +53,7 @@ public class NullablePrimaryKeyTest {
 			String expectedMappingTableSql = "create table personAddress (address_id bigint, " +
 					"person_id bigint not null, primary key (person_id))";
 
-			assertEquals( "Wrong SQL", expectedMappingTableSql, commands.get( 2 ) );
+			assertEquals( expectedMappingTableSql, commands.get( 2 ), "Wrong SQL" );
 		}
 		catch (Exception e) {
 			fail( e.getMessage() );

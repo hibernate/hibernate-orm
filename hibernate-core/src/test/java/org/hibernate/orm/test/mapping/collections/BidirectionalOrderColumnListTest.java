@@ -16,28 +16,20 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class BidirectionalOrderColumnListTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				Phone.class,
-		};
-	}
+@Jpa( annotatedClasses = {BidirectionalOrderColumnListTest.Person.class, BidirectionalOrderColumnListTest.Phone.class} )
+public class BidirectionalOrderColumnListTest {
 
 	@Test
-	public void testLifecycle() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Person person = new Person(1L);
 			entityManager.persist(person);
 			person.addPhone(new Phone(1L, "landline", "028-234-9876"));
@@ -45,9 +37,7 @@ public class BidirectionalOrderColumnListTest extends BaseEntityManagerFunctiona
 			entityManager.flush();
 			person.removePhone(person.getPhones().get(0));
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			entityManager.find(Person.class, 1L).getPhones().size();
-		});
+		scope.inTransaction( entityManager -> entityManager.find(Person.class, 1L).getPhones().size() );
 	}
 
 	@Entity(name = "Person")

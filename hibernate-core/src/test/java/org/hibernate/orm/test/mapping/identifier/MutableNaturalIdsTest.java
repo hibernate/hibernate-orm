@@ -4,14 +4,16 @@
  */
 package org.hibernate.orm.test.mapping.identifier;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.junit.Test;
+
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -19,7 +21,8 @@ import jakarta.persistence.Id;
 /**
  * @author Gary Gregory
  */
-public class MutableNaturalIdsTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(annotatedClasses = {MutableNaturalIdsTest.Author.class})
+public class MutableNaturalIdsTest {
 
 	private static final String FIELD_1 = "email1";
 	private static final String FIELD_2 = "email2";
@@ -32,16 +35,9 @@ public class MutableNaturalIdsTest extends BaseEntityManagerFunctionalTestCase {
 	private static final String NEW_VALUE_1 = "john.doe1@acme.com";
 	private static final String NEW_VALUE_2 = "john.doe2@acme.com";
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Author.class
-		};
-	}
-
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Author author = new Author();
 			author.setId(1L);
 			author.setName("John Doe");
@@ -51,7 +47,7 @@ public class MutableNaturalIdsTest extends BaseEntityManagerFunctionalTestCase {
 
 			entityManager.persist(author);
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Author author = entityManager
 				.unwrap(Session.class)
 				.byNaturalId(Author.class)

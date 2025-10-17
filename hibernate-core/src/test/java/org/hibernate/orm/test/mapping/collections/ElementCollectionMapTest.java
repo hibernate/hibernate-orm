@@ -16,29 +16,20 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Assert;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class ElementCollectionMapTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				Phone.class,
-		};
-	}
+@Jpa( annotatedClasses = {ElementCollectionMapTest.Person.class, ElementCollectionMapTest.Phone.class} )
+public class ElementCollectionMapTest {
 
 	@Test
-	public void testLifecycle() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Person person = new Person(1L);
 			//tag::collections-map-value-type-entity-key-add-example[]
 			person.getPhoneRegister().put(
@@ -50,10 +41,10 @@ public class ElementCollectionMapTest extends BaseEntityManagerFunctionalTestCas
 			//end::collections-map-value-type-entity-key-add-example[]
 			entityManager.persist(person);
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Person person = entityManager.find(Person.class, 1L);
 			Map<Phone, Date> phones = person.getPhoneRegister();
-			Assert.assertEquals(2, phones.size());
+			Assertions.assertEquals(2, phones.size());
 		});
 	}
 

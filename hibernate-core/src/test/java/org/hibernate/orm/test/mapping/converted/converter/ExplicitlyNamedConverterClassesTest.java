@@ -9,17 +9,21 @@ import jakarta.persistence.Converter;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.Session;
-
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for asserting correct behavior of applying AttributeConverters explicitly listed in persistence.xml.
  *
  * @author Steve Ebersole
  */
-public class ExplicitlyNamedConverterClassesTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {ExplicitlyNamedConverterClassesTest.Entity1.class, ExplicitlyNamedConverterClassesTest.NotAutoAppliedConverter.class}
+)
+@SessionFactory()
+public class ExplicitlyNamedConverterClassesTest {
 
 	// test handling of explicitly named, but non-auto-applied converter ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -51,23 +55,10 @@ public class ExplicitlyNamedConverterClassesTest extends BaseNonConfigCoreFuncti
 		}
 	}
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Entity1.class, NotAutoAppliedConverter.class };
-	}
-
 	@Test
-	public void testNonAutoAppliedConvertIsNotApplied() {
-		Session session = openSession();
-		session.getTransaction().begin();
-		session.persist( new Entity1( 1, "1" ) );
-		session.getTransaction().commit();
-		session.close();
+	public void testNonAutoAppliedConvertIsNotApplied(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist(new Entity1(1, "1")) );
 
-		session = openSession();
-		session.getTransaction().begin();
-		session.createQuery( "delete Entity1" ).executeUpdate();
-		session.getTransaction().commit();
-		session.close();
+		scope.dropData();
 	}
 }

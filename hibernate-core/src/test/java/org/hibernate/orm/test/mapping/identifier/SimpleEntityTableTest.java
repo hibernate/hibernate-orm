@@ -8,26 +8,18 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 
 /**
  * @author Vlad Mihalcea
  */
-public class SimpleEntityTableTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Book.class
-		};
-	}
+@Jpa(annotatedClasses = {SimpleEntityTableTest.Book.class})
+public class SimpleEntityTableTest {
 
 	@Test
 	public void test() {
-
 	}
 
 	//tag::entity-pojo-table-mapping-example[]

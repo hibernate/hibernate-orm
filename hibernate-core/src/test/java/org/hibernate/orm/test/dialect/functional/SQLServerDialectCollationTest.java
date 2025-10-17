@@ -5,7 +5,7 @@
 package org.hibernate.orm.test.dialect.functional;
 
 import java.io.Serializable;
-import java.sql.SQLException;
+import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Objects;
@@ -14,21 +14,20 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.boot.registry.BootstrapServiceRegistry;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.SQLServerDialect;
 
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * used driver hibernate.connection.driver_class com.microsoft.sqlserver.jdbc.SQLServerDriver
@@ -36,68 +35,48 @@ import static org.junit.Assert.assertEquals;
  * @author Guenther Demetz
  */
 @RequiresDialect(SQLServerDialect.class)
-public class SQLServerDialectCollationTest extends BaseCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = {SQLServerDialectCollationTest.CustomProduct.class})
+@SessionFactory(exportSchema = false)
+@ServiceRegistry(settings = {@Setting(name = AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, value = "true")})
+public class SQLServerDialectCollationTest {
 
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, Boolean.TRUE.toString() );
-	}
+	private static final String TABLE_NAME = "CustomProduct";
+	private static final String CATALOG = "hibernate_orm_test_collation";
 
-	@Override
-	protected void buildSessionFactory() {
-		BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
-		StandardServiceRegistryImpl _serviceRegistry =
-				buildServiceRegistry( bootRegistry, constructAndConfigureConfiguration( bootRegistry ) );
 
-		try {
-			try {
-				TransactionUtil.doWithJDBC(
-						_serviceRegistry,
-						connection -> {
-							try (Statement statement = connection.createStatement()) {
-								connection.setAutoCommit( true );
-								statement.executeUpdate( "DROP DATABASE hibernate_orm_test_collation" );
-							}
-						}
-				);
-			}
-			catch (SQLException e) {
-				log.debug( e.getMessage() );
-			}
-			try {
-				TransactionUtil.doWithJDBC(
-						_serviceRegistry,
-						connection -> {
-							try (Statement statement = connection.createStatement()) {
-								connection.setAutoCommit( true );
-								statement.executeUpdate( "CREATE DATABASE hibernate_orm_test_collation COLLATE Latin1_General_CS_AS" );
-								statement.executeUpdate( "ALTER DATABASE [hibernate_orm_test_collation] SET AUTO_CLOSE OFF " );
-							}
-						}
-				);
-			}
-			catch (SQLException e) {
-				log.debug( e.getMessage() );
-			}
-		}
-		finally {
-			_serviceRegistry.destroy();
-		}
-		super.buildSessionFactory();
+	@BeforeEach
+	protected void setup(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.doWork( connection -> {
+				try (PreparedStatement ps = connection.prepareStatement( "DROP DATABASE IF EXISTS " + CATALOG )) {
+					ps.execute();
+				}
+			} );
+		} );
+
+		scope.inTransaction( session -> {
+			session.doWork( connection -> {
+				try (Statement statement = connection.createStatement()) {
+					statement.executeUpdate( "CREATE DATABASE " + CATALOG + " COLLATE Latin1_General_CS_AS" );
+					statement.executeUpdate( "ALTER DATABASE [" + CATALOG + "] SET AUTO_CLOSE OFF " );
+				}
+			} );
+		} );
+
+		scope.getSessionFactory().getSchemaManager().exportMappedObjects( false );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-7198")
-	public void testMaxResultsSqlServerWithCaseSensitiveCollation() throws Exception {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testMaxResultsSqlServerWithCaseSensitiveCollation(SessionFactoryScope scope) {
+		scope.inTransaction(  session -> {
 			for ( int i = 1; i <= 20; i++ ) {
 				session.persist( new CustomProduct( i, "Kit" + i ) );
 			}
-			session.flush();
-			session.clear();
+		} );
 
-			List list = session.createQuery( "from CustomProduct where description like 'Kit%'" )
+		scope.inTransaction(   session -> {
+			List<CustomProduct> list = session.createQuery( "from CustomProduct where description like 'Kit%'", CustomProduct.class )
 					.setFirstResult( 2 )
 					.setMaxResults( 2 )
 					.list();
@@ -105,16 +84,8 @@ public class SQLServerDialectCollationTest extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-			CustomProduct.class
-		};
-	}
-
-
-	@Entity(name = "CustomProduct")
-	@Table(catalog = "hibernate_orm_test_collation", schema = "dbo")
+	@Entity(name = TABLE_NAME)
+	@Table(catalog = CATALOG, schema = "dbo")
 	public static class CustomProduct implements Serializable {
 		@Id
 		public Integer id;
@@ -156,8 +127,4 @@ public class SQLServerDialectCollationTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Override
-	protected boolean rebuildSessionFactoryOnError() {
-		return false;
-	}
 }

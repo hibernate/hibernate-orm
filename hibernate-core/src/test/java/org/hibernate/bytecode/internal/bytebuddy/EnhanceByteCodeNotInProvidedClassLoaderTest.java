@@ -14,8 +14,8 @@ import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests that bytecode can be enhanced when the original class cannot be loaded from
@@ -31,9 +31,9 @@ public class EnhanceByteCodeNotInProvidedClassLoaderTest {
 		// Now use a fake class name so it won't be found in the ClassLoader
 		// provided by DefaultEnhancementContext
 		byte[] enhanced = enhancer.enhance( SimpleEntity.class.getName() + "Fake", buffer );
-		Assert.assertNotNull( "This is null when there have been swallowed exceptions during enhancement. Check Logs!", enhanced );
+		Assertions.assertNotNull( enhanced, "This is null when there have been swallowed exceptions during enhancement. Check Logs!" );
 		// Make sure enhanced bytecode is different from original bytecode.
-		Assert.assertFalse( Arrays.equals( buffer, enhanced ) );
+		Assertions.assertFalse( Arrays.equals( buffer, enhanced ) );
 	}
 
 	private byte[] readResource(Class<?> clazz) {
@@ -52,7 +52,7 @@ public class EnhanceByteCodeNotInProvidedClassLoaderTest {
 			os.close();
 		}
 		catch (IOException ex) {
-			Assert.fail( "Should not have an IOException here" );
+			Assertions.fail( "Should not have an IOException here" );
 		}
 		return os.toByteArray();
 	}

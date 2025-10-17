@@ -13,6 +13,7 @@ import jakarta.persistence.Converter;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -22,215 +23,240 @@ import jakarta.persistence.MapKey;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.Transaction;
+import org.hibernate.Session;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Janario Oliveira
  */
-public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				MapEntity.class,
-				MapValue.class,
+@DomainModel(
+		annotatedClasses = {
+				MapKeyAttributeConverterTest.MapEntity.class,
+				MapKeyAttributeConverterTest.MapValue.class,
 
 				ColorTypeConverter.class,
 
-				CustomColorTypeConverter.class,
-				ImplicitEnumMapKeyConverter.class,
-				ExplicitEnumMapKeyConverter.class,
-				ImplicitEnumMapKeyOverridedConverter.class
-		};
+				MapKeyAttributeConverterTest.CustomColorTypeConverter.class,
+				MapKeyAttributeConverterTest.ImplicitEnumMapKeyConverter.class,
+				MapKeyAttributeConverterTest.ExplicitEnumMapKeyConverter.class,
+				MapKeyAttributeConverterTest.ImplicitEnumMapKeyOverriddenConverter.class
+		}
+)
+@SessionFactory
+public class MapKeyAttributeConverterTest {
+
+	@Test
+	public void testImplicitType(SessionFactoryScope scope) {
+		MapEntity found = scope.fromTransaction( session -> {
+			MapValue mapValue = create();
+			mapValue.implicitType = ColorType.BLUE;
+			mapValue.mapEntity.implicitType.put( mapValue.implicitType, mapValue );
+
+			return persist( session, mapValue.mapEntity );
+		} );
+
+		scope.inSession( session -> {
+			assertEquals( 1, found.implicitType.size() );
+			MapValue foundValue = found.implicitType.get( ColorType.BLUE );
+			assertEquals( ColorType.BLUE, foundValue.implicitType );
+
+			assertEquals( "blue", findDatabaseValue( session, foundValue.id, "implicitType", String.class ) );
+		} );
 	}
 
 	@Test
-	public void testImplicitType() {
-		MapValue mapValue = create();
-		mapValue.implicitType = ColorType.BLUE;
-		mapValue.mapEntity.implicitType.put( mapValue.implicitType, mapValue );
+	public void testExplicitType(SessionFactoryScope scope) {
+		MapEntity found = scope.fromTransaction( session -> {
+			MapValue mapValue = create();
+			mapValue.explicitType = ColorType.RED;
+			mapValue.mapEntity.explicitType.put( mapValue.explicitType, mapValue );
 
-		MapEntity found = persist( mapValue.mapEntity );
+			return persist( session, mapValue.mapEntity );
+		} );
 
-		assertEquals( 1, found.implicitType.size() );
-		MapValue foundValue = found.implicitType.get( ColorType.BLUE );
-		assertEquals( ColorType.BLUE, foundValue.implicitType );
+		scope.inSession( session -> {
 
-		assertEquals( "blue", findDatabaseValue( foundValue, "implicitType" ) );
-		getSession().close();
+			assertEquals( 1, found.explicitType.size() );
+			MapValue foundValue = found.explicitType.get( ColorType.RED );
+			assertEquals( ColorType.RED, foundValue.explicitType );
+
+			assertEquals( "COLOR-red", findDatabaseValue( session, foundValue.id, "explicitType", String.class ) );
+		} );
 	}
 
 	@Test
-	public void testExplicitType() {
-		MapValue mapValue = create();
-		mapValue.explicitType = ColorType.RED;
-		mapValue.mapEntity.explicitType.put( mapValue.explicitType, mapValue );
+	public void testEnumDefaultType(SessionFactoryScope scope) {
+		MapEntity found = scope.fromTransaction( session -> {
+			MapValue mapValue = create();
+			mapValue.enumDefault = EnumMapKey.VALUE_1;
+			mapValue.mapEntity.enumDefaultType.put( mapValue.enumDefault, mapValue );
 
-		MapEntity found = persist( mapValue.mapEntity );
+			return persist( session, mapValue.mapEntity );
+		} );
 
-		assertEquals( 1, found.explicitType.size() );
-		MapValue foundValue = found.explicitType.get( ColorType.RED );
-		assertEquals( ColorType.RED, foundValue.explicitType );
+		scope.inSession( session -> {
+			assertEquals( 1, found.enumDefaultType.size() );
+			MapValue foundValue = found.enumDefaultType.get( EnumMapKey.VALUE_1 );
+			assertEquals( EnumMapKey.VALUE_1, foundValue.enumDefault );
 
-		assertEquals( "COLOR-red", findDatabaseValue( foundValue, "explicitType" ) );
-		getSession().close();
+			assertEquals( 0, findDatabaseValue( session, foundValue.id, "enumDefault", Integer.class ) );
+		} );
 	}
 
 	@Test
-	public void testEnumDefaultType() {
-		MapValue mapValue = create();
-		mapValue.enumDefault = EnumMapKey.VALUE_1;
-		mapValue.mapEntity.enumDefaultType.put( mapValue.enumDefault, mapValue );
+	public void testEnumExplicitOrdinalType(SessionFactoryScope scope) {
+		MapEntity found = scope.fromTransaction( session -> {
+			MapValue mapValue = create();
+			mapValue.enumExplicitOrdinal = EnumMapKey.VALUE_2;
+			mapValue.mapEntity.enumExplicitOrdinalType.put( mapValue.enumExplicitOrdinal, mapValue );
 
-		MapEntity found = persist( mapValue.mapEntity );
+			return persist( session, mapValue.mapEntity );
+		} );
 
-		assertEquals( 1, found.enumDefaultType.size() );
-		MapValue foundValue = found.enumDefaultType.get( EnumMapKey.VALUE_1 );
-		assertEquals( EnumMapKey.VALUE_1, foundValue.enumDefault );
+		scope.inSession( session -> {
+			assertEquals( 1, found.enumExplicitOrdinalType.size() );
+			MapValue foundValue = found.enumExplicitOrdinalType.get( EnumMapKey.VALUE_2 );
+			assertEquals( EnumMapKey.VALUE_2, foundValue.enumExplicitOrdinal );
 
-		assertEquals( 0, ((Number) findDatabaseValue( foundValue, "enumDefault" )).intValue() );
-		getSession().close();
+			assertEquals( 1, findDatabaseValue( session, foundValue.id, "enumExplicitOrdinal", Integer.class ) );
+		} );
 	}
 
 	@Test
-	public void testEnumExplicitOrdinalType() {
-		MapValue mapValue = create();
-		mapValue.enumExplicitOrdinal = EnumMapKey.VALUE_2;
-		mapValue.mapEntity.enumExplicitOrdinalType.put( mapValue.enumExplicitOrdinal, mapValue );
+	public void testEnumExplicitStringType(SessionFactoryScope scope) {
+		MapEntity found = scope.fromTransaction( session -> {
+			MapValue mapValue = create();
+			mapValue.enumExplicitString = EnumMapKey.VALUE_1;
+			mapValue.mapEntity.enumExplicitStringType.put( mapValue.enumExplicitString, mapValue );
 
-		MapEntity found = persist( mapValue.mapEntity );
+			return persist( session, mapValue.mapEntity );
+		} );
 
-		assertEquals( 1, found.enumExplicitOrdinalType.size() );
-		MapValue foundValue = found.enumExplicitOrdinalType.get( EnumMapKey.VALUE_2 );
-		assertEquals( EnumMapKey.VALUE_2, foundValue.enumExplicitOrdinal );
+		scope.inSession( session -> {
+			assertEquals( 1, found.enumExplicitStringType.size() );
+			MapValue foundValue = found.enumExplicitStringType.get( EnumMapKey.VALUE_1 );
+			assertEquals( EnumMapKey.VALUE_1, foundValue.enumExplicitString );
 
-		assertEquals( 1, ((Number) findDatabaseValue( foundValue, "enumExplicitOrdinal" )).intValue() );
-		getSession().close();
+			assertEquals( "VALUE_1", findDatabaseValue( session, foundValue.id, "enumExplicitString", String.class ) );
+		} );
 	}
 
 	@Test
-	public void testEnumExplicitStringType() {
-		MapValue mapValue = create();
-		mapValue.enumExplicitString = EnumMapKey.VALUE_1;
-		mapValue.mapEntity.enumExplicitStringType.put( mapValue.enumExplicitString, mapValue );
+	public void testEnumExplicitType(SessionFactoryScope scope) {
+		MapEntity found = scope.fromTransaction( session -> {
+			MapValue mapValue = create();
+			mapValue.enumExplicit = EnumMapKey.VALUE_2;
+			mapValue.mapEntity.enumExplicitType.put( mapValue.enumExplicit, mapValue );
 
-		MapEntity found = persist( mapValue.mapEntity );
+			return persist( session, mapValue.mapEntity );
+		} );
 
-		assertEquals( 1, found.enumExplicitStringType.size() );
-		MapValue foundValue = found.enumExplicitStringType.get( EnumMapKey.VALUE_1 );
-		assertEquals( EnumMapKey.VALUE_1, foundValue.enumExplicitString );
+		scope.inSession( session -> {
+			assertEquals( 1, found.enumExplicitType.size() );
+			MapValue foundValue = found.enumExplicitType.get( EnumMapKey.VALUE_2 );
+			assertEquals( EnumMapKey.VALUE_2, foundValue.enumExplicit );
 
-		assertEquals( "VALUE_1", findDatabaseValue( foundValue, "enumExplicitString" ) );
-		getSession().close();
+			assertEquals( "2", findDatabaseValue( session, foundValue.id, "enumExplicit", String.class ) );
+		} );
 	}
 
 	@Test
-	public void testEnumExplicitType() {
-		MapValue mapValue = create();
-		mapValue.enumExplicit = EnumMapKey.VALUE_2;
-		mapValue.mapEntity.enumExplicitType.put( mapValue.enumExplicit, mapValue );
+	public void testEnumImplicitType(SessionFactoryScope scope) {
+		MapEntity found = scope.fromTransaction( session -> {
+			MapValue mapValue = create();
+			mapValue.enumImplicit = ImplicitEnumMapKey.VALUE_2;
+			mapValue.mapEntity.enumImplicitType.put( mapValue.enumImplicit, mapValue );
 
-		MapEntity found = persist( mapValue.mapEntity );
+			return persist( session, mapValue.mapEntity );
+		} );
 
-		assertEquals( 1, found.enumExplicitType.size() );
-		MapValue foundValue = found.enumExplicitType.get( EnumMapKey.VALUE_2 );
-		assertEquals( EnumMapKey.VALUE_2, foundValue.enumExplicit );
+		scope.inSession( session -> {
+			assertEquals( 1, found.enumImplicitType.size() );
+			MapValue foundValue = found.enumImplicitType.get( ImplicitEnumMapKey.VALUE_2 );
+			assertEquals( ImplicitEnumMapKey.VALUE_2, foundValue.enumImplicit );
 
-		assertEquals( "2", findDatabaseValue( foundValue, "enumExplicit" ) );
-		getSession().close();
+			assertEquals( "I2", findDatabaseValue( session, foundValue.id, "enumImplicit", String.class ) );
+		} );
 	}
 
 	@Test
-	public void testEnumImplicitType() {
-		MapValue mapValue = create();
-		mapValue.enumImplicit = ImplicitEnumMapKey.VALUE_2;
-		mapValue.mapEntity.enumImplicitType.put( mapValue.enumImplicit, mapValue );
+	public void testEnumImplicitOverrideOrdinalType(SessionFactoryScope scope) {
+		MapEntity found = scope.fromTransaction( session -> {
+			MapValue mapValue = create();
+			mapValue.enumImplicitOverrideOrdinal = ImplicitEnumMapKey.VALUE_1;
+			mapValue.mapEntity.enumImplicitOverrideOrdinalType.put( mapValue.enumImplicitOverrideOrdinal, mapValue );
 
-		MapEntity found = persist( mapValue.mapEntity );
+			return persist( session, mapValue.mapEntity );
+		} );
 
-		assertEquals( 1, found.enumImplicitType.size() );
-		MapValue foundValue = found.enumImplicitType.get( ImplicitEnumMapKey.VALUE_2 );
-		assertEquals( ImplicitEnumMapKey.VALUE_2, foundValue.enumImplicit );
+		scope.inSession( session -> {
+			assertEquals( 1, found.enumImplicitOverrideOrdinalType.size() );
+			MapValue foundValue = found.enumImplicitOverrideOrdinalType.get( ImplicitEnumMapKey.VALUE_1 );
+			assertEquals( ImplicitEnumMapKey.VALUE_1, foundValue.enumImplicitOverrideOrdinal );
 
-		assertEquals( "I2", findDatabaseValue( foundValue, "enumImplicit" ) );
-		getSession().close();
+			assertEquals( 0, findDatabaseValue( session, foundValue.id, "enumImplicitOverrideOrdinal", Integer.class ) );
+		} );
 	}
 
 	@Test
-	public void testEnumImplicitOverrideOrdinalType() {
-		MapValue mapValue = create();
-		mapValue.enumImplicitOverrideOrdinal = ImplicitEnumMapKey.VALUE_1;
-		mapValue.mapEntity.enumImplicitOverrideOrdinalType.put( mapValue.enumImplicitOverrideOrdinal, mapValue );
+	public void testEnumImplicitOverrideStringType(SessionFactoryScope scope) {
+		MapEntity found = scope.fromTransaction( session -> {
+			MapValue mapValue = create();
+			mapValue.enumImplicitOverrideString = ImplicitEnumMapKey.VALUE_2;
+			mapValue.mapEntity.enumImplicitOverrideStringType.put( mapValue.enumImplicitOverrideString, mapValue );
 
-		MapEntity found = persist( mapValue.mapEntity );
+			return persist( session, mapValue.mapEntity );
+		} );
 
-		assertEquals( 1, found.enumImplicitOverrideOrdinalType.size() );
-		MapValue foundValue = found.enumImplicitOverrideOrdinalType.get( ImplicitEnumMapKey.VALUE_1 );
-		assertEquals( ImplicitEnumMapKey.VALUE_1, foundValue.enumImplicitOverrideOrdinal );
+		scope.inSession( session -> {
+			assertEquals( 1, found.enumImplicitOverrideStringType.size() );
+			MapValue foundValue = found.enumImplicitOverrideStringType.get( ImplicitEnumMapKey.VALUE_2 );
+			assertEquals( ImplicitEnumMapKey.VALUE_2, foundValue.enumImplicitOverrideString );
 
-		assertEquals( 0, ((Number) findDatabaseValue( foundValue, "enumImplicitOverrideOrdinal" )).intValue() );
-		getSession().close();
+			assertEquals( "VALUE_2", findDatabaseValue( session, foundValue.id, "enumImplicitOverrideString", String.class ) );
+		} );
 	}
 
 	@Test
-	public void testEnumImplicitOverrideStringType() {
-		MapValue mapValue = create();
-		mapValue.enumImplicitOverrideString = ImplicitEnumMapKey.VALUE_2;
-		mapValue.mapEntity.enumImplicitOverrideStringType.put( mapValue.enumImplicitOverrideString, mapValue );
+	public void testEnumImplicitOverriddenType(SessionFactoryScope scope) {
+		MapEntity found = scope.fromTransaction( session -> {
+			MapValue mapValue = create();
+			mapValue.enumImplicitOverridden = ImplicitEnumMapKey.VALUE_1;
+			mapValue.mapEntity.enumImplicitOverriddenType.put( mapValue.enumImplicitOverridden, mapValue );
 
-		MapEntity found = persist( mapValue.mapEntity );
+			return persist( session, mapValue.mapEntity );
+		} );
 
-		assertEquals( 1, found.enumImplicitOverrideStringType.size() );
-		MapValue foundValue = found.enumImplicitOverrideStringType.get( ImplicitEnumMapKey.VALUE_2 );
-		assertEquals( ImplicitEnumMapKey.VALUE_2, foundValue.enumImplicitOverrideString );
+		scope.inSession( session -> {
+			assertEquals( 1, found.enumImplicitOverriddenType.size() );
+			MapValue foundValue = found.enumImplicitOverriddenType.get( ImplicitEnumMapKey.VALUE_1 );
+			assertEquals( ImplicitEnumMapKey.VALUE_1, foundValue.enumImplicitOverridden );
 
-		assertEquals( "VALUE_2", findDatabaseValue( foundValue, "enumImplicitOverrideString" ) );
-		getSession().close();
+			assertEquals( "O1", findDatabaseValue( session, foundValue.id, "enumImplicitOverridden", String.class ) );
+		} );
 	}
-
-	@Test
-	public void testEnumImplicitOverridedType() {
-		MapValue mapValue = create();
-		mapValue.enumImplicitOverrided = ImplicitEnumMapKey.VALUE_1;
-		mapValue.mapEntity.enumImplicitOverridedType.put( mapValue.enumImplicitOverrided, mapValue );
-
-		MapEntity found = persist( mapValue.mapEntity );
-
-		assertEquals( 1, found.enumImplicitOverridedType.size() );
-		MapValue foundValue = found.enumImplicitOverridedType.get( ImplicitEnumMapKey.VALUE_1 );
-		assertEquals( ImplicitEnumMapKey.VALUE_1, foundValue.enumImplicitOverrided );
-
-		assertEquals( "O1", findDatabaseValue( foundValue, "enumImplicitOverrided" ) );
-		getSession().close();
-	}
-
 
 	private MapValue create() {
 		MapEntity mapEntity = new MapEntity();
 		return new MapValue( mapEntity );
 	}
 
-	private MapEntity persist(MapEntity mapEntity) {
-		Transaction tx = openSession().getTransaction();
-		tx.begin();
-		mapEntity = (MapEntity) getSession().merge( mapEntity );
+	private MapEntity persist(Session session, final MapEntity mapEntity) {
+		session.persist(mapEntity);
 
-		tx.commit();
-		getSession().close();
-
-		mapEntity = openSession().get( MapEntity.class, mapEntity.id );
-		return mapEntity;
+		return session.find(MapEntity.class, mapEntity.id);
 	}
 
-	private Object findDatabaseValue(MapValue mapValue, String column) {
-		return getSession()
-				.createNativeQuery( "select mv." + column + " from map_value mv where mv.id=:id" )
-				.setParameter( "id", mapValue.id )
-				.uniqueResult();
+	private Object findDatabaseValue(Session session, Integer id, String columnName, Class<?> expectedResultType) {
+		return session.createNativeQuery(
+				"select mv." + columnName + " from map_value mv where mv.id=:id", expectedResultType )
+						.setParameter( "id", id )
+						.uniqueResult();
 	}
 
 	@Entity( name = "MapEntity" )
@@ -240,39 +266,39 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 		@GeneratedValue(strategy = GenerationType.AUTO)
 		private Integer id;
 
-		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
+		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 		@MapKey(name = "implicitType")
-		private Map<ColorType, MapValue> implicitType = new HashMap<ColorType, MapValue>();
+		private Map<ColorType, MapValue> implicitType = new HashMap<>();
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
 		@MapKey(name = "explicitType")
-		private Map<ColorType, MapValue> explicitType = new HashMap<ColorType, MapValue>();
+		private Map<ColorType, MapValue> explicitType = new HashMap<>();
 
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
 		@MapKey(name = "enumDefault")
-		private Map<EnumMapKey, MapValue> enumDefaultType = new HashMap<EnumMapKey, MapValue>();
+		private Map<EnumMapKey, MapValue> enumDefaultType = new HashMap<>();
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
 		@MapKey(name = "enumExplicitOrdinal")
-		private Map<EnumMapKey, MapValue> enumExplicitOrdinalType = new HashMap<EnumMapKey, MapValue>();
+		private Map<EnumMapKey, MapValue> enumExplicitOrdinalType = new HashMap<>();
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
 		@MapKey(name = "enumExplicitString")
-		private Map<EnumMapKey, MapValue> enumExplicitStringType = new HashMap<EnumMapKey, MapValue>();
+		private Map<EnumMapKey, MapValue> enumExplicitStringType = new HashMap<>();
 
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
 		@MapKey(name = "enumExplicit")
-		private Map<EnumMapKey, MapValue> enumExplicitType = new HashMap<EnumMapKey, MapValue>();
+		private Map<EnumMapKey, MapValue> enumExplicitType = new HashMap<>();
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
 		@MapKey(name = "enumImplicit")
-		private Map<ImplicitEnumMapKey, MapValue> enumImplicitType = new HashMap<ImplicitEnumMapKey, MapValue>();
+		private Map<ImplicitEnumMapKey, MapValue> enumImplicitType = new HashMap<>();
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
 		@MapKey(name = "enumImplicitOverrideOrdinal")
-		private Map<ImplicitEnumMapKey, MapValue> enumImplicitOverrideOrdinalType = new HashMap<ImplicitEnumMapKey, MapValue>();
+		private Map<ImplicitEnumMapKey, MapValue> enumImplicitOverrideOrdinalType = new HashMap<>();
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
 		@MapKey(name = "enumImplicitOverrideString")
-		private Map<ImplicitEnumMapKey, MapValue> enumImplicitOverrideStringType = new HashMap<ImplicitEnumMapKey, MapValue>();
+		private Map<ImplicitEnumMapKey, MapValue> enumImplicitOverrideStringType = new HashMap<>();
 
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
-		@MapKey(name = "enumImplicitOverrided")
-		private Map<ImplicitEnumMapKey, MapValue> enumImplicitOverridedType = new HashMap<ImplicitEnumMapKey, MapValue>();
+		@MapKey(name = "enumImplicitOverridden")
+		private Map<ImplicitEnumMapKey, MapValue> enumImplicitOverriddenType = new HashMap<>();
 	}
 
 	@Entity( name = "MapValue" )
@@ -305,8 +331,8 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 		@Convert(disableConversion = true)
 		private ImplicitEnumMapKey enumImplicitOverrideString;
 
-		@Convert(converter = ImplicitEnumMapKeyOverridedConverter.class)
-		private ImplicitEnumMapKey enumImplicitOverrided;
+		@Convert(converter = ImplicitEnumMapKeyOverriddenConverter.class)
+		private ImplicitEnumMapKey enumImplicitOverridden;
 
 		protected MapValue() {
 		}
@@ -368,7 +394,7 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 
 
 	@Converter
-	public static class ImplicitEnumMapKeyOverridedConverter implements AttributeConverter<ImplicitEnumMapKey, String> {
+	public static class ImplicitEnumMapKeyOverriddenConverter implements AttributeConverter<ImplicitEnumMapKey, String> {
 		@Override
 		public String convertToDatabaseColumn(ImplicitEnumMapKey attribute) {
 			return attribute == null ? null :

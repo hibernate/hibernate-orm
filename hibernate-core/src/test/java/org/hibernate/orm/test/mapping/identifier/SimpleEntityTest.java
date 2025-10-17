@@ -12,32 +12,27 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Vlad Mihalcea
  */
-public class SimpleEntityTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(annotatedClasses = {
+		SimpleEntityTest.Book.class, SimpleEntityTest.Library.class
+})
+public class SimpleEntityTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Library.class,
-			Book.class
-		};
-	}
-
-	@Before
-	public void init() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	@BeforeEach
+	public void init(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Library library = new Library();
 			library.setId(1L);
 			library.setName("Amazon");
@@ -53,11 +48,17 @@ public class SimpleEntityTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(  entityManager -> {
+			scope.getEntityManagerFactory().getSchemaManager().truncate();
+		} );
+	}
 
 	@Test
-	public void testIdentityScope() {
+	public void testIdentityScope(EntityManagerFactoryScope scope) {
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::entity-pojo-identity-scope-example[]
 			Book book1 = entityManager.find(Book.class, 1L);
 			Book book2 = entityManager.find(Book.class, 1L);
@@ -69,9 +70,9 @@ public class SimpleEntityTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testSetIdentityScope() {
+	public void testSetIdentityScope(EntityManagerFactoryScope scope) {
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::entity-pojo-set-identity-scope-example[]
 			Library library = entityManager.find(Library.class, 1L);
 
@@ -87,34 +88,26 @@ public class SimpleEntityTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testMultiSessionIdentityScope() {
+	public void testMultiSessionIdentityScope(EntityManagerFactoryScope scope) {
 
 		//tag::entity-pojo-multi-session-identity-scope-example[]
-		Book book1 = doInJPA(this::entityManagerFactory, entityManager -> {
-			return entityManager.find(Book.class, 1L);
-		});
+		Book book1 = scope.fromTransaction( entityManager -> entityManager.find(Book.class, 1L) );
 
-		Book book2 = doInJPA(this::entityManagerFactory, entityManager -> {
-			return entityManager.find(Book.class, 1L);
-		});
+		Book book2 = scope.fromTransaction( entityManager -> entityManager.find(Book.class, 1L) );
 
 		assertFalse(book1 == book2);
 		//end::entity-pojo-multi-session-identity-scope-example[]
 	}
 
 	@Test
-	public void testMultiSessionSetIdentityScope() {
+	public void testMultiSessionSetIdentityScope(EntityManagerFactoryScope scope) {
 
-		Book book1 = doInJPA(this::entityManagerFactory, entityManager -> {
-			return entityManager.find(Book.class, 1L);
-		});
+		Book book1 = scope.fromTransaction( entityManager -> entityManager.find(Book.class, 1L) );
 
-		Book book2 = doInJPA(this::entityManagerFactory, entityManager -> {
-			return entityManager.find(Book.class, 1L);
-		});
+		Book book2 = scope.fromTransaction( entityManager -> entityManager.find(Book.class, 1L) );
 		//tag::entity-pojo-multi-session-set-identity-scope-example[]
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Set<Book> books = new HashSet<>();
 
 			books.add(book1);
@@ -126,9 +119,9 @@ public class SimpleEntityTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testTransientSetIdentityScope() {
+	public void testTransientSetIdentityScope(EntityManagerFactoryScope scope) {
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::entity-pojo-transient-set-identity-scope-example[]
 			Library library = entityManager.find(Library.class, 1L);
 

@@ -94,19 +94,19 @@ public class JavaTimeJdbcTypeTests {
 		} );
 
 		scope.inTransaction( (session) -> {
-			final EntityWithJavaTimeValues entity = session.get( EntityWithJavaTimeValues.class, 1 );
+			final EntityWithJavaTimeValues entity = session.find( EntityWithJavaTimeValues.class, 1 );
 			assertThat( entity.theInstant ).isEqualTo( start );
 			entity.theInstant = start.plus( 2000, ChronoUnit.DAYS );
 		} );
 
 		scope.inTransaction( (session) -> {
-			final EntityWithJavaTimeValues entity = session.get( EntityWithJavaTimeValues.class, 1 );
+			final EntityWithJavaTimeValues entity = session.find( EntityWithJavaTimeValues.class, 1 );
 			assertThat( entity.theInstant ).isEqualTo( start.plus( 2000, ChronoUnit.DAYS ) );
 			entity.theInstant = start.minus( 2000, ChronoUnit.DAYS );
 		} );
 
 		scope.inTransaction( (session) -> {
-			final EntityWithJavaTimeValues entity = session.get( EntityWithJavaTimeValues.class, 1 );
+			final EntityWithJavaTimeValues entity = session.find( EntityWithJavaTimeValues.class, 1 );
 			assertThat( entity.theInstant ).isEqualTo( start.minus( 2000, ChronoUnit.DAYS ) );
 		} );
 	}
@@ -124,19 +124,19 @@ public class JavaTimeJdbcTypeTests {
 		} );
 
 		scope.inTransaction( (session) -> {
-			final EntityWithJavaTimeValues entity = session.get( EntityWithJavaTimeValues.class, 1 );
+			final EntityWithJavaTimeValues entity = session.find( EntityWithJavaTimeValues.class, 1 );
 			assertThat( entity.theLocalDateTime ).isEqualTo( start );
 			entity.theLocalDateTime = start.plusDays( 2000 );
 		} );
 
 		scope.inTransaction( (session) -> {
-			final EntityWithJavaTimeValues entity = session.get( EntityWithJavaTimeValues.class, 1 );
+			final EntityWithJavaTimeValues entity = session.find( EntityWithJavaTimeValues.class, 1 );
 			assertThat( entity.theLocalDateTime ).isEqualTo( start.plusDays( 2000 ) );
 			entity.theLocalDateTime = start.minusDays( 2000 );
 		} );
 
 		scope.inTransaction( (session) -> {
-			final EntityWithJavaTimeValues entity = session.get( EntityWithJavaTimeValues.class, 1 );
+			final EntityWithJavaTimeValues entity = session.find( EntityWithJavaTimeValues.class, 1 );
 			assertThat( entity.theLocalDateTime ).isEqualTo( start.minusDays( 2000 ) );
 		} );
 	}
@@ -154,19 +154,19 @@ public class JavaTimeJdbcTypeTests {
 		} );
 
 		scope.inTransaction( (session) -> {
-			final EntityWithJavaTimeValues entity = session.get( EntityWithJavaTimeValues.class, 1 );
+			final EntityWithJavaTimeValues entity = session.find( EntityWithJavaTimeValues.class, 1 );
 			assertThat( entity.theLocalDate ).isEqualTo( startTime );
 			entity.theLocalDate = startTime.plusDays( 2000 );
 		} );
 
 		scope.inTransaction( (session) -> {
-			final EntityWithJavaTimeValues entity = session.get( EntityWithJavaTimeValues.class, 1 );
+			final EntityWithJavaTimeValues entity = session.find( EntityWithJavaTimeValues.class, 1 );
 			assertThat( entity.theLocalDate ).isEqualTo( startTime.plusDays( 2000 ) );
 			entity.theLocalDate = startTime.minusDays( 2000 );
 		} );
 
 		scope.inTransaction( (session) -> {
-			final EntityWithJavaTimeValues entity = session.get( EntityWithJavaTimeValues.class, 1 );
+			final EntityWithJavaTimeValues entity = session.find( EntityWithJavaTimeValues.class, 1 );
 			assertThat( entity.theLocalDate ).isEqualTo( startTime.minusDays( 2000 ) );
 		} );
 	}
@@ -187,19 +187,19 @@ public class JavaTimeJdbcTypeTests {
 		} );
 
 		scope.inTransaction( (session) -> {
-			final EntityWithJavaTimeValues entity = session.get( EntityWithJavaTimeValues.class, 1 );
+			final EntityWithJavaTimeValues entity = session.find( EntityWithJavaTimeValues.class, 1 );
 			assertThat( entity.theLocalTime ).isEqualTo( startTime );
 			entity.theLocalTime = startTime.plusHours( 2000 );
 		} );
 
 		scope.inTransaction( (session) -> {
-			final EntityWithJavaTimeValues entity = session.get( EntityWithJavaTimeValues.class, 1 );
+			final EntityWithJavaTimeValues entity = session.find( EntityWithJavaTimeValues.class, 1 );
 			assertThat( entity.theLocalTime ).isEqualTo( startTime.plusHours( 2000 ) );
 			entity.theLocalTime = startTime.plusHours( 2000 );
 		} );
 
 		scope.inTransaction( (session) -> {
-			final EntityWithJavaTimeValues entity = session.get( EntityWithJavaTimeValues.class, 1 );
+			final EntityWithJavaTimeValues entity = session.find( EntityWithJavaTimeValues.class, 1 );
 			assertThat( entity.theLocalTime ).isEqualTo( startTime.plusHours( 2000 ) );
 		} );
 	}

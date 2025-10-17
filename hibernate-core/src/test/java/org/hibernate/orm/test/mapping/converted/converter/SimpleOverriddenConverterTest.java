@@ -12,38 +12,33 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
 
 /**
  * Tests MappedSuperclass/Entity overriding of Convert definitions
  *
  * @author Steve Ebersole
  */
-public class SimpleOverriddenConverterTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Super.class, Sub.class };
-	}
-
-	@Override
-	protected boolean createSchema() {
-		return false;
-	}
+@DomainModel(annotatedClasses = {SimpleOverriddenConverterTest.Super.class, SimpleOverriddenConverterTest.Sub.class})
+@SessionFactory(exportSchema = false)
+public class SimpleOverriddenConverterTest {
 
 	/**
 	 * Test outcome of annotations exclusively.
 	 */
 	@Test
-	public void testSimpleConvertOverrides() {
-		final EntityPersister ep = sessionFactory().getMappingMetamodel().getEntityDescriptor(Sub.class.getName());
-		final JdbcTypeRegistry jdbcTypeRegistry = sessionFactory().getTypeConfiguration().getJdbcTypeRegistry();
+	public void testSimpleConvertOverrides(SessionFactoryScope scope) {
+		final EntityPersister ep = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Sub.class.getName());
+		final JdbcTypeRegistry jdbcTypeRegistry = scope.getSessionFactory().getTypeConfiguration().getJdbcTypeRegistry();
 
 		BasicType<?> type = (BasicType<?>) ep.getPropertyType( "it" );
 		assertTyping( StringJavaType.class, type.getJavaTypeDescriptor() );

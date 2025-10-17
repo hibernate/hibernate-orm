@@ -124,6 +124,7 @@ public interface Cache extends jakarta.persistence.Cache {
 
 
 
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Entity data
 

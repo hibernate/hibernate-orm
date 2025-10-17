@@ -6,7 +6,6 @@ package org.hibernate.orm.test.cdi.converters.standard;
 
 import jakarta.enterprise.inject.se.SeContainer;
 import jakarta.enterprise.inject.se.SeContainerInitializer;
-
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
@@ -14,29 +13,28 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.orm.test.cdi.converters.MyData;
-import org.hibernate.orm.test.cdi.converters.OrmXmlConverterBean;
-import org.hibernate.orm.test.cdi.converters.TheOrmXmlEntity;
-import org.hibernate.tool.schema.Action;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-
 import org.hibernate.orm.test.cdi.converters.ConverterBean;
 import org.hibernate.orm.test.cdi.converters.MonitorBean;
+import org.hibernate.orm.test.cdi.converters.MyData;
+import org.hibernate.orm.test.cdi.converters.OrmXmlConverterBean;
 import org.hibernate.orm.test.cdi.converters.TheEntity;
-import org.junit.Test;
+import org.hibernate.orm.test.cdi.converters.TheOrmXmlEntity;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.hibernate.tool.schema.Action;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-public class CdiHostedConverterTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class CdiHostedConverterTest {
 	@Test
 	public void testAnnotations() {
 		MonitorBean.reset();
@@ -105,7 +103,7 @@ public class CdiHostedConverterTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@JiraKey(value = "HHH-14881\n")
+	@JiraKey("HHH-14881")
 	public void testOrmXml() {
 		MonitorBean.reset();
 

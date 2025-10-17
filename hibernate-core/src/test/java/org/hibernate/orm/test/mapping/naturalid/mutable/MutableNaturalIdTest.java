@@ -24,11 +24,11 @@ import java.lang.reflect.Field;
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.hibernate.cfg.AvailableSettings.USE_QUERY_CACHE;
 import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Gavin King
@@ -315,7 +315,7 @@ public class MutableNaturalIdTest {
 							.using( "org", "hb" )
 							.load();
 					assertNotNull( beforeClear );
-					assertEquals( statistics.getPrepareStatementCount(), 1 );
+					assertEquals( 1, statistics.getPrepareStatementCount() );
 
 					session.clear();
 
@@ -324,7 +324,7 @@ public class MutableNaturalIdTest {
 							.using( "org", "hb" )
 							.load();
 					assertNotNull( afterClear );
-					assertEquals( statistics.getPrepareStatementCount(), 2 );
+					assertEquals( 2, statistics.getPrepareStatementCount() );
 
 					assertNotSame( beforeClear, afterClear );
 				}
@@ -347,7 +347,7 @@ public class MutableNaturalIdTest {
 							.using( "org", "hb" )
 							.load();
 					assertNotNull( beforeEvict );
-					assertEquals( statistics.getPrepareStatementCount(), 1 );
+					assertEquals( 1, statistics.getPrepareStatementCount() );
 
 					session.evict( beforeEvict );
 
@@ -356,7 +356,7 @@ public class MutableNaturalIdTest {
 							.using( "org", "hb" )
 							.load();
 					assertNotNull( afterEvict );
-					assertEquals( statistics.getPrepareStatementCount(), 2 );
+					assertEquals( 2, statistics.getPrepareStatementCount() );
 
 					assertNotSame( beforeEvict, afterEvict );
 				}

@@ -85,7 +85,7 @@ public class AliasTest {
 					session.clear();
 
 					session.getTransaction().begin();
-					user = session.get( UserEntity.class, user.getId() );
+					user = session.find( UserEntity.class, user.getId() );
 
 					try {
 						session.flush();

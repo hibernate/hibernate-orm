@@ -52,7 +52,7 @@ public class ManyToOneBidirectionalCircularityTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
-					EntityTest entity = session.get( EntityTest.class, 1 );
+					EntityTest entity = session.find( EntityTest.class, 1 );
 
 					EntityTest2 entity2 = entity.getEntity2();
 					assertThat( entity2.getName(), is( "e2" ) );

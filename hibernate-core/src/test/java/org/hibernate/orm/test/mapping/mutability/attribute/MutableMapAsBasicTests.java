@@ -39,7 +39,7 @@ public class MutableMapAsBasicTests {
 
 		// make changes to a managed entity - should trigger update
 		scope.inTransaction( (session) -> {
-			final TestEntity managed = session.get( TestEntity.class, 1 );
+			final TestEntity managed = session.find( TestEntity.class, 1 );
 			statementInspector.clear();
 			assertThat( managed.data ).hasSize( 2 );
 			// make the change
@@ -48,7 +48,7 @@ public class MutableMapAsBasicTests {
 		assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 
 		// make changes to a detached entity and merge it - should trigger update
-		final TestEntity loaded = scope.fromTransaction( (session) -> session.get( TestEntity.class, 1 ) );
+		final TestEntity loaded = scope.fromTransaction( (session) -> session.find( TestEntity.class, 1 ) );
 		assertThat( loaded.data ).hasSize( 3 );
 		// make the change
 		loaded.data.put( "jkl", "007" );
@@ -65,14 +65,14 @@ public class MutableMapAsBasicTests {
 
 		// make no changes to a managed entity - should not trigger update
 		scope.inTransaction( (session) -> {
-			final TestEntity managed = session.get( TestEntity.class, 1 );
+			final TestEntity managed = session.find( TestEntity.class, 1 );
 			statementInspector.clear();
 			assertThat( managed.data ).hasSize( 2 );
 		} );
 		assertThat( statementInspector.getSqlQueries() ).isEmpty();
 
 		// make no changes to a detached entity and merge it - should not trigger update
-		final TestEntity loaded = scope.fromTransaction( (session) -> session.get( TestEntity.class, 1 ) );
+		final TestEntity loaded = scope.fromTransaction( (session) -> session.find( TestEntity.class, 1 ) );
 		assertThat( loaded.data ).hasSize( 2 );
 		statementInspector.clear();
 		scope.inTransaction( (session) -> session.merge( loaded ) );

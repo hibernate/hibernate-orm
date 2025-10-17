@@ -72,7 +72,7 @@ public class OneToManyTest {
 		scope.inTransaction(
 				session -> {
 					try {
-						Card card = session.get( Card.class, CARD_ID );
+						Card card = session.find( Card.class, CARD_ID );
 						assertEquals( 1, card.getFields().size() );
 
 						CardField cf = card.getFields().iterator().next();

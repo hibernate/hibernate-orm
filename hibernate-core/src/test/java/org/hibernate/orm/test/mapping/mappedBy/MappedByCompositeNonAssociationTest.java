@@ -40,7 +40,7 @@ public class MappedByCompositeNonAssociationTest {
 
 		scope.inTransaction(s -> s.persist(loan));
 		Loan l1 = scope.fromTransaction(s -> {
-			Loan ll = s.get(Loan.class, loan.id);
+			Loan ll = s.find(Loan.class, loan.id);
 			Hibernate.initialize(ll.extensions);
 			return ll;
 		});

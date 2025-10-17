@@ -50,7 +50,7 @@ public abstract class AbstractJandexAwareTask extends DefaultTask {
 	@Internal
 	protected abstract Provider<RegularFile> getTaskReportFileReference();
 
-	@Nested
+	@Internal
 	protected abstract Property<IndexManager> getIndexManager();
 
 	@Nested

@@ -27,41 +27,38 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 		final var indexManager = project.getExtensions().create( "indexManager", IndexManager.class );
 		indexManager.getArtifactsToProcess().from( artifactsToProcess );
 
-		final var details = project.getExtensions().getByType( OrmBuildDetails.class );
-		project.getTasks().withType( AbstractJandexAwareTask.class )
-				.configureEach(task -> {
-					task.getOrmBuildDetails().set( details );
-					task.getIndexManager().set( indexManager );
-				});
-
 		final var indexerTask = project.getTasks().register(
 				"buildAggregatedIndex",
 				IndexerTask.class,
 				task -> task.getIndexManager().set( indexManager )
 		);
 
+		final var details = project.getExtensions().getByType( OrmBuildDetails.class );
+		project.getTasks().withType( AbstractJandexAwareTask.class )
+				.configureEach(task -> {
+					task.getOrmBuildDetails().set( details );
+					task.getIndexManager().set( indexManager );
+					task.dependsOn( indexerTask );
+				});
+
 		final var incubatingTask = project.getTasks().register(
 				"generateIncubationReport",
-				IncubationReportTask.class,
-				(task) -> task.dependsOn( indexerTask )
+				IncubationReportTask.class
 		);
 
 		final var deprecationTask = project.getTasks().register(
 				"generateDeprecationReport",
-				DeprecationReportTask.class,
-				(task) -> task.dependsOn( indexerTask )
+				DeprecationReportTask.class
 		);
 
 		final var internalsTask = project.getTasks().register(
 				"generateInternalsReport",
-				InternalsReportTask.class,
-				(task) -> task.dependsOn( indexerTask )
+				InternalsReportTask.class
 		);
 
 		final var loggingTask = project.getTasks().register(
 				"generateLoggingReport",
-				LoggingReportTask.class,
-				(task) -> task.dependsOn( indexerTask )
+				LoggingReportTask.class
 		);
 
 		final var dialectConfig = project.getConfigurations()
@@ -71,7 +68,6 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 				"generateDialectTableReport",
 				DialectReportTask.class,
 				(task) -> {
-					task.dependsOn( indexerTask );
 					task.getDialectReportSources().from( dialectConfig );
 					task.getSourcePackage().set( "org.hibernate.dialect" );
 					task.getReportFile().set( project.getLayout().getBuildDirectory().file( "orm/generated/dialect/dialect-table.adoc" ) );
@@ -85,7 +81,6 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 				"generateCommunityDialectTableReport",
 				DialectReportTask.class,
 				(task) -> {
-					task.dependsOn( indexerTask );
 					task.getDialectReportSources().from( communityDialectConfig );
 					task.getSourcePackage().set( "org.hibernate.community.dialect" );
 					task.getReportFile().set( project.getLayout().getBuildDirectory().file( "orm/generated/dialect/dialect-table-community.adoc" ) );

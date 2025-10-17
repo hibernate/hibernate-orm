@@ -4,12 +4,10 @@
  */
 package org.hibernate.orm.test.boot.model.source;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Guillaume Smet
@@ -21,9 +19,9 @@ public class AttributePathTest {
 	public void testCollectionElement() {
 		AttributePath attributePath = AttributePath.parse( "items.{element}.name" );
 
-		assertFalse( attributePath.isCollectionElement() );
-		assertTrue( attributePath.getParent().isCollectionElement() );
-		assertFalse( attributePath.getParent().getParent().isCollectionElement() );
+		Assertions.assertFalse( attributePath.isCollectionElement() );
+		Assertions.assertTrue( attributePath.getParent().isCollectionElement() );
+		Assertions.assertFalse( attributePath.getParent().getParent().isCollectionElement() );
 	}
 
 }

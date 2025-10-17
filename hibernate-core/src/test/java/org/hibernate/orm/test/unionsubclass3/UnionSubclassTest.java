@@ -147,7 +147,7 @@ public class UnionSubclassTest {
 	@Test
 	@JiraKey("HHH-12565")
 	public void typeOfTPCCriteriaTest(SessionFactoryScope factoryScope) {
-		factoryScope.inSession(session -> {
+		factoryScope.inTransaction(session -> {
 			Father father = new Father();
 			father.id = 42L;
 			session.persist( father );

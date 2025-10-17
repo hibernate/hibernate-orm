@@ -53,22 +53,29 @@ public class TableLock {
 	private final TableDetails tableDetails;
 	private final EntityMappingType entityMappingType;
 
-	private final QuerySpec querySpec = new QuerySpec( true );
+	// Used by Hibernate Reactive
+	protected final QuerySpec querySpec = new QuerySpec( true );
 
-	private final NavigablePath rootPath;
+	// Used by Hibernate Reactive
+	protected final NavigablePath rootPath;
 
 	private final TableReference physicalTableReference;
 	private final TableGroup physicalTableGroup;
 
 	private final TableReference logicalTableReference;
-	private final TableGroup logicalTableGroup;
+	// Used by Hibernate Reactive
+	protected final TableGroup logicalTableGroup;
 
-	private final LockingCreationStates creationStates;
+	// Used by Hibernate Reactive
+	protected final LockingCreationStates creationStates;
 
-	private final List<ResultHandler> resultHandlers = new ArrayList<>();
-	private final List<DomainResult<?>> domainResults = new ArrayList<>();
+	// Used by Hibernate Reactive
+	protected final List<ResultHandler> resultHandlers = new ArrayList<>();
+	// Used by Hibernate Reactive
+	protected final List<DomainResult<?>> domainResults = new ArrayList<>();
 
-	private final JdbcParameterBindings jdbcParameterBindings;
+	// Used by Hibernate Reactive
+	protected final JdbcParameterBindings jdbcParameterBindings;
 
 	public TableLock(
 			TableDetails tableDetails,
@@ -262,7 +269,8 @@ public class TableLock {
 	}
 
 
-	private interface ResultHandler {
+	// Used by Hibernate Reactive
+	protected interface ResultHandler {
 		void applyResult(Object state, EntityDetails entityDetails, SharedSessionContractImplementor session);
 	}
 
@@ -274,7 +282,8 @@ public class TableLock {
 		}
 	}
 
-	private static class NonToOneResultHandler extends AbstractResultHandler {
+	// Used by Hibernate Reactive
+	protected static class NonToOneResultHandler extends AbstractResultHandler {
 		public NonToOneResultHandler(Integer statePosition) {
 			super( statePosition );
 		}
@@ -286,8 +295,9 @@ public class TableLock {
 		}
 	}
 
-	private static class ToOneResultHandler extends AbstractResultHandler {
-		private final ToOneAttributeMapping toOne;
+	// Used by Hibernate Reactive
+	protected static class ToOneResultHandler extends AbstractResultHandler {
+		protected final ToOneAttributeMapping toOne;
 
 		public ToOneResultHandler(Integer statePosition, ToOneAttributeMapping toOne) {
 			super( statePosition );
@@ -318,7 +328,8 @@ public class TableLock {
 		}
 	}
 
-	private static void applyLoadedState(EntityDetails entityDetails, Integer statePosition, Object stateValue) {
+	// Used by Hibernate Reactive
+	protected static void applyLoadedState(EntityDetails entityDetails, Integer statePosition, Object stateValue) {
 		final var entry = entityDetails.entry();
 		final var loadedState = entry.getLoadedState();
 		if ( loadedState != null ) {
@@ -331,7 +342,8 @@ public class TableLock {
 		}
 	}
 
-	private static void applyModelState(EntityDetails entityDetails, Integer statePosition, Object reference) {
+	// Used by Hibernate Reactive
+	protected static void applyModelState(EntityDetails entityDetails, Integer statePosition, Object reference) {
 		entityDetails.key().getPersister().getAttributeMapping( statePosition ).setValue( entityDetails.instance(), reference );
 	}
 }

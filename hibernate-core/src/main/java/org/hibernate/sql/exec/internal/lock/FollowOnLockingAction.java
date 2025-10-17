@@ -10,6 +10,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
 import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
@@ -26,8 +27,8 @@ import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.exec.internal.JdbcSelectWithActions;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcSelectWithActionsBuilder;
 import org.hibernate.sql.exec.spi.StatementAccess;
 import org.hibernate.sql.exec.spi.LoadedValuesCollector;
 import org.hibernate.sql.exec.spi.PostAction;
@@ -54,12 +55,15 @@ import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
  * @author Steve Ebersole
  */
 public class FollowOnLockingAction implements PostAction {
-	private final LoadedValuesCollectorImpl loadedValuesCollector;
+	// Used by Hibernate Reactive
+	protected  final LoadedValuesCollectorImpl loadedValuesCollector;
 	private final LockMode lockMode;
 	private final Timeout lockTimeout;
-	private final Locking.Scope lockScope;
+	// Used by Hibernate Reactive
+	protected final Locking.Scope lockScope;
 
-	private FollowOnLockingAction(
+	// Used by Hibernate Reactive
+	protected FollowOnLockingAction(
 			LoadedValuesCollectorImpl loadedValuesCollector,
 			LockMode lockMode,
 			Timeout lockTimeout,
@@ -74,7 +78,7 @@ public class FollowOnLockingAction implements PostAction {
 			LockOptions lockOptions,
 			QuerySpec lockingTarget,
 			LockingClauseStrategy lockingClauseStrategy,
-			JdbcSelectWithActions.Builder jdbcSelectBuilder) {
+			JdbcSelectWithActionsBuilder jdbcSelectBuilder) {
 		final var fromClause = lockingTarget.getFromClause();
 		final var loadedValuesCollector = resolveLoadedValuesCollector( fromClause, lockingClauseStrategy );
 
@@ -118,16 +122,6 @@ public class FollowOnLockingAction implements PostAction {
 			// we match each attribute to the table it is mapped to and add it to
 			// the select-list for that table-segment.
 			entitySegments.forEach( (entityMappingType, entityKeys) -> {
-				if ( SQL_EXEC_LOGGER.isDebugEnabled() ) {
-					SQL_EXEC_LOGGER.startingFollowOnLockingProcess( entityMappingType.getEntityName() );
-				}
-
-				// apply an empty "fetch graph" to make sure any embedded associations reachable from
-				// any of the DomainResults we will create are treated as lazy
-				final var graph = entityMappingType.createRootGraph( session );
-				effectiveEntityGraph.clear();
-				effectiveEntityGraph.applyGraph( graph, GraphSemantic.FETCH );
-
 				// create a table-lock reference for each table for the entity (keyed by name)
 				final var tableLocks = prepareTableLocks( entityMappingType, entityKeys, session );
 
@@ -135,57 +129,17 @@ public class FollowOnLockingAction implements PostAction {
 				// we'll use this later when we adjust the state array and inject state into the entity instance.
 				final var entityDetailsMap = LockingHelper.resolveEntityKeys( entityKeys, executionContext );
 
-				entityMappingType.forEachAttributeMapping( (index, attributeMapping) -> {
-					// we need to handle collections specially (which we do below, so skip them here)
-					if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
-						final var tableLock = resolveTableLock( attributeMapping, tableLocks, entityMappingType );
-						if ( tableLock == null ) {
-							throw new AssertionFailure( String.format(
-									Locale.ROOT,
-									"Unable to locate table for attribute `%s`",
-									attributeMapping.getNavigableRole().getFullPath()
-							) );
-						}
-
-						// here we apply the selection for the attribute to the corresponding table-lock ref
-						tableLock.applyAttribute( index, attributeMapping );
-					}
-				} );
-
-				// now we do process any collections, if asked
-				if ( lockScope == Locking.Scope.INCLUDE_COLLECTIONS ) {
-					SqmMutationStrategyHelper.visitCollectionTables( entityMappingType, (attribute) -> {
-						// we may need to lock the "collection table".
-						// the conditions are a bit unclear as to directionality, etc., so for now lock each.
-						LockingHelper.lockCollectionTable(
-								attribute,
-								lockMode,
-								lockTimeout,
-								entityDetailsMap,
-								executionContext
-						);
-					} );
-				}
-				else if ( lockScope == Locking.Scope.INCLUDE_FETCHES
-						&& loadedValuesCollector.getCollectedCollections() != null
-						&& !loadedValuesCollector.getCollectedCollections().isEmpty() ) {
-					final var attributeKeys = collectionSegments.get( entityMappingType );
-					if ( attributeKeys != null ) {
-						for ( var entry : attributeKeys.entrySet() ) {
-							LockingHelper.lockCollectionTable(
-									entry.getKey(),
-									lockMode,
-									lockTimeout,
-									entry.getValue(),
-									executionContext
-							);
-						}
-					}
-				}
-
-
 				// at this point, we have all the individual locking selects ready to go - execute them
-				final var lockingOptions = buildLockingOptions( executionContext );
+				final var lockingOptions = buildLockingOptions(
+						tableLocks,
+						entityDetailsMap,
+						entityMappingType,
+						effectiveEntityGraph,
+						entityKeys,
+						collectionSegments,
+						session,
+						executionContext );
+
 				tableLocks.forEach( (s, tableLock) ->
 						tableLock.performActions( entityDetailsMap, lockingOptions, session ) );
 			} );
@@ -195,6 +149,78 @@ public class FollowOnLockingAction implements PostAction {
 			effectiveEntityGraph.clear();
 			session.getLoadQueryInfluencers().applyEntityGraph( initialGraph, initialSemantic );
 		}
+	}
+
+	// Used by Hibernate Reactive
+	public QueryOptions buildLockingOptions(
+			Map<String, TableLock> tableLocks,
+			Map<Object, EntityDetails> entityDetailsMap,
+			EntityMappingType entityMappingType,
+			EffectiveEntityGraph effectiveEntityGraph,
+			List<EntityKey>  entityKeys,
+			Map<EntityMappingType, Map<PluralAttributeMapping, List<CollectionKey>>> collectionSegments,
+			SharedSessionContractImplementor session,
+			ExecutionContext executionContext) {
+		if ( SQL_EXEC_LOGGER.isDebugEnabled() ) {
+			SQL_EXEC_LOGGER.startingFollowOnLockingProcess( entityMappingType.getEntityName() );
+		}
+
+		// apply an empty "fetch graph" to make sure any embedded associations reachable from
+		// any of the DomainResults we will create are treated as lazy
+		final var graph = entityMappingType.createRootGraph( session );
+		effectiveEntityGraph.clear();
+		effectiveEntityGraph.applyGraph( graph, GraphSemantic.FETCH );
+
+		entityMappingType.forEachAttributeMapping( (index, attributeMapping) -> {
+			// we need to handle collections specially (which we do below, so skip them here)
+			if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
+				final var tableLock = resolveTableLock( attributeMapping, tableLocks, entityMappingType );
+				if ( tableLock == null ) {
+					throw new AssertionFailure( String.format(
+							Locale.ROOT,
+							"Unable to locate table for attribute `%s`",
+							attributeMapping.getNavigableRole().getFullPath()
+					) );
+				}
+
+				// here we apply the selection for the attribute to the corresponding table-lock ref
+				tableLock.applyAttribute( index, attributeMapping );
+			}
+		} );
+
+		// now we do process any collections, if asked
+		if ( lockScope == Locking.Scope.INCLUDE_COLLECTIONS ) {
+			SqmMutationStrategyHelper.visitCollectionTables( entityMappingType, (attribute) -> {
+				// we may need to lock the "collection table".
+				// the conditions are a bit unclear as to directionality, etc., so for now lock each.
+				LockingHelper.lockCollectionTable(
+						attribute,
+						lockMode,
+						lockTimeout,
+						entityDetailsMap,
+						executionContext
+				);
+			} );
+		}
+		else if ( lockScope == Locking.Scope.INCLUDE_FETCHES
+				&& loadedValuesCollector.getCollectedCollections() != null
+				&& !loadedValuesCollector.getCollectedCollections().isEmpty() ) {
+			final var attributeKeys = collectionSegments.get( entityMappingType );
+			if ( attributeKeys != null ) {
+				for ( var entry : attributeKeys.entrySet() ) {
+					LockingHelper.lockCollectionTable(
+							entry.getKey(),
+							lockMode,
+							lockTimeout,
+							entry.getValue(),
+							executionContext
+					);
+				}
+			}
+		}
+
+		// at this point, we have all the individual locking selects ready to go - execute them
+		return buildLockingOptions( executionContext );
 	}
 
 	private TableLock resolveTableLock(
@@ -223,7 +249,8 @@ public class FollowOnLockingAction implements PostAction {
 		return lockingQueryOptions;
 	}
 
-	private Map<EntityMappingType, List<EntityKey>> segmentLoadedValues() {
+	// Used by Hibernate Reactive
+	protected Map<EntityMappingType, List<EntityKey>> segmentLoadedValues() {
 		final Map<EntityMappingType, List<EntityKey>> map = new IdentityHashMap<>();
 		LockingHelper.segmentLoadedValues( loadedValuesCollector.getCollectedRootEntities(), map );
 		LockingHelper.segmentLoadedValues( loadedValuesCollector.getCollectedNonRootEntities(), map );
@@ -233,13 +260,15 @@ public class FollowOnLockingAction implements PostAction {
 		return map;
 	}
 
-	private Map<EntityMappingType, Map<PluralAttributeMapping, List<CollectionKey>>> segmentLoadedCollections() {
+	// Used by Hibernate Reactive
+	protected Map<EntityMappingType, Map<PluralAttributeMapping, List<CollectionKey>>> segmentLoadedCollections() {
 		final Map<EntityMappingType, Map<PluralAttributeMapping, List<CollectionKey>>> map = new HashMap<>();
 		LockingHelper.segmentLoadedCollections( loadedValuesCollector.getCollectedCollections(), map );
 		return map;
 	}
 
-	private Map<String, TableLock> prepareTableLocks(
+	// Used by Hibernate Reactive
+	protected Map<String, TableLock> prepareTableLocks(
 			EntityMappingType entityMappingType,
 			List<EntityKey> entityKeys,
 			SharedSessionContractImplementor session) {
@@ -251,11 +280,13 @@ public class FollowOnLockingAction implements PostAction {
 		return segments;
 	}
 
-	private TableLock createTableLock(TableDetails tableDetails, EntityMappingType entityMappingType, List<EntityKey> entityKeys, SharedSessionContractImplementor session) {
+	// Used by Hibernate Reactive
+	protected TableLock createTableLock(TableDetails tableDetails, EntityMappingType entityMappingType, List<EntityKey> entityKeys, SharedSessionContractImplementor session) {
 		return new TableLock( tableDetails, entityMappingType, entityKeys, session );
 	}
 
-	private static LoadedValuesCollectorImpl resolveLoadedValuesCollector(
+	// Used by Hibernate Reactive
+	protected static LoadedValuesCollectorImpl resolveLoadedValuesCollector(
 			FromClause fromClause,
 			LockingClauseStrategy lockingClauseStrategy) {
 		final var fromClauseRoots = fromClause.getRoots();

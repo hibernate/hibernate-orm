@@ -4,6 +4,19 @@
  */
 package org.hibernate.orm.post;
 
+import org.gradle.api.file.ProjectLayout;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.TaskAction;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.Index;
+
+import javax.inject.Inject;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -14,17 +27,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
-
-import org.gradle.api.file.RegularFile;
-import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.TaskAction;
-
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-import org.jboss.jandex.Index;
 
 import static org.jboss.jandex.DotName.createSimple;
 
@@ -46,10 +48,12 @@ public abstract class LoggingReportTask extends AbstractJandexAwareTask {
 
 	private final Property<RegularFile> reportFile;
 
-	public LoggingReportTask() {
+	@Inject
+	public LoggingReportTask(ProjectLayout layout, ObjectFactory objects) {
+		super( objects );
 		setDescription( "Generates a report of \"system\" logging" );
-		reportFile = getProject().getObjects().fileProperty();
-		reportFile.convention( getProject().getLayout().getBuildDirectory().file( "orm/generated/logging/index.adoc" ) );
+		reportFile = objects.fileProperty();
+		reportFile.convention( layout.getBuildDirectory().file( "orm/generated/logging/index.adoc" ) );
 	}
 
 	@Override
@@ -62,7 +66,7 @@ public abstract class LoggingReportTask extends AbstractJandexAwareTask {
 		final TreeMap<String, SubSystem> subSystemByName = new TreeMap<>();
 		final TreeSet<IdRange> idRanges = new TreeSet<>( Comparator.comparing( IdRange::getMinValue ) );
 
-		final Index index = getIndexManager().getIndex();
+		final Index index = getIndexManager().get().getIndex();
 		final List<AnnotationInstance> subSysAnnUsages = index.getAnnotations( SUB_SYS_ANN_NAME );
 		final List<AnnotationInstance> msgLoggerAnnUsages = index.getAnnotations( MSG_LOGGER_ANN_NAME );
 
@@ -118,7 +122,7 @@ public abstract class LoggingReportTask extends AbstractJandexAwareTask {
 
 	private IdRange calculateIdRange(AnnotationInstance msgLoggerAnnUsage, SubSystem subSystem) {
 		final ClassInfo loggerClassInfo = msgLoggerAnnUsage.target().asClass();
-		getProject().getLogger().lifecycle( "MessageLogger (`{}`) missing id-range", loggerClassInfo.simpleName() );
+		getLogger().lifecycle( "MessageLogger (`{}`) missing id-range", loggerClassInfo.simpleName() );
 
 		final List<AnnotationInstance> messageAnnUsages = loggerClassInfo.annotations( MSG_ANN_NAME );
 		if ( messageAnnUsages.isEmpty() ) {

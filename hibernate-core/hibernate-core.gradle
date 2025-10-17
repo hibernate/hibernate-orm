@@ -295,3 +295,7 @@ tasks.sourcesJar.dependsOn ':hibernate-core:generateGraphParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateHqlParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateSqlScriptParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateOrderingParser'
+
+tasks.named( "compileJava", JavaCompile ) {
+    notCompatibleWithConfigurationCache( "org.hibernate.build.version-injection plugin call project in execution time" )
+}

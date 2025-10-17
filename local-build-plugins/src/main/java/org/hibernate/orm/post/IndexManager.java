@@ -4,6 +4,28 @@
  */
 package org.hibernate.orm.post;
 
+import org.gradle.api.file.ArchiveOperations;
+import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.FileTree;
+import org.gradle.api.file.FileVisitDetails;
+import org.gradle.api.file.FileVisitor;
+import org.gradle.api.file.ProjectLayout;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.file.RelativePath;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.SkipWhenEmpty;
+import org.jboss.jandex.ClassSummary;
+import org.jboss.jandex.Index;
+import org.jboss.jandex.IndexReader;
+import org.jboss.jandex.IndexWriter;
+import org.jboss.jandex.Indexer;
+
+import javax.inject.Inject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -16,62 +38,52 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.file.FileTree;
-import org.gradle.api.file.FileVisitDetails;
-import org.gradle.api.file.FileVisitor;
-import org.gradle.api.file.RegularFile;
-import org.gradle.api.file.RelativePath;
-import org.gradle.api.provider.Provider;
-
-import org.jboss.jandex.ClassSummary;
-import org.jboss.jandex.Index;
-import org.jboss.jandex.IndexReader;
-import org.jboss.jandex.IndexWriter;
-import org.jboss.jandex.Indexer;
-
 /**
  * Encapsulates and manages a Jandex Index
  *
  * @author Steve Ebersole
  */
 public class IndexManager {
-	private final Configuration artifactsToProcess;
+	private final ConfigurableFileCollection artifactsToProcess;
 	private final Provider<RegularFile> indexFileReferenceAccess;
 	private final Provider<RegularFile> packageFileReferenceAccess;
-	private final Project project;
-
 	private Index index;
 	private TreeSet<Inclusion> internalPackageNames;
 
-	public IndexManager(Configuration artifactsToProcess, Project project) {
-		this.artifactsToProcess = artifactsToProcess;
-		this.indexFileReferenceAccess = project.getLayout()
+	@Inject
+	public IndexManager(ObjectFactory objects, ProjectLayout layout) {
+		this.artifactsToProcess = objects.fileCollection();
+		this.indexFileReferenceAccess = layout
 				.getBuildDirectory()
 				.file( "orm/reports/indexing/jandex.idx" );
-		this.packageFileReferenceAccess = project.getLayout()
+		this.packageFileReferenceAccess = layout
 				.getBuildDirectory()
 				.file( "orm/reports/indexing/internal-packages.txt" );
-		this.project = project;
 	}
 
-	public Configuration getArtifactsToProcess() {
+
+	@InputFiles
+	@SkipWhenEmpty
+	public ConfigurableFileCollection getArtifactsToProcess() {
 		return artifactsToProcess;
 	}
 
+	@OutputFile
 	public Provider<RegularFile> getIndexFileReferenceAccess() {
 		return indexFileReferenceAccess;
 	}
 
+	@OutputFile
 	public Provider<RegularFile> getPackageFileReferenceAccess() {
 		return packageFileReferenceAccess;
 	}
 
+	@Internal
 	public TreeSet<Inclusion> getInternalPackageNames() {
 		return internalPackageNames;
 	}
 
+	@Internal
 	public Index getIndex() {
 		if ( index == null ) {
 			index = loadIndex( indexFileReferenceAccess );
@@ -125,7 +137,7 @@ public class IndexManager {
 	/**
 	 * Used from {@link IndexerTask} as its action
 	 */
-	void index() {
+	void index(ArchiveOperations archiveOperations, Logger logger) {
 		if ( index != null ) {
 			throw new IllegalStateException( "Index was already created or loaded" );
 		}
@@ -134,10 +146,10 @@ public class IndexManager {
 		internalPackageNames = new TreeSet<>( Comparator.comparing( Inclusion::getPath ) );
 
 		// note: each of `artifacts` is a jar-file
-		final Set<File> artifacts = artifactsToProcess.resolve();
+		final Set<File> artifacts = artifactsToProcess.getFiles();
 
 		artifacts.forEach( (jar) -> {
-			final FileTree jarFileTree = project.zipTree( jar );
+			final FileTree jarFileTree = archiveOperations.zipTree( jar );
 			jarFileTree.visit(
 					new FileVisitor() {
 						private boolean isInOrmPackage(RelativePath relativePath) {
@@ -169,8 +181,7 @@ public class IndexManager {
 								try (final FileInputStream stream = new FileInputStream( details.getFile() )) {
 									final ClassSummary classSummary = indexer.indexWithSummary( stream );
 									if ( classSummary == null ) {
-										project.getLogger()
-												.lifecycle( "Problem indexing class file - " + details.getFile()
+										logger.lifecycle( "Problem indexing class file - {}", details.getFile()
 														.getAbsolutePath() );
 									}
 								}

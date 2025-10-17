@@ -5,13 +5,12 @@
 package org.hibernate.orm.post;
 
 import org.gradle.api.DefaultTask;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.file.RegularFile;
-import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.SkipWhenEmpty;
+import org.gradle.api.file.ArchiveOperations;
+import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.TaskAction;
+
+import javax.inject.Inject;
 
 import static org.hibernate.orm.post.ReportGenerationPlugin.AGGREGATE_CONFIG_NAME;
 import static org.hibernate.orm.post.ReportGenerationPlugin.TASK_GROUP_NAME;
@@ -22,33 +21,20 @@ import static org.hibernate.orm.post.ReportGenerationPlugin.TASK_GROUP_NAME;
  * @author Steve Ebersole
  */
 public abstract class IndexerTask extends DefaultTask {
-	private final Provider<IndexManager> indexManager;
+	private final ArchiveOperations archiveOperations;
 
-	public IndexerTask() {
+	@Inject
+	public IndexerTask(ArchiveOperations archiveOperations) {
+		this.archiveOperations = archiveOperations;
 		setGroup( TASK_GROUP_NAME );
 		setDescription( String.format( "Builds a Jandex Index from the artifacts attached to the `%s` Configuration", AGGREGATE_CONFIG_NAME ) );
-
-		indexManager = getProject().provider( () -> getProject().getExtensions().getByType( IndexManager.class ) );
 	}
 
-	@InputFiles
-	@SkipWhenEmpty
-	public Configuration getArtifactsToProcess() {
-		return indexManager.get().getArtifactsToProcess();
-	}
-
-	@OutputFile
-	public Provider<RegularFile> getIndexFileReference() {
-		return indexManager.get().getIndexFileReferenceAccess();
-	}
-
-	@OutputFile
-	public Provider<RegularFile> getPackageFileReferenceAccess() {
-		return indexManager.get().getPackageFileReferenceAccess();
-	}
+	@Nested
+	public abstract Property<IndexManager> getIndexManager();
 
 	@TaskAction
 	public void createIndex() {
-		indexManager.get().index();
+		getIndexManager().get().index( archiveOperations, getLogger() );
 	}
 }

@@ -4,17 +4,19 @@
  */
 package org.hibernate.orm.post;
 
+import org.gradle.api.file.ProjectLayout;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.TaskAction;
+import org.jboss.jandex.DotName;
+
+import javax.inject.Inject;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Comparator;
 import java.util.TreeSet;
-
-import org.gradle.api.file.RegularFile;
-import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.TaskAction;
-
-import org.jboss.jandex.DotName;
 
 
 /**
@@ -25,10 +27,12 @@ public abstract class InternalsReportTask extends AbstractJandexAwareTask {
 
 	private final Property<RegularFile> reportFile;
 
-	public InternalsReportTask() {
+	@Inject
+	public InternalsReportTask(ProjectLayout layout, ObjectFactory objects) {
+		super( objects );
 		setDescription( "Generates a report of things consider internal" );
-		reportFile = getProject().getObjects().fileProperty();
-		reportFile.convention( getProject().getLayout().getBuildDirectory().file( "orm/reports/internal.txt" ) );
+		reportFile = objects.fileProperty();
+		reportFile.convention( layout.getBuildDirectory().file( "orm/reports/internal.txt" ) );
 	}
 
 	@Override
@@ -39,7 +43,7 @@ public abstract class InternalsReportTask extends AbstractJandexAwareTask {
 	@TaskAction
 	public void generateInternalsReport() {
 		final TreeSet<Inclusion> internals = new TreeSet<>( Comparator.comparing( Inclusion::getPath ) );
-		internals.addAll( getIndexManager().getInternalPackageNames() );
+		internals.addAll( getIndexManager().get().getInternalPackageNames() );
 		processAnnotations( DotName.createSimple( INTERNAL_ANN_NAME ), internals );
 
 		writeReport( internals );

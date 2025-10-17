@@ -4,6 +4,24 @@
  */
 package org.hibernate.orm.post;
 
+import org.gradle.api.DefaultTask;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.OutputFile;
+import org.hibernate.build.OrmBuildDetails;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.FieldInfo;
+import org.jboss.jandex.Index;
+import org.jboss.jandex.MethodInfo;
+
+import javax.inject.Inject;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -13,47 +31,36 @@ import java.util.List;
 import java.util.TreeSet;
 import java.util.function.Consumer;
 
-import org.gradle.api.DefaultTask;
-import org.gradle.api.file.RegularFile;
-import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.OutputFile;
-
-import org.hibernate.build.OrmBuildDetails;
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationTarget;
-import org.jboss.jandex.DotName;
-import org.jboss.jandex.FieldInfo;
-import org.jboss.jandex.Index;
-import org.jboss.jandex.MethodInfo;
-
 import static org.hibernate.orm.post.ReportGenerationPlugin.TASK_GROUP_NAME;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractJandexAwareTask extends DefaultTask {
-	private final Provider<IndexManager> indexManager;
+	private final Property<OrmBuildDetails> ormBuildDetails;
 
-	public AbstractJandexAwareTask() {
+	@Inject
+	public AbstractJandexAwareTask(ObjectFactory objects) {
 		setGroup( TASK_GROUP_NAME );
+		ormBuildDetails = objects.property( OrmBuildDetails.class );
 
-		this.indexManager = getProject().provider( () -> getProject().getExtensions().getByType( IndexManager.class ) );
-		getInputs().property( "version", getProject().getExtensions().getByType( OrmBuildDetails.class ).getHibernateVersion() );
+		getInputs().property( "version", ormBuildDetails.map( OrmBuildDetails::getHibernateVersion ) );
 	}
 
 	@Internal
 	protected abstract Provider<RegularFile> getTaskReportFileReference();
 
-	@Internal
-	protected IndexManager getIndexManager() {
-		return indexManager.get();
+	@Nested
+	protected abstract Property<IndexManager> getIndexManager();
+
+	@Nested
+	public Property<OrmBuildDetails> getOrmBuildDetails() {
+		return ormBuildDetails;
 	}
 
 	@InputFile
 	public Provider<RegularFile> getIndexFileReference() {
-		return indexManager.get().getIndexFileReferenceAccess();
+		return getIndexManager().get().getIndexFileReferenceAccess();
 	}
 
 	@OutputFile
@@ -94,7 +101,7 @@ public abstract class AbstractJandexAwareTask extends DefaultTask {
 	}
 
 	protected void processAnnotations(Consumer<Inclusion> inclusions, DotName... annotationNames) {
-		final Index index = getIndexManager().getIndex();
+		final Index index = getIndexManager().get().getIndex();
 
 		for ( int i = 0; i < annotationNames.length; i++ ) {
 			final DotName annotationName = annotationNames[ i ];

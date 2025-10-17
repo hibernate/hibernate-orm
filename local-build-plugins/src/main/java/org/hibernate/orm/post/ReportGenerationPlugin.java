@@ -7,6 +7,7 @@ package org.hibernate.orm.post;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.hibernate.build.OrmBuildDetails;
 
 /**
  * @author Steve Ebersole
@@ -23,12 +24,20 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 				.maybeCreate( AGGREGATE_CONFIG_NAME )
 				.setDescription( "Used to collect the jars with classes files to be used in the aggregation reports for `@Internal`, `@Incubating`, etc" );
 
-		final var indexManager = new IndexManager( artifactsToProcess, project );
-		project.getExtensions().add( "indexManager", indexManager );
+		final var indexManager = project.getExtensions().create( "indexManager", IndexManager.class );
+		indexManager.getArtifactsToProcess().from( artifactsToProcess );
+
+		final var details = project.getExtensions().getByType( OrmBuildDetails.class );
+		project.getTasks().withType( AbstractJandexAwareTask.class )
+				.configureEach(task -> {
+					task.getOrmBuildDetails().set( details );
+					task.getIndexManager().set( indexManager );
+				});
 
 		final var indexerTask = project.getTasks().register(
 				"buildAggregatedIndex",
-				IndexerTask.class
+				IndexerTask.class,
+				task -> task.getIndexManager().set( indexManager )
 		);
 
 		final var incubatingTask = project.getTasks().register(
@@ -83,14 +92,17 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 				}
 		);
 
-		final var groupingTask = project.getTasks().maybeCreate( "generateReports" );
-		groupingTask.setGroup( TASK_GROUP_NAME );
-		groupingTask.dependsOn( indexerTask );
-		groupingTask.dependsOn( incubatingTask );
-		groupingTask.dependsOn( deprecationTask );
-		groupingTask.dependsOn( internalsTask );
-		groupingTask.dependsOn( loggingTask );
-		groupingTask.dependsOn( dialectTableTask );
-		groupingTask.dependsOn( communityDialectTableTask );
+		project.getTasks().register( "generateReports", groupingTask -> {
+			groupingTask.setGroup( TASK_GROUP_NAME );
+			groupingTask.dependsOn(
+					indexerTask,
+					incubatingTask,
+					deprecationTask,
+					internalsTask,
+					loggingTask,
+					dialectTableTask,
+					communityDialectTableTask
+			);
+		} );
 	}
 }

@@ -6,6 +6,7 @@ package org.hibernate.orm.post;
 
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFile;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
@@ -15,6 +16,7 @@ import org.gradle.api.tasks.TaskAction;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Index;
 
+import javax.inject.Inject;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -37,11 +39,14 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 	private final Property<String> sourcePackage;
 	private final Property<RegularFile> reportFile;
 
-	public DialectReportTask() {
+	@Inject
+	public DialectReportTask(ObjectFactory objects) {
+		super( objects );
 		setDescription( "Generates a report of the supported Dialects" );
-		dialectReportSources = getProject().getObjects().fileCollection();
-		sourcePackage = getProject().getObjects().property(String.class);
-		reportFile = getProject().getObjects().fileProperty();
+
+		dialectReportSources = objects.fileCollection();
+		sourcePackage = objects.property( String.class );
+		reportFile = objects.fileProperty();
 	}
 
 	@Input
@@ -69,7 +74,7 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 		final ClassLoader classLoader = Helper.asClassLoader( dialectReportSources );
 		final DialectClassDelegate dialectClassDelegate = new DialectClassDelegate( classLoader );
 
-		final Index index = getIndexManager().getIndex();
+		final Index index = getIndexManager().get().getIndex();
 		final Collection<ClassInfo> allDialectClasses = index.getAllKnownSubclasses( DialectClassDelegate.DIALECT_CLASS_NAME );
 		String sourcePackagePrefix = this.sourcePackage.get() + ".";
 		allDialectClasses.removeIf( c -> !c.name().toString().startsWith( sourcePackagePrefix ) );

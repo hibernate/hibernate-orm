@@ -4,18 +4,19 @@
  */
 package org.hibernate.orm.post;
 
+import org.gradle.api.file.ProjectLayout;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.TaskAction;
+import org.jboss.jandex.DotName;
+
+import javax.inject.Inject;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Comparator;
 import java.util.TreeSet;
-import javax.inject.Inject;
-
-import org.gradle.api.file.RegularFile;
-import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.TaskAction;
-
-import org.jboss.jandex.DotName;
 
 
 /**
@@ -27,10 +28,11 @@ public abstract class IncubationReportTask extends AbstractJandexAwareTask {
 	private final Property<RegularFile> reportFile;
 
 	@Inject
-	public IncubationReportTask() {
+	public IncubationReportTask(ProjectLayout layout, ObjectFactory objects) {
+		super( objects );
 		setDescription( "Generates a report for things considered incubating" );
-		reportFile = getProject().getObjects().fileProperty();
-		reportFile.convention( getProject().getLayout().getBuildDirectory().file( "orm/reports/incubating.txt" ) );
+		reportFile = objects.fileProperty();
+		reportFile.convention( layout.getBuildDirectory().file( "orm/reports/incubating.txt" ) );
 	}
 
 	@Override

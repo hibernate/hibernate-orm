@@ -6,6 +6,8 @@ package org.hibernate.orm.properties;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.tasks.TaskProvider;
+import org.hibernate.build.OrmBuildDetails;
 import org.hibernate.build.aspects.ModuleAspect;
 
 import static org.hibernate.orm.properties.SettingsDocExtension.EXTENSION_NAME;
@@ -32,6 +34,9 @@ public class SettingsDocumentationPlugin implements Plugin<Project> {
 		dslExtension.getOutputFile().convention( project.getLayout().getBuildDirectory().file( "asciidoc/fragments/config-settings.adoc" ) );
 
 		// create the generation task
-		project.getTasks().register( TASK_NAME, SettingsDocGenerationTask.class, dslExtension );
+		final OrmBuildDetails details = project.getExtensions().getByType( OrmBuildDetails.class );
+		final TaskProvider<SettingsDocGenerationTask> settingsDocGenerationTask = project.getTasks()
+				.register( TASK_NAME, SettingsDocGenerationTask.class, dslExtension );
+		settingsDocGenerationTask.configure( task -> task.getOrmBuildDetails().set( details ) );
 	}
 }

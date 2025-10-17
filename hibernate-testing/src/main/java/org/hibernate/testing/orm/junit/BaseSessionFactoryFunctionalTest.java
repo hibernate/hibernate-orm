@@ -22,7 +22,6 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -84,11 +83,6 @@ public abstract class BaseSessionFactoryFunctionalTest
 		applySettings( ssrBuilder );
 		ServiceRegistryUtil.applySettings( ssrBuilder );
 		return ssrBuilder.build();
-	}
-
-	@Override
-	public void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder bsrb) {
-
 	}
 
 	protected boolean exportSchema() {

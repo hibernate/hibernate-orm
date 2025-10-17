@@ -15,6 +15,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -28,11 +29,13 @@ import static org.junit.Assert.fail;
 /**
  * @author Gavin King
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(xmlMappings = "org/hibernate/orm/test/unionsubclass2/Person.hbm.xml")
 @SessionFactory
 public class UnionSubclassTest {
-	protected String[] getMappings() {
-		return new String[] {};
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test

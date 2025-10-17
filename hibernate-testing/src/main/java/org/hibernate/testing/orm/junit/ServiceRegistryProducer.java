@@ -14,5 +14,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 public interface ServiceRegistryProducer {
 	StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder);
 
-	void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder bsrb);
+	default void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder bsrb) {
+		// generally this is not the one we are interested in
+	}
 }

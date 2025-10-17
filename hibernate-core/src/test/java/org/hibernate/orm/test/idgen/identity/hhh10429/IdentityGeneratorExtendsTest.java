@@ -10,33 +10,27 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
-
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Matthew Morrissette
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-10429")
 @DomainModel( annotatedClasses = IdentityGeneratorExtendsTest.EntityBean.class )
 public class IdentityGeneratorExtendsTest {
 
 	@Test
 	public void testIdentifierGeneratorExtendsIdentityGenerator(DomainModelScope scope) {
-		// the Dialect is irrelevant here.. we just need a Dialect that supports IDENTITY
-		final Dialect dialect = new H2Dialect();
-
 		final MetadataImplementor domainModel = scope.getDomainModel();
 		final PersistentClass entityBinding = domainModel.getEntityBinding( EntityBean.class.getName() );
 		final KeyValue identifier = entityBinding.getIdentifier();

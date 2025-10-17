@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * @author Gail Badner
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel
 @SessionFactory
 @ServiceRegistry(

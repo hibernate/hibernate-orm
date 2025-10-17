@@ -63,7 +63,10 @@ import static org.junit.Assert.fail;
  * Applies functional testing logic for core Hibernate testing on top of {@link BaseUnitTestCase}
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use JUnit 5/6
  */
+@Deprecated
 public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	public static final String VALIDATE_DATA_CLEANUP = "hibernate.test.validateDataCleanup";
 

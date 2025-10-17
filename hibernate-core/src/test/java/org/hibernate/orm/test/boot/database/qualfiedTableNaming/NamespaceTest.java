@@ -9,13 +9,12 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -31,7 +30,7 @@ public class NamespaceTest {
 	private final Database mockDatabase = mock( Database.class );
 	private Namespace.Name name;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		when( mockDatabase.getPhysicalNamingStrategy() ).thenReturn( new TestNamingStrategy() );
 		name = new Namespace.Name(

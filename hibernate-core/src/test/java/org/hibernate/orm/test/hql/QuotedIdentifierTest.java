@@ -7,59 +7,49 @@ package org.hibernate.orm.test.hql;
 import java.util.List;
 
 import org.hibernate.annotations.processing.Exclude;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Christian Beikov
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @Exclude
-public class QuotedIdentifierTest extends BaseCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = QuotedIdentifierTest.Person.class)
+@SessionFactory
+public class QuotedIdentifierTest {
 
-	private Person person;
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Person.class
-		};
-	}
-
-	@Before
-	public void setUp() {
-		doInHibernate( this::sessionFactory, session -> {
-			person = new Person();
-			person.setName( "Chuck" );
-			person.setSurname( "Norris" );
+	@BeforeEach
+	public void createTestData(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var person = new Person( 1, "Chuck", "Norris" );
 			session.persist( person );
 		} );
 	}
 
-	@After
-	public void tearDown() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createQuery("delete `The Person`").executeUpdate();
-		} );
+	@AfterEach
+	public void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testQuotedIdentifier() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testQuotedIdentifier(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
 			TypedQuery<Tuple> query = session.createQuery(
 					"select `the person`.`name` as `The person name` " +
-							"from `The Person` `the person`",
+					"from `The Person` `the person`",
 					Tuple.class
 			);
 			List<Tuple> resultList = query.getResultList();
@@ -69,8 +59,8 @@ public class QuotedIdentifierTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testQuotedFunctionName() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testQuotedFunctionName(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
 			TypedQuery<Tuple> query = session.createQuery(
 					"select `upper`(`the person`.`name`) as `The person name` " +
 							"from `The Person` `the person`",
@@ -84,16 +74,20 @@ public class QuotedIdentifierTest extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "The Person")
 	public static class Person {
-
 		@Id
-		@GeneratedValue
 		private Integer id;
-
 		@Column(name = "the name")
 		private String name;
-
-		@Column
 		private String surname;
+
+		public Person() {
+		}
+
+		public Person(Integer id, String name, String surname) {
+			this.id = id;
+			this.name = name;
+			this.surname = surname;
+		}
 
 		public String getName() {
 			return name;

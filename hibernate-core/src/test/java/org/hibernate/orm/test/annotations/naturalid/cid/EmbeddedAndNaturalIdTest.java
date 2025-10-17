@@ -7,87 +7,66 @@ package org.hibernate.orm.test.annotations.naturalid.cid;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Donnchadh O Donnabhain
  */
-public class EmbeddedAndNaturalIdTest extends BaseCoreFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = {A.class, AId.class})
+@SessionFactory
+public class EmbeddedAndNaturalIdTest {
 	@JiraKey(value = "HHH-9333")
 	@Test
-	public void testSave() {
-		A account = new A( new AId( 1 ), "testCode" );
-		inTransaction(
-				session ->
-					session.persist( account )
-		);
-	}
-
-	@JiraKey(value = "HHH-9333")
-	@Test
-	public void testNaturalIdCriteria() {
-		inTransaction(
-				s -> {
-					A u = new A( new AId( 1 ), "testCode" );
-					s.persist( u );
-				}
-		);
-
-		inTransaction(
-				s -> {
-					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
-					CriteriaQuery<A> criteria = criteriaBuilder.createQuery( A.class );
-					Root<A> root = criteria.from( A.class );
-					criteria.where( criteriaBuilder.equal( root.get( "shortCode" ), "testCode" ) );
-					A u = s.createQuery( criteria ).uniqueResult();
-//        u = ( A ) s.createCriteria( A.class )
-//                .add( Restrictions.naturalId().set( "shortCode", "testCode" ) )
-//                .uniqueResult();
-					assertNotNull( u );
-				}
-		);
+	public void testSave(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction(  session -> {
+			var account = new A( new AId( 1 ), "testCode" );
+			session.persist( account );
+		} );
 	}
 
 	@JiraKey(value = "HHH-9333")
 	@Test
-	public void testByNaturalId() {
-		inTransaction(
-				s -> {
-					A u = new A( new AId( 1 ), "testCode" );
-					s.persist( u );
-				}
-		);
+	public void testNaturalIdCriteria(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			A u = new A( new AId( 1 ), "testCode" );
+			session.persist( u );
+		} );
 
-		inTransaction(
-				s -> {
-					A u = s.byNaturalId( A.class ).using( "shortCode", "testCode" ).load();
-					assertNotNull( u );
-				}
-		);
+		factoryScope.inTransaction( (session) -> {
+			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+			CriteriaQuery<A> criteria = criteriaBuilder.createQuery( A.class );
+			Root<A> root = criteria.from( A.class );
+			criteria.where( criteriaBuilder.equal( root.get( "shortCode" ), "testCode" ) );
+			A u = session.createQuery( criteria ).uniqueResult();
+			assertNotNull( u );
+		} );
 	}
 
-	@After
-	public void tearDown() {
-		// clean up
-		inTransaction(
-				session ->
-					session.createQuery( "delete A" ).executeUpdate()
+	@JiraKey(value = "HHH-9333")
+	@Test
+	public void testByNaturalId(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			A u = new A( new AId( 1 ), "testCode" );
+			session.persist( u );
+		} );
 
-		);
+		factoryScope.inTransaction(s -> {
+			A u = s.byNaturalId( A.class ).using( "shortCode", "testCode" ).load();
+			assertNotNull( u );
+		} );
 	}
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				A.class,
-				AId.class
-		};
+	@AfterEach
+	public void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 }

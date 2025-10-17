@@ -35,6 +35,7 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -50,6 +51,7 @@ import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
 /**
  * @author Marco Belladelli
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = {
 		MixedTimingGeneratorsTest.AssignedEntity.class,
 		MixedTimingGeneratorsTest.RandomEntity.class,
@@ -59,6 +61,11 @@ import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsIdentityColumns.class )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17322" )
 public class MixedTimingGeneratorsTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
+
 	@Test
 	@SkipForDialect( dialectClass = SQLServerDialect.class, reason = "SQLServer does not support setting explicit values for identity columns" )
 	@SkipForDialect( dialectClass = OracleDialect.class, reason = "Oracle does not support setting explicit values for identity columns" )

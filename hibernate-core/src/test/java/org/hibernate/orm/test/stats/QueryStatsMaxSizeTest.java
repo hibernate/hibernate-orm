@@ -22,11 +22,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @Jpa(
 		annotatedClasses = QueryStatsMaxSizeTest.Employee.class,
 		generateStatistics = true
 )
-
 public class QueryStatsMaxSizeTest {
 
 	@Test

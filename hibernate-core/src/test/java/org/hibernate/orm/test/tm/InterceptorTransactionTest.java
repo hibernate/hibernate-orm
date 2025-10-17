@@ -4,46 +4,98 @@
  */
 package org.hibernate.orm.test.tm;
 
-import java.util.Arrays;
-import java.util.Map;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-
 import jakarta.transaction.Status;
-
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.JpaComplianceSettings;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
-
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-import org.hibernate.testing.junit4.CustomParameterized;
-import org.hibernate.orm.test.exceptionhandling.BaseJpaOrNativeBootstrapFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistryFunctionalTesting;
+import org.hibernate.testing.orm.junit.ServiceRegistryProducer;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import java.util.Arrays;
+
+import static org.hibernate.cfg.JpaComplianceSettings.JPA_TRANSACTION_COMPLIANCE;
+import static org.hibernate.cfg.TransactionSettings.ALLOW_JTA_TRANSACTION_ACCESS;
+import static org.hibernate.cfg.TransactionSettings.TRANSACTION_COORDINATOR_STRATEGY;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @JiraKey( value = "HHH-13326")
-@RunWith(CustomParameterized.class)
-public class InterceptorTransactionTest extends BaseJpaOrNativeBootstrapFunctionalTestCase {
+@TestInstance( TestInstance.Lifecycle.PER_METHOD )
+@ServiceRegistryFunctionalTesting
+@DomainModel(annotatedClasses = InterceptorTransactionTest.SimpleEntity.class)
+@SessionFactory
+@ParameterizedClass
+@MethodSource("options")
+public class InterceptorTransactionTest implements ServiceRegistryProducer {
+
+	public record Options(
+			boolean jpaBootstrap,
+			JpaComplianceTransactionSetting jpaTransactionCompliance,
+			JtaAllowTransactionAccessSetting allowJtaTransactionAccess) {
+		void apply(StandardServiceRegistryBuilder registryBuilder) {
+			registryBuilder.applySetting( JpaComplianceSettings.JPA_COMPLIANCE, jpaBootstrap );
+
+			switch ( jpaTransactionCompliance ) {
+				case DEFAULT:
+					// Keep the default (false)
+					break;
+				case TRUE:
+					registryBuilder.applySetting( JPA_TRANSACTION_COMPLIANCE, "true" );
+					break;
+				case FALSE:
+					registryBuilder.applySetting( JPA_TRANSACTION_COMPLIANCE, "false" );
+					break;
+
+			}
+			switch ( allowJtaTransactionAccess ) {
+				case DEFAULT:
+					// Keep the default (true native bootstrap; false if jpa bootstrap)
+					break;
+				case TRUE:
+					registryBuilder.applySetting( ALLOW_JTA_TRANSACTION_ACCESS, "true" );
+					break;
+				case FALSE:
+					registryBuilder.applySetting( ALLOW_JTA_TRANSACTION_ACCESS, "false" );
+					break;
+			}
+		}
+	}
+
+	@Override
+	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder) {
+		TestingJtaBootstrap.prepare( builder );
+		builder.applySetting( TRANSACTION_COORDINATOR_STRATEGY, "jta" );
+		options.apply( builder );
+		return builder.build();
+	}
 
 	public enum JpaComplianceTransactionSetting { DEFAULT, TRUE, FALSE }
 	public enum JtaAllowTransactionAccessSetting {
 		DEFAULT {
 			@Override
 			public boolean allowTransactionAccess(
-					SessionFactory sessionFactory,
+					SessionFactoryImplementor sessionFactory,
 					JpaComplianceTransactionSetting jpaComplianceTransactionSetting) {
 				return !sessionFactory.getSessionFactoryOptions().isJpaBootstrap() ||
 						jpaComplianceTransactionSetting != JpaComplianceTransactionSetting.TRUE;
@@ -52,7 +104,7 @@ public class InterceptorTransactionTest extends BaseJpaOrNativeBootstrapFunction
 		TRUE {
 			@Override
 			public boolean allowTransactionAccess(
-					SessionFactory sessionFactory,
+					SessionFactoryImplementor sessionFactory,
 					JpaComplianceTransactionSetting jpaComplianceTransactionSetting) {
 				return true;
 			}
@@ -60,7 +112,7 @@ public class InterceptorTransactionTest extends BaseJpaOrNativeBootstrapFunction
 		FALSE {
 			@Override
 			public boolean allowTransactionAccess(
-					SessionFactory sessionFactory,
+					SessionFactoryImplementor sessionFactory,
 					JpaComplianceTransactionSetting jpaComplianceTransactionSetting) {
 				// setting is ignored if jpaComplianceTransactionSetting != JpaComplianceTransactionSetting.TRUE
 				return jpaComplianceTransactionSetting != JpaComplianceTransactionSetting.TRUE;
@@ -68,92 +120,45 @@ public class InterceptorTransactionTest extends BaseJpaOrNativeBootstrapFunction
 		};
 
 		public abstract boolean allowTransactionAccess(
-				SessionFactory sessionFactory,
+				SessionFactoryImplementor sessionFactory,
 				JpaComplianceTransactionSetting jpaComplianceTransactionSetting
 		);
 	};
 
-	@Parameterized.Parameters(name = "Bootstrap={0}, JpaComplianceTransactionSetting={1}, JtaAllowTransactionAccessSetting={2}")
-	public static Iterable<Object[]> parameters() {
-		return Arrays.asList( new Object[][] {
-				{ BootstrapMethod.JPA, JpaComplianceTransactionSetting.DEFAULT, JtaAllowTransactionAccessSetting.DEFAULT },
-				{ BootstrapMethod.JPA, JpaComplianceTransactionSetting.TRUE, JtaAllowTransactionAccessSetting.DEFAULT },
-				{ BootstrapMethod.JPA, JpaComplianceTransactionSetting.TRUE, JtaAllowTransactionAccessSetting.TRUE },
-				{ BootstrapMethod.JPA, JpaComplianceTransactionSetting.TRUE, JtaAllowTransactionAccessSetting.FALSE },
-				{ BootstrapMethod.JPA, JpaComplianceTransactionSetting.FALSE, JtaAllowTransactionAccessSetting.DEFAULT },
-				{ BootstrapMethod.JPA, JpaComplianceTransactionSetting.FALSE, JtaAllowTransactionAccessSetting.TRUE },
-				{ BootstrapMethod.JPA, JpaComplianceTransactionSetting.FALSE, JtaAllowTransactionAccessSetting.FALSE },
-				{ BootstrapMethod.NATIVE, JpaComplianceTransactionSetting.DEFAULT, JtaAllowTransactionAccessSetting.DEFAULT },
-				{ BootstrapMethod.NATIVE, JpaComplianceTransactionSetting.TRUE, JtaAllowTransactionAccessSetting.DEFAULT },
-				{ BootstrapMethod.NATIVE, JpaComplianceTransactionSetting.TRUE, JtaAllowTransactionAccessSetting.TRUE },
-				{ BootstrapMethod.NATIVE, JpaComplianceTransactionSetting.TRUE, JtaAllowTransactionAccessSetting.FALSE },
-				{ BootstrapMethod.NATIVE, JpaComplianceTransactionSetting.FALSE, JtaAllowTransactionAccessSetting.DEFAULT },
-				{ BootstrapMethod.NATIVE, JpaComplianceTransactionSetting.FALSE, JtaAllowTransactionAccessSetting.TRUE },
-				{ BootstrapMethod.NATIVE, JpaComplianceTransactionSetting.FALSE, JtaAllowTransactionAccessSetting.FALSE },
-		} );
+	public static Iterable<Options> options() {
+		return Arrays.asList(
+				new Options( true, JpaComplianceTransactionSetting.DEFAULT, JtaAllowTransactionAccessSetting.DEFAULT ),
+				new Options( true, JpaComplianceTransactionSetting.TRUE, JtaAllowTransactionAccessSetting.DEFAULT ),
+				new Options( true, JpaComplianceTransactionSetting.TRUE, JtaAllowTransactionAccessSetting.TRUE ),
+				new Options( true, JpaComplianceTransactionSetting.FALSE, JtaAllowTransactionAccessSetting.TRUE ),
+				new Options( true, JpaComplianceTransactionSetting.FALSE, JtaAllowTransactionAccessSetting.FALSE ),
+				new Options( false, JpaComplianceTransactionSetting.DEFAULT, JtaAllowTransactionAccessSetting.DEFAULT ),
+				new Options( false, JpaComplianceTransactionSetting.TRUE, JtaAllowTransactionAccessSetting.DEFAULT ),
+				new Options( false, JpaComplianceTransactionSetting.TRUE, JtaAllowTransactionAccessSetting.TRUE ),
+				new Options( false, JpaComplianceTransactionSetting.FALSE, JtaAllowTransactionAccessSetting.TRUE ),
+				new Options( false, JpaComplianceTransactionSetting.FALSE, JtaAllowTransactionAccessSetting.FALSE )
+		);
 	}
 
-	private final JpaComplianceTransactionSetting jpaComplianceTransactionSetting;
-	private final JtaAllowTransactionAccessSetting jtaAllowTransactionAccessSetting;
+	private final Options options;
 
-	public InterceptorTransactionTest(
-			BootstrapMethod bootstrapMethod,
-			JpaComplianceTransactionSetting jpaComplianceTransactionSetting,
-			JtaAllowTransactionAccessSetting jtaAllowTransactionAccessSetting) {
-		super( bootstrapMethod );
-		this.jpaComplianceTransactionSetting = jpaComplianceTransactionSetting;
-		this.jtaAllowTransactionAccessSetting = jtaAllowTransactionAccessSetting;
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { SimpleEntity.class };
-	}
-
-	protected void configure(Map<String, Object> properties) {
-		super.configure( properties );
-		TestingJtaBootstrap.prepare( properties );
-		properties.put( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta" );
-
-		switch ( jpaComplianceTransactionSetting ) {
-			case DEFAULT:
-				// Keep the default (false)
-				break;
-			case TRUE:
-				properties.put( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "true" );
-				break;
-			case FALSE:
-				properties.put( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "false" );
-				break;
-
-		}
-		switch ( jtaAllowTransactionAccessSetting ) {
-			case DEFAULT:
-				// Keep the default (true native bootstrap; false if jpa bootstrap)
-				break;
-			case TRUE:
-				properties.put( AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS, "true" );
-				break;
-			case FALSE:
-				properties.put( AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS, "false" );
-				break;
-		}
+	public InterceptorTransactionTest(Options options) {
+		this.options = options;
 	}
 
 	@Test
-	public void testHibernateTransactionApi() throws Exception {
-
+	public void testHibernateTransactionApi(SessionFactoryScope factoryScope) throws Exception {
 		final TransactionInterceptor interceptor = new TransactionInterceptor();
 
-		Session session = sessionFactory().withOptions().interceptor( interceptor ).openSession();
-
+		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
+		final SessionImplementor session = sessionFactory.withOptions().interceptor( interceptor ).openSession();
 		try {
 			session.getTransaction().begin();
-			if ( !jtaAllowTransactionAccessSetting.allowTransactionAccess(
-					sessionFactory(),
-					jpaComplianceTransactionSetting
+			if ( !options.allowJtaTransactionAccess.allowTransactionAccess(
+					sessionFactory,
+					options.jpaTransactionCompliance
 			) ) {
-				fail( "IllegalStateException should have been thrown." );
+				Assertions.fail( "IllegalStateException should have been thrown." );
 			}
 		}
 		catch (IllegalStateException ex) {
@@ -161,8 +166,8 @@ public class InterceptorTransactionTest extends BaseJpaOrNativeBootstrapFunction
 				TestingJtaPlatformImpl.INSTANCE.getTransactionManager().setRollbackOnly();
 			}
 			session.close();
-			assertEquals( JpaComplianceTransactionSetting.TRUE, jpaComplianceTransactionSetting );
-			return;  // EARLY RETURN
+			assertEquals( JpaComplianceTransactionSetting.TRUE, options.jpaTransactionCompliance );
+			return;
 		}
 
 		// Interceptor#afterTransactionBegin is never called when using JTA
@@ -188,11 +193,11 @@ public class InterceptorTransactionTest extends BaseJpaOrNativeBootstrapFunction
 	}
 
 	@Test
-	public void testJtaApi() throws Exception {
-
+	public void testJtaApi(SessionFactoryScope factoryScope) throws Exception {
 		final TransactionInterceptor interceptor = new TransactionInterceptor();
 
-		Session session = sessionFactory().withOptions().interceptor( interceptor ).openSession();
+		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
+		Session session = sessionFactory.withOptions().interceptor( interceptor ).openSession();
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 
@@ -211,16 +216,16 @@ public class InterceptorTransactionTest extends BaseJpaOrNativeBootstrapFunction
 
 		assertTrue( interceptor.beforeTransactionCompletionMethodCalled );
 		assertTrue( interceptor.afterTransactionCompletionMethodCalled );
-		if ( jtaAllowTransactionAccessSetting.allowTransactionAccess(
-				sessionFactory(),
-				jpaComplianceTransactionSetting
+		if ( options.allowJtaTransactionAccess.allowTransactionAccess(
+				sessionFactory,
+				options.jpaTransactionCompliance
 		) ) {
 			assertEquals( true, interceptor.beforeTransactionCompletionAssertionPassed );
 			assertEquals( true, interceptor.afterTransactionCompletionAssertionPassed );
 		}
 		else {
-			assertEquals( null, interceptor.beforeTransactionCompletionAssertionPassed );
-			assertEquals( null, interceptor.afterTransactionCompletionAssertionPassed );
+			assertNull( interceptor.beforeTransactionCompletionAssertionPassed );
+			assertNull( interceptor.afterTransactionCompletionAssertionPassed );
 		}
 
 		assertNull( interceptor.afterTransactionBeginAssertionPassed );
@@ -229,11 +234,12 @@ public class InterceptorTransactionTest extends BaseJpaOrNativeBootstrapFunction
 	}
 
 	@Test
-	public void testJtaApiWithSharedTransactionCoordinator() throws Exception {
-
+	public void testJtaApiWithSharedTransactionCoordinator(SessionFactoryScope factoryScope) throws Exception {
 		final TransactionInterceptor interceptor = new TransactionInterceptor();
 
-		Session originalSession = openSession();
+		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
+
+		Session originalSession = sessionFactory.openSession();
 
 		Session session =  originalSession.sessionWithOptions().connection().interceptor( interceptor ).openSession();
 
@@ -254,16 +260,16 @@ public class InterceptorTransactionTest extends BaseJpaOrNativeBootstrapFunction
 
 		assertTrue( interceptor.beforeTransactionCompletionMethodCalled );
 		assertTrue( interceptor.afterTransactionCompletionMethodCalled );
-		if ( jtaAllowTransactionAccessSetting.allowTransactionAccess(
-				sessionFactory(),
-				jpaComplianceTransactionSetting
+		if ( options.allowJtaTransactionAccess.allowTransactionAccess(
+				sessionFactory,
+				options.jpaTransactionCompliance
 		) ) {
 			assertEquals( true, interceptor.beforeTransactionCompletionAssertionPassed );
 			assertEquals( true, interceptor.afterTransactionCompletionAssertionPassed );
 		}
 		else {
-			assertEquals( null, interceptor.beforeTransactionCompletionAssertionPassed );
-			assertEquals( null, interceptor.afterTransactionCompletionAssertionPassed );
+			assertNull( interceptor.beforeTransactionCompletionAssertionPassed );
+			assertNull( interceptor.afterTransactionCompletionAssertionPassed );
 		}
 
 		assertNull( interceptor.afterTransactionBeginAssertionPassed );
@@ -305,7 +311,7 @@ public class InterceptorTransactionTest extends BaseJpaOrNativeBootstrapFunction
 		}
 	}
 
-	private class TransactionInterceptor implements Interceptor {
+	private static class TransactionInterceptor implements Interceptor {
 		private boolean afterTransactionBeginMethodCalled;
 		private Boolean afterTransactionBeginAssertionPassed;
 

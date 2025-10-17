@@ -4,27 +4,23 @@
  */
 package org.hibernate.orm.test.cdi.events.extended;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.BootstrapServiceRegistry;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.tool.schema.Action;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-
 import org.hibernate.orm.test.cdi.events.Monitor;
 import org.hibernate.orm.test.cdi.events.TheEntity;
-import org.hibernate.orm.test.cdi.testsupport.TestingExtendedBeanManager;
-import org.junit.Test;
+import org.hibernate.orm.test.cdi.events.TheListener;
+import org.hibernate.orm.test.cdi.testsupport.CdiContainer;
+import org.hibernate.orm.test.cdi.testsupport.CdiContainerLinker;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
+import static org.hibernate.cfg.ManagedBeanSettings.CDI_BEAN_MANAGER;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests support for CDI delaying access to the CDI container until
@@ -32,67 +28,35 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-public class InvalidExtendedCdiSupportTest extends BaseUnitTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@BaseUnitTest
+public class InvalidExtendedCdiSupportTest {
 	@Test
-	public void test() {
-		doTest( TestingExtendedBeanManager.create() );
-	}
+	@ExtendWith( Monitor.Resetter.class )
+	@CdiContainer(beanClasses = {Monitor.class, TheListener.class})
+	@ServiceRegistry(resolvableSettings = @ServiceRegistry.ResolvableSetting(
+			settingName = CDI_BEAN_MANAGER,
+			resolver = CdiContainerLinker.ExtendedResolver.class
+	))
+	@DomainModel(annotatedClasses = TheEntity.class)
+	@SessionFactory
+	public void test(SessionFactoryScope factoryScope) {
+		// The CDI bean should not be built immediately...
+		assertFalse( Monitor.wasInstantiated() );
+		assertEquals( 0, Monitor.currentCount() );
 
-	private void doTest(TestingExtendedBeanManager beanManager) {
-		Monitor.reset();
-
-		BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
-
-		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
-				.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
-				.applySetting( AvailableSettings.CDI_BEAN_MANAGER, beanManager )
-				.build();
-
-
-		final SessionFactoryImplementor sessionFactory;
-
-		try {
-			sessionFactory = (SessionFactoryImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( TheEntity.class )
-					.buildMetadata()
-					.getSessionFactoryBuilder()
-					.build();
-		}
-		catch ( Exception e ) {
-			StandardServiceRegistryBuilder.destroy( ssr );
-			throw e;
-		}
-
+		// this time (compared to the valid test) lets not build the CDI
+		// container and just let Hibernate try to use the uninitialized
+		// ExtendedBeanManager reference - this should blow up
 
 		try {
-			// The CDI bean should not be built immediately...
-			assertFalse( Monitor.wasInstantiated() );
-			assertEquals( 0, Monitor.currentCount() );
+			factoryScope.inTransaction( (session) -> {
+				session.persist( new TheEntity( 1 ) );
+			} );
 
-			// this time (compared to the valid test) lets not build the CDI
-			// container and just let Hibernate try to use the uninitialized
-			// ExtendedBeanManager reference
-
-			try {
-				inTransaction(
-						sessionFactory,
-						session -> session.persist( new TheEntity( 1 ) )
-				);
-
-				inTransaction(
-						sessionFactory,
-						session -> {
-							session.createQuery( "delete TheEntity" ).executeUpdate();
-						}
-				);
-
-				fail( "Expecting failure" );
-			}
-			catch (IllegalStateException expected) {
-			}
+			fail( "Expecting failure" );
 		}
-		finally {
-			sessionFactory.close();
+		catch (IllegalStateException expected) {
 		}
 	}
 }

@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-9983")
 @RequiresDialect( OracleDialect.class )
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsIdentityColumns.class )
@@ -33,11 +34,9 @@ import org.junit.jupiter.api.Test;
 public class SaveEntityTest {
 	@Test
 	public void testSave(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(s) -> {
-					s.persist( new Company() );
-				}
-		);
+		scope.inTransaction( (s) -> {
+			s.persist( new Company() );
+		} );
 	}
 
 	@Entity

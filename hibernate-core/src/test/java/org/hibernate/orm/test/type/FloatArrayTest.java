@@ -39,13 +39,15 @@ import jakarta.persistence.Query;
 import jakarta.persistence.Table;
 import jakarta.persistence.TypedQuery;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Jordan Gigov
  * @author Christian Beikov
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @BootstrapServiceRegistry(
 		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
@@ -65,11 +67,13 @@ public class FloatArrayTest {
 			em.persist( new TableWithFloatArrays( 3L, null ) );
 
 			Query q;
+			//noinspection deprecation
 			q = em.createNamedQuery( "TableWithFloatArrays.Native.insert" );
 			q.setParameter( "id", 4L );
 			q.setParameter( "data", new Float[]{ null, null, 0.0f } );
 			q.executeUpdate();
 
+			//noinspection deprecation
 			q = em.createNativeQuery( "INSERT INTO table_with_float_arrays(id, the_array) VALUES ( :id , :data )" );
 			q.setParameter( "id", 5L );
 			q.setParameter( "data", new Float[]{ null, null, 0.0f } );
@@ -79,7 +83,7 @@ public class FloatArrayTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@Test
@@ -87,13 +91,13 @@ public class FloatArrayTest {
 		scope.inSession( em -> {
 			TableWithFloatArrays tableRecord;
 			tableRecord = em.find( TableWithFloatArrays.class, 1L );
-			assertThat( tableRecord.getTheArray(), is( new Float[]{} ) );
+			assertThat( tableRecord.getTheArray() ).isEmpty();
 
 			tableRecord = em.find( TableWithFloatArrays.class, 2L );
-			assertThat( tableRecord.getTheArray(), is( new Float[]{ 512.5f, 112.0f, null, -0.5f } ) );
+			assertThat( tableRecord.getTheArray() ).isEqualTo( new Float[]{ 512.5f, 112.0f, null, -0.5f } );
 
 			tableRecord = em.find( TableWithFloatArrays.class, 3L );
-			assertThat( tableRecord.getTheArray(), is( (Object) null ) );
+			assertNull( tableRecord.getTheArray() );
 		} );
 	}
 
@@ -103,7 +107,7 @@ public class FloatArrayTest {
 			TypedQuery<TableWithFloatArrays> tq = em.createNamedQuery( "TableWithFloatArrays.JPQL.getById", TableWithFloatArrays.class );
 			tq.setParameter( "id", 2L );
 			TableWithFloatArrays tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getTheArray(), is( new Float[]{ 512.5f, 112.0f, null, -0.5f } ) );
+			assertThat( tableRecord.getTheArray() ).isEqualTo( new Float[]{ 512.5f, 112.0f, null, -0.5f } );
 		} );
 	}
 
@@ -117,7 +121,7 @@ public class FloatArrayTest {
 			TypedQuery<TableWithFloatArrays> tq = em.createNamedQuery( "TableWithFloatArrays.JPQL.getByData", TableWithFloatArrays.class );
 			tq.setParameter( "data", new Float[]{} );
 			TableWithFloatArrays tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getId(), is( 1L ) );
+			assertEquals( 1L, tableRecord.getId() );
 		} );
 	}
 
@@ -127,7 +131,7 @@ public class FloatArrayTest {
 			TypedQuery<TableWithFloatArrays> tq = em.createNamedQuery( "TableWithFloatArrays.Native.getById", TableWithFloatArrays.class );
 			tq.setParameter( "id", 2L );
 			TableWithFloatArrays tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getTheArray(), is( new Float[]{ 512.5f, 112.0f, null, -0.5f } ) );
+			assertThat( tableRecord.getTheArray() ).isEqualTo( new Float[]{ 512.5f, 112.0f, null, -0.5f } );
 		} );
 	}
 
@@ -151,7 +155,7 @@ public class FloatArrayTest {
 			);
 			tq.setParameter( "data", new Float[]{ 512.5f, 112.0f, null, -0.5f } );
 			TableWithFloatArrays tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getId(), is( 2L ) );
+			assertEquals( 2L, tableRecord.getId() );
 		} );
 	}
 
@@ -165,10 +169,10 @@ public class FloatArrayTest {
 			final Dialect dialect = em.getSessionFactory().getJdbcServices().getDialect();
 			if ( dialect instanceof HSQLDialect ) {
 				// In HSQL, float is a synonym for double
-				assertThat( tuple[1], is( new Double[] { 512.5d, 112.0d, null, -0.5d } ) );
+				assertThat( tuple[1] ).isEqualTo( new Double[] { 512.5d, 112.0d, null, -0.5d } );
 			}
 			else {
-				assertThat( tuple[1], is( new Float[] { 512.5f, 112.0f, null, -0.5f } ) );
+				assertThat( tuple[1] ).isEqualTo( new Float[] { 512.5f, 112.0f, null, -0.5f } );
 			}
 		} );
 	}

@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.mapping.type.java;
 
-import java.util.Comparator;
-
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -14,11 +12,11 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
+import java.util.Comparator;
 
-import static org.hamcrest.core.IsInstanceOf.instanceOf;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Andrea Boriero
@@ -29,22 +27,17 @@ public class JavaTypeRegistryTest {
 	public void testGetJavaTypeDescriptorRegistry() {
 		final TypeConfiguration typeConfiguration = new TypeConfiguration();
 		final JavaTypeRegistry registry = new JavaTypeRegistry( typeConfiguration );
-
-		final JavaType<String> descriptor = registry.getDescriptor( String.class );
-
-		assertThat( descriptor, instanceOf( StringJavaType.class ) );
+		final JavaType<String> descriptor = registry.findDescriptor( String.class );
+		assertThat( descriptor ).isInstanceOf( StringJavaType.class );
 	}
 
 	@Test
 	public void testRegisterJavaTypeDescriptorRegistry(){
 		final TypeConfiguration typeConfiguration = new TypeConfiguration();
 		final JavaTypeRegistry registry = new JavaTypeRegistry( typeConfiguration );
-
 		registry.addDescriptor( new CustomJavaType() );
-
-		final JavaType<?> descriptor = registry.getDescriptor( CustomType.class );
-
-		assertThat( descriptor, instanceOf( CustomJavaType.class ) );
+		final JavaType<?> descriptor = registry.findDescriptor( CustomType.class );
+		assertThat( descriptor ).isInstanceOf( CustomJavaType.class );
 	}
 
 	public static class CustomType {}

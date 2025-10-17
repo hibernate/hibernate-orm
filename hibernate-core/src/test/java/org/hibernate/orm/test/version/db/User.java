@@ -7,12 +7,10 @@ import java.sql.Timestamp;
 import java.util.Set;
 
 /**
- * Implementation of User.
- *
  * @author Steve Ebersole
  */
 public class User {
-	private Long id;
+	private Integer id;
 	private Timestamp timestamp;
 	private String username;
 	private Set groups;
@@ -21,15 +19,16 @@ public class User {
 	public User() {
 	}
 
-	public User(String username) {
+	public User(Integer id, String username) {
+		this.id = id;
 		this.username = username;
 	}
 
-	public Long getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 

@@ -43,12 +43,14 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.persistence.TypedQuery;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Christian Beikov
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @BootstrapServiceRegistry(
 		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
@@ -67,22 +69,23 @@ public class EnumSetTest {
 			em.persist( new TableWithEnumSet( 2L, EnumSet.of( MyEnum.VALUE1, MyEnum.VALUE2 ) ) );
 			em.persist( new TableWithEnumSet( 3L, null ) );
 
-			Query q;
-			q = em.createNamedQuery( "TableWithEnumSet.Native.insert" );
-			q.setParameter( "id", 4L );
-			q.setParameter( "data", EnumSet.of( MyEnum.VALUE2, MyEnum.VALUE1, MyEnum.VALUE3 ), enumSetType );
-			q.executeUpdate();
+			//noinspection deprecation,unchecked
+			em.createNamedQuery( "TableWithEnumSet.Native.insert" )
+					.setParameter( "id", 4L )
+					.setParameter( "data", EnumSet.of( MyEnum.VALUE2, MyEnum.VALUE1, MyEnum.VALUE3 ), enumSetType )
+					.executeUpdate();
 
-			q = em.createNativeQuery( "INSERT INTO table_with_enum_set(id, the_set) VALUES ( :id , :data )" );
-			q.setParameter( "id", 5L );
-			q.setParameter( "data", EnumSet.of( MyEnum.VALUE2, MyEnum.VALUE1, MyEnum.VALUE3 ), enumSetType );
-			q.executeUpdate();
+			//noinspection deprecation,unchecked
+			em.createNativeQuery( "INSERT INTO table_with_enum_set(id, the_set) VALUES ( :id , :data )" )
+					.setParameter( "id", 5L )
+					.setParameter( "data", EnumSet.of( MyEnum.VALUE2, MyEnum.VALUE1, MyEnum.VALUE3 ), enumSetType )
+					.executeUpdate();
 		} );
 	}
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@Test
@@ -90,13 +93,13 @@ public class EnumSetTest {
 		scope.inSession( em -> {
 			TableWithEnumSet tableRecord;
 			tableRecord = em.find( TableWithEnumSet.class, 1L );
-			assertThat( tableRecord.getTheSet(), is( new HashSet<>() ) );
+			assertThat( tableRecord.getTheSet() ).isEmpty();
 
 			tableRecord = em.find( TableWithEnumSet.class, 2L );
-			assertThat( tableRecord.getTheSet(), is( EnumSet.of( MyEnum.VALUE1, MyEnum.VALUE2 ) ) );
+			assertThat( tableRecord.getTheSet() ).isEqualTo( EnumSet.of( MyEnum.VALUE1, MyEnum.VALUE2 ) );
 
 			tableRecord = em.find( TableWithEnumSet.class, 3L );
-			assertThat( tableRecord.getTheSet(), is( (Object) null ) );
+			assertNull( tableRecord.getTheSet() );
 		} );
 	}
 
@@ -106,7 +109,7 @@ public class EnumSetTest {
 			TypedQuery<TableWithEnumSet> tq = em.createNamedQuery( "TableWithEnumSet.JPQL.getById", TableWithEnumSet.class );
 			tq.setParameter( "id", 2L );
 			TableWithEnumSet tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getTheSet(), is( EnumSet.of( MyEnum.VALUE1, MyEnum.VALUE2 ) ) );
+			assertThat( tableRecord.getTheSet() ).isEqualTo( EnumSet.of( MyEnum.VALUE1, MyEnum.VALUE2 ) );
 		} );
 	}
 
@@ -120,7 +123,7 @@ public class EnumSetTest {
 			TypedQuery<TableWithEnumSet> tq = em.createNamedQuery( "TableWithEnumSet.JPQL.getByData", TableWithEnumSet.class );
 			tq.setParameter( "data", new HashSet<>() );
 			TableWithEnumSet tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getId(), is( 1L ) );
+			assertEquals( 1L, tableRecord.getId() );
 		} );
 	}
 
@@ -130,7 +133,7 @@ public class EnumSetTest {
 			TypedQuery<TableWithEnumSet> tq = em.createNamedQuery( "TableWithEnumSet.Native.getById", TableWithEnumSet.class );
 			tq.setParameter( "id", 2L );
 			TableWithEnumSet tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getTheSet(), is( EnumSet.of( MyEnum.VALUE1, MyEnum.VALUE2 ) ) );
+			assertThat( tableRecord.getTheSet() ).isEqualTo( EnumSet.of( MyEnum.VALUE1, MyEnum.VALUE2 ) );
 		} );
 	}
 
@@ -154,7 +157,7 @@ public class EnumSetTest {
 			);
 			tq.setParameter( "data", EnumSet.of( MyEnum.VALUE1, MyEnum.VALUE2 ), enumSetType );
 			TableWithEnumSet tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getId(), is( 2L ) );
+			assertEquals( 2L, tableRecord.getId() );
 		} );
 	}
 

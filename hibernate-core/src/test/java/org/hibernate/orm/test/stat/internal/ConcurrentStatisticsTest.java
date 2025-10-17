@@ -8,22 +8,21 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.stat.CacheRegionStatistics;
 import org.hibernate.stat.internal.StatisticsImpl;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel
 @ServiceRegistry(settings = {
 		@Setting( name = Environment.CACHE_REGION_PREFIX, value = ConcurrentStatisticsTest.REGION_PREFIX),

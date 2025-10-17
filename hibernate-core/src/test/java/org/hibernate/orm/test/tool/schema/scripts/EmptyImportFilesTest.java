@@ -4,28 +4,25 @@
  */
 package org.hibernate.orm.test.tool.schema.scripts;
 
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
+
+import static org.hibernate.cfg.SchemaToolingSettings.JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE;
 
 /**
  * @author Vlad Mihalcea
  */
-@JiraKey(value = "HHH-13089")
-public class EmptyImportFilesTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	public void configure(Configuration cfg) {
-		cfg.setProperty(
-				Environment.HBM2DDL_IMPORT_FILES,
-				""
-		);
-	}
-
+@SuppressWarnings("JUnitMalformedDeclaration")
+@JiraKey("HHH-13089")
+@ServiceRegistry(settings = @Setting( name = JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE, value = ""))
+@SessionFactory
+public class EmptyImportFilesTest {
 	@Test
-	public void testImportFile() throws Exception {
+	public void testImportFile(SessionFactoryScope factoryScope) {
+		factoryScope.getSessionFactory();
 	}
 }

@@ -4,6 +4,22 @@
  */
 package org.hibernate.orm.test.version;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Version;
+import org.hibernate.HibernateException;
+import org.hibernate.annotations.TypeRegistration;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.usertype.UserVersionType;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,63 +27,34 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Objects;
 
-import org.hibernate.HibernateException;
-import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.usertype.UserVersionType;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
-import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Version;
-import org.hamcrest.CoreMatchers;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-
-@JiraKey( value = "HHH-15240")
-public class UserVersionTest extends BaseSessionFactoryFunctionalTest {
-
-	private static long versionValue;
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				TestEntity.class
-		};
-	}
-
-	@Override
-	protected void applyMetadataBuilder(MetadataBuilder metadataBuilder) {
-		metadataBuilder.applyBasicType(
-				new CustomVersionUserVersionType(),
-				CustomVersion.class.getName()
-		);
+@SuppressWarnings("JUnitMalformedDeclaration")
+@JiraKey("HHH-15240")
+@DomainModel(annotatedClasses = UserVersionTest.TestEntity.class)
+@SessionFactory
+public class UserVersionTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testIt() {
-		inTransaction(
-				session -> {
-					TestEntity testEntity = new TestEntity( 1 );
-					session.persist( testEntity );
-				}
-		);
+	public void testIt(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction(session -> {
+			session.persist( new TestEntity( 1 ) );
+		} );
 
-		inTransaction(
-				session -> {
-					TestEntity testEntity = session.get( TestEntity.class, 1 );
-					assertThat( testEntity.getVersion().getRev(), CoreMatchers.is( versionValue ) );
-				}
-		);
+		factoryScope.inTransaction( session -> {
+			TestEntity testEntity = session.find( TestEntity.class, 1 );
+			assertThat( testEntity.getVersion().getRev() ).isEqualTo( CustomVersionUserVersionType.versionValue );
+		} );
 	}
 
 
 	@Entity(name = "TestEntity")
+	@TypeRegistration(basicClass = CustomVersion.class, userType =  CustomVersionUserVersionType.class)
 	public static class TestEntity {
 		@Id
 		public int id;
@@ -123,6 +110,7 @@ public class UserVersionTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	public static class CustomVersionUserVersionType implements UserVersionType<CustomVersion> {
+		public static long versionValue;
 
 		@Override
 		public int getSqlType() {

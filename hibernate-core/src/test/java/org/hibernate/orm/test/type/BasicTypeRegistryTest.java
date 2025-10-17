@@ -12,6 +12,7 @@ import java.sql.Types;
 import java.util.UUID;
 
 import org.hibernate.HibernateException;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
@@ -26,34 +27,33 @@ import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * @author Steve Ebersole
  */
-public class BasicTypeRegistryTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class BasicTypeRegistryTest {
 	@Test
 	public void testOverriding() {
 		TypeConfiguration typeConfiguration = new TypeConfiguration();
 		BasicTypeRegistry registry = typeConfiguration.getBasicTypeRegistry();
 
 		BasicType<?> uuidBinaryRegistration = registry.getRegisteredType( "uuid-binary" );
-		assertTrue( uuidBinaryRegistration.getJavaTypeDescriptor() instanceof UUIDJavaType );
-		assertTrue( uuidBinaryRegistration.getJdbcType() instanceof BinaryJdbcType );
+		assertInstanceOf( UUIDJavaType.class, uuidBinaryRegistration.getJavaTypeDescriptor() );
+		assertInstanceOf( BinaryJdbcType.class, uuidBinaryRegistration.getJdbcType() );
 
 		final BasicType<?> uuidRegistration = registry.getRegisteredType( UUID.class.getName() );
-		assertTrue( uuidRegistration.getJavaTypeDescriptor() instanceof UUIDJavaType );
-		assertTrue( uuidRegistration.getJdbcType() instanceof ObjectJdbcType );
+		assertInstanceOf( UUIDJavaType.class, uuidRegistration.getJavaTypeDescriptor() );
+		assertInstanceOf( ObjectJdbcType.class, uuidRegistration.getJdbcType() );
 
 		final BasicType<?> override = new BasicTypeImpl<>( UUIDJavaType.INSTANCE, CharJdbcType.INSTANCE );
 		registry.register( override, UUID.class.getName() );

@@ -6,8 +6,6 @@ package org.hibernate.orm.test.cdi.general.hibernatesearch.standard;
 
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.se.SeContainer;
-import jakarta.enterprise.inject.se.SeContainerInitializer;
-
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
@@ -15,15 +13,8 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.orm.test.cdi.general.hibernatesearch.delayed.HibernateSearchDelayedCdiSupportTest;
-import org.hibernate.orm.test.cdi.general.hibernatesearch.extended.HibernateSearchExtendedCdiSupportTest;
-import org.hibernate.tool.schema.Action;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-
-import org.hibernate.orm.test.cdi.general.hibernatesearch.Monitor;
 import org.hibernate.orm.test.cdi.general.hibernatesearch.HibernateSearchSimulatedIntegrator;
+import org.hibernate.orm.test.cdi.general.hibernatesearch.Monitor;
 import org.hibernate.orm.test.cdi.general.hibernatesearch.TheAlternativeNamedApplicationScopedBeanImpl;
 import org.hibernate.orm.test.cdi.general.hibernatesearch.TheAlternativeNamedDependentBeanImpl;
 import org.hibernate.orm.test.cdi.general.hibernatesearch.TheApplicationScopedBean;
@@ -37,9 +28,17 @@ import org.hibernate.orm.test.cdi.general.hibernatesearch.TheNamedDependentBean;
 import org.hibernate.orm.test.cdi.general.hibernatesearch.TheNestedDependentBean;
 import org.hibernate.orm.test.cdi.general.hibernatesearch.TheNonHibernateBeanConsumer;
 import org.hibernate.orm.test.cdi.general.hibernatesearch.TheSharedApplicationScopedBean;
-import org.junit.Test;
+import org.hibernate.orm.test.cdi.general.hibernatesearch.delayed.HibernateSearchDelayedCdiSupportTest;
+import org.hibernate.orm.test.cdi.general.hibernatesearch.extended.HibernateSearchExtendedCdiSupportTest;
+import org.hibernate.orm.test.cdi.testsupport.CdiContainer;
+import org.hibernate.orm.test.cdi.testsupport.CdiContainerScope;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.hibernate.tool.schema.Action;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * Tests support for requesting CDI beans in Hibernate Search
@@ -60,29 +59,30 @@ import static org.junit.Assert.assertEquals;
  *
  * @see HibernateSearchSimulatedIntegrator
  */
-public class HibernateSearchStandardCdiSupportTest extends BaseUnitTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+public class HibernateSearchStandardCdiSupportTest {
 	@Test
-	public void testIt() {
-		Monitor.reset();
+	@ExtendWith( Monitor.Resetter.class )
+	@CdiContainer(beanClasses = {
+			TheApplicationScopedBean.class,
+			TheNamedApplicationScopedBean.class,
+			TheMainNamedApplicationScopedBeanImpl.class,
+			TheAlternativeNamedApplicationScopedBeanImpl.class,
+			TheSharedApplicationScopedBean.class,
+			TheDependentBean.class,
+			TheNamedDependentBean.class,
+			TheMainNamedDependentBeanImpl.class,
+			TheAlternativeNamedDependentBeanImpl.class,
+			TheNestedDependentBean.class,
+			TheNonHibernateBeanConsumer.class
+	})
+	public void testIt(CdiContainerScope cdiContainerScope) {
+		assertFalse( cdiContainerScope.isContainerAvailable() );
 
-		final TheFallbackBeanInstanceProducer fallbackBeanInstanceProducer =
-				new TheFallbackBeanInstanceProducer();
-		final HibernateSearchSimulatedIntegrator beanConsumingIntegrator =
-				new HibernateSearchSimulatedIntegrator( fallbackBeanInstanceProducer );
+		final TheFallbackBeanInstanceProducer fallbackBeanInstanceProducer = new TheFallbackBeanInstanceProducer();
+		final HibernateSearchSimulatedIntegrator beanConsumingIntegrator = new HibernateSearchSimulatedIntegrator( fallbackBeanInstanceProducer );
 
-		final SeContainerInitializer cdiInitializer = SeContainerInitializer.newInstance()
-				.disableDiscovery()
-				.addBeanClasses( TheApplicationScopedBean.class )
-				.addBeanClasses( TheNamedApplicationScopedBean.class, TheMainNamedApplicationScopedBeanImpl.class,
-						TheAlternativeNamedApplicationScopedBeanImpl.class )
-				.addBeanClasses( TheSharedApplicationScopedBean.class )
-				.addBeanClasses( TheDependentBean.class )
-				.addBeanClasses( TheNamedDependentBean.class, TheMainNamedDependentBeanImpl.class,
-						TheAlternativeNamedDependentBeanImpl.class )
-				.addBeanClasses( TheNestedDependentBean.class )
-				.addBeanClasses( TheNonHibernateBeanConsumer.class );
-
-		try (final SeContainer cdiContainer = cdiInitializer.initialize()) {
+		try (SeContainer cdiContainer = cdiContainerScope.getContainer()) {
 			// Simulate CDI bean consumers outside of Hibernate ORM
 			Instance<TheNonHibernateBeanConsumer> nonHibernateBeanConsumerInstance =
 					cdiContainer.getBeanManager().createInstance().select( TheNonHibernateBeanConsumer.class );

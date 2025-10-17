@@ -29,6 +29,7 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import org.jboss.logging.Logger;
@@ -36,32 +37,34 @@ import org.jboss.logging.Logger;
 /**
  * @author Vlad Mihalcea
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-12738")
-@Jpa(
-		annotatedClasses = {
-				ForeignGeneratorResourceLocalTest.Contract.class,
-				ForeignGeneratorResourceLocalTest.Customer.class,
-				ForeignGeneratorResourceLocalTest.CustomerContractRelation.class
-		}
-)
+@Jpa( annotatedClasses = {
+		ForeignGeneratorResourceLocalTest.Contract.class,
+		ForeignGeneratorResourceLocalTest.Customer.class,
+		ForeignGeneratorResourceLocalTest.CustomerContractRelation.class
+})
 public class ForeignGeneratorResourceLocalTest {
 	private static final Logger log = Logger.getLogger( ForeignGeneratorResourceLocalTest.class );
 
+	@AfterEach
+	void dropTestData(EntityManagerFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
+
 	@Test
 	public void baseline(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				(entityManager) -> {
-					final Contract contract = new Contract();
-					entityManager.persist( contract );
+		scope.inTransaction( (entityManager) -> {
+			final Contract contract = new Contract();
+			entityManager.persist( contract );
 
-					final Customer customer = new Customer();
-					entityManager.persist( customer );
+			final Customer customer = new Customer();
+			entityManager.persist( customer );
 
-					final CustomerContractRelation relation = new CustomerContractRelation();
-					relation.setContractId( customer.getId() );
-					customer.addContractRelation( relation );
-				}
-		);
+			final CustomerContractRelation relation = new CustomerContractRelation();
+			relation.setContractId( customer.getId() );
+			customer.addContractRelation( relation );
+		} );
 	}
 
 	@Test
@@ -70,43 +73,35 @@ public class ForeignGeneratorResourceLocalTest {
 	}
 
 	private void doIt(EntityManagerFactoryScope scope, boolean explicitFlush) {
-		final Long contractId = scope.fromTransaction(
-				(entityManager) -> {
-					Contract contract = new Contract();
+		final Long contractId = scope.fromTransaction( (entityManager) -> {
+			var contract = new Contract();
+			entityManager.persist( contract );
+			return contract.getId();
+		} );
 
-					entityManager.persist( contract );
-					return contract.getId();
-				}
-		);
+		final Long customerId = scope.fromTransaction( (entityManager) -> {
+			var customer = new Customer();
+			entityManager.persist( customer );
+			return customer.getId();
+		} );
 
-		final Long customerId = scope.fromTransaction(
-				(entityManager) -> {
-					Customer customer = new Customer();
+		scope.inTransaction( (entityManager) -> {
+			final String qry = "SELECT c " +
+					"FROM Customer c " +
+					" LEFT JOIN FETCH c.contractRelations " +
+					" WHERE c.id = :customerId";
+			final Customer customer = entityManager.createQuery( qry, Customer.class )
+					.setParameter( "customerId", customerId )
+					.getSingleResult();
 
-					entityManager.persist( customer );
-					return customer.getId();
-				}
-		);
+			final CustomerContractRelation relation = new CustomerContractRelation();
+			relation.setContractId( contractId );
+			customer.addContractRelation( relation );
 
-		scope.inTransaction(
-				(entityManager) -> {
-					final String qry = "SELECT c " +
-							"FROM Customer c " +
-							" LEFT JOIN FETCH c.contractRelations " +
-							" WHERE c.id = :customerId";
-					final Customer customer = entityManager.createQuery( qry, Customer.class )
-							.setParameter( "customerId", customerId )
-							.getSingleResult();
-
-					final CustomerContractRelation relation = new CustomerContractRelation();
-					relation.setContractId( contractId );
-					customer.addContractRelation( relation );
-
-					if ( explicitFlush ) {
-						entityManager.flush();
-					}
-				}
-		);
+			if ( explicitFlush ) {
+				entityManager.flush();
+			}
+		} );
 	}
 
 	@Test

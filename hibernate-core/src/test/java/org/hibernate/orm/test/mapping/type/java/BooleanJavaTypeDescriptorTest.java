@@ -17,12 +17,16 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 public class BooleanJavaTypeDescriptorTest {
-	private BooleanJavaType underTest = new BooleanJavaType();
+	private final BooleanJavaType underTest = new BooleanJavaType();
 
 	@Test
 	@JiraKey( "HHH-17275" )
@@ -31,7 +35,7 @@ public class BooleanJavaTypeDescriptorTest {
 		// when
 		String checkCondition = underTest.getCheckCondition("is_active", VarcharJdbcType.INSTANCE, new BooleanXConverter(), new AnyDialect());
 		// then
-		assertEquals("is_active in ('X') or is_active is null", checkCondition);
+		assertEquals( "is_active in ('X') or is_active is null", checkCondition );
 	}
 
 	@Test
@@ -40,7 +44,7 @@ public class BooleanJavaTypeDescriptorTest {
 		// when
 		String checkCondition = underTest.getCheckCondition("is_active", VarcharJdbcType.INSTANCE, new TrueFalseConverter(), new AnyDialect());
 		// then
-		assertEquals("is_active in ('F','T')", checkCondition);
+		assertEquals( "is_active in ('F','T')", checkCondition );
 	}
 
 	@Test
@@ -49,7 +53,7 @@ public class BooleanJavaTypeDescriptorTest {
 		// when
 		String checkCondition = underTest.getCheckCondition("is_active", IntegerJdbcType.INSTANCE, new OneNullBooleanConverter(), new AnyDialect());
 		// then
-		assertEquals("is_active in (1) or is_active is null", checkCondition);
+		assertEquals( "is_active in (1) or is_active is null", checkCondition );
 	}
 
 	@Test

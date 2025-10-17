@@ -22,7 +22,7 @@ public class LongArrayDescriptorTest extends AbstractDescriptorTest<Long[]> {
 
 	@Override
 	protected Data<Long[]> getTestData() {
-		return new Data<Long[]>( original, copy, different );
+		return new Data<>( original, copy, different );
 	}
 
 	@Override

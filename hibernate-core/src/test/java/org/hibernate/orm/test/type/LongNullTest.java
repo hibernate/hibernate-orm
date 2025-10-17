@@ -13,32 +13,19 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.SqlTypes;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = LongNullTest.Foo.class)
 @SessionFactory
 public class LongNullTest {
-
-	@Entity
-	public static final class Foo {
-		@Id
-		@GeneratedValue
-		private Long id;
-
-		@JdbcTypeCode(SqlTypes.LONG32NVARCHAR)
-		@Column
-		private String field = null;
-
-		@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
-		@Column
-		private String nfield = null;
-
-		@JdbcTypeCode(SqlTypes.LONG32VARBINARY)
-		@Column
-		private byte[] bfield = null;
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
@@ -68,5 +55,24 @@ public class LongNullTest {
 		assertEquals( expected.field, actual.field );
 		assertEquals( expected.nfield, actual.nfield );
 		assertArrayEquals( expected.bfield, actual.bfield );
+	}
+
+	@Entity
+	public static final class Foo {
+		@Id
+		@GeneratedValue
+		private Long id;
+
+		@JdbcTypeCode(SqlTypes.LONG32NVARCHAR)
+		@Column
+		private String field = null;
+
+		@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
+		@Column
+		private String nfield = null;
+
+		@JdbcTypeCode(SqlTypes.LONG32VARBINARY)
+		@Column
+		private byte[] bfield = null;
 	}
 }

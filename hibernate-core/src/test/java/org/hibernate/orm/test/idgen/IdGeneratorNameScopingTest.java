@@ -18,12 +18,11 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 /**
  * Tests for scoping of generator names
@@ -48,11 +47,11 @@ public class IdGeneratorNameScopingTest {
 		// this will fail because both
 		try {
 			buildMetadata( true );
-			fail();
+			Assertions.fail();
 		}
 		catch (Exception e) {
-			assertThat( e, instanceOf( IllegalArgumentException.class ) );
-			assertThat( e.getMessage(), startsWith( "Duplicate generator name" ) );
+			assertThat( e ).isInstanceOf( IllegalArgumentException.class );
+			assertThat( e.getMessage() ).startsWith( "Duplicate generator name" );
 		}
 	}
 

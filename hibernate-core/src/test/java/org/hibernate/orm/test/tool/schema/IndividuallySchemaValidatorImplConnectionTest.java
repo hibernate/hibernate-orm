@@ -18,10 +18,10 @@ import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionPro
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.boot.JdbcConnectionAccessImpl;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
@@ -35,9 +35,9 @@ import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaValidator;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -48,28 +48,23 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * @author Vlad Mihalcea
  */
 @JiraKey(value = "HHH-11864")
 @RequiresDialect(H2Dialect.class)
-public class IndividuallySchemaValidatorImplConnectionTest extends BaseUnitTestCase {
-
+@BaseUnitTest
+public class IndividuallySchemaValidatorImplConnectionTest {
 	private StandardServiceRegistry ssr;
-
 	protected HibernateSchemaManagementTool tool;
-
 	private Map<String,Object> configurationValues;
-
 	private ExecutionOptions executionOptions;
-
 	private DriverManagerConnectionProvider connectionProvider;
-
 	private Connection connection;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		connectionProvider =
 				new DriverManagerConnectionProvider();
@@ -103,13 +98,12 @@ public class IndividuallySchemaValidatorImplConnectionTest extends BaseUnitTestC
 		};
 	}
 
-	@After
+	@AfterEach
 	public void tearsDown() {
 		try {
 			connectionProvider.closeConnection( connection );
 		}
 		catch (SQLException e) {
-			log.error( e.getMessage() );
 		}
 		connectionProvider.stop();
 		StandardServiceRegistryBuilder.destroy( ssr );

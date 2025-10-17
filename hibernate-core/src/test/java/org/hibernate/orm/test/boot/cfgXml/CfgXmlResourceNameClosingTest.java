@@ -4,25 +4,22 @@
  */
 package org.hibernate.orm.test.boot.cfgXml;
 
+import org.hibernate.boot.cfgxml.internal.ConfigLoader;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.boot.cfgxml.internal.ConfigLoader;
-import org.hibernate.boot.registry.BootstrapServiceRegistry;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-
-import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test that makes sure the input stream inside {@link ConfigLoader#loadConfigXmlResource(String)}
@@ -30,31 +27,29 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
+@BaseUnitTest
 @JiraKey( value = "HHH-10120" )
-public class CfgXmlResourceNameClosingTest extends BaseUnitTestCase {
-	private static class InputStreamWrapper extends InputStream {
-		private final InputStream wrapped;
-		private boolean wasClosed = false;
-
-		public InputStreamWrapper(InputStream wrapped) {
-			this.wrapped = wrapped;
+public class CfgXmlResourceNameClosingTest {
+	@Test
+	public void testStreamClosing() {
+		final var classLoaderService = new LocalClassLoaderServiceImpl();
+		final var bootstrapServiceRegistry = new BootstrapServiceRegistryBuilder()
+				.applyClassLoaderService( classLoaderService )
+				.build();
+		final var serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder( bootstrapServiceRegistry )
+				.configure( "org/hibernate/orm/test/boot/cfgXml/hibernate.cfg.xml" )
+				.build();
+		try {
+			assertThat( classLoaderService.openedStreams ).hasSize( 1 );
+			for ( InputStreamWrapper openedStream : classLoaderService.openedStreams ) {
+				assertTrue( openedStream.wasClosed );
+			}
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 
-		@Override
-		public int read() throws IOException {
-			return wrapped.read();
-		}
-
-		@Override
-		public void close() throws IOException {
-			wrapped.close();
-			wasClosed = true;
-			super.close();
-		}
-
-		public boolean wasClosed() {
-			return wasClosed;
-		}
+		assertTrue( classLoaderService.stopped );
 	}
 
 	private static class LocalClassLoaderServiceImpl extends ClassLoaderServiceImpl {
@@ -85,25 +80,30 @@ public class CfgXmlResourceNameClosingTest extends BaseUnitTestCase {
 		}
 	}
 
-	LocalClassLoaderServiceImpl classLoaderService = new LocalClassLoaderServiceImpl();
+	private static class InputStreamWrapper extends InputStream {
+		private final InputStream wrapped;
+		private boolean wasClosed = false;
 
-	@Test
-	public void testStreamClosing() {
-		BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder()
-				.applyClassLoaderService( classLoaderService )
-				.build();
-		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
-				.configure( "org/hibernate/orm/test/boot/cfgXml/hibernate.cfg.xml" )
-				.build();
-		try {
-			for ( InputStreamWrapper openedStream : classLoaderService.openedStreams ) {
-				assertTrue( openedStream.wasClosed );
-			}
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
+		public InputStreamWrapper(InputStream wrapped) {
+			this.wrapped = wrapped;
 		}
 
-		assertTrue( classLoaderService.stopped );
+		@Override
+		public int read() throws IOException {
+			return wrapped.read();
+		}
+
+		@Override
+		public void close() throws IOException {
+			wrapped.close();
+			wasClosed = true;
+			super.close();
+		}
+
+		public boolean wasClosed() {
+			return wasClosed;
+		}
 	}
+
+
 }

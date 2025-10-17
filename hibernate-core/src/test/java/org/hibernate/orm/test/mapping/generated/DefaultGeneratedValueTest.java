@@ -46,10 +46,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test for the generation of column values using different value generation strategies.
@@ -123,7 +123,7 @@ public class DefaultGeneratedValueTest {
 		assertEquals( "Bob", created.name );
 
 		scope.inTransaction( (s) -> {
-			final TheEntity theEntity = s.get( TheEntity.class, 1 );
+			final TheEntity theEntity = s.find( TheEntity.class, 1 );
 			assertNotNull( theEntity.createdDate );
 			assertNotNull( theEntity.alwaysDate );
 			assertNotNull( theEntity.vmCreatedDate );
@@ -163,15 +163,15 @@ public class DefaultGeneratedValueTest {
 		clock.tick();
 
 		scope.inTransaction( (s) -> {
-			final TheEntity theEntity = s.get( TheEntity.class, 1 );
+			final TheEntity theEntity = s.find( TheEntity.class, 1 );
 			theEntity.lastName = "Smith";
 		} );
 
 		scope.inTransaction( (s) -> {
-			final TheEntity theEntity = s.get( TheEntity.class, 1 );
+			final TheEntity theEntity = s.find( TheEntity.class, 1 );
 
-			assertEquals( "Creation timestamp should not change on update", created.vmCreatedSqlTimestamp, theEntity.vmCreatedSqlTimestamp );
-			assertTrue( "Update timestamp should have changed due to update", theEntity.updated.after( created.updated ) );
+			assertEquals( created.vmCreatedSqlTimestamp, theEntity.vmCreatedSqlTimestamp, "Creation timestamp should not change on update" );
+			assertTrue( theEntity.updated.after( created.updated ), "Update timestamp should have changed due to update" );
 		} );
 	}
 

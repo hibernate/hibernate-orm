@@ -6,18 +6,13 @@ package org.hibernate.orm.test.mapping.generated;
 
 import org.hibernate.dialect.OracleDialect;
 
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
 
 /**
  * @author Steve Ebersole
  */
 @RequiresDialect( value = OracleDialect.class )
+@DomainModel(xmlMappings = "org/hibernate/orm/test/mapping/generated/GeneratedPropertyEntity.hbm.xml")
 public class TriggerGeneratedValuesWithoutCachingTest extends AbstractGeneratedPropertyTest {
-	public final String[] getMappings() {
-		return new String[] { "mapping/generated/GeneratedPropertyEntity.hbm.xml" };
-	}
-
-	public String getCacheConcurrencyStrategy() {
-		return null;
-	}
 }

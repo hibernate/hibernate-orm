@@ -5,9 +5,17 @@
 package org.hibernate.sql.exec.internal;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.LockOptions;
+import org.hibernate.Locking;
+import org.hibernate.dialect.lock.spi.LockTimeoutType;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.exec.internal.lock.CollectionLockingAction;
+import org.hibernate.sql.exec.internal.lock.FollowOnLockingAction;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcLockStrategy;
 import org.hibernate.sql.exec.spi.JdbcOperationQuery;
@@ -15,6 +23,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.exec.spi.JdbcSelectWithActionsBuilder;
 import org.hibernate.sql.exec.spi.LoadedValuesCollector;
 import org.hibernate.sql.exec.spi.PostAction;
 import org.hibernate.sql.exec.spi.PreAction;
@@ -35,9 +44,12 @@ import java.util.Set;
 public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 	private final JdbcOperationQuerySelect primaryOperation;
 
-	private final LoadedValuesCollector loadedValuesCollector;
-	private final PreAction[] preActions;
-	private final PostAction[] postActions;
+	// Used by Hibernate Reactive
+	protected final LoadedValuesCollector loadedValuesCollector;
+	// Used by Hibernate Reactive
+	protected final PreAction[] preActions;
+	// Used by Hibernate Reactive
+	protected final PostAction[] postActions;
 
 	public JdbcSelectWithActions(
 			JdbcOperationQuerySelect primaryOperation,
@@ -149,24 +161,84 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 		return primaryOperation.isCompatibleWith( jdbcParameterBindings, queryOptions );
 	}
 
-	public static class Builder {
-		private final JdbcOperationQuerySelect primaryAction;
-
+	public static class Builder implements JdbcSelectWithActionsBuilder {
+		private JdbcOperationQuerySelect primaryAction;
 		private LoadedValuesCollector loadedValuesCollector;
 		protected List<PreAction> preActions;
 		protected List<PostAction> postActions;
+		protected LockTimeoutType lockTimeoutType;
+		protected LockingSupport lockingSupport;
+		protected LockOptions lockOptions;
+		protected QuerySpec lockingTarget;
+		protected LockingClauseStrategy lockingClauseStrategy;
+		boolean isFollonOnLockStrategy;
 
-		public Builder(JdbcOperationQuerySelect primaryAction) {
-			this.primaryAction = primaryAction;
+		@Override
+		public Builder setPrimaryAction(JdbcSelect primaryAction){
+			assert primaryAction instanceof JdbcOperationQuerySelect;
+			this.primaryAction = (JdbcOperationQuerySelect) primaryAction;
+			return this;
 		}
 
 		@SuppressWarnings("UnusedReturnValue")
+		@Override
 		public Builder setLoadedValuesCollector(LoadedValuesCollector loadedValuesCollector) {
 			this.loadedValuesCollector = loadedValuesCollector;
 			return this;
 		}
 
+		@Override
+		public Builder setLockTimeoutType(LockTimeoutType lockTimeoutType){
+			this.lockTimeoutType = lockTimeoutType;
+			return this;
+		}
+
+		@Override
+		public Builder setLockingSupport(LockingSupport lockingSupport){
+			this.lockingSupport = lockingSupport;
+			return this;
+		}
+
+		@Override
+		public Builder setLockOptions(LockOptions lockOptions){
+			this.lockOptions = lockOptions;
+			return this;
+		}
+
+		@Override
+		public Builder setLockingTarget(QuerySpec lockingTarget){
+			this.lockingTarget = lockingTarget;
+			return this;
+		}
+
+		@Override
+		public Builder setLockingClauseStrategy(LockingClauseStrategy lockingClauseStrategy){
+			this.lockingClauseStrategy = lockingClauseStrategy;
+			return this;
+		}
+
+		@Override
+		public Builder setIsFollowOnLockStrategy(boolean isFollonOnLockStrategy){
+			this.isFollonOnLockStrategy = isFollonOnLockStrategy;
+			return this;
+		}
+
+		@Override
 		public JdbcSelect build() {
+			if ( lockTimeoutType == LockTimeoutType.CONNECTION ) {
+				addSecondaryActionPair(
+						new LockTimeoutHandler(
+								lockOptions.getTimeout(),
+								lockingSupport.getConnectionLockTimeoutStrategy()
+						)
+				);
+			}
+			if ( isFollonOnLockStrategy ) {
+				FollowOnLockingAction.apply( lockOptions, lockingTarget, lockingClauseStrategy, this );
+			}
+			else if ( lockOptions.getScope() == Locking.Scope.INCLUDE_COLLECTIONS ) {
+				CollectionLockingAction.apply( lockOptions, lockingTarget, this );
+			}
 			if ( preActions == null && postActions == null ) {
 				assert loadedValuesCollector == null;
 				return primaryAction;
@@ -182,6 +254,7 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 		 *
 		 * @return {@code this}, for method chaining.
 		 */
+		@Override
 		public Builder appendPreAction(PreAction... actions) {
 			if ( preActions == null ) {
 				preActions = new ArrayList<>();
@@ -195,6 +268,7 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 		 *
 		 * @return {@code this}, for method chaining.
 		 */
+		@Override
 		public Builder prependPreAction(PreAction... actions) {
 			if ( preActions == null ) {
 				preActions = new ArrayList<>();
@@ -209,6 +283,7 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 		 *
 		 * @return {@code this}, for method chaining.
 		 */
+		@Override
 		public Builder appendPostAction(PostAction... actions) {
 			if ( postActions == null ) {
 				postActions = new ArrayList<>();
@@ -222,6 +297,7 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 		 *
 		 * @return {@code this}, for method chaining.
 		 */
+		@Override
 		public Builder prependPostAction(PostAction... actions) {
 			if ( postActions == null ) {
 				postActions = new ArrayList<>();
@@ -243,6 +319,7 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 		 *
 		 * @return {@code this}, for method chaining.
 		 */
+		@Override
 		public Builder addSecondaryActionPair(SecondaryAction action) {
 			return addSecondaryActionPair( (PreAction) action, (PostAction) action );
 		}
@@ -255,24 +332,27 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 		 *
 		 * @return {@code this}, for method chaining.
 		 */
+		@Override
 		public Builder addSecondaryActionPair(PreAction preAction, PostAction postAction) {
 			prependPreAction( preAction );
 			appendPostAction( postAction );
 			return this;
 		}
 
-		private static PreAction[] toPreActionArray(List<PreAction> actions) {
-			if ( CollectionHelper.isEmpty( actions ) ) {
-				return null;
-			}
-			return actions.toArray( new PreAction[0] );
+		// Used by Hibernate Reactive
+		static PreAction[] toPreActionArray(List<PreAction> actions) {
+		if ( CollectionHelper.isEmpty( actions ) ) {
+			return null;
 		}
+		return actions.toArray( new PreAction[0] );
+	}
+	// Used by Hibernate Reactive
+	static PostAction[] toPostActionArray(List<PostAction> actions) {
+		if ( CollectionHelper.isEmpty( actions ) ) {
+			return null;
+		}
+		return actions.toArray( new PostAction[0] );
+	}
 
-		private static PostAction[] toPostActionArray(List<PostAction> actions) {
-			if ( CollectionHelper.isEmpty( actions ) ) {
-				return null;
-			}
-			return actions.toArray( new PostAction[0] );
-		}
 	}
 }

@@ -2201,7 +2201,8 @@ public abstract class AbstractEntityPersister
 		return getDialect().getLockingStrategy( this, lockMode, lockScope );
 	}
 
-	private LockingStrategy getLocker(LockMode lockMode, Locking.Scope lockScope) {
+	// Used by Hibernate Reactive
+	protected LockingStrategy getLocker(LockMode lockMode, Locking.Scope lockScope) {
 		return lockScope != Locking.Scope.ROOT_ONLY
 				// be sure to not use the cached form if any form of extended locking is requested
 				? generateLocker( lockMode, lockScope )

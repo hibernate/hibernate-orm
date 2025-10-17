@@ -18,8 +18,8 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.exec.internal.JdbcSelectWithActions;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcSelectWithActionsBuilder;
 import org.hibernate.sql.exec.spi.LoadedValuesCollector;
 import org.hibernate.sql.exec.spi.PostAction;
 import org.hibernate.sql.exec.spi.StatementAccess;
@@ -40,11 +40,15 @@ import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
  * @author Steve Ebersole
  */
 public class CollectionLockingAction implements PostAction {
-	private final LoadedValuesCollectorImpl loadedValuesCollector;
-	private final LockMode lockMode;
-	private final Timeout lockTimeout;
+	// Used by Hibernate Reactive
+	protected final LoadedValuesCollectorImpl loadedValuesCollector;
+	// Used by Hibernate Reactive
+	protected final LockMode lockMode;
+	// Used by Hibernate Reactive
+	protected final Timeout lockTimeout;
 
-	private CollectionLockingAction(
+	// Used by Hibernate Reactive
+	protected CollectionLockingAction(
 			LoadedValuesCollectorImpl loadedValuesCollector,
 			LockMode lockMode,
 			Timeout lockTimeout) {
@@ -56,7 +60,7 @@ public class CollectionLockingAction implements PostAction {
 	public static void apply(
 			LockOptions lockOptions,
 			QuerySpec lockingTarget,
-			JdbcSelectWithActions.Builder jdbcSelectBuilder) {
+			JdbcSelectWithActionsBuilder jdbcSelectBuilder) {
 		assert lockOptions.getScope() == Locking.Scope.INCLUDE_COLLECTIONS;
 
 		final var loadedValuesCollector = resolveLoadedValuesCollector( lockingTarget.getFromClause() );
@@ -78,6 +82,11 @@ public class CollectionLockingAction implements PostAction {
 			StatementAccess jdbcStatementAccess,
 			Connection jdbcConnection,
 			ExecutionContext executionContext) {
+		performPostAction( executionContext );
+	}
+
+	// Used by Hibernate Reactive
+	protected void performPostAction(ExecutionContext executionContext) {
 		LockingHelper.logLoadedValues( loadedValuesCollector );
 
 		final var session = executionContext.getSession();
@@ -130,7 +139,8 @@ public class CollectionLockingAction implements PostAction {
 		}
 	}
 
-	private static LoadedValuesCollectorImpl resolveLoadedValuesCollector(FromClause fromClause) {
+	// Used by Hibernate Reactive
+	protected static LoadedValuesCollectorImpl resolveLoadedValuesCollector(FromClause fromClause) {
 		final var fromClauseRoots = fromClause.getRoots();
 		if ( fromClauseRoots.size() == 1 ) {
 			return new LoadedValuesCollectorImpl(
@@ -144,7 +154,8 @@ public class CollectionLockingAction implements PostAction {
 		}
 	}
 
-	private static Map<EntityMappingType, List<EntityKey>> segmentLoadedValues(LoadedValuesCollector loadedValuesCollector) {
+	// Used by Hibernate Reactive
+	protected static Map<EntityMappingType, List<EntityKey>> segmentLoadedValues(LoadedValuesCollector loadedValuesCollector) {
 		final Map<EntityMappingType, List<EntityKey>> map = new IdentityHashMap<>();
 		LockingHelper.segmentLoadedValues( loadedValuesCollector.getCollectedRootEntities(), map );
 		LockingHelper.segmentLoadedValues( loadedValuesCollector.getCollectedNonRootEntities(), map );
@@ -155,7 +166,8 @@ public class CollectionLockingAction implements PostAction {
 		return map;
 	}
 
-	private static class LoadedValuesCollectorImpl implements LoadedValuesCollector {
+	// Used by Hibernate Reactive
+	protected static class LoadedValuesCollectorImpl implements LoadedValuesCollector {
 		private final List<NavigablePath> rootPaths;
 
 		private List<LoadedEntityRegistration> rootEntitiesToLock;

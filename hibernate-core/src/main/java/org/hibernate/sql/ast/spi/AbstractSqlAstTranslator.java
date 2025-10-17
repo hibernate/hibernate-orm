@@ -14,7 +14,6 @@ import org.hibernate.Timeouts;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
-import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -177,11 +176,7 @@ import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
 import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.internal.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
-import org.hibernate.sql.exec.internal.JdbcSelectWithActions;
-import org.hibernate.sql.exec.internal.LockTimeoutHandler;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
-import org.hibernate.sql.exec.internal.lock.CollectionLockingAction;
-import org.hibernate.sql.exec.internal.lock.FollowOnLockingAction;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcLockStrategy;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -893,26 +888,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		final LockingSupport lockingSupport = getDialect().getLockingSupport();
 		final LockingSupport.Metadata lockingSupportMetadata = lockingSupport.getMetadata();
-
-		final JdbcSelectWithActions.Builder builder = new JdbcSelectWithActions.Builder( jdbcSelect );
-
-		final LockTimeoutType lockTimeoutType = lockingSupportMetadata.getLockTimeoutType( lockOptions.getTimeout() );
-		if ( lockTimeoutType == LockTimeoutType.CONNECTION ) {
-			builder.addSecondaryActionPair( new LockTimeoutHandler(
-					lockOptions.getTimeout(),
-					lockingSupport.getConnectionLockTimeoutStrategy()
-			) );
-		}
-
 		final LockStrategy lockStrategy = determineLockingStrategy( lockingTarget, lockOptions.getFollowOnStrategy() );
-		if ( lockStrategy == LockStrategy.FOLLOW_ON ) {
-			FollowOnLockingAction.apply( lockOptions, lockingTarget, lockingClauseStrategy, builder );
-		}
-		else if ( lockOptions.getScope() == Locking.Scope.INCLUDE_COLLECTIONS ) {
-			CollectionLockingAction.apply( lockOptions, lockingTarget, builder );
-		}
 
-		return builder.build();
+		return getSessionFactory().getJdbcSelectWithActionsBuilder()
+				.setPrimaryAction( jdbcSelect )
+				.setLockTimeoutType( lockingSupportMetadata.getLockTimeoutType( lockOptions.getTimeout() ) )
+				.setLockingSupport( lockingSupport )
+				.setLockOptions( lockOptions )
+				.setLockingTarget( lockingTarget )
+				.setLockingClauseStrategy( lockingClauseStrategy )
+				.setIsFollowOnLockStrategy( lockStrategy == LockStrategy.FOLLOW_ON )
+				.build();
 	}
 
 	private JdbcValuesMappingProducer buildJdbcValuesMappingProducer(SelectStatement selectStatement) {

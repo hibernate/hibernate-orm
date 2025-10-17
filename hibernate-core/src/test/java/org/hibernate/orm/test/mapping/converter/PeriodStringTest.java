@@ -11,38 +11,31 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class PeriodStringTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(annotatedClasses = {PeriodStringTest.Event.class})
+public class PeriodStringTest {
 
 	private Period period = Period.ofYears(1).plusMonths(2).plusDays(3);
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Event.class
-		};
-	}
-
 	@Test
-	public void testLifecycle() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Event event = new Event(period);
 			entityManager.persist(event);
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Event event = entityManager.createQuery("from Event", Event.class).getSingleResult();
 			assertEquals(period, event.getSpan());
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::basic-jpa-convert-period-string-converter-immutability-plan-example[]
 			Event event = entityManager.createQuery("from Event", Event.class).getSingleResult();
 			event.setSpan(Period

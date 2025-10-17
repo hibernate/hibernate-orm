@@ -2,11 +2,12 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-import java.util.function.Function
 
 import org.asciidoctor.gradle.jvm.AsciidoctorTask
 import org.asciidoctor.gradle.jvm.pdf.AsciidoctorPdfTask
 import org.ysb33r.grolifant.api.core.jvm.ExecutionMode
+
+import java.util.function.Function
 
 buildscript {
 	configurations.configureEach {
@@ -714,16 +715,14 @@ settingsDocumentation {
 def generateSettingsDocTask = tasks.named( "generateSettingsDoc" ) {
 	dependsOn aggregateJavadocsTask
 
-	doFirst {
-		def javadoc = aggregateJavadocsTask.get()
-		def javaLanguageVersion = javadoc.javadocTool.present
-				? javadoc.javadocTool.get().metadata.languageVersion
-				: JavaLanguageVersion.of( JavaVersion.current().name )
+    def javadoc = aggregateJavadocsTask.get()
+    def javaLanguageVersion = javadoc.javadocTool.present
+            ? javadoc.javadocTool.get().metadata.languageVersion
+            : JavaLanguageVersion.of( JavaVersion.current().name )
 
-		if ( javaLanguageVersion.asInt() > 11 ) {
-			println "Aggregated Javadocs was built using a JDK newer than version 11; generating the settings User Guide fragment will not succeed"
-		}
-	}
+    if ( javaLanguageVersion.asInt() > 11 ) {
+        println "Aggregated Javadocs was built using a JDK newer than version 11; generating the settings User Guide fragment will not succeed"
+    }
 }
 
 def renderUserGuideHtmlTask = tasks.register( 'renderUserGuideHtml', AsciidoctorTask ) { task ->
@@ -969,7 +968,8 @@ def buildDocsForPublishingTask = tasks.register( 'buildDocsForPublishing' ) { ta
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-tasks.withType(AsciidoctorTask).configureEach {
+tasks.withType( AsciidoctorTask ).configureEach {
+    notCompatibleWithConfigurationCache( "AsciiDoctor v4 is not compatible with CC yet, remove with stable release of v5" )
     baseDirFollowsSourceDir()
     outputOptions {
         separateOutputDirs = false
@@ -981,7 +981,8 @@ tasks.withType(AsciidoctorTask).configureEach {
     dependsOn 'unpackTheme'
 }
 
-tasks.withType(AsciidoctorPdfTask).configureEach {
+tasks.withType( AsciidoctorPdfTask ).configureEach {
+    notCompatibleWithConfigurationCache( "AsciiDoctor v4 is not compatible with CC yet, remove with stable release of v5" )
     // See https://docs.asciidoctor.org/gradle-plugin/latest/common-task-configuration/#choosing-an-execution-mode-for-asciidoctorj
     executionMode = ExecutionMode.JAVA_EXEC
 

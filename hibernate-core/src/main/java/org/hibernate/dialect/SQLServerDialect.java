@@ -347,6 +347,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public int getDoublePrecision() {
+		return 38;
+	}
+
+	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 		// Need to bind as java.sql.Timestamp because reading OffsetDateTime from a "datetime2" column fails

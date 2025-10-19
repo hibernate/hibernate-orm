@@ -4,46 +4,46 @@
  */
 package org.hibernate.orm.test.batch;
 
-import java.lang.reflect.Field;
-
-import org.hibernate.SessionEventListener;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.jdbc.batch.spi.Batch;
-import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
-import org.hibernate.engine.spi.SessionImplementor;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.SessionEventListener;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.jdbc.batch.spi.Batch;
+import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Field;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Shawn Clowater
  * @author Steve Ebersole
  */
-@JiraKey( value = "HHH-7689" )
-public class BatchingBatchFailureTest extends BaseCoreFunctionalTestCase implements SessionEventListener {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { User.class };
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		// explicitly enable batching
-		configuration.setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, 5 );
-		// and disable in-vm nullability checking (so we can force in-db not-null constraint violations)
-		configuration.setProperty( AvailableSettings.CHECK_NULLABILITY, false );
-	}
+@JiraKey(value = "HHH-7689")
+@DomainModel(
+		annotatedClasses = {
+				BatchingBatchFailureTest.User.class
+		}
+)
+@SessionFactory
+@ServiceRegistry(
+		settings = {
+				@Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "5"),
+				@Setting(name = AvailableSettings.CHECK_NULLABILITY, value = "false")
+		}
+)
+public class BatchingBatchFailureTest implements SessionEventListener {
 
 	SessionImplementor session;
 	Batch batch;
@@ -56,13 +56,13 @@ public class BatchingBatchFailureTest extends BaseCoreFunctionalTestCase impleme
 			batch = (Batch) field.get( session.getJdbcCoordinator() );
 		}
 		catch (Exception e) {
-			throw new RuntimeException(e);
+			throw new RuntimeException( e );
 		}
 	}
 
 	@Test
-	public void testBasicInsertion() {
-		session = sessionFactory().withOptions().eventListeners( this ).openSession();
+	public void testBasicInsertion(SessionFactoryScope scope) {
+		session = scope.getSessionFactory().withOptions().eventListeners( this ).openSession();
 		session.getTransaction().begin();
 
 		try {
@@ -87,7 +87,8 @@ public class BatchingBatchFailureTest extends BaseCoreFunctionalTestCase impleme
 				}
 				else {
 //					//check to see that there aren't any statements queued up (this can be an issue if using SavePoints)
-					final PreparedStatementDetails statementDetails = batch.getStatementGroup().getSingleStatementDetails();
+					final PreparedStatementDetails statementDetails = batch.getStatementGroup()
+							.getSingleStatementDetails();
 					assertThat( statementDetails.getStatement() ).isNull();
 				}
 			}
@@ -101,8 +102,8 @@ public class BatchingBatchFailureTest extends BaseCoreFunctionalTestCase impleme
 		}
 	}
 
-	@Entity( name = "User" )
-	@Table( name = "`USER`" )
+	@Entity(name = "User")
+	@Table(name = "`USER`")
 	public static class User {
 		private Integer id;
 		private String name;
@@ -124,7 +125,7 @@ public class BatchingBatchFailureTest extends BaseCoreFunctionalTestCase impleme
 			this.id = id;
 		}
 
-		@Column( nullable = false )
+		@Column(nullable = false)
 		public String getName() {
 			return name;
 		}

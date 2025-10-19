@@ -218,8 +218,8 @@ def aggregateJavadocsTask = tasks.register( "javadoc", Javadoc ) {
 				? javadocTool.get().metadata.languageVersion
 				: JavaLanguageVersion.of( JavaVersion.current().name )
 
-		if ( javaLanguageVersion.asInt() != 21 ) {
-			println "Aggregated Javadocs are bing built` using a JDK different than version 21: \n" +
+		if ( javaLanguageVersion.asInt() != 25 ) {
+			println "Aggregated Javadocs are bing built` using a JDK different than version 25: \n" +
 					"\t* `stylesheet.css` might not be compatible\n" +
 					"\t* generating the User Guide settings fragment might not succeed"
 		}
@@ -249,13 +249,13 @@ asciidoctorj {
             'doc-main-dir': project(':documentation').layout.projectDirectory.dir('src').dir("main").asFile.absolutePath,
             'doc-generated-content-dir': project(':documentation').layout.buildDirectory.dir('asciidoc').get()
                     .dir("fragments").asFile.absolutePath,
-            'theme-main-dir': rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+            'theme-main-dir': project.layout.buildDirectory.dir("unpacked-theme").get()
                     .dir("hibernate-asciidoctor-theme").dir("asciidoc").asFile.absolutePath,
             stylesdir: "css",
             'iconfont-remote': false,
             'iconfont-name': 'font-awesome/css/solid',
             docinfo: 'shared,private',
-            docinfodir: rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+            docinfodir: project.layout.buildDirectory.dir("unpacked-theme").get()
                     .dir("hibernate-asciidoctor-theme").dir("asciidoc").dir("docinfo").dir('hibernate').asFile.absolutePath,
             'html.meta.project-key': 'orm',
             'html-outdated-content-project-key': 'orm',
@@ -282,7 +282,7 @@ def renderTopicalLoggingGuideHtmlTask = tasks.register( 'renderTopicalLoggingGui
         from( 'src/main/asciidoc/topical/' ) {
             include '**/images/**'
         }
-        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+        from(project.layout.buildDirectory.dir("unpacked-theme").get()
                 .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
             include 'css/**'
             include 'images/**'
@@ -304,7 +304,7 @@ def renderTopicalRegistriesGuideHtmlTask = tasks.register( 'renderTopicalRegistr
         from( 'src/main/asciidoc/topical/' ) {
             include '**/images/**'
         }
-        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+        from(project.layout.buildDirectory.dir("unpacked-theme").get()
                 .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
             include 'css/**'
             include 'images/**'
@@ -327,7 +327,7 @@ def renderTopicalGuideHtmlTask = tasks.register( 'renderTopicalGuideHtml', Ascii
 		from( 'src/main/asciidoc/topical/' ) {
 			include '**/images/**'
 		}
-        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+        from(project.layout.buildDirectory.dir("unpacked-theme").get()
                 .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
             include 'css/**'
             include 'images/**'
@@ -376,7 +376,7 @@ def renderGettingStartedGuideHtmlTask = tasks.register( 'renderGettingStartedGui
 	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
 
 	resources {
-        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+        from(project.layout.buildDirectory.dir("unpacked-theme").get()
                 .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
             include 'css/**'
             include 'images/**'
@@ -425,7 +425,7 @@ def renderIntroductionHtmlTask = tasks.register( 'renderIntroductionHtml', Ascii
 		from( 'src/main/asciidoc/introduction/' ) {
 			include 'images/**'
 		}
-        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+        from(project.layout.buildDirectory.dir("unpacked-theme").get()
                 .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
             include 'css/**'
             include 'images/**'
@@ -484,7 +484,7 @@ def renderQueryLanguageGuideHtmlTask = tasks.register( 'renderQueryLanguageGuide
 		from( 'src/main/asciidoc/querylanguage/' ) {
 			include 'images/**'
 		}
-        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+        from(project.layout.buildDirectory.dir("unpacked-theme").get()
                 .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
             include 'css/**'
             include 'images/**'
@@ -531,7 +531,7 @@ def renderRepositoriesHtmlTask = tasks.register( 'renderRepositoriesHtml', Ascii
 		from( 'src/main/asciidoc/repositories/' ) {
 			include 'images/**'
 		}
-        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+        from(project.layout.buildDirectory.dir("unpacked-theme").get()
                 .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
             include 'css/**'
             include 'images/**'
@@ -747,7 +747,7 @@ def renderUserGuideHtmlTask = tasks.register( 'renderUserGuideHtml', Asciidoctor
 		from( 'src/main/asciidoc/userguide/' ) {
 			include 'images/**'
 		}
-        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+        from(project.layout.buildDirectory.dir("unpacked-theme").get()
                 .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
             include 'css/**'
             include 'images/**'
@@ -781,7 +781,7 @@ def renderIntegrationGuideHtmlTask = tasks.register( "renderIntegrationGuideHtml
 		from( 'src/main/asciidoc/integrationguide/' ) {
 			include 'images/**'
 		}
-        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+        from(project.layout.buildDirectory.dir("unpacked-theme").get()
                 .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
             include 'css/**'
             include 'images/**'
@@ -833,7 +833,7 @@ def renderWhatsNewTask = tasks.register( "renderWhatsNew", AsciidoctorTask ) {
 	outputDir = project.layout.buildDirectory.dir( 'asciidoc/whats-new' )
 
 	resources {
-        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+        from(project.layout.buildDirectory.dir("unpacked-theme").get()
                 .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
             include 'css/**'
             include 'images/**'
@@ -876,7 +876,7 @@ def renderMigrationGuideTask = tasks.register( "renderMigrationGuide", Asciidoct
 	outputDir = project.layout.buildDirectory.dir( 'asciidoc/migration-guide' )
 
 	resources {
-        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+        from(project.layout.buildDirectory.dir("unpacked-theme").get()
                 .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
             include 'css/**'
             include 'images/**'
@@ -900,7 +900,7 @@ def renderDialectGuideTask = tasks.register( 'renderDialectGuide', AsciidoctorTa
     attributes 'generated-report-dir': layout.buildDirectory.dir( 'orm/generated' ).get()
 
     resources {
-        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+        from(project.layout.buildDirectory.dir("unpacked-theme").get()
                 .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
             include 'css/**'
             include 'images/**'
@@ -925,7 +925,7 @@ def renderLoggingReportTask = tasks.register( 'renderLoggingReport', Asciidoctor
 	task.outputDir = project.layout.buildDirectory.dir( 'asciidoc/logging' )
 
 	task.resources {
-        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+        from(project.layout.buildDirectory.dir("unpacked-theme").get()
                 .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
             include 'css/**'
             include 'images/**'
@@ -986,7 +986,7 @@ tasks.withType(AsciidoctorPdfTask).configureEach {
     executionMode = ExecutionMode.JAVA_EXEC
 
     asciidoctorj {
-        requires rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+        requires project.layout.buildDirectory.dir("unpacked-theme").get()
                 .dir("hibernate-asciidoctor-theme").dir("asciidoc").dir("theme").file("hibernate.rb").asFile.absolutePath
     }
 

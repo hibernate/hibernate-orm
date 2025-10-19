@@ -14,12 +14,8 @@ dependencies {
     themezip 'org.hibernate.infra:hibernate-asciidoctor-theme:5.1.1.Final@zip'
 }
 
-tasks.register('unpackTheme', Copy) {
-    def unpackDir = rootProject.layout.buildDirectory.dir("unpacked-theme")
-
-    onlyIf {
-        !unpackDir.get().asFile.exists()
-    }
+def unpackThemeTask = tasks.register('unpackTheme', Copy) {
+    def unpackDir = project.layout.buildDirectory.dir("unpacked-theme")
     destinationDir = unpackDir.get().asFile
 
     def zipFile = configurations.themezip.singleFile
@@ -33,6 +29,7 @@ tasks.withType(Javadoc).configureEach {
 
     inputs.property "ormVersion", project.extensions.ormBuildDetails.hibernateVersion
     inputs.property "currentYear", currentYear
+    inputs.property "theme-location", unpackThemeTask.get().destinationDir
 
     // exclude any generated sources and internal packages
     exclude 'org/hibernate/grammars'
@@ -44,8 +41,8 @@ tasks.withType(Javadoc).configureEach {
         windowTitle = "Hibernate Javadocs ($project.name)"
         docTitle = "Hibernate Javadocs ($project.name : $project.version)"
         // Pick the styles for the JDK that is used to "build" the Javadocs:
-        stylesheetFile = rootProject.layout.buildDirectory.dir("unpacked-theme").get()
-                .dir("hibernate-asciidoctor-theme").dir("javadoc").dir("jdk21").file("stylesheet.css").asFile
+        def rootThemeDir = project.layout.buildDirectory.dir("unpacked-theme").get().dir("hibernate-asciidoctor-theme").dir("javadoc").dir("jdk21")
+        stylesheetFile = rootThemeDir.file("stylesheet.css").asFile
         bottom = "Copyright &copy; 2001-$currentYear <a href=\"https://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
 
         // The javadoc folder contains cached versions of the respective element-list files to avoid release issues when servers are down

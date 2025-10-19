@@ -11,41 +11,37 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Vlad Mihalcea
  */
-public class ManyToOneTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				Phone.class,
-		};
-	}
+@Jpa(
+		annotatedClasses = {
+				ManyToOneTest.Person.class,
+				ManyToOneTest.Phone.class,
+		}
+)
+public class ManyToOneTest {
 
 	@Test
-	public void testLifecycle() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			//tag::associations-many-to-one-lifecycle-example[]
 			Person person = new Person();
-			entityManager.persist(person);
+			entityManager.persist( person );
 
-			Phone phone = new Phone("123-456-7890");
-			phone.setPerson(person);
-			entityManager.persist(phone);
+			Phone phone = new Phone( "123-456-7890" );
+			phone.setPerson( person );
+			entityManager.persist( phone );
 
 			entityManager.flush();
-			phone.setPerson(null);
+			phone.setPerson( null );
 			//end::associations-many-to-one-lifecycle-example[]
-		});
+		} );
 	}
 
 	//tag::associations-many-to-one-example[]
@@ -78,7 +74,7 @@ public class ManyToOneTest extends BaseEntityManagerFunctionalTestCase {
 
 		//Getters and setters are omitted for brevity
 
-	//end::associations-many-to-one-example[]
+		//end::associations-many-to-one-example[]
 
 		public Phone() {
 		}
@@ -102,7 +98,7 @@ public class ManyToOneTest extends BaseEntityManagerFunctionalTestCase {
 		public void setPerson(Person person) {
 			this.person = person;
 		}
-	//tag::associations-many-to-one-example[]
+		//tag::associations-many-to-one-example[]
 	}
 	//end::associations-many-to-one-example[]
 }

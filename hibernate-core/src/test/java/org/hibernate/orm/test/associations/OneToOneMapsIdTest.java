@@ -8,54 +8,50 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
-
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Vlad Mihalcea
  */
-public class OneToOneMapsIdTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				PersonDetails.class
-		};
-	}
+@Jpa(
+		annotatedClasses = {
+				OneToOneMapsIdTest.Person.class,
+				OneToOneMapsIdTest.PersonDetails.class
+		}
+)
+public class OneToOneMapsIdTest {
 
 	@Test
-	public void testLifecycle() {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
 		//tag::identifiers-derived-mapsid-persist-example[]
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Person person = new Person("ABC-123");
-			person.setId(1L);
-			entityManager.persist(person);
+		scope.inTransaction( entityManager -> {
+			Person person = new Person( "ABC-123" );
+			person.setId( 1L );
+			entityManager.persist( person );
 
 			PersonDetails personDetails = new PersonDetails();
-			personDetails.setNickName("John Doe");
-			personDetails.setPerson(person);
+			personDetails.setNickName( "John Doe" );
+			personDetails.setPerson( person );
 
-			entityManager.persist(personDetails);
-		});
+			entityManager.persist( personDetails );
+		} );
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			PersonDetails personDetails = entityManager.find(PersonDetails.class, 1L);
+		scope.inTransaction( entityManager -> {
+			PersonDetails personDetails = entityManager.find( PersonDetails.class, 1L );
 
-			assertEquals("John Doe", personDetails.getNickName());
-		});
+			assertThat( personDetails.getNickName() ).isEqualTo( "John Doe" );
+		} );
 		//end::identifiers-derived-mapsid-persist-example[]
 	}
 
 	//tag::identifiers-derived-mapsid[]
 	@Entity(name = "Person")
-	public static class Person  {
+	public static class Person {
 
 		@Id
 		private Long id;
@@ -63,7 +59,8 @@ public class OneToOneMapsIdTest extends BaseEntityManagerFunctionalTestCase {
 		@NaturalId
 		private String registrationNumber;
 
-		public Person() {}
+		public Person() {
+		}
 
 		public Person(String registrationNumber) {
 			this.registrationNumber = registrationNumber;
@@ -83,11 +80,11 @@ public class OneToOneMapsIdTest extends BaseEntityManagerFunctionalTestCase {
 		public String getRegistrationNumber() {
 			return registrationNumber;
 		}
-	//tag::identifiers-derived-mapsid[]
+		//tag::identifiers-derived-mapsid[]
 	}
 
 	@Entity(name = "PersonDetails")
-	public static class PersonDetails  {
+	public static class PersonDetails {
 
 		@Id
 		private Long id;
@@ -116,7 +113,7 @@ public class OneToOneMapsIdTest extends BaseEntityManagerFunctionalTestCase {
 		public void setPerson(Person person) {
 			this.person = person;
 		}
-	//tag::identifiers-derived-mapsid[]
+		//tag::identifiers-derived-mapsid[]
 	}
 	//end::identifiers-derived-mapsid[]
 

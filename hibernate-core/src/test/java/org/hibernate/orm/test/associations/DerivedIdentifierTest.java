@@ -9,46 +9,43 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
-
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Vlad Mihalcea
  */
-public class DerivedIdentifierTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				PersonDetails.class
-		};
-	}
+@Jpa(
+		annotatedClasses = {
+				DerivedIdentifierTest.Person.class,
+				DerivedIdentifierTest.PersonDetails.class
+		}
+)
+public class DerivedIdentifierTest {
 
 	@Test
-	public void testLifecycle() {
-		Long personId = doInJPA(this::entityManagerFactory, entityManager -> {
-			Person person = new Person("ABC-123");
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		Long personId = scope.fromTransaction( entityManager -> {
+			Person person = new Person( "ABC-123" );
 
 			PersonDetails details = new PersonDetails();
-			details.setPerson(person);
+			details.setPerson( person );
 
-			entityManager.persist(person);
-			entityManager.persist(details);
+			entityManager.persist( person );
+			entityManager.persist( details );
 
 			return person.getId();
-		});
+		} );
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			PersonDetails details = entityManager.find(PersonDetails.class, personId);
-			Assert.assertNotNull(details);
-		});
+		scope.inTransaction( entityManager -> {
+			PersonDetails details = entityManager.find( PersonDetails.class, personId );
+			assertThat( details ).isNotNull();
+		} );
 	}
 
 	@Entity(name = "Person")

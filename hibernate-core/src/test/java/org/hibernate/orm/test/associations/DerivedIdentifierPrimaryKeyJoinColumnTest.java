@@ -9,45 +9,42 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
-
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Vlad Mihalcea
  */
-public class DerivedIdentifierPrimaryKeyJoinColumnTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				PersonDetails.class
-		};
-	}
+@Jpa(
+		annotatedClasses = {
+				DerivedIdentifierPrimaryKeyJoinColumnTest.Person.class,
+				DerivedIdentifierPrimaryKeyJoinColumnTest.PersonDetails.class
+		}
+)
+public class DerivedIdentifierPrimaryKeyJoinColumnTest {
 
 	@Test
-	public void testLifecycle() {
-		Long personId = doInJPA(this::entityManagerFactory, entityManager -> {
-			Person person = new Person("ABC-123");
-			entityManager.persist(person);
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		Long personId = scope.fromTransaction( entityManager -> {
+			Person person = new Person( "ABC-123" );
+			entityManager.persist( person );
 
 			PersonDetails details = new PersonDetails();
-			details.setPerson(person);
+			details.setPerson( person );
 
-			entityManager.persist(details);
+			entityManager.persist( details );
 			return person.getId();
-		});
+		} );
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			PersonDetails details = entityManager.find(PersonDetails.class, personId);
-			Assert.assertNotNull(details);
-		});
+		scope.inTransaction( entityManager -> {
+			PersonDetails details = entityManager.find( PersonDetails.class, personId );
+			assertThat( details ).isNotNull();
+		} );
 	}
 
 	@Entity(name = "Person")

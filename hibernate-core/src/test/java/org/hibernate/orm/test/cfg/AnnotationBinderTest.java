@@ -10,31 +10,31 @@ import jakarta.persistence.PrimaryKeyJoinColumn;
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static junit.framework.TestCase.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Dominique Toupin
  */
 @JiraKey(value = "HHH-10456")
+@BaseUnitTest
 public class AnnotationBinderTest {
 
 	@Test
 	public void testInvalidPrimaryKeyJoinColumn() {
-		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
-			try {
+		AnnotationException annotationException = assertThrows( AnnotationException.class, () -> {
+			try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
 				new MetadataSources( serviceRegistry )
 						.addAnnotatedClass( InvalidPrimaryKeyJoinColumnAnnotationEntity.class )
 						.buildMetadata();
-				fail();
 			}
-			catch (AnnotationException ae) {
-				// expected!
-			}
-		}
+		} );
+		assertThat( annotationException.getMessage() ).contains( "InvalidPrimaryKeyJoinColumnAnnotationEntity" );
 	}
 
 	@Entity

@@ -16,7 +16,7 @@ import org.hibernate.testing.orm.junit.SettingProvider;
 		settingProviders = {
 				@SettingProvider(
 						settingName = AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY,
-						provider = GlobalTemporaryTableMutationStrategyIdTest.QueryMultyTableMutationStrategyProvider.class
+						provider = InlineMutationStrategyIdTest.QueryMultyTableMutationStrategyProvider.class
 				)
 		}
 )

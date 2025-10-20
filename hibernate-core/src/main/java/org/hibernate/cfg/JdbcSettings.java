@@ -8,6 +8,7 @@ import java.util.Calendar;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.env.JdbcMetadataOnBoot;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.query.Query;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -541,17 +542,19 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	/**
 	 * Whether access to JDBC {@linkplain java.sql.DatabaseMetaData metadata} is allowed during bootstrap.
 	 * <p/>
-	 * Typically, Hibernate accesses this metadata to understand the capabilities of the underlying
-	 * database to help minimize needed configuration. Disabling this access means that only explicit
-	 * settings are used. At a minimum, the Dialect to use must be specified using either the {@value #DIALECT}
-	 * or {@value JdbcSettings#JAKARTA_HBM2DDL_DB_NAME} setting. When the Dialect to use is specified in
-	 * this manner it is generally a good idea to specify the
-	 * {@linkplain JdbcSettings#JAKARTA_HBM2DDL_DB_VERSION database version} as well - Dialects use the
-	 * version to configure themselves.
+	 * Allowable options are defined by {@linkplain JdbcMetadataOnBoot}.  For configuration, any of the
+	 * following forms are accepted: <ul>
+	 *     <li>an instance of {@linkplain JdbcMetadataOnBoot}</li>
+	 *     <li>case-insensitive {@linkplain JdbcMetadataOnBoot} option name</li>
+	 *     <li>for legacy purposes, {@code true} or {@code false} -
+	 *     		{@code true} is mapped to {@linkplain JdbcMetadataOnBoot#ALLOW} and
+	 *     		{@code false} is mapped to {@linkplain JdbcMetadataOnBoot#DISALLOW}
+	 *     </li>
+	 * </ul>
 	 *
-	 * @apiNote The specified Dialect may also provide defaults into the "explicit" settings.
+	 * @settingDefault {@code allow}
 	 *
-	 * @settingDefault {@code true}
+	 * @see JdbcMetadataOnBoot
 	 *
 	 * @since 6.5
 	 */

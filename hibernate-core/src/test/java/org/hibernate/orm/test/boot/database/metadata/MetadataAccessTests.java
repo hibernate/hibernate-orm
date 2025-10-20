@@ -37,6 +37,7 @@ import org.hibernate.engine.jdbc.dialect.internal.DialectFactoryImpl;
 import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfoSource;
+import org.hibernate.engine.jdbc.env.JdbcMetadataOnBoot;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -45,6 +46,7 @@ import org.hibernate.testing.env.TestingDatabaseInfo;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,6 +55,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
@@ -202,6 +208,24 @@ public class MetadataAccessTests {
 			assertThat( expected.getCause() ).isInstanceOf( HibernateException.class );
 			final HibernateException cause = (HibernateException) expected.getCause();
 			assertThat( cause.getMessage() ).startsWith( "Unable to determine Dialect without JDBC metadata" );
+		}
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-18286")
+	@RequiresDialect(value = H2Dialect.class, comment = "Unit test - limit to default job")
+	void testDontIgnoreMetadataAccessFailureWhenConnectionCantBeObtained() {
+		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder();
+		registryBuilder.clearSettings();
+
+		registryBuilder.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, JdbcMetadataOnBoot.REQUIRE );
+
+		try (StandardServiceRegistry registry = registryBuilder.build()) {
+			assertThatExceptionOfType( ServiceException.class )
+					.isThrownBy( () -> registry.getService( JdbcEnvironment.class ) )
+					.havingCause()
+					.isInstanceOf( HibernateException.class )
+					.withMessage( "Unable to access JDBC metadata" );
 		}
 	}
 

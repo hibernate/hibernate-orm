@@ -14,16 +14,16 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.GetterFieldImpl;
 import org.hibernate.property.access.spi.GetterMethodImpl;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
-
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 
 /**
@@ -31,15 +31,16 @@ import static org.junit.Assert.fail;
  *
  * @author Hardy Ferentschik
  */
+@BaseUnitTest
 public class AccessMappingTest {
 	private ServiceRegistry serviceRegistry;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		if ( serviceRegistry != null ) {
 			ServiceRegistryBuilder.destroy( serviceRegistry );
@@ -51,18 +52,11 @@ public class AccessMappingTest {
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( Course1.class );
 		cfg.addAnnotatedClass( Student.class );
-		SessionFactory sf = null;
-		try {
-			sf = cfg.buildSessionFactory( serviceRegistry );
+		try (SessionFactory sf = cfg.buildSessionFactory( serviceRegistry )) {
 			fail( "@Id and @OneToMany are not placed consistently in test entities. SessionFactory creation should fail." );
 		}
 		catch (MappingException | JdbcTypeRecommendationException e) {
 			// success
-		}
-		finally {
-			if ( sf != null ) {
-				sf.close();
-			}
 		}
 	}
 
@@ -72,20 +66,16 @@ public class AccessMappingTest {
 		Class<?> classUnderTest = Course6.class;
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Student.class );
-		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
-		try {
+		try (SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg
+				.buildSessionFactory( serviceRegistry )) {
 			final EntityPersister entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
-					.getEntityDescriptor(classUnderTest.getName());
+					.getEntityDescriptor( classUnderTest.getName() );
 			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
 
-			assertTrue(
-					"Field access should be used.",
-					identifierMapping.getPropertyAccess().getGetter() instanceof GetterFieldImpl
-			);
-		}
-		finally {
-			factory.close();
+			assertThat( identifierMapping.getPropertyAccess().getGetter() )
+					.describedAs( "Field access should be used." )
+					.isInstanceOf( GetterFieldImpl.class );
 		}
 	}
 
@@ -95,43 +85,36 @@ public class AccessMappingTest {
 		Class<?> classUnderTest = Course7.class;
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Student.class );
-		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
-		try {
+
+		try (SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg
+				.buildSessionFactory( serviceRegistry )) {
 			final EntityPersister entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
-					.getEntityDescriptor(classUnderTest.getName());
+					.getEntityDescriptor( classUnderTest.getName() );
 			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
 
-			assertTrue(
-					"Property access should be used.",
-					identifierMapping.getPropertyAccess().getGetter() instanceof GetterMethodImpl
-			);
-		}
-		finally {
-			factory.close();
+			assertThat( identifierMapping.getPropertyAccess().getGetter() )
+					.describedAs( "Property access should be used." )
+					.isInstanceOf( GetterMethodImpl.class );
 		}
 	}
 
 	@Test
-	public void testExplicitPropertyAccessAnnotationsOnProperty() throws Exception {
+	public void testExplicitPropertyAccessAnnotationsOnProperty() {
 		Configuration cfg = new Configuration();
 		Class<?> classUnderTest = Course2.class;
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Student.class );
-		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
-		try {
+		try (SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg
+				.buildSessionFactory( serviceRegistry )) {
 			final EntityPersister entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
-					.getEntityDescriptor(classUnderTest.getName());
+					.getEntityDescriptor( classUnderTest.getName() );
 			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
 
-			assertTrue(
-					"Property access should be used.",
-					identifierMapping.getPropertyAccess().getGetter() instanceof GetterMethodImpl
-			);
-		}
-		finally {
-			factory.close();
+			assertThat( identifierMapping.getPropertyAccess().getGetter() )
+					.describedAs( "Property access should be used." )
+					.isInstanceOf( GetterMethodImpl.class );
 		}
 	}
 
@@ -140,18 +123,11 @@ public class AccessMappingTest {
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( Course4.class );
 		cfg.addAnnotatedClass( Student.class );
-		SessionFactory sf = null;
-		try {
-			sf = cfg.buildSessionFactory( serviceRegistry );
+		try (SessionFactory sf = cfg.buildSessionFactory( serviceRegistry )) {
 			fail( "@Id and @OneToMany are not placed consistently in test entities. SessionFactory creation should fail." );
 		}
 		catch (MappingException e) {
 			// success
-		}
-		finally {
-			if ( sf != null ) {
-				sf.close();
-			}
 		}
 	}
 
@@ -161,25 +137,20 @@ public class AccessMappingTest {
 		Class<?> classUnderTest = Course3.class;
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Student.class );
-		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
-		try {
+		try (SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg
+				.buildSessionFactory( serviceRegistry )) {
 			final EntityPersister entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
-					.getEntityDescriptor(classUnderTest.getName());
+					.getEntityDescriptor( classUnderTest.getName() );
 			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
 
-			assertTrue(
-					"Field access should be used.",
-					identifierMapping.getPropertyAccess().getGetter() instanceof GetterFieldImpl
-			);
+			assertThat( identifierMapping.getPropertyAccess().getGetter() )
+					.describedAs( "Field access should be used." )
+					.isInstanceOf( GetterFieldImpl.class );
 
-			assertTrue(
-					"Property access should be used.",
-					entityPersister.getAttributeMapping( 0 ).getPropertyAccess().getGetter() instanceof GetterMethodImpl
-			);
-		}
-		finally {
-			factory.close();
+			assertThat( entityPersister.getAttributeMapping( 0 ).getPropertyAccess().getGetter() )
+					.describedAs( "Property access should be used." )
+					.isInstanceOf( GetterMethodImpl.class );
 		}
 	}
 
@@ -189,25 +160,23 @@ public class AccessMappingTest {
 		Class<?> classUnderTest = Course5.class;
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Student.class );
-		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
-		try {
+		try (SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg
+				.buildSessionFactory( serviceRegistry )) {
 			final EntityPersister entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
-					.getEntityDescriptor(classUnderTest.getName());
+					.getEntityDescriptor( classUnderTest.getName() );
 			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
 
-			assertTrue(
-					"Field access should be used.",
-					identifierMapping.getPropertyAccess().getGetter() instanceof GetterFieldImpl
-			);
+			assertThat(
 
-			assertTrue(
-					"Property access should be used.",
-					entityPersister.getAttributeMapping( 0 ).getPropertyAccess().getGetter() instanceof GetterMethodImpl
-			);
-		}
-		finally {
-			factory.close();
+					identifierMapping.getPropertyAccess().getGetter()
+			)
+					.describedAs( "Field access should be used." )
+					.isInstanceOf( GetterFieldImpl.class );
+
+			assertThat( entityPersister.getAttributeMapping( 0 ).getPropertyAccess().getGetter() )
+					.describedAs( "Property access should be used." )
+					.isInstanceOf( GetterMethodImpl.class );
 		}
 	}
 
@@ -218,20 +187,18 @@ public class AccessMappingTest {
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Person.class );
 		cfg.addAnnotatedClass( Being.class );
-		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
-		try {
+		try (SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg
+				.buildSessionFactory( serviceRegistry )) {
 			final EntityPersister entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
-					.getEntityDescriptor(classUnderTest.getName());
+					.getEntityDescriptor( classUnderTest.getName() );
 			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
 
-			assertTrue(
-					"Field access should be used since the default access mode gets inherited",
-					identifierMapping.getPropertyAccess().getGetter() instanceof GetterFieldImpl
-			);
-		}
-		finally {
-			factory.close();
+			assertThat(
+					identifierMapping.getPropertyAccess().getGetter() )
+					.describedAs( "Field access should be used since the default access mode gets inherited" )
+					.isInstanceOf( GetterFieldImpl.class );
+			;
 		}
 	}
 
@@ -241,29 +208,24 @@ public class AccessMappingTest {
 		cfg.addAnnotatedClass( Horse.class );
 		cfg.addAnnotatedClass( Animal.class );
 
-		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
-		try {
+		try (SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg
+				.buildSessionFactory( serviceRegistry )) {
 			EntityPersister entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
-					.getEntityDescriptor(Animal.class.getName());
+					.getEntityDescriptor( Animal.class.getName() );
 			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
 
-			assertTrue(
-					"Property access should be used since explicity configured via @Access",
-					identifierMapping.getPropertyAccess().getGetter() instanceof GetterMethodImpl
-			);
+			assertThat( identifierMapping.getPropertyAccess().getGetter() )
+					.describedAs( "Property access should be used since explicity configured via @Access" )
+					.isInstanceOf( GetterMethodImpl.class );
 
 			entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
-					.getEntityDescriptor(Horse.class.getName());
+					.getEntityDescriptor( Horse.class.getName() );
 
-			assertTrue(
-					"Field access should be used since the default access mode gets inherited",
-					entityPersister.getAttributeMapping( 0 ).getPropertyAccess().getGetter() instanceof GetterFieldImpl
-			);
-		}
-		finally {
-			factory.close();
+			assertThat( entityPersister.getAttributeMapping( 0 ).getPropertyAccess().getGetter() )
+					.describedAs( "Field access should be used since the default access mode gets inherited" )
+					.isInstanceOf( GetterFieldImpl.class );
 		}
 	}
 

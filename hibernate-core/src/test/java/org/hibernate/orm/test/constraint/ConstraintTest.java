@@ -11,24 +11,30 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-
 import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.UniqueKey;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Brett Meyer
  */
-public class ConstraintTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				ConstraintTest.DataPoint.class,
+				ConstraintTest.DataPoint2.class
+		}
+)
+@SessionFactory
+public class ConstraintTest {
 
 	private static final int MAX_NAME_LENGTH = 30;
 
@@ -38,91 +44,91 @@ public class ConstraintTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	private static final String EXPLICIT_UK_NAME = "uk_explicit";
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { DataPoint.class, DataPoint2.class };
-	}
-
 	@Test
-	@JiraKey( value = "HHH-7797" )
-	public void testUniqueConstraints() {
-		Column column = (Column) metadata().getEntityBinding( DataPoint.class.getName() )
+	@JiraKey(value = "HHH-7797")
+	public void testUniqueConstraints(SessionFactoryScope scope) {
+		MetadataImplementor metadata = scope.getMetadataImplementor();
+		Column column = (Column) metadata.getEntityBinding( DataPoint.class.getName() )
 				.getProperty( "foo1" ).getSelectables().get( 0 );
-		assertFalse( column.isNullable() );
-		assertTrue( column.isUnique() );
+		assertThat( column.isNullable() ).isFalse();
+		assertThat( column.isUnique() ).isTrue();
 
-		column = (Column) metadata().getEntityBinding( DataPoint.class.getName() )
+		column = (Column) metadata.getEntityBinding( DataPoint.class.getName() )
 				.getProperty( "foo2" ).getSelectables().get( 0 );
-		assertTrue( column.isNullable() );
-		assertTrue( column.isUnique() );
+		assertThat( column.isNullable() ).isTrue();
+		assertThat( column.isUnique() ).isTrue();
 
-		column = (Column) metadata().getEntityBinding( DataPoint.class.getName() )
+		column = (Column) metadata.getEntityBinding( DataPoint.class.getName() )
 				.getProperty( "id" ).getSelectables().get( 0 );
-		assertFalse( column.isNullable() );
-		assertTrue( column.isUnique() );
+		assertThat( column.isNullable() ).isFalse();
+		assertThat( column.isUnique() ).isTrue();
 	}
 
 	@Test
-	@JiraKey( value = "HHH-1904" )
-	public void testConstraintNameLength() {
+	@JiraKey(value = "HHH-1904")
+	public void testConstraintNameLength(SessionFactoryScope scope) {
+		MetadataImplementor metadata = scope.getMetadataImplementor();
+
 		int foundCount = 0;
-		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {
+		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
 			for ( org.hibernate.mapping.Table table : namespace.getTables() ) {
 				for ( ForeignKey fk : table.getForeignKeyCollection() ) {
-					assertTrue( fk.getName().length() <= MAX_NAME_LENGTH );
+					assertThat( fk.getName().length() ).isLessThanOrEqualTo( MAX_NAME_LENGTH );
 
 					// ensure the randomly generated constraint name doesn't
 					// happen if explicitly given
 					Column column = fk.getColumn( 0 );
 					if ( column.getName().equals( "explicit_native" ) ) {
 						foundCount++;
-						assertEquals( EXPLICIT_FK_NAME_NATIVE, fk.getName() );
+						assertThat( fk.getName() ).isEqualTo( EXPLICIT_FK_NAME_NATIVE );
 					}
 					else if ( column.getName().equals( "explicit_jpa" ) ) {
 						foundCount++;
-						assertEquals( EXPLICIT_FK_NAME_JPA, fk.getName() );
+						assertThat( fk.getName() ).isEqualTo( EXPLICIT_FK_NAME_JPA );
 					}
 				}
 
 				for ( UniqueKey uk : table.getUniqueKeys().values() ) {
-					assertTrue( uk.getName().length() <= MAX_NAME_LENGTH );
+					assertThat( uk.getName().length() ).isLessThanOrEqualTo( MAX_NAME_LENGTH );
 
 					// ensure the randomly generated constraint name doesn't
 					// happen if explicitly given
 					Column column = uk.getColumn( 0 );
 					if ( column.getName().equals( "explicit" ) ) {
 						foundCount++;
-						assertEquals( EXPLICIT_UK_NAME, uk.getName() );
+						assertThat( uk.getName() ).isEqualTo( EXPLICIT_UK_NAME );
 					}
 				}
 			}
 
 		}
 
-		assertEquals("Could not find the necessary columns.", 3, foundCount);
+		assertThat( foundCount )
+				.describedAs( "Could not find the necessary columns." )
+				.isEqualTo( 3 );
 	}
 
 	@Entity
-	@Table( name = "DataPoint", uniqueConstraints = {
-			@UniqueConstraint( name = EXPLICIT_UK_NAME, columnNames = { "explicit" } )
-	} )
+	@Table(name = "DataPoint", uniqueConstraints = {
+			@UniqueConstraint(name = EXPLICIT_UK_NAME, columnNames = {"explicit"})
+	})
 	public static class DataPoint {
 		@Id
 		@GeneratedValue
-		@jakarta.persistence.Column( nullable = false, unique = true)
+		@jakarta.persistence.Column(nullable = false, unique = true)
 		public long id;
 
-		@jakarta.persistence.Column( nullable = false, unique = true)
+		@jakarta.persistence.Column(nullable = false, unique = true)
 		public String foo1;
 
-		@jakarta.persistence.Column( nullable = true, unique = true)
+		@jakarta.persistence.Column(unique = true)
 		public String foo2;
 
 		public String explicit;
 	}
 
 	@Entity
-	@Table( name = "DataPoint2" )
+	@Table(name = "DataPoint2")
 	public static class DataPoint2 {
 		@Id
 		@GeneratedValue

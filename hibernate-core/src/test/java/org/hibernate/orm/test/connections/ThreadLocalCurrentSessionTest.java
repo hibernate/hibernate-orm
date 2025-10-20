@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.connections;
 
-import java.util.Map;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
@@ -13,100 +11,147 @@ import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
-
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
  */
 @RequiresDialect(H2Dialect.class)
-public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase {
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		super.addSettings( settings );
+@ServiceRegistry(
+		settingProviders = @SettingProvider(
+				settingName = Environment.CURRENT_SESSION_CONTEXT_CLASS,
+				provider = ThreadLocalCurrentSessionTest.CurrentSessionContextClassProvider.class
 
-		settings.put( Environment.CURRENT_SESSION_CONTEXT_CLASS, TestableThreadLocalContext.class.getName() );
-		settings.put( Environment.GENERATE_STATISTICS, "true" );
+		)
+)
+@SessionFactory(
+		generateStatistics = true
+)
+public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase {
+
+	public static class CurrentSessionContextClassProvider implements SettingProvider.Provider<String> {
+		@Override
+		public String getSetting() {
+			return TestableThreadLocalContext.class.getName();
+		}
 	}
 
+
 	@Override
-	protected Session getSessionUnderTest() throws Throwable {
-		Session session = sessionFactory().getCurrentSession();
+	protected Session getSessionUnderTest(SessionFactoryScope scope) {
+		Session session = scope.getSessionFactory().getCurrentSession();
 		session.beginTransaction();
 		return session;
 	}
 
 	@Override
-	protected void release(Session session) {
+	protected void release(Session session, SessionFactoryScope scope) {
+		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		if ( session.getTransaction().getStatus() != TransactionStatus.ACTIVE ) {
-			TestableThreadLocalContext.unbind( sessionFactory() );
+			TestableThreadLocalContext.unbind( sessionFactory );
 			return;
 		}
-		long initialCount = sessionFactory().getStatistics().getSessionCloseCount();
+		long initialCount = sessionFactory.getStatistics().getSessionCloseCount();
 		session.getTransaction().commit();
-		long subsequentCount = sessionFactory().getStatistics().getSessionCloseCount();
-		assertEquals( "Session still open after commit", initialCount + 1, subsequentCount );
+		long subsequentCount = sessionFactory.getStatistics().getSessionCloseCount();
+		assertThat( subsequentCount )
+				.describedAs( "Session still open after commit" )
+				.isEqualTo( initialCount + 1 );
 		// also make sure it was cleaned up from the internal ThreadLocal...
-		assertFalse( "session still bound to internal ThreadLocal", TestableThreadLocalContext.hasBind() );
+		assertThat( TestableThreadLocalContext.hasBind() )
+				.describedAs( "session still bound to internal ThreadLocal" )
+				.isFalse();
 	}
 
 	@Override
-	protected void reconnect(Session session) throws Throwable {
+	protected void reconnect(Session session) {
 	}
 
 	@Override
 	protected void checkSerializedState(Session session) {
-		assertFalse( "session still bound after serialize", TestableThreadLocalContext.isSessionBound( session ) );
+		assertThat( TestableThreadLocalContext.isSessionBound( session ) )
+				.describedAs( "session still bound after serialize" )
+				.isFalse();
 	}
 
 	@Override
 	protected void checkDeserializedState(Session session) {
-		assertTrue( "session not bound after deserialize", TestableThreadLocalContext.isSessionBound( session ) );
+		assertThat( TestableThreadLocalContext.isSessionBound( session ) )
+				.describedAs( "session not bound after deserialize" )
+				.isTrue();
 	}
 
 	@Test
 	@JiraKey(value = "HHH-11067")
-	public void testEqualityChecking() {
-		Session session1 = sessionFactory().getCurrentSession();
-		Session session2 = sessionFactory().getCurrentSession();
-
-		assertSame( "== check", session1, session2 );
-		assertEquals( "#equals check", session1, session2 );
+	public void testEqualityChecking(SessionFactoryScope scope) {
+		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+		Session session1 = null;
+		Session session2 = null;
+		try {
+			session1 = sessionFactory.getCurrentSession();
+			session2 = sessionFactory.getCurrentSession();
+			assertThat( session1 ).isSameAs( session2 );
+			assertThat( session1 ).isEqualTo( session2 );
+		}
+		finally {
+			release( session1, scope );
+			release( session2, scope );
+		}
 	}
 
 	@Test
-	public void testTransactionProtection() {
-		Session session = sessionFactory().getCurrentSession();
-		try {
+	public void testTransactionProtection(SessionFactoryScope scope) {
+		try (Session session = scope.getSessionFactory().getCurrentSession()) {
+
 			session.createQuery( "from Silly" );
 			fail( "method other than beginTransaction() allowed" );
 		}
-		catch ( HibernateException e ) {
+		catch (HibernateException e) {
 			// ok
 		}
 	}
 
 	@Test
-	public void testContextCleanup() {
-		Session session = sessionFactory().getCurrentSession();
-		session.beginTransaction();
-		session.getTransaction().commit();
-		assertFalse( "session open after txn completion", session.isOpen() );
-		assertFalse( "session still bound after txn completion", TestableThreadLocalContext.isSessionBound( session ) );
+	public void testContextCleanup(SessionFactoryScope scope) {
+		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+		Session session = null;
+		Session session2 = null;
+		try {
+			session = sessionFactory.getCurrentSession();
+			session.beginTransaction();
+			session.getTransaction().commit();
+			assertThat( session.isOpen() )
+					.describedAs( "session open after txn completion" )
+					.isFalse();
+			assertThat( TestableThreadLocalContext.isSessionBound( session ) )
+					.describedAs( "session still bound after txn completion" )
+					.isFalse();
 
-		Session session2 = sessionFactory().getCurrentSession();
-		assertFalse( "same session returned after txn completion", session == session2 );
-		session2.close();
-		assertFalse( "session open after closing", session2.isOpen() );
-		assertFalse( "session still bound after closing", TestableThreadLocalContext.isSessionBound( session2 ) );
+			session2 = sessionFactory.getCurrentSession();
+			assertThat( session == session2 )
+					.describedAs( "same session returned after txn completion" )
+					.isFalse();
+			session2.close();
+			assertThat( session2.isOpen() )
+					.describedAs( "session open after closing" )
+					.isFalse();
+			assertThat( TestableThreadLocalContext.isSessionBound( session2 ) )
+					.describedAs( "session still bound after closing" )
+					.isFalse();
+		}
+		finally {
+			release( session, scope );
+			release( session2, scope );
+		}
 	}
 
 	public static class TestableThreadLocalContext extends ThreadLocalSessionContext {
@@ -119,7 +164,7 @@ public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase 
 
 		public static boolean isSessionBound(Session session) {
 			return sessionMap() != null && sessionMap().containsKey( me.factory() )
-					&& sessionMap().get( me.factory() ) == session;
+				&& sessionMap().get( me.factory() ) == session;
 		}
 
 		public static boolean hasBind() {

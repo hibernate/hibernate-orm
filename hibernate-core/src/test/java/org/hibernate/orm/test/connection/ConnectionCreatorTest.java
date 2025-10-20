@@ -4,14 +4,6 @@
  */
 package org.hibernate.orm.test.connection;
 
-import java.sql.Connection;
-import java.sql.Driver;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
@@ -25,19 +17,28 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.service.Service;
 import org.hibernate.service.internal.ProvidedService;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
+import java.sql.Connection;
+import java.sql.Driver;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Steve Ebersole
  */
-public class ConnectionCreatorTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class ConnectionCreatorTest {
+
 	@Test
-	@JiraKey(value = "HHH-8621" )
+	@JiraKey(value = "HHH-8621")
 	public void testBadUrl() throws Exception {
 		DriverConnectionCreator connectionCreator = new DriverConnectionCreator(
 				(Driver) Class.forName( "org.h2.Driver" ).newInstance(),
@@ -55,13 +56,11 @@ public class ConnectionCreatorTest extends BaseUnitTestCase {
 				null
 		);
 
-		try {
-			Connection conn = connectionCreator.createConnection();
-			conn.close();
-			fail( "Expecting the bad Connection URL to cause an exception" );
-		}
-		catch (JDBCConnectionException expected) {
-		}
+		assertThrows( JDBCConnectionException.class, () -> {
+					Connection conn = connectionCreator.createConnection();
+					conn.close();
+				},
+				"Expecting the bad Connection URL to cause an exception" );
 	}
 
 	private final static class CCTStandardServiceRegistryImpl extends StandardServiceRegistryImpl {
@@ -72,16 +71,17 @@ public class ConnectionCreatorTest extends BaseUnitTestCase {
 				Map<String, Object> configurationValues) {
 			super( autoCloseRegistry, bootstrapServiceRegistry, configurationValues );
 		}
+
 		@Override
 		@SuppressWarnings("unchecked")
 		public <R extends Service> R getService(Class<R> serviceRole) {
 			if ( JdbcServices.class.equals( serviceRole ) ) {
 				// return a new, not fully initialized JdbcServicesImpl
-				JdbcServicesImpl jdbcServices = new JdbcServicesImpl(this);
+				JdbcServicesImpl jdbcServices = new JdbcServicesImpl( this );
 				jdbcServices.configure( new HashMap<>() );
 				return (R) jdbcServices;
 			}
-			if( JdbcEnvironment.class.equals( serviceRole ) ){
+			if ( JdbcEnvironment.class.equals( serviceRole ) ) {
 				return (R) new JdbcEnvironmentImpl( this, new H2Dialect() );
 			}
 			return super.getService( serviceRole );
@@ -92,9 +92,10 @@ public class ConnectionCreatorTest extends BaseUnitTestCase {
 				BootstrapServiceRegistry bootstrapServiceRegistry,
 				List<StandardServiceInitiator<?>> serviceInitiators,
 				List<ProvidedService<?>> providedServices,
-				Map<String,Object> configurationValues) {
+				Map<String, Object> configurationValues) {
 
-			CCTStandardServiceRegistryImpl instance = new CCTStandardServiceRegistryImpl( autoCloseRegistry, bootstrapServiceRegistry, configurationValues );
+			CCTStandardServiceRegistryImpl instance = new CCTStandardServiceRegistryImpl( autoCloseRegistry,
+					bootstrapServiceRegistry, configurationValues );
 			instance.initialize();
 			instance.applyServiceRegistrations( serviceInitiators, providedServices );
 

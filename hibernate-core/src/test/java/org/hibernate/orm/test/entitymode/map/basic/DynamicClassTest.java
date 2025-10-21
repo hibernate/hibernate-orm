@@ -70,7 +70,8 @@ public class DynamicClassTest {
 						assertThat( Hibernate.isInitialized( stringObjectMap.get( "productLine" ) ) ).isFalse();
 					}
 					Map<String, Map<String, Object>> model = list.get( 0 );
-					assertThat( ((((List<Map<String, Object>>) (model.get( "productLine" )).get( "models" )) ).contains( model );
+					assertThat( ((List<Map<String, Object>>) (model.get( "productLine" )).get( "models" )).contains( model ) )
+							.isTrue();
 					session.clear();
 				}
 		);

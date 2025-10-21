@@ -6,6 +6,7 @@ package org.hibernate.orm.test.connection;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.dialect.H2Dialect;
@@ -40,27 +41,35 @@ public class ConnectionCreatorTest {
 	@Test
 	@JiraKey(value = "HHH-8621")
 	public void testBadUrl() throws Exception {
-		DriverConnectionCreator connectionCreator = new DriverConnectionCreator(
-				(Driver) Class.forName( "org.h2.Driver" ).newInstance(),
-				CCTStandardServiceRegistryImpl.create(
-						true,
-						new BootstrapServiceRegistryImpl(),
-						Collections.emptyList(),
-						Collections.emptyList(),
-						Collections.emptyMap()
-				),
-				"jdbc:h2:mem:test-bad-urls;nosuchparam=saywhat;DB_CLOSE_ON_EXIT=FALSE",
-				new Properties(),
-				false,
-				null,
-				null
+		CCTStandardServiceRegistryImpl serviceRegistry = CCTStandardServiceRegistryImpl.create(
+				true,
+				new BootstrapServiceRegistryImpl(),
+				Collections.emptyList(),
+				Collections.emptyList(),
+				Collections.emptyMap()
 		);
+		try {
+			DriverConnectionCreator connectionCreator = new DriverConnectionCreator(
+					(Driver) Class.forName( "org.h2.Driver" ).newInstance(),
+					serviceRegistry,
+					"jdbc:h2:mem:test-bad-urls;nosuchparam=saywhat;DB_CLOSE_ON_EXIT=FALSE",
+					new Properties(),
+					false,
+					null,
+					null
+			);
 
-		assertThrows( JDBCConnectionException.class, () -> {
-					Connection conn = connectionCreator.createConnection();
-					conn.close();
-				},
-				"Expecting the bad Connection URL to cause an exception" );
+			assertThrows( JDBCConnectionException.class, () -> {
+						try (Connection conn = connectionCreator.createConnection()) {
+
+						}
+					},
+					"Expecting the bad Connection URL to cause an exception" );
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy(serviceRegistry);
+		}
+
 	}
 
 	private final static class CCTStandardServiceRegistryImpl extends StandardServiceRegistryImpl {

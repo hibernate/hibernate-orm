@@ -59,9 +59,9 @@ public abstract class AbstractJPAIndexTest {
 	@Test
 	public void testTableIndex(SessionFactoryScope scope) {
 		PersistentClass entity = scope.getMetadataImplementor().getEntityBinding( Car.class.getName() );
-		Iterator itr = entity.getTable().getUniqueKeys().values().iterator();
+		Iterator<UniqueKey> itr = entity.getTable().getUniqueKeys().values().iterator();
 		assertThat( itr.hasNext() ).isTrue();
-		UniqueKey uk = (UniqueKey) itr.next();
+		UniqueKey uk = itr.next();
 		assertThat( itr.hasNext() ).isFalse();
 		assertThat( StringHelper.isNotEmpty( uk.getName() ) ).isTrue();
 		assertThat( uk.getColumnSpan() ).isEqualTo( 2 );
@@ -72,10 +72,10 @@ public abstract class AbstractJPAIndexTest {
 		assertThat( uk.getTable() ).isSameAs( entity.getTable() );
 
 
-		itr = entity.getTable().getIndexes().values().iterator();
-		assertThat( itr.hasNext() ).isTrue();
-		Index index = (Index) itr.next();
-		assertThat( itr.hasNext() ).isFalse();
+		Iterator<Index> indexItr = entity.getTable().getIndexes().values().iterator();
+		assertThat( indexItr.hasNext() ).isTrue();
+		Index index = indexItr.next();
+		assertThat( indexItr.hasNext() ).isFalse();
 		assertThat( index.getName() ).isEqualTo( "Car_idx" );
 		assertThat( index.getColumnSpan() ).isEqualTo( 1 );
 		column = index.getColumns().iterator().next();

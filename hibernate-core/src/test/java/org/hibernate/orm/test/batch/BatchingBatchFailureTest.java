@@ -63,9 +63,10 @@ public class BatchingBatchFailureTest implements SessionEventListener {
 	@Test
 	public void testBasicInsertion(SessionFactoryScope scope) {
 		session = scope.getSessionFactory().withOptions().eventListeners( this ).openSession();
-		session.getTransaction().begin();
+
 
 		try {
+			session.getTransaction().begin();
 			session.persist( new User( 1, "ok" ) );
 			session.persist( new User( 2, null ) );
 			session.persist( new User( 3, "ok" ) );

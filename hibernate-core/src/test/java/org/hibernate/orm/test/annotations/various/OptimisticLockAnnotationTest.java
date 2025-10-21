@@ -25,8 +25,6 @@ public class OptimisticLockAnnotationTest {
 
 	@Test
 	public void testOptimisticLockExcludeOnNameProperty(SessionFactoryScope scope) {
-
-
 		scope.inTransaction(
 				session -> {
 					Conductor c = new Conductor();

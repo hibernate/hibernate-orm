@@ -55,7 +55,7 @@ public abstract class AbstractCharsetNamingStrategyTest {
 	}
 
 	@Test
-	public void testWithCustomNamingStrategy() throws Exception {
+	public void testWithCustomNamingStrategy() {
 		Metadata metadata = new MetadataSources( serviceRegistry )
 				.addAnnotatedClass( Address.class )
 				.addAnnotatedClass( Person.class )

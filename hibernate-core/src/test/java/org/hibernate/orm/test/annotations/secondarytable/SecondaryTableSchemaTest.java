@@ -32,7 +32,6 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 @RequiresDialect(value = H2Dialect.class)
 public class SecondaryTableSchemaTest extends EntityManagerFactoryBasedFunctionalTest {
 
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {Cluster.class};

@@ -13,6 +13,7 @@ import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,11 +23,12 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Emmanuel Bernard
  */
 @BaseUnitTest
+@Order(Integer.MAX_VALUE)
 public class PersisterClassProviderTest {
 
 	@Test
 	public void testPersisterClassProvider() {
-		assertThat( SessionFactoryRegistry.INSTANCE.hasRegistrations() ).isFalse();
+		assertThat(SessionFactoryRegistry.INSTANCE.hasRegistrations() ).isFalse();
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( Gate.class );
 		ServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()

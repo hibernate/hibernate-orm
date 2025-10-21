@@ -26,7 +26,6 @@ public class PersisterClassProviderTest {
 
 	@Test
 	public void testPersisterClassProvider() {
-
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( Gate.class );
 		ServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()

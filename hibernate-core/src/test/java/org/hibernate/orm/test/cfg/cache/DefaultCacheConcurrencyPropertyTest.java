@@ -11,7 +11,6 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
@@ -36,10 +35,9 @@ public class DefaultCacheConcurrencyPropertyTest {
 	@JiraKey(value = "HHH-9763")
 	public void testExplicitDefault() {
 
-		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
+		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY, "read-only" )
-				.build();
-		try {
+				.build()) {
 			assertThat( ssr.getService( ConfigurationService.class ).getSettings()
 					.get( AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY ) )
 					.isEqualTo( "read-only" );
@@ -57,9 +55,6 @@ public class DefaultCacheConcurrencyPropertyTest {
 				assertThat( persister.canWriteToCache() ).isTrue();
 				assertThat( persister.getCacheAccessStrategy() ).isNotNull();
 			}
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
 		}
 	}
 

@@ -4,13 +4,6 @@
  */
 package org.hibernate.orm.test.foreignkeys.disabled;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.stream.StreamSupport;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Entity;
@@ -19,7 +12,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.Metadata;
@@ -28,7 +20,14 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.mapping.Table;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.stream.StreamSupport;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 /**
  * {@inheritDoc}
@@ -47,15 +46,17 @@ public class OneToManyBidirectionalForeignKeyTest {
 			Metadata metadata = new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( PlainTreeEntity.class ).addAnnotatedClass( TreeEntityWithOnDelete.class )
 					.buildMetadata();
-			assertTrue( findTable( metadata, TABLE_NAME_PLAIN ).getForeignKeyCollection().isEmpty() );
-			assertFalse( findTable( metadata, TABLE_NAME_WITH_ON_DELETE ).getForeignKeyCollection().isEmpty() );
+			assertThat( findTable( metadata, TABLE_NAME_PLAIN ).getForeignKeyCollection().isEmpty() )
+					.isTrue();
+			assertThat( findTable( metadata, TABLE_NAME_WITH_ON_DELETE ).getForeignKeyCollection().isEmpty() )
+					.isFalse();
 		}
 	}
 
 	private static Table findTable(Metadata metadata, String tableName) {
-		return StreamSupport.stream(metadata.getDatabase().getNamespaces().spliterator(), false)
-				.flatMap(namespace -> namespace.getTables().stream()).filter(t -> t.getName().equals(tableName))
-				.findFirst().orElse(null);
+		return StreamSupport.stream( metadata.getDatabase().getNamespaces().spliterator(), false )
+				.flatMap( namespace -> namespace.getTables().stream() ).filter( t -> t.getName().equals( tableName ) )
+				.findFirst().orElse( null );
 	}
 
 	@Entity
@@ -72,7 +73,7 @@ public class OneToManyBidirectionalForeignKeyTest {
 		@OneToMany(mappedBy = "parent")
 		// workaround
 		// @org.hibernate.annotations.ForeignKey(name = "none")
-		private Collection<PlainTreeEntity> children = new ArrayList<>(0);
+		private Collection<PlainTreeEntity> children = new ArrayList<>( 0 );
 	}
 
 	@Entity
@@ -88,7 +89,7 @@ public class OneToManyBidirectionalForeignKeyTest {
 
 		@OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE)
 		@OnDelete(action = OnDeleteAction.CASCADE)
-		private Collection<TreeEntityWithOnDelete> children = new ArrayList<>(0);
+		private Collection<TreeEntityWithOnDelete> children = new ArrayList<>( 0 );
 
 	}
 

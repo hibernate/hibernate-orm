@@ -26,6 +26,7 @@ public class PersisterClassProviderTest {
 
 	@Test
 	public void testPersisterClassProvider() {
+		assertThat( SessionFactoryRegistry.INSTANCE.hasRegistrations() ).isFalse();
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( Gate.class );
 		ServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()

@@ -45,6 +45,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 	private final SqmJoinType joinType;
 	private final boolean fetch;
 	private final String alias;
+	private final boolean allowReuse;
 
 	private ConsumerDelegate delegate;
 	private boolean nested;
@@ -54,11 +55,13 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			SqmJoinType joinType,
 			boolean fetch,
 			String alias,
+			boolean allowReuse,
 			SqmCreationState creationState) {
 		this.sqmRoot = sqmRoot;
 		this.joinType = joinType;
 		this.fetch = fetch;
 		this.alias = alias;
+		this.allowReuse = allowReuse;
 		this.creationState = creationState;
 	}
 
@@ -72,6 +75,8 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		this.joinType = joinType;
 		this.fetch = fetch;
 		this.alias = alias;
+		// This constructor is only used for entity names, so no need for join reuse
+		this.allowReuse = false;
 		this.creationState = creationState;
 		this.delegate = new AttributeJoinDelegate(
 				sqmFrom,
@@ -102,7 +107,13 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		}
 		else {
 			assert delegate != null;
-			delegate.consumeIdentifier( identifier, !nested && isTerminal, !( nested && isTerminal ) );
+			delegate.consumeIdentifier(
+					identifier,
+					!nested && isTerminal,
+					// Non-nested joins shall allow reuse, but nested ones (i.e. in treat)
+					// only allow join reuse for non-terminal parts
+					allowReuse && (!nested || !isTerminal)
+			);
 		}
 	}
 
@@ -192,7 +203,12 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		if ( allowReuse ) {
 			if ( !isTerminal ) {
 				for ( SqmJoin<?, ?> sqmJoin : lhs.getSqmJoins() ) {
-					if ( sqmJoin.getAlias() == null && sqmJoin.getModel() == subPathSource ) {
+					// In order for an HQL join to be reusable, is must have the same path source,
+					if ( sqmJoin.getModel() == subPathSource
+						// must not have a join condition
+						&& sqmJoin.getJoinPredicate() == null
+						// and the same join type
+						&& sqmJoin.getSqmJoinType() == joinType ) {
 						return sqmJoin;
 					}
 				}

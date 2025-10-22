@@ -4,126 +4,118 @@
  */
 package org.hibernate.orm.test.envers.integration.basic;
 
-import java.util.Map;
 import jakarta.persistence.TransactionRequiredException;
-
-import org.hibernate.Session;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 import org.hibernate.orm.test.envers.integration.collection.norevision.Name;
 import org.hibernate.orm.test.envers.integration.collection.norevision.Person;
-
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @JiraKey(value = "HHH-5565")
-@SkipForDialect(value = MySQLDialect.class, comment = "The test hangs on")
-public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {StrTestEntity.class, Person.class, Name.class};
+@SkipForDialect(dialectClass = MySQLDialect.class, reason = "The test hangs on")
+@EnversTest
+@Jpa(annotatedClasses = {StrTestEntity.class, Person.class, Name.class},
+		integrationSettings = {
+				@Setting(name = EnversSettings.STORE_DATA_AT_DELETE, value = "true"),
+				@Setting(name = EnversSettings.REVISION_ON_COLLECTION_CHANGE, value = "true")
+		})
+public class OutsideTransactionTest {
+	@Test
+	public void testInsertOutsideActiveTransaction(EntityManagerFactoryScope scope) {
+		assertThrows( TransactionRequiredException.class, () -> {
+			scope.inEntityManager( em -> {
+				// Illegal insertion of entity outside of active transaction.
+				StrTestEntity entity = new StrTestEntity( "data" );
+				em.persist( entity );
+				em.flush();
+			} );
+		} );
 	}
 
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		super.addSettings( settings );
+	@Test
+	public void testMergeOutsideActiveTransaction(EntityManagerFactoryScope scope) {
+		final StrTestEntity entity = scope.fromTransaction( em -> {
+			StrTestEntity e = new StrTestEntity( "data" );
+			em.persist( e );
+			return e;
+		} );
 
-		settings.put( EnversSettings.STORE_DATA_AT_DELETE, "true" );
-		settings.put( EnversSettings.REVISION_ON_COLLECTION_CHANGE, "true" );
+		assertThrows( TransactionRequiredException.class, () -> {
+			scope.inEntityManager( em -> {
+				// Illegal modification of entity state outside of active transaction.
+				entity.setStr( "modified data" );
+				em.merge( entity );
+				em.flush();
+			} );
+		} );
 	}
 
-	@Test(expected = TransactionRequiredException.class)
-	public void testInsertOutsideActiveTransaction() {
-		Session session = openSession();
-
-		// Illegal insertion of entity outside of active transaction.
-		StrTestEntity entity = new StrTestEntity( "data" );
-		session.persist( entity );
-		session.flush();
-
-		session.close();
+	@Test
+	public void testDeleteOutsideActiveTransaction(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			em.getTransaction().begin();
+			final StrTestEntity entity = new StrTestEntity( "data" );
+			em.persist( entity );
+			em.getTransaction().commit();
+			assertThrows( TransactionRequiredException.class, () -> {
+				// Illegal removal of entity outside of active transaction.
+				em.remove( entity );
+				em.flush();
+			} );
+		} );
 	}
 
-	@Test(expected = TransactionRequiredException.class)
-	public void testMergeOutsideActiveTransaction() {
-		Session session = openSession();
+	@Test
+	public void testCollectionUpdateOutsideActiveTransaction(EntityManagerFactoryScope scope) {
+		final Person person = scope.fromTransaction( em -> {
+			Person p = new Person();
+			Name name = new Name();
+			name.setName( "Name" );
+			p.getNames().add( name );
+			em.persist( p );
+			return p;
+		} );
 
-		// Revision 1
-		session.getTransaction().begin();
-		StrTestEntity entity = new StrTestEntity( "data" );
-		session.persist( entity );
-		session.getTransaction().commit();
-
-		// Illegal modification of entity state outside of active transaction.
-		entity.setStr( "modified data" );
-		session.merge( entity );
-		session.flush();
-
-		session.close();
+		assertThrows( TransactionRequiredException.class, () -> {
+			scope.inEntityManager( em -> {
+				// Illegal collection update outside of active transaction.
+				person.getNames().clear();
+				em.merge( person );
+				em.flush();
+			} );
+		} );
 	}
 
-	@Test(expected = TransactionRequiredException.class)
-	public void testDeleteOutsideActiveTransaction() {
-		Session session = openSession();
+	@Test
+	public void testCollectionRemovalOutsideActiveTransaction(EntityManagerFactoryScope scope) {
+		final Person person = scope.fromTransaction( em -> {
+			Person p = new Person();
+			Name name = new Name();
+			name.setName( "Name" );
+			p.getNames().add( name );
+			em.persist( p );
+			return p;
+		} );
 
-		// Revision 1
-		session.getTransaction().begin();
-		StrTestEntity entity = new StrTestEntity( "data" );
-		session.persist( entity );
-		session.getTransaction().commit();
-
-		// Illegal removal of entity outside of active transaction.
-		session.remove( entity );
-		session.flush();
-
-		session.close();
-	}
-
-	@Test(expected = TransactionRequiredException.class)
-	public void testCollectionUpdateOutsideActiveTransaction() {
-		Session session = openSession();
-
-		// Revision 1
-		session.getTransaction().begin();
-		Person person = new Person();
-		Name name = new Name();
-		name.setName( "Name" );
-		person.getNames().add( name );
-		session.persist( person );
-		session.getTransaction().commit();
-
-		// Illegal collection update outside of active transaction.
-		person.getNames().remove( name );
-		session.merge( person );
-		session.flush();
-
-		session.close();
-	}
-
-	@Test(expected = TransactionRequiredException.class)
-	public void testCollectionRemovalOutsideActiveTransaction() {
-		Session session = openSession();
-
-		// Revision 1
-		session.getTransaction().begin();
-		Person person = new Person();
-		Name name = new Name();
-		name.setName( "Name" );
-		person.getNames().add( name );
-		session.persist( person );
-		session.getTransaction().commit();
-
-		// Illegal collection removal outside of active transaction.
-		person.setNames( null );
-		session.merge( person );
-		session.flush();
-
-		session.close();
+		assertThrows( TransactionRequiredException.class, () -> {
+			scope.inEntityManager( em -> {
+				// Illegal collection removal outside of active transaction.
+				person.setNames( null );
+				em.merge( person );
+				em.flush();
+			} );
+		} );
 	}
 }

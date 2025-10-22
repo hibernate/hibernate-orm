@@ -4,49 +4,56 @@
  */
 package org.hibernate.orm.test.envers.integration.basic;
 
-import jakarta.persistence.EntityManager;
-
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.exception.NotAuditedException;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class NotVersioned extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {BasicTestEntity1.class, BasicTestEntity3.class})
+public class NotVersioned {
 	private Integer id1;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {BasicTestEntity1.class, BasicTestEntity3.class};
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			BasicTestEntity3 bte1 = new BasicTestEntity3( "x", "y" );
+			em.persist( bte1 );
+			id1 = bte1.getId();
+		} );
+
+		scope.inTransaction( em -> {
+			BasicTestEntity3 bte1 = em.find( BasicTestEntity3.class, id1 );
+			bte1.setStr1( "a" );
+			bte1.setStr2( "b" );
+		} );
 	}
 
 	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
-		BasicTestEntity3 bte1 = new BasicTestEntity3( "x", "y" );
-		em.persist( bte1 );
-		id1 = bte1.getId();
-		em.getTransaction().commit();
-
-		em.getTransaction().begin();
-		bte1 = em.find( BasicTestEntity3.class, id1 );
-		bte1.setStr1( "a" );
-		bte1.setStr2( "b" );
-		em.getTransaction().commit();
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertThrows( NotAuditedException.class, () ->
+				auditReader.getRevisions( BasicTestEntity3.class, id1 )
+			);
+		} );
 	}
 
-	@Test(expected = NotAuditedException.class)
-	public void testRevisionsCounts() {
-		getAuditReader().getRevisions( BasicTestEntity3.class, id1 );
-	}
-
-	@Test(expected = NotAuditedException.class)
-	public void testHistoryOfId1() {
-		getAuditReader().find( BasicTestEntity3.class, id1, 1 );
+	@Test
+	public void testHistoryOfId1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertThrows( NotAuditedException.class, () ->
+				auditReader.find( BasicTestEntity3.class, id1, 1 )
+			);
+		} );
 	}
 }

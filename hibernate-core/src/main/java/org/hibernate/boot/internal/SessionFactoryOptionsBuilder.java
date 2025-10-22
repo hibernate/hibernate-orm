@@ -5,6 +5,7 @@
 package org.hibernate.boot.internal;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -80,6 +81,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.format.FormatMapper;
+import org.hibernate.type.format.FormatMapperCreationContext;
 import org.hibernate.type.format.jaxb.JaxbXmlFormatMapper;
 
 import jakarta.persistence.criteria.Nulls;
@@ -294,10 +296,17 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				settings.get( JAKARTA_VALIDATION_FACTORY )
 		);
 
+		final var formatMapperCreationContext = new FormatMapperCreationContext() {
+			@Override
+			public BootstrapContext getBootstrapContext() {
+				return context;
+			}
+		};
 		jsonFormatMapper = jsonFormatMapper(
 				settings.get( JSON_FORMAT_MAPPER ),
 				!getBoolean( ORACLE_OSON_DISABLED, settings),
-				strategySelector
+				strategySelector,
+				formatMapperCreationContext
 		);
 
 		xmlFormatMapper = xmlFormatMapper(
@@ -305,7 +314,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				strategySelector,
 				xmlFormatMapperLegacyFormatEnabled =
 						context.getMetadataBuildingOptions()
-								.isXmlFormatMapperLegacyFormatEnabled()
+								.isXmlFormatMapperLegacyFormatEnabled(),
+				formatMapperCreationContext
 		);
 
 		sessionFactoryName = (String) settings.get( SESSION_FACTORY_NAME );
@@ -852,7 +862,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 						.getDefaultConnectionHandlingMode();
 	}
 
-	private static FormatMapper jsonFormatMapper(Object setting, boolean osonExtensionEnabled, StrategySelector selector) {
+	private static FormatMapper jsonFormatMapper(Object setting, boolean osonExtensionEnabled, StrategySelector selector, FormatMapperCreationContext creationContext) {
 		return formatMapper(
 				setting,
 				selector,
@@ -860,31 +870,56 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 					// Prefer the OSON Jackson FormatMapper by default if available
 					final FormatMapper jsonJacksonFormatMapper =
 							osonExtensionEnabled && isJacksonOsonExtensionAvailable()
-									? getOsonJacksonFormatMapperOrNull()
-									: getJsonJacksonFormatMapperOrNull();
+									? getOsonJacksonFormatMapperOrNull( creationContext )
+									: getJsonJacksonFormatMapperOrNull( creationContext );
 					return jsonJacksonFormatMapper != null
 							? jsonJacksonFormatMapper
 							: getJakartaJsonBFormatMapperOrNull();
-				}
+				},
+				creationContext
 		);
 	}
 
-	private static FormatMapper xmlFormatMapper(Object setting, StrategySelector selector, boolean legacyFormat) {
+	private static FormatMapper xmlFormatMapper(Object setting, StrategySelector selector, boolean legacyFormat, FormatMapperCreationContext creationContext) {
 		return formatMapper(
 				setting,
 				selector,
 				() -> {
-					final FormatMapper jacksonFormatMapper =
-							getXMLJacksonFormatMapperOrNull( legacyFormat );
+					final FormatMapper jacksonFormatMapper = getXMLJacksonFormatMapperOrNull( creationContext );
 					return jacksonFormatMapper != null
 							? jacksonFormatMapper
 							: new JaxbXmlFormatMapper( legacyFormat );
-				}
+				},
+				creationContext
 		);
 	}
 
-	private static FormatMapper formatMapper(Object setting, StrategySelector selector, Callable<FormatMapper> defaultResolver) {
-		return selector.resolveDefaultableStrategy( FormatMapper.class, setting, defaultResolver );
+	private static FormatMapper formatMapper(Object setting, StrategySelector selector, Callable<FormatMapper> defaultResolver, FormatMapperCreationContext creationContext) {
+		return selector.resolveStrategy( FormatMapper.class, setting, defaultResolver, strategyClass -> {
+			try {
+				final Constructor<? extends FormatMapper> creationContextConstructor =
+						strategyClass.getDeclaredConstructor( FormatMapperCreationContext.class );
+				return creationContextConstructor.newInstance( creationContext );
+			}
+			catch (NoSuchMethodException e) {
+				// Ignore
+			}
+			catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
+				throw new StrategySelectionException(
+						String.format( "Could not instantiate named strategy class [%s]", strategyClass.getName() ),
+						e
+				);
+			}
+			try {
+				return strategyClass.getDeclaredConstructor().newInstance();
+			}
+			catch (Exception e) {
+				throw new StrategySelectionException(
+						String.format( "Could not instantiate named strategy class [%s]", strategyClass.getName() ),
+						e
+				);
+			}
+		} );
 	}
 
 

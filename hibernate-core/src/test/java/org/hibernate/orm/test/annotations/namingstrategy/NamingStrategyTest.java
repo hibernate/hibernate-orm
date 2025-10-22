@@ -16,8 +16,8 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
@@ -34,12 +34,12 @@ public class NamingStrategyTest {
 
 	private ServiceRegistry serviceRegistry;
 
-	@BeforeAll
+	@BeforeEach
 	public void setUp() {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void tearDown() {
 		if ( serviceRegistry != null ) {
 			ServiceRegistryBuilder.destroy( serviceRegistry );

@@ -13,8 +13,8 @@ public class MyEntity {
 	private Long id;
 	private String name;
 	private MySibling sibling;
-	private Set nonInverseChildren = new HashSet();
-	private Set inverseChildren = new HashSet();
+	private Set<MyChild> nonInverseChildren = new HashSet<>();
+	private Set<MyChild> inverseChildren = new HashSet<>();
 
 	public MyEntity() {
 	}
@@ -47,19 +47,19 @@ public class MyEntity {
 		this.sibling = sibling;
 	}
 
-	public Set getNonInverseChildren() {
+	public Set<MyChild> getNonInverseChildren() {
 		return nonInverseChildren;
 	}
 
-	public void setNonInverseChildren(Set nonInverseChildren) {
+	public void setNonInverseChildren(Set<MyChild> nonInverseChildren) {
 		this.nonInverseChildren = nonInverseChildren;
 	}
 
-	public Set getInverseChildren() {
+	public Set<MyChild> getInverseChildren() {
 		return inverseChildren;
 	}
 
-	public void setInverseChildren(Set inverseChildren) {
+	public void setInverseChildren(Set<MyChild> inverseChildren) {
 		this.inverseChildren = inverseChildren;
 	}
 }

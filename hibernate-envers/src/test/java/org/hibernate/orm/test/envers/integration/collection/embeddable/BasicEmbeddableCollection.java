@@ -5,107 +5,106 @@
 package org.hibernate.orm.test.envers.integration.collection.embeddable;
 
 import java.util.Arrays;
-import jakarta.persistence.EntityManager;
 
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-import junit.framework.Assert;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @JiraKey(value = "HHH-6613")
-public class BasicEmbeddableCollection extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {DarkCharacter.class})
+public class BasicEmbeddableCollection {
 	private int id = -1;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {DarkCharacter.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1 - empty element collection
-		em.getTransaction().begin();
-		DarkCharacter darkCharacter = new DarkCharacter( 1, 1 );
-		em.persist( darkCharacter );
-		em.getTransaction().commit();
-
-		id = darkCharacter.getId();
+		scope.inTransaction( em -> {
+			DarkCharacter darkCharacter = new DarkCharacter( 1, 1 );
+			em.persist( darkCharacter );
+			id = darkCharacter.getId();
+		} );
 
 		// Revision 2 - adding collection element
-		em.getTransaction().begin();
-		darkCharacter = em.find( DarkCharacter.class, darkCharacter.getId() );
-		darkCharacter.getNames().add( new Name( "Action", "Hank" ) );
-		darkCharacter = em.merge( darkCharacter );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			DarkCharacter darkCharacter = em.find( DarkCharacter.class, id );
+			darkCharacter.getNames().add( new Name( "Action", "Hank" ) );
+			em.merge( darkCharacter );
+		} );
 
 		// Revision 3 - adding another collection element
-		em.getTransaction().begin();
-		darkCharacter = em.find( DarkCharacter.class, darkCharacter.getId() );
-		darkCharacter.getNames().add( new Name( "Green", "Lantern" ) );
-		darkCharacter = em.merge( darkCharacter );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			DarkCharacter darkCharacter = em.find( DarkCharacter.class, id );
+			darkCharacter.getNames().add( new Name( "Green", "Lantern" ) );
+			em.merge( darkCharacter );
+		} );
 
 		// Revision 4 - removing single collection element
-		em.getTransaction().begin();
-		darkCharacter = em.find( DarkCharacter.class, darkCharacter.getId() );
-		darkCharacter.getNames().remove( new Name( "Action", "Hank" ) );
-		darkCharacter = em.merge( darkCharacter );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			DarkCharacter darkCharacter = em.find( DarkCharacter.class, id );
+			darkCharacter.getNames().remove( new Name( "Action", "Hank" ) );
+			em.merge( darkCharacter );
+		} );
 
 		// Revision 5 - removing all collection elements
-		em.getTransaction().begin();
-		darkCharacter = em.find( DarkCharacter.class, darkCharacter.getId() );
-		darkCharacter.getNames().clear();
-		darkCharacter = em.merge( darkCharacter );
-		em.getTransaction().commit();
-
-		em.close();
+		scope.inTransaction( em -> {
+			DarkCharacter darkCharacter = em.find( DarkCharacter.class, id );
+			darkCharacter.getNames().clear();
+			em.merge( darkCharacter );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCount() {
-		Assert.assertEquals( Arrays.asList( 1, 2, 3, 4, 5 ), getAuditReader().getRevisions( DarkCharacter.class, id ) );
+	public void testRevisionsCount(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1, 2, 3, 4, 5 ), auditReader.getRevisions( DarkCharacter.class, id ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfCharacter() {
-		DarkCharacter darkCharacter = new DarkCharacter( id, 1 );
+	public void testHistoryOfCharacter(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			DarkCharacter darkCharacter = new DarkCharacter( id, 1 );
 
-		DarkCharacter ver1 = getAuditReader().find( DarkCharacter.class, id, 1 );
+			DarkCharacter ver1 = auditReader.find( DarkCharacter.class, id, 1 );
 
-		Assert.assertEquals( darkCharacter, ver1 );
-		Assert.assertEquals( 0, ver1.getNames().size() );
+			assertEquals( darkCharacter, ver1 );
+			assertEquals( 0, ver1.getNames().size() );
 
-		darkCharacter.getNames().add( new Name( "Action", "Hank" ) );
-		DarkCharacter ver2 = getAuditReader().find( DarkCharacter.class, id, 2 );
+			darkCharacter.getNames().add( new Name( "Action", "Hank" ) );
+			DarkCharacter ver2 = auditReader.find( DarkCharacter.class, id, 2 );
 
-		Assert.assertEquals( darkCharacter, ver2 );
-		Assert.assertEquals( darkCharacter.getNames(), ver2.getNames() );
+			assertEquals( darkCharacter, ver2 );
+			assertEquals( darkCharacter.getNames(), ver2.getNames() );
 
-		darkCharacter.getNames().add( new Name( "Green", "Lantern" ) );
-		DarkCharacter ver3 = getAuditReader().find( DarkCharacter.class, id, 3 );
+			darkCharacter.getNames().add( new Name( "Green", "Lantern" ) );
+			DarkCharacter ver3 = auditReader.find( DarkCharacter.class, id, 3 );
 
-		Assert.assertEquals( darkCharacter, ver3 );
-		Assert.assertEquals( darkCharacter.getNames(), ver3.getNames() );
+			assertEquals( darkCharacter, ver3 );
+			assertEquals( darkCharacter.getNames(), ver3.getNames() );
 
-		darkCharacter.getNames().remove( new Name( "Action", "Hank" ) );
-		DarkCharacter ver4 = getAuditReader().find( DarkCharacter.class, id, 4 );
+			darkCharacter.getNames().remove( new Name( "Action", "Hank" ) );
+			DarkCharacter ver4 = auditReader.find( DarkCharacter.class, id, 4 );
 
-		Assert.assertEquals( darkCharacter, ver4 );
-		Assert.assertEquals( darkCharacter.getNames(), ver4.getNames() );
+			assertEquals( darkCharacter, ver4 );
+			assertEquals( darkCharacter.getNames(), ver4.getNames() );
 
-		darkCharacter.getNames().clear();
-		DarkCharacter ver5 = getAuditReader().find( DarkCharacter.class, id, 5 );
+			darkCharacter.getNames().clear();
+			DarkCharacter ver5 = auditReader.find( DarkCharacter.class, id, 5 );
 
-		Assert.assertEquals( darkCharacter, ver5 );
-		Assert.assertEquals( darkCharacter.getNames(), ver5.getNames() );
+			assertEquals( darkCharacter, ver5 );
+			assertEquals( darkCharacter.getNames(), ver5.getNames() );
+		} );
 	}
 }

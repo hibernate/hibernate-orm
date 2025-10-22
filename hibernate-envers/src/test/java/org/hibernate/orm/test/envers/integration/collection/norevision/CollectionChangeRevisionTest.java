@@ -7,12 +7,15 @@ package org.hibernate.orm.test.envers.integration.collection.norevision;
 import java.util.Arrays;
 import java.util.List;
 
-public class CollectionChangeRevisionTest extends AbstractCollectionChangeTest {
-	@Override
-	protected String getCollectionChangeValue() {
-		return "true";
-	}
+import org.hibernate.envers.configuration.EnversSettings;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
 
+@EnversTest
+@Jpa(annotatedClasses = {Person.class, Name.class, Parent.class, Child.class, House.class},
+		integrationSettings = @Setting(name = EnversSettings.REVISION_ON_COLLECTION_CHANGE, value = "true"))
+public class CollectionChangeRevisionTest extends AbstractCollectionChangeTest {
 	@Override
 	protected List<Integer> getExpectedPersonRevisions() {
 		return Arrays.asList( 1, 3 );

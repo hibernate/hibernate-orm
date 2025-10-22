@@ -16,34 +16,32 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.MapKeyEnumerated;
 
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.tools.TestTools;
-import org.junit.Test;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.orm.test.envers.tools.TestTools.checkCollection;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-13655")
-public class MapKeyEnumeratedNonEntityTest extends BaseEnversJPAFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { TestEntity.class };
-	}
+@EnversTest
+@Jpa(annotatedClasses = {MapKeyEnumeratedNonEntityTest.TestEntity.class})
+public class MapKeyEnumeratedNonEntityTest {
 
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1
-		doInJPA( this::entityManagerFactory, entityManager -> {
-
+		scope.inTransaction( entityManager -> {
 			final TestEntity test = new TestEntity();
 			test.setId( 1 );
 			test.addMapKeyAssociation( TestEnum.ONE, 1 );
@@ -52,7 +50,7 @@ public class MapKeyEnumeratedNonEntityTest extends BaseEnversJPAFunctionalTestCa
 		} );
 
 		// Revision 2
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final TestEntity test = entityManager.find( TestEntity.class, 1 );
 			test.addMapKeyAssociation( TestEnum.TWO, 2 );
 
@@ -60,14 +58,14 @@ public class MapKeyEnumeratedNonEntityTest extends BaseEnversJPAFunctionalTestCa
 		} );
 
 		// Revision 3
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final TestEntity test = entityManager.find( TestEntity.class, 1 );
 			test.removeMapKeyAssociation( TestEnum.ONE );
 			entityManager.merge( test );
 		} );
 
 		// Revision 4
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final TestEntity test = entityManager.find( TestEntity.class, 1 );
 			test.removeMapKeyAssociation( TestEnum.TWO );
 			entityManager.merge( test );
@@ -75,29 +73,34 @@ public class MapKeyEnumeratedNonEntityTest extends BaseEnversJPAFunctionalTestCa
 	}
 
 	@Test
-	public void testRevisionNumberHistory() {
-		assertEquals( Arrays.asList( 1, 2, 3, 4 ), getAuditReader().getRevisions( TestEntity.class, 1 ) );
+	public void testRevisionNumberHistory(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			assertEquals( Arrays.asList( 1, 2, 3, 4 ), AuditReaderFactory.get( em ).getRevisions( TestEntity.class, 1 ) );
+		} );
 	}
 
 	@Test
-	public void testRevisionHistory() {
+	public void testRevisionHistory(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			var auditReader = AuditReaderFactory.get( em );
 
-		final TestEntity rev1 = getAuditReader().find( TestEntity.class, 1, 1 );
-		assertEquals( 1, rev1.getMapEnumMap().size() );
-		assertEquals( TestEnum.ONE, rev1.getMapEnumMap().keySet().iterator().next() );
+			final TestEntity rev1 = auditReader.find( TestEntity.class, 1, 1 );
+			assertEquals( 1, rev1.getMapEnumMap().size() );
+			assertEquals( TestEnum.ONE, rev1.getMapEnumMap().keySet().iterator().next() );
 
-		final TestEntity rev2 = getAuditReader().find( TestEntity.class, 1, 2 );
-		assertEquals( 2, rev2.getMapEnumMap().size() );
-		assertEquals( TestTools.makeSet( TestEnum.ONE, TestEnum.TWO ), rev2.getMapEnumMap().keySet() );
-		checkCollection( rev2.getMapEnumMap().values(), 1, 2 );
+			final TestEntity rev2 = auditReader.find( TestEntity.class, 1, 2 );
+			assertEquals( 2, rev2.getMapEnumMap().size() );
+			assertEquals( TestTools.makeSet( TestEnum.ONE, TestEnum.TWO ), rev2.getMapEnumMap().keySet() );
+			checkCollection( rev2.getMapEnumMap().values(), 1, 2 );
 
-		final TestEntity rev3 = getAuditReader().find( TestEntity.class, 1, 3 );
-		assertEquals( 1, rev3.getMapEnumMap().size() );
-		assertEquals( TestTools.makeSet( TestEnum.TWO ), rev3.getMapEnumMap().keySet() );
-		checkCollection( rev2.getMapEnumMap().values(), 2 );
+			final TestEntity rev3 = auditReader.find( TestEntity.class, 1, 3 );
+			assertEquals( 1, rev3.getMapEnumMap().size() );
+			assertEquals( TestTools.makeSet( TestEnum.TWO ), rev3.getMapEnumMap().keySet() );
+			checkCollection( rev3.getMapEnumMap().values(), 2 );
 
-		final TestEntity rev4 = getAuditReader().find( TestEntity.class, 1, 4 );
-		assertEquals( 0, rev4.getMapEnumMap().size() );
+			final TestEntity rev4 = auditReader.find( TestEntity.class, 1, 4 );
+			assertEquals( 0, rev4.getMapEnumMap().size() );
+		} );
 	}
 
 	public enum TestEnum {

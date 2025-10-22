@@ -640,6 +640,28 @@ Book book =
 
 Notice that this code fragment is completely typesafe, again thanks to <<metamodel-generator,Hibernate Processor>>.
 
+[[controlling-merge]]
+=== Controlling state retrieval during merge
+
+When <<persistence-operations,`merge()`>> is used with cascading, that is, when the `merge()` operation is applied to a root entity with associations mapped `cascade=MERGE`, Hibernate issues a single `select` statement to retrieve the current database state associated with the entity and its associated entities.
+In certain circumstances, this query might be suboptimal.
+However, this query does not occur if the root entity was already loaded into the persistence context before `merge()` is called.
+
+Therefore, we may gain control over the way state is loaded before a `merge()` just by calling `find()` before calling `merge()`.
+
+[source,java]
+----
+Book book = ... ;
+var graph = session.createEntityGraph(Book.class);
+graph.addSubgraph(Book_.chapters);  // Book.chapters mapped cascade=MERGE
+entityManager.find(graph, book.getIsbn());  // force loading of the book
+entityManager.merge(book);
+----
+
+When merging multiple root entities, `findMultiple()` may be used instead of `find()`.
+
+TIP: In some cases, `merge()` is much less efficient than the `upsert()` operation of <<stateless-sessions,`StatelessSession`>>.
+
 [[flush]]
 === Flushing the session
 

@@ -7,15 +7,18 @@ package org.hibernate.type.format.jackson;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import oracle.jdbc.provider.oson.OsonModule;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.format.AbstractJsonFormatMapper;
+import org.hibernate.type.format.FormatMapperCreationContext;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.List;
 
 
 /**
@@ -34,7 +37,19 @@ public final class JacksonOsonFormatMapper extends AbstractJsonFormatMapper {
 	 * Creates a new JacksonOsonFormatMapper
 	 */
 	public JacksonOsonFormatMapper() {
-		this( new ObjectMapper().findAndRegisterModules() );
+		this( ObjectMapper.findModules( JacksonJsonFormatMapper.class.getClassLoader() ) );
+	}
+
+	public JacksonOsonFormatMapper(FormatMapperCreationContext creationContext) {
+		this(
+				creationContext.getBootstrapContext()
+						.getClassLoaderService()
+						.<List<Module>>workWithClassLoader( ObjectMapper::findModules )
+		);
+	}
+
+	private JacksonOsonFormatMapper(List<Module> modules) {
+		this( new ObjectMapper().registerModules( modules ) );
 	}
 
 	public JacksonOsonFormatMapper(ObjectMapper objectMapper) {

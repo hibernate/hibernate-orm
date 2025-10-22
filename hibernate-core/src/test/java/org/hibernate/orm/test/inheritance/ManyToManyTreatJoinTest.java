@@ -13,6 +13,7 @@ import java.util.Set;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterAll;
@@ -95,6 +96,21 @@ public class ManyToManyTreatJoinTest {
 	}
 
 	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	public void testSingleTableTreatJoinCondition(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			final Integer result = session.createSelectionQuery(
+					"select s.subProp from ParentEntity p join treat(p.singleEntities as SingleSub1) s on s.subProp<>2",
+					Integer.class
+			).getSingleResultOrNull();
+			assertThat( result ).isNull();
+			inspector.assertNumberOfJoins( 0, 2 );
+		} );
+	}
+
+	@Test
 	public void testJoinedSelectChild(SessionFactoryScope scope) {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
 		inspector.clear();
@@ -123,6 +139,21 @@ public class ManyToManyTreatJoinTest {
 	}
 
 	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	public void testJoinedTreatJoinCondition(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			final Integer result = session.createSelectionQuery(
+					"select s.subProp from ParentEntity p join treat(p.joinedEntities as JoinedSub1) s on s.subProp<>3",
+					Integer.class
+			).getSingleResultOrNull();
+			assertThat( result ).isNull();
+			inspector.assertNumberOfJoins( 0, 3 );
+		} );
+	}
+
+	@Test
 	public void testTablePerClassSelectChild(SessionFactoryScope scope) {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
 		inspector.clear();
@@ -146,6 +177,21 @@ public class ManyToManyTreatJoinTest {
 					Integer.class
 			).getSingleResult();
 			assertThat( result ).isEqualTo( 1 );
+			inspector.assertNumberOfJoins( 0, 2 );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	public void testTablePerClassTreatJoinCondition(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			final Integer result = session.createSelectionQuery(
+					"select s.subProp from ParentEntity p join treat(p.unionEntities as UnionSub1) s on s.subProp<>4",
+					Integer.class
+			).getSingleResultOrNull();
+			assertThat( result ).isNull();
 			inspector.assertNumberOfJoins( 0, 2 );
 		} );
 	}

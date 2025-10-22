@@ -128,6 +128,7 @@ import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.mutation.internal.SqmInsertStrategyHelper;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.sql.internal.AnyDiscriminatorPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.AsWrappedExpression;
 import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
@@ -227,6 +228,7 @@ import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
 import org.hibernate.query.sqm.tree.insert.SqmConflictUpdateAction;
@@ -385,7 +387,6 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
-import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiation;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
@@ -2684,7 +2685,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// as roots anyway, so nothing to worry about
 
 			log.tracef( "Resolved SqmRoot [%s] to correlated TableGroup [%s]", sqmRoot, tableGroup );
-			consumeExplicitJoins( from, tableGroup );
+			if ( from instanceof SqmRoot<?> ) {
+				consumeJoins( (SqmRoot<?>) from, fromClauseIndex, tableGroup );
+			}
+			else {
+				consumeExplicitJoins( from, tableGroup );
+			}
 			return;
 		}
 		else {
@@ -3347,6 +3353,39 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				SqmMappingModelHelper.resolveExplicitTreatTarget( sqmJoin, this )
 		);
 
+		final List<SqmFrom<?, ?>> sqmTreats = sqmJoin.getSqmTreats();
+		final SqmPredicate joinPredicate;
+		final SqmPredicate[] treatPredicates;
+		final boolean hasPredicate;
+		if ( !sqmTreats.isEmpty() ) {
+			if ( sqmTreats.size() == 1 ) {
+				// If there is only a single treat, combine the predicates just as they are
+				joinPredicate = SqmCreationHelper.combinePredicates(
+						sqmJoin.getJoinPredicate(),
+						( (SqmQualifiedJoin<?, ?>) sqmTreats.get( 0 ) ).getJoinPredicate()
+				);
+				treatPredicates = null;
+				hasPredicate = joinPredicate != null;
+			}
+			else {
+				// When there are multiple predicates, we have to apply type filters
+				joinPredicate = sqmJoin.getJoinPredicate();
+				treatPredicates = new SqmPredicate[sqmTreats.size()];
+				boolean hasTreatPredicate = false;
+				for ( int i = 0; i < sqmTreats.size(); i++ ) {
+					final var p = ( (SqmQualifiedJoin<?, ?>) sqmTreats.get( i ) ).getJoinPredicate();
+					treatPredicates[i] = p;
+					hasTreatPredicate = hasTreatPredicate || p != null;
+				}
+				hasPredicate = joinPredicate != null || hasTreatPredicate;
+			}
+		}
+		else {
+			joinPredicate = sqmJoin.getJoinPredicate();
+			treatPredicates = null;
+			hasPredicate = joinPredicate != null;
+		}
+
 		if ( pathSource instanceof PluralPersistentAttribute ) {
 			assert modelPart instanceof PluralAttributeMapping;
 
@@ -3363,7 +3402,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					null,
 					sqmJoinType.getCorrespondingSqlJoinType(),
 					sqmJoin.isFetched(),
-					sqmJoin.getJoinPredicate() != null,
+					hasPredicate,
 					this
 			);
 
@@ -3379,7 +3418,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					null,
 					sqmJoinType.getCorrespondingSqlJoinType(),
 					sqmJoin.isFetched(),
-					sqmJoin.getJoinPredicate() != null,
+					hasPredicate,
 					this
 			);
 
@@ -3388,7 +3427,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// Since this is an explicit join, we force the initialization of a possible lazy table group
 			// to retain the cardinality, but only if this is a non-trivial attribute join.
 			// Left or inner singular attribute joins without a predicate can be safely optimized away
-			if ( sqmJoin.getJoinPredicate() != null || sqmJoinType != SqmJoinType.INNER && sqmJoinType != SqmJoinType.LEFT ) {
+			if ( hasPredicate || sqmJoinType != SqmJoinType.INNER && sqmJoinType != SqmJoinType.LEFT ) {
 				joinedTableGroup.getPrimaryTableReference();
 			}
 		}
@@ -3425,14 +3464,26 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroupJoin joinForPredicate;
 
 		// add any additional join restrictions
-		if ( sqmJoin.getJoinPredicate() != null ) {
+		if ( hasPredicate ) {
 			if ( sqmJoin.isFetched() ) {
 				QueryLogging.QUERY_MESSAGE_LOGGER.debugf( "Join fetch [%s] is restricted", sqmJoinNavigablePath );
 			}
 
 			final SqmJoin<?, ?> oldJoin = currentlyProcessingJoin;
 			currentlyProcessingJoin = sqmJoin;
-			final Predicate predicate = visitNestedTopLevelPredicate( sqmJoin.getJoinPredicate() );
+			Predicate predicate = joinPredicate == null ? null : visitNestedTopLevelPredicate( joinPredicate );
+			if ( treatPredicates != null ) {
+				final Junction orPredicate = new Junction( Junction.Nature.DISJUNCTION );
+				for ( int i = 0; i < treatPredicates.length; i++ ) {
+					final EntityDomainType<?> treatType =
+							(EntityDomainType<?>) ( (SqmTreatedPath<?, ?>) sqmTreats.get( i ) ).getTreatTarget();
+					orPredicate.add( combinePredicates(
+							createTreatTypeRestriction( sqmJoin, treatType ),
+							treatPredicates[i] == null ? null : visitNestedTopLevelPredicate( treatPredicates[i] )
+					) );
+				}
+				predicate = predicate != null ? combinePredicates( predicate, orPredicate ) : orPredicate;
+			}
 			joinForPredicate = TableGroupJoinHelper.determineJoinForPredicateApply( joinedTableGroupJoin );
 			// If translating the join predicate didn't initialize the table group,
 			// we can safely apply it on the collection table group instead

@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.inheritance;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -22,6 +23,8 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -72,6 +75,95 @@ public class JoinedInheritanceTreatQueryTest {
 			).getSingleResult();
 			assertThat( result.getOwner() ).isInstanceOf( ProductOwner1.class );
 			assertThat( ( (ProductOwner1) result.getOwner() ).getDescription().getText() ).isEqualTo( "description" );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	public void testTreatedJoinWithCondition(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			final List<Product> result = session.createSelectionQuery(
+					"from Product p " +
+					"join treat(p.owner AS ProductOwner2) as own1 on own1.basicProp = 'unknown value'",
+					Product.class
+			).getResultList();
+			assertThat( result ).isEmpty();
+			inspector.assertNumberOfJoins( 0, 2 );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	public void testMultipleTreatedJoinWithCondition(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			final List<Product> result = session.createSelectionQuery(
+					"from Product p " +
+					"join treat(p.owner AS ProductOwner1) as own1 on own1.description is null " +
+					"join treat(p.owner AS ProductOwner2) as own2 on own2.basicProp = 'unknown value'",
+					Product.class
+			).getResultList();
+			assertThat( result ).isEmpty();
+			inspector.assertNumberOfJoins( 0, 4 );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	public void testMultipleTreatedJoinSameAttribute(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			final List<Product> result = session.createSelectionQuery(
+					"from Product p " +
+					"join treat(p.owner AS ProductOwner1) as own1 " +
+					"join treat(p.owner AS ProductOwner2) as own2",
+					Product.class
+			).getResultList();
+			// No rows, because treat joining the same association with disjunct types can't emit results
+			assertThat( result ).isEmpty();
+			inspector.assertNumberOfJoins( 0, 4 );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	public void testMultipleTreatedJoinSameAttributeCriteria(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			final var cb = session.getCriteriaBuilder();
+			final var query = cb.createQuery(Product.class);
+			final var p = query.from( Product.class );
+			p.join( "owner" ).treatAs( ProductOwner1.class );
+			p.join( "owner" ).treatAs( ProductOwner2.class );
+			final List<Product> result = session.createSelectionQuery( query ).getResultList();
+			// No rows, because treat joining the same association with disjunct types can't emit results
+			assertThat( result ).isEmpty();
+			inspector.assertNumberOfJoins( 0, 4 );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	public void testMultipleTreatedJoinCriteria(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			final var cb = session.getCriteriaBuilder();
+			final var query = cb.createQuery(Product.class);
+			final var p = query.from( Product.class );
+			final var ownerJoin = p.join( "owner" );
+			ownerJoin.treatAs( ProductOwner1.class );
+			ownerJoin.treatAs( ProductOwner2.class );
+			final List<Product> result = session.createSelectionQuery( query ).getResultList();
+			// The owner attribute is inner joined, but since there are multiple subtype treats,
+			// the type restriction for the treat usage does not filter rows
+			assertThat( result ).hasSize( 2 );
+			inspector.assertNumberOfJoins( 0, 3 );
 		} );
 	}
 

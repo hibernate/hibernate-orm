@@ -7,6 +7,7 @@
 package org.hibernate.boot.internal;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -70,6 +71,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.format.FormatMapper;
+import org.hibernate.type.format.FormatMapperCreationContext;
 import org.hibernate.type.format.jackson.JacksonIntegration;
 import org.hibernate.type.format.jakartajson.JakartaJsonIntegration;
 import org.hibernate.type.format.jaxb.JaxbXmlFormatMapper;
@@ -313,13 +315,23 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				AvailableSettings.JPA_VALIDATION_FACTORY,
 				configurationSettings.get( AvailableSettings.JAKARTA_VALIDATION_FACTORY )
 		);
-		this.jsonFormatMapper = determineJsonFormatMapper(
+
+		final var formatMapperCreationContext = new FormatMapperCreationContext() {
+			@Override
+			public BootstrapContext getBootstrapContext() {
+				return context;
+			}
+		};
+		jsonFormatMapper = jsonFormatMapper(
 				configurationSettings.get( AvailableSettings.JSON_FORMAT_MAPPER ),
-				strategySelector
+				strategySelector,
+				formatMapperCreationContext
 		);
-		this.xmlFormatMapper = determineXmlFormatMapper(
+
+		xmlFormatMapper = xmlFormatMapper(
 				configurationSettings.get( AvailableSettings.XML_FORMAT_MAPPER ),
-				strategySelector
+				strategySelector,
+				formatMapperCreationContext
 		);
 
 		this.sessionFactoryName = (String) configurationSettings.get( SESSION_FACTORY_NAME );
@@ -827,7 +839,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	private PhysicalConnectionHandlingMode interpretConnectionHandlingMode(
-			Map<String,Object> configurationSettings,
+			Map<String, Object> configurationSettings,
 			StandardServiceRegistry serviceRegistry) {
 		final PhysicalConnectionHandlingMode specifiedHandlingMode = PhysicalConnectionHandlingMode.interpret(
 				configurationSettings.get( CONNECTION_HANDLING )
@@ -840,34 +852,60 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return serviceRegistry.requireService( TransactionCoordinatorBuilder.class ).getDefaultConnectionHandlingMode();
 	}
 
-	private static FormatMapper determineJsonFormatMapper(Object setting, StrategySelector strategySelector) {
-		return strategySelector.resolveDefaultableStrategy(
-				FormatMapper.class,
+	private static FormatMapper jsonFormatMapper(Object setting, StrategySelector selector, FormatMapperCreationContext creationContext) {
+		return formatMapper(
 				setting,
-				(Callable<FormatMapper>) () -> {
-					final FormatMapper jsonJacksonFormatMapper = JacksonIntegration.getJsonJacksonFormatMapperOrNull();
-					if (jsonJacksonFormatMapper != null) {
-						return jsonJacksonFormatMapper;
-					}
-					else {
-						return JakartaJsonIntegration.getJakartaJsonBFormatMapperOrNull();
-					}
-				}
+				selector,
+				() -> {
+					final FormatMapper jsonJacksonFormatMapper = JacksonIntegration.getJsonJacksonFormatMapperOrNull( creationContext );
+					return jsonJacksonFormatMapper != null
+							? jsonJacksonFormatMapper
+							: JakartaJsonIntegration.getJakartaJsonBFormatMapperOrNull();
+				},
+				creationContext
 		);
 	}
 
-	private static FormatMapper determineXmlFormatMapper(Object setting, StrategySelector strategySelector) {
-		return strategySelector.resolveDefaultableStrategy(
-				FormatMapper.class,
+	private static FormatMapper xmlFormatMapper(Object setting, StrategySelector selector, FormatMapperCreationContext creationContext) {
+		return formatMapper(
 				setting,
-				(Callable<FormatMapper>) () -> {
-					final FormatMapper jacksonFormatMapper = JacksonIntegration.getXMLJacksonFormatMapperOrNull();
-					if (jacksonFormatMapper != null) {
-						return jacksonFormatMapper;
-					}
-					return new JaxbXmlFormatMapper();
-				}
+				selector,
+				() -> {
+					final FormatMapper jacksonFormatMapper = JacksonIntegration.getXMLJacksonFormatMapperOrNull( creationContext );
+					return jacksonFormatMapper != null
+							? jacksonFormatMapper
+							: new JaxbXmlFormatMapper();
+				},
+				creationContext
 		);
+	}
+
+	private static FormatMapper formatMapper(Object setting, StrategySelector selector, Callable<FormatMapper> defaultResolver, FormatMapperCreationContext creationContext) {
+		return selector.resolveStrategy( FormatMapper.class, setting, defaultResolver, strategyClass -> {
+			try {
+				final Constructor<? extends FormatMapper> creationContextConstructor =
+						strategyClass.getDeclaredConstructor( FormatMapperCreationContext.class );
+				return creationContextConstructor.newInstance( creationContext );
+			}
+			catch (NoSuchMethodException e) {
+				// Ignore
+			}
+			catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
+				throw new StrategySelectionException(
+						String.format( "Could not instantiate named strategy class [%s]", strategyClass.getName() ),
+						e
+				);
+			}
+			try {
+				return strategyClass.getDeclaredConstructor().newInstance();
+			}
+			catch (Exception e) {
+				throw new StrategySelectionException(
+						String.format( "Could not instantiate named strategy class [%s]", strategyClass.getName() ),
+						e
+				);
+			}
+		} );
 	}
 
 

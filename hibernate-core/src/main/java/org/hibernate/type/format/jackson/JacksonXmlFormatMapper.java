@@ -8,8 +8,12 @@ package org.hibernate.type.format.jackson;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.ArrayList;
 
+import com.fasterxml.jackson.databind.Module;
+
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.format.FormatMapper;
@@ -24,6 +28,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator;
+import org.hibernate.type.format.FormatMapperCreationContext;
 
 /**
  * @author Christian Beikov
@@ -35,17 +40,30 @@ public final class JacksonXmlFormatMapper implements FormatMapper {
 	private final ObjectMapper objectMapper;
 
 	public JacksonXmlFormatMapper() {
-		this( createXmlMapper() );
+		this(
+				createXmlMapper( XmlMapper.findModules( JacksonXmlFormatMapper.class.getClassLoader() ) )
+		);
+	}
+
+	public JacksonXmlFormatMapper(FormatMapperCreationContext creationContext) {
+		this(
+				createXmlMapper(
+						creationContext.getBootstrapContext()
+								.getServiceRegistry()
+								.requireService( ClassLoaderService.class )
+								.<List<Module>>workWithClassLoader( XmlMapper::findModules )
+				)
+		);
 	}
 
 	public JacksonXmlFormatMapper(ObjectMapper objectMapper) {
 		this.objectMapper = objectMapper;
 	}
 
-	private static XmlMapper createXmlMapper() {
+	private static XmlMapper createXmlMapper(List<Module> modules) {
 		final XmlMapper xmlMapper = new XmlMapper();
 		// needed to automatically find and register Jackson's jsr310 module for java.time support
-		xmlMapper.findAndRegisterModules();
+		xmlMapper.registerModules( modules );
 		xmlMapper.configure( SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false );
 		xmlMapper.enable( ToXmlGenerator.Feature.WRITE_NULLS_AS_XSI_NIL );
 		// Workaround for null vs empty string handling inside arrays,

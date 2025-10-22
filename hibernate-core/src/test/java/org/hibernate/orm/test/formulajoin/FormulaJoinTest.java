@@ -4,115 +4,114 @@
  */
 package org.hibernate.orm.test.formulajoin;
 
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
+
 import java.util.List;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.PostgreSQLDialect;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Gavin King
  */
-public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	public String[] getMappings() {
-		return new String[] { "formulajoin/Root.hbm.xml" };
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.JPA_METAMODEL_POPULATION, "enabled" );
-	}
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/formulajoin/Root.hbm.xml"
+)
+@SessionFactory
+@ServiceRegistry(
+		settings = @Setting(name = AvailableSettings.JPA_METAMODEL_POPULATION, value = "enabled")
+)
+public class FormulaJoinTest {
 
 	@Test
-	public void testFormulaJoin() {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		Root root = new Root();
-		root.setName("root 1");
-		Detail current = new Detail();
-		current.setCurrentVersion(true);
-		current.setVersion(2);
-		current.setDetails("details of root 1 blah blah");
-		current.setRoot( root );
-		root.setDetail(current);
-		Detail past = new Detail();
-		past.setCurrentVersion(false);
-		past.setVersion(1);
-		past.setDetails("old details of root 1 yada yada");
-		past.setRoot( root );
-		s.persist( root );
-		s.persist(past);
-		s.persist(current);
-		tx.commit();
-		s.close();
+	public void testFormulaJoin(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Root root = new Root();
+					root.setName( "root 1" );
+					Detail current = new Detail();
+					current.setCurrentVersion( true );
+					current.setVersion( 2 );
+					current.setDetails( "details of root 1 blah blah" );
+					current.setRoot( root );
+					root.setDetail( current );
+					Detail past = new Detail();
+					past.setCurrentVersion( false );
+					past.setVersion( 1 );
+					past.setDetails( "old details of root 1 yada yada" );
+					past.setRoot( root );
+					session.persist( root );
+					session.persist( past );
+					session.persist( current );
+				}
+		);
 
-		if ( getDialect() instanceof PostgreSQLDialect ) return;
+		if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof PostgreSQLDialect ) {
+			return;
+		}
 
-		s = openSession();
-		tx = s.beginTransaction();
-		List l = s.createQuery("from Root m left join m.detail d", Object[].class).list();
-		assertEquals( l.size(), 1 );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					List<Object[]> l = session.createQuery( "from Root m left join m.detail d", Object[].class ).list();
+					assertThat( l ).hasSize( 1 );
+				}
+		);
 
-		s = openSession();
-		tx = s.beginTransaction();
-		l = s.createQuery("from Root m left join fetch m.detail").list();
-		assertEquals( l.size(), 1 );
-		Root m = (Root) l.get(0);
-		assertEquals( "root 1", m.getDetail().getRoot().getName() );
-		assertTrue( m==m.getDetail().getRoot() );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					List<Root> l = session.createQuery( "from Root m left join fetch m.detail", Root.class ).list();
+					assertThat( l ).hasSize( 1 );
+					Root m = l.get( 0 );
+					assertThat( m.getDetail().getRoot().getName() ).isEqualTo( "root 1" );
+					assertThat( m.getDetail().getRoot() ).isEqualTo( m );
+				}
+		);
 
-		s = openSession();
-		tx = s.beginTransaction();
-		l = s.createQuery("from Root m join fetch m.detail").list();
-		assertEquals( l.size(), 1 );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					List<Root> l = session.createQuery( "from Root m join fetch m.detail", Root.class ).list();
+					assertThat( l ).hasSize( 1 );
+				}
+		);
 
-		s = openSession();
-		tx = s.beginTransaction();
-		l = s.createQuery("from Detail d join fetch d.currentRoot.root").list();
-		assertEquals( l.size(), 2 );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					List<Detail> l = session.createQuery( "from Detail d join fetch d.currentRoot.root", Detail.class )
+							.list();
+					assertThat( l ).hasSize( 2 );
+				}
+		);
 
-		s = openSession();
-		tx = s.beginTransaction();
-		l = s.createQuery("from Detail d join fetch d.root").list();
-		assertEquals( l.size(), 2 );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					List<Detail> l = session.createQuery( "from Detail d join fetch d.root", Detail.class ).list();
+					assertThat( l ).hasSize( 2 );
+				}
+		);
 
-		s = openSession();
-		tx = s.beginTransaction();
-		l = s.createQuery("from Detail d join fetch d.currentRoot.root m join fetch m.detail").list();
-		assertEquals( l.size(), 2 );
-		tx.commit();
+		scope.inTransaction(
+				session -> {
+					List<Detail> l = session.createQuery( "from Detail d join fetch d.currentRoot.root m join fetch m.detail",
+							Detail.class ).list();
+					assertThat( l ).hasSize( 2 );
+				}
+		);
 
-		s = openSession();
-		tx = s.beginTransaction();
-		l = s.createQuery("from Detail d join fetch d.root m join fetch m.detail").list();
-		assertEquals( l.size(), 2 );
+		scope.inTransaction(
+				session -> {
+					List<Detail> l = session.createQuery( "from Detail d join fetch d.root m join fetch m.detail",
+							Detail.class ).list();
+					assertThat( l ).hasSize( 2 );
 
-		s.createQuery("delete from Detail").executeUpdate();
-		s.createQuery("delete from Root").executeUpdate();
-
-		tx.commit();
-		s.close();
-
+					session.createMutationQuery( "delete from Detail" ).executeUpdate();
+					session.createMutationQuery( "delete from Root" ).executeUpdate();
+				}
+		);
 	}
 }

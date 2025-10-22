@@ -113,6 +113,19 @@ public class EntityManagerFactoryBasedFunctionalTest
 		return settings;
 	}
 
+	@AfterAll
+	public void afterAll() {
+		if ( entityManagerFactoryScope != null ) {
+			try {
+				entityManagerFactoryScope.close();
+			}
+			catch (Exception e) {
+				throw new RuntimeException( e );
+			}
+		}
+	}
+
+
 	protected Map<Object, Object> getConfig() {
 		Map<Object, Object> config = Environment.getProperties();
 		ArrayList<Class<?>> classes = new ArrayList<>();
@@ -275,11 +288,6 @@ public class EntityManagerFactoryBasedFunctionalTest
 		if ( isCleanupTestDataRequired() ) {
 			cleanupTestData();
 		}
-	}
-
-	@AfterAll
-	public final void afterAll() {
-		entityManagerFactoryScope.getEntityManagerFactory().close();
 	}
 
 	protected boolean isCleanupTestDataRequired() {

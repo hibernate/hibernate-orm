@@ -68,6 +68,29 @@ public class AttributeJoinWithNaturalJoinedInheritanceTest {
 		} );
 	}
 
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	public void testTreatedJoinWithCondition(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			final ChildEntityA childEntityA1 = new SubChildEntityA1( 11 );
+			childEntityA1.setName( "childA1" );
+			s.persist( childEntityA1 );
+			final ChildEntityA childEntityA2 = new SubChildEntityA2( 21 );
+			childEntityA2.setName( "childA2" );
+			s.persist( childEntityA2 );
+			s.persist( new RootOne( 1, childEntityA1 ) );
+			s.persist( new RootOne( 2, childEntityA2 ) );
+		} );
+		scope.inTransaction( s -> {
+			final Tuple tuple = s.createQuery(
+					"select r, ce, ce.uk " +
+					"from RootOne r join treat(r.child as ChildEntityA) ce on ce.name = 'childA1'",
+					Tuple.class
+			).getSingleResult();
+			assertResult( tuple, 1, 11, 11, "child_a_1", SubChildEntityA1.class, 11 );
+		} );
+	}
+
 	private <T extends ChildEntityA> void assertResult(
 			Tuple result,
 			Integer rootId,
@@ -113,6 +136,7 @@ public class AttributeJoinWithNaturalJoinedInheritanceTest {
 	public static class BaseClass {
 		@Id
 		private Integer id;
+		private String name;
 
 		@Column( name = "disc_col", insertable = false, updatable = false )
 		private String discCol;
@@ -130,6 +154,14 @@ public class AttributeJoinWithNaturalJoinedInheritanceTest {
 
 		public String getDiscCol() {
 			return discCol;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
 		}
 	}
 

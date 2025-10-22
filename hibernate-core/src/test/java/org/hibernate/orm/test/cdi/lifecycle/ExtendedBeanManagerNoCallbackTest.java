@@ -4,20 +4,19 @@
  */
 package org.hibernate.orm.test.cdi.lifecycle;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
-
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.jupiter.api.Test;
-
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.SessionFactory;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.junit.jupiter.api.Test;
 
 /**
  * We pass an ExtendedBeanManager but never "initialize" it.  This might happen when the
@@ -30,12 +29,11 @@ public class ExtendedBeanManagerNoCallbackTest {
 				.applySetting( AvailableSettings.JAKARTA_CDI_BEAN_MANAGER, new ExtendedBeanManagerImpl() )
 				.build();
 
-		try {
-			// this will trigger trying to locate IdentifierGeneratorFactory as a managed-bean
-			new MetadataSources( ssr )
-					.addAnnotatedClass( TheEntity.class )
-					.buildMetadata()
-					.buildSessionFactory();
+		// this will trigger trying to locate IdentifierGeneratorFactory as a managed-bean
+		try (SessionFactory sf = new MetadataSources( ssr )
+				.addAnnotatedClass( TheEntity.class )
+				.buildMetadata()
+				.buildSessionFactory()) {
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

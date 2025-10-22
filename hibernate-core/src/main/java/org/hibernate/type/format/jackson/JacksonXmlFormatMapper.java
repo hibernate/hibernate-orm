@@ -45,7 +45,7 @@ public final class JacksonXmlFormatMapper implements FormatMapper {
 	private static XmlMapper createXmlMapper() {
 		final XmlMapper xmlMapper = new XmlMapper();
 		// needed to automatically find and register Jackson's jsr310 module for java.time support
-		xmlMapper.findAndRegisterModules();
+		xmlMapper.registerModules( XmlMapper.findModules( JacksonXmlFormatMapper.class.getClassLoader() ) );
 		xmlMapper.configure( SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false );
 		xmlMapper.enable( ToXmlGenerator.Feature.WRITE_NULLS_AS_XSI_NIL );
 		// Workaround for null vs empty string handling inside arrays,

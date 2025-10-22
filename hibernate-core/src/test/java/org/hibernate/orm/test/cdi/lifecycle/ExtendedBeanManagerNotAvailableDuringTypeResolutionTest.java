@@ -37,7 +37,7 @@ public class ExtendedBeanManagerNotAvailableDuringTypeResolutionTest {
 		try {
 			// this will trigger trying to locate MyEnumType as a managed-bean
 			try (InputStream mappingInputStream =
-						 new ByteArrayInputStream( TheEntity.ENTITY_DEFINITION.getBytes( StandardCharsets.UTF_8 ) )) {
+						new ByteArrayInputStream( TheEntity.ENTITY_DEFINITION.getBytes( StandardCharsets.UTF_8 ) )) {
 				try (SessionFactory sf = new MetadataSources( ssr )
 						.addInputStream( mappingInputStream )
 						.buildMetadata()

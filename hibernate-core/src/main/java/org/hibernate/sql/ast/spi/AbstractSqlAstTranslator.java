@@ -4766,12 +4766,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				if ( binding == null ) {
 					throw new ExecutionException( "JDBC parameter value not bound - " + offsetParameter );
 				}
-				offsetValue = ((Number) binding.getBindValue()).intValue() + staticOffset;
+				offsetValue = ((Number) binding.getBindValue()).intValue();
 			}
 			//noinspection unchecked
 			fetchParameter.getExpressionType().getSingleJdbcMapping().getJdbcValueBinder().bind(
 					statement,
-					bindValue.intValue() + offsetValue,
+					bindValue.intValue() + offsetValue + staticOffset,
 					startPosition,
 					executionContext.getSession()
 			);

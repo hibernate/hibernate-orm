@@ -4744,38 +4744,23 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( PARAM_MARKER );
 			final JdbcParameter offsetParameter = (JdbcParameter) offsetClauseExpression;
 			final JdbcParameter fetchParameter = (JdbcParameter) fetchClauseExpression;
-			final OffsetReceivingParameterBinder fetchBinder = new OffsetReceivingParameterBinder(
+			final FetchPlusOffsetParameterBinder fetchBinder = new FetchPlusOffsetParameterBinder(
 					offsetParameter,
 					fetchParameter,
 					offset
 			);
-			// We don't register and bind the special OffsetJdbcParameter as that comes from the query options
-			// And in this case, we only want to bind a single JDBC parameter
-			if ( !( offsetParameter instanceof OffsetJdbcParameter ) ) {
-				jdbcParameters.addParameter( offsetParameter );
-				parameterBinders.add(
-						(statement, startPosition, jdbcParameterBindings, executionContext) -> {
-							final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( offsetParameter );
-							if ( binding == null ) {
-								throw new ExecutionException( "JDBC parameter value not bound - " + offsetParameter );
-							}
-							fetchBinder.dynamicOffset = (Number) binding.getBindValue();
-						}
-				);
-			}
 			jdbcParameters.addParameter( fetchParameter );
 			parameterBinders.add( fetchBinder );
 		}
 	}
 
-	private static class OffsetReceivingParameterBinder implements JdbcParameterBinder {
+	private static class FetchPlusOffsetParameterBinder implements JdbcParameterBinder {
 
 		private final JdbcParameter offsetParameter;
 		private final JdbcParameter fetchParameter;
 		private final int staticOffset;
-		private Number dynamicOffset;
 
-		public OffsetReceivingParameterBinder(
+		public FetchPlusOffsetParameterBinder(
 				JdbcParameter offsetParameter,
 				JdbcParameter fetchParameter,
 				int staticOffset) {
@@ -4806,13 +4791,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				offsetValue = executionContext.getQueryOptions().getEffectiveLimit().getFirstRow();
 			}
 			else {
-				offsetValue = dynamicOffset.intValue() + staticOffset;
-				dynamicOffset = null;
+				final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( offsetParameter );
+				if ( binding == null ) {
+					throw new ExecutionException( "JDBC parameter value not bound - " + offsetParameter );
+				}
+				offsetValue = ((Number) binding.getBindValue()).intValue();
 			}
 			//noinspection unchecked
 			fetchParameter.getExpressionType().getSingleJdbcMapping().getJdbcValueBinder().bind(
 					statement,
-					bindValue.intValue() + offsetValue,
+					bindValue.intValue() + offsetValue + staticOffset,
 					startPosition,
 					executionContext.getSession()
 			);

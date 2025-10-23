@@ -39,14 +39,17 @@ public class SQLServerMetaDataDialect extends JDBCMetaDataDialect {
 				table = caseForSearch( table );
 				
 				log.debug("geSuggestedPrimaryKeyStrategyName(" + catalog + "." + schema + "." + table + ")");
-				
+
 				sql = "SELECT a.TABLE_CATALOG, a.TABLE_SCHEMA, a.TABLE_NAME as table_name, c.DATA_TYPE as data_type, b.CONSTRAINT_TYPE,  OBJECTPROPERTY(OBJECT_ID(a.TABLE_NAME),'TableHasIdentity') as hasIdentity " +
 						"FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE a " +
 						"INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS b on a.CONSTRAINT_NAME = b.CONSTRAINT_NAME " +
 						"INNER JOIN INFORMATION_SCHEMA.COLUMNS c on a.TABLE_CATALOG = c.TABLE_CATALOG AND a.TABLE_SCHEMA = c.TABLE_SCHEMA AND a.TABLE_NAME = c.TABLE_NAME AND a.COLUMN_NAME = c.COLUMN_NAME " +
-						"WHERE a.TABLE_NAME='"+table+"' AND a.TABLE_SCHEMA='"+schema+"' AND a.TABLE_CATALOG='"+catalog+"' AND b.CONSTRAINT_TYPE = 'Primary key'";
-				
+						"WHERE a.TABLE_NAME=? AND a.TABLE_SCHEMA=? AND a.TABLE_CATALOG=? AND b.CONSTRAINT_TYPE = 'Primary key'";
+
 				PreparedStatement statement = getConnection().prepareStatement( sql );
+				statement.setString(1, table);
+				statement.setString( 2, schema );
+				statement.setString( 3, catalog );
 				
 				final String sc = schema;
 				final String cat = catalog;

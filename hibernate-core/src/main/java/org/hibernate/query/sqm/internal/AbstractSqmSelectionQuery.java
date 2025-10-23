@@ -291,7 +291,7 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		if ( statement instanceof SqmSelectStatement<?> select ) {
 			final List<SqmSelection<?>> selections =
 					select.getQueryPart().getFirstQuerySpec().getSelectClause().getSelections();
-			return isTupleMetadataRequired( resultType, selections.get(0) )
+			return isTupleMetadataRequired( resultType, selections )
 					? getTupleMetadata( selections )
 					: null;
 		}
@@ -300,7 +300,8 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		}
 	}
 
-	private static <R> boolean isTupleMetadataRequired(Class<R> resultType, SqmSelection<?> selection) {
+	private static <R> boolean isTupleMetadataRequired(Class<R> resultType, List<SqmSelection<?>> selections) {
+		final var selection = selections.size() == 1 ? selections.get( 0 ) : null;
 		return isHqlTuple( selection )
 			|| !isInstantiableWithoutMetadata( resultType )
 				&& !isSelectionAssignableToResultType( selection, resultType );

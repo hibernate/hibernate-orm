@@ -27,8 +27,15 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.StringWriter;
+import java.util.logging.Logger;
 
 public class TrAXPrettyPrinterStrategy extends AbstractXMLPrettyPrinterStrategy {
+
+    private static final Logger LOGGER = Logger.getLogger( TrAXPrettyPrinterStrategy.class.getName() );
+    private static final TransformerFactory TRANSFORMER_FACTORY = TransformerFactory.newInstance(
+            "com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl",
+            null);
+
     private int indent = 4;
     private boolean omitXmlDeclaration;
 
@@ -45,16 +52,18 @@ public class TrAXPrettyPrinterStrategy extends AbstractXMLPrettyPrinterStrategy 
     }
 
     protected Transformer newTransformer(final Document document) throws TransformerConfigurationException {
-        final TransformerFactory transformerFactory = newTransformerFactory();
 
-        final Transformer transformer = transformerFactory.newTransformer();
+        final Transformer transformer = TRANSFORMER_FACTORY.newTransformer();
         transformer.setOutputProperty(OutputKeys.METHOD, "xml");
         transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, isOmitXmlDeclaration() ? "yes" : "no");
         try {
             transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", String.valueOf(getIndent()));
-        } catch (IllegalArgumentException ignored) {
+        }
+        catch (IllegalArgumentException e) {
+            LOGGER.severe( "An IllegalArgumentException happened while adding the 'indent' property." );
+            throw new RuntimeException(e);
         }
 
         final DocumentType doctype = document.getDoctype();
@@ -64,16 +73,6 @@ public class TrAXPrettyPrinterStrategy extends AbstractXMLPrettyPrinterStrategy 
         }
 
         return transformer;
-    }
-
-    protected TransformerFactory newTransformerFactory() {
-        final TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        try {
-            transformerFactory.setAttribute("indent-number", getIndent());
-        } catch (IllegalArgumentException ignored) {
-        }
-
-        return transformerFactory;
     }
 
     public int getIndent() {
@@ -91,4 +90,5 @@ public class TrAXPrettyPrinterStrategy extends AbstractXMLPrettyPrinterStrategy 
     public void setOmitXmlDeclaration(boolean omitXmlDeclaration) {
         this.omitXmlDeclaration = omitXmlDeclaration;
     }
+
 }

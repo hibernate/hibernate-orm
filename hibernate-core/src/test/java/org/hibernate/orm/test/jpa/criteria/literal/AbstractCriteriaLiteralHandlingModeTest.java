@@ -4,39 +4,42 @@
  */
 package org.hibernate.orm.test.jpa.criteria.literal;
 
-import java.util.List;
-import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
-
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.sqm.CastType;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.sqm.CastType;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.hibernate.testing.jdbc.SQLStatementInterceptor;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Map;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public abstract class AbstractCriteriaLiteralHandlingModeTest extends BaseEntityManagerFunctionalTestCase {
+public abstract class AbstractCriteriaLiteralHandlingModeTest extends EntityManagerFactoryBasedFunctionalTest {
 
-	private SQLStatementInterceptor sqlStatementInterceptor;
+	private SQLStatementInspector sqlStatementInspector;
 
 	@Override
 	protected void addConfigOptions(Map options) {
-		sqlStatementInterceptor = new SQLStatementInterceptor( options );
+		sqlStatementInspector = new SQLStatementInspector();
+		options.put( AvailableSettings.STATEMENT_INSPECTOR, sqlStatementInspector );
 		options.put( AvailableSettings.DIALECT_NATIVE_PARAM_MARKERS, Boolean.FALSE );
 	}
 
@@ -47,7 +50,7 @@ public abstract class AbstractCriteriaLiteralHandlingModeTest extends BaseEntity
 		};
 	}
 
-	@Before
+	@BeforeEach
 	public void init() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Book book = new Book();
@@ -59,7 +62,7 @@ public abstract class AbstractCriteriaLiteralHandlingModeTest extends BaseEntity
 	}
 
 	@Test
-	public void testLiteralHandlingMode() throws Exception {
+	public void testLiteralHandlingMode() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			final HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) entityManager.getCriteriaBuilder();
 			final CriteriaQuery<Tuple> query = cb.createQuery( Tuple.class );
@@ -83,18 +86,18 @@ public abstract class AbstractCriteriaLiteralHandlingModeTest extends BaseEntity
 					entity.get( "name" )
 			);
 
-			sqlStatementInterceptor.clear();
+			sqlStatementInspector.clear();
 
 			List<Tuple> tuples = entityManager.createQuery( query ).getResultList();
 			assertEquals( 1, tuples.size() );
 
-			sqlStatementInterceptor.assertExecuted( expectedSQL() );
+			sqlStatementInspector.assertExecuted( expectedSQL() );
 		} );
 	}
 
 	protected String casted(String expression, CastType castType) {
-		final TypeConfiguration typeConfiguration = entityManagerFactory().getTypeConfiguration();
-		return getDialect().castPattern( CastType.OTHER, castType )
+		final TypeConfiguration typeConfiguration = entityManagerFactory().unwrap( SessionFactoryImplementor.class ).getTypeConfiguration();
+		return DialectContext.getDialect().castPattern( CastType.OTHER, castType )
 				.replace(
 						"?2",
 						typeConfiguration.getDdlTypeRegistry().getDescriptor( SqlTypes.VARCHAR )

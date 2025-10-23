@@ -23,7 +23,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Jpa(
 		annotatedClasses = {
@@ -50,7 +50,7 @@ public class NonPkAssociationEqualityPredicateTest {
 					);
 
 					List<Order> orders = entityManager.createQuery( orderCriteria ).getResultList();
-					assertTrue( orders.size() == 0 );
+					assertEquals( 0, orders.size() );
 				}
 		);
 	}

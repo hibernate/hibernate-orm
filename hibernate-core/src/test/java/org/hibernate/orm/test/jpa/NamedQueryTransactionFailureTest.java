@@ -4,21 +4,22 @@
  */
 package org.hibernate.orm.test.jpa;
 
-import java.util.Map;
-
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
-
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 
 import org.mockito.Mockito;
 
+import java.util.Map;
+
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
@@ -27,7 +28,7 @@ import static org.mockito.Mockito.when;
 /**
  * @author Vlad Mihalcea
  */
-public class NamedQueryTransactionFailureTest extends BaseEntityManagerFunctionalTestCase {
+public class NamedQueryTransactionFailureTest extends EntityManagerFactoryBasedFunctionalTest {
 	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] {
@@ -66,7 +67,7 @@ public class NamedQueryTransactionFailureTest extends BaseEntityManagerFunctiona
 	}
 
 	@Override
-	protected boolean createSchema() {
+	protected boolean exportSchema() {
 		return false;
 	}
 

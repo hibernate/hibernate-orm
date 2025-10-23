@@ -4,17 +4,10 @@
  */
 package org.hibernate.orm.test.jpa.criteria.simplecase;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
-import java.util.List;
-
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -26,10 +19,18 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Mote that these are simply performing syntax checking (can the criteria query
@@ -37,200 +38,201 @@ import org.junit.Test;
  *
  * @author Steve Ebersole
  */
-public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(annotatedClasses = {BasicSimpleCaseTest.Customer.class, BasicSimpleCaseTest.TestEntity.class})
+public class BasicSimpleCaseTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {Customer.class, TestEntity.class};
+	@AfterEach
+	public void cleanupTestData(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test
 	@JiraKey(value = "HHH-9343")
-	public void testCaseStringResult() {
-		EntityManager em = getOrCreateEntityManager();
-		CriteriaBuilder builder = em.getCriteriaBuilder();
+	public void testCaseStringResult(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
+			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 
-		CriteriaQuery<Tuple> query = builder.createTupleQuery();
-		Root<Customer> root = query.from( Customer.class );
+			CriteriaQuery<Tuple> query = builder.createTupleQuery();
+			Root<Customer> root = query.from( Customer.class );
 
-		Path<String> emailPath = root.get( "email" );
-		CriteriaBuilder.Case<String> selectCase = builder.selectCase();
-		selectCase.when( builder.greaterThan( builder.length( emailPath ), 13 ), "Long" );
-		selectCase.when( builder.greaterThan( builder.length( emailPath ), 12 ), "Normal" );
-		Expression<String> emailType = selectCase.otherwise( "Unknown" );
+			Path<String> emailPath = root.get( "email" );
+			CriteriaBuilder.Case<String> selectCase = builder.selectCase();
+			selectCase.when( builder.greaterThan( builder.length( emailPath ), 13 ), "Long" );
+			selectCase.when( builder.greaterThan( builder.length( emailPath ), 12 ), "Normal" );
+			Expression<String> emailType = selectCase.otherwise( "Unknown" );
 
-		query.multiselect( emailPath, emailType );
+			query.multiselect( emailPath, emailType );
 
-		em.createQuery( query ).getResultList();
+			entityManager.createQuery( query ).getResultList();
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-9343")
-	public void testCaseIntegerResult() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+	public void testCaseIntegerResult(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 
-		CriteriaBuilder builder = em.getCriteriaBuilder();
+			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 
-		CriteriaQuery<Tuple> query = builder.createTupleQuery();
-		Root<Customer> root = query.from( Customer.class );
+			CriteriaQuery<Tuple> query = builder.createTupleQuery();
+			Root<Customer> root = query.from( Customer.class );
 
-		Path<String> emailPath = root.get( "email" );
-		CriteriaBuilder.Case<Integer> selectCase = builder.selectCase();
-		selectCase.when( builder.greaterThan( builder.length( emailPath ), 13 ), 2 );
-		selectCase.when( builder.greaterThan( builder.length( emailPath ), 12 ), 1 );
-		Expression<Integer> emailType = selectCase.otherwise( 0 );
+			Path<String> emailPath = root.get( "email" );
+			CriteriaBuilder.Case<Integer> selectCase = builder.selectCase();
+			selectCase.when( builder.greaterThan( builder.length( emailPath ), 13 ), 2 );
+			selectCase.when( builder.greaterThan( builder.length( emailPath ), 12 ), 1 );
+			Expression<Integer> emailType = selectCase.otherwise( 0 );
 
-		query.multiselect( emailPath, emailType );
+			query.multiselect( emailPath, emailType );
 
-		em.createQuery( query ).getResultList();
+			entityManager.createQuery( query ).getResultList();
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-9343")
-	public void testCaseLiteralResult() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+	public void testCaseLiteralResult(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 
-		CriteriaBuilder cb = em.getCriteriaBuilder();
-		CriteriaQuery<Boolean> cq = cb.createQuery( Boolean.class );
-		Root<Customer> expense_ = cq.from( Customer.class );
-		em.createQuery(
-				cq.distinct( true ).where(
-						cb.equal( expense_.get( "email" ), "@hibernate.com" )
-				).multiselect(
-						cb.selectCase()
-								.when( cb.gt( cb.count( expense_ ), cb.literal( 0L ) ), cb.literal( true ) )
-								.otherwise( cb.literal( false ) )
-				)
-		).getSingleResult();
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaQuery<Boolean> cq = cb.createQuery( Boolean.class );
+			Root<Customer> expense_ = cq.from( Customer.class );
+			entityManager.createQuery(
+					cq.distinct( true ).where(
+							cb.equal( expense_.get( "email" ), "@hibernate.com" )
+					).multiselect(
+							cb.selectCase()
+									.when( cb.gt( cb.count( expense_ ), cb.literal( 0L ) ), cb.literal( true ) )
+									.otherwise( cb.literal( false ) )
+					)
+			).getSingleResult();
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-9343")
-	public void testCaseLiteralResult2() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+	public void testCaseLiteralResult2(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 
-		CriteriaBuilder cb = em.getCriteriaBuilder();
-		CriteriaQuery<Boolean> cq = cb.createQuery( Boolean.class );
-		Root<Customer> expense_ = cq.from( Customer.class );
-		em.createQuery(
-				cq.distinct( true ).where(
-						cb.equal( expense_.get( "email" ), "@hibernate.com" )
-				).multiselect(
-						cb.selectCase()
-								.when( cb.gt( cb.count( expense_ ), cb.literal( 0L ) ), true )
-								.otherwise( false )
-				)
-		).getSingleResult();
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaQuery<Boolean> cq = cb.createQuery( Boolean.class );
+			Root<Customer> expense_ = cq.from( Customer.class );
+			entityManager.createQuery(
+					cq.distinct( true ).where(
+							cb.equal( expense_.get( "email" ), "@hibernate.com" )
+					).multiselect(
+							cb.selectCase()
+									.when( cb.gt( cb.count( expense_ ), cb.literal( 0L ) ), true )
+									.otherwise( false )
+					)
+			).getSingleResult();
+		} );
 	}
 
 	@Test
-	public void testCaseInOrderBy() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+	public void testCaseInOrderBy(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 
-		CriteriaBuilder builder = em.getCriteriaBuilder();
+			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 
-		CriteriaQuery<Customer> query = builder.createQuery( Customer.class );
-		Root<Customer> root = query.from( Customer.class );
-		query.select( root );
+			CriteriaQuery<Customer> query = builder.createQuery( Customer.class );
+			Root<Customer> root = query.from( Customer.class );
+			query.select( root );
 
-		Path<String> emailPath = root.get( "email" );
-		SimpleCase<String, Integer> orderCase = builder.selectCase( emailPath );
-		orderCase = orderCase.when( "test@test.com", 1 );
-		orderCase = orderCase.when( "test2@test.com", 2 );
+			Path<String> emailPath = root.get( "email" );
+			SimpleCase<String, Integer> orderCase = builder.selectCase( emailPath );
+			orderCase = orderCase.when( "test@test.com", 1 );
+			orderCase = orderCase.when( "test2@test.com", 2 );
 
-		query.orderBy( builder.asc( orderCase.otherwise( 0 ) ) );
+			query.orderBy( builder.asc( orderCase.otherwise( 0 ) ) );
 
-		em.createQuery( query );
-
+			entityManager.createQuery( query );
+		} );
 	}
 
 	@Test
-	public void testCaseInOrderBy2() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+	public void testCaseInOrderBy2(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 
-		CriteriaBuilder builder = em.getCriteriaBuilder();
+			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 
-		CriteriaQuery<Customer> query = builder.createQuery( Customer.class );
-		Root<Customer> root = query.from( Customer.class );
-		query.select( root );
+			CriteriaQuery<Customer> query = builder.createQuery( Customer.class );
+			Root<Customer> root = query.from( Customer.class );
+			query.select( root );
 
-		Path<String> emailPath = root.get( "email" );
-		SimpleCase<String, String> orderCase = builder.selectCase( emailPath );
-		orderCase = orderCase.when( "test@test.com", "a" );
-		orderCase = orderCase.when( "test2@test.com", "b" );
+			Path<String> emailPath = root.get( "email" );
+			SimpleCase<String, String> orderCase = builder.selectCase( emailPath );
+			orderCase = orderCase.when( "test@test.com", "a" );
+			orderCase = orderCase.when( "test2@test.com", "b" );
 
-		query.orderBy( builder.asc( orderCase.otherwise( "c" ) ) );
+			query.orderBy( builder.asc( orderCase.otherwise( "c" ) ) );
 
-		em.createQuery( query );
-
+			entityManager.createQuery( query );
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-13016")
 	@FailureExpected(jiraKey = "HHH-13016")
-	public void testCaseEnumResult() {
-		doInJPA( this::entityManagerFactory, em -> {
+	public void testCaseEnumResult(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			// create entities
 			Customer customer1 = new Customer();
 			customer1.setEmail( "LONG5678901234" );
-			em.persist( customer1 );
+			entityManager.persist( customer1 );
 			Customer customer2 = new Customer();
 			customer2.setEmail( "NORMAL7890123" );
-			em.persist( customer2 );
+			entityManager.persist( customer2 );
 			Customer customer3 = new Customer();
 			customer3.setEmail( "UNKNOWN" );
-			em.persist( customer3 );
+			entityManager.persist( customer3 );
 		});
-		EntityManager em = getOrCreateEntityManager();
-		CriteriaBuilder builder = em.getCriteriaBuilder();
+		scope.inEntityManager( entityManager -> {
+			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 
-		CriteriaQuery<Tuple> query = builder.createTupleQuery();
-		Root<Customer> root = query.from( Customer.class );
+			CriteriaQuery<Tuple> query = builder.createTupleQuery();
+			Root<Customer> root = query.from( Customer.class );
 
-		Path<String> emailPath = root.get( "email" );
-		CriteriaBuilder.Case<EmailType> selectCase = builder.selectCase();
-		selectCase.when( builder.greaterThan( builder.length( emailPath ), 13 ), EmailType.LONG );
-		selectCase.when( builder.greaterThan( builder.length( emailPath ), 12 ), EmailType.NORMAL );
-		Expression<EmailType> emailType = selectCase.otherwise( EmailType.UNKNOWN );
+			Path<String> emailPath = root.get( "email" );
+			CriteriaBuilder.Case<EmailType> selectCase = builder.selectCase();
+			selectCase.when( builder.greaterThan( builder.length( emailPath ), 13 ), EmailType.LONG );
+			selectCase.when( builder.greaterThan( builder.length( emailPath ), 12 ), EmailType.NORMAL );
+			Expression<EmailType> emailType = selectCase.otherwise( EmailType.UNKNOWN );
 
-		query.multiselect( emailPath, emailType );
-		query.orderBy( builder.asc( emailPath ) );
+			query.multiselect( emailPath, emailType );
+			query.orderBy( builder.asc( emailPath ) );
 
-		List<Tuple> results = em.createQuery( query ).getResultList();
-		assertEquals( 3, results.size() );
-		assertEquals( "LONG5678901234", results.get( 0 ).get( 0 ) );
-		assertEquals( EmailType.LONG, results.get( 0 ).get( 1 ) );
-		assertEquals( "NORMAL7890123", results.get( 1 ).get( 0 ) );
-		assertEquals( EmailType.NORMAL, results.get( 1 ).get( 1 )  );
-		assertEquals( "UNKNOWN", results.get( 2 ).get( 0 ) );
-		assertEquals( EmailType.UNKNOWN, results.get( 2 ).get( 1 )  );
+			List<Tuple> results = entityManager.createQuery( query ).getResultList();
+			assertEquals( 3, results.size() );
+			assertEquals( "LONG5678901234", results.get( 0 ).get( 0 ) );
+			assertEquals( EmailType.LONG, results.get( 0 ).get( 1 ) );
+			assertEquals( "NORMAL7890123", results.get( 1 ).get( 0 ) );
+			assertEquals( EmailType.NORMAL, results.get( 1 ).get( 1 ) );
+			assertEquals( "UNKNOWN", results.get( 2 ).get( 0 ) );
+			assertEquals( EmailType.UNKNOWN, results.get( 2 ).get( 1 ) );
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-13199")
-	public void testCaseEnumInSum() throws Exception {
-		doInJPA( this::entityManagerFactory, em -> {
+	public void testCaseEnumInSum(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			// create entities
 			TestEntity e1 = new TestEntity();
 			e1.setEnumField( TestEnum.VAL_1 );
 			e1.setValue( 20L );
-			em.persist( e1 );
+			entityManager.persist( e1 );
 
 			TestEntity e2 = new TestEntity();
 			e2.setEnumField( TestEnum.VAL_2 );
 			e2.setValue( 10L );
-			em.persist( e2 );
+			entityManager.persist( e2 );
 		} );
 
-		doInJPA( this::entityManagerFactory, em -> {
+		scope.inTransaction( entityManager -> {
 			// Works in previous version (e.g. Hibernate 5.3.7.Final)
 			// Fails in Hibernate 5.4.0.Final
-			CriteriaBuilder cb = em.getCriteriaBuilder();
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Tuple> query = cb.createTupleQuery();
 			Root<TestEntity> r = query.from( TestEntity.class );
 
@@ -256,7 +258,7 @@ public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
 							cb.sum( case2 ).alias( "VAL_2" ) ) )
 					.groupBy( r.<TestEnum> get( "enumField" ) );
 
-			List<Tuple> list = em.createQuery( query ).getResultList();
+			List<Tuple> list = entityManager.createQuery( query ).getResultList();
 			assertEquals( 2, list.size() );
 			for ( Tuple tuple : list ) {
 				TestEnum enumVal = tuple.get( "enumField", TestEnum.class );

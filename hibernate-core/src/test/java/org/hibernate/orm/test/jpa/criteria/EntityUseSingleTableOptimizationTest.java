@@ -42,7 +42,7 @@ public class EntityUseSingleTableOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "from Thing t where type(t) = House" )
+					entityManager.createSelectionQuery( "from Thing t where type(t) = House", Thing.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals(
@@ -70,7 +70,7 @@ public class EntityUseSingleTableOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "select 1 from Thing t where type(t) = Building" )
+					entityManager.createSelectionQuery( "select 1 from Thing t where type(t) = Building", Integer.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals(
@@ -91,7 +91,7 @@ public class EntityUseSingleTableOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "select t.id from Thing t where type(t) = House" )
+					entityManager.createSelectionQuery( "select t.id from Thing t where type(t) = House", Long.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals(
@@ -112,7 +112,7 @@ public class EntityUseSingleTableOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "from Thing t where type(t) <> House" )
+					entityManager.createSelectionQuery( "from Thing t where type(t) <> House", Thing.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals(
@@ -140,7 +140,7 @@ public class EntityUseSingleTableOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "from Thing t where type(t) in (House, Car)" )
+					entityManager.createSelectionQuery( "from Thing t where type(t) in (House, Car)", Thing.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals(
@@ -168,7 +168,7 @@ public class EntityUseSingleTableOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "from Thing t where type(t) in (House, Skyscraper)" )
+					entityManager.createSelectionQuery( "from Thing t where type(t) in (House, Skyscraper)", Thing.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals(
@@ -196,7 +196,7 @@ public class EntityUseSingleTableOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "from Thing t where type(t) not in (House, Car)" )
+					entityManager.createSelectionQuery( "from Thing t where type(t) not in (House, Car)", Thing.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals(
@@ -224,7 +224,7 @@ public class EntityUseSingleTableOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "from Thing t where treat(t as House).familyName is not null" )
+					entityManager.createSelectionQuery( "from Thing t where treat(t as House).familyName is not null", Thing.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals(
@@ -252,7 +252,7 @@ public class EntityUseSingleTableOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "from Thing t where treat(t as Skyscraper).doors is not null" )
+					entityManager.createSelectionQuery( "from Thing t where treat(t as Skyscraper).doors is not null", Thing.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals(
@@ -280,7 +280,7 @@ public class EntityUseSingleTableOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "from Thing t where treat(t as House).familyName is not null or t.id > 0" )
+					entityManager.createSelectionQuery( "from Thing t where treat(t as House).familyName is not null or t.id > 0", Thing.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals(
@@ -308,7 +308,7 @@ public class EntityUseSingleTableOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "from Thing t where type(t) = House or t.id > 0" )
+					entityManager.createSelectionQuery( "from Thing t where type(t) = House or t.id > 0", Thing.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals(
@@ -336,7 +336,7 @@ public class EntityUseSingleTableOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "select t.nr from Skyscraper t" )
+					entityManager.createSelectionQuery( "select t.nr from Skyscraper t", Integer.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals(

@@ -4,12 +4,8 @@
  */
 package org.hibernate.orm.test.jpa.criteria;
 
-import java.util.ArrayList;
-import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
@@ -18,39 +14,41 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Janario Oliveira
  * @author Gail Badner
  */
-public class EntitySuperclassCollectionTest
-		extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				PersonBase.class, Person.class, Address.class
-		};
-	}
+@Jpa(annotatedClasses = {
+		EntitySuperclassCollectionTest.PersonBase.class,
+		EntitySuperclassCollectionTest.Person.class,
+		EntitySuperclassCollectionTest.Address.class}
+)
+public class EntitySuperclassCollectionTest {
 
 	@Test
 	@JiraKey(value = "HHH-10556")
-	public void testPerson() {
+	public void testPerson(EntityManagerFactoryScope scope) {
 		String address = "super-address";
 
-		PersonBase person = createPerson( new Person(), address );
+		PersonBase person = createPerson( scope, new Person(), address );
 
-		assertAddress( person, address );
+		assertAddress( scope, person, address );
 	}
 
-	private void assertAddress(PersonBase person, String address) {
+	private void assertAddress(EntityManagerFactoryScope scope, PersonBase person, String address) {
 		List<Object> results = find(
+				scope,
 				person.getClass(),
 				person.id,
 				"addresses"
@@ -59,35 +57,31 @@ public class EntitySuperclassCollectionTest
 
 		assertEquals(
 				person.addresses.get( 0 ).id,
-				( (Address) results.get( 0 ) ).id
+				((Address) results.get( 0 )).id
 		);
-		assertEquals( address, ( (Address) results.get( 0 ) ).name );
-
-		getOrCreateEntityManager().close();
+		assertEquals( address, ((Address) results.get( 0 )).name );
 	}
 
-	private PersonBase createPerson(PersonBase person, String address) {
-		EntityManager em = createEntityManager();
-		EntityTransaction tx = em.getTransaction();
-		tx.begin();
+	private PersonBase createPerson(EntityManagerFactoryScope scope, PersonBase person, String address) {
+		PersonBase personBase;
 
 		person.addresses.add( new Address( address ) );
-		person = em.merge( person );
-		tx.commit();
-		return person;
+		personBase = scope.fromTransaction( entityManager -> entityManager.merge( person ) );
+		return personBase;
 	}
 
-	private List<Object> find(Class<?> clazz, int id, String path) {
-		EntityManager em = createEntityManager();
-		CriteriaBuilder cb = em.getCriteriaBuilder();
-		CriteriaQuery<Object> cq = cb.createQuery();
-		Root<?> root = cq.from( clazz );
+	private List<Object> find(EntityManagerFactoryScope scope, Class<?> clazz, int id, String path) {
+		return scope.fromEntityManager( entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaQuery<Object> cq = cb.createQuery();
+			Root<?> root = cq.from( clazz );
 
-		cq.select( root.get( path ) )
-				.where( cb.equal( root.get( "id" ), id ) );
+			cq.select( root.get( path ) )
+					.where( cb.equal( root.get( "id" ), id ) );
 
-		TypedQuery<Object> query = em.createQuery( cq );
-		return query.getResultList();
+			TypedQuery<Object> query = entityManager.createQuery( cq );
+			return query.getResultList();
+		} );
 	}
 
 	@Entity(name = "Address")
@@ -111,7 +105,7 @@ public class EntitySuperclassCollectionTest
 		@GeneratedValue
 		Integer id;
 		@OneToMany(cascade = CascadeType.ALL)
-		List<Address> addresses = new ArrayList<Address>();
+		List<Address> addresses = new ArrayList<>();
 	}
 
 	@Entity(name = "Person")

@@ -4,33 +4,22 @@
  */
 package org.hibernate.orm.test.jpa.secondarytable;
 
-import java.util.Arrays;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.runners.Parameterized;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
+import org.junit.jupiter.params.Parameter;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.EnumSource;
 
-public abstract class AbstractNonOptionalSecondaryTableTest extends BaseEntityManagerFunctionalTestCase {
-	public enum JpaComplianceCachingSetting{ DEFAULT, TRUE, FALSE };
+@ParameterizedClass
+@EnumSource(value = AbstractNonOptionalSecondaryTableTest.JpaComplianceCachingSetting.class)
+public abstract class AbstractNonOptionalSecondaryTableTest extends EntityManagerFactoryBasedFunctionalTest {
+	public enum JpaComplianceCachingSetting{ DEFAULT, TRUE, FALSE }
 
-	private final JpaComplianceCachingSetting jpaComplianceCachingSetting;
-
-	@Parameterized.Parameters(name = "JpaComplianceCachingSetting={0}")
-	public static Iterable<Object[]> parameters() {
-		return Arrays.asList(
-				new Object[][] {
-						{ JpaComplianceCachingSetting.DEFAULT },
-						{ JpaComplianceCachingSetting.FALSE },
-						{ JpaComplianceCachingSetting.TRUE }
-				}
-		);
-	}
-
-	AbstractNonOptionalSecondaryTableTest(JpaComplianceCachingSetting jpaComplianceCachingSetting) {
-		this.jpaComplianceCachingSetting = jpaComplianceCachingSetting;
-	}
+	@Parameter
+	private JpaComplianceCachingSetting jpaComplianceCachingSetting;
 
 	@Override
 	protected void addConfigOptions(Map options) {

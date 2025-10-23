@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.jpa.criteria.basic;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -15,10 +14,11 @@ import jakarta.persistence.criteria.Root;
 import java.io.Serializable;
 import java.util.List;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 
@@ -29,39 +29,26 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Andrea Boriero
  */
 @JiraKey(value = "HHH-10843")
-public class ConcatTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(annotatedClasses = {ConcatTest.TestEntity.class})
+public class ConcatTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {TestEntity.class};
-	}
-
-	@Before
-	public void setUp() {
-		EntityManager entityManager = getOrCreateEntityManager();
-		entityManager.getTransaction().begin();
-		try {
+	@BeforeEach
+	public void setUp(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			TestEntity testEntity = new TestEntity();
 			testEntity.setName( "test_1" );
 			entityManager.persist( testEntity );
-			entityManager.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( entityManager.getTransaction().isActive() ) {
-				entityManager.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			entityManager.close();
-		}
+		} );
+	}
+
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test
-	public void testSelectCaseWithConcat() {
-		EntityManager entityManager = getOrCreateEntityManager();
-		entityManager.getTransaction().begin();
-		try {
+	public void testSelectCaseWithConcat(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Object[]> query = cb.createQuery( Object[].class );
 			Root<TestEntity> testEntity = query.from( TestEntity.class );
@@ -77,44 +64,22 @@ public class ConcatTest extends BaseEntityManagerFunctionalTestCase {
 			assertThat( results.size(), is( 1 ) );
 			assertThat( results.get( 0 )[0], is( "test_1" ) );
 			assertThat( results.get( 0 )[1], is( ".Test" ) );
-			entityManager.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( entityManager.getTransaction().isActive() ) {
-				entityManager.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			entityManager.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testConcat() {
-		EntityManager entityManager = getOrCreateEntityManager();
-		entityManager.getTransaction().begin();
-		try {
+	public void testConcat(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			CriteriaQuery query = cb.createQuery();
 			Root<TestEntity> testEntity = query.from( TestEntity.class );
 
 			query.select( testEntity ).where( cb.equal( testEntity.get( "name" ), cb.concat( "test", cb.literal( "_1" ) ) ) );
 
-			final List results = entityManager.createQuery( query ).getResultList();
-			entityManager.getTransaction().commit();
+			final List<?> results = entityManager.createQuery( query ).getResultList();
 
 			assertThat( results.size(), is( 1 ) );
-		}
-		catch (Exception e) {
-			if ( entityManager.getTransaction().isActive() ) {
-				entityManager.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			entityManager.close();
-		}
+		} );
 	}
 
 	@Entity(name = "TestEntity")

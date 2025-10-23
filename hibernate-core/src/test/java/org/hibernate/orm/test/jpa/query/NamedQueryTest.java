@@ -15,37 +15,33 @@ import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.hibernate.Session;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Andrea Boriero
  */
 @JiraKey(value = "HHH-11092")
-public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(annotatedClasses = {NamedQueryTest.Game.class})
+public class NamedQueryTest {
 
 	private static final String[] GAME_TITLES = { "Halo", "Grand Theft Auto", "NetHack" };
 
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] { Game.class };
-	}
-
-	@Before
-	public void setUp()
+	@BeforeEach
+	public void setUp(EntityManagerFactoryScope scope)
 			throws Exception {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			for ( String title : GAME_TITLES ) {
 				Game game = new Game( title );
 				entityManager.persist( game );
@@ -53,17 +49,17 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 	}
 
-	@After
-	public void tearDown() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					entityManager.createQuery( "delete from Game" ).executeUpdate();
 				}
 		);
 	}
 
 	@Test
-	public void testNamedQueriesOrdinalParametersAreOneBased() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testNamedQueriesOrdinalParametersAreOneBased(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					Query query = entityManager.createNamedQuery( "NamedQuery" );
 					query.setParameter( 1, GAME_TITLES[0] );
 					List list = query.getResultList();
@@ -73,8 +69,8 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testNamedQueryOrdinalParametersConflict() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testNamedQueryOrdinalParametersConflict(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					Query query = entityManager.createNamedQuery( "NamedQuery" );
 					query.setParameter( 1, GAME_TITLES[0] );
 					List list = query.getResultList();
@@ -92,8 +88,8 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testNamedQueryOrdinalParametersConflict2() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testNamedQueryOrdinalParametersConflict2(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					Query query = entityManager.createNamedQuery( "NamedQuery" );
 					query.setParameter( 1, GAME_TITLES[0] );
 					List list = query.getResultList();
@@ -111,8 +107,8 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testNativeNamedQueriesOrdinalParametersAreOneBased() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testNativeNamedQueriesOrdinalParametersAreOneBased(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					Query query = entityManager.createNamedQuery( "NamedNativeQuery" );
 					query.setParameter( 1, GAME_TITLES[0] );
 					List list = query.getResultList();
@@ -122,8 +118,8 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testNativeNamedQueriesOrdinalParametersConflict() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testNativeNamedQueriesOrdinalParametersConflict(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					Query query = entityManager.createNamedQuery( "NamedNativeQuery" );
 					query.setParameter( 1, GAME_TITLES[0] );
 					List list = query.getResultList();
@@ -142,8 +138,8 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testNativeNamedQueriesOrdinalParametersConflict2() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testNativeNamedQueriesOrdinalParametersConflict2(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					Query query = entityManager.createNamedQuery( "NamedNativeQuery" );
 					query.setParameter( 1, GAME_TITLES[0] );
 					List list = query.getResultList();
@@ -163,8 +159,8 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-12621")
-	public void testNativeQueriesFromNamedQueriesDoNotShareQuerySpaces() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testNativeQueriesFromNamedQueriesDoNotShareQuerySpaces(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Query originalQuery = entityManager.createNativeQuery( "select g from Game g where title = ?1" );
 			entityManager.getEntityManagerFactory().addNamedQuery( "myQuery", originalQuery );
 
@@ -182,23 +178,23 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-11413")
-	public void testNamedNativeQueryExceptionNoResultDefined() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testNamedNativeQueryExceptionNoResultDefined(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			assertThrows(
-					"Named query exists but its result type is not compatible",
 					IllegalArgumentException.class,
-					() -> entityManager.createNamedQuery( "NamedNativeQuery", Game.class )
+					() -> entityManager.createNamedQuery( "NamedNativeQuery", Game.class ),
+					"Named query exists but its result type is not compatible"
 			);
 		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-11413")
-	public void testNamedQueryAddedFromTypedNativeQuery() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testNamedQueryAddedFromTypedNativeQuery(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			final Query query = entityManager.createNativeQuery(
 					"select g.title from Game g where title = ?", String.class );
-			entityManagerFactory().addNamedQuery( "the-query", query );
+			scope.getEntityManagerFactory().addNamedQuery( "the-query", query );
 
 			final TypedQuery<String> namedQuery = entityManager.createNamedQuery( "the-query", String.class );
 			namedQuery.setParameter( 1, "abc" );
@@ -208,9 +204,9 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey("HHH-17566")
-	public void testNamedQueryAddedFromEntityNativeQuery() {
+	public void testNamedQueryAddedFromEntityNativeQuery(EntityManagerFactoryScope scope) {
 		// Check that the native query works
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final Query query = entityManager.createNativeQuery(
 					"select g.* from Game g where title = ?", Game.class );
 			query.setParameter( 1, "Halo" );
@@ -221,10 +217,10 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 					.returns( "Halo", Game::getTitle );
 		} );
 		// Check corresponding named query can be used as a typed query
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final Query query = entityManager.createNativeQuery(
 					"select g.* from Game g where title = ?", Game.class );
-			entityManagerFactory().addNamedQuery( "the-query", query );
+			scope.getEntityManagerFactory().addNamedQuery( "the-query", query );
 
 			final TypedQuery<Game> namedQuery = entityManager.createNamedQuery( "the-query", Game.class );
 			namedQuery.setParameter( 1, "Halo" );
@@ -237,9 +233,9 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey("HHH-17566")
-	public void testNamedQueryAddedFromEntityNativeQueryUsedAsUntyped() {
+	public void testNamedQueryAddedFromEntityNativeQueryUsedAsUntyped(EntityManagerFactoryScope scope) {
 		// Check corresponding named query can be used as an untyped query
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final Query query = entityManager.createNativeQuery(
 					"select g.* from Game g where title = ?", Game.class );
 			query.setParameter( 1, "Halo" );
@@ -250,10 +246,10 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 					.returns( "Halo", Game::getTitle );
 		} );
 		// Check naming the native query works
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final Query query = entityManager.createNativeQuery(
 					"select g.* from Game g where title = ?", Game.class );
-			entityManagerFactory().addNamedQuery( "the-query", query );
+			scope.getEntityManagerFactory().addNamedQuery( "the-query", query );
 
 			final Query namedQuery = entityManager.createNamedQuery( "the-query" );
 			namedQuery.setParameter( 1, "Halo" );

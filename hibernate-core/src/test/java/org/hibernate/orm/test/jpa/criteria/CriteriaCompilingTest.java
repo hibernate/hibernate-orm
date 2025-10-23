@@ -21,7 +21,6 @@ import org.hibernate.CacheMode;
 import org.hibernate.query.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.Session;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.orm.test.jpa.callbacks.RemoteControl;
 import org.hibernate.orm.test.jpa.callbacks.Television;
 import org.hibernate.orm.test.jpa.callbacks.VideoSystem;
@@ -40,47 +39,47 @@ import org.hibernate.orm.test.jpa.metamodel.Product;
 import org.hibernate.orm.test.jpa.metamodel.ShelfLife;
 import org.hibernate.orm.test.jpa.metamodel.Spouse;
 
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
-public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Customer.class,
-				Alias.class,
-				Phone.class,
-				Address.class,
-				Country.class,
-				CreditCard.class,
-				Info.class,
-				Spouse.class,
-				LineItem.class,
-				Order.class,
-				Product.class,
-				ShelfLife.class,
-				// @Inheritance
-				Fruit.class,
-				Strawberry.class,
-				// @MappedSuperclass
-				VideoSystem.class,
-				Television.class,
-				RemoteControl.class
-		};
-	}
+@Jpa(annotatedClasses = {
+		Customer.class,
+		Alias.class,
+		Phone.class,
+		Address.class,
+		Country.class,
+		CreditCard.class,
+		Info.class,
+		Spouse.class,
+		LineItem.class,
+		Order.class,
+		Product.class,
+		ShelfLife.class,
+		// @Inheritance
+		Fruit.class,
+		Strawberry.class,
+		// @MappedSuperclass
+		VideoSystem.class,
+		Television.class,
+		RemoteControl.class
+})
+public class CriteriaCompilingTest {
 
-	@Before
-	public void setUp(){
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+	@BeforeEach
+	public void setUp(EntityManagerFactoryScope scope){
+		scope.inTransaction( entityManager -> {
 			Customer customer = new Customer();
 			customer.setId( "id" );
 			customer.setName( " David R. Vincent " );
@@ -92,11 +91,16 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 	}
 
+	@AfterEach
+	public void cleanupTestData(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
+	}
+
 	@Test
-	public void testTrim() {
+	public void testTrim(EntityManagerFactoryScope scope) {
 		final String expectedResult = "David R. Vincent";
 
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
@@ -122,14 +126,14 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 			TypedQuery<String> tq = entityManager.createQuery( cquery );
 
 			String result = tq.getSingleResult();
-			Assert.assertEquals( "Mismatch in received results", expectedResult, result );
+			assertEquals( expectedResult, result, "Mismatch in received results" );
 		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-11393")
-	public void testTrimAChar() {
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testTrimAChar(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 			final CriteriaQuery<Customer> query = criteriaBuilder.createQuery( Customer.class );
 			final Root<Customer> from = query.from( Customer.class );
@@ -146,8 +150,8 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testJustSimpleRootCriteria() {
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testJustSimpleRootCriteria(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			// First w/o explicit selection...
 			CriteriaQuery<Customer> criteria = entityManager.getCriteriaBuilder().createQuery( Customer.class );
 			criteria.from( Customer.class );
@@ -162,8 +166,8 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testSimpleJoinCriteria() {
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testSimpleJoinCriteria(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 
 			// String based...
 			CriteriaQuery<Order> criteria = entityManager.getCriteriaBuilder().createQuery( Order.class );
@@ -175,8 +179,8 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testSimpleFetchCriteria() {
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testSimpleFetchCriteria(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 
 			// String based...
 			CriteriaQuery<Order> criteria = entityManager.getCriteriaBuilder().createQuery( Order.class );
@@ -188,8 +192,8 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testSerialization() {
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testSerialization(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 
 			CriteriaQuery<Order> criteria = entityManager.getCriteriaBuilder().createQuery( Order.class );
 			Root<Order> root = criteria.from( Order.class );
@@ -204,8 +208,8 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-10960")
-	public void testDeprecation() {
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testDeprecation(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 
 			Session session = entityManager.unwrap( Session.class );
 			CriteriaBuilder builder = session.getCriteriaBuilder();
@@ -244,13 +248,8 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 			byteIn.close();
 		}
 		catch (Exception e) {
-			Assert.fail( "Unable to serialize / deserialize the object: " + e.getMessage() );
+			Assertions.fail( "Unable to serialize / deserialize the object: " + e.getMessage() );
 		}
 		return serializedObject;
-	}
-
-	@Override
-	public void releaseResources() {
-		super.releaseResources();
 	}
 }

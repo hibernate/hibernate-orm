@@ -4,40 +4,6 @@
  */
 package org.hibernate.orm.test.jpa.criteria.basic;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.community.dialect.AltibaseDialect;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.community.dialect.DerbyDialect;
-import org.hibernate.dialect.PostgresPlusDialect;
-import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.orm.test.jpa.metamodel.AbstractMetamodelSpecificTest;
-import org.hibernate.orm.test.jpa.metamodel.Phone;
-import org.hibernate.orm.test.jpa.metamodel.Product;
-import org.hibernate.orm.test.jpa.metamodel.Product_;
-import org.hibernate.query.Query;
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.query.criteria.JpaCriteriaQuery;
-import org.hibernate.query.criteria.JpaDerivedRoot;
-import org.hibernate.query.criteria.JpaSubQuery;
-import org.hibernate.query.common.TemporalUnit;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.Jira;
-import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.community.dialect.GaussDBDialect;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -47,7 +13,41 @@ import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.Session;
+import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.community.dialect.GaussDBDialect;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.orm.test.jpa.metamodel.Address;
+import org.hibernate.orm.test.jpa.metamodel.Phone;
+import org.hibernate.orm.test.jpa.metamodel.Product;
+import org.hibernate.orm.test.jpa.metamodel.Product_;
+import org.hibernate.query.Query;
+import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaDerivedRoot;
+import org.hibernate.query.criteria.JpaSubQuery;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -55,16 +55,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * @author Steve Ebersole
  */
-public class ExpressionsTest extends AbstractMetamodelSpecificTest {
+@Jpa(annotatedClasses = {Product.class, Phone.class, Address.class})
+public class ExpressionsTest {
 	private CriteriaBuilder builder;
 
 	@BeforeEach
-	public void prepareTestData() {
-		builder = entityManagerFactory().getCriteriaBuilder();
+	public void prepareTestData(EntityManagerFactoryScope scope) {
+		builder = scope.getEntityManagerFactory().getCriteriaBuilder();
 
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+		scope.inTransaction( entityManager -> {
 					Product product = new Product();
 					product.setId( "product1" );
 					product.setPrice( 1.23d );
@@ -79,15 +78,13 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@AfterEach
-	public void cleanupTestData() {
-		entityManagerFactory().unwrap(SessionFactory.class).getSchemaManager().truncate();
+	public void cleanupTestData(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test
-	public void testEmptyConjunction() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+	public void testEmptyConjunction(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
 					criteria.from( Product.class );
 					criteria.where( builder.and() );
@@ -99,17 +96,15 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 
 	@Test
 	@JiraKey( value = "HHH-15452")
-	public void testGetConjunctionExpressionsAndAddPredicate(){
-		inTransaction(
-				entityManager -> {
-					CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+	public void testGetConjunctionExpressionsAndAddPredicate(EntityManagerFactoryScope scope){
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Product> criteria = builder.createQuery(Product.class);
-					Root<Product> rootClaseGrid = criteria.from(Product.class);
+					Root<Product> root = criteria.from(Product.class);
 
-					Predicate conjuncion = builder.conjunction();
-					Predicate expr = builder.equal(rootClaseGrid.get("id"), "NON existing id");
+					Predicate conjunction = builder.conjunction();
+					Predicate expr = builder.equal(root.get("id"), "NON existing id");
 					// Modifications to the list do not affect the query
-					List<Expression<Boolean>> expressions = conjuncion.getExpressions();
+					List<Expression<Boolean>> expressions = conjunction.getExpressions();
 					expressions.add( expr);
 
 					List<Product> result = entityManager.createQuery( criteria ).getResultList();
@@ -120,10 +115,8 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 
 	@Test
 	@JiraKey(value = "HHH-6876")
-	public void testEmptyInList() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+	public void testEmptyInList(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
 					Root<Product> from = criteria.from( Product.class );
 					criteria.where( from.get( Product_.partNumber ).in() ); // empty IN list
@@ -134,10 +127,8 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	public void testEmptyConjunctionIsTrue() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+	public void testEmptyConjunctionIsTrue(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
 					criteria.from( Product.class );
 					criteria.where( builder.isTrue( builder.and() ) );
@@ -148,10 +139,8 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	public void testEmptyConjunctionIsFalse() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+	public void testEmptyConjunctionIsFalse(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
 					criteria.from( Product.class );
 					criteria.where( builder.isFalse( builder.and() ) );
@@ -162,10 +151,8 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	public void testEmptyDisjunction() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+	public void testEmptyDisjunction(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
 					criteria.from( Product.class );
 					criteria.where( builder.disjunction() );
@@ -176,10 +163,8 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	public void testEmptyDisjunctionIsTrue() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+	public void testEmptyDisjunctionIsTrue(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
 					criteria.from( Product.class );
 					criteria.where( builder.isTrue( builder.disjunction() ) );
@@ -190,10 +175,8 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	public void testEmptyDisjunctionIsFalse() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+	public void testEmptyDisjunctionIsFalse(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
 					criteria.from( Product.class );
 					criteria.where( builder.isFalse( builder.disjunction() ) );
@@ -204,10 +187,8 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	public void testDiff() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+	public void testDiff(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Integer> criteria = builder.createQuery( Integer.class );
 					criteria.from( Product.class );
 					criteria.select( builder.diff( builder.literal( 5 ), builder.literal( 2 ) ) );
@@ -218,10 +199,8 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	public void testDiffWithQuotient() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+	public void testDiffWithQuotient(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Number> criteria = builder.createQuery( Number.class );
 					criteria.from( Product.class );
 					criteria.select(
@@ -240,10 +219,8 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	public void testSumWithQuotient() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+	public void testSumWithQuotient(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Number> criteria = builder.createQuery( Number.class );
 					criteria.from( Product.class );
 					criteria.select(
@@ -263,10 +240,8 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-17223" )
-	public void testSumWithCoalesce() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+	public void testSumWithCoalesce(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					final CriteriaQuery<Integer> criteria = builder.createQuery( Integer.class );
 					final Root<Product> root = criteria.from( Product.class );
 					criteria.select(
@@ -282,10 +257,8 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-17260" )
-	public void testSumWithSubqueryPath() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+	public void testSumWithSubqueryPath(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					final HibernateCriteriaBuilder cb =  entityManager.unwrap( Session.class ).getCriteriaBuilder();
 					final JpaCriteriaQuery<Integer> criteria = cb.createQuery( Integer.class );
 					final JpaSubQuery<Tuple> subquery = criteria.subquery( Tuple.class );
@@ -306,20 +279,16 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "does not support extract(epoch)")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "datediff overflow limits")
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.date multi overflows")
-	public void testDateTimeOperations() {
+	public void testDateTimeOperations(EntityManagerFactoryScope scope) {
 		HibernateCriteriaBuilder builder = (HibernateCriteriaBuilder) this.builder;
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<LocalDate> criteria = builder.createQuery(LocalDate.class);
 					criteria.select( builder.addDuration( builder.localDate(),
 							builder.duration(2, TemporalUnit.YEAR) ) );
 					entityManager.createQuery(criteria).getSingleResult();
 				}
 		);
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<LocalDate> criteria = builder.createQuery(LocalDate.class);
 					criteria.select( builder.addDuration(
 							// had to call literal() here because parameter-based binding caused error from
@@ -339,34 +308,26 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 //					entityManager.createQuery(criteria).getSingleResult();
 //				}
 //		);
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<LocalDateTime> criteria = builder.createQuery(LocalDateTime.class);
 					criteria.select( builder.subtractDuration( builder.localDateTime(), Duration.ofMinutes(30) ) );
 					entityManager.createQuery(criteria).getSingleResult();
 				}
 		);
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Duration> criteria = builder.createQuery(Duration.class);
 					criteria.select( builder.durationScaled( 5, builder.duration(2, TemporalUnit.HOUR ) ) );
 					assertEquals( Duration.ofHours(10), entityManager.createQuery(criteria).getSingleResult() );
 				}
 		);
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Duration> criteria = builder.createQuery(Duration.class);
 					criteria.select( builder.durationSum( builder.duration(30, TemporalUnit.MINUTE ),
 							builder.duration(2, TemporalUnit.HOUR) ) );
 					assertEquals( Duration.ofMinutes(150), entityManager.createQuery(criteria).getSingleResult() );
 				}
 		);
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Long> criteria = builder.createQuery(Long.class);
 					criteria.select( builder.durationByUnit( TemporalUnit.SECOND,
 							builder.durationSum( builder.duration(30, TemporalUnit.MINUTE),
@@ -379,20 +340,16 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	@Test
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "numeric overflows")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "does not support extract(epoch)")
-	void testDurationBetween() {
+	void testDurationBetween(EntityManagerFactoryScope scope) {
 		HibernateCriteriaBuilder builder = (HibernateCriteriaBuilder) this.builder;
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Duration> criteria = builder.createQuery(Duration.class);
 					criteria.select( builder.durationBetween( builder.localDate(),
 							LocalDate.of(2000,1, 1) ) );
 					entityManager.createQuery(criteria).getSingleResult();
 				}
 		);
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Duration> criteria = builder.createQuery(Duration.class);
 					criteria.select( builder.durationBetween( builder.localDate(),
 							builder.subtractDuration( builder.localDate(),
@@ -400,9 +357,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 					assertEquals( Duration.ofDays(2), entityManager.createQuery(criteria).getSingleResult() );
 				}
 		);
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Duration> criteria = builder.createQuery(Duration.class);
 					criteria.select( builder.durationBetween( builder.localDateTime(),
 							builder.subtractDuration( builder.localDateTime(),
@@ -418,10 +373,8 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 			"Fixing this would require a custom SqmToSqlAstConverter that creates a special JdbcParameter " +
 			"that is always rendered as literal. Since numeric literal + parameter arithmetic is rare, we skip this for now.")
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "Same reason as for Derby")
-	public void testQuotientAndMultiply() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+	public void testQuotientAndMultiply(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Number> criteria = builder.createQuery( Number.class );
 					criteria.from( Product.class );
 					criteria.select(
@@ -452,16 +405,14 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	public void testParameterReuse() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
-					CriteriaQuery<Product> criteria = entityManager.getCriteriaBuilder().createQuery( Product.class );
+	public void testParameterReuse(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+					CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
 					Root<Product> from = criteria.from( Product.class );
-					ParameterExpression<String> param = entityManager.getCriteriaBuilder().parameter( String.class );
-					Predicate predicate = entityManager.getCriteriaBuilder().equal( from.get( Product_.id ), param );
-					Predicate predicate2 = entityManager.getCriteriaBuilder().equal( from.get( Product_.name ), param );
-					criteria.where( entityManager.getCriteriaBuilder().or( predicate, predicate2 ) );
+					ParameterExpression<String> param = builder.parameter( String.class );
+					Predicate predicate = builder.equal( from.get( Product_.id ), param );
+					Predicate predicate2 = builder.equal( from.get( Product_.name ), param );
+					criteria.where( builder.or( predicate, predicate2 ) );
 					assertEquals( 1, criteria.getParameters().size() );
 					TypedQuery<Product> query = entityManager.createQuery( criteria );
 					int hqlParamCount = countGeneratedParameters( query.unwrap( Query.class ) );
@@ -476,10 +427,8 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	public void testInExplicitTupleList() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+	public void testInExplicitTupleList(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
 					Root<Product> from = criteria.from( Product.class );
 					criteria.where( from.get( Product_.partNumber )
@@ -491,10 +440,8 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	public void testInExplicitTupleListVarargs() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+	public void testInExplicitTupleListVarargs(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
 					Root<Product> from = criteria.from( Product.class );
 					criteria.where( from.get( Product_.partNumber ).in( ( (long) Integer.MAX_VALUE ) + 1 ) );
@@ -505,10 +452,8 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	public void testInExpressionVarargs() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+	public void testInExpressionVarargs(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
 					Root<Product> from = criteria.from( Product.class );
 					criteria.where( from.get( Product_.partNumber ).in( from.get( Product_.partNumber ) ) );
@@ -519,10 +464,8 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	public void testJoinedElementCollectionValuesInTupleList() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
+	public void testJoinedElementCollectionValuesInTupleList(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					CriteriaQuery<Phone> criteria = builder.createQuery( Phone.class );
 					Root<Phone> from = criteria.from( Phone.class );
 					criteria.where(

@@ -5,44 +5,42 @@
 package org.hibernate.orm.test.jpa.query;
 
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.sql.internal.NativeQueryImpl;
 
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.*;
 import jakarta.persistence.criteria.CriteriaDelete;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @RequiresDialect(H2Dialect.class)
-public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{User.class};
-	}
+@Jpa(annotatedClasses = {TupleNativeQueryTest.User.class})
+public class TupleNativeQueryTest {
 
-	@Before
-	public void setUp() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	@BeforeEach
+	public void setUp(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			User user = new User("Arnold");
 			entityManager.persist(user);
 		});
 	}
 
-	@After
-	public void tearDown() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			CriteriaDelete<User> delete = entityManager.getCriteriaBuilder().createCriteriaDelete(User.class);
 			delete.from(User.class);
 			entityManager.createQuery(delete).executeUpdate();
@@ -50,8 +48,8 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testPositionalGetterShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testPositionalGetterShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getTupleResult(entityManager);
 			Tuple tuple = result.get(0);
 			assertEquals(1L, tuple.get(0));
@@ -60,8 +58,8 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testPositionalGetterWithClassShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testPositionalGetterWithClassShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getTupleResult(entityManager);
 			Tuple tuple = result.get(0);
 			assertEquals(Long.valueOf(1L), tuple.get(0, Long.class));
@@ -69,70 +67,51 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testPositionalGetterShouldThrowExceptionWhenLessThanZeroGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getTupleResult(entityManager);
-			Tuple tuple = result.get(0);
-			tuple.get(-1);
+	@Test
+	public void testPositionalGetterShouldThrowExceptionWhenLessThanZeroGiven(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						List<Tuple> result = getTupleResult(entityManager);
+						Tuple tuple = result.get(0);
+						tuple.get(-1);
+					}
+			);
 		});
 	}
-
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testPositionalGetterWithClassShouldThrowExceptionWhenLessThanZeroGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getTupleResult(entityManager);
-			Tuple tuple = result.get(0);
-			tuple.get(-1);
-		});
-	}
-
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testPositionalGetterShouldThrowExceptionWhenTupleSizePositionGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getTupleResult(entityManager);
-			Tuple tuple = result.get(0);
-			tuple.get(2);
-		});
-	}
-
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testPositionalGetterWithClassShouldThrowExceptionWhenTupleSizePositionGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getTupleResult(entityManager);
-			Tuple tuple = result.get(0);
-			tuple.get(2);
-		});
-	}
-
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testPositionalGetterShouldThrowExceptionWhenExceedingPositionGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getTupleResult(entityManager);
-			Tuple tuple = result.get(0);
-			tuple.get(3);
-		});
-	}
-
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testPositionalGetterWithClassShouldThrowExceptionWhenExceedingPositionGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getTupleResult(entityManager);
-			Tuple tuple = result.get(0);
-			tuple.get(3);
-		});
-	}
-
 
 	@Test
-	public void testAliasGetterWithoutExplicitAliasShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testPositionalGetterShouldThrowExceptionWhenTupleSizePositionGiven(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						List<Tuple> result = getTupleResult(entityManager);
+						Tuple tuple = result.get(0);
+						tuple.get(2);
+					}
+			);
+		});
+	}
+
+	@Test
+	public void testPositionalGetterShouldThrowExceptionWhenExceedingPositionGiven(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						List<Tuple> result = getTupleResult(entityManager);
+						Tuple tuple = result.get(0);
+						tuple.get(3);
+					}
+			);
+		});
+	}
+
+	@Test
+	public void testAliasGetterWithoutExplicitAliasShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getTupleResult(entityManager);
 			Tuple tuple = result.get(0);
 			assertEquals(1L, tuple.get("ID"));
@@ -141,26 +120,31 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testAliasGetterShouldWorkWithoutExplicitAliasWhenLowerCaseAliasGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testAliasGetterShouldWorkWithoutExplicitAliasWhenLowerCaseAliasGiven(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getTupleResult(entityManager);
 			Tuple tuple = result.get(0);
 			tuple.get("id");
 		});
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void testAliasGetterShouldThrowExceptionWithoutExplicitAliasWhenWrongAliasGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getTupleResult(entityManager);
-			Tuple tuple = result.get(0);
-			tuple.get("e");
+	@Test
+	public void testAliasGetterShouldThrowExceptionWithoutExplicitAliasWhenWrongAliasGiven(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						List<Tuple> result = getTupleResult(entityManager);
+						Tuple tuple = result.get(0);
+						tuple.get("e");
+					}
+			);
 		});
 	}
 
 	@Test
-	public void testAliasGetterWithClassWithoutExplicitAliasShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testAliasGetterWithClassWithoutExplicitAliasShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getTupleResult(entityManager);
 			Tuple tuple = result.get(0);
 			assertEquals(Long.valueOf(1L), tuple.get("ID", Long.class));
@@ -168,10 +152,9 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
-
 	@Test
-	public void testAliasGetterWithExplicitAliasShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testAliasGetterWithExplicitAliasShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getTupleAliasedResult(entityManager);
 			Tuple tuple = result.get(0);
 			assertEquals(1L, tuple.get("ALIAS1"));
@@ -180,8 +163,8 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testAliasGetterWithClassWithExplicitAliasShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testAliasGetterWithClassWithExplicitAliasShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getTupleAliasedResult(entityManager);
 			Tuple tuple = result.get(0);
 			assertEquals(Long.valueOf(1L), tuple.get("ALIAS1", Long.class));
@@ -190,8 +173,8 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testToArrayShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testToArrayShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> tuples = getTupleResult(entityManager);
 			Object[] result = tuples.get(0).toArray();
 			assertArrayEquals(new Object[]{1L, "Arnold"}, result);
@@ -199,8 +182,8 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testGetElementsShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testGetElementsShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> tuples = getTupleResult(entityManager);
 			List<TupleElement<?>> result = tuples.get(0).getElements();
 			assertEquals(2, result.size());
@@ -212,8 +195,8 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testPositionalGetterWithNamedNativeQueryShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testPositionalGetterWithNamedNativeQueryShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getTupleNamedResult(entityManager, "standard");
 			Tuple tuple = result.get(0);
 			assertEquals(1L, tuple.get(0));
@@ -222,8 +205,8 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testPositionalGetterWithNamedNativeQueryWithClassShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testPositionalGetterWithNamedNativeQueryWithClassShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getTupleNamedResult(entityManager, "standard");
 			Tuple tuple = result.get(0);
 			assertEquals(Long.valueOf(1L), tuple.get(0, Long.class));
@@ -231,70 +214,51 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testPositionalGetterWithNamedNativeQueryShouldThrowExceptionWhenLessThanZeroGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getTupleNamedResult(entityManager, "standard");
-			Tuple tuple = result.get(0);
-			tuple.get(-1);
+	@Test
+	public void testPositionalGetterWithNamedNativeQueryShouldThrowExceptionWhenLessThanZeroGiven(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						List<Tuple> result = getTupleNamedResult(entityManager, "standard");
+						Tuple tuple = result.get(0);
+						tuple.get(-1);
+					}
+			);
 		});
 	}
-
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testPositionalGetterWithNamedNativeQueryWithClassShouldThrowExceptionWhenLessThanZeroGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getTupleNamedResult(entityManager, "standard");
-			Tuple tuple = result.get(0);
-			tuple.get(-1);
-		});
-	}
-
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testPositionalGetterWithNamedNativeQueryShouldThrowExceptionWhenTupleSizePositionGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getTupleNamedResult(entityManager, "standard");
-			Tuple tuple = result.get(0);
-			tuple.get(2);
-		});
-	}
-
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testPositionalGetterWithNamedNativeQueryWithClassShouldThrowExceptionWhenTupleSizePositionGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getTupleNamedResult(entityManager, "standard");
-			Tuple tuple = result.get(0);
-			tuple.get(2);
-		});
-	}
-
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testPositionalGetterWithNamedNativeQueryShouldThrowExceptionWhenExceedingPositionGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getTupleNamedResult(entityManager, "standard");
-			Tuple tuple = result.get(0);
-			tuple.get(3);
-		});
-	}
-
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testPositionalGetterWithNamedNativeQueryWithClassShouldThrowExceptionWhenExceedingPositionGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getTupleNamedResult(entityManager, "standard");
-			Tuple tuple = result.get(0);
-			tuple.get(3);
-		});
-	}
-
 
 	@Test
-	public void testAliasGetterWithNamedNativeQueryWithoutExplicitAliasShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testPositionalGetterWithNamedNativeQueryShouldThrowExceptionWhenTupleSizePositionGiven(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						List<Tuple> result = getTupleNamedResult(entityManager, "standard");
+						Tuple tuple = result.get(0);
+						tuple.get(2);
+					}
+			);
+		});
+	}
+
+	@Test
+	public void testPositionalGetterWithNamedNativeQueryShouldThrowExceptionWhenExceedingPositionGiven(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						List<Tuple> result = getTupleNamedResult(entityManager, "standard");
+						Tuple tuple = result.get(0);
+						tuple.get(3);
+					}
+			);
+		});
+	}
+
+	@Test
+	public void testAliasGetterWithNamedNativeQueryWithoutExplicitAliasShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getTupleNamedResult(entityManager, "standard");
 			Tuple tuple = result.get(0);
 			assertEquals(1L, tuple.get("ID"));
@@ -303,26 +267,31 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testAliasGetterWithNamedNativeQueryShouldWorkWithoutExplicitAliasWhenLowerCaseAliasGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testAliasGetterWithNamedNativeQueryShouldWorkWithoutExplicitAliasWhenLowerCaseAliasGiven(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getTupleNamedResult(entityManager, "standard");
 			Tuple tuple = result.get(0);
 			tuple.get("id");
 		});
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void testAliasGetterWithNamedNativeQueryShouldThrowExceptionWithoutExplicitAliasWhenWrongAliasGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getTupleNamedResult(entityManager, "standard");
-			Tuple tuple = result.get(0);
-			tuple.get("e");
+	@Test
+	public void testAliasGetterWithNamedNativeQueryShouldThrowExceptionWithoutExplicitAliasWhenWrongAliasGiven(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						List<Tuple> result = getTupleNamedResult(entityManager, "standard");
+						Tuple tuple = result.get(0);
+						tuple.get("e");
+					}
+			);
 		});
 	}
 
 	@Test
-	public void testAliasGetterWithNamedNativeQueryWithClassWithoutExplicitAliasShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testAliasGetterWithNamedNativeQueryWithClassWithoutExplicitAliasShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getTupleNamedResult(entityManager, "standard");
 			Tuple tuple = result.get(0);
 			assertEquals(Long.valueOf(1L), tuple.get("ID", Long.class));
@@ -330,10 +299,9 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
-
 	@Test
-	public void testAliasGetterWithNamedNativeQueryWithExplicitAliasShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testAliasGetterWithNamedNativeQueryWithExplicitAliasShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getTupleNamedResult(entityManager, "standard_with_alias");
 			Tuple tuple = result.get(0);
 			assertEquals(1L, tuple.get("ALIAS1"));
@@ -342,8 +310,8 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testAliasGetterWithNamedNativeQueryWithClassWithExplicitAliasShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testAliasGetterWithNamedNativeQueryWithClassWithExplicitAliasShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getTupleNamedResult(entityManager, "standard_with_alias");
 			Tuple tuple = result.get(0);
 			assertEquals(Long.valueOf(1L), tuple.get("ALIAS1", Long.class));
@@ -352,8 +320,8 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testToArrayShouldWithNamedNativeQueryWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testToArrayShouldWithNamedNativeQueryWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> tuples = getTupleNamedResult(entityManager, "standard");
 			Object[] result = tuples.get(0).toArray();
 			assertArrayEquals(new Object[]{1L, "Arnold"}, result);
@@ -361,8 +329,8 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testGetElementsWithNamedNativeQueryShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testGetElementsWithNamedNativeQueryShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> tuples = getTupleNamedResult(entityManager, "standard");
 			List<TupleElement<?>> result = tuples.get(0).getElements();
 			assertEquals(2, result.size());
@@ -374,8 +342,8 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testStreamedPositionalGetterShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testStreamedPositionalGetterShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getStreamedTupleResult(entityManager);
 			Tuple tuple = result.get(0);
 			assertEquals(1L, tuple.get(0));
@@ -384,8 +352,8 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testStreamedPositionalGetterWithClassShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testStreamedPositionalGetterWithClassShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getStreamedTupleResult(entityManager);
 			Tuple tuple = result.get(0);
 			assertEquals(Long.valueOf(1L), tuple.get(0, Long.class));
@@ -393,70 +361,51 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testStreamedPositionalGetterShouldThrowExceptionWhenLessThanZeroGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getStreamedTupleResult(entityManager);
-			Tuple tuple = result.get(0);
-			tuple.get(-1);
+	@Test
+	public void testStreamedPositionalGetterShouldThrowExceptionWhenLessThanZeroGiven(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						List<Tuple> result = getStreamedTupleResult(entityManager);
+						Tuple tuple = result.get(0);
+						tuple.get(-1);
+					}
+			);
 		});
 	}
-
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testStreamedPositionalGetterWithClassShouldThrowExceptionWhenLessThanZeroGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getStreamedTupleResult(entityManager);
-			Tuple tuple = result.get(0);
-			tuple.get(-1);
-		});
-	}
-
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testStreamedPositionalGetterShouldThrowExceptionWhenTupleSizePositionGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getStreamedTupleResult(entityManager);
-			Tuple tuple = result.get(0);
-			tuple.get(2);
-		});
-	}
-
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testStreamedPositionalGetterWithClassShouldThrowExceptionWhenTupleSizePositionGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getStreamedTupleResult(entityManager);
-			Tuple tuple = result.get(0);
-			tuple.get(2);
-		});
-	}
-
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testStreamedPositionalGetterShouldThrowExceptionWhenExceedingPositionGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getStreamedTupleResult(entityManager);
-			Tuple tuple = result.get(0);
-			tuple.get(3);
-		});
-	}
-
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testStreamedPositionalGetterWithClassShouldThrowExceptionWhenExceedingPositionGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getStreamedTupleResult(entityManager);
-			Tuple tuple = result.get(0);
-			tuple.get(3);
-		});
-	}
-
 
 	@Test
-	public void testStreamedAliasGetterWithoutExplicitAliasShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testStreamedPositionalGetterShouldThrowExceptionWhenTupleSizePositionGiven(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						List<Tuple> result = getStreamedTupleResult(entityManager);
+						Tuple tuple = result.get(0);
+						tuple.get(2);
+					}
+			);
+		});
+	}
+
+	@Test
+	public void testStreamedPositionalGetterShouldThrowExceptionWhenExceedingPositionGiven(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						List<Tuple> result = getStreamedTupleResult(entityManager);
+						Tuple tuple = result.get(0);
+						tuple.get(3);
+					}
+			);
+		});
+	}
+
+	@Test
+	public void testStreamedAliasGetterWithoutExplicitAliasShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getStreamedTupleResult(entityManager);
 			Tuple tuple = result.get(0);
 			assertEquals(1L, tuple.get("ID"));
@@ -465,26 +414,31 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testStreamedAliasGetterShouldWorkWithoutExplicitAliasWhenLowerCaseAliasGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testStreamedAliasGetterShouldWorkWithoutExplicitAliasWhenLowerCaseAliasGiven(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getStreamedTupleResult(entityManager);
 			Tuple tuple = result.get(0);
 			tuple.get("id");
 		});
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void testStreamedAliasGetterShouldThrowExceptionWithoutExplicitAliasWhenWrongAliasGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getStreamedTupleResult(entityManager);
-			Tuple tuple = result.get(0);
-			tuple.get("e");
+	@Test
+	public void testStreamedAliasGetterShouldThrowExceptionWithoutExplicitAliasWhenWrongAliasGiven(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						List<Tuple> result = getStreamedTupleResult(entityManager);
+						Tuple tuple = result.get(0);
+						tuple.get("e");
+					}
+			);
 		});
 	}
 
 	@Test
-	public void testStreamedAliasGetterWithClassWithoutExplicitAliasShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testStreamedAliasGetterWithClassWithoutExplicitAliasShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getStreamedTupleResult(entityManager);
 			Tuple tuple = result.get(0);
 			assertEquals(Long.valueOf(1L), tuple.get("ID", Long.class));
@@ -492,10 +446,9 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
-
 	@Test
-	public void testStreamedAliasGetterWithExplicitAliasShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testStreamedAliasGetterWithExplicitAliasShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getTupleAliasedResult(entityManager);
 			Tuple tuple = result.get(0);
 			assertEquals(1L, tuple.get("ALIAS1"));
@@ -504,8 +457,8 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testStreamedAliasGetterWithClassWithExplicitAliasShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testStreamedAliasGetterWithClassWithExplicitAliasShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getTupleAliasedResult(entityManager);
 			Tuple tuple = result.get(0);
 			assertEquals(Long.valueOf(1L), tuple.get("ALIAS1", Long.class));
@@ -514,8 +467,8 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testStreamedToArrayShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testStreamedToArrayShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> tuples = getStreamedTupleResult(entityManager);
 			Object[] result = tuples.get(0).toArray();
 			assertArrayEquals(new Object[]{1L, "Arnold"}, result);
@@ -523,8 +476,8 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testStreamedGetElementsShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testStreamedGetElementsShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> tuples = getStreamedTupleResult(entityManager);
 			List<TupleElement<?>> result = tuples.get(0).getElements();
 			assertEquals(2, result.size());
@@ -536,8 +489,8 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testStreamedPositionalGetterWithNamedNativeQueryShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testStreamedPositionalGetterWithNamedNativeQueryShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard");
 			Tuple tuple = result.get(0);
 			assertEquals(1L, tuple.get(0));
@@ -546,8 +499,8 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testStreamedPositionalGetterWithNamedNativeQueryWithClassShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testStreamedPositionalGetterWithNamedNativeQueryWithClassShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard");
 			Tuple tuple = result.get(0);
 			assertEquals(Long.valueOf(1L), tuple.get(0, Long.class));
@@ -555,70 +508,51 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testStreamedPositionalGetterWithNamedNativeQueryShouldThrowExceptionWhenLessThanZeroGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard");
-			Tuple tuple = result.get(0);
-			tuple.get(-1);
+	@Test
+	public void testStreamedPositionalGetterWithNamedNativeQueryShouldThrowExceptionWhenLessThanZeroGiven(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard");
+						Tuple tuple = result.get(0);
+						tuple.get(-1);
+					}
+			);
 		});
 	}
-
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testStreamedPositionalGetterWithNamedNativeQueryWithClassShouldThrowExceptionWhenLessThanZeroGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard");
-			Tuple tuple = result.get(0);
-			tuple.get(-1);
-		});
-	}
-
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testStreamedPositionalGetterWithNamedNativeQueryShouldThrowExceptionWhenTupleSizePositionGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard");
-			Tuple tuple = result.get(0);
-			tuple.get(2);
-		});
-	}
-
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testStreamedPositionalGetterWithNamedNativeQueryWithClassShouldThrowExceptionWhenTupleSizePositionGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard");
-			Tuple tuple = result.get(0);
-			tuple.get(2);
-		});
-	}
-
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testStreamedPositionalGetterWithNamedNativeQueryShouldThrowExceptionWhenExceedingPositionGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard");
-			Tuple tuple = result.get(0);
-			tuple.get(3);
-		});
-	}
-
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testStreamedPositionalGetterWithNamedNativeQueryWithClassShouldThrowExceptionWhenExceedingPositionGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard");
-			Tuple tuple = result.get(0);
-			tuple.get(3);
-		});
-	}
-
 
 	@Test
-	public void testStreamedAliasGetterWithNamedNativeQueryWithoutExplicitAliasShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testStreamedPositionalGetterWithNamedNativeQueryShouldThrowExceptionWhenTupleSizePositionGiven(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard");
+						Tuple tuple = result.get(0);
+						tuple.get(2);
+					}
+			);
+		});
+	}
+
+	@Test
+	public void testStreamedPositionalGetterWithNamedNativeQueryShouldThrowExceptionWhenExceedingPositionGiven(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard");
+						Tuple tuple = result.get(0);
+						tuple.get(3);
+					}
+			);
+		});
+	}
+
+	@Test
+	public void testStreamedAliasGetterWithNamedNativeQueryWithoutExplicitAliasShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard");
 			Tuple tuple = result.get(0);
 			assertEquals(1L, tuple.get("ID"));
@@ -627,26 +561,31 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testStreamedAliasGetterWithNamedNativeQueryShouldWorkWithoutExplicitAliasWhenLowerCaseAliasGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testStreamedAliasGetterWithNamedNativeQueryShouldWorkWithoutExplicitAliasWhenLowerCaseAliasGiven(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard");
 			Tuple tuple = result.get(0);
 			tuple.get("id");
 		});
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void testStreamedAliasGetterWithNamedNativeQueryShouldThrowExceptionWithoutExplicitAliasWhenWrongAliasGiven() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard");
-			Tuple tuple = result.get(0);
-			tuple.get("e");
+	@Test
+	public void testStreamedAliasGetterWithNamedNativeQueryShouldThrowExceptionWithoutExplicitAliasWhenWrongAliasGiven(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard");
+						Tuple tuple = result.get(0);
+						tuple.get("e");
+					}
+			);
 		});
 	}
 
 	@Test
-	public void testStreamedAliasGetterWithNamedNativeQueryWithClassWithoutExplicitAliasShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testStreamedAliasGetterWithNamedNativeQueryWithClassWithoutExplicitAliasShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard");
 			Tuple tuple = result.get(0);
 			assertEquals(Long.valueOf(1L), tuple.get("ID", Long.class));
@@ -654,10 +593,9 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
-
 	@Test
-	public void testStreamedAliasGetterWithNamedNativeQueryWithExplicitAliasShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testStreamedAliasGetterWithNamedNativeQueryWithExplicitAliasShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard_with_alias");
 			Tuple tuple = result.get(0);
 			assertEquals(1L, tuple.get("ALIAS1"));
@@ -666,8 +604,8 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testStreamedAliasGetterWithNamedNativeQueryWithClassWithExplicitAliasShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testStreamedAliasGetterWithNamedNativeQueryWithClassWithExplicitAliasShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard_with_alias");
 			Tuple tuple = result.get(0);
 			assertEquals(Long.valueOf(1L), tuple.get("ALIAS1", Long.class));
@@ -676,8 +614,8 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testStreamedToArrayShouldWithNamedNativeQueryWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testStreamedToArrayShouldWithNamedNativeQueryWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> tuples = getStreamedNamedTupleResult(entityManager, "standard");
 			Object[] result = tuples.get(0).toArray();
 			assertArrayEquals(new Object[]{1L, "Arnold"}, result);
@@ -685,8 +623,8 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testStreamedGetElementsWithNamedNativeQueryShouldWorkProperly() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testStreamedGetElementsWithNamedNativeQueryShouldWorkProperly(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> tuples = getStreamedNamedTupleResult(entityManager, "standard");
 			List<TupleElement<?>> result = tuples.get(0).getElements();
 			assertEquals(2, result.size());
@@ -699,12 +637,12 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-11897")
-	public void testGetElementsShouldNotThrowExceptionWhenResultContainsNullValue() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testGetElementsShouldNotThrowExceptionWhenResultContainsNullValue(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			User user = entityManager.find(User.class, 1L);
 			user.firstName = null;
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			List<Tuple> tuples = getTupleResult(entityManager);
 			final Tuple tuple = tuples.get(0);
 			List<TupleElement<?>> result = tuple.getElements();
@@ -741,7 +679,6 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 		return (List<Tuple>) query.getResultList();
 	}
 
-	@SuppressWarnings("unchecked")
 	private List<Tuple> getTupleNamedResult(EntityManager entityManager, String name) {
 		return entityManager.createNamedQuery(name, Tuple.class).getResultList();
 	}
@@ -769,6 +706,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 					query = "SELECT id AS alias1, firstname AS alias2 FROM users"
 			)
 	})
+
 	public static class User {
 		@Id
 		private long id;

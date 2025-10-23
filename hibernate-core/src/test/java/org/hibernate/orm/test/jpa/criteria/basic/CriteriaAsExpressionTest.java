@@ -38,11 +38,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @Jpa(annotatedClasses = {
 		Product.class,
 		ShelfLife.class,
-		CiteriaAsExpressionTest.TestEntity.class
+		CriteriaAsExpressionTest.TestEntity.class
 },
 		useCollectingStatementInspector = true
 )
-public class CiteriaAsExpressionTest {
+public class CriteriaAsExpressionTest {
 	private static final int QUANTITY = 2;
 	private static final String NAME = "a";
 	private static final Integer NAME_CONVERTED_VALUE = 1;
@@ -98,7 +98,7 @@ public class CiteriaAsExpressionTest {
 
 	@Test
 	@JiraKey("HHH-15713")
-	public void testAsIntegerToIntegreDoesNotCreateACast(EntityManagerFactoryScope scope) {
+	public void testAsIntegerToIntegerDoesNotCreateACast(EntityManagerFactoryScope scope) {
 		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
@@ -175,8 +175,7 @@ public class CiteriaAsExpressionTest {
 		List<String> sqlQueries = statementInspector.getSqlQueries();
 		assertThat( sqlQueries.size() ).isEqualTo( 1 );
 
-		String executedQuery = sqlQueries.get( 0 );
-		return executedQuery;
+		return sqlQueries.get( 0 );
 	}
 
 	@Entity(name = "TestEntity")

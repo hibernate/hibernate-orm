@@ -164,7 +164,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		final Method[] getters = new Method[getterNames.length];
 		final Method[] setters = new Method[setterNames.length];
 		try {
-			findAccessors( clazz, getterNames, setterNames, types, getters, setters );
+			unwrapPropertyInfos( clazz, getterNames, setterNames, types, getters, setters );
 		}
 		catch (InvalidPropertyAccessorException ex) {
 			LOG.unableToGenerateReflectionOptimizer( clazz.getName(), ex.getMessage() );
@@ -199,6 +199,18 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 	@Override
 	public @Nullable ReflectionOptimizer getReflectionOptimizer(Class<?> clazz, Map<String, PropertyAccess> propertyAccessMap) {
+		final PropertyInfo[] propertyInfos = new PropertyInfo[propertyAccessMap.size()];
+		int i = 0;
+		for ( Map.Entry<String, PropertyAccess> entry : propertyAccessMap.entrySet() ) {
+			final String propertyName = entry.getKey();
+			final PropertyAccess propertyAccess = entry.getValue();
+			propertyInfos[i++] = new PropertyInfo( propertyName, propertyAccess );
+		}
+		return getReflectionOptimizer( clazz, propertyInfos );
+	}
+
+	@Override
+	public @Nullable ReflectionOptimizer getReflectionOptimizer(Class<?> clazz, PropertyInfo[] propertyInfos) {
 		final Class<?> fastClass;
 		if ( !clazz.isInterface() && !Modifier.isAbstract( clazz.getModifiers() ) ) {
 			// we only provide a fast class instantiator if the class can be instantiated
@@ -223,17 +235,17 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			fastClass = null;
 		}
 
-		final Member[] getters = new Member[propertyAccessMap.size()];
-		final Member[] setters = new Member[propertyAccessMap.size()];
+		final Member[] getters = new Member[propertyInfos.length];
+		final Member[] setters = new Member[propertyInfos.length];
+		final String[] propertyNames = new String[propertyInfos.length];
 		try {
-			findAccessors( clazz, propertyAccessMap, getters, setters );
+			unwrapPropertyInfos( clazz, propertyInfos, propertyNames, getters, setters );
 		}
 		catch (InvalidPropertyAccessorException ex) {
 			LOG.unableToGenerateReflectionOptimizer( clazz.getName(), ex.getMessage() );
 			return null;
 		}
 
-		final String[] propertyNames = propertyAccessMap.keySet().toArray( new String[0] );
 		final Class<?> superClass = determineAccessOptimizerSuperClass( clazz, propertyNames, getters, setters );
 
 		final String className = clazz.getName() + "$" + OPTIMIZER_PROXY_NAMING_SUFFIX + encodeName( propertyNames, getters, setters );
@@ -1201,7 +1213,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		}
 	}
 
-	private static void findAccessors(
+	private static void unwrapPropertyInfos(
 			Class<?> clazz,
 			String[] getterNames,
 			String[] setterNames,
@@ -1243,14 +1255,17 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		}
 	}
 
-	private static void findAccessors(
+	private static void unwrapPropertyInfos(
 			Class<?> clazz,
-			Map<String, PropertyAccess> propertyAccessMap,
+			PropertyInfo[] propertyInfos,
+			String[] propertyNames,
 			Member[] getters,
 			Member[] setters) {
 		int i = 0;
-		for ( Map.Entry<String, PropertyAccess> entry : propertyAccessMap.entrySet() ) {
-			final PropertyAccess propertyAccess = entry.getValue();
+		for ( PropertyInfo propertyInfo : propertyInfos ) {
+			final String propertyName = propertyInfo.propertyName();
+			final PropertyAccess propertyAccess = propertyInfo.propertyAccess();
+			propertyNames[i] = propertyName;
 			if ( propertyAccess instanceof PropertyAccessEmbeddedImpl ) {
 				getters[i] = EMBEDDED_MEMBER;
 				setters[i] = EMBEDDED_MEMBER;
@@ -1259,14 +1274,14 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			}
 			final Getter getter = propertyAccess.getGetter();
 			if ( getter == null ) {
-				throw new InvalidPropertyAccessorException( "invalid getter for property [" + entry.getKey() + "]" );
+				throw new InvalidPropertyAccessorException( "invalid getter for property [" + propertyName + "]" );
 			}
 			final Setter setter = propertyAccess.getSetter();
 			if ( setter == null ) {
 				throw new InvalidPropertyAccessorException(
 						String.format(
 								"cannot find a setter for [%s] on type [%s]",
-								entry.getKey(),
+								propertyName,
 								clazz.getName()
 						)
 				);
@@ -1282,7 +1297,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				throw new InvalidPropertyAccessorException(
 						String.format(
 								"cannot find a getter for [%s] on type [%s]",
-								entry.getKey(),
+								propertyName,
 								clazz.getName()
 						)
 				);
@@ -1301,7 +1316,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				throw new InvalidPropertyAccessorException(
 						String.format(
 								"cannot find a setter for [%s] on type [%s]",
-								entry.getKey(),
+								propertyName,
 								clazz.getName()
 						)
 				);

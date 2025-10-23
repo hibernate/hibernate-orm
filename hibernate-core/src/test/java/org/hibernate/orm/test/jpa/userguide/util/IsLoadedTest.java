@@ -4,46 +4,42 @@
  */
 package org.hibernate.orm.test.jpa.userguide.util;
 
-import jakarta.persistence.EntityManager;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Emmanuel Bernard
  */
-public class IsLoadedTest extends BaseEntityManagerFunctionalTestCase {
-	@Test
-	public void testIsLoadedOnPrivateSuperclassProperty() {
-		EntityManager em = entityManagerFactory().createEntityManager();
-		em.getTransaction().begin();
-		try {
-			Author a = new Author();
-			Book book = new Book( a );
-			em.persist( a );
-			em.persist( book );
-			em.flush();
-			em.clear();
-			book = em.find( Book.class, book.getId() );
-			assertTrue( em.getEntityManagerFactory().getPersistenceUnitUtil().isLoaded( book ) );
-			assertFalse( em.getEntityManagerFactory().getPersistenceUnitUtil().isLoaded( book, "author" ) );
-		}
-		finally {
-			em.getTransaction().rollback();
-			em.close();
-		}
+@Jpa(annotatedClasses = {
+		Author.class,
+		Book.class,
+		CopyrightableContent.class
+})
+public class IsLoadedTest {
+
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Author.class,
-				Book.class,
-				CopyrightableContent.class
-		};
+	@Test
+	public void testIsLoadedOnPrivateSuperclassProperty(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			Author a = new Author();
+			Book book = new Book( a );
+			entityManager.persist( a );
+			entityManager.persist( book );
+			entityManager.flush();
+			entityManager.clear();
+			book = entityManager.find( Book.class, book.getId() );
+			assertTrue( entityManager.getEntityManagerFactory().getPersistenceUnitUtil().isLoaded( book ) );
+			assertFalse( entityManager.getEntityManagerFactory().getPersistenceUnitUtil().isLoaded( book, "author" ) );
+		} );
 	}
+
 }

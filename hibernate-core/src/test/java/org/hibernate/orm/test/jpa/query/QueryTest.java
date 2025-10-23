@@ -4,15 +4,8 @@
  */
 package org.hibernate.orm.test.jpa.query;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.List;
-import java.util.Map;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.NonUniqueResultException;
 import jakarta.persistence.Parameter;
@@ -21,40 +14,42 @@ import jakarta.persistence.Query;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
-
 import org.hibernate.Hibernate;
 import org.hibernate.QueryException;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.SessionFactory;
+import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.community.dialect.DerbyDialect;
-import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.orm.test.jpa.Distributor;
 import org.hibernate.orm.test.jpa.Item;
 import org.hibernate.orm.test.jpa.Wallet;
 import org.hibernate.stat.Statistics;
-
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-import junit.framework.Assert;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static junit.framework.Assert.assertNull;
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Emmanuel Bernard
@@ -62,123 +57,84 @@ import static org.junit.Assert.fail;
  * @author Chris Cranford
  * @author Yanming Zhou
  */
-public class QueryTest extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] {
+@Jpa(
+		annotatedClasses = {
 				Item.class,
 				Distributor.class,
 				Wallet.class,
 				Employee.class,
 				Contractor.class
-		};
-	}
+		},
+		generateStatistics = true
+)
+public class QueryTest {
 
-	@Override
-	@SuppressWarnings("unchecked")
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		options.put( AvailableSettings.GENERATE_STATISTICS, "true" );
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test
 	@JiraKey(value = "HHH-7192")
-	public void testTypedManipulationQueryError() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-
-		try {
-			em.createQuery( "delete Item", Item.class );
-			fail();
-		}
-		catch (IllegalArgumentException expected) {
-			//expected
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-		}
-
-		try {
-			em.createQuery( "update Item i set i.name = 'someName'", Item.class );
-			fail();
-		}
-		catch (IllegalArgumentException expected) {
-			//expected
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+	public void testTypedManipulationQueryError(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> entityManager.createQuery( "delete Item", Item.class )
+			);
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> entityManager.createQuery( "update Item i set i.name = 'someName'", Item.class )
+			);
+		} );
 	}
 
 	@Test
-	public void testPagedQuery() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
+	public void testPagedQuery(EntityManagerFactoryScope scope)  {
+		scope.inTransaction( entityManager -> {
 			Item item = new Item( "Mouse", "Micro$oft mouse" );
-			em.persist( item );
+			entityManager.persist( item );
 			item = new Item( "Computer", "Apple II" );
-			em.persist( item );
-			Query q = em.createQuery( "select i from " + Item.class.getName() + " i where i.name like :itemName" );
+			entityManager.persist( item );
+			Query q = entityManager.createQuery( "select i from " + Item.class.getName() + " i where i.name like :itemName", Item.class );
 			q.setParameter( "itemName", "%" );
 			q.setMaxResults( 1 );
 			q.getSingleResult();
-			q = em.createQuery( "select i from Item i where i.name like :itemName" );
+			q = entityManager.createQuery( "select i from Item i where i.name like :itemName", Item.class );
 			q.setParameter( "itemName", "%" );
 			q.setFirstResult( 1 );
 			q.setMaxResults( 1 );
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testNullPositionalParameter() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
+	public void testNullPositionalParameter(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Item item = new Item( "Mouse", "Micro$oft mouse" );
-			em.persist( item );
-			Query q = em.createQuery( "from Item i where i.intVal=?1" );
+			entityManager.persist( item );
+			TypedQuery<Item> q = entityManager.createQuery( "from Item i where i.intVal=?1", Item.class );
 			q.setParameter( 1, null );
-			List results = q.getResultList();
+			List<Item> results = q.getResultList();
 			// null != null
 			assertEquals( 0, results.size() );
-			q = em.createQuery( "from Item i where i.intVal is null and ?1 is null" );
+			q = entityManager.createQuery( "from Item i where i.intVal is null and ?1 is null", Item.class );
 			q.setParameter( 1, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-			q = em.createQuery( "from Item i where i.intVal is null or i.intVal = ?1" );
+			q = entityManager.createQuery( "from Item i where i.intVal is null or i.intVal = ?1", Item.class );
 			q.setParameter( 1, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testNullPositionalParameterParameter() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
+	public void testNullPositionalParameterParameter(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Item item = new Item( "Mouse", "Micro$oft mouse" );
-			em.persist( item );
-			Query q = em.createQuery( "from Item i where i.intVal=?1" );
-			Parameter p = new Parameter() {
+			entityManager.persist( item );
+			TypedQuery<Item> q = entityManager.createQuery( "from Item i where i.intVal=?1", Item.class );
+			Parameter<Integer> p = new Parameter<>() {
 				@Override
 				public String getName() {
 					return null;
@@ -190,41 +146,32 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 				}
 
 				@Override
-				public Class getParameterType() {
+				public Class<Integer> getParameterType() {
 					return Integer.class;
 				}
 			};
 			q.setParameter( p, null );
-			Parameter pGotten = q.getParameter( p.getPosition() );
-			List results = q.getResultList();
+			List<Item> results = q.getResultList();
 			// null != null
 			assertEquals( 0, results.size() );
-			q = em.createQuery( "from Item i where i.intVal is null and ?1 is null" );
+			q = entityManager.createQuery( "from Item i where i.intVal is null and ?1 is null", Item.class );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-			q = em.createQuery( "from Item i where i.intVal is null or i.intVal = ?1" );
+			q = entityManager.createQuery( "from Item i where i.intVal is null or i.intVal = ?1", Item.class );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testNullPositionalParameterParameterIncompatible() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
+	public void testNullPositionalParameterParameterIncompatible(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Item item = new Item( "Mouse", "Micro$oft mouse" );
-			em.persist( item );
-			Query q = em.createQuery( "from Item i where i.intVal=?1" );
-			Parameter p = new Parameter() {
+			entityManager.persist( item );
+			TypedQuery<Item> q = entityManager.createQuery( "from Item i where i.intVal=?1", Item.class );
+			Parameter<Long> p = new Parameter<>() {
 				@Override
 				public String getName() {
 					return null;
@@ -236,70 +183,53 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 				}
 
 				@Override
-				public Class getParameterType() {
+				public Class<Long> getParameterType() {
 					return Long.class;
 				}
 			};
 			q.setParameter( p, null );
-			Parameter pGotten = q.getParameter( p.getPosition() );
-			List results = q.getResultList();
+			List<Item> results = q.getResultList();
 			// null != null
 			assertEquals( 0, results.size() );
-			q = em.createQuery( "from Item i where i.intVal is null and ?1 is null" );
+			q = entityManager.createQuery( "from Item i where i.intVal is null and ?1 is null", Item.class );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-			q = em.createQuery( "from Item i where i.intVal is null or i.intVal = ?1" );
+			q = entityManager.createQuery( "from Item i where i.intVal is null or i.intVal = ?1", Item.class );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testNullNamedParameter() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
+	public void testNullNamedParameter(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Item item = new Item( "Mouse", "Micro$oft mouse" );
-			em.persist( item );
-			Query q = em.createQuery( "from Item i where i.intVal=:iVal" );
+			entityManager.persist( item );
+			TypedQuery<Item> q = entityManager.createQuery( "from Item i where i.intVal=:iVal", Item.class );
 			q.setParameter( "iVal", null );
-			List results = q.getResultList();
+			List<Item> results = q.getResultList();
 			// null != null
 			assertEquals( 0, results.size() );
-			q = em.createQuery( "from Item i where i.intVal is null and :iVal is null" );
+			q = entityManager.createQuery( "from Item i where i.intVal is null and :iVal is null", Item.class );
 			q.setParameter( "iVal", null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-			q = em.createQuery( "from Item i where i.intVal is null or i.intVal = :iVal" );
+			q = entityManager.createQuery( "from Item i where i.intVal is null or i.intVal = :iVal", Item.class );
 			q.setParameter( "iVal", null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testNullNamedParameterParameter() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
+	public void testNullNamedParameterParameter(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Item item = new Item( "Mouse", "Micro$oft mouse" );
-			em.persist( item );
-			Query q = em.createQuery( "from Item i where i.intVal=:iVal" );
-			Parameter p = new Parameter() {
+			entityManager.persist( item );
+			TypedQuery<Item> q = entityManager.createQuery( "from Item i where i.intVal=:iVal", Item.class );
+			Parameter<Integer> p = new Parameter<>() {
 				@Override
 				public String getName() {
 					return "iVal";
@@ -311,40 +241,32 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 				}
 
 				@Override
-				public Class getParameterType() {
+				public Class<Integer> getParameterType() {
 					return Integer.class;
 				}
 			};
 			q.setParameter( p, null );
-			List results = q.getResultList();
+			List<Item> results = q.getResultList();
 			// null != null
 			assertEquals( 0, results.size() );
-			q = em.createQuery( "from Item i where i.intVal is null and :iVal is null" );
+			q = entityManager.createQuery( "from Item i where i.intVal is null and :iVal is null", Item.class );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-			q = em.createQuery( "from Item i where i.intVal is null or i.intVal = :iVal" );
+			q = entityManager.createQuery( "from Item i where i.intVal is null or i.intVal = :iVal", Item.class );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testNullNamedParameterParameterIncompatible() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
+	public void testNullNamedParameterParameterIncompatible(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Item item = new Item( "Mouse", "Micro$oft mouse" );
-			em.persist( item );
-			Query q = em.createQuery( "from Item i where i.intVal=:iVal" );
-			Parameter p = new Parameter() {
+			entityManager.persist( item );
+			TypedQuery<Item> q = entityManager.createQuery( "from Item i where i.intVal=:iVal", Item.class );
+			Parameter<Long> p = new Parameter<>() {
 				@Override
 				public String getName() {
 					return "iVal";
@@ -356,84 +278,70 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 				}
 
 				@Override
-				public Class getParameterType() {
+				public Class<Long> getParameterType() {
 					return Long.class;
 				}
 			};
 			q.setParameter( p, null );
-			List results = q.getResultList();
+			List<Item> results = q.getResultList();
 			// null != null
 			assertEquals( 0, results.size() );
-			q = em.createQuery( "from Item i where i.intVal is null and :iVal is null" );
+			q = entityManager.createQuery( "from Item i where i.intVal is null and :iVal is null", Item.class );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-			q = em.createQuery( "from Item i where i.intVal is null or i.intVal = :iVal" );
+			q = entityManager.createQuery( "from Item i where i.intVal is null or i.intVal = :iVal", Item.class );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = GaussDBDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = InformixDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	public void testNativeQueryNullPositionalParameter() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "HHH-10312: Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, matchSubTypes = true, reason = "HHH-10312: Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class, matchSubTypes = true, reason = "HHH-10312: Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true, reason = "HHH-10312: Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(dialectClass = InformixDialect.class, matchSubTypes = true, reason = "HHH-10312: Cannot determine the parameter types and bind type is unknown because the value is null")
+	public void testNativeQueryNullPositionalParameter(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Item item = new Item( "Mouse", "Micro$oft mouse" );
-			em.persist( item );
+			entityManager.persist( item );
 			// native queries don't seem to flush by default ?!?
-			em.flush();
-			Query q = em.createNativeQuery( "select * from Item i where i.int_val=?" );
+			entityManager.flush();
+
+			Query q = entityManager.createNativeQuery( "select * from Item i where i.int_val=?", Item.class );
 			q.setParameter( 1, null );
-			List results = q.getResultList();
+			List<?> results = q.getResultList();
 			// null != null
 			assertEquals( 0, results.size() );
-			q = em.createNativeQuery( "select * from Item i where i.int_val is null and ? is null" );
+			q = entityManager.createNativeQuery( "select * from Item i where i.int_val is null and ? is null", Item.class );
 			q.setParameter( 1, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-			q = em.createNativeQuery( "select * from Item i where i.int_val is null or i.int_val = ?" );
+			q = entityManager.createNativeQuery( "select * from Item i where i.int_val is null or i.int_val = ?", Item.class );
 			q.setParameter(1, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-10161")
-	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = GaussDBDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = InformixDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	public void testNativeQueryNullPositionalParameterParameter() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "HHH-10312: Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, matchSubTypes = true, reason = "HHH-10312: Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class, matchSubTypes = true, reason = "HHH-10312: Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true, reason = "HHH-10312: Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(dialectClass = InformixDialect.class, matchSubTypes = true, reason = "HHH-10312: Cannot determine the parameter types and bind type is unknown because the value is null")
+	public void testNativeQueryNullPositionalParameterParameter(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Item item = new Item( "Mouse", "Micro$oft mouse" );
-			em.persist( item );
+			entityManager.persist( item );
 			// native queries don't seem to flush by default ?!?
-			em.flush();
-			Query q = em.createNativeQuery( "select * from Item i where i.int_val=?" );
-			Parameter p = new Parameter() {
+			entityManager.flush();
+
+			Query q = entityManager.createNativeQuery( "select * from Item i where i.int_val=?", Item.class );
+			Parameter<Integer> p = new Parameter<>() {
 				@Override
 				public String getName() {
 					return null;
@@ -445,85 +353,70 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 				}
 
 				@Override
-				public Class getParameterType() {
+				public Class<Integer> getParameterType() {
 					return Integer.class;
 				}
 			};
 			q.setParameter( p, null );
-			Parameter pGotten = q.getParameter( p.getPosition() );
-			List results = q.getResultList();
+			List<?> results = q.getResultList();
 			// null != null
 			assertEquals( 0, results.size() );
-			q = em.createNativeQuery( "select * from Item i where i.int_val is null and ? is null" );
+			q = entityManager.createNativeQuery( "select * from Item i where i.int_val is null and ? is null", Item.class );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-			q = em.createNativeQuery( "select * from Item i where i.int_val is null or i.int_val = ?" );
+			q = entityManager.createNativeQuery( "select * from Item i where i.int_val is null or i.int_val = ?", Item.class );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = GaussDBDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = InformixDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	public void testNativeQueryNullNamedParameter() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "HHH-10312: Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, matchSubTypes = true, reason = "HHH-10312: Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class, matchSubTypes = true, reason = "HHH-10312: Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true, reason = "HHH-10312: Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(dialectClass = InformixDialect.class, matchSubTypes = true, reason = "HHH-10312: Cannot determine the parameter types and bind type is unknown because the value is null")
+	public void testNativeQueryNullNamedParameter(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Item item = new Item( "Mouse", "Micro$oft mouse" );
-			em.persist( item );
+			entityManager.persist( item );
 			// native queries don't seem to flush by default ?!?
-			em.flush();
-			Query q = em.createNativeQuery( "select * from Item i where i.int_val=:iVal" );
+			entityManager.flush();
+
+			Query q = entityManager.createNativeQuery( "select * from Item i where i.int_val=:iVal", Item.class );
 			q.setParameter( "iVal", null );
-			List results = q.getResultList();
+			List<?> results = q.getResultList();
 			// null != null
 			assertEquals( 0, results.size() );
-			q = em.createNativeQuery( "select * from Item i where (i.int_val is null) and (:iVal is null)" );
+			q = entityManager.createNativeQuery( "select * from Item i where (i.int_val is null) and (:iVal is null)", Item.class );
 			q.setParameter( "iVal", null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-			q = em.createNativeQuery( "select * from Item i where i.int_val is null or i.int_val = :iVal" );
+			q = entityManager.createNativeQuery( "select * from Item i where i.int_val is null or i.int_val = :iVal", Item.class );
 			q.setParameter( "iVal", null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-10161")
-	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = GaussDBDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = InformixDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	public void testNativeQueryNullNamedParameterParameter() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "HHH-10312: Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, matchSubTypes = true, reason = "HHH-10312: Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class, matchSubTypes = true, reason = "HHH-10312: Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true, reason = "HHH-10312: Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(dialectClass = InformixDialect.class, matchSubTypes = true, reason = "HHH-10312: Cannot determine the parameter types and bind type is unknown because the value is null")
+	public void testNativeQueryNullNamedParameterParameter(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Item item = new Item( "Mouse", "Micro$oft mouse" );
-			em.persist( item );
+			entityManager.persist( item );
 			// native queries don't seem to flush by default ?!?
-			em.flush();
-			Query q = em.createNativeQuery( "select * from Item i where i.int_val=:iVal" );
-			Parameter p = new Parameter() {
+			entityManager.flush();
+
+			Query q = entityManager.createNativeQuery( "select * from Item i where i.int_val=:iVal", Item.class );
+			Parameter<Integer> p = new Parameter<>() {
 				@Override
 				public String getName() {
 					return "iVal";
@@ -535,199 +428,140 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 				}
 
 				@Override
-				public Class getParameterType() {
+				public Class<Integer> getParameterType() {
 					return Integer.class;
 				}
 			};
 			q.setParameter( p, null );
-			Parameter pGotten = q.getParameter( p.getName() );
-			List results = q.getResultList();
+			List<?> results = q.getResultList();
 			assertEquals( 0, results.size() );
-			q = em.createNativeQuery( "select * from Item i where (i.int_val is null) and (:iVal is null)" );
+			q = entityManager.createNativeQuery( "select * from Item i where (i.int_val is null) and (:iVal is null)", Item.class );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-			q = em.createNativeQuery( "select * from Item i where i.int_val is null or i.int_val = :iVal" );
+			q = entityManager.createNativeQuery( "select * from Item i where i.int_val is null or i.int_val = :iVal", Item.class );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+		} );
 	}
 
 	@Test
 	@JiraKey("HHH-18033")
-	public void testQueryContainsQuotedSemicolonWithLimit() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			em.persist( new Item( "Mouse;", "Micro$oft mouse" ) );
+	public void testQueryContainsQuotedSemicolonWithLimit(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 
-			Query q = em.createQuery( "from Item where name like '%;%'" ).setMaxResults(10);
+			entityManager.persist( new Item( "Mouse;", "Micro$oft mouse" ) );
+
+			TypedQuery<Item> q = entityManager.createQuery( "from Item where name like '%;%'", Item.class ).setMaxResults(10);
 			assertEquals( 1, q.getResultList().size() );
 
-			q = em.createQuery( "from Item where name like '%;%' " ).setMaxResults(10);
+			q = entityManager.createQuery( "from Item where name like '%;%' ", Item.class ).setMaxResults(10);
 			assertEquals( 1, q.getResultList().size() );
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+		} );
 	}
 
 	@Test
 	@JiraKey("HHH-18033")
-	public void testNativeQueryContainsQuotedSemicolonWithLimit() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			em.persist( new Item( "Mouse;", "Micro$oft mouse" ) );
+	public void testNativeQueryContainsQuotedSemicolonWithLimit(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 
-			Query q = em.createNativeQuery( "select * from Item where name like '%;%'" ).setMaxResults(10);
+			entityManager.persist( new Item( "Mouse;", "Micro$oft mouse" ) );
+
+			Query q = entityManager.createNativeQuery( "select * from Item where name like '%;%'", Item.class ).setMaxResults(10);
 			assertEquals( 1, q.getResultList().size() );
 
-			q = em.createNativeQuery( "select * from Item where name like '%;%' " ).setMaxResults(10);
+			q = entityManager.createNativeQuery( "select * from Item where name like '%;%' ", Item.class ).setMaxResults(10);
 			assertEquals( 1, q.getResultList().size() );
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+		} );
 	}
 
 	@Test
 	@JiraKey("HHH-18033")
-	@SkipForDialect(value = OracleDialect.class, comment = "Doesn't support semicolon as ending of statement")
-	@SkipForDialect(value = SybaseDialect.class, comment = "Doesn't support semicolon as ending of statement")
-	@SkipForDialect(value = DerbyDialect.class, comment = "Doesn't support semicolon as ending of statement")
-	@SkipForDialect(value = DB2Dialect.class, comment = "Doesn't support semicolon as ending of statement")
-	public void testNativeQueryContainsQuotedSemicolonAndEndsWithSemicolonWithLimit() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			em.persist( new Item( "Mouse;", "Micro$oft mouse" ) );
+	@SkipForDialect(dialectClass = OracleDialect.class, matchSubTypes = true, reason = "Doesn't support semicolon as ending of statement")
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Doesn't support semicolon as ending of statement")
+	@SkipForDialect(dialectClass = DerbyDialect.class, matchSubTypes = true, reason = "Doesn't support semicolon as ending of statement")
+	@SkipForDialect(dialectClass = DB2Dialect.class, matchSubTypes = true, reason = "Doesn't support semicolon as ending of statement")
+	public void testNativeQueryContainsQuotedSemicolonAndEndsWithSemicolonWithLimit(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 
-			Query q = em.createNativeQuery( "select * from Item where name like '%;%';" ).setMaxResults(10);
+			entityManager.persist( new Item( "Mouse;", "Micro$oft mouse" ) );
+
+			Query q = entityManager.createNativeQuery( "select * from Item where name like '%;%';", Item.class ).setMaxResults(10);
 			assertEquals( 1, q.getResultList().size() );
 
-			q = em.createNativeQuery( "select * from Item where name like '%;%' ; " ).setMaxResults(10);
+			q = entityManager.createNativeQuery( "select * from Item where name like '%;%' ; ", Item.class ).setMaxResults(10);
 			assertEquals( 1, q.getResultList().size() );
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testAggregationReturnType() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
+	public void testAggregationReturnType(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Item item = new Item( "Mouse", "Micro$oft mouse" );
-			em.persist( item );
+			entityManager.persist( item );
 			item = new Item( "Computer", "Apple II" );
-			em.persist( item );
-			Query q = em.createQuery( "select count(i) from Item i where i.name like :itemName" );
+			entityManager.persist( item );
+			Query q = entityManager.createQuery( "select count(i) from Item i where i.name like :itemName" );
 			q.setParameter( "itemName", "%" );
-			assertTrue( q.getSingleResult() instanceof Long );
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+			assertInstanceOf( Long.class, q.getSingleResult() );
+		} );
 	}
 
 	@Test
-	public void testTypeExpression() throws Exception {
-		final EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
+	public void testTypeExpression(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			final Employee employee = new Employee( "Lukasz", 100.0 );
-			em.persist( employee );
+			entityManager.persist( employee );
 			final Contractor contractor = new Contractor( "Kinga", 100.0, "Microsoft" );
-			em.persist( contractor );
-			final Query q = em.createQuery( "SELECT e FROM Employee e where TYPE(e) <> Contractor" );
-			final List result = q.getResultList();
+			entityManager.persist( contractor );
+			final TypedQuery<Employee> q = entityManager.createQuery( "SELECT e FROM Employee e where TYPE(e) <> Contractor", Employee.class );
+			final List<Employee> result = q.getResultList();
 			assertNotNull( result );
-			assertEquals( Arrays.asList( employee ), result );
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+			assertEquals( List.of( employee ), result );
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH_7407")
-	public void testMultipleParameterLists() throws Exception {
+	public void testMultipleParameterLists(EntityManagerFactoryScope scope) {
 		final Item item = new Item( "Mouse", "Micro$oft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
 
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			em.persist( item );
-			em.persist( item2 );
-			assertTrue( em.contains( item ) );
-			em.getTransaction().commit();
+		scope.inTransaction( entityManager -> {
+			entityManager.persist( item );
+			entityManager.persist( item2 );
+			assertTrue( entityManager.contains( item ) );
+		} );
 
-
-			List<String> names = Arrays.asList( item.getName() );
-			Query q = em.createQuery( "select item from Item item where item.name in :names or item.name in :names2" );
+		scope.inTransaction( entityManager -> {
+			List<String> names = List.of( item.getName() );
+			TypedQuery<Item> q = entityManager.createQuery(
+					"select item from Item item where item.name in :names or item.name in :names2", Item.class );
 			q.setParameter( "names", names );
 			q.setParameter( "names2", names );
-			List result = q.getResultList();
+			List<Item> result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 1, result.size() );
 
-			List<String> descrs = Arrays.asList( item.getDescr() );
-			q = em.createQuery(
-					"select item from Item item where item.name in :names and ( item.descr is null or item.descr in :descrs )" );
+			List<String> descrs = List.of( item.getDescr() );
+			q = entityManager.createQuery(
+					"select item from Item item where item.name in :names and ( item.descr is null or item.descr in :descrs )",
+					Item.class );
 			q.setParameter( "names", names );
 			q.setParameter( "descrs", descrs );
 			result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 1, result.size() );
-
-			em.getTransaction().begin();
-			em.remove( em.getReference( Item.class, item.getName() ) );
-			em.remove( em.getReference( Item.class, item2.getName() ) );
-			em.getTransaction().commit();
-		}
-		catch (Exception e){
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			em.close();
-		}
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH_8949")
-	public void testCacheStoreAndRetrieveModeParameter() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			Query query = em.createQuery( "select item from Item item" );
+	public void testCacheStoreAndRetrieveModeParameter(EntityManagerFactoryScope scope)  {
+		scope.inTransaction( entityManager -> {
+
+			Query query = entityManager.createQuery( "select item from Item item", Item.class );
 
 			query.getHints().clear();
 
@@ -745,90 +579,67 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			assertEquals( CacheRetrieveMode.USE, query.getHints().get( "jakarta.persistence.cache.retrieveMode" ) );
 			assertEquals( CacheStoreMode.REFRESH, query.getHints().get( "jakarta.persistence.cache.storeMode" ) );
 
-			em.getTransaction().commit();
-		}
-		catch (Exception e){
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testJpaPositionalParameters() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			Query query = em.createQuery( "from Item item where item.name =?1 or item.descr = ?1" );
-			Parameter p1 = query.getParameter( 1 );
-			Assert.assertNotNull( p1 );
-			Assert.assertNotNull( p1.getPosition() );
-			Assert.assertNull( p1.getName() );
+	public void testJpaPositionalParameters(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 
-			em.getTransaction().commit();
-		}
-		catch (Exception e){
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			em.close();
-		}
+			Query query = entityManager.createQuery( "from Item item where item.name =?1 or item.descr = ?1", Item.class );
+			Parameter<?> p1 = query.getParameter( 1 );
+			assertNotNull( p1 );
+			assertNotNull( p1.getPosition() );
+			assertNull( p1.getName() );
+
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-12290")
-	public void testParameterCollectionAndPositional() {
+	public void testParameterCollectionAndPositional(EntityManagerFactoryScope scope) {
 		final Item item = new Item( "Mouse", "Microsoft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
-
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			entityManager.persist( item );
 			entityManager.persist( item2 );
 			assertTrue( entityManager.contains( item ) );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Query q = entityManager.createQuery( "select item from Item item where item.name in ?1 and item.descr = ?2" );
-			List params = new ArrayList();
+		scope.inTransaction( entityManager -> {
+			TypedQuery<Item> q = entityManager.createQuery( "select item from Item item where item.name in ?1 and item.descr = ?2", Item.class );
+			List<String> params = new ArrayList<>();
 			params.add( item.getName() );
 			params.add( item2.getName() );
 			q.setParameter( 1, params );
 			q.setParameter( 2, item2.getDescr() );
-			List result = q.getResultList();
+			List<Item> result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 1, result.size() );
 		} );
-
 	}
 
 	@Test
 	@JiraKey(value = "HHH-12290")
-	public void testParameterCollectionParenthesesAndPositional() {
+	public void testParameterCollectionParenthesesAndPositional(EntityManagerFactoryScope scope) {
 		final Item item = new Item( "Mouse", "Microsoft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			entityManager.persist( item );
 			entityManager.persist( item2 );
 			assertTrue( entityManager.contains( item ) );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Query q = entityManager.createQuery(
-					"select item from Item item where item.name in (?1) and item.descr = ?2" );
-			List params = new ArrayList();
+		scope.inTransaction( entityManager -> {
+			TypedQuery<Item> q = entityManager.createQuery(
+					"select item from Item item where item.name in (?1) and item.descr = ?2", Item.class );
+			List<String> params = new ArrayList<>();
 			params.add( item.getName() );
 			params.add( item2.getName() );
 			q.setParameter( 1, params );
 			q.setParameter( 2, item2.getDescr() );
-			List result = q.getResultList();
+			List<Item> result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 1, result.size() );
 		} );
@@ -836,55 +647,53 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-12290")
-	public void testParameterCollectionSingletonParenthesesAndPositional() {
+	public void testParameterCollectionSingletonParenthesesAndPositional(EntityManagerFactoryScope scope) {
 		final Item item = new Item( "Mouse", "Microsoft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			entityManager.persist( item );
 			entityManager.persist( item2 );
 			assertTrue( entityManager.contains( item ) );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Query q = entityManager.createQuery(
-					"select item from Item item where item.name in (?1) and item.descr = ?2" );
-			List params = new ArrayList();
+		scope.inTransaction( entityManager -> {
+			TypedQuery<Item> q = entityManager.createQuery(
+					"select item from Item item where item.name in (?1) and item.descr = ?2", Item.class );
+			List<String> params = new ArrayList<>();
 			params.add( item2.getName() );
 			q.setParameter( 1, params );
 			q.setParameter( 2, item2.getDescr() );
-			List result = q.getResultList();
+			List<Item> result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 1, result.size() );
 		} );
 	}
 
 	@Test
-	public void testParameterList() throws Exception {
+	public void testParameterList(EntityManagerFactoryScope scope) {
 		final Item item = new Item( "Mouse", "Micro$oft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
 
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			em.persist( item );
-			em.persist( item2 );
-			assertTrue( em.contains( item ) );
-			em.getTransaction().commit();
+		scope.inTransaction( entityManager -> {
+			entityManager.persist( item );
+			entityManager.persist( item2 );
+			assertTrue( entityManager.contains( item ) );
+		} );
 
-			em.getTransaction().begin();
-			Query q = em.createQuery( "select item from Item item where item.name in :names" );
+		scope.inTransaction( entityManager -> {
+			TypedQuery<Item> q = entityManager.createQuery( "select item from Item item where item.name in :names", Item.class );
 			//test hint in value and string
 			q.setHint( "org.hibernate.fetchSize", 10 );
 			q.setHint( "org.hibernate.fetchSize", "10" );
-			List params = new ArrayList();
+			List<String> params = new ArrayList<>();
 			params.add( item.getName() );
 			q.setParameter( "names", params );
-			List result = q.getResultList();
+			List<Item> result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 1, result.size() );
 
-			q = em.createQuery( "select item from Item item where item.name in :names" );
+			q = entityManager.createQuery( "select item from Item item where item.name in :names", Item.class );
 			//test hint in value and string
 			q.setHint( "org.hibernate.fetchSize", 10 );
 			q.setHint( "org.hibernate.fetchSize", "10" );
@@ -894,8 +703,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			assertNotNull( result );
 			assertEquals( 2, result.size() );
 
-			q = em.createQuery( "select item from Item item where item.name in ?1" );
-			params = new ArrayList();
+			q = entityManager.createQuery( "select item from Item item where item.name in ?1", Item.class );
+			params = new ArrayList<>();
 			params.add( item.getName() );
 			params.add( item2.getName() );
 			// deprecated usage of positional parameter by String
@@ -903,52 +712,38 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 2, result.size() );
-			em.remove( result.get( 0 ) );
-			em.remove( result.get( 1 ) );
-			em.getTransaction().commit();
-		}
-		catch (Exception e){
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testParameterListInExistingParens() throws Exception {
+	public void testParameterListInExistingParens(EntityManagerFactoryScope scope) {
 		final Item item = new Item( "Mouse", "Micro$oft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
 
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			em.persist( item );
-			em.persist( item2 );
-			assertTrue( em.contains( item ) );
-			em.getTransaction().commit();
+		scope.inTransaction( entityManager -> {
+			entityManager.persist( item );
+			entityManager.persist( item2 );
+			assertTrue( entityManager.contains( item ) );
+		} );
 
-			em.getTransaction().begin();
-			Query q = em.createQuery( "select item from Item item where item.name in (:names)" );
+		scope.inTransaction( entityManager -> {
+			TypedQuery<Item> q = entityManager.createQuery( "select item from Item item where item.name in (:names)", Item.class );
 			//test hint in value and string
 			q.setHint( "org.hibernate.fetchSize", 10 );
 			q.setHint( "org.hibernate.fetchSize", "10" );
-			List params = new ArrayList();
+			List<String> params = new ArrayList<>();
 			params.add( item.getName() );
 			params.add( item2.getName() );
 			q.setParameter( "names", params );
-			List result = q.getResultList();
+			List<Item> result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 2, result.size() );
 
-			q = em.createQuery( "select item from Item item where item.name in ( \n :names \n)\n" );
+			q = entityManager.createQuery( "select item from Item item where item.name in ( \n :names \n)\n", Item.class );
 			//test hint in value and string
 			q.setHint( "org.hibernate.fetchSize", 10 );
 			q.setHint( "org.hibernate.fetchSize", "10" );
-			params = new ArrayList();
+			params = new ArrayList<>();
 			params.add( item.getName() );
 			params.add( item2.getName() );
 			q.setParameter( "names", params );
@@ -956,8 +751,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			assertNotNull( result );
 			assertEquals( 2, result.size() );
 
-			q = em.createQuery( "select item from Item item where item.name in ( ?1 )" );
-			params = new ArrayList();
+			q = entityManager.createQuery( "select item from Item item where item.name in ( ?1 )", Item.class );
+			params = new ArrayList<>();
 			params.add( item.getName() );
 			params.add( item2.getName() );
 			// deprecated usage of positional parameter by String
@@ -965,37 +760,23 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 2, result.size() );
-			em.remove( result.get( 0 ) );
-			em.remove( result.get( 1 ) );
-			em.getTransaction().commit();
-		}
-		catch (Exception e){
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			em.close();
-		}
+		} );
 	}
 
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-17490" )
-	public void testEmptyParameterList() throws Exception {
+	public void testEmptyParameterList(EntityManagerFactoryScope scope) {
 		final Item item = new Item( "Mouse", "Micro$oft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
 
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			em.persist( item );
-			em.persist( item2 );
-			assertTrue( em.contains( item ) );
-			em.getTransaction().commit();
+		scope.inTransaction( entityManager -> {
+			entityManager.persist( item );
+			entityManager.persist( item2 );
+			assertTrue( entityManager.contains( item ) );
+		} );
 
-			em.getTransaction().begin();
-			TypedQuery<Item> q = em.createQuery(
+		scope.inTransaction( entityManager -> {
+			TypedQuery<Item> q = entityManager.createQuery(
 					"select item from Item item where item.name in :names",
 					Item.class
 			);
@@ -1004,7 +785,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			assertNotNull( result );
 			assertEquals( 0, result.size() );
 
-			q = em.createQuery(
+			q = entityManager.createQuery(
 					"select item from Item item where item.name not in :names",
 					Item.class
 			);
@@ -1012,401 +793,263 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 2, result.size() );
-
-			em.remove( result.get( 0 ) );
-			em.remove( result.get( 1 ) );
-			em.getTransaction().commit();
-		}
-		catch (Exception e){
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testEscapeCharacter() throws Exception {
+	public void testEscapeCharacter(EntityManagerFactoryScope scope) {
 		final Item item = new Item( "Mouse", "Micro_oft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
 
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			em.persist( item );
-			em.persist( item2 );
-			assertTrue( em.contains( item ) );
-			em.getTransaction().commit();
+		scope.inTransaction( entityManager -> {
 
-			em.getTransaction().begin();
-			Query q = em.createQuery( "select item from Item item where item.descr like 'Microk_oft mouse' escape 'k' " );
-			List result = q.getResultList();
+			entityManager.persist( item );
+			entityManager.persist( item2 );
+			assertTrue( entityManager.contains( item ) );
+		} );
+
+		scope.inTransaction( entityManager -> {
+			TypedQuery<Item> q = entityManager.createQuery( "select item from Item item where item.descr like 'Microk_oft mouse' escape 'k' ", Item.class );
+			List<Item> result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 1, result.size() );
-			int deleted = em.createQuery( "delete from Item" ).executeUpdate();
+			int deleted = entityManager.createQuery( "delete from Item" ).executeUpdate();
 			assertEquals( 2, deleted );
-			em.getTransaction().commit();
-		}
-		catch (Exception e){
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testNativeQueryByEntity() {
-		Item item = new Item( "Mouse", "Micro$oft mouse" );
+	public void testNativeQueryByEntity(EntityManagerFactoryScope scope) {
+		Statistics stats = scope.getEntityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
 
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			em.persist( item );
-			assertTrue( em.contains( item ) );
-			em.getTransaction().commit();
+		scope.inEntityManager( entityManager -> {
 
-			Statistics stats = em.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class ).getStatistics();
+			entityManager.getTransaction().begin();
+			Item item = new Item( "Mouse", "Micro$oft mouse" );
+			entityManager.persist( item );
+			assertTrue( entityManager.contains( item ) );
+			entityManager.getTransaction().commit();
+
 			stats.clear();
 			assertEquals( 0, stats.getFlushCount() );
 
-			em.getTransaction().begin();
-			item = (Item) em.createNativeQuery( "select * from Item", Item.class ).getSingleResult();
+			entityManager.getTransaction().begin();
+			item = (Item) entityManager.createNativeQuery( "select * from Item", Item.class ).getSingleResult();
 			assertEquals( 1, stats.getFlushCount() );
 			assertNotNull( item );
 			assertEquals( "Micro$oft mouse", item.getDescr() );
-			em.remove( item );
-			em.getTransaction().commit();
-		}
-		catch (Exception e){
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			em.close();
-		}
+			entityManager.getTransaction().commit();
+		} );
 	}
 
 	@Test
-	public void testNativeQueryByResultSet() {
-		Item item = new Item( "Mouse", "Micro$oft mouse" );
+	public void testNativeQueryByResultSet(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			Item item = new Item( "Mouse", "Micro$oft mouse" );
+			entityManager.persist( item );
+			assertTrue( entityManager.contains( item ) );
+		} );
 
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			em.persist( item );
-			assertTrue( em.contains( item ) );
-			em.getTransaction().commit();
-
-			em.getTransaction().begin();
-			item = (Item) em.createNativeQuery(
+		scope.inTransaction(  entityManager -> {
+			Item item = (Item) entityManager.createNativeQuery(
 					"select name as itemname, descr as itemdescription from Item",
 					"getItem"
-			)
-					.getSingleResult();
+			).getSingleResult();
 			assertNotNull( item );
 			assertEquals( "Micro$oft mouse", item.getDescr() );
-			em.remove( item );
-			em.getTransaction().commit();
-		}
-		catch (Exception e){
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testExplicitPositionalParameter() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
+	public void testExplicitPositionalParameter(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Wallet w = new Wallet();
 			w.setBrand( "Lacoste" );
 			w.setModel( "Minimic" );
 			w.setSerial( "0100202002" );
-			em.persist( w );
-			em.getTransaction().commit();
-			em.getTransaction().begin();
-			Query query = em.createQuery( "select w from " + Wallet.class.getName() + " w where w.brand in ?1" );
-			List brands = new ArrayList();
+			entityManager.persist( w );
+		} );
+
+		scope.inTransaction(  entityManager -> {
+			TypedQuery<Wallet> query = entityManager.createQuery( "select w from " + Wallet.class.getName() + " w where w.brand in ?1", Wallet.class );
+			List<String> brands = new ArrayList<>();
 			brands.add( "Lacoste" );
 			query.setParameter( 1, brands );
-			w = (Wallet) query.getSingleResult();
+			Wallet w = query.getSingleResult();
 			assertNotNull( w );
-			query = em.createQuery( "select w from " + Wallet.class.getName() + " w where w.marketEntrance = ?1" );
+			query = entityManager.createQuery( "select w from " + Wallet.class.getName() + " w where w.marketEntrance = ?1", Wallet.class );
 			query.setParameter( 1, new Date(), TemporalType.DATE );
-			//assertNull( query.getSingleResult() );
 			assertEquals( 0, query.getResultList().size() );
-			em.remove( w );
-			em.getTransaction().commit();
-		}
-		catch (Exception e){
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testTemporalTypeBinding() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			Query query = em.createQuery( "select w from " + Wallet.class.getName() + " w where w.marketEntrance = :me" );
-			Parameter parameter = query.getParameter( "me", Date.class );
-			assertEquals( parameter.getParameterType(), java.sql.Timestamp.class );
+	public void testTemporalTypeBinding(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+
+			TypedQuery<Wallet> query = entityManager.createQuery( "select w from " + Wallet.class.getName() + " w where w.marketEntrance = :me", Wallet.class );
+			Parameter<Date> parameter = query.getParameter( "me", Date.class );
+			assertEquals( java.sql.Timestamp.class, parameter.getParameterType() );
 
 			query.setParameter( "me", new Date() );
 			query.setParameter( "me", new Date(), TemporalType.DATE );
 			query.setParameter( "me", new GregorianCalendar(), TemporalType.DATE );
-
-			em.getTransaction().commit();
-		}
-		catch (Exception e){
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			em.close();
-		}
-
+		} );
 	}
 
 	@Test
-	public void testPositionalParameterForms() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
+	public void testPositionalParameterForms(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Wallet w = new Wallet();
 			w.setBrand( "Lacoste" );
 			w.setModel( "Minimic" );
 			w.setSerial( "0100202002" );
-			em.persist( w );
-			em.getTransaction().commit();
+			entityManager.persist( w );
+		} );
 
-			em.getTransaction().begin();
+		scope.inTransaction(  entityManager -> {
 			// first using jpa-style positional parameter
-			Query query = em.createQuery( "select w from Wallet w where w.brand = ?1" );
+			TypedQuery<Wallet> query = entityManager.createQuery( "select w from Wallet w where w.brand = ?1", Wallet.class );
 			query.setParameter( 1, "Lacoste" );
-			w = (Wallet) query.getSingleResult();
+			Wallet w = query.getSingleResult();
 			assertNotNull( w );
 
 			// next using jpa-style positional parameter, but as a name (which is how Hibernate core treats these
-			query = em.createQuery( "select w from Wallet w where w.brand = ?1" );
+			query = entityManager.createQuery( "select w from Wallet w where w.brand = ?1", Wallet.class );
 			// deprecated usage of positional parameter by String
 			query.setParameter( 1, "Lacoste" );
-			w = (Wallet) query.getSingleResult();
+			w = query.getSingleResult();
 			assertNotNull( w );
-
-			em.remove( w );
-			em.getTransaction().commit();
-		}
-		catch (Exception e){
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testPositionalParameterWithUserError() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
+	public void testPositionalParameterWithUserError(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Wallet w = new Wallet();
 			w.setBrand( "Lacoste" );
 			w.setModel( "Minimic" );
 			w.setSerial( "0100202002" );
-			em.persist( w );
-			em.flush();
+			entityManager.persist( w );
+			entityManager.flush();
 
 			// Gaps are not allowed
-			try {
-				Query jpaQuery = em.createQuery( "select w from Wallet w where w.brand = ?1 and w.model = ?3" );
-				fail( "expecting error regarding gap in positional param labels" );
-			}
-			catch ( IllegalArgumentException e ) {
-				assertNotNull( e.getCause() );
-				assertTyping( QueryException.class, e.getCause() );
-				assertTrue( e.getCause().getMessage().contains( "Gap" ) );
-			}
+			IllegalArgumentException iae = assertThrows(
+					IllegalArgumentException.class,
+					() -> entityManager.createQuery( "select w from Wallet w where w.brand = ?1 and w.model = ?3", Wallet.class ),
+					"expecting error regarding gap in positional param labels"
+			);
+			assertNotNull( iae.getCause() );
+			assertTyping( QueryException.class, iae.getCause() );
+			assertTrue( iae.getCause().getMessage().contains( "Gap" ) );
 
 			// using jpa-style, position index should match syntax '?<position>'.
-			Query jpaQuery = em.createQuery( "select w from Wallet w where w.brand = ?1" );
-			jpaQuery.setParameter( 1, "Lacoste" );
-			try {
-				jpaQuery.setParameter( 2, "Expensive" );
-				fail( "Should fail due to a user error in parameters" );
-			}
-			catch (Exception e) {
-				assertTyping( IllegalArgumentException.class, e );
-			}
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						Query jpaQuery = entityManager.createQuery( "select w from Wallet w where w.brand = ?1", Wallet.class );
+						jpaQuery.setParameter( 1, "Lacoste" );
+						jpaQuery.setParameter( 2, "Expensive" );
+					},
+					"Should fail due to a user error in parameters"
+			);
 
 			// using jpa-style, position index specified not in query - test exception type
-			jpaQuery = em.createQuery( "select w from Wallet w " );
-			try {
-				Parameter parameter = jpaQuery.getParameter( 1 );
-				fail( "Should fail due to a user error in parameters" );
-			}
-			catch (Exception e) {
-				assertTyping( IllegalArgumentException.class, e );
-			}
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						Query jpaQuery = entityManager.createQuery( "select w from Wallet w " );
+						jpaQuery.getParameter( 1 );
+					},
+					"Should fail due to a user error in parameters"
+			);
 
 			// using jpa-style, position index specified not in query - test exception type
-			jpaQuery = em.createQuery( "select w from Wallet w" );
-			try {
-				Parameter<Integer> parameter = jpaQuery.getParameter( 1, Integer.class );
-				fail( "Should fail due to user error in parameters" );
-			}
-			catch (Exception e) {
-				assertTyping( IllegalArgumentException.class, e );
-			}
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						Query jpaQuery = entityManager.createQuery( "select w from Wallet w" );
+						jpaQuery.getParameter( 1, Integer.class );
+					},
+					"Should fail due to a user error in parameters"
+			);
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-10803")
-	public void testNamedParameterWithUserError() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
+	public void testNamedParameterWithUserError(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Wallet w = new Wallet();
 			w.setBrand( "Lacoste" );
 			w.setModel( "Minimic" );
 			w.setSerial( "0100202002" );
-			em.persist( w );
-			em.flush();
+			entityManager.persist( w );
+			entityManager.flush();
 
-			Query jpaQuery = em.createQuery( "select w from Wallet w" );
-			try {
-				Parameter<?> parameter = jpaQuery.getParameter( "brand" );
-				fail( "Should fail due to user error in parameters" );
-			}
-			catch (Exception e) {
-				assertTyping( IllegalArgumentException.class, e );
-			}
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						Query jpaQuery = entityManager.createQuery( "select w from Wallet w", Wallet.class );
+						jpaQuery.getParameter( "brand" );
+					},
+					"Should fail due to a user error in parameters"
+			);
 
-			jpaQuery = em.createQuery( "select w from Wallet w" );
-			try {
-				Parameter<String> parameter = jpaQuery.getParameter( "brand", String.class );
-				fail( "Should fail due to user error in parameters" );
-			}
-			catch (Exception e) {
-				assertTyping( IllegalArgumentException.class, e );
-			}
-
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						Query jpaQuery = entityManager.createQuery( "select w from Wallet w", Wallet.class );
+						jpaQuery.getParameter( "brand", String.class );
+					},
+					"Should fail due to a user error in parameters"
+			);
+		} );
 	}
 
 	@Test
-	public void testNativeQuestionMarkParameter() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
+	public void testNativeQuestionMarkParameter(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Wallet w = new Wallet();
 			w.setBrand( "Lacoste" );
 			w.setModel( "Minimic" );
 			w.setSerial( "0100202002" );
-			em.persist( w );
-			em.getTransaction().commit();
-			em.getTransaction().begin();
-			Query query = em.createNativeQuery( "select * from Wallet w where w.brand = ?", Wallet.class );
+			entityManager.persist( w );
+		} );
+
+		scope.inTransaction(  entityManager -> {
+			Query query = entityManager.createNativeQuery( "select * from Wallet w where w.brand = ?", Wallet.class );
 			query.setParameter( 1, "Lacoste" );
-			w = (Wallet) query.getSingleResult();
+			Wallet w = (Wallet) query.getSingleResult();
 			assertNotNull( w );
-			em.remove( w );
-			em.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testNativeQueryWithPositionalParameter() {
-		Item item = new Item( "Mouse", "Micro$oft mouse" );
+	public void testNativeQueryWithPositionalParameter(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			Item item = new Item( "Mouse", "Micro$oft mouse" );
+			entityManager.persist( item );
+			assertTrue( entityManager.contains( item ) );
+		} );
 
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			em.persist( item );
-			assertTrue( em.contains( item ) );
-			em.getTransaction().commit();
-
-			em.getTransaction().begin();
-			Query query = em.createNativeQuery( "select * from Item where name = ?1", Item.class );
+		scope.inTransaction(  entityManager -> {
+			Query query = entityManager.createNativeQuery( "select * from Item where name = ?1", Item.class );
+			query.setParameter( 1, "Mouse" );
+			Item item = (Item) query.getSingleResult();
+			assertNotNull( item );
+			assertEquals( "Micro$oft mouse", item.getDescr() );
+			query = entityManager.createNativeQuery( "select * from Item where name = ?", Item.class );
 			query.setParameter( 1, "Mouse" );
 			item = (Item) query.getSingleResult();
 			assertNotNull( item );
 			assertEquals( "Micro$oft mouse", item.getDescr() );
-			query = em.createNativeQuery( "select * from Item where name = ?", Item.class );
-			query.setParameter( 1, "Mouse" );
-			item = (Item) query.getSingleResult();
-			assertNotNull( item );
-			assertEquals( "Micro$oft mouse", item.getDescr() );
-			em.remove( item );
-			em.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testDistinct() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			em.createQuery( "delete Item" ).executeUpdate();
-			em.createQuery( "delete Distributor" ).executeUpdate();
+	public void testDistinct(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Distributor d1 = new Distributor();
 			d1.setName( "Fnac" );
 			Distributor d2 = new Distributor();
@@ -1414,32 +1057,22 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			Item item = new Item( "Mouse", "Micro$oft mouse" );
 			item.getDistributors().add( d1 );
 			item.getDistributors().add( d2 );
-			em.persist( d1 );
-			em.persist( d2 );
-			em.persist( item );
-			em.flush();
-			em.clear();
-			Query q = em.createQuery( "select distinct i from Item i left join fetch i.distributors" );
-			item = (Item) q.getSingleResult()
-			;
-			//assertEquals( 1, distinctResult.size() );
-			//item = (Item) distinctResult.get( 0 );
+			entityManager.persist( d1 );
+			entityManager.persist( d2 );
+			entityManager.persist( item );
+			entityManager.flush();
+			entityManager.clear();
+
+			TypedQuery<Item> q = entityManager.createQuery( "select distinct i from Item i left join fetch i.distributors", Item.class );
+			item = q.getSingleResult();
 			assertTrue( Hibernate.isInitialized( item.getDistributors() ) );
 			assertEquals( 2, item.getDistributors().size() );
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testIsNull() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
+	public void testIsNull(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Distributor d1 = new Distributor();
 			d1.setName( "Fnac" );
 			Distributor d2 = new Distributor();
@@ -1448,222 +1081,153 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			Item item2 = new Item( "Mouse2", "dd" );
 			item.getDistributors().add( d1 );
 			item.getDistributors().add( d2 );
-			em.persist( d1 );
-			em.persist( d2 );
-			em.persist( item );
-			em.persist( item2 );
-			em.flush();
-			em.clear();
-			Query q = em.createQuery(
-					"select i from Item i where i.descr = :descr or (i.descr is null and cast(:descr as string) is null)"
+			entityManager.persist( d1 );
+			entityManager.persist( d2 );
+			entityManager.persist( item );
+			entityManager.persist( item2 );
+			entityManager.flush();
+			entityManager.clear();
+
+			TypedQuery<Item> q = entityManager.createQuery(
+					"select i from Item i where i.descr = :descr or (i.descr is null and cast(:descr as string) is null)", Item.class
 			);
-			//Query q = em.createQuery( "select i from Item i where (i.descr is null and :descr is null) or (i.descr = :descr");
 			q.setParameter( "descr", "dd" );
-			List result = q.getResultList();
+			List<Item> result = q.getResultList();
 			assertEquals( 1, result.size() );
 			q.setParameter( "descr", null );
 			result = q.getResultList();
 			assertEquals( 1, result.size() );
-			//item = (Item) distinctResult.get( 0 );
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testUpdateQuery() {
-		Item item = new Item( "Mouse", "Micro$oft mouse" );
-
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			em.persist( item );
-			assertTrue( em.contains( item ) );
-
-			em.flush();
-			em.clear();
+	public void testUpdateQuery(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			Item item = new Item( "Mouse", "Micro$oft mouse" );
+			entityManager.persist( item );
+			assertTrue( entityManager.contains( item ) );
+			entityManager.flush();
+			entityManager.clear();
 
 			assertEquals(
-					1, em.createNativeQuery(
-							"update Item set descr = 'Logitech Mouse' where name = 'Mouse'"
+					1, entityManager.createNativeQuery(
+							"update Item set descr = 'Logitech Mouse' where name = 'Mouse'", Item.class
 					).executeUpdate()
 			);
-			item = em.find( Item.class, item.getName() );
+			item = entityManager.find( Item.class, item.getName() );
 			assertEquals( "Logitech Mouse", item.getDescr() );
-			em.remove( item );
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testUnavailableNamedQuery() throws Exception {
-		Item item = new Item( "Mouse", "Micro$oft mouse" );
+	public void testUnavailableNamedQuery(EntityManagerFactoryScope scope) {
+		final Item item = new Item( "Mouse", "Micro$oft mouse" );
+		scope.inTransaction( entityManager -> {
+			entityManager.persist( item );
 
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			em.persist( item );
-			try {
-				em.createNamedQuery( "wrong name" );
-				fail( "Wrong named query should raise an exception" );
-			}
-			catch (IllegalArgumentException e) {
-				//success
-			}
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> entityManager.createNamedQuery( "wrong name" ),
+					"Wrong named query should raise an exception"
+			);
+
 			assertTrue(
-					"thrown IllegalArgumentException should of caused transaction to be marked for rollback only",
-					true == em.getTransaction().getRollbackOnly()
+					entityManager.getTransaction().getRollbackOnly(),
+					"thrown IllegalArgumentException should have caused transaction to be marked for rollback only"
 			);
-			em.getTransaction().rollback();        // HHH-8442 changed to rollback since thrown ISE causes
-			// transaction to be marked for rollback only.
-			// No need to remove entity since it was rolled back.
+		} );
 
-			assertNull(
-					"entity should not of been saved to database since IllegalArgumentException should of" +
-							"caused transaction to be marked for rollback only", em.find( Item.class, item.getName() )
+		scope.inTransaction( entityManager -> {
+			assertNull( entityManager.find( Item.class, item.getName() ),
+					"entity should not have been saved to database since IllegalArgumentException should have " +
+					"caused transaction to be marked for rollback only"
 			);
-		}
-		finally {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testTypedNamedNativeQuery() {
-		Item item = new Item( "Mouse", "Micro$oft mouse" );
+	public void testTypedNamedNativeQuery(EntityManagerFactoryScope scope) {
 
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			em.persist( item );
-			assertTrue( em.contains( item ) );
-			em.getTransaction().commit();
+		scope.inTransaction( entityManager -> {
+			Item item = new Item( "Mouse", "Micro$oft mouse" );
+			entityManager.persist( item );
+			assertTrue( entityManager.contains( item ) );
+		} );
 
-			em.getTransaction().begin();
-			item = em.createNamedQuery( "nativeItem1", Item.class ).getSingleResult();
-			item = em.createNamedQuery( "nativeItem2", Item.class ).getSingleResult();
+		scope.inTransaction(  entityManager -> {
+			Item item = entityManager.createNamedQuery( "nativeItem1", Item.class ).getSingleResult();
+			item = entityManager.createNamedQuery( "nativeItem2", Item.class ).getSingleResult();
 			assertNotNull( item );
 			assertEquals( "Micro$oft mouse", item.getDescr() );
-			em.remove( item );
-			em.getTransaction().commit();
-
-		}
-		catch (Exception e) {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testTypedScalarQueries() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
+	public void testTypedScalarQueries(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Item item = new Item( "Mouse", "Micro$oft mouse" );
-			em.persist( item );
-			assertTrue( em.contains( item ) );
-			em.getTransaction().commit();
+			entityManager.persist( item );
+			assertTrue( entityManager.contains( item ) );
+		} );
 
-			em.getTransaction().begin();
-			Object[] itemData = em.createQuery( "select i.name,i.descr from Item i", Object[].class ).getSingleResult();
+		scope.inTransaction(  entityManager -> {
+			Object[] itemData = entityManager.createQuery( "select i.name,i.descr from Item i", Object[].class ).getSingleResult();
 			assertEquals( 2, itemData.length );
 			assertEquals( String.class, itemData[0].getClass() );
 			assertEquals( String.class, itemData[1].getClass() );
-			Tuple itemTuple = em.createQuery( "select i.name,i.descr from Item i", Tuple.class ).getSingleResult();
+			Tuple itemTuple = entityManager.createQuery( "select i.name,i.descr from Item i", Tuple.class ).getSingleResult();
 			assertEquals( 2, itemTuple.getElements().size() );
 			assertEquals( String.class, itemTuple.get( 0 ).getClass() );
 			assertEquals( String.class, itemTuple.get( 1 ).getClass() );
-			Item itemView = em.createQuery( "select new Item(i.name,i.descr) from Item i", Item.class )
+			Item itemView = entityManager.createQuery( "select new Item(i.name,i.descr) from Item i", Item.class )
 					.getSingleResult();
 			assertNotNull( itemView );
 			assertEquals( "Micro$oft mouse", itemView.getDescr() );
-			itemView = em.createNamedQuery( "query-construct", Item.class ).getSingleResult();
+			itemView = entityManager.createNamedQuery( "query-construct", Item.class ).getSingleResult();
 			assertNotNull( itemView );
 			assertEquals( "Micro$oft mouse", itemView.getDescr() );
-			em.remove( item );
-			em.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			em.close();
-		}
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-10269")
-	public void testFailingNativeQuery() {
-		final EntityManager entityManager = getOrCreateEntityManager();
-		try {
-			// Tests that Oracle does not run out of cursors.
-			for ( int i = 0; i < 1000; i++ ) {
-				try {
-					entityManager.createNativeQuery( "Select 1 from NotExistedTable" ).getResultList();
-					fail( "expected PersistenceException" );
-				}
-				catch (PersistenceException e) {
-					// expected
-				}
-			}
-		}finally {
-			entityManager.close();
-		}
-
+	public void testFailingNativeQuery(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			assertThrows(
+					PersistenceException.class,
+					() -> {
+						// Tests that Oracle does not run out of cursors.
+						for ( int i = 0; i < 1000; i++ ) {
+							entityManager.createNativeQuery( "Select 1 from NonExistentTable" ).getResultList();
+						}
+					},
+					"Expected PersistenceException"
+			);
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-10833")
-	public void testGetSingleResultWithNoResultException() {
-		final EntityManager entityManager  = getOrCreateEntityManager();
-		try {
-			entityManager.createQuery( "FROM Item WHERE name = 'bozo'" ).getSingleResult();
-			fail( "Expected NoResultException" );
-		}
-		catch ( Exception e ) {
-			assertTyping( NoResultException.class, e );
-		}
-		finally {
-			entityManager.close();
-		}
+	public void testGetSingleResultWithNoResultException(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			assertThrows(
+					NoResultException.class,
+					() -> entityManager.createQuery( "FROM Item WHERE name = 'bozo'" ).getSingleResult(),
+					"Expected NoResultException"
+			);
+		} );
 	}
 
 	@Test
-	public void testGetSingleResultWithManyResultsException() {
-		final EntityManager entityManager  = getOrCreateEntityManager();
-		try {
-			entityManager.getTransaction().begin();
+	public void testGetSingleResultWithManyResultsException(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			entityManager.persist( new Item( "1", "1" ) );
 			entityManager.persist( new Item( "2", "2" ) );
-			entityManager.createQuery( "FROM Item" ).getSingleResult();
-			fail( "Expected NoResultException" );
-		}
-		catch ( Exception e ) {
-			assertTyping( NonUniqueResultException.class, e );
-		}
-		finally {
-			entityManager.getTransaction().rollback();
-			entityManager.close();
-		}
+			assertThrows(
+					NonUniqueResultException.class,
+					() -> entityManager.createQuery( "FROM Item" ).getSingleResult(),
+					"Expected NonUniqueResultException"
+			);
+		} );
 	}
 }

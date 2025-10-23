@@ -4,73 +4,61 @@
  */
 package org.hibernate.orm.test.jpa.query;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
+import org.hibernate.HibernateException;
+import org.hibernate.annotations.Type;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.usertype.UserType;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Map;
 import java.util.Objects;
-
-import org.hibernate.HibernateException;
-import org.hibernate.annotations.Type;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.usertype.UserType;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 
 /**
  * @author Andrea Boriero
  */
-public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {TestEntity.class};
-	}
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		options.put( AvailableSettings.JPA_LOAD_BY_ID_COMPLIANCE, "true" );
-	}
+@Jpa(
+		annotatedClasses = {QueryParametersValidationTest.TestEntity.class},
+		integrationSettings = {@Setting(name = AvailableSettings.JPA_LOAD_BY_ID_COMPLIANCE, value = "true")}
+)
+public class QueryParametersValidationTest {
 
 	@JiraKey(value = "HHH-11397")
-	@Test(expected = IllegalArgumentException.class)
-	public void setParameterWithWrongTypeShouldThrowIllegalArgumentException() {
-		final EntityManager entityManager = entityManagerFactory().createEntityManager();
-		try {
-			entityManager.createQuery( "select e from TestEntity e where e.id = :id" ).setParameter( "id", 1 );
-		}
-		finally {
-			entityManager.close();
-		}
+	@Test
+	public void setParameterWithWrongTypeShouldThrowIllegalArgumentException(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
+			Assertions.assertThrows(
+					IllegalArgumentException.class,
+					() -> entityManager.createQuery( "select e from TestEntity e where e.id = :id" ).setParameter( "id", 1 )
+			);
+		} );
 	}
 
 	@Test
-	public void setParameterWithCorrectTypeShouldNotThrowIllegalArgumentException() {
-		final EntityManager entityManager = entityManagerFactory().createEntityManager();
-		try {
+	public void setParameterWithCorrectTypeShouldNotThrowIllegalArgumentException(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
 			entityManager.createQuery( "select e from TestEntity e where e.id = :id" ).setParameter( "id", 1L );
-		}
-		finally {
-			entityManager.close();
-		}
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-11971")
-	public void setPrimitiveParameterShouldNotThrowExceptions() {
-		final EntityManager entityManager = entityManagerFactory().createEntityManager();
-		try {
+	public void setPrimitiveParameterShouldNotThrowExceptions(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
 			entityManager.createQuery( "select e from TestEntity e where e.active = :active" ).setParameter(
 					"active",
 					true
@@ -79,22 +67,18 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 					"active",
 					Boolean.TRUE
 			);
-		}
-		finally {
-			entityManager.close();
-		}
+		} );
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	@JiraKey( value = "HHH-11971")
-	public void setWrongPrimitiveParameterShouldThrowIllegalArgumentException() {
-		final EntityManager entityManager = entityManagerFactory().createEntityManager();
-		try {
-			entityManager.createQuery( "select e from TestEntity e where e.active = :active" ).setParameter( "active", 'c' );
-		}
-		finally {
-			entityManager.close();
-		}
+	public void setWrongPrimitiveParameterShouldThrowIllegalArgumentException(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
+			Assertions.assertThrows(
+					IllegalArgumentException.class,
+					() -> entityManager.createQuery( "select e from TestEntity e where e.active = :active" ).setParameter( "active", 'c' )
+			);
+		} );
 	}
 
 	@Entity(name = "TestEntity")

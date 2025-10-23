@@ -57,7 +57,7 @@ public class RegisterNamedQueryWithParameterTest {
 				entityManager -> {
 					Query query = entityManager.createNamedQuery( QUERY_NAME );
 					query.setParameter( "value", 1 );
-					List results = query.getResultList();
+					List<?> results = query.getResultList();
 					assertThat( results.size() ).isEqualTo( 1 );
 				}
 		);

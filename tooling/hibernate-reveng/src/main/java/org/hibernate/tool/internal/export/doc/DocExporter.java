@@ -248,18 +248,27 @@ public class DocExporter extends AbstractExporter {
 		// d:\graphviz-1.12\bin\dot.exe -Tgif c:\temp\ManualDraw.dot > c:\temp\ManualDraw.gif
 		// so we follow that model here and read stdout until EOF
 		// 
-	
-		final String exeCmd = 
-			escape(dotExeFileName) + 
-			" -T" + getFormatForFile(outFileName) + " " + 
-			escape(dotFileName) +
-			" -o " + 
-			escape(outFileName);			
-	
-		Process p = Runtime.getRuntime().exec(exeCmd);
-		//p.getErrorStream().
+
+        final String[] cmdAsArray = new String[] {
+                escape( dotExeFileName ),
+                "-T",
+                getFormatForFile( outFileName ),
+                escape( dotFileName ),
+                "-o",
+                escape( outFileName )
+        };
+
+        StringBuilder sb = new StringBuilder();
+        for (String s : cmdAsArray) {
+            sb.append( s ).append( " " );
+        }
+
+        final String cmdAsString = sb.toString();
+
+        Process p = Runtime.getRuntime().exec(cmdAsArray);
+
 		try {
-			log.debug( "Executing: " + exeCmd );
+			log.debug( "Executing: " + cmdAsString );
 //			 Get the input stream and read from it
 	        InputStream in = p.getErrorStream();
 	        int c;
@@ -270,10 +279,10 @@ public class DocExporter extends AbstractExporter {
 			int i = p.waitFor( );
 			if(i!=0) {
 				//TODO: dump system.err
-				log.error("Error " + i + " while executing: " + exeCmd);				
+				log.error("Error " + i + " while executing: " + cmdAsString);
 			}
 		} catch(Exception ie){
-			log.error( "Error while executing: " + exeCmd, ie );
+			log.error( "Error while executing: " + cmdAsString, ie );
 		}
 	}		
 

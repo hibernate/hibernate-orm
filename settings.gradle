@@ -358,6 +358,9 @@ project(':hibernate-maven-plugin').projectDir = new File(rootProject.projectDir,
 include 'hibernate-ant'
 project(':hibernate-ant').projectDir = new File(rootProject.projectDir, "tooling/hibernate-ant")
 
+include 'hibernate-assistant'
+project(':hibernate-assistant').projectDir = new File(rootProject.projectDir, "tooling/hibernate-assistant")
+
 rootProject.children.each { project ->
     project.buildFileName = "${project.name}.gradle"
     assert project.projectDir.isDirectory()

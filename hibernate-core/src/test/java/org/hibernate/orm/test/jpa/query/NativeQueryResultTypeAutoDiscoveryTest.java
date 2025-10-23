@@ -4,35 +4,26 @@
  */
 package org.hibernate.orm.test.jpa.query;
 
-import java.math.BigDecimal;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.time.Month;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
-
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 import org.hibernate.Session;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
-import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
-import org.hibernate.dialect.HANADialect;
+import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.community.dialect.DerbyDialect;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -40,11 +31,13 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.community.dialect.TiDBDialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
-import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.java.BigDecimalJavaType;
 import org.hibernate.type.descriptor.java.FloatJavaType;
@@ -54,27 +47,22 @@ import org.hibernate.type.descriptor.jdbc.BinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.CharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NumericJdbcType;
 import org.hibernate.type.descriptor.jdbc.RealJdbcType;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.CustomRunner;
-import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
-import org.hibernate.testing.orm.junit.DialectContext;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
+import java.math.BigDecimal;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.time.Month;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.function.Function;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.Hibernate.getLobHelper;
 
 /**
@@ -88,43 +76,58 @@ import static org.hibernate.Hibernate.getLobHelper;
  * so that we can more easily disable testing of a particular type in a particular dialect.
  */
 @JiraKey(value = "HHH-7318")
-@RunWith(CustomRunner.class)
+@Jpa(
+		annotatedClasses = {
+				NativeQueryResultTypeAutoDiscoveryTest.BigDecimalAsDecimalType.class,
+				NativeQueryResultTypeAutoDiscoveryTest.BigintEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.BinaryEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.BitEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.BlobEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.BooleanEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.Char255Entity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.CharEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.ClobEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.DateEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.DecimalEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.DoubleEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.FloatEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.IntegerEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.LongvarbinaryEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.LongvarcharEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.NumericEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.NvarcharEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.RealEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.SmallintEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.TimeEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.TimestampEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.TinyintEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.VarbinaryEntity.class,
+				NativeQueryResultTypeAutoDiscoveryTest.VarcharEntity.class
+		},
+		integrationSettings = {@Setting(name = AvailableSettings.NATIVE_PREFER_JDBC_DATETIME_TYPES, value = "true")}
+)
 public class NativeQueryResultTypeAutoDiscoveryTest {
 
-	private static final Dialect DIALECT = DialectContext.getDialect();
-
-	private SessionFactoryImplementor entityManagerFactory;
-
-	@After
-	public void cleanupEntityManagerFactory() {
-		if ( entityManagerFactory != null ) {
-			entityManagerFactory.close();
-			entityManagerFactory = null;
-		}
+	@AfterEach
+	public void cleanup(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle maps integer types to number")
-	public void smallintType() {
-		createEntityManagerFactory(SmallintEntity.class);
-		doTest( SmallintEntity.class, (short)32767 );
+	public void smallintType(EntityManagerFactoryScope scope) {
+		doTest( scope, SmallintEntity.class, (short)32767 );
 	}
 
 	@Test
-	public void integerTypes() {
-		createEntityManagerFactory(
-				BigintEntity.class,
-				IntegerEntity.class
-		);
-
-		doTest( BigintEntity.class, 9223372036854775807L );
-		doTest( IntegerEntity.class, 2147483647 );
+	public void integerTypes(EntityManagerFactoryScope scope) {
+		doTest( scope, BigintEntity.class, 9223372036854775807L );
+		doTest( scope, IntegerEntity.class, 2147483647 );
 	}
 
 	@Test
-	public void doubleType() {
-		createEntityManagerFactory( DoubleEntity.class );
-		doTest( DoubleEntity.class, 445146115151.45845 );
+	public void doubleType(EntityManagerFactoryScope scope) {
+		doTest( scope, DoubleEntity.class, 445146115151.45845 );
 	}
 
 	@Test
@@ -132,9 +135,8 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "No support for the bit datatype so we use number(1,0)")
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for the bit datatype so we use smallint")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "No support for the bit datatype so we use char(1)")
-	public void booleanType() {
-		createEntityManagerFactory( BooleanEntity.class );
-		doTest( BooleanEntity.class, true );
+	public void booleanType(EntityManagerFactoryScope scope) {
+		doTest( scope, BooleanEntity.class, true );
 	}
 
 	@Test
@@ -142,9 +144,8 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "No support for the bit datatype so we use number(1,0)")
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for the bit datatype so we use smallint")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "No support for the bit datatype so we use char(1)")
-	public void bitType() {
-		createEntityManagerFactory( BitEntity.class );
-		doTest( BitEntity.class, false );
+	public void bitType(EntityManagerFactoryScope scope) {
+		doTest( scope, BitEntity.class, false );
 	}
 
 	@Test
@@ -160,18 +161,16 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase maps tinyint to smallint")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "informix maps tinyint to smallint")
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.Turns tinyints into shorts in result sets and advertises the type as short in the metadata")
-	public void tinyintType() {
-		createEntityManagerFactory( TinyintEntity.class );
-		doTest( TinyintEntity.class, (byte)127 );
+	public void tinyintType(EntityManagerFactoryScope scope) {
+		doTest( scope, TinyintEntity.class, (byte)127 );
 	}
 
 	@Test
 	@SkipForDialect(dialectClass = H2Dialect.class, reason = "Turns floats into doubles in result sets and advertises the type as double in the metadata")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "Turns floats into doubles in result sets and advertises the type as double in the metadata")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Turns floats into doubles in result sets and advertises the type as double in the metadata")
-	public void floatType() {
-		createEntityManagerFactory( FloatEntity.class );
-		doTest( FloatEntity.class, 15516.125f );
+	public void floatType(EntityManagerFactoryScope scope) {
+		doTest( scope, FloatEntity.class, 15516.125f );
 	}
 
 	@Test
@@ -179,9 +178,8 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "Turns reals into doubles in result sets and advertises the type as double in the metadata")
 	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "Turns reals into doubles in result sets and advertises the type as double in the metadata")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "Turns reals into doubles in result sets and advertises the type as double in the metadata")
-	public void realType() {
-		createEntityManagerFactory( RealEntity.class );
-		doTest( RealEntity.class, 15516.125f );
+	public void realType(EntityManagerFactoryScope scope) {
+		doTest( scope, RealEntity.class, 15516.125f );
 	}
 
 	@Test
@@ -193,11 +191,8 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Value is too big for the maximum allowed precision of Firebird")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Value is too big for the maximum allowed precision of Altibase")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "The scale exceeds the maximum precision specified")
-	public void numericType() {
-		createEntityManagerFactory(
-				NumericEntity.class
-		);
-		doTest( NumericEntity.class, new BigDecimal( "5464384284258458485484848458.48465843584584684" ) );
+	public void numericType(EntityManagerFactoryScope scope) {
+		doTest( scope, NumericEntity.class, new BigDecimal( "5464384284258458485484848458.48465843584584684" ) );
 	}
 
 	@Test
@@ -209,20 +204,14 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Value is too big for the maximum allowed precision of Firebird")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Value is too big for the maximum allowed precision of Altibase")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "The scale exceeds the maximum precision specified")
-	public void decimalType() {
-		createEntityManagerFactory( DecimalEntity.class );
-		doTest( DecimalEntity.class, new BigDecimal( "5464384284258458485484848458.48465843584584684" )  );
+	public void decimalType(EntityManagerFactoryScope scope) {
+		doTest( scope, DecimalEntity.class, new BigDecimal( "5464384284258458485484848458.48465843584584684" )  );
 	}
 
 	@Test
-	public void commonTextTypes() {
-		createEntityManagerFactory(
-				VarcharEntity.class,
-				NvarcharEntity.class
-		);
-
-		doTest( VarcharEntity.class, "some text" );
-		doTest( NvarcharEntity.class, "some text" );
+	public void commonTextTypes(EntityManagerFactoryScope scope) {
+		doTest( scope, VarcharEntity.class, "some text" );
+		doTest( scope, NvarcharEntity.class, "some text" );
 	}
 
 	@Test
@@ -231,37 +220,26 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase maps LONGVARCHAR to CLOB")
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA maps LONGVARCHAR to CLOB")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase maps LONGVARCHAR to CLOB")
-	public void longCharType() {
-		createEntityManagerFactory(
-				LongvarcharEntity.class
-		);
-
-		doTest( LongvarcharEntity.class, "some text" );
+	public void longCharType(EntityManagerFactoryScope scope) {
+		doTest( scope, LongvarcharEntity.class, "some text" );
 	}
 
 	@Test
-	public void charType() {
-		createEntityManagerFactory( CharEntity.class );
-		doTest( CharEntity.class, 'c' );
+	public void charType(EntityManagerFactoryScope scope) {
+		doTest( scope, CharEntity.class, 'c' );
 	}
 
 	@Test
 	// Most other dialects define java.sql.Types.CHAR as "CHAR(1)" instead of "CHAR($l)", so they ignore the length
 	@RequiresDialect(H2Dialect.class)
-	public void char255Type() {
-		createEntityManagerFactory( Char255Entity.class );
-		doTest( Char255Entity.class, "some text" );
+	public void char255Type(EntityManagerFactoryScope scope) {
+		doTest( scope, Char255Entity.class, "some text" );
 	}
 
 	@Test
-	public void binaryTypes() {
-		createEntityManagerFactory(
-				BinaryEntity.class,
-				VarbinaryEntity.class
-		);
-
-		doTest( BinaryEntity.class, "some text".getBytes() );
-		doTest( VarbinaryEntity.class, "some text".getBytes() );
+	public void binaryTypes(EntityManagerFactoryScope scope) {
+		doTest( scope, BinaryEntity.class, "some text".getBytes() );
+		doTest( scope, VarbinaryEntity.class, "some text".getBytes() );
 	}
 
 	@Test
@@ -270,29 +248,22 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase maps LONGVARBINARY to BLOB")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase maps LONGVARBINARY to BLOB")
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA maps LONGVARCHAR to BLOB")
-	public void longBinaryType() {
-		createEntityManagerFactory(
-				LongvarbinaryEntity.class
-		);
-
-		doTest( LongvarbinaryEntity.class, "some text".getBytes() );
+	public void longBinaryType(EntityManagerFactoryScope scope) {
+		doTest( scope, LongvarbinaryEntity.class, "some text".getBytes() );
 	}
 
 	@Test
 	// Lobs are apparently handled differently in other dialects, queries return Strings instead of the CLOB/BLOB
 	@RequiresDialect(H2Dialect.class)
-	public void lobTypes() {
-		createEntityManagerFactory(
-				ClobEntity.class,
-				BlobEntity.class
-		);
-
+	public void lobTypes(EntityManagerFactoryScope scope) {
 		doTest(
+				scope,
 				ClobEntity.class,
 				Clob.class,
 				session -> getLobHelper().createClob( "some text" )
 		);
 		doTest(
+				scope,
 				BlobEntity.class,
 				Blob.class,
 				session -> getLobHelper().createBlob( "some text".getBytes() )
@@ -305,49 +276,39 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Sybase maps DATE and TIME to TIMESTAMP", matchSubTypes = true)
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase maps DATE and TIME to TIMESTAMP")
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.GaussDB's Oracle model maps DATE and TIME to TIMESTAMP")
-	public void dateTimeTypes() {
-		createEntityManagerFactory(
-				DateEntity.class,
-				TimeEntity.class
-		);
-
+	public void dateTimeTypes(EntityManagerFactoryScope scope) {
 		ZonedDateTime zonedDateTime = ZonedDateTime.of(
 				2014, Month.NOVEMBER.getValue(), 15,
 				18, 0, 0, 0,
 				ZoneId.of( "UTC" )
 		);
 
-		doTest( DateEntity.class, new java.sql.Date( zonedDateTime.toInstant().toEpochMilli() ) );
-		doTest( TimeEntity.class, new Time( zonedDateTime.toLocalTime().toNanoOfDay() / 1000 ) );
+		doTest( scope, DateEntity.class, new java.sql.Date( zonedDateTime.toInstant().toEpochMilli() ) );
+		doTest( scope, TimeEntity.class, new Time( zonedDateTime.toLocalTime().toNanoOfDay() / 1000 ) );
 	}
 
 	@Test
-	public void timestampType() {
-		createEntityManagerFactory(
-				TimestampEntity.class
-		);
-
+	public void timestampType(EntityManagerFactoryScope scope) {
 		ZonedDateTime zonedDateTime = ZonedDateTime.of(
 				2014, Month.NOVEMBER.getValue(), 15,
 				18, 0, 0, 0,
 				ZoneId.of( "UTC" )
 		);
 
-		doTest( TimestampEntity.class, new Timestamp( zonedDateTime.toInstant().toEpochMilli() ) );
+		doTest( scope, TimestampEntity.class, new Timestamp( zonedDateTime.toInstant().toEpochMilli() ) );
 	}
 
-	private <E extends TestedEntity<T>, T> void doTest(Class<E> entityType, T testedValue) {
-		this.doTest( entityType, ReflectHelper.getClass( testedValue ), ignored -> testedValue );
+	private <E extends TestedEntity<T>, T> void doTest(EntityManagerFactoryScope scope, Class<E> entityType, T testedValue) {
+		this.doTest( scope, entityType, ReflectHelper.getClass( testedValue ), ignored -> testedValue );
 	}
 
-	private <E extends TestedEntity<T>, T> void doTest(Class<E> entityType, Class<? extends T> testedValueClass,
-			Function<Session, T> testedValueProvider) {
-		String entityName = entityManagerFactory.getMetamodel().entity( entityType ).getName();
+	private <E extends TestedEntity<T>, T> void doTest(EntityManagerFactoryScope scope, Class<E> entityType, Class<? extends T> testedValueClass,
+													Function<Session, T> testedValueProvider) {
 		// Expecting all entities to use the entity name as table name in these tests, because it's simpler
-		String tableName = entityName;
+		String tableName = scope.getEntityManagerFactory().getMetamodel().entity( entityType ).getName();
 
 		// Create a single record in the test database.
-		TransactionUtil.doInJPA( () -> entityManagerFactory, em -> {
+		scope.inTransaction( em -> {
 			try {
 				E entity = entityType.getConstructor().newInstance();
 				T testedValue = testedValueProvider.apply( em.unwrap( Session.class ) );
@@ -362,35 +323,14 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 			}
 		} );
 
-		TransactionUtil.doInJPA( () -> entityManagerFactory, em -> {
+		scope.inTransaction( em -> {
 			// Execute a native query to get the entity that was just created.
 			Object result = em.createNativeQuery(
 					"SELECT testedProperty FROM " + tableName
-			)
-					.getSingleResult();
+			).getSingleResult();
 
-			Assert.assertThat( result, instanceOf( testedValueClass ) );
+			assertThat( result, instanceOf( testedValueClass ) );
 		} );
-	}
-
-	private void createEntityManagerFactory(Class<?> ... entityTypes) {
-		cleanupEntityManagerFactory();
-		EntityManagerFactoryBuilderImpl entityManagerFactoryBuilder =
-				(EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
-						new PersistenceUnitDescriptorAdapter(),
-						buildSettings( entityTypes )
-				);
-		entityManagerFactory = entityManagerFactoryBuilder.build().unwrap( SessionFactoryImplementor.class );
-	}
-
-	private Map<Object, Object> buildSettings(Class<?> ... entityTypes) {
-		Map<Object, Object> settings = new HashMap<>();
-		settings.put( AvailableSettings.NATIVE_PREFER_JDBC_DATETIME_TYPES, "true" );
-		settings.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
-		settings.put( AvailableSettings.DIALECT, DIALECT.getClass().getName() );
-		settings.put( AvailableSettings.LOADED_CLASSES, Arrays.asList( entityTypes ) );
-		ServiceRegistryUtil.applySettings( settings );
-		return settings;
 	}
 
 	@MappedSuperclass

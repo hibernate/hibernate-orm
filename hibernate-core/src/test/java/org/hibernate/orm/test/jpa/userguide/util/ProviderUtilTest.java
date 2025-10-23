@@ -8,17 +8,18 @@ import jakarta.persistence.Persistence;
 import jakarta.persistence.spi.LoadState;
 
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-public class ProviderUtilTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(annotatedClasses = {Author.class})
+public class ProviderUtilTest {
 
 	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 
@@ -60,12 +61,4 @@ public class ProviderUtilTest extends BaseEntityManagerFunctionalTestCase {
 		assertEquals( LoadState.UNKNOWN, PersistenceUtilHelper.isLoadedWithReference( entity, "attribute", cache ) );
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Author.class,
-				Book.class,
-				CopyrightableContent.class
-		};
-	}
 }

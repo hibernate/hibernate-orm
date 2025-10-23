@@ -25,26 +25,22 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.MapJoin;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Christian Beikov
  */
-public class MapJoinTestWithEmbeddable extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {Batch.class, Node.class, BatchNodeMetadata.class};
-	}
+@Jpa(annotatedClasses = {MapJoinWithEmbeddableTest.Batch.class, MapJoinWithEmbeddableTest.Node.class, MapJoinWithEmbeddableTest.BatchNodeMetadata.class})
+public class MapJoinWithEmbeddableTest {
 
 	@Test
 	@JiraKey( value = "HHH-10455" )
-	public void testSelectingKeyOfMapJoin() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testSelectingKeyOfMapJoin(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Node> query = cb.createQuery( Node.class );
 			Root<Batch> root = query.from( Batch.class );
@@ -60,8 +56,8 @@ public class MapJoinTestWithEmbeddable extends BaseEntityManagerFunctionalTestCa
 
 	@Test
 	@JiraKey( value = "HHH-10229" )
-	public void testSelectingValueOfMapJoin() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testSelectingValueOfMapJoin(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			CriteriaQuery<BatchNodeMetadata> query = cb.createQuery( BatchNodeMetadata.class );
 			Root<Batch> root = query.from( Batch.class );
@@ -107,18 +103,18 @@ public class MapJoinTestWithEmbeddable extends BaseEntityManagerFunctionalTestCa
 
 		@Column(nullable = false)
 		@Enumerated(EnumType.STRING)
-		private NodeMigration migrering = NodeMigration.TOTAL;
+		private NodeMigration migration = NodeMigration.TOTAL;
 
-		public NodeMigration getMigrering() {
-			return migrering;
+		public NodeMigration getMigration() {
+			return migration;
 		}
 
-		public void setMigrering(NodeMigration migrering) {
-			this.migrering = migrering;
+		public void setMigration(NodeMigration migration) {
+			this.migration = migration;
 		}
 	}
 
-	public static enum NodeMigration {
+	public enum NodeMigration {
 		TOTAL
 	}
 }

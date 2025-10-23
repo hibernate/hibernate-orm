@@ -4,13 +4,6 @@
  */
 package org.hibernate.orm.test.jpa.criteria.fetchscroll;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -20,150 +13,125 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.query.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.dialect.HANADialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.junit.Test;
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.query.Query;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-10062")
-public class CriteriaToScrollableResultsFetchTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(annotatedClasses = {
+		Customer.class,
+		Order.class,
+		OrderLine.class,
+		Product.class,
+		PurchaseOrg.class,
+		Facility.class,
+		Site.class
+})
+public class CriteriaToScrollableResultsFetchTest {
 
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[]{
-				Customer.class,
-				Order.class,
-				OrderLine.class,
-				Product.class,
-				PurchaseOrg.class,
-				Facility.class,
-				Site.class
-		};
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test
-	@SkipForDialect(value = HANADialect.class, comment = "HANA only supports forward-only cursors")
-	public void testWithScroll() {
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA only supports forward-only cursors")
+	public void testWithScroll(EntityManagerFactoryScope scope) {
 		// Creates data necessary for test
-		Long facilityId = populate();
+		Long facilityId = populate(scope);
 		// Controller iterates the data
-		for ( OrderLine line : getOrderLinesScrolled( facilityId ) ) {
+		for ( OrderLine line : getOrderLinesScrolled( scope, facilityId ) ) {
 			// This should ~NOT~ fail with a LazilyLoadException
 			assertNotNull( line.getProduct().getFacility().getSite().getName() );
 		}
 	}
 
 	@Test
-	public void testNoScroll() {
+	public void testNoScroll(EntityManagerFactoryScope scope) {
 		// Creates data necessary for test.
-		Long facilityId = populate();
+		Long facilityId = populate(scope);
 		// Controller iterates the data
-		for ( OrderLine line : getOrderLinesJpaFetched( facilityId ) ) {
+		for ( OrderLine line : getOrderLinesJpaFetched( scope, facilityId ) ) {
 			assertNotNull( line.getProduct().getFacility().getSite().getName() );
 		}
 	}
 
-	private List<OrderLine> getOrderLinesScrolled(Long facilityId) {
-		EntityManager em = getOrCreateEntityManager();
-		try {
-			em.getTransaction().begin();
+	private List<OrderLine> getOrderLinesScrolled(EntityManagerFactoryScope scope, Long facilityId) {
+		return scope.fromTransaction( entityManager -> {
 
-			Set<PurchaseOrg> purchaseOrgs = getPurchaseOrgsByFacilityId( facilityId, em );
-			assertEquals( "Expected one purchase organization.", 1, purchaseOrgs.size() );
-			System.out.println( purchaseOrgs );
+			Set<PurchaseOrg> purchaseOrgs = getPurchaseOrgsByFacilityId( facilityId, entityManager );
+			assertEquals( 1, purchaseOrgs.size(), "Expected one purchase organization." );
 
-			TypedQuery<OrderLine> query = getOrderLinesQuery( purchaseOrgs, em );
+			TypedQuery<OrderLine> query = getOrderLinesQuery( entityManager, purchaseOrgs );
 
-			Query hibernateQuery = query.unwrap( Query.class );
+			Query<?> hibernateQuery = query.unwrap( Query.class );
 			hibernateQuery.setReadOnly( true );
 			hibernateQuery.setCacheable( false );
 
 			List<OrderLine> lines = new ArrayList<>();
-			try (ScrollableResults scrollableResults = hibernateQuery.scroll()) {
+			try (ScrollableResults<?> scrollableResults = hibernateQuery.scroll()) {
 				scrollableResults.last();
-				int rows = scrollableResults.getRowNumber() + 1;
 				scrollableResults.beforeFirst();
 				while ( scrollableResults.next() ) {
 					lines.add( (OrderLine) scrollableResults.get() );
 				}
 			}
 			assertNotNull( lines );
-			assertEquals( "Expected one order line", 1, lines.size() );
+			assertEquals( 1, lines.size(), "Expected one order line" );
 
-			em.getTransaction().commit();
 			return lines;
-		}
-		catch (Throwable t) {
-			if ( em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw t;
-		}
-		finally {
-			em.close();
-		}
+		} );
 	}
 
-	private List<OrderLine> getOrderLinesJpaFetched(Long facilityId) {
-		EntityManager em = getOrCreateEntityManager();
-		try {
-			em.getTransaction().begin();
+	private List<OrderLine> getOrderLinesJpaFetched(EntityManagerFactoryScope scope, Long facilityId) {
+		return scope.fromTransaction( entityManager -> {
 
-			Set<PurchaseOrg> purchaseOrgs = getPurchaseOrgsByFacilityId( facilityId, em );
-			assertEquals( "Expected one purchase organization.", 1, purchaseOrgs.size() );
-			System.out.println( purchaseOrgs );
+			Set<PurchaseOrg> purchaseOrgs = getPurchaseOrgsByFacilityId( facilityId, entityManager );
+			assertEquals( 1, purchaseOrgs.size(), "Expected one purchase organization." );
 
-			TypedQuery<OrderLine> query = getOrderLinesQuery( purchaseOrgs, em );
-			List<OrderLine> lines = query.getResultList();
-			em.getTransaction().commit();
-			return lines;
-		}
-		catch (Throwable t) {
-			if ( em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw t;
-		}
-		finally {
-			em.close();
-		}
+			TypedQuery<OrderLine> query = getOrderLinesQuery( entityManager, purchaseOrgs );
+			return query.getResultList();
+		} );
 	}
 
 	private Set<PurchaseOrg> getPurchaseOrgsByFacilityId(Long facilityId, EntityManager em) {
 		Set<PurchaseOrg> orgs = new HashSet<>();
-		try {
-			for ( PurchaseOrg purchaseOrg : findAll( PurchaseOrg.class, em ) ) {
-				for ( Facility facility : purchaseOrg.getFacilities() ) {
-					if ( facility.getId().equals( facilityId ) ) {
-						orgs.add( purchaseOrg );
-						break;
-					}
+		for ( PurchaseOrg purchaseOrg : findAll( PurchaseOrg.class, em ) ) {
+			for ( Facility facility : purchaseOrg.getFacilities() ) {
+				if ( facility.getId().equals( facilityId ) ) {
+					orgs.add( purchaseOrg );
+					break;
 				}
 			}
 		}
-		catch (Exception e) {
-
-		}
-		finally {
-			return orgs;
-		}
+		return orgs;
 	}
 
-	private <T> List<T> findAll(Class<T> clazz, EntityManager em) {
-		return em.createQuery( "SELECT o FROM " + clazz.getSimpleName() + " o", clazz ).getResultList();
+	private <T> List<T> findAll(Class<T> clazz, EntityManager entityManager) {
+		return entityManager.createQuery( "SELECT o FROM " + clazz.getSimpleName() + " o", clazz ).getResultList();
 	}
 
-	private TypedQuery<OrderLine> getOrderLinesQuery(Collection<PurchaseOrg> purchaseOrgs, EntityManager em) {
-		CriteriaBuilder cb = em.getCriteriaBuilder();
+	private TypedQuery<OrderLine> getOrderLinesQuery(EntityManager entityManager, Collection<PurchaseOrg> purchaseOrgs) {
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<OrderLine> query = cb.createQuery( OrderLine.class );
 		Root<OrderLine> root = query.from( OrderLine.class );
 		Path<OrderLineId> idPath = root.get( OrderLine_.id );
@@ -183,61 +151,46 @@ public class CriteriaToScrollableResultsFetchTest extends BaseEntityManagerFunct
 
 		query.select( root ).where( predicates.toArray( new Predicate[predicates.size()] ) );
 
-		return em.createQuery( query );
+		return entityManager.createQuery( query );
 	}
 
-	private Long populate() {
-		final EntityManager em = getOrCreateEntityManager();
-		try {
-			em.getTransaction().begin();
-
+	private Long populate(EntityManagerFactoryScope scope) {
+		return scope.fromTransaction( entityManager -> {
 			Customer customer = new Customer();
 			customer.setName( "MGM" );
-			em.persist( customer );
+			entityManager.persist( customer );
 
 			Site site = new Site();
 			site.setName( "NEW YORK" );
 			site.setCustomer( customer );
-			em.persist( site );
+			entityManager.persist( site );
 
 			Facility facility = new Facility();
 			facility.setName( "ACME" );
 			facility.setSite( site );
 			facility.setCustomer( customer );
-			em.persist( facility );
+			entityManager.persist( facility );
 
 			PurchaseOrg purchaseOrg = new PurchaseOrg();
 			purchaseOrg.setName( "LOONEY TUNES" );
 			purchaseOrg.setCustomer( customer );
-			purchaseOrg.setFacilities( Arrays.asList( facility ) );
-			em.persist( purchaseOrg );
+			purchaseOrg.setFacilities( List.of( facility ) );
+			entityManager.persist( purchaseOrg );
 
 			Product product = new Product( facility, "0000 0001" );
-			em.persist( product );
+			entityManager.persist( product );
 
 			Order order = new Order( purchaseOrg, "12345" );
-			OrderLine line1 = new OrderLine( order, 1L, product );
 
+			OrderLine line1 = new OrderLine( order, 1L, product );
 			Set<OrderLine> lines = new HashSet<>();
 			lines.add( line1 );
-
 			order.setLines( lines );
 
-			em.persist( order );
-
-			em.getTransaction().commit();
+			entityManager.persist( order );
 
 			return facility.getId();
-		}
-		catch (Throwable t) {
-			if ( em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw t;
-		}
-		finally {
-			em.close();
-		}
+		} );
 	}
 
 }

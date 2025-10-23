@@ -50,7 +50,7 @@ public class CoalesceTest {
 		scope.inEntityManager(
 				entityManager -> {
 					TypedQuery<HHH15291Entity> query = entityManager.createQuery(
-							"" + "SELECT t FROM HHH15291Entity t "
+							"SELECT t FROM HHH15291Entity t "
 									+ "WHERE t.itemString2 = " + "COALESCE (t.itemString1, ?1)",
 							HHH15291Entity.class
 					);
@@ -67,7 +67,7 @@ public class CoalesceTest {
 		scope.inEntityManager(
 				entityManager -> {
 					TypedQuery<String> query2 = entityManager.createQuery(
-							"" + "SELECT COALESCE (t.itemString2, ?1) FROM HHH15291Entity t ORDER BY t.itemInteger1 ASC",
+							"SELECT COALESCE (t.itemString2, ?1) FROM HHH15291Entity t ORDER BY t.itemInteger1 ASC",
 							String.class
 					);
 					query2.setParameter( 1, "Sample" );

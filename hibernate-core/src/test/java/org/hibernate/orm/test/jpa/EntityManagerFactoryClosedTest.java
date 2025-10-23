@@ -4,75 +4,44 @@
  */
 package org.hibernate.orm.test.jpa;
 
-import java.util.Map;
-import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManager;
+import org.hibernate.cfg.JpaComplianceSettings;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.cfg.AvailableSettings;
-
-import org.hibernate.testing.jta.TestingJtaBootstrap;
-import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-import org.junit.Test;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * EntityManagerFactoryClosedTest
- *
- * @author Scott Marlow
+ * @author Jan Schatteman
+ * This test was separated from the EntityManagerTest, which now extends the {@link EntityManagerFactoryBasedFunctionalTest}
+ * That only creates the {@link jakarta.persistence.EntityManagerFactory} once per class, so this test caused problems
+ * for the other tests
  */
-public class EntityManagerFactoryClosedTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		integrationSettings = {@Setting(name = JpaComplianceSettings.JPA_CLOSED_COMPLIANCE, value = "true")}
+)
+public class EntityManagerFactoryClosedTest {
 
-	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		TestingJtaBootstrap.prepare(options);
-		options.put( AvailableSettings.JAKARTA_TRANSACTION_TYPE, "JTA" );
-	}
-
-	/**
-	 * Test that using a closed EntityManagerFactory throws an IllegalStateException
-	 * Also ensure that HHH-8586 doesn't regress.
-	 * @throws Exception
-	 */
 	@Test
-	public void testWithTransactionalEnvironment() throws Exception {
+	public void testFactoryClosed(EntityManagerFactoryScope scope) {
+		EntityManager entityManager = scope.getEntityManagerFactory().createEntityManager();
+		assertTrue( entityManager.isOpen() );
+		assertTrue( entityManager.getEntityManagerFactory().isOpen() );
 
-		assertFalse( JtaStatusHelper.isActive(TestingJtaPlatformImpl.INSTANCE.getTransactionManager()) );
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		assertTrue( JtaStatusHelper.isActive(TestingJtaPlatformImpl.INSTANCE.getTransactionManager()) );
-		EntityManagerFactory entityManagerFactory = entityManagerFactory();
+		// closing the entity manager factory should close the EntityManager
+		entityManager.getEntityManagerFactory().close();
+		assertFalse( entityManager.isOpen() );
 
-		entityManagerFactory.close();	// close the underlying entity manager factory
-
-		try {
-			entityManagerFactory.createEntityManager();
-			fail( "expected IllegalStateException when calling emf.createEntityManager with closed emf" );
-		} catch( IllegalStateException expected ) {
-			// success
-
-		}
-
-		try {
-			entityManagerFactory.getCriteriaBuilder();
-			fail( "expected IllegalStateException when calling emf.getCriteriaBuilder with closed emf" );
-		} catch( IllegalStateException expected ) {
-			// success
-		}
-
-		try {
-			entityManagerFactory.getCache();
-			fail( "expected IllegalStateException when calling emf.getCache with closed emf" );
-		} catch( IllegalStateException expected ) {
-			// success
-		}
-
-		assertFalse( entityManagerFactory.isOpen() );
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+		assertThrows(
+				IllegalStateException.class,
+				entityManager::close,
+				"closing entity manager that uses a closed session factory, must throw IllegalStateException"
+		);
 	}
 
 }

@@ -4,10 +4,10 @@
  */
 package org.hibernate.orm.test.jpa.criteria;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -16,25 +16,17 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @JiraKey("HHH-16606")
-public class SelectOnlyArrayPropertyTest extends BaseEntityManagerFunctionalTestCase {
-
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				EntityWithIdAndIntegerArray.class
-		};
-	}
+@Jpa(annotatedClasses = {SelectOnlyArrayPropertyTest.EntityWithIdAndIntegerArray.class})
+public class SelectOnlyArrayPropertyTest {
 
 	@Test
 	@JiraKey("HHH-16606")
-	public void criteriaSelectOnlyIntArray() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void criteriaSelectOnlyIntArray(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			final byte[] result = "Hello, World!".getBytes();
 
 			EntityWithIdAndIntegerArray myEntity = new EntityWithIdAndIntegerArray( 1, result );
@@ -57,8 +49,8 @@ public class SelectOnlyArrayPropertyTest extends BaseEntityManagerFunctionalTest
 	}
 
 	@Test
-	public void criteriaSelectWrappedIntArray() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void criteriaSelectWrappedIntArray(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			final byte[] result = "Hi there!".getBytes();
 
 			EntityWithIdAndIntegerArray myEntity = new EntityWithIdAndIntegerArray( 2, result );

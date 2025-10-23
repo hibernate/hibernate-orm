@@ -49,7 +49,7 @@ public class CriteriaQualifiedJoinTest {
 		scope.inTransaction( entityManager -> {
 			final Secondary secondaryA = new Secondary( 1, "a" );
 			final Secondary secondaryB = new Secondary( 2, "b" );
-			ArrayList<Object> entities = new ArrayList<Object>( List.of(
+			ArrayList<Object> entities = new ArrayList<>( List.of(
 					secondaryA,
 					secondaryB,
 					new Primary( 1, secondaryA ),

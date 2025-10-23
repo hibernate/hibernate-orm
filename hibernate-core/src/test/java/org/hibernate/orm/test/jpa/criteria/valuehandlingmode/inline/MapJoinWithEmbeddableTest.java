@@ -4,19 +4,6 @@
  */
 package org.hibernate.orm.test.jpa.criteria.valuehandlingmode.inline;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-
-
-import org.hibernate.cfg.AvailableSettings;
-
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.Setting;
-
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -35,19 +22,30 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.MapJoin;
 import jakarta.persistence.criteria.Root;
 
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+
+import org.junit.jupiter.api.Test;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+
 
 /**
  * @author Christian Beikov
  */
 @Jpa(
 		annotatedClasses = {
-				MapJoinTestWithEmbeddable.Batch.class,
-				MapJoinTestWithEmbeddable.Node.class,
-				MapJoinTestWithEmbeddable.BatchNodeMetadata.class
-		}
-		,properties = @Setting( name = AvailableSettings.CRITERIA_VALUE_HANDLING_MODE, value = "inline")
+				MapJoinWithEmbeddableTest.Batch.class,
+				MapJoinWithEmbeddableTest.Node.class,
+				MapJoinWithEmbeddableTest.BatchNodeMetadata.class
+		},
+		properties = @Setting( name = AvailableSettings.CRITERIA_VALUE_HANDLING_MODE, value = "inline")
 )
-public class MapJoinTestWithEmbeddable  {
+public class MapJoinWithEmbeddableTest {
 
 	@Test
 	public void testSelectingKeyOfMapJoin(EntityManagerFactoryScope scope) {
@@ -113,14 +111,14 @@ public class MapJoinTestWithEmbeddable  {
 
 		@Column(nullable = false)
 		@Enumerated(EnumType.STRING)
-		private NodeMigration migrering = NodeMigration.TOTAL;
+		private NodeMigration migration = NodeMigration.TOTAL;
 
-		public NodeMigration getMigrering() {
-			return migrering;
+		public NodeMigration getMigration() {
+			return migration;
 		}
 
-		public void setMigrering(NodeMigration migrering) {
-			this.migrering = migrering;
+		public void setMigration(NodeMigration migration) {
+			this.migration = migration;
 		}
 	}
 

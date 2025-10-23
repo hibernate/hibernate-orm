@@ -6,7 +6,6 @@ package org.hibernate.orm.test.jpa.criteria;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
@@ -23,29 +22,23 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Andrea Boriero
  */
-public class TreatListJoinTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(annotatedClasses = {TreatListJoinTest.TestEntity.class, TreatListJoinTest.EntityA.class, TreatListJoinTest.EntityB.class})
+public class TreatListJoinTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {TestEntity.class, EntityA.class, EntityB.class};
-	}
-
-	@Before
-	public void setUp() {
-		EntityManager em = createEntityManager();
-		try {
-			em.getTransaction().begin();
+	@BeforeEach
+	public void setUp(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 
 			for ( int i = 0; i < 5; i++ ) {
 				TestEntity e = new TestEntity();
@@ -53,7 +46,7 @@ public class TreatListJoinTest extends BaseEntityManagerFunctionalTestCase {
 				eA.setParent( e );
 				eA.valueA = "a_" + i;
 
-				em.persist( e );
+				entityManager.persist( e );
 			}
 			for ( int i = 0; i < 5; i++ ) {
 				TestEntity e = new TestEntity();
@@ -62,32 +55,21 @@ public class TreatListJoinTest extends BaseEntityManagerFunctionalTestCase {
 				eB.valueB = "b_" + i;
 				eB.setParent( e );
 
-				em.persist( e );
+				entityManager.persist( e );
 			}
 
-			em.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testTreatJoin() {
-		EntityManager em = createEntityManager();
-		try {
-			final CriteriaBuilder cb = em.getCriteriaBuilder();
+	public void testTreatJoin(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
 			final CriteriaQuery<Tuple> query = cb.createTupleQuery();
 			final Root<TestEntity> testEntity = query.from( TestEntity.class );
 
-			final List<Selection<?>> selections = new LinkedList();
+			final List<Selection<?>> selections = new LinkedList<>();
 			selections.add( testEntity.get( "id" ) );
 
 			final ListJoin<TestEntity, AbstractEntity> entities = testEntity.joinList(
@@ -117,12 +99,9 @@ public class TreatListJoinTest extends BaseEntityManagerFunctionalTestCase {
 
 			query.multiselect( selections );
 
-			final List<Tuple> resultList = em.createQuery( query ).getResultList();
+			final List<Tuple> resultList = entityManager.createQuery( query ).getResultList();
 			assertThat( resultList.size(), is( 10 ) );
-		}
-		finally {
-			em.close();
-		}
+		} );
 	}
 
 	@MappedSuperclass

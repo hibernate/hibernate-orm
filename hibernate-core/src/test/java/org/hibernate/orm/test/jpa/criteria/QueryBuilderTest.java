@@ -7,7 +7,7 @@ package org.hibernate.orm.test.jpa.criteria;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import jakarta.persistence.EntityManager;
+
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -22,7 +22,6 @@ import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.exception.SQLGrammarException;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.orm.test.jpa.metamodel.Address;
 import org.hibernate.orm.test.jpa.metamodel.Alias;
 import org.hibernate.orm.test.jpa.metamodel.Country;
@@ -38,262 +37,245 @@ import org.hibernate.orm.test.jpa.metamodel.ShelfLife;
 import org.hibernate.orm.test.jpa.metamodel.Spouse;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.testing.transaction.TransactionUtil2;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
  */
-public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Address.class,
-				Alias.class,
-				Country.class,
-				CreditCard.class,
-				Customer.class,
-				Human.class,
-				Info.class,
-				LineItem.class,
-				Order.class,
-				Phone.class,
-				Product.class,
-				ShelfLife.class,
-				Spouse.class,
-				Book.class,
-				Store.class
-		};
+@Jpa(annotatedClasses = {
+		Address.class,
+		Alias.class,
+		Country.class,
+		CreditCard.class,
+		Customer.class,
+		Human.class,
+		Info.class,
+		LineItem.class,
+		Order.class,
+		Phone.class,
+		Product.class,
+		ShelfLife.class,
+		Spouse.class,
+		Book.class,
+		Store.class
+})
+public class QueryBuilderTest {
+
+	@Test
+	public void testEqualityComparisonLiteralConversion(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			Metamodel mm = entityManager.getMetamodel();
+
+			CriteriaQuery<Integer> cquery = cb.createQuery( Integer.class );
+			Root<Product> product = cquery.from( Product.class );
+			EntityType<Product> Product_ = mm.entity( Product.class );
+
+			cquery.select(
+					cb.toInteger(
+							product.get(
+									Product_.getSingularAttribute( "quantity", Integer.class ) )
+					)
+			);
+
+			SqmComparisonPredicate predicate = (SqmComparisonPredicate) cb.equal(
+					product.get( Product_.getSingularAttribute( "partNumber", Long.class ) ),
+					373767373
+			);
+			assertEquals( Long.class, predicate.getLeftHandExpression().getJavaType() );
+			cquery.where( predicate );
+			entityManager.createQuery( cquery ).getResultList();
+
+			predicate = (SqmComparisonPredicate) cb.ge(
+					cb.length( product.get( Product_.getSingularAttribute( "name", String.class ) ) ),
+					4L
+			);
+			assertEquals( Integer.class, predicate.getLeftHandExpression().getJavaType() );
+			cquery.where( predicate );
+			entityManager.createQuery( cquery ).getResultList();
+
+		} );
 	}
 
 	@Test
-	public void testEqualityComparisonLiteralConversion() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-
-		CriteriaBuilder cb = em.getCriteriaBuilder();
-		Metamodel mm = em.getMetamodel();
-
-		CriteriaQuery<Integer> cquery = cb.createQuery( Integer.class );
-		Root<Product> product = cquery.from( Product.class );
-		EntityType<Product> Product_ = mm.entity( Product.class );
-
-		cquery.select(
-				cb.toInteger(
-						product.get(
-								Product_.getSingularAttribute( "quantity", Integer.class ) )
-				)
-		);
-
-		SqmComparisonPredicate predicate = (SqmComparisonPredicate) cb.equal(
-				product.get( Product_.getSingularAttribute( "partNumber", Long.class ) ),
-				373767373
-		);
-		assertEquals( Long.class, predicate.getLeftHandExpression().getJavaType() );
-		cquery.where( predicate );
-		em.createQuery( cquery ).getResultList();
-
-		predicate = (SqmComparisonPredicate) cb.ge(
-				cb.length( product.get( Product_.getSingularAttribute( "name", String.class ) ) ),
-				4L
-		);
-		assertEquals( Integer.class, predicate.getLeftHandExpression().getJavaType() );
-		cquery.where( predicate );
-		em.createQuery( cquery ).getResultList();
-
-		em.getTransaction().commit();
-		em.close();
-	}
-
-	@Test
-	public void testEqualityComparisonEntityConversion() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+	public void testEqualityComparisonEntityConversion(EntityManagerFactoryScope scope) {
 		Address address = new Address( "Street Id", "Fake Street", "Fake City", "Fake State", "Fake Zip" );
-		Phone phone1 = new Phone( "1", "555", "0001", address );
-		Phone phone2 = new Phone( "2", "555", "0002", address );
-		Phone phone3 = new Phone( "3", "555", "0003", address );
-		Phone phone4 = new Phone( "4", "555", "0004" );
+		scope.inTransaction( entityManager -> {
+			Phone phone1 = new Phone( "1", "555", "0001", address );
+			Phone phone2 = new Phone( "2", "555", "0002", address );
+			Phone phone3 = new Phone( "3", "555", "0003", address );
+			Phone phone4 = new Phone( "4", "555", "0004" );
 
-		List<Phone> phones = new ArrayList<>( 3 );
-		phones.add( phone1 );
-		phones.add( phone2 );
-		phones.add( phone3 );
+			List<Phone> phones = new ArrayList<>( 3 );
+			phones.add( phone1 );
+			phones.add( phone2 );
+			phones.add( phone3 );
 
-		address.setPhones( phones );
-		em.persist( address );
-		em.persist( phone4 );
+			address.setPhones( phones );
+			entityManager.persist( address );
+			entityManager.persist( phone4 );
+		} );
 
-		em.getTransaction().commit();
 
+		scope.inTransaction( entityManager -> {
 
-		em.getTransaction().begin();
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			Metamodel mm = entityManager.getMetamodel();
+			EntityType<Phone> Phone_ = mm.entity( Phone.class );
 
-		CriteriaBuilder cb = em.getCriteriaBuilder();
-		Metamodel mm = em.getMetamodel();
-		EntityType<Phone> Phone_ = mm.entity( Phone.class );
+			CriteriaQuery<Phone> cquery = cb.createQuery( Phone.class );
+			Root<Phone> phone = cquery.from( Phone.class );
+			Predicate predicate = cb.equal(
+					phone.get( Phone_.getSingularAttribute( "address", Address.class ) ),
+					address
+			);
+			cquery.where( predicate );
+			List<Phone> results = entityManager.createQuery( cquery ).getResultList();
 
-		CriteriaQuery<Phone> cquery = cb.createQuery( Phone.class );
-		Root<Phone> phone = cquery.from( Phone.class );
-		Predicate predicate = cb.equal(
-				phone.get( Phone_.getSingularAttribute( "address", Address.class ) ),
-				address
-		);
-		cquery.where( predicate );
-		List<Phone> results = em.createQuery( cquery ).getResultList();
-
-		assertEquals( 3, results.size() );
-		em.getTransaction().commit();
-		em.close();
+			assertEquals( 3, results.size() );
+		} );
 	}
 
 	@Test
-	public void testTypeConversion() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		CriteriaBuilder cb = em.getCriteriaBuilder();
-		Metamodel mm = em.getMetamodel();
-		EntityType<Product> Product_ = mm.entity( Product.class );
+	public void testTypeConversion(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			Metamodel mm = entityManager.getMetamodel();
+			EntityType<Product> Product_ = mm.entity( Product.class );
 
-		// toFloat
-		CriteriaQuery<Float> floatQuery = cb.createQuery( Float.class );
-		Root<Product> product = floatQuery.from( Product.class );
-		floatQuery.select(
-				cb.toFloat(
-						product.get( Product_.getSingularAttribute( "quantity", Integer.class ) )
-				)
-		);
-		em.createQuery( floatQuery ).getResultList();
+			// toFloat
+			CriteriaQuery<Float> floatQuery = cb.createQuery( Float.class );
+			Root<Product> product = floatQuery.from( Product.class );
+			floatQuery.select(
+					cb.toFloat(
+							product.get( Product_.getSingularAttribute( "quantity", Integer.class ) )
+					)
+			);
+			entityManager.createQuery( floatQuery ).getResultList();
 
-		// toDouble
-		CriteriaQuery<Double> doubleQuery = cb.createQuery( Double.class );
-		product = doubleQuery.from( Product.class );
-		doubleQuery.select(
-				cb.toDouble(
-						product.get( Product_.getSingularAttribute( "quantity", Integer.class ) )
-				)
-		);
-		em.createQuery( doubleQuery ).getResultList();
+			// toDouble
+			CriteriaQuery<Double> doubleQuery = cb.createQuery( Double.class );
+			product = doubleQuery.from( Product.class );
+			doubleQuery.select(
+					cb.toDouble(
+							product.get( Product_.getSingularAttribute( "quantity", Integer.class ) )
+					)
+			);
+			entityManager.createQuery( doubleQuery ).getResultList();
 
-		em.getTransaction().commit();
-		em.close();
+		} );
 	}
 
 	@Test
-	public void testConstructor() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		CriteriaBuilder cb = em.getCriteriaBuilder();
+	public void testConstructor(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
-		CriteriaQuery<Customer> cquery = cb.createQuery( Customer.class );
-		Root<Customer> customer = cquery.from( Customer.class );
-		EntityType<Customer> Customer_ = customer.getModel();
+			CriteriaQuery<Customer> cquery = cb.createQuery( Customer.class );
+			Root<Customer> customer = cquery.from( Customer.class );
+			EntityType<Customer> Customer_ = customer.getModel();
 
-		cquery.select(
-				cb.construct(
-						Customer.class,
-						customer.get( Customer_.getSingularAttribute( "id", String.class ) ),
-						customer.get( Customer_.getSingularAttribute( "name", String.class ) )
-				)
-		);
-		TypedQuery<Customer> tq = em.createQuery( cquery );
-		tq.getResultList();
+			cquery.select(
+					cb.construct(
+							Customer.class,
+							customer.get( Customer_.getSingularAttribute( "id", String.class ) ),
+							customer.get( Customer_.getSingularAttribute( "name", String.class ) )
+					)
+			);
+			TypedQuery<Customer> tq = entityManager.createQuery( cquery );
+			tq.getResultList();
 
-		em.getTransaction().commit();
-		em.close();
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-8699")
-	public void testMultiselectWithPredicates() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+	public void testMultiselectWithPredicates(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 
-		em.createQuery( "select (c.id, c.name), c.age from Customer c" ).getResultList();
-		CriteriaBuilder cb = em.getCriteriaBuilder();
-		CriteriaQuery<Tuple> cq = cb.createTupleQuery();
-		Root<Customer> r = cq.from( Customer.class );
-		cq.multiselect(
-				r.get( Customer_.id ), r.get( Customer_.name ),
-				cb.concat( "Hello ", r.get( Customer_.name ) ), cb.isNotNull( r.get( Customer_.age ) )
-		);
-		TypedQuery<Tuple> tq = em.createQuery( cq );
-		tq.getResultList();
+			entityManager.createQuery( "select (c.id, c.name), c.age from Customer c" ).getResultList();
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaQuery<Tuple> cq = cb.createTupleQuery();
+			Root<Customer> r = cq.from( Customer.class );
+			cq.multiselect(
+					r.get( Customer_.id ), r.get( Customer_.name ),
+					cb.concat( "Hello ", r.get( Customer_.name ) ), cb.isNotNull( r.get( Customer_.age ) )
+			);
+			TypedQuery<Tuple> tq = entityManager.createQuery( cq );
+			tq.getResultList();
 
-		em.getTransaction().commit();
-		em.close();
+		} );
 	}
 
 	@Test
 	@SkipForDialect(dialectClass = CockroachDialect.class)
-	public void testDateTimeFunctions() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		CriteriaBuilder cb = em.getCriteriaBuilder();
+	public void testDateTimeFunctions(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
-		CriteriaQuery<java.sql.Date> dateQuery = cb.createQuery( java.sql.Date.class );
-		dateQuery.from( Customer.class );
-		dateQuery.select( cb.currentDate() );
-		em.createQuery( dateQuery ).getResultList();
+			CriteriaQuery<java.sql.Date> dateQuery = cb.createQuery( java.sql.Date.class );
+			dateQuery.from( Customer.class );
+			dateQuery.select( cb.currentDate() );
+			entityManager.createQuery( dateQuery ).getResultList();
 
-		CriteriaQuery<java.sql.Time> timeQuery = cb.createQuery( java.sql.Time.class );
-		timeQuery.from( Customer.class );
-		timeQuery.select( cb.currentTime() );
-		em.createQuery( timeQuery ).getResultList();
+			CriteriaQuery<java.sql.Time> timeQuery = cb.createQuery( java.sql.Time.class );
+			timeQuery.from( Customer.class );
+			timeQuery.select( cb.currentTime() );
+			entityManager.createQuery( timeQuery ).getResultList();
 
-		CriteriaQuery<java.sql.Timestamp> tsQuery = cb.createQuery( java.sql.Timestamp.class );
-		tsQuery.from( Customer.class );
-		tsQuery.select( cb.currentTimestamp() );
-		em.createQuery( tsQuery ).getResultList();
+			CriteriaQuery<java.sql.Timestamp> tsQuery = cb.createQuery( java.sql.Timestamp.class );
+			tsQuery.from( Customer.class );
+			tsQuery.select( cb.currentTimestamp() );
+			entityManager.createQuery( tsQuery ).getResultList();
 
-		em.getTransaction().commit();
-		em.close();
+		} );
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = InformixDialect.class, majorVersion = 11, minorVersion = 70, reason = "Informix does not support count literals")
-	public void testFunctionDialectFunctions() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		CriteriaBuilder cb = em.getCriteriaBuilder();
-		CriteriaQuery<Long> criteria = cb.createQuery( Long.class );
-		criteria.select( cb.count( cb.literal( 1 ) ) );
-		Root<Customer> root = criteria.from( Customer.class );
-		criteria.where(
-				cb.equal(
-						cb.function(
-								"substring",
-								String.class,
-								root.get( Customer_.name ),
-								cb.literal( 1 ),
-								cb.literal( 1 )
-						),
-						cb.literal( "a" )
-				)
-		);
-		em.createQuery( criteria ).getResultList();
-		em.getTransaction().commit();
-		em.close();
+	@SkipForDialect(dialectClass = InformixDialect.class, majorVersion = 11, minorVersion = 70,
+			reason = "Informix does not support count literals")
+	public void testFunctionDialectFunctions(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaQuery<Long> criteria = cb.createQuery( Long.class );
+			criteria.select( cb.count( cb.literal( 1 ) ) );
+			Root<Customer> root = criteria.from( Customer.class );
+			criteria.where(
+					cb.equal(
+							cb.function(
+									"substring",
+									String.class,
+									root.get( Customer_.name ),
+									cb.literal( 1 ),
+									cb.literal( 1 )
+							),
+							cb.literal( "a" )
+					)
+			);
+			entityManager.createQuery( criteria ).getResultList();
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-10737")
-	public void testMissingDialectFunction() {
-		TransactionUtil2.inTransaction( entityManagerFactory(), (em) -> {
+	public void testMissingDialectFunction(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Human human = new Human();
 			human.setId( 200L );
 			human.setName( "2" );
-			em.persist( human );
+			entityManager.persist( human );
 		} );
 
-		TransactionUtil2.inTransaction( entityManagerFactory(), (em) -> {
-			CriteriaBuilder cb = em.getCriteriaBuilder();
+		scope.inTransaction( entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Long> criteria = cb.createQuery( Long.class );
 
 			Root<Human> root = criteria.from( Human.class );
@@ -312,7 +294,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 			);
 
 			try {
-				em.createQuery( criteria ).getResultList();
+				entityManager.createQuery( criteria ).getResultList();
 				fail( "Expecting a SQLGrammarException" );
 			}
 			catch (SQLGrammarException | GenericJDBCException expected) {
@@ -323,20 +305,20 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-12314")
-	public void testJoinUsingNegatedPredicate() {
+	public void testJoinUsingNegatedPredicate(EntityManagerFactoryScope scope) {
 		// Write test data
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final Store store = new Store();
 			store.setName( "Acme Books" );
 			store.setAddress( "123 Main St" );
 			entityManager.persist( store );
 
 			final Book book = new Book();
-			book.setStores( new HashSet<>( List.of(store) ) );
+			book.setStores( new HashSet<>( List.of( store ) ) );
 			entityManager.persist( book );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			final CriteriaQuery<Book> query = cb.createQuery( Book.class );
 			final Root<Book> bookRoot = query.from( Book.class );

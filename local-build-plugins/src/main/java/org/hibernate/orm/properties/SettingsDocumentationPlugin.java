@@ -6,6 +6,8 @@ package org.hibernate.orm.properties;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.tasks.TaskProvider;
+import org.hibernate.build.OrmBuildDetails;
 import org.hibernate.build.aspects.ModuleAspect;
 
 import static org.hibernate.orm.properties.SettingsDocExtension.EXTENSION_NAME;
@@ -25,13 +27,16 @@ public class SettingsDocumentationPlugin implements Plugin<Project> {
 		project.getPluginManager().apply( ModuleAspect.class );
 
 		// create and register the DSL extension
-		final SettingsDocExtension dslExtension = new SettingsDocExtension( project );
-		project.getExtensions().add( EXTENSION_NAME, dslExtension );
+		final SettingsDocExtension dslExtension = project.getExtensions()
+				.create( SettingsDocExtension.class, EXTENSION_NAME, SettingsDocExtension.class );
 		dslExtension.getJavadocDirectory().convention( project.getLayout().getBuildDirectory().dir( "javadocs" ) );
 		dslExtension.getPublishedDocsUrl().convention( "https://docs.jboss.org/hibernate/orm" );
 		dslExtension.getOutputFile().convention( project.getLayout().getBuildDirectory().file( "asciidoc/fragments/config-settings.adoc" ) );
 
 		// create the generation task
-		project.getTasks().register( TASK_NAME, SettingsDocGenerationTask.class, dslExtension, project );
+		final OrmBuildDetails details = project.getExtensions().getByType( OrmBuildDetails.class );
+		final TaskProvider<SettingsDocGenerationTask> settingsDocGenerationTask = project.getTasks()
+				.register( TASK_NAME, SettingsDocGenerationTask.class, dslExtension );
+		settingsDocGenerationTask.configure( task -> task.getOrmBuildDetails().set( details ) );
 	}
 }

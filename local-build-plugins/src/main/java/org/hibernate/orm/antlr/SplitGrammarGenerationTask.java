@@ -4,21 +4,25 @@
  */
 package org.hibernate.orm.antlr;
 
-import java.io.File;
-
-import javax.inject.Inject;
-
 import org.gradle.api.DefaultTask;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
+import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.process.ExecOperations;
+
+import javax.inject.Inject;
+import java.io.File;
 
 import static org.hibernate.orm.antlr.AntlrHelper.stripSillyGeneratedFromLines;
 
@@ -40,32 +44,36 @@ public abstract class SplitGrammarGenerationTask extends DefaultTask {
 	public SplitGrammarGenerationTask(
 			SplitGrammarDescriptor grammarDescriptor,
 			AntlrSpec antlrSpec,
-			ExecOperations execOperations) {
+			ExecOperations execOperations,
+			ProjectLayout layout,
+			ProviderFactory providers
+	) {
 		this.grammarDescriptor = grammarDescriptor;
 		this.execOperations = execOperations;
 
-		lexerGrammarFile = getProject().provider( () -> {
+		lexerGrammarFile = providers.provider( () -> {
 			final Directory grammarBaseDirectory = antlrSpec.getGrammarBaseDirectory().get();
 			final Directory grammarDirectory = grammarBaseDirectory.dir( grammarDescriptor.getPackageName().get().replace( '.', '/' ) );
 			return grammarDirectory.file( grammarDescriptor.getLexerFileName().get() );
 		} );
 
-		parserGrammarFile = getProject().provider( () -> {
+		parserGrammarFile = providers.provider( () -> {
 			final Directory grammarBaseDirectory = antlrSpec.getGrammarBaseDirectory().get();
 			final Directory grammarDirectory = grammarBaseDirectory.dir( grammarDescriptor.getPackageName().get().replace( '.', '/' ) );
 			return grammarDirectory.file( grammarDescriptor.getParserFileName().get() );
 		} );
 
-		generationDirectory = getProject().provider( () -> {
-			final Directory baseDirectory = getProject().getLayout().getBuildDirectory().dir( "tmp/antlr" ).get();
-			return baseDirectory.dir( grammarDescriptor.getPackageName().get().replace( '.', '/' ) );
-		} );
+		generationDirectory = layout.getBuildDirectory()
+				.dir( "tmp/antlr" )
+				.map(dir -> dir.dir(grammarDescriptor.getPackageName().get().replace('.', '/')));
 
-		outputDirectory = getProject().provider( () -> {
-			final Directory outputBaseDirectory = antlrSpec.getOutputBaseDirectory().get();
-			return outputBaseDirectory.dir( grammarDescriptor.getPackageName().get().replace( '.', '/' ) );
-		} );
+		outputDirectory = antlrSpec.getOutputBaseDirectory()
+				.map(dir -> dir.dir(grammarDescriptor.getPackageName().get().replace('.', '/')));
 	}
+
+	@InputFiles
+	@Classpath
+	public abstract ConfigurableFileCollection getAntlrClasspath();
 
 	@InputFile
 	@PathSensitive( PathSensitivity.RELATIVE )
@@ -100,14 +108,14 @@ public abstract class SplitGrammarGenerationTask extends DefaultTask {
 		generateLexer( generationDir );
 		generateParser( generationDir );
 
-		stripSillyGeneratedFromLines( generationDir, outputDir, getProject() );
+		stripSillyGeneratedFromLines( generationDir, outputDir, getLogger() );
 	}
 
 
 	private void generateLexer(File outputDir) {
 		final File lexerFile = getLexerGrammarFile().get().getAsFile();
 
-		getProject().getLogger().lifecycle(
+		getLogger().lifecycle(
 				"Starting Antlr lexer grammar generation `{}` : `{}` -> `{}`",
 				grammarDescriptor.getName(),
 				lexerFile.getAbsolutePath(),
@@ -118,9 +126,9 @@ public abstract class SplitGrammarGenerationTask extends DefaultTask {
 		execOperations.javaexec(
 				(javaExecSpec) -> {
 					javaExecSpec.getMainClass().set( "org.antlr.v4.Tool" );
-					javaExecSpec.classpath( getProject().getConfigurations().getByName( "antlr" ) );
+					javaExecSpec.classpath( getAntlrClasspath() );
 					javaExecSpec.args(
-							"-o", getProject().relativePath( outputDir.getAbsolutePath() ),
+							"-o", outputDir.getAbsolutePath(),
 							"-long-messages",
 							lexerFile.getAbsolutePath()
 					);
@@ -131,7 +139,7 @@ public abstract class SplitGrammarGenerationTask extends DefaultTask {
 	private void generateParser(File outputDir) {
 		final File parserFile = getParserGrammarFile().get().getAsFile();
 
-		getProject().getLogger().lifecycle(
+		getLogger().lifecycle(
 				"Starting Antlr parser grammar generation `{}` : `{}` -> `{}`",
 				grammarDescriptor.getName(),
 				parserFile.getAbsolutePath(),
@@ -142,9 +150,9 @@ public abstract class SplitGrammarGenerationTask extends DefaultTask {
 		execOperations.javaexec(
 				(javaExecSpec) -> {
 					javaExecSpec.getMainClass().set( "org.antlr.v4.Tool" );
-					javaExecSpec.classpath( getProject().getConfigurations().named( "antlr" ) );
+					javaExecSpec.classpath( getAntlrClasspath() );
 					javaExecSpec.args(
-							"-o", getProject().relativePath( outputDir.getAbsolutePath() ),
+							"-o", outputDir.getAbsolutePath(),
 							"-long-messages",
 							parserFile.getAbsolutePath()
 					);

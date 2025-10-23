@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.antlr;
 
-import javax.inject.Inject;
-
 import org.gradle.api.Named;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
@@ -15,8 +13,6 @@ import org.gradle.api.provider.Property;
  */
 public class SplitGrammarDescriptor implements Named {
 	private final String name;
-	private final AntlrSpec antlrSpec;
-
 	private final Property<String> packageName;
 	private final Property<String> lexerFileName;
 	private final Property<String> parserFileName;
@@ -24,10 +20,8 @@ public class SplitGrammarDescriptor implements Named {
 	private final Property<Boolean> generateVisitor;
 	private final Property<Boolean> generateListener;
 
-	@Inject
-	public SplitGrammarDescriptor(String name, AntlrSpec antlrSpec, ObjectFactory objectFactory) {
+	public SplitGrammarDescriptor(String name, ObjectFactory objectFactory) {
 		this.name = name;
-		this.antlrSpec = antlrSpec;
 
 		packageName = objectFactory.property( String.class );
 		lexerFileName = objectFactory.property( String.class );

@@ -49,43 +49,35 @@ tasks.compileJava {
 
 gradlePlugin {
 	plugins {
-		databaseServicePlugin {
+        register( "databaseServicePlugin" ) {
 			id = 'org.hibernate.orm.database-service'
 			implementationClass = 'org.hibernate.orm.db.DatabaseServicePlugin'
 		}
-		antlrPlugin {
+        register( "antlrPlugin" ) {
 			id = 'org.hibernate.orm.antlr'
 			implementationClass = 'org.hibernate.orm.antlr.AntlrPlugin'
 		}
-		jakartaPlugin {
-			id = 'org.hibernate.orm.jakarta'
-			implementationClass = 'org.hibernate.orm.jakarta.JakartaPlugin'
-		}
-		jakartaPublishPlugin {
-			id = 'org.hibernate.orm.jakarta-publish'
-			implementationClass = 'org.hibernate.orm.jakarta.JakartaPublishingPlugin'
-		}
-		reportsPlugin {
+        register( "reportsPlugin" ) {
 			id = 'org.hibernate.orm.build.reports'
 			implementationClass = 'org.hibernate.orm.post.ReportGenerationPlugin'
 		}
-		envSettings {
+        register( "envSettings" ) {
 			id = 'org.hibernate.orm.build.env-settings'
 			implementationClass = 'org.hibernate.orm.env.EnvironmentSettingsPlugin'
 		}
-		jdkVersionSettings {
+        register( "jdkVersionSettings" ) {
 			id = 'org.hibernate.orm.build.jdks-settings'
 			implementationClass = 'org.hibernate.orm.toolchains.JdkVersionSettingsPlugin'
 		}
-		settingsDocumentationPlugin {
+        register( "settingsDocumentationPlugin" ) {
 			id = 'org.hibernate.orm.build.settings-doc'
 			implementationClass = 'org.hibernate.orm.properties.SettingsDocumentationPlugin'
 		}
-		jdkVersionsPlugin {
+        register( "jdkVersionsPlugin" ) {
 			id = 'org.hibernate.orm.build.jdks'
 			implementationClass = 'org.hibernate.orm.toolchains.JdkVersionPlugin'
 		}
-		javaModulePlugin {
+        register( "javaModulePlugin" ) {
 			id = 'org.hibernate.orm.build.java-module'
 			implementationClass = 'org.hibernate.orm.toolchains.JavaModulePlugin'
 		}

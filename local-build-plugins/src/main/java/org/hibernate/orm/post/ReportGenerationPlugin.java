@@ -7,6 +7,7 @@ package org.hibernate.orm.post;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.hibernate.build.OrmBuildDetails;
 
 /**
  * @author Steve Ebersole
@@ -23,36 +24,41 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 				.maybeCreate( AGGREGATE_CONFIG_NAME )
 				.setDescription( "Used to collect the jars with classes files to be used in the aggregation reports for `@Internal`, `@Incubating`, etc" );
 
-		final var indexManager = new IndexManager( artifactsToProcess, project );
-		project.getExtensions().add( "indexManager", indexManager );
+		final var indexManager = project.getExtensions().create( "indexManager", IndexManager.class );
+		indexManager.getArtifactsToProcess().from( artifactsToProcess );
 
 		final var indexerTask = project.getTasks().register(
 				"buildAggregatedIndex",
-				IndexerTask.class
+				IndexerTask.class,
+				task -> task.getIndexManager().set( indexManager )
 		);
+
+		final var details = project.getExtensions().getByType( OrmBuildDetails.class );
+		project.getTasks().withType( AbstractJandexAwareTask.class )
+				.configureEach(task -> {
+					task.getOrmBuildDetails().set( details );
+					task.getIndexManager().set( indexManager );
+					task.dependsOn( indexerTask );
+				});
 
 		final var incubatingTask = project.getTasks().register(
 				"generateIncubationReport",
-				IncubationReportTask.class,
-				(task) -> task.dependsOn( indexerTask )
+				IncubationReportTask.class
 		);
 
 		final var deprecationTask = project.getTasks().register(
 				"generateDeprecationReport",
-				DeprecationReportTask.class,
-				(task) -> task.dependsOn( indexerTask )
+				DeprecationReportTask.class
 		);
 
 		final var internalsTask = project.getTasks().register(
 				"generateInternalsReport",
-				InternalsReportTask.class,
-				(task) -> task.dependsOn( indexerTask )
+				InternalsReportTask.class
 		);
 
 		final var loggingTask = project.getTasks().register(
 				"generateLoggingReport",
-				LoggingReportTask.class,
-				(task) -> task.dependsOn( indexerTask )
+				LoggingReportTask.class
 		);
 
 		final var dialectConfig = project.getConfigurations()
@@ -62,7 +68,6 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 				"generateDialectTableReport",
 				DialectReportTask.class,
 				(task) -> {
-					task.dependsOn( indexerTask );
 					task.getDialectReportSources().from( dialectConfig );
 					task.getSourcePackage().set( "org.hibernate.dialect" );
 					task.getReportFile().set( project.getLayout().getBuildDirectory().file( "orm/generated/dialect/dialect-table.adoc" ) );
@@ -76,21 +81,23 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 				"generateCommunityDialectTableReport",
 				DialectReportTask.class,
 				(task) -> {
-					task.dependsOn( indexerTask );
 					task.getDialectReportSources().from( communityDialectConfig );
 					task.getSourcePackage().set( "org.hibernate.community.dialect" );
 					task.getReportFile().set( project.getLayout().getBuildDirectory().file( "orm/generated/dialect/dialect-table-community.adoc" ) );
 				}
 		);
 
-		final var groupingTask = project.getTasks().maybeCreate( "generateReports" );
-		groupingTask.setGroup( TASK_GROUP_NAME );
-		groupingTask.dependsOn( indexerTask );
-		groupingTask.dependsOn( incubatingTask );
-		groupingTask.dependsOn( deprecationTask );
-		groupingTask.dependsOn( internalsTask );
-		groupingTask.dependsOn( loggingTask );
-		groupingTask.dependsOn( dialectTableTask );
-		groupingTask.dependsOn( communityDialectTableTask );
+		project.getTasks().register( "generateReports", groupingTask -> {
+			groupingTask.setGroup( TASK_GROUP_NAME );
+			groupingTask.dependsOn(
+					indexerTask,
+					incubatingTask,
+					deprecationTask,
+					internalsTask,
+					loggingTask,
+					dialectTableTask,
+					communityDialectTableTask
+			);
+		} );
 	}
 }

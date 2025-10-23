@@ -4,17 +4,14 @@
  */
 package org.hibernate.orm.properties;
 
-import javax.inject.Inject;
-
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.Project;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
-import org.gradle.util.internal.ConfigureUtil;
 
-import groovy.lang.Closure;
+import javax.inject.Inject;
 
 /**
  * DSL extension for configuring aspects of the settings documentation process
@@ -32,13 +29,13 @@ public class SettingsDocExtension {
 	private final RegularFileProperty outputFile;
 
 	@Inject
-	public SettingsDocExtension(Project project) {
-		javadocDirectory = project.getObjects().directoryProperty();
-		publishedDocsUrl = project.getObjects().property( String.class );
-		anchorNameBase = project.getObjects().property( String.class );
-		sections = project.getObjects().domainObjectContainer( SettingsDocSection.class, SettingsDocSection::create );
+	public SettingsDocExtension(ObjectFactory objects) {
+		javadocDirectory = objects.directoryProperty();
+		publishedDocsUrl = objects.property( String.class );
+		anchorNameBase = objects.property( String.class );
+		sections = objects.domainObjectContainer( SettingsDocSection.class, SettingsDocSection::create );
 
-		outputFile = project.getObjects().fileProperty();
+		outputFile = objects.fileProperty();
 	}
 
 	/**
@@ -80,13 +77,6 @@ public class SettingsDocExtension {
 	 */
 	public void sections(Action<NamedDomainObjectContainer<SettingsDocSection>> action) {
 		action.execute( getSections() );
-	}
-
-	/**
-	 * @see #getSections()
-	 */
-	public void sections(Closure<NamedDomainObjectContainer<SettingsDocSection>> closure) {
-		ConfigureUtil.configure( closure, getSections() );
 	}
 
 	/**

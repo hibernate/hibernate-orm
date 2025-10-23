@@ -1,0 +1,52 @@
+[[hibernate-assistant]]
+== Hibernate Assistant
+:assistant-project-dir: {root-project-dir}/hibernate-assistant
+
+[WARNING]
+====
+This entire module is currently incubating and may experience breaking changes at any time, including in a micro (patch) release.
+====
+
+[[assistant-overview]]
+=== Overview
+
+The Hibernate Assistant module serves as a bridge between your existing Hibernate ORM application and generative AI services. It provides the foundational components needed to expose your domain model and database operations to Large Language Models (LLMs), enabling natural language interactions with your data layer. Rather than prescribing a specific AI provider or implementation, this module focuses on providing flexible, reusable building blocks that can be integrated with any LLM service or framework.
+
+This module contains:
+
+1. The `HibernateAssistant` interface: to provide a simple, provider-agnostic, natural-language focused API to Hibernate ORM's persistence capabilities.
+2. Serialization utilities: to ease the use of Hibernate ORM in the context of generative AI, for example when implementing the above.
+
+No implementation is included, but the above provides the building blocks for integration with generative AI services/APIs.
+
+[[assistant-gen-ai]]
+==== Generative AI integration considerations
+
+Hibernate ORM comes with several advantages when interfacing with an LLM and accessing underlying RDBMS data, mainly:
+
+Access to data is *constrained to the mapped domain model*::
+The only tables the LLM will be able to access are the ones that have a corresponding entity class, and only columns listed as fields in your objects can be read. Custom filters and SQL restrictions can be applied to further restrict the scope of the data exposed through these tools. You don’t have to worry about creating custom database-level users or permissions only to ensure sensitive information is not exposed to AI services;
+
+Easy results consumption::
+Natively maps results to *Java objects* for direct application consumption, but can also be serialized and passed back to the model to obtain an *informed natural language response based on your existing data*;
+
+Type-safety and query validation::
+Hibernate’s query language parsing can identify the *type of query* being executed and prevent accidental data modifications when the user only meant to read data;
+
+*Fail-early* in case the generated statements are incorrect::
+Thanks to Hibernate’s advanced query validation and type-safety features, we don’t need to make a round-trip to the database before noticing a problem, increasing both reliability and overall performance. It’s also easy to understand what the problem with the generated query is thanks to clear error messages, and attempt to solve it either manually or with subsequent prompts;
+
+Bridge the gap with natural language::
+With HQL it’s easier to write more *complex queries* involving multiple entities (i.e. tables) thanks to associations, embeddable values and inheritance. LLMs have an easier time generating valid queries that provide useful information to the user when compared to plain SQL, since Hibernate's query language is closer to natural language.
+
+
+[[assistant-serialization]]
+==== Serialization Components
+
+To facilitate communication between Hibernate and LLM providers, the module includes two key Service Provider Interfaces (SPIs):
+
+`MetamodelSerializer`:: Generates a structured textual representation of your Hibernate mapping model, including entity classes, relationships, properties, and constraints. This allows the LLM to understand your domain model's structure and semantics.
+
+`ResultsSerializer`:: Converts query results and data into a structured textual format suitable for LLM consumption and interpretation. This enables the AI to reason about actual data from your database.
+
+Default JSON-based implementations of both serializers are provided, offering a ready-to-use foundation for most integration scenarios.

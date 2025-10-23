@@ -62,10 +62,10 @@ public class StrTestEntity {
 
 		StrTestEntity that = (StrTestEntity) o;
 
-		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+		if ( id != null ? !id.equals( that.getId() ) : that.getId() != null ) {
 			return false;
 		}
-		if ( str != null ? !str.equals( that.str ) : that.str != null ) {
+		if ( str != null ? !str.equals( that.getStr() ) : that.getStr() != null ) {
 			return false;
 		}
 

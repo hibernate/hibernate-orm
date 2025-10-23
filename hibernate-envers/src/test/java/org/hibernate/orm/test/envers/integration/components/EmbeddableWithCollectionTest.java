@@ -24,32 +24,30 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
 import org.hibernate.envers.AuditMappedBy;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-9108")
-public class EmbeddableWithCollectionTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {EmbeddableWithCollectionTest.Header.class, EmbeddableWithCollectionTest.Item.class})
+public class EmbeddableWithCollectionTest {
 	private Long headerId;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Header.class, Item.class };
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1
-		headerId = TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		headerId = scope.fromTransaction( entityManager -> {
 			Header h1 = new Header( "h1" );
 			h1.addItem( new Item( "h1-item0", h1 ) );
 			h1.addItem( new Item( "h1-item1", h1 ) );
@@ -58,21 +56,21 @@ public class EmbeddableWithCollectionTest extends BaseEnversJPAFunctionalTestCas
 		} );
 
 		// Revision 2
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final Header header = entityManager.find( Header.class, headerId );
 			header.addItem( new Item( "h1-item2", header ) );
 			entityManager.merge( header );
 		} );
 
 		// Revision 3
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final Header header = entityManager.find( Header.class, headerId );
 			header.removeItem( header.getEmbeddableWithCollection().getItems().get( 0 ) );
 			entityManager.merge( header );
 		} );
 
 		// Revision 4
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final Header header = entityManager.find( Header.class, headerId );
 			header.setEmbeddableWithCollection( null );
 			entityManager.merge( header );
@@ -80,30 +78,36 @@ public class EmbeddableWithCollectionTest extends BaseEnversJPAFunctionalTestCas
 	}
 
 	@Test
-	public void testRevisionCounts() {
-		assertEquals( Arrays.asList( 1, 2, 3, 4 ), getAuditReader().getRevisions( Header.class, headerId ) );
+	public void testRevisionCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1, 2, 3, 4 ), auditReader.getRevisions( Header.class, headerId ) );
+		} );
 	}
 
 	@Test
-	public void testRevisionHistory() {
-		final Header rev1 = getAuditReader().find( Header.class, headerId, 1 );
-		assertEquals( 2, rev1.getEmbeddableWithCollection().getItems().size() );
-		assertEquals( "h1-item0", rev1.getEmbeddableWithCollection().getItems().get( 0 ).getName() );
-		assertEquals( "h1-item1", rev1.getEmbeddableWithCollection().getItems().get( 1 ).getName() );
+	public void testRevisionHistory(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			final Header rev1 = auditReader.find( Header.class, headerId, 1 );
+			assertEquals( 2, rev1.getEmbeddableWithCollection().getItems().size() );
+			assertEquals( "h1-item0", rev1.getEmbeddableWithCollection().getItems().get( 0 ).getName() );
+			assertEquals( "h1-item1", rev1.getEmbeddableWithCollection().getItems().get( 1 ).getName() );
 
-		final Header rev2 = getAuditReader().find( Header.class, headerId, 2 );
-		assertEquals( 3, rev2.getEmbeddableWithCollection().getItems().size() );
-		assertEquals( "h1-item0", rev2.getEmbeddableWithCollection().getItems().get( 0 ).getName() );
-		assertEquals( "h1-item1", rev2.getEmbeddableWithCollection().getItems().get( 1 ).getName() );
-		assertEquals( "h1-item2", rev2.getEmbeddableWithCollection().getItems().get( 2 ).getName() );
+			final Header rev2 = auditReader.find( Header.class, headerId, 2 );
+			assertEquals( 3, rev2.getEmbeddableWithCollection().getItems().size() );
+			assertEquals( "h1-item0", rev2.getEmbeddableWithCollection().getItems().get( 0 ).getName() );
+			assertEquals( "h1-item1", rev2.getEmbeddableWithCollection().getItems().get( 1 ).getName() );
+			assertEquals( "h1-item2", rev2.getEmbeddableWithCollection().getItems().get( 2 ).getName() );
 
-		final Header rev3 = getAuditReader().find( Header.class, headerId, 3 );
-		assertEquals( 2, rev3.getEmbeddableWithCollection().getItems().size() );
-		assertEquals( "h1-item1", rev3.getEmbeddableWithCollection().getItems().get( 0 ).getName() );
-		assertEquals( "h1-item2", rev3.getEmbeddableWithCollection().getItems().get( 1 ).getName() );
+			final Header rev3 = auditReader.find( Header.class, headerId, 3 );
+			assertEquals( 2, rev3.getEmbeddableWithCollection().getItems().size() );
+			assertEquals( "h1-item1", rev3.getEmbeddableWithCollection().getItems().get( 0 ).getName() );
+			assertEquals( "h1-item2", rev3.getEmbeddableWithCollection().getItems().get( 1 ).getName() );
 
-		final Header rev4 = getAuditReader().find( Header.class, headerId, 4 );
-		assertEquals( 0, rev4.getEmbeddableWithCollection().getItems().size() );
+			final Header rev4 = auditReader.find( Header.class, headerId, 4 );
+			assertEquals( 0, rev4.getEmbeddableWithCollection().getItems().size() );
+		} );
 	}
 
 	@Entity(name = "Header")

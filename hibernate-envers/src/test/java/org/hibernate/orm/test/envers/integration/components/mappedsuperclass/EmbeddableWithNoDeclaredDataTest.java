@@ -5,69 +5,61 @@
 package org.hibernate.orm.test.envers.integration.components.mappedsuperclass;
 
 import java.util.List;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityTransaction;
 
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
 
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Jakob Braeuchi.
  * @author Gail Badner
  */
 @JiraKey(value = "HHH-9193")
-public class EmbeddableWithNoDeclaredDataTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {
+		EntityWithEmbeddableWithNoDeclaredData.class,
+		AbstractEmbeddable.class,
+		EmbeddableWithNoDeclaredData.class
+})
+public class EmbeddableWithNoDeclaredDataTest {
 	private long id;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { EntityWithEmbeddableWithNoDeclaredData.class, AbstractEmbeddable.class, EmbeddableWithNoDeclaredData.class };
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		this.id = scope.fromTransaction( entityManager -> {
+			EntityWithEmbeddableWithNoDeclaredData entity = new EntityWithEmbeddableWithNoDeclaredData();
+			entity.setName( "Entity 1" );
+			entity.setValue( new EmbeddableWithNoDeclaredData( 84 ) );
+			entityManager.persist( entity );
+			return entity.getId();
+		} );
 	}
 
 	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
+	public void testEmbeddableThatExtendsMappedSuperclass(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
+			EntityWithEmbeddableWithNoDeclaredData entityLoaded = entityManager.find( EntityWithEmbeddableWithNoDeclaredData.class, id );
 
-		EntityWithEmbeddableWithNoDeclaredData entity = new EntityWithEmbeddableWithNoDeclaredData();
-		entity.setName( "Entity 1" );
-		entity.setValue( new EmbeddableWithNoDeclaredData( 84 ) );
+			AuditReader reader = AuditReaderFactory.get( entityManager );
 
-		EntityTransaction tx = em.getTransaction();
-		tx.begin();
-		em.persist( entity );
-		tx.commit();
-		em.close();
+			List<Number> revs = reader.getRevisions( EntityWithEmbeddableWithNoDeclaredData.class, id );
+			assertThat( revs ).hasSize( 1 );
 
-		id = entity.getId();
-	}
+			EntityWithEmbeddableWithNoDeclaredData entityRev1 = reader.find( EntityWithEmbeddableWithNoDeclaredData.class, id, revs.get( 0 ) );
 
-	@Test
-	public void testEmbeddableThatExtendsMappedSuperclass() {
+			assertThat( entityRev1.getName() ).isEqualTo( entityLoaded.getName() );
 
-		// Reload and Compare Revision
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
-		EntityWithEmbeddableWithNoDeclaredData entityLoaded = em.find( EntityWithEmbeddableWithNoDeclaredData.class, id );
-
-		AuditReader reader = AuditReaderFactory.get( em );
-
-		List<Number> revs = reader.getRevisions( EntityWithEmbeddableWithNoDeclaredData.class, id );
-		Assert.assertEquals( 1, revs.size() );
-
-		EntityWithEmbeddableWithNoDeclaredData entityRev1 = reader.find( EntityWithEmbeddableWithNoDeclaredData.class, id, revs.get( 0 ) );
-
-		em.getTransaction().commit();
-		Assert.assertEquals( entityLoaded.getName(), entityRev1.getName() );
-
-		// value should be null because there is no data in EmbeddableWithNoDeclaredData
-		// and the fields in AbstractEmbeddable should not be audited.
-		Assert.assertNull( entityRev1.getValue() );
+			// value should be null because there is no data in EmbeddableWithNoDeclaredData
+			// and the fields in AbstractEmbeddable should not be audited.
+			assertThat( entityRev1.getValue() ).isNull();
+		} );
 	}
 }

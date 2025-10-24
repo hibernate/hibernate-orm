@@ -86,11 +86,14 @@ public class JpaComplianceTests {
 						.applySetting( AvailableSettings.JPA_COMPLIANCE, true )
 						.build(),
 				(serviceRegistryScope) -> {
-					final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) new MetadataSources( serviceRegistryScope.getRegistry() )
+					try (final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) new MetadataSources(
+							serviceRegistryScope.getRegistry() )
 							.buildMetadata()
-							.buildSessionFactory();
-					final JpaCompliance jpaCompliance = sessionFactory.getSessionFactoryOptions().getJpaCompliance();
-					assertAll( jpaCompliance, true );
+							.buildSessionFactory()) {
+						final JpaCompliance jpaCompliance = sessionFactory.getSessionFactoryOptions()
+								.getJpaCompliance();
+						assertAll( jpaCompliance, true );
+					}
 				}
 		);
 		// MutableJpaComplianceImpl defaults its values based on the passed
@@ -107,11 +110,14 @@ public class JpaComplianceTests {
 						.applySetting( AvailableSettings.JPA_COMPLIANCE, false )
 						.build(),
 				(serviceRegistryScope) -> {
-					final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) new MetadataSources( serviceRegistryScope.getRegistry() )
+					try (final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) new MetadataSources(
+							serviceRegistryScope.getRegistry() )
 							.buildMetadata()
-							.buildSessionFactory();
-					final JpaCompliance jpaCompliance = sessionFactory.getSessionFactoryOptions().getJpaCompliance();
-					assertAll( jpaCompliance, false );
+							.buildSessionFactory()) {
+						final JpaCompliance jpaCompliance = sessionFactory.getSessionFactoryOptions()
+								.getJpaCompliance();
+						assertAll( jpaCompliance, false );
+					}
 				}
 		);
 

@@ -6,7 +6,6 @@ package org.hibernate.orm.test.associations;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -17,35 +16,38 @@ import jakarta.persistence.ManyToMany;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Vlad Mihalcea
  */
-public class ManyToManyBidirectionalTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				ManyToManyBidirectionalTest.Person.class,
+				ManyToManyBidirectionalTest.Address.class,
+		},
+		settingProviders = @SettingProvider(
+				settingName = DEFAULT_LIST_SEMANTICS,
+				provider = ManyToManyBidirectionalTest.CollectionClassificationProvider.class
+		)
+)
+public class ManyToManyBidirectionalTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				Address.class,
-		};
-	}
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		options.put( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
+	public static class CollectionClassificationProvider implements SettingProvider.Provider<CollectionClassification> {
+		@Override
+		public CollectionClassification getSetting() {
+			return CollectionClassification.BAG;
+		}
 	}
 
 	@Test
-	public void testLifecycle() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			//tag::associations-many-to-many-bidirectional-lifecycle-example[]
 			Person person1 = new Person("ABC-123");
 			Person person2 = new Person("DEF-456");

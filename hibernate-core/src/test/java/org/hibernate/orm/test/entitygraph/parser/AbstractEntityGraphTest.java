@@ -4,30 +4,29 @@
  */
 package org.hibernate.orm.test.entitygraph.parser;
 
-import jakarta.persistence.EntityManager;
-
 import org.hibernate.graph.GraphParser;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 
-public abstract class AbstractEntityGraphTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				GraphParsingTestEntity.class,
+				GraphParsingTestSubEntity.class
+		}
+)
+public abstract class AbstractEntityGraphTest {
 
-	public AbstractEntityGraphTest() {
-		super();
+	protected <T> RootGraphImplementor<T> parseGraph(Class<T> entityType, String graphString, EntityManagerFactoryScope scope) {
+		return scope.fromEntityManager(
+				entityManager -> {
+					return (RootGraphImplementor<T>) GraphParser.parse( entityType, graphString, entityManager );
+				}
+		);
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{ GraphParsingTestEntity.class, GraphParsingTestSubEntity.class };
-	}
-
-	protected <T> RootGraphImplementor<T> parseGraph(Class<T> entityType, String graphString) {
-		EntityManager entityManager = getOrCreateEntityManager();
-		return (RootGraphImplementor<T>) GraphParser.parse( entityType, graphString, entityManager );
-	}
-
-	protected <T> RootGraphImplementor<GraphParsingTestEntity> parseGraph(String graphString) {
-		return parseGraph( GraphParsingTestEntity.class, graphString );
+	protected <T> RootGraphImplementor<GraphParsingTestEntity> parseGraph(String graphString, EntityManagerFactoryScope scope) {
+		return parseGraph( GraphParsingTestEntity.class, graphString, scope );
 	}
 
 }

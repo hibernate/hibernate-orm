@@ -25,11 +25,10 @@ import org.hibernate.annotations.Cascade;
  */
 @Entity()
 @Table(name="`Employer`")
-@SuppressWarnings({"serial", "unchecked"})
 public class Employer implements Serializable {
 	private Integer id;
-	private Collection employees;
-	private List contractors;
+	private Collection<Employee> employees;
+	private List<Contractor> contractors;
 
 	@ManyToMany(
 			targetEntity = Contractor.class,
@@ -42,11 +41,11 @@ public class Employer implements Serializable {
 	)
 	@Cascade({org.hibernate.annotations.CascadeType.PERSIST, org.hibernate.annotations.CascadeType.MERGE})
 	@OrderBy("name desc")
-	public List getContractors() {
+	public List<Contractor> getContractors() {
 		return contractors;
 	}
 
-	public void setContractors(List contractors) {
+	public void setContractors(List<Contractor> contractors) {
 		this.contractors = contractors;
 	}
 
@@ -61,7 +60,7 @@ public class Employer implements Serializable {
 	)
 	@Cascade({org.hibernate.annotations.CascadeType.PERSIST, org.hibernate.annotations.CascadeType.MERGE})
 	@OrderBy("name asc")
-	public Collection getEmployees() {
+	public Collection<Employee> getEmployees() {
 		return employees;
 	}
 
@@ -71,7 +70,7 @@ public class Employer implements Serializable {
 		return id;
 	}
 
-	public void setEmployees(Collection set) {
+	public void setEmployees(Collection<Employee> set) {
 		employees = set;
 	}
 

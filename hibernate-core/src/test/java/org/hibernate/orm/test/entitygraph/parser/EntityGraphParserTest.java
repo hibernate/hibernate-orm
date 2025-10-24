@@ -4,25 +4,21 @@
  */
 package org.hibernate.orm.test.entitygraph.parser;
 
-import java.util.List;
-import java.util.Map;
-
 import jakarta.persistence.AttributeNode;
 import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.Subgraph;
-
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.graph.GraphParser;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Assert;
-import org.junit.Test;
+import java.util.List;
+import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * A unit test of {@link GraphParser}.
@@ -32,33 +28,35 @@ import static org.junit.Assert.assertNotNull;
 public class EntityGraphParserTest extends AbstractEntityGraphTest {
 
 	@Test
-	public void testNullParsing() {
-		EntityGraph<GraphParsingTestEntity> graph = parseGraph( (String) null );
-		Assert.assertNull( graph );
+	public void testNullParsing(EntityManagerFactoryScope scope) {
+		EntityGraph<GraphParsingTestEntity> graph = parseGraph( null, scope );
+		assertThat( graph ).isNull();
 	}
 
 	@Test
-	public void testOneBasicAttributeParsing() {
-		EntityGraph<GraphParsingTestEntity> graph = parseGraph( "name" );
+	public void testOneBasicAttributeParsing(EntityManagerFactoryScope scope) {
+		EntityGraph<GraphParsingTestEntity> graph = parseGraph( "name", scope );
 		AssertionHelper.assertBasicAttributes( graph, "name" );
 	}
 
 	@Test
-	public void testTwoBasicAttributesParsing() {
-		EntityGraph<GraphParsingTestEntity> graph = parseGraph( "name, description" );
+	public void testTwoBasicAttributesParsing(EntityManagerFactoryScope scope) {
+		EntityGraph<GraphParsingTestEntity> graph = parseGraph( "name, description", scope );
 		AssertionHelper.assertBasicAttributes( graph, "name", "description" );
 	}
 
 	@Test
-	public void testLinkParsing() {
-		EntityGraph<GraphParsingTestEntity> graph = parseGraph( "linkToOne(name, description)" );
-		assertNotNull( graph );
+	public void testLinkParsing(EntityManagerFactoryScope scope) {
+		EntityGraph<GraphParsingTestEntity> graph = parseGraph( "linkToOne(name, description)", scope );
+		assertThat( graph ).isNotNull();
+
 		List<AttributeNode<?>> attrs = graph.getAttributeNodes();
-		assertNotNull( attrs );
-		assertEquals( 1, attrs.size() );
+		assertThat( attrs ).isNotNull();
+
+		assertThat( attrs.size() ).isEqualTo( 1 );
 		AttributeNode<?> node = attrs.get( 0 );
-		assertNotNull( node );
-		assertEquals( "linkToOne", node.getAttributeName() );
+		assertThat( node ).isNotNull();
+		assertThat( node.getAttributeName() ).isEqualTo( "linkToOne" );
 		AssertionHelper.assertNullOrEmpty( node.getKeySubgraphs() );
 		@SuppressWarnings("rawtypes")
 		Map<Class, Subgraph> sub = node.getSubgraphs();
@@ -66,15 +64,15 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 	}
 
 	@Test
-	public void testMapKeyParsing() {
-		EntityGraph<GraphParsingTestEntity> graph = parseGraph( "map.key(name, description)" );
-		assertNotNull( graph );
+	public void testMapKeyParsing(EntityManagerFactoryScope scope) {
+		EntityGraph<GraphParsingTestEntity> graph = parseGraph( "map.key(name, description)", scope );
+		assertThat( graph ).isNotNull();
 		List<AttributeNode<?>> attrs = graph.getAttributeNodes();
-		assertNotNull( attrs );
-		assertEquals( 1, attrs.size() );
+		assertThat( attrs ).isNotNull();
+		assertThat( attrs.size() ).isEqualTo( 1 );
 		AttributeNode<?> node = attrs.get( 0 );
-		assertNotNull( node );
-		assertEquals( "map", node.getAttributeName() );
+		assertThat( node ).isNotNull();
+		assertThat( node.getAttributeName() ).isEqualTo( "map" );
 		AssertionHelper.assertNullOrEmpty( node.getSubgraphs() );
 		@SuppressWarnings("rawtypes")
 		Map<Class, Subgraph> sub = node.getKeySubgraphs();
@@ -82,15 +80,15 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 	}
 
 	@Test
-	public void testMapValueParsing() {
-		EntityGraph<GraphParsingTestEntity> graph = parseGraph( "map.value(name, description)" );
-		assertNotNull( graph );
+	public void testMapValueParsing(EntityManagerFactoryScope scope) {
+		EntityGraph<GraphParsingTestEntity> graph = parseGraph( "map.value(name, description)", scope );
+		assertThat( graph ).isNotNull();
 		List<AttributeNode<?>> attrs = graph.getAttributeNodes();
-		assertNotNull( attrs );
-		assertEquals( 1, attrs.size() );
+		assertThat( attrs ).isNotNull();
+		assertThat( attrs.size() ).isEqualTo( 1 );
 		AttributeNode<?> node = attrs.get( 0 );
-		assertNotNull( node );
-		assertEquals( "map", node.getAttributeName() );
+		assertThat( node ).isNotNull();
+		assertThat( node.getAttributeName() ).isEqualTo( "map" );
 		AssertionHelper.assertNullOrEmpty( node.getKeySubgraphs() );
 		@SuppressWarnings("rawtypes")
 		Map<Class, Subgraph> sub = node.getSubgraphs();
@@ -98,11 +96,11 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 	}
 
 	@Test
-	public void testMixParsingWithMaps() {
+	public void testMixParsingWithMaps(EntityManagerFactoryScope scope) {
 		String g = " name , linkToOne ( description, map . key ( name ) , map . value ( description ) , name ) , description , map . key ( name , description ) , map . value ( description ) ";
 		g = g.replace( " ", "       " );
 		for ( int i = 1; i <= 2; i++, g = g.replace( " ", "" ) ) {
-			EntityGraph<GraphParsingTestEntity> graph = parseGraph( g );
+			EntityGraph<GraphParsingTestEntity> graph = parseGraph( g, scope );
 			AssertionHelper.assertBasicAttributes( graph, "name", "description" );
 
 			AttributeNode<?> linkToOne = AssertionHelper.getAttributeNodeByName( graph, "linkToOne", true );
@@ -140,11 +138,11 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 	}
 
 	@Test
-	public void testMixParsingWithSimplifiedMaps() {
+	public void testMixParsingWithSimplifiedMaps(EntityManagerFactoryScope scope) {
 		String g = " name , linkToOne ( description, map . key ( name )  , name ) , description , map . value ( description, name ) ";
 		g = g.replace( " ", "       " );
 		for ( int i = 1; i <= 2; i++, g = g.replace( " ", "" ) ) {
-			EntityGraph<GraphParsingTestEntity> graph = parseGraph( g );
+			EntityGraph<GraphParsingTestEntity> graph = parseGraph( g, scope );
 			AssertionHelper.assertBasicAttributes( graph, "name", "description" );
 
 			AttributeNode<?> linkToOne = AssertionHelper.getAttributeNodeByName( graph, "linkToOne", true );
@@ -172,56 +170,68 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 	}
 
 	@Test
-	public void testLinkSubtypeParsing() {
-		RootGraphImplementor<GraphParsingTestEntity> graph = parseGraph( "linkToOne(name, description), linkToOne(GraphParsingTestSubEntity: sub)" );
-		assertNotNull( graph );
+	public void testLinkSubtypeParsing(EntityManagerFactoryScope scope) {
+		RootGraphImplementor<GraphParsingTestEntity> graph = parseGraph(
+				"linkToOne(name, description), linkToOne(GraphParsingTestSubEntity: sub)", scope );
+		assertThat( graph ).isNotNull();
 
-		List<? extends AttributeNodeImplementor<?,?,?>> attrs = graph.getAttributeNodeList();
-		assertNotNull( attrs );
-		assertEquals( 1, attrs.size() );
+		List<? extends AttributeNodeImplementor<?, ?, ?>> attrs = graph.getAttributeNodeList();
+		assertThat( attrs ).isNotNull();
+		assertThat( attrs.size() ).isEqualTo( 1 );
 
-		AttributeNodeImplementor<?,?,?> linkToOneNode = attrs.get( 0 );
-		assertNotNull( linkToOneNode );
-		assertEquals( "linkToOne", linkToOneNode.getAttributeName() );
+		AttributeNodeImplementor<?, ?, ?> linkToOneNode = attrs.get( 0 );
+		assertThat( linkToOneNode ).isNotNull();
+		assertThat( linkToOneNode.getAttributeName() ).isEqualTo( "linkToOne" );
 
 		AssertionHelper.assertNullOrEmpty( linkToOneNode.getKeySubgraphs() );
 
 		final SubGraphImplementor<?> subgraph = linkToOneNode.getSubGraphs().get( GraphParsingTestSubEntity.class );
-		assertNotNull( subgraph );
+		assertThat( subgraph ).isNotNull();
 
 		AssertionHelper.assertBasicAttributes( subgraph, "sub" );
 	}
 
 	@Test
-	public void testHHH10378IsNotFixedYet() {
-		EntityManager entityManager = getOrCreateEntityManager();
-		RootGraphImplementor<GraphParsingTestEntity> graph = ( (SessionImplementor) entityManager ).createEntityGraph(
-				GraphParsingTestEntity.class );
-		final SubGraphImplementor<GraphParsingTestSubEntity> subGraph = graph.addSubGraph(
-				"linkToOne",
-				GraphParsingTestSubEntity.class
+	public void testHHH10378IsNotFixedYet(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(
+				entityManager -> {
+					RootGraphImplementor<GraphParsingTestEntity> graph = ((SessionImplementor) entityManager)
+							.createEntityGraph( GraphParsingTestEntity.class );
+					final SubGraphImplementor<GraphParsingTestSubEntity> subGraph = graph.addSubGraph(
+							"linkToOne",
+							GraphParsingTestSubEntity.class
+					);
+
+					assertThat( GraphParsingTestSubEntity.class ).isEqualTo( subGraph.getGraphedType().getJavaType() );
+
+					final AttributeNodeImplementor<?, ?, ?> subTypeAttrNode = subGraph.findOrCreateAttributeNode(
+							"sub" );
+					assert subTypeAttrNode != null;
+				}
 		);
 
-		assertEquals( subGraph.getGraphedType().getJavaType(), GraphParsingTestSubEntity.class );
-
-		final AttributeNodeImplementor<?,?,?> subTypeAttrNode = subGraph.findOrCreateAttributeNode( "sub" );
-		assert subTypeAttrNode != null;
 	}
 
 	@Test
-	public void testHHH12696MapSubgraphsKeyFirst() {
+	public void testHHH12696MapSubgraphsKeyFirst(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(
+				entityManager -> {
+					EntityGraph<GraphParsingTestEntity> graph = entityManager
+							.createEntityGraph( GraphParsingTestEntity.class );
 
-		EntityManager entityManager = getOrCreateEntityManager();
-		EntityGraph<GraphParsingTestEntity> graph = entityManager.createEntityGraph( GraphParsingTestEntity.class );
+					final String mapAttributeName = "map";
+					Subgraph<GraphParsingTestEntity> keySubgraph = graph.addKeySubgraph( mapAttributeName );
+					Subgraph<GraphParsingTestEntity> valueSubgraph = graph.addSubgraph( mapAttributeName );
 
-		final String mapAttributeName = "map";
-		Subgraph<GraphParsingTestEntity> keySubgraph = graph.addKeySubgraph( mapAttributeName );
-		Subgraph<GraphParsingTestEntity> valueSubgraph = graph.addSubgraph( mapAttributeName );
-
-		checkMapKeyAndValueSubgraphs( graph, mapAttributeName, keySubgraph, valueSubgraph );
+					checkMapKeyAndValueSubgraphs( graph, mapAttributeName, keySubgraph, valueSubgraph );
+				}
+		);
 	}
 
-	private void checkMapKeyAndValueSubgraphs(EntityGraph<GraphParsingTestEntity> graph, final String mapAttributeName, Subgraph<GraphParsingTestEntity> keySubgraph,
+	private void checkMapKeyAndValueSubgraphs(
+			EntityGraph<GraphParsingTestEntity> graph,
+			final String mapAttributeName,
+			Subgraph<GraphParsingTestEntity> keySubgraph,
 			Subgraph<GraphParsingTestEntity> valueSubgraph) {
 		int count = 0;
 		for ( AttributeNode<?> node : graph.getAttributeNodes() ) {
@@ -229,27 +239,35 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 				count++;
 				@SuppressWarnings("rawtypes")
 				Map<Class, Subgraph> keySubgraphs = node.getKeySubgraphs();
-				Assert.assertTrue( "Missing the key subgraph", !keySubgraphs.isEmpty() );
-				Assert.assertSame( keySubgraph, keySubgraphs.get( GraphParsingTestEntity.class ) );
+				assertThat( !keySubgraphs.isEmpty() )
+						.describedAs( "Missing the key subgraph" )
+						.isTrue();
+				assertThat( keySubgraphs.get( GraphParsingTestEntity.class ) ).isSameAs( keySubgraph );
 
 				@SuppressWarnings("rawtypes")
 				Map<Class, Subgraph> valueSubgraphs = node.getSubgraphs();
-				Assert.assertTrue( "Missing the value subgraph", !valueSubgraphs.isEmpty() );
-				Assert.assertSame( valueSubgraph, valueSubgraphs.get( GraphParsingTestEntity.class ) );
+				assertThat( !valueSubgraphs.isEmpty() )
+						.describedAs( "Missing the value subgraph" )
+						.isTrue();
+				assertThat( valueSubgraphs.get( GraphParsingTestEntity.class ) ).isSameAs( valueSubgraph );
 			}
 		}
-		assertEquals( 1, count );
+		assertThat( count ).isEqualTo( 1 );
 	}
 
 	@Test
-	public void testHHH12696MapSubgraphsValueFirst() {
-		EntityManager entityManager = getOrCreateEntityManager();
-		EntityGraph<GraphParsingTestEntity> graph = entityManager.createEntityGraph( GraphParsingTestEntity.class );
+	public void testHHH12696MapSubgraphsValueFirst(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(
+				entityManager -> {
+					EntityGraph<GraphParsingTestEntity> graph = entityManager
+							.createEntityGraph( GraphParsingTestEntity.class );
 
-		final String mapAttributeName = "map";
-		Subgraph<GraphParsingTestEntity> valueSubgraph = graph.addSubgraph( mapAttributeName );
-		Subgraph<GraphParsingTestEntity> keySubgraph = graph.addKeySubgraph( mapAttributeName );
+					final String mapAttributeName = "map";
+					Subgraph<GraphParsingTestEntity> valueSubgraph = graph.addSubgraph( mapAttributeName );
+					Subgraph<GraphParsingTestEntity> keySubgraph = graph.addKeySubgraph( mapAttributeName );
 
-		checkMapKeyAndValueSubgraphs( graph, mapAttributeName, keySubgraph, valueSubgraph );
+					checkMapKeyAndValueSubgraphs( graph, mapAttributeName, keySubgraph, valueSubgraph );
+				}
+		);
 	}
 }

@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.SortedSet;
@@ -31,7 +32,7 @@ public class Customer implements Serializable {
 	Long id;
 	String name;
 	SortedSet<Ticket> tickets;
-	Collection discountTickets;
+	Collection<Discount> discountTickets;
 	Passport passport;
 
 	public Customer() {
@@ -69,11 +70,11 @@ public class Customer implements Serializable {
 	@OneToMany(targetEntity = Discount.class,
 			cascade = CascadeType.ALL, mappedBy = "owner")
 	@Cascade({ALL})
-	public Collection getDiscountTickets() {
+	public Collection<Discount> getDiscountTickets() {
 		return discountTickets;
 	}
 
-	public void setDiscountTickets(Collection collection) {
+	public void setDiscountTickets(Collection<Discount> collection) {
 		discountTickets = collection;
 	}
 

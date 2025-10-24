@@ -7,11 +7,13 @@ package org.hibernate.orm.test.entitygraph.parser;
 import jakarta.persistence.AttributeNode;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.Subgraph;
-import org.junit.Assert;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
@@ -19,33 +21,33 @@ import java.util.Map;
 public class AssertionHelper {
 	static <C extends Collection<?>> void assertNullOrEmpty(C collection) {
 		if ( collection != null ) {
-			Assert.assertEquals( 0, collection.size() );
+			assertThat( collection ).hasSize( 0 );
 		}
 	}
 
 	public static <M extends Map<?, ?>> void assertNullOrEmpty(M map) {
 		if ( map != null ) {
-			Assert.assertEquals( 0, map.size() );
+			assertThat( map.size() ).isEqualTo( 0 );
 		}
 	}
 
 	public static void assertBasicAttributes(EntityGraph<?> graph, String... names) {
-		Assert.assertNotNull( graph );
+		assertThat( graph ).isNotNull();
 		assertBasicAttributes( graph.getAttributeNodes(), names );
 	}
 
 	public static void assertBasicAttributes(Subgraph<?> graph, String... names) {
-		Assert.assertNotNull( graph );
+		assertThat( graph ).isNotNull();
 		assertBasicAttributes( graph.getAttributeNodes(), names );
 	}
 
 	public static void assertBasicAttributes(List<AttributeNode<?>> attrs, String... names) {
-		if ( ( names == null ) || ( names.length == 0 ) ) {
+		if ( (names == null) || (names.length == 0) ) {
 			assertNullOrEmpty( attrs );
 		}
 		else {
-			Assert.assertNotNull( attrs );
-			Assert.assertTrue( names.length <= attrs.size() );
+			assertThat( attrs ).isNotNull();
+			assertThat( names.length ).isLessThanOrEqualTo( attrs.size() );
 
 			for ( String name : names ) {
 				AttributeNode<?> node = null;
@@ -55,7 +57,7 @@ public class AssertionHelper {
 						break;
 					}
 				}
-				Assert.assertNotNull( node );
+				assertThat( node ).isNotNull();
 				assertNullOrEmpty( node.getKeySubgraphs() );
 				assertNullOrEmpty( node.getSubgraphs() );
 			}
@@ -72,11 +74,13 @@ public class AssertionHelper {
 
 	public static AttributeNode<?> getAttributeNodeByName(List<AttributeNode<?>> attrs, String name, boolean required) {
 		for ( AttributeNode<?> attr : attrs ) {
-			if ( name.equals( attr.getAttributeName() ) )
+			if ( name.equals( attr.getAttributeName() ) ) {
 				return attr;
+			}
 		}
-		if ( required )
-			Assert.fail( "Required attribute not found." );
+		if ( required ) {
+			fail( "Required attribute not found." );
+		}
 		return null;
 	}
 }

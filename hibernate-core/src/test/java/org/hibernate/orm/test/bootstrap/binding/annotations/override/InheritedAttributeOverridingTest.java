@@ -14,25 +14,26 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Steve Ebersole
  */
-public class InheritedAttributeOverridingTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class InheritedAttributeOverridingTest {
 	private StandardServiceRegistry standardServiceRegistry;
 
-	@Before
+	@BeforeEach
 	public void buildServiceRegistry() {
 		standardServiceRegistry = ServiceRegistryUtil.serviceRegistry();
 	}
 
-	@After
+	@AfterEach
 	public void releaseServiceRegistry() {
 		if ( standardServiceRegistry != null ) {
 			StandardServiceRegistryBuilder.destroy( standardServiceRegistry );

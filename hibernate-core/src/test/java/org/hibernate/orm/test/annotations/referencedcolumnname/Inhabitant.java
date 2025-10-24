@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.referencedcolumnname;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -18,7 +19,7 @@ import jakarta.persistence.ManyToMany;
 public class Inhabitant implements Serializable {
 	private Integer id;
 	private String name;
-	private Set<House> livesIn = new HashSet<House>();
+	private Set<House> livesIn = new HashSet<>();
 
 	@Id
 	@GeneratedValue
@@ -49,13 +50,9 @@ public class Inhabitant implements Serializable {
 
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
-		if ( !( o instanceof Inhabitant ) ) return false;
+		if ( !(o instanceof Inhabitant inhabitant) ) return false;
 
-		final Inhabitant inhabitant = (Inhabitant) o;
-
-		if ( name != null ? !name.equals( inhabitant.name ) : inhabitant.name != null ) return false;
-
-		return true;
+		return name != null ? name.equals( inhabitant.name ) : inhabitant.name == null;
 	}
 
 	public int hashCode() {

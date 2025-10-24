@@ -4,19 +4,21 @@
  */
 package org.hibernate.orm.test.bootstrap.spi.metadatabuildercontributor;
 
+import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.dialect.H2Dialect;
-
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
+
 
 /**
  * @author Vlad Mihalcea
  */
 @RequiresDialect(H2Dialect.class)
-@JiraKey( value = "HHH-12589" )
+@JiraKey(value = "HHH-12589")
 public class SqlFunctionMetadataBuilderContributorIllegalArgumentTest
 		extends AbstractSqlFunctionMetadataBuilderContributorTest {
 
@@ -26,23 +28,25 @@ public class SqlFunctionMetadataBuilderContributorIllegalArgumentTest
 	}
 
 	@Override
-	public void buildEntityManagerFactory() {
+	public EntityManagerFactory produceEntityManagerFactory() {
+		EntityManagerFactory entityManagerFactory = null;
 		try {
-			super.buildEntityManagerFactory();
-
-			fail("Should throw exception!");
+			entityManagerFactory = super.produceEntityManagerFactory();
+			fail( "Should throw exception!" );
 		}
 		catch (IllegalArgumentException e) {
-			assertTrue( e.getMessage().startsWith( "The provided hibernate.metadata_builder_contributor setting value" ) );
+			assertThat( e.getMessage() ).startsWith(
+					"The provided hibernate.metadata_builder_contributor setting value" );
 		}
+		return entityManagerFactory;
 	}
 
 	@Override
+	@Test
 	public void test() {
 		try {
 			super.test();
-
-			fail("Should throw exception!");
+			fail( "Should throw exception!" );
 		}
 		catch (Exception expected) {
 		}

@@ -4,45 +4,57 @@
  */
 package org.hibernate.orm.test.annotations.strategy;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl;
-
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Emmanuel Bernard
  */
-public class StrategyTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				Storm.class
+		}
+)
+@SessionFactory
+@ServiceRegistry(
+		settingProviders = @SettingProvider(
+				settingName = AvailableSettings.IMPLICIT_NAMING_STRATEGY,
+				provider = StrategyTest.ImplicitNamyStrategyProvider.class
+		)
+)
+public class StrategyTest {
+
+	public static class ImplicitNamyStrategyProvider implements SettingProvider.Provider<ImplicitNamingStrategy> {
+		@Override
+		public ImplicitNamingStrategy getSetting() {
+			return ImplicitNamingStrategyComponentPathImpl.INSTANCE;
+		}
+	}
+
+
 	@Test
-	public void testComponentSafeStrategy() throws Exception {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		Location start = new Location();
-		start.setCity( "Paris" );
-		start.setCountry( "France" );
-		Location end = new Location();
-		end.setCity( "London" );
-		end.setCountry( "UK" );
-		Storm storm = new Storm();
-		storm.setEnd( end );
-		storm.setStart( start );
-		s.persist( storm );
-		s.flush();
-		tx.rollback();
-		s.close();
-	}
-
-	@Override
-	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
-		super.configureMetadataBuilder( metadataBuilder );
-		metadataBuilder.applyImplicitNamingStrategy( ImplicitNamingStrategyComponentPathImpl.INSTANCE );
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Storm.class };
+	public void testComponentSafeStrategy(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Location start = new Location();
+					start.setCity( "Paris" );
+					start.setCountry( "France" );
+					Location end = new Location();
+					end.setCity( "London" );
+					end.setCountry( "UK" );
+					Storm storm = new Storm();
+					storm.setEnd( end );
+					storm.setStart( start );
+					session.persist( storm );
+					session.flush();
+				}
+		);
 	}
 }

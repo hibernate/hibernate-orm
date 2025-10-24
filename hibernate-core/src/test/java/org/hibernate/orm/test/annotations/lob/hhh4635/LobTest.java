@@ -5,12 +5,14 @@
 package org.hibernate.orm.test.annotations.lob.hhh4635;
 
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.query.Query;
-import org.hibernate.Session;
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
+import java.util.logging.Logger;
 
 import static org.hibernate.Hibernate.getLobHelper;
 
@@ -21,26 +23,28 @@ import static org.hibernate.Hibernate.getLobHelper;
  */
 @RequiresDialect( OracleDialect.class )
 @JiraKey( value = "HHH-4635" )
-public class LobTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				LobTestEntity.class
+		}
+)
+@SessionFactory
+public class LobTest  {
+	static final Logger LOG = Logger.getLogger( LobTest.class.getName() );
 
 	@Test
-	public void hibernateTest() {
-		printConfig();
+	public void hibernateTest(SessionFactoryScope scope) {
+		printConfig(scope);
 
-		Session session = openSession();
-		session.beginTransaction();
-		LobTestEntity entity = new LobTestEntity();
-		entity.setId(1L);
-		entity.setLobValue(getLobHelper().createBlob(new byte[9999]));
-		entity.setQwerty(randomString(4000));
-		session.persist(entity);
-		session.getTransaction().commit();
-		session.close();
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { LobTestEntity.class };
+		scope.inTransaction(
+				session -> {
+					LobTestEntity entity = new LobTestEntity();
+					entity.setId( 1L );
+					entity.setLobValue( getLobHelper().createBlob( new byte[9999] ) );
+					entity.setQwerty( randomString( 4000 ) );
+					session.persist( entity );
+				}
+		);
 	}
 
 	private String randomString( int count ) {
@@ -51,16 +55,14 @@ public class LobTest extends BaseCoreFunctionalTestCase {
 		return buffer.toString();
 	}
 
-	private void printConfig() {
+	private void printConfig(SessionFactoryScope scope) {
 		String sql = "select value from V$NLS_PARAMETERS where parameter = 'NLS_CHARACTERSET'";
 
-		Session session = openSession();
-		session.beginTransaction();
-		Query query = session.createNativeQuery( sql );
-
-		String s = (String) query.uniqueResult();
-		log.debug( "Using Oracle charset " + s );
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction(
+				session -> {
+					String s = session.createNativeQuery( sql, String.class ).uniqueResult();
+					LOG.info( "Using Oracle charset " + s );
+				}
+		);
 	}
 }

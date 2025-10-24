@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.manytomany;
+
 import java.io.Serializable;
 import java.util.Collection;
 import jakarta.persistence.CascadeType;
@@ -24,7 +25,6 @@ import org.hibernate.annotations.Cascade;
  */
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-@SuppressWarnings("serial")
 public class Employee implements Serializable {
 	private Integer id;
 	private Collection<Employer> employers;

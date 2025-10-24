@@ -11,20 +11,21 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.internal.util.ReaderInputStream;
 
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Koen Aers
  */
 @JiraKey( value = "HHH-10223" )
 @RequiresDialect( H2Dialect.class )
-public class NamedQueryTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class NamedQueryTest {
 
-	private static String NAMED_QUERY_HBM_XML =
+	private static final String NAMED_QUERY_HBM_XML =
 		"<hibernate-mapping package='org.hibernate.orm.test.hbm.query'> "+
 		"	<class name='NamedQueryTest$Bar'>                   "+
 		"		<id name='id'>                                  "+

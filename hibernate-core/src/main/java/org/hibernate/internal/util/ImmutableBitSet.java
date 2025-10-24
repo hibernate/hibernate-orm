@@ -4,6 +4,8 @@
  */
 package org.hibernate.internal.util;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.util.Arrays;
 import java.util.BitSet;
 
@@ -24,6 +26,10 @@ public class ImmutableBitSet {
 
 	private ImmutableBitSet(long[] words) {
 		this.words = words;
+	}
+
+	public static ImmutableBitSet valueOfOrEmpty(@Nullable BitSet bitSet) {
+		return bitSet == null ? EMPTY : valueOf( bitSet );
 	}
 
 	public static ImmutableBitSet valueOf(BitSet bitSet) {
@@ -70,4 +76,7 @@ public class ImmutableBitSet {
 		return Arrays.equals( words, set.words );
 	}
 
+	public BitSet toBitSet() {
+		return BitSet.valueOf( words );
+	}
 }

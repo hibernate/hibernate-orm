@@ -1,0 +1,19 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+
+plugins {
+    id "local.publishing-java-module"
+    id "local.publishing-group-relocation"
+}
+
+description = 'Tools to aid Hibernate developers through natural language, leveraging LLMs and generative AI functionalities.'
+
+dependencies {
+    api project( ':hibernate-core' )
+
+    testImplementation project( ':hibernate-testing' )
+    testImplementation project( path: ':hibernate-core', configuration: 'tests' )
+    testImplementation libs.jackson
+}

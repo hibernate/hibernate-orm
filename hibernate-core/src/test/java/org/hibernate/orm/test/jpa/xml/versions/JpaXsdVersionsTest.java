@@ -4,12 +4,6 @@
  */
 package org.hibernate.orm.test.jpa.xml.versions;
 
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.SharedCacheMode;
@@ -17,17 +11,24 @@ import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.ClassTransformer;
 import jakarta.persistence.spi.PersistenceUnitInfo;
 import jakarta.persistence.spi.PersistenceUnitTransactionType;
-import javax.sql.DataSource;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.InvalidMappingException;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.orm.test.jpa.pack.defaultpar.Lighter;
 import org.hibernate.orm.test.jpa.pack.defaultpar_1_0.Lighter1;
-
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Assert;
-import org.junit.Test;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+import javax.sql.DataSource;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * "smoke" tests for JEE bootstrapping of HEM via a {@link PersistenceUnitInfo}
@@ -87,7 +88,7 @@ public class JpaXsdVersionsTest {
 				.addMappingFileName( "org/hibernate/orm/test/jpa/xml/versions/invalid-orm-1_0.xml" );
 		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
 		try ( EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, getDefaultPuConfig() ) ) {
-			Assert.fail("expecting 'invalid content' error");
+			Assertions.fail("expecting 'invalid content' error");
 		}
 		catch (InvalidMappingException | AnnotationException expected) {
 			// expected condition

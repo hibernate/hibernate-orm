@@ -65,7 +65,7 @@ public class JtaReusingEntityTransactionTest {
 
 		scope.inTransaction(
 				entityManager -> {
-					List<TestEntity> results = entityManager.createQuery( "from TestEntity" ).getResultList();
+					List<TestEntity> results = entityManager.createQuery( "from TestEntity", TestEntity.class ).getResultList();
 					assertThat( results.size(), is( 2 ) );
 				}
 		);

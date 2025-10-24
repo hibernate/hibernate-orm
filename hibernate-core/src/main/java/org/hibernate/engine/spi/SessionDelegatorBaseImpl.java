@@ -75,6 +75,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /**
  * A wrapper class that delegates all method invocations to a delegate instance of
@@ -515,6 +516,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public RootGraphImplementor<?> getEntityGraph(String graphName) {
 		return delegate.getEntityGraph( graphName );
+	}
+
+	@Override
+	public <T extends ExtensionStorage> T getExtensionStorage(Class<T> extension, Supplier<T> createIfMissing) {
+		return delegate.getExtensionStorage( extension, createIfMissing );
 	}
 
 	@Override

@@ -5,35 +5,19 @@
 package org.hibernate.orm.test.envers.integration.collection.norevision;
 
 import java.util.List;
-import java.util.Map;
 
-import org.hibernate.Session;
-import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-
-import org.junit.Test;
-
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.jupiter.api.Test;
 
-public abstract class AbstractCollectionChangeTest extends BaseEnversFunctionalTestCase {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public abstract class AbstractCollectionChangeTest {
 	protected Integer personId;
 	protected Integer parentId;
 	protected Integer houseId;
-
-	@Override
-	protected void addSettings(Map settings) {
-		super.addSettings( settings );
-
-		settings.put( EnversSettings.REVISION_ON_COLLECTION_CHANGE, getCollectionChangeValue() );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {Person.class, Name.class, Parent.class, Child.class, House.class};
-	}
-
-	protected abstract String getCollectionChangeValue();
 
 	protected abstract List<Integer> getExpectedPersonRevisions();
 
@@ -41,89 +25,98 @@ public abstract class AbstractCollectionChangeTest extends BaseEnversFunctionalT
 
 	protected abstract List<Integer> getExpectedHouseRevisions();
 
-	@Test
-	@Priority(10)
-	public void initData() {
-		Session session = openSession();
-
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Rev 1
-		session.getTransaction().begin();
-		Person p = new Person();
-		Name n = new Name();
-		n.setName( "name1" );
-		p.getNames().add( n );
-		session.persist( p );
-		session.getTransaction().commit();
+		scope.inTransaction( em -> {
+			Person p = new Person();
+			Name n = new Name();
+			n.setName( "name1" );
+			p.getNames().add( n );
+			em.persist( p );
+			personId = p.getId();
+		} );
 
 		// Rev 2
-		session.getTransaction().begin();
-		n.setName( "Changed name" );
-		session.merge( p );
-		session.getTransaction().commit();
+		scope.inTransaction( em -> {
+			Person p = em.find( Person.class, personId );
+			Name n = p.getNames().iterator().next();
+			n.setName( "Changed name" );
+			em.merge( p );
+		} );
 
 		// Rev 3
-		session.getTransaction().begin();
-		Name n2 = new Name();
-		n2.setName( "name2" );
-		p.getNames().add( n2 );
-		session.getTransaction().commit();
-
-		personId = p.getId();
+		scope.inTransaction( em -> {
+			Person p = em.find( Person.class, personId );
+			Name n2 = new Name();
+			n2.setName( "name2" );
+			p.getNames().add( n2 );
+		} );
 
 		// Rev 4
-		session.getTransaction().begin();
-		Child child1 = new Child();
-		Parent parent = new Parent();
-		parent.setName( "P1" );
-		child1.setParent( parent );
-		parent.getChildren().add( child1 );
-		session.persist( child1 );
-		session.persist( parent );
-		session.getTransaction().commit();
+		scope.inTransaction( em -> {
+			Child child1 = new Child();
+			Parent parent = new Parent();
+			parent.setName( "P1" );
+			child1.setParent( parent );
+			parent.getChildren().add( child1 );
+			em.persist( child1 );
+			em.persist( parent );
+			parentId = parent.getId();
+		} );
 
 		// Rev 5
-		session.getTransaction().begin();
-		Child child2 = new Child();
-		parent.getChildren().add( child2 );
-		child2.setParent( parent );
-		session.persist( child2 );
-		session.persist( parent );
-		session.getTransaction().commit();
-
-		parentId = parent.getId();
+		scope.inTransaction( em -> {
+			Parent parent = em.find( Parent.class, parentId );
+			Child child2 = new Child();
+			parent.getChildren().add( child2 );
+			child2.setParent( parent );
+			em.persist( child2 );
+			em.persist( parent );
+		} );
 
 		// Rev 6
-		session.getTransaction().begin();
-		House house = new House();
-		house.getColors().add( "Red" );
-		session.persist( house );
-		session.getTransaction().commit();
+		scope.inTransaction( em -> {
+			House house = new House();
+			house.getColors().add( "Red" );
+			em.persist( house );
+			houseId = house.getId();
+		} );
 
 		// Rev 7
-		session.getTransaction().begin();
-		house.getColors().add( "Blue" );
-		session.merge( house );
-		session.getTransaction().commit();
-
-		houseId = house.getId();
-
-		session.close();
+		scope.inTransaction( em -> {
+			House house = em.find( House.class, houseId );
+			house.getColors().add( "Blue" );
+			em.merge( house );
+		} );
 	}
 
 	@Test
-	public void testPersonRevisionCount() {
-		assert getAuditReader().getRevisions( Person.class, personId ).equals( getExpectedPersonRevisions() );
-	}
-
-	@Test
-	@JiraKey(value = "HHH-10201")
-	public void testParentRevisionCount() {
-		assert getAuditReader().getRevisions( Parent.class, parentId ).equals( getExpectedParentRevisions() );
+	public void testPersonRevisionCount(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( getExpectedPersonRevisions(),
+					auditReader.getRevisions( Person.class, personId ) );
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-10201")
-	public void testHouseRevisionCount() {
-		assert getAuditReader().getRevisions( House.class, houseId ).equals( getExpectedHouseRevisions() );
+	public void testParentRevisionCount(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( getExpectedParentRevisions(),
+					auditReader.getRevisions( Parent.class, parentId ) );
+		} );
+	}
+
+	@Test
+	@JiraKey(value = "HHH-10201")
+	public void testHouseRevisionCount(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( getExpectedHouseRevisions(),
+					auditReader.getRevisions( House.class, houseId ) );
+		} );
 	}
 }

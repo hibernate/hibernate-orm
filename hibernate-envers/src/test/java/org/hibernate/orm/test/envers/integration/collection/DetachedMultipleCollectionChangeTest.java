@@ -4,33 +4,31 @@
  */
 package org.hibernate.orm.test.envers.integration.collection;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
-import jakarta.transaction.Status;
-import jakarta.transaction.TransactionManager;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.collection.MultipleCollectionEntity;
 import org.hibernate.orm.test.envers.entities.collection.MultipleCollectionRefEntity1;
 import org.hibernate.orm.test.envers.entities.collection.MultipleCollectionRefEntity2;
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.jta.TestingJtaBootstrap;
-import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Test the audit history of a detached entity with multiple collections that is
@@ -39,12 +37,17 @@ import static org.junit.Assert.assertNotNull;
  * @author Erik-Berndt Scheper
  */
 @JiraKey(value = "HHH-6349")
-@SkipForDialect(value = OracleDialect.class,
-		comment = "Oracle does not support identity key generation")
-@SkipForDialect(value = AltibaseDialect.class,
-		comment = "Altibase does not support identity key generation")
-public class DetachedMultipleCollectionChangeTest extends BaseEnversJPAFunctionalTestCase {
-	private TransactionManager tm = null;
+@SkipForDialect(dialectClass = OracleDialect.class,
+		reason = "Oracle does not support identity key generation")
+@SkipForDialect(dialectClass = AltibaseDialect.class,
+		reason = "Altibase does not support identity key generation")
+@EnversTest
+@Jpa(annotatedClasses = {
+		MultipleCollectionEntity.class,
+		MultipleCollectionRefEntity1.class,
+		MultipleCollectionRefEntity2.class
+})
+public class DetachedMultipleCollectionChangeTest {
 
 	private Long mceId1 = null;
 	private Long re1Id1 = null;
@@ -54,50 +57,23 @@ public class DetachedMultipleCollectionChangeTest extends BaseEnversJPAFunctiona
 	private Long re2Id2 = null;
 	private Long re2Id3 = null;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				MultipleCollectionEntity.class,
-				MultipleCollectionRefEntity1.class,
-				MultipleCollectionRefEntity2.class
-		};
-	}
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
 
-	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		TestingJtaBootstrap.prepare( options );
-		options.put( AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS, "true" );
-		tm = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
-	}
+			MultipleCollectionEntity mce;
+			MultipleCollectionRefEntity1 re1_1, updatedRe1_1, re1_2, re1_3;
+			MultipleCollectionRefEntity2 re2_1, updatedRe2_1, re2_2, re2_3;
 
-	@Test
-	@Priority(10)
-	public void initData() throws Exception {
-		EntityManager em;
-		MultipleCollectionEntity mce;
-		MultipleCollectionRefEntity1 re1_1, updatedRe1_1, re1_2, re1_3;
-		MultipleCollectionRefEntity2 re2_1, updatedRe2_1, re2_2, re2_3;
-
-		tm.begin();
-		try {
-			em = createIsolatedEntityManager();
-			em.joinTransaction();
+			em.getTransaction().begin();
 			mce = new MultipleCollectionEntity();
 			mce.setText( "MultipleCollectionEntity-1" );
 			em.persist( mce );
 			mceId1 = mce.getId();
-		}
-		finally {
-			tryCommit( tm );
-		}
-		assertNotNull( mceId1 );
+			em.getTransaction().commit();
+			assertNotNull( mceId1 );
 
-		tm.begin();
-		try {
-			em = createIsolatedEntityManager();
-			em.joinTransaction();
-
+			em.getTransaction().begin();
 			re1_1 = new MultipleCollectionRefEntity1();
 			re1_1.setText( "MultipleCollectionRefEntity1-1" );
 			re1_1.setMultipleCollectionEntity( mce );
@@ -121,178 +97,181 @@ public class DetachedMultipleCollectionChangeTest extends BaseEnversJPAFunctiona
 			mce.addRefEntity2( re2_2 );
 
 			mce = em.merge( mce );
-		}
-		finally {
-			tryCommit( tm );
-		}
-		for ( MultipleCollectionRefEntity1 refEnt1 : mce.getRefEntities1() ) {
-			if ( refEnt1.equals( re1_1 ) ) {
-				re1Id1 = refEnt1.getId();
-			}
-			else if ( refEnt1.equals( re1_2 ) ) {
-				re1Id2 = refEnt1.getId();
-			}
-			else {
-				throw new IllegalStateException( "unexpected instance" );
-			}
-		}
-		for ( MultipleCollectionRefEntity2 refEnt2 : mce.getRefEntities2() ) {
-			if ( refEnt2.equals( re2_1 ) ) {
-				re2Id1 = refEnt2.getId();
-			}
-			else if ( refEnt2.equals( re2_2 ) ) {
-				re2Id2 = refEnt2.getId();
-			}
-			else {
-				throw new IllegalStateException( "unexpected instance" );
-			}
-		}
-		assertNotNull( re1Id1 );
-		assertNotNull( re1Id2 );
-		assertNotNull( re2Id1 );
-		assertNotNull( re2Id2 );
+			em.getTransaction().commit();
 
-		tm.begin();
-		try {
-			em = createIsolatedEntityManager();
-			em.joinTransaction();
+			for ( MultipleCollectionRefEntity1 refEnt1 : mce.getRefEntities1() ) {
+				if ( refEnt1.equals( re1_1 ) ) {
+					re1Id1 = refEnt1.getId();
+				}
+				else if ( refEnt1.equals( re1_2 ) ) {
+					re1Id2 = refEnt1.getId();
+				}
+				else {
+					throw new IllegalStateException( "unexpected instance" );
+				}
+			}
+			for ( MultipleCollectionRefEntity2 refEnt2 : mce.getRefEntities2() ) {
+				if ( refEnt2.equals( re2_1 ) ) {
+					re2Id1 = refEnt2.getId();
+				}
+				else if ( refEnt2.equals( re2_2 ) ) {
+					re2Id2 = refEnt2.getId();
+				}
+				else {
+					throw new IllegalStateException( "unexpected instance" );
+				}
+			}
+			assertNotNull( re1Id1 );
+			assertNotNull( re1Id2 );
+			assertNotNull( re2Id1 );
+			assertNotNull( re2Id2 );
 
-			assertEquals( 2, mce.getRefEntities1().size() );
+			em.getTransaction().begin();
+			final MultipleCollectionEntity entity = em.find( MultipleCollectionEntity.class, mceId1 );
+			assertEquals( 2, entity.getRefEntities1().size() );
 
-			mce.removeRefEntity1( re1_2 );
-			assertEquals( 1, mce.getRefEntities1().size() );
+			entity.removeRefEntity1( re1_2 );
+			assertEquals( 1, entity.getRefEntities1().size() );
 
-			updatedRe1_1 = mce.getRefEntities1().get( 0 );
+			updatedRe1_1 = entity.getRefEntities1().get( 0 );
 			assertEquals( re1_1, updatedRe1_1 );
 			updatedRe1_1.setText( "MultipleCollectionRefEntity1-1-updated" );
 
 			re1_3 = new MultipleCollectionRefEntity1();
 			re1_3.setText( "MultipleCollectionRefEntity1-3" );
-			re1_3.setMultipleCollectionEntity( mce );
-			mce.addRefEntity1( re1_3 );
-			assertEquals( 2, mce.getRefEntities1().size() );
+			re1_3.setMultipleCollectionEntity( entity );
+			entity.addRefEntity1( re1_3 );
+			assertEquals( 2, entity.getRefEntities1().size() );
 
-			assertEquals( 2, mce.getRefEntities2().size() );
+			assertEquals( 2, entity.getRefEntities2().size() );
 
-			mce.removeRefEntity2( re2_2 );
-			assertEquals( 1, mce.getRefEntities2().size() );
+			entity.removeRefEntity2( re2_2 );
+			assertEquals( 1, entity.getRefEntities2().size() );
 
-			updatedRe2_1 = mce.getRefEntities2().get( 0 );
+			updatedRe2_1 = entity.getRefEntities2().get( 0 );
 			assertEquals( re2_1, updatedRe2_1 );
 			updatedRe2_1.setText( "MultipleCollectionRefEntity2-1-updated" );
 
 			re2_3 = new MultipleCollectionRefEntity2();
 			re2_3.setText( "MultipleCollectionRefEntity2-3" );
-			re2_3.setMultipleCollectionEntity( mce );
-			mce.addRefEntity2( re2_3 );
-			assertEquals( 2, mce.getRefEntities2().size() );
+			re2_3.setMultipleCollectionEntity( entity );
+			entity.addRefEntity2( re2_3 );
+			assertEquals( 2, entity.getRefEntities2().size() );
 
-			mce = em.merge( mce );
+			em.merge( entity );
+			em.getTransaction().commit();
 
-		}
-		finally {
-			tryCommit( tm );
-		}
-		for ( MultipleCollectionRefEntity1 adres : mce.getRefEntities1() ) {
-			if ( adres.equals( re1_3 ) ) {
-				re1Id3 = adres.getId();
+
+			mce = em.find( MultipleCollectionEntity.class, mceId1 );
+			for ( MultipleCollectionRefEntity1 adres : mce.getRefEntities1() ) {
+				if ( adres.equals( re1_3 ) ) {
+					re1Id3 = adres.getId();
+				}
 			}
-		}
-		for ( MultipleCollectionRefEntity2 partner : mce.getRefEntities2() ) {
-			if ( partner.equals( re2_3 ) ) {
-				re2Id3 = partner.getId();
+			for ( MultipleCollectionRefEntity2 partner : mce.getRefEntities2() ) {
+				if ( partner.equals( re2_3 ) ) {
+					re2Id3 = partner.getId();
+				}
 			}
-		}
-		assertNotNull( re1Id3 );
-		assertNotNull( re2Id3 );
+			assertNotNull( re1Id3 );
+			assertNotNull( re2Id3 );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() throws Exception {
-		List<Number> mceId1Revs = getAuditReader().getRevisions( MultipleCollectionEntity.class, mceId1 );
-		List<Number> re1Id1Revs = getAuditReader().getRevisions( MultipleCollectionRefEntity1.class, re1Id1 );
-		List<Number> re1Id2Revs = getAuditReader().getRevisions( MultipleCollectionRefEntity1.class, re1Id2 );
-		List<Number> re1Id3Revs = getAuditReader().getRevisions( MultipleCollectionRefEntity1.class, re1Id3 );
-		List<Number> re2Id1Revs = getAuditReader().getRevisions( MultipleCollectionRefEntity2.class, re2Id1 );
-		List<Number> re2Id2Revs = getAuditReader().getRevisions( MultipleCollectionRefEntity2.class, re2Id2 );
-		List<Number> re2Id3Revs = getAuditReader().getRevisions( MultipleCollectionRefEntity2.class, re2Id3 );
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			List<Number> mceId1Revs = auditReader.getRevisions( MultipleCollectionEntity.class, mceId1 );
+			List<Number> re1Id1Revs = auditReader.getRevisions( MultipleCollectionRefEntity1.class, re1Id1 );
+			List<Number> re1Id2Revs = auditReader.getRevisions( MultipleCollectionRefEntity1.class, re1Id2 );
+			List<Number> re1Id3Revs = auditReader.getRevisions( MultipleCollectionRefEntity1.class, re1Id3 );
+			List<Number> re2Id1Revs = auditReader.getRevisions( MultipleCollectionRefEntity2.class, re2Id1 );
+			List<Number> re2Id2Revs = auditReader.getRevisions( MultipleCollectionRefEntity2.class, re2Id2 );
+			List<Number> re2Id3Revs = auditReader.getRevisions( MultipleCollectionRefEntity2.class, re2Id3 );
 
-		assertEquals( Arrays.asList( 1, 2, 3 ), mceId1Revs );
-		assertEquals( Arrays.asList( 2, 3 ), re1Id1Revs );
-		assertEquals( Arrays.asList( 2, 3 ), re1Id2Revs );
-		assertEquals( Arrays.asList( 3 ), re1Id3Revs );
-		assertEquals( Arrays.asList( 2, 3 ), re2Id1Revs );
-		assertEquals( Arrays.asList( 2, 3 ), re2Id2Revs );
-		assertEquals( Arrays.asList( 3 ), re2Id3Revs );
+			assertEquals( Arrays.asList( 1, 2, 3 ), mceId1Revs );
+			assertEquals( Arrays.asList( 2, 3 ), re1Id1Revs );
+			assertEquals( Arrays.asList( 2, 3 ), re1Id2Revs );
+			assertEquals( Arrays.asList( 3 ), re1Id3Revs );
+			assertEquals( Arrays.asList( 2, 3 ), re2Id1Revs );
+			assertEquals( Arrays.asList( 2, 3 ), re2Id2Revs );
+			assertEquals( Arrays.asList( 3 ), re2Id3Revs );
+		} );
 	}
 
 	@Test
-	@SkipForDialect(value = CockroachDialect.class,
-			comment = "requires serial_normalization=sql_sequence setting")
-	@SkipForDialect(value = OracleDialect.class,
-			comment = "Oracle does not support identity key generation")
-	public void testAuditJoinTable() throws Exception {
-		List<AuditJoinTableInfo> mceRe1AuditJoinTableInfos = getAuditJoinTableRows(
-				"MCE_RE1_AUD", "MCE_ID",
-				"aud.originalId.MultipleCollectionEntity_id", "RE1_ID",
-				"aud.originalId.refEntities1_id", "aud.originalId.REV",
-				"aud.originalId.REV.id", "aud.REVTYPE"
-		);
-		List<AuditJoinTableInfo> mceRe2AuditJoinTableInfos = getAuditJoinTableRows(
-				"MCE_RE2_AUD", "MCE_ID",
-				"aud.originalId.MultipleCollectionEntity_id", "RE2_ID",
-				"aud.originalId.refEntities2_id", "aud.originalId.REV",
-				"aud.originalId.REV.id", "aud.REVTYPE"
-		);
+	@SkipForDialect(dialectClass = CockroachDialect.class,
+			reason = "requires serial_normalization=sql_sequence setting")
+	@SkipForDialect(dialectClass = OracleDialect.class,
+			reason = "Oracle does not support identity key generation")
+	public void testAuditJoinTable(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			List<AuditJoinTableInfo> mceRe1AuditJoinTableInfos = getAuditJoinTableRows(
+					em,
+					"MCE_RE1_AUD", "MCE_ID",
+					"aud.originalId.MultipleCollectionEntity_id", "RE1_ID",
+					"aud.originalId.refEntities1_id", "aud.originalId.REV",
+					"aud.originalId.REV.id", "aud.REVTYPE"
+			);
+			List<AuditJoinTableInfo> mceRe2AuditJoinTableInfos = getAuditJoinTableRows(
+					em,
+					"MCE_RE2_AUD", "MCE_ID",
+					"aud.originalId.MultipleCollectionEntity_id", "RE2_ID",
+					"aud.originalId.refEntities2_id", "aud.originalId.REV",
+					"aud.originalId.REV.id", "aud.REVTYPE"
+			);
 
-		assertEquals( 4, mceRe1AuditJoinTableInfos.size() );
-		assertEquals( 4, mceRe2AuditJoinTableInfos.size() );
+			assertEquals( 4, mceRe1AuditJoinTableInfos.size() );
+			assertEquals( 4, mceRe2AuditJoinTableInfos.size() );
 
-		SequenceIdRevisionEntity rev2 = new SequenceIdRevisionEntity();
-		rev2.setId( 2 );
-		SequenceIdRevisionEntity rev3 = new SequenceIdRevisionEntity();
-		rev3.setId( 3 );
+			SequenceIdRevisionEntity rev2 = new SequenceIdRevisionEntity();
+			rev2.setId( 2 );
+			SequenceIdRevisionEntity rev3 = new SequenceIdRevisionEntity();
+			rev3.setId( 3 );
 
-		assertEquals(
-				new AuditJoinTableInfo( "MCE_RE1_AUD", rev2, RevisionType.ADD, "MCE_ID", 1L, "RE1_ID", 1L ),
-				mceRe1AuditJoinTableInfos.get( 0 )
-		);
-		assertEquals(
-				new AuditJoinTableInfo( "MCE_RE1_AUD", rev2, RevisionType.ADD, "MCE_ID", 1L, "RE1_ID", 2L ),
-				mceRe1AuditJoinTableInfos.get( 1 )
-		);
-		assertEquals(
-				new AuditJoinTableInfo( "MCE_RE1_AUD", rev3, RevisionType.DEL, "MCE_ID", 1L, "RE1_ID", 2L ),
-				mceRe1AuditJoinTableInfos.get( 2 )
-		);
-		assertEquals(
-				new AuditJoinTableInfo( "MCE_RE1_AUD", rev3, RevisionType.ADD, "MCE_ID", 1L, "RE1_ID", 3L ),
-				mceRe1AuditJoinTableInfos.get( 3 )
-		);
+			assertEquals(
+					new AuditJoinTableInfo( "MCE_RE1_AUD", rev2, RevisionType.ADD, "MCE_ID", 1L, "RE1_ID", 1L ),
+					mceRe1AuditJoinTableInfos.get( 0 )
+			);
+			assertEquals(
+					new AuditJoinTableInfo( "MCE_RE1_AUD", rev2, RevisionType.ADD, "MCE_ID", 1L, "RE1_ID", 2L ),
+					mceRe1AuditJoinTableInfos.get( 1 )
+			);
+			assertEquals(
+					new AuditJoinTableInfo( "MCE_RE1_AUD", rev3, RevisionType.DEL, "MCE_ID", 1L, "RE1_ID", 2L ),
+					mceRe1AuditJoinTableInfos.get( 2 )
+			);
+			assertEquals(
+					new AuditJoinTableInfo( "MCE_RE1_AUD", rev3, RevisionType.ADD, "MCE_ID", 1L, "RE1_ID", 3L ),
+					mceRe1AuditJoinTableInfos.get( 3 )
+			);
 
-		assertEquals(
-				new AuditJoinTableInfo( "MCE_RE2_AUD", rev2, RevisionType.ADD, "MCE_ID", 1L, "RE2_ID", 1L ),
-				mceRe2AuditJoinTableInfos.get( 0 )
-		);
-		assertEquals(
-				new AuditJoinTableInfo( "MCE_RE2_AUD", rev2, RevisionType.ADD, "MCE_ID", 1L, "RE2_ID", 2L ),
-				mceRe2AuditJoinTableInfos.get( 1 )
-		);
-		assertEquals(
-				new AuditJoinTableInfo( "MCE_RE2_AUD", rev3, RevisionType.DEL, "MCE_ID", 1L, "RE2_ID", 2L ),
-				mceRe2AuditJoinTableInfos.get( 2 )
-		);
-		assertEquals(
-				new AuditJoinTableInfo( "MCE_RE2_AUD", rev3, RevisionType.ADD, "MCE_ID", 1L, "RE2_ID", 3L ),
-				mceRe2AuditJoinTableInfos.get( 3 )
-		);
+			assertEquals(
+					new AuditJoinTableInfo( "MCE_RE2_AUD", rev2, RevisionType.ADD, "MCE_ID", 1L, "RE2_ID", 1L ),
+					mceRe2AuditJoinTableInfos.get( 0 )
+			);
+			assertEquals(
+					new AuditJoinTableInfo( "MCE_RE2_AUD", rev2, RevisionType.ADD, "MCE_ID", 1L, "RE2_ID", 2L ),
+					mceRe2AuditJoinTableInfos.get( 1 )
+			);
+			assertEquals(
+					new AuditJoinTableInfo( "MCE_RE2_AUD", rev3, RevisionType.DEL, "MCE_ID", 1L, "RE2_ID", 2L ),
+					mceRe2AuditJoinTableInfos.get( 2 )
+			);
+			assertEquals(
+					new AuditJoinTableInfo( "MCE_RE2_AUD", rev3, RevisionType.ADD, "MCE_ID", 1L, "RE2_ID", 3L ),
+					mceRe2AuditJoinTableInfos.get( 3 )
+			);
+		} );
 	}
 
 	private List<AuditJoinTableInfo> getAuditJoinTableRows(
+			EntityManager em,
 			String middleEntityName, String joinColumnIdName,
 			String joinColumnIdProp, String inverseJoinColumnIdName,
 			String inverseJoinColumnIdProp, String revProp, String revIdProp,
-			String revTypeProp) throws Exception {
+			String revTypeProp) {
 		StringBuilder qryBuilder = new StringBuilder( "select " );
 		qryBuilder.append( "aud " );
 		qryBuilder.append( ", " ).append( joinColumnIdProp ).append( " as joinColumnId" );
@@ -305,7 +284,6 @@ public class DetachedMultipleCollectionChangeTest extends BaseEnversJPAFunctiona
 
 		String query = qryBuilder.toString();
 
-		EntityManager em = createIsolatedEntityManager();
 		Query qry = em.createQuery( query );
 
 		@SuppressWarnings("unchecked")
@@ -353,9 +331,9 @@ public class DetachedMultipleCollectionChangeTest extends BaseEnversJPAFunctiona
 		@Override
 		public String toString() {
 			return "AuditJoinTableInfo [name=" + name + ", revId=" + revId
-					+ ", revType=" + revType + ", " + joinColumnName + "="
-					+ joinColumnId + ", " + inverseJoinColumnName + "="
-					+ inverseJoinColumnId + "]";
+				+ ", revType=" + revType + ", " + joinColumnName + "="
+				+ joinColumnId + ", " + inverseJoinColumnName + "="
+				+ inverseJoinColumnId + "]";
 		}
 
 		@Override
@@ -398,15 +376,6 @@ public class DetachedMultipleCollectionChangeTest extends BaseEnversJPAFunctiona
 			result = 31 * result + (joinColumnId != null ? joinColumnId.hashCode() : 0);
 			result = 31 * result + (inverseJoinColumnId != null ? inverseJoinColumnId.hashCode() : 0);
 			return result;
-		}
-	}
-
-	public static void tryCommit(TransactionManager tm) throws Exception {
-		if ( tm.getStatus() == Status.STATUS_MARKED_ROLLBACK ) {
-			tm.rollback();
-		}
-		else {
-			tm.commit();
 		}
 	}
 }

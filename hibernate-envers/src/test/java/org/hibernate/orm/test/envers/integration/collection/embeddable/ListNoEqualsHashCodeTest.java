@@ -4,29 +4,31 @@
  */
 package org.hibernate.orm.test.envers.integration.collection.embeddable;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OrderColumn;
-
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.junit.Test;
-
+import org.hibernate.envers.strategy.internal.DefaultAuditStrategy;
+import org.hibernate.testing.envers.RequiresAuditStrategy;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * This test verifies that when a list-based {@link ElementCollection} of {@link Embeddable} objects
@@ -36,18 +38,14 @@ import static org.junit.Assert.fail;
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-12607")
-public class ListNoEqualsHashCodeTest extends BaseEnversJPAFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { TestEntity.class };
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
+@EnversTest
+@Jpa(annotatedClasses = {ListNoEqualsHashCodeTest.TestEntity.class})
+public class ListNoEqualsHashCodeTest {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		final Emb emb1 = new Emb( "value1" );
 		final Emb emb2 = new Emb( "value2" );
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			TestEntity e = new TestEntity( 1 );
 			e.setEmbs1( new ArrayList<>() );
 			e.getEmbs1().add( emb1 );
@@ -55,7 +53,7 @@ public class ListNoEqualsHashCodeTest extends BaseEnversJPAFunctionalTestCase {
 			entityManager.persist( e );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			TestEntity e = entityManager.find( TestEntity.class, 1 );
 			for ( Emb emb : e.getEmbs1() ) {
 				if ( emb.getValue().equals( "value1" ) ) {
@@ -68,65 +66,67 @@ public class ListNoEqualsHashCodeTest extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	public void testAuditRowsForValidityAuditStrategy() {
-		if ( ValidityAuditStrategy.class.getName().equals( getAuditStrategy() ) ) {
-			doInJPA( this::entityManagerFactory, entityManager -> {
-				Long results = entityManager
-						.createQuery(
-								"SELECT COUNT(1) FROM TestEntity_embs1_AUD WHERE REVEND IS NULL",
-								Long.class
-						)
-						.getSingleResult();
+	@RequiresAuditStrategy(ValidityAuditStrategy.class)
+	public void testAuditRowsForValidityAuditStrategy(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
+			Long results = entityManager
+					.createQuery(
+							"SELECT COUNT(1) FROM TestEntity_embs1_AUD WHERE REVEND IS NULL",
+							Long.class
+					)
+					.getSingleResult();
 
-				assertNotNull( results );
-				assertEquals( Long.valueOf( 4 ), results );
-			} );
+			assertNotNull( results );
+			assertEquals( Long.valueOf( 4 ), results );
 
-			doInJPA( this::entityManagerFactory, entityManager -> {
-				Long results = entityManager
-						.createQuery(
-								"SELECT COUNT(1) FROM TestEntity_embs1_AUD",
-								Long.class
-						)
-						.getSingleResult();
+			results = entityManager
+					.createQuery(
+							"SELECT COUNT(1) FROM TestEntity_embs1_AUD",
+							Long.class
+					)
+					.getSingleResult();
 
-				assertNotNull( results );
-				assertEquals( Long.valueOf( 6 ), results );
-			} );
-		}
+			assertNotNull( results );
+			assertEquals( Long.valueOf( 6 ), results );
+		} );
 	}
 
 	@Test
-	public void testAuditRowsForDefaultAuditStrategy() {
-		if ( !ValidityAuditStrategy.class.getName().equals( getAuditStrategy() ) ) {
-			doInJPA( this::entityManagerFactory, entityManager -> {
-				Long results = entityManager
-						.createQuery(
-								"SELECT COUNT(1) FROM TestEntity_embs1_AUD",
-								Long.class
-						)
-						.getSingleResult();
+	@RequiresAuditStrategy(DefaultAuditStrategy.class)
+	public void testAuditRowsForDefaultAuditStrategy(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
+			Long results = entityManager
+					.createQuery(
+							"SELECT COUNT(1) FROM TestEntity_embs1_AUD",
+							Long.class
+					)
+					.getSingleResult();
 
-				assertNotNull( results );
-				assertEquals( Long.valueOf( 6 ), results );
-			} );
-		}
+			assertNotNull( results );
+			assertEquals( Long.valueOf( 6 ), results );
+		} );
 	}
 
 	@Test
-	public void testRevisionHistory1() {
-		TestEntity e = getAuditReader().find( TestEntity.class, 1, 1 );
-		assertEquals( 2, e.getEmbs1().size() );
-		assertHasEmbeddableWithValue( e, "value1" );
-		assertHasEmbeddableWithValue( e, "value2" );
+	public void testRevisionHistory1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			TestEntity e = auditReader.find( TestEntity.class, 1, 1 );
+			assertEquals( 2, e.getEmbs1().size() );
+			assertHasEmbeddableWithValue( e, "value1" );
+			assertHasEmbeddableWithValue( e, "value2" );
+		} );
 	}
 
 	@Test
-	public void testRevisionHistory2() {
-		TestEntity e = getAuditReader().find( TestEntity.class, 1, 2 );
-		assertEquals( 2, e.getEmbs1().size() );
-		assertHasEmbeddableWithValue( e, "value3" );
-		assertHasEmbeddableWithValue( e, "value2" );
+	public void testRevisionHistory2(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			TestEntity e = auditReader.find( TestEntity.class, 1, 2 );
+			assertEquals( 2, e.getEmbs1().size() );
+			assertHasEmbeddableWithValue( e, "value3" );
+			assertHasEmbeddableWithValue( e, "value2" );
+		} );
 	}
 
 	private static void assertHasEmbeddableWithValue(TestEntity entity, String value) {

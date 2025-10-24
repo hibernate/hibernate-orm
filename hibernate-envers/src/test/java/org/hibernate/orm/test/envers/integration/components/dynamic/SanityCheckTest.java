@@ -7,49 +7,52 @@ package org.hibernate.orm.test.envers.integration.components.dynamic;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.Assert;
-import org.hibernate.Session;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.junit.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-public class SanityCheckTest extends BaseEnversFunctionalTestCase {
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
-	@Override
-	protected String[] getMappings() {
-		return new String[] { "mappings/dynamicComponents/mapSanityCheck.hbm.xml" };
-	}
+@EnversTest
+@Jpa(
+		xmlMappings = "mappings/dynamicComponents/mapSanityCheck.hbm.xml",
+		annotatedClasses = {
+				PlainEntity.class,
+				ManyToOneEntity.class,
+				ManyToManyEntity.class,
+				OneToOneEntity.class
+		}
+)
+public class SanityCheckTest {
 
-	@Test
-	@Priority(10)
-	public void shouldInit() {
-		Session session = getSession();
-		session.getTransaction().begin();
+	@BeforeClassTemplate
+	public void shouldInit(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			ManyToOneEntity manyToOne = getManyToOneEntity();
+			ManyToManyEntity manyToMany = getManyToManyEntity();
+			OneToOneEntity oneToOne = getOneToOneEntity();
 
-		ManyToOneEntity manyToOne = getManyToOneEntity();
-		ManyToManyEntity manyToMany = getManyToManyEntity();
-		OneToOneEntity oneToOne = getOneToOneEntity();
+			PlainEntity plainEntity = getPlainEntity( manyToOne, manyToMany, oneToOne );
 
-		PlainEntity plainEntity = getPlainEntity( manyToOne, manyToMany, oneToOne );
+			em.persist( manyToMany );
+			em.persist( manyToOne );
+			em.persist( oneToOne );
+			em.persist( plainEntity );
+		} );
 
-		session.persist( manyToMany );
-		session.persist( manyToOne );
-		session.persist( oneToOne );
-		session.persist( plainEntity );
-
-		session.getTransaction().commit();
-		session.getTransaction().begin();
-		PlainEntity load = (PlainEntity) session.getReference( PlainEntity.class, 1L );
-
-		Assert.assertEquals( plainEntity, load );
-		session.getTransaction().commit();
-
+		scope.inTransaction( em -> {
+			PlainEntity load = em.getReference( PlainEntity.class, 1L );
+			PlainEntity expected = getPlainEntity( getManyToOneEntity(), getManyToManyEntity(), getOneToOneEntity() );
+			assertEquals( expected, load );
+		} );
 	}
 
 	private PlainEntity getPlainEntity(ManyToOneEntity manyToOne, ManyToManyEntity manyToMany, OneToOneEntity oneToOne) {
@@ -85,100 +88,113 @@ public class SanityCheckTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Test
-	public void shouldFindRevisionBySimpleProperty() {
-		ManyToOneEntity manyToOne = getManyToOneEntity();
-		ManyToManyEntity manyToMany = getManyToManyEntity();
-		OneToOneEntity oneToOne = getOneToOneEntity();
+	public void shouldFindRevisionBySimpleProperty(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
 
-		PlainEntity entity = getPlainEntity( manyToOne, manyToMany, oneToOne );
+			ManyToOneEntity manyToOne = getManyToOneEntity();
+			ManyToManyEntity manyToMany = getManyToManyEntity();
+			OneToOneEntity oneToOne = getOneToOneEntity();
 
+			PlainEntity entity = getPlainEntity( manyToOne, manyToMany, oneToOne );
 
-		//given (and result of shouldInitData()
-
-		//when
-		List resultList = getAuditReader().createQuery()
-				.forEntitiesAtRevision( PlainEntity.class, 1 )
-				.add( AuditEntity.property( "component_componentNote" ).eq( "Note" ) )
-				.getResultList();
-
-		Assert.assertEquals( entity, resultList.get( 0 ) );
-	}
-
-	@Test
-	public void shouldFindByInternalComponentProperty() {
-		ManyToOneEntity manyToOne = getManyToOneEntity();
-		ManyToManyEntity manyToMany = getManyToManyEntity();
-		OneToOneEntity oneToOne = getOneToOneEntity();
-
-		PlainEntity entity = getPlainEntity( manyToOne, manyToMany, oneToOne );
-
-
-		//given (and result of shouldInitData()
-
-		//when
-		List resultList = getAuditReader().createQuery()
-				.forEntitiesAtRevision( PlainEntity.class, 1 )
-				.add(
-						AuditEntity.property( "component_internalComponent_property" )
-								.eq( entity.getComponent().getInternalComponent().getProperty() )
-				)
-				.getResultList();
-
-		Assert.assertEquals( entity, resultList.get( 0 ) );
-	}
-
-	@Test
-	public void shouldFailWhenQueryOnManyToMany() {
-		ManyToManyEntity manyToMany = getManyToManyEntity();
-
-		//when
-
-		List<ManyToManyEntity> manyToManyEntities = new ArrayList<ManyToManyEntity>();
-		manyToManyEntities.add( manyToMany );
-		try {
-			getAuditReader().createQuery()
+			//when
+			List resultList = auditReader.createQuery()
 					.forEntitiesAtRevision( PlainEntity.class, 1 )
-					.add( AuditEntity.property( "component_manyToManyList" ).eq( manyToManyEntities ) )
-					.getResultList();
-			//then
-			fail( "This should have generated an AuditException" );
-		}
-		catch ( Exception e ) {
-			assertTyping( AuditException.class, e );
-			assertEquals(
-					"This type of relation (org.hibernate.orm.test.envers.integration.components.dynamic.PlainEntity." +
-							"component_manyToManyList) can't be used in audit query restrictions.",
-					e.getMessage()
-			);
-		}
-	}
-
-	@Test
-	public void shouldFailWhenQueryOnManyToOne() {
-		//when
-		PlainEntity plainEntity = (PlainEntity) getAuditReader().createQuery()
-				.forEntitiesAtRevision( PlainEntity.class, 1 )
-				.add( AuditEntity.relatedId( "component_manyToOneEntity" ).eq( getManyToOneEntity().getId() ) )
-				.getResultList().get( 0 );
-
-		//then
-		Assert.assertEquals( getManyToOneEntity(), plainEntity.getComponent().getManyToOneEntity() );
-	}
-
-	@Test
-	public void shouldFailWhenQueryOnOneToOne() {
-		//when
-		try {
-			getAuditReader().createQuery()
-					.forEntitiesAtRevision( PlainEntity.class, 1 )
-					.add( AuditEntity.relatedId( "component_oneToOneEntity" ).eq( getOneToOneEntity().getId() ) )
+					.add( AuditEntity.property( "component_componentNote" ).eq( "Note" ) )
 					.getResultList();
 
+			assertEquals( entity, resultList.get( 0 ) );
+		} );
+	}
+
+	@Test
+	public void shouldFindByInternalComponentProperty(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+
+			ManyToOneEntity manyToOne = getManyToOneEntity();
+			ManyToManyEntity manyToMany = getManyToManyEntity();
+			OneToOneEntity oneToOne = getOneToOneEntity();
+
+			PlainEntity entity = getPlainEntity( manyToOne, manyToMany, oneToOne );
+
+			//when
+			List resultList = auditReader.createQuery()
+					.forEntitiesAtRevision( PlainEntity.class, 1 )
+					.add(
+							AuditEntity.property( "component_internalComponent_property" )
+									.eq( entity.getComponent().getInternalComponent().getProperty() )
+					)
+					.getResultList();
+
+			assertEquals( entity, resultList.get( 0 ) );
+		} );
+	}
+
+	@Test
+	public void shouldFailWhenQueryOnManyToMany(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+
+			ManyToManyEntity manyToMany = getManyToManyEntity();
+
+			//when
+			List<ManyToManyEntity> manyToManyEntities = new ArrayList<ManyToManyEntity>();
+			manyToManyEntities.add( manyToMany );
+			try {
+				auditReader.createQuery()
+						.forEntitiesAtRevision( PlainEntity.class, 1 )
+						.add( AuditEntity.property( "component_manyToManyList" ).eq( manyToManyEntities ) )
+						.getResultList();
+				//then
+				fail( "This should have generated an AuditException" );
+			}
+			catch ( Exception e ) {
+				assertTyping( AuditException.class, e );
+				assertEquals(
+						"This type of relation (org.hibernate.orm.test.envers.integration.components.dynamic.PlainEntity." +
+								"component_manyToManyList) can't be used in audit query restrictions.",
+						e.getMessage()
+				);
+			}
+		} );
+	}
+
+	@Test
+	public void shouldFailWhenQueryOnManyToOne(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+
+			//when
+			PlainEntity plainEntity = (PlainEntity) auditReader.createQuery()
+					.forEntitiesAtRevision( PlainEntity.class, 1 )
+					.add( AuditEntity.relatedId( "component_manyToOneEntity" ).eq( getManyToOneEntity().getId() ) )
+					.getResultList().get( 0 );
+
 			//then
-			fail( "This should have generated an IllegalArgumentException" );
-		}
-		catch ( Exception e ) {
-			assertTyping( IllegalArgumentException.class, e );
-		}
+			assertEquals( getManyToOneEntity(), plainEntity.getComponent().getManyToOneEntity() );
+		} );
+	}
+
+	@Test
+	public void shouldFailWhenQueryOnOneToOne(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+
+			//when
+			try {
+				auditReader.createQuery()
+						.forEntitiesAtRevision( PlainEntity.class, 1 )
+						.add( AuditEntity.relatedId( "component_oneToOneEntity" ).eq( getOneToOneEntity().getId() ) )
+						.getResultList();
+
+				//then
+				fail( "This should have generated an IllegalArgumentException" );
+			}
+			catch ( Exception e ) {
+				assertTyping( IllegalArgumentException.class, e );
+			}
+		} );
 	}
 }

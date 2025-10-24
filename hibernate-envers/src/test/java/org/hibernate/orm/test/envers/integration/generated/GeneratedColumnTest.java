@@ -4,33 +4,29 @@
  */
 package org.hibernate.orm.test.envers.integration.generated;
 
-import jakarta.persistence.EntityManager;
-
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.AssertionsKt.assertNull;
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-10841")
-public class GeneratedColumnTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {SimpleEntity.class})
+public class GeneratedColumnTest {
 	private Integer entityId;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { SimpleEntity.class };
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager entityManager = getOrCreateEntityManager();
-		try {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
 			// Revision 1
 			SimpleEntity se = new SimpleEntity();
 			se.setData( "data" );
@@ -52,33 +48,35 @@ public class GeneratedColumnTest extends BaseEnversJPAFunctionalTestCase {
 			se = entityManager.find( SimpleEntity.class, se.getId() );
 			entityManager.remove( se );
 			entityManager.getTransaction().commit();
-
-		}
-		finally {
-			entityManager.close();
-		}
+		} );
 	}
 
 	@Test
-	public void getRevisionCounts() {
-		assertEquals( 3, getAuditReader().getRevisions( SimpleEntity.class, entityId ).size() );
+	public void getRevisionCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( 3, auditReader.getRevisions( SimpleEntity.class, entityId ).size() );
+		} );
 	}
 
 	@Test
-	public void testRevisionHistory() {
-		// revision - insertion
-		final SimpleEntity rev1 = getAuditReader().find( SimpleEntity.class, entityId, 1 );
-		assertEquals( "data", rev1.getData() );
-		assertEquals( 1, rev1.getCaseNumberInsert() );
+	public void testRevisionHistory(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
+			final var auditReader = AuditReaderFactory.get( entityManager );
 
-		// revision - update
-		final SimpleEntity rev2 = getAuditReader().find( SimpleEntity.class, entityId, 2 );
-		assertEquals( "data2", rev2.getData() );
-		assertEquals( 1, rev2.getCaseNumberInsert() );
+			// revision - insertion
+			final SimpleEntity rev1 = auditReader.find( SimpleEntity.class, entityId, 1 );
+			assertEquals( "data", rev1.getData() );
+			assertEquals( 1, rev1.getCaseNumberInsert() );
 
-		// revision - deletion
-		final SimpleEntity rev3 = getAuditReader().find( SimpleEntity.class, entityId, 3 );
-		assertEquals( "data2", rev2.getData() );
-		assertEquals( 1, rev2.getCaseNumberInsert() );
+			// revision - update
+			final SimpleEntity rev2 = auditReader.find( SimpleEntity.class, entityId, 2 );
+			assertEquals( "data2", rev2.getData() );
+			assertEquals( 1, rev2.getCaseNumberInsert() );
+
+			// revision - deletion
+			final SimpleEntity rev3 = auditReader.find( SimpleEntity.class, entityId, 3 );
+			assertNull( rev3 );
+		} );
 	}
 }

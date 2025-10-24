@@ -287,6 +287,7 @@ public class SessionFactoryExtension
 			releaseSessionFactory();
 		}
 
+		@Override
 		public void releaseSessionFactory() {
 			if ( sessionFactory != null ) {
 				log.debug( "Releasing SessionFactory" );

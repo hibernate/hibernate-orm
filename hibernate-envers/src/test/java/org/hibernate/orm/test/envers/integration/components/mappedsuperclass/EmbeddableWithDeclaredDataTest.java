@@ -5,71 +5,63 @@
 package org.hibernate.orm.test.envers.integration.components.mappedsuperclass;
 
 import java.util.List;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityTransaction;
 
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
 
-import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Jakob Braeuchi.
  * @author Gail Badner
  */
 @JiraKey(value = "HHH-9193")
-public class EmbeddableWithDeclaredDataTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {
+		EntityWithEmbeddableWithDeclaredData.class,
+		AbstractEmbeddable.class,
+		EmbeddableWithDeclaredData.class
+})
+public class EmbeddableWithDeclaredDataTest {
 	private long id;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { EntityWithEmbeddableWithDeclaredData.class, AbstractEmbeddable.class, EmbeddableWithDeclaredData.class };
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-
-		EntityWithEmbeddableWithDeclaredData entity = new EntityWithEmbeddableWithDeclaredData();
-		entity.setName( "Entity 1" );
-		entity.setValue( new EmbeddableWithDeclaredData( 42, "TestCodeart" ) );
-
-		EntityTransaction tx = em.getTransaction();
-		tx.begin();
-		em.persist( entity );
-		tx.commit();
-		em.close();
-
-		id = entity.getId();
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		this.id = scope.fromTransaction( entityManager -> {
+			EntityWithEmbeddableWithDeclaredData entity = new EntityWithEmbeddableWithDeclaredData();
+			entity.setName( "Entity 1" );
+			entity.setValue( new EmbeddableWithDeclaredData( 42, "TestCodeart" ) );
+			entityManager.persist( entity );
+			return entity.getId();
+		} );
 	}
 
 	@Test
 	@FailureExpected( jiraKey = "HHH-9193" )
-	public void testEmbeddableThatExtendsMappedSuperclass() {
+	public void testEmbeddableThatExtendsMappedSuperclass(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
+			EntityWithEmbeddableWithDeclaredData entityLoaded = entityManager.find( EntityWithEmbeddableWithDeclaredData.class, id );
 
-		// Reload and Compare Revision
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
-		EntityWithEmbeddableWithDeclaredData entityLoaded = em.find( EntityWithEmbeddableWithDeclaredData.class, id );
+			AuditReader reader = AuditReaderFactory.get( entityManager );
 
-		AuditReader reader = AuditReaderFactory.get( em );
+			List<Number> revs = reader.getRevisions( EntityWithEmbeddableWithDeclaredData.class, id );
+			assertThat( revs ).hasSize( 1 );
 
-		List<Number> revs = reader.getRevisions( EntityWithEmbeddableWithDeclaredData.class, id );
-		Assert.assertEquals( 1, revs.size() );
+			EntityWithEmbeddableWithDeclaredData entityRev1 = reader.find( EntityWithEmbeddableWithDeclaredData.class, id, revs.get( 0 ) );
+			assertThat( entityRev1.getName() ).isEqualTo( entityLoaded.getName() );
 
-		EntityWithEmbeddableWithDeclaredData entityRev1 = reader.find( EntityWithEmbeddableWithDeclaredData.class, id, revs.get( 0 ) );
-		em.getTransaction().commit();
-		Assert.assertEquals( entityLoaded.getName(), entityRev1.getName() );
-
-		// only value.codeArt should be audited because it is the only audited field in EmbeddableWithDeclaredData;
-		// fields in AbstractEmbeddable should not be audited.
-		Assert.assertEquals( entityLoaded.getValue().getCodeart(), entityRev1.getValue().getCodeart() );
-		Assert.assertEquals(0, entityRev1.getValue().getCode() );
+			// only value.codeArt should be audited because it is the only audited field in EmbeddableWithDeclaredData;
+			// fields in AbstractEmbeddable should not be audited.
+			assertThat( entityRev1.getValue().getCodeart() ).isEqualTo( entityLoaded.getValue().getCodeart() );
+			assertThat( entityRev1.getValue().getCode() ).isEqualTo( 0 );
+		} );
 	}
 }

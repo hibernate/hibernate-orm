@@ -4,31 +4,40 @@
  */
 package org.hibernate.orm.test.envers.integration.query;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.Collections;
 import java.util.List;
 
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.criteria.JoinType;
 
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Felix Feisst (feisst dot felix at gmail dot com)
  */
 @JiraKey(value = "HHH-11895")
-public class NestedComponentQueryTest extends BaseEnversJPAFunctionalTestCase {
+@Jpa(annotatedClasses = {
+		NestedComponentQueryTest.EntityOwner.class,
+		NestedComponentQueryTest.Component1.class,
+		NestedComponentQueryTest.Component2.class
+})
+@EnversTest
+public class NestedComponentQueryTest {
 
 	@Embeddable
 	public static class Component1 {
@@ -97,60 +106,57 @@ public class NestedComponentQueryTest extends BaseEnversJPAFunctionalTestCase {
 		}
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{ EntityOwner.class, Component1.class, Component2.class };
-	}
-
 	private EntityOwner owner1;
 	private EntityOwner owner2;
 
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
-		owner1 = new EntityOwner();
-		Component1 component1 = new Component1();
-		component1.setName1( "X" );
-		owner1.setComponent1( component1 );
-		Component2 component2 = new Component2();
-		component2.setName2( "Y" );
-		component1.setComponent2( component2 );
-		em.persist( owner1 );
-		owner2 = new EntityOwner();
-		Component1 component12 = new Component1();
-		component12.setName1( "Z" );
-		owner2.setComponent1( component12 );
-		Component2 component22 = new Component2();
-		component22.setName2( "Z" );
-		component12.setComponent2( component22 );
-		em.persist( owner2 );
-		em.getTransaction().commit();
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			owner1 = new EntityOwner();
+			Component1 component1 = new Component1();
+			component1.setName1( "X" );
+			owner1.setComponent1( component1 );
+			Component2 component2 = new Component2();
+			component2.setName2( "Y" );
+			component1.setComponent2( component2 );
+			em.persist( owner1 );
+			owner2 = new EntityOwner();
+			Component1 component12 = new Component1();
+			component12.setName1( "Z" );
+			owner2.setComponent1( component12 );
+			Component2 component22 = new Component2();
+			component22.setName2( "Z" );
+			component12.setComponent2( component22 );
+			em.persist( owner2 );
+		} );
 	}
 
 	@Test
-	public void testQueryNestedComponent() {
-		List actual = getAuditReader().createQuery()
-				.forEntitiesAtRevision( EntityOwner.class, 1 )
-				.addProjection( AuditEntity.id() )
-				.traverseRelation( "component1", JoinType.INNER, "c1" )
-				.traverseRelation( "component2", JoinType.INNER, "c2" )
-				.add( AuditEntity.property( "c2", "name2" ).eq( "Y" ) )
-				.getResultList();
-		assertEquals( "Expected owner1 to be returned", Collections.singletonList( owner1.getId() ), actual );
+	public void testQueryNestedComponent(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			List actual = AuditReaderFactory.get( em ).createQuery()
+					.forEntitiesAtRevision( EntityOwner.class, 1 )
+					.addProjection( AuditEntity.id() )
+					.traverseRelation( "component1", JoinType.INNER, "c1" )
+					.traverseRelation( "component2", JoinType.INNER, "c2" )
+					.add( AuditEntity.property( "c2", "name2" ).eq( "Y" ) )
+					.getResultList();
+			assertEquals( Collections.singletonList( owner1.getId() ), actual, "Expected owner1 to be returned" );
+		} );
 	}
 
 	@Test
-	public void testQueryNestedComponentWithPropertyEquals() {
-		List actual = getAuditReader().createQuery()
-				.forEntitiesAtRevision( EntityOwner.class, 1 )
-				.addProjection( AuditEntity.id() )
-				.traverseRelation( "component1", JoinType.INNER, "c1" )
-				.traverseRelation( "component2", JoinType.INNER, "c2" )
-				.add( AuditEntity.property( "c1", "name1" ).eqProperty( "c2", "name2" ) )
-				.getResultList();
-		assertEquals( "Expected owner2 to be returned", Collections.singletonList( owner2.getId() ), actual );
+	public void testQueryNestedComponentWithPropertyEquals(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			List actual = AuditReaderFactory.get( em ).createQuery()
+					.forEntitiesAtRevision( EntityOwner.class, 1 )
+					.addProjection( AuditEntity.id() )
+					.traverseRelation( "component1", JoinType.INNER, "c1" )
+					.traverseRelation( "component2", JoinType.INNER, "c2" )
+					.add( AuditEntity.property( "c1", "name1" ).eqProperty( "c2", "name2" ) )
+					.getResultList();
+			assertEquals( Collections.singletonList( owner2.getId() ), actual, "Expected owner2 to be returned" );
+		} );
 	}
 
 }

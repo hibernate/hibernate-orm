@@ -16,6 +16,7 @@ import org.hibernate.mapping.RootClass;
  */
 public interface DomainModelScope {
 	MetadataImplementor getDomainModel();
+	void releaseModel();
 
 	default void visitHierarchies(Consumer<RootClass> action) {
 		getDomainModel().getEntityBindings().forEach(

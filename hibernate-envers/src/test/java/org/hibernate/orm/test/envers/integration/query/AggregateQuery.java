@@ -6,164 +6,173 @@ package org.hibernate.orm.test.envers.integration.query;
 
 import java.util.Arrays;
 import java.util.List;
-import jakarta.persistence.EntityManager;
 
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.IntTestEntity;
 import org.hibernate.orm.test.envers.entities.ids.UnusualIdNamingEntity;
 import org.hibernate.orm.test.envers.tools.TestTools;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 @SuppressWarnings("unchecked")
-public class AggregateQuery extends BaseEnversJPAFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {IntTestEntity.class, UnusualIdNamingEntity.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-
+@Jpa(annotatedClasses = {
+		IntTestEntity.class,
+		UnusualIdNamingEntity.class
+})
+@EnversTest
+public class AggregateQuery {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1
-		em.getTransaction().begin();
-		IntTestEntity ite1 = new IntTestEntity( 2 );
-		IntTestEntity ite2 = new IntTestEntity( 10 );
-		em.persist( ite1 );
-		em.persist( ite2 );
-		Integer id1 = ite1.getId();
-		Integer id2 = ite2.getId();
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			IntTestEntity ite1 = new IntTestEntity( 2 );
+			IntTestEntity ite2 = new IntTestEntity( 10 );
+			em.persist( ite1 );
+			em.persist( ite2 );
+		} );
 
 		// Revision 2
-		em.getTransaction().begin();
-		IntTestEntity ite3 = new IntTestEntity( 8 );
-		UnusualIdNamingEntity uine1 = new UnusualIdNamingEntity( "id1", "data1" );
-		em.persist( uine1 );
-		em.persist( ite3 );
-		ite1 = em.find( IntTestEntity.class, id1 );
-		ite1.setNumber( 0 );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			IntTestEntity ite3 = new IntTestEntity( 8 );
+			UnusualIdNamingEntity uine1 = new UnusualIdNamingEntity( "id1", "data1" );
+			em.persist( uine1 );
+			em.persist( ite3 );
+			IntTestEntity ite1 = em.createQuery( "from IntTestEntity where number = 2", IntTestEntity.class )
+					.getSingleResult();
+			ite1.setNumber( 0 );
+		} );
 
 		// Revision 3
-		em.getTransaction().begin();
-		ite2 = em.find( IntTestEntity.class, id2 );
-		ite2.setNumber( 52 );
-		em.getTransaction().commit();
-
-		em.close();
+		scope.inTransaction( em -> {
+			IntTestEntity ite2 = em.createQuery( "from IntTestEntity where number = 10", IntTestEntity.class )
+					.getSingleResult();
+			ite2.setNumber( 52 );
+		} );
 	}
 
 	@Test
-	public void testEntitiesAvgMaxQuery() {
-		Object[] ver1 = (Object[]) getAuditReader().createQuery()
-				.forEntitiesAtRevision( IntTestEntity.class, 1 )
-				.addProjection( AuditEntity.property( "number" ).max() )
-				.addProjection( AuditEntity.property( "number" ).function( "avg" ) )
-				.getSingleResult();
+	public void testEntitiesAvgMaxQuery(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			Object[] ver1 = (Object[]) AuditReaderFactory.get( em ).createQuery()
+					.forEntitiesAtRevision( IntTestEntity.class, 1 )
+					.addProjection( AuditEntity.property( "number" ).max() )
+					.addProjection( AuditEntity.property( "number" ).function( "avg" ) )
+					.getSingleResult();
 
-		Object[] ver2 = (Object[]) getAuditReader().createQuery()
-				.forEntitiesAtRevision( IntTestEntity.class, 2 )
-				.addProjection( AuditEntity.property( "number" ).max() )
-				.addProjection( AuditEntity.property( "number" ).function( "avg" ) )
-				.getSingleResult();
+			Object[] ver2 = (Object[]) AuditReaderFactory.get( em ).createQuery()
+					.forEntitiesAtRevision( IntTestEntity.class, 2 )
+					.addProjection( AuditEntity.property( "number" ).max() )
+					.addProjection( AuditEntity.property( "number" ).function( "avg" ) )
+					.getSingleResult();
 
-		Object[] ver3 = (Object[]) getAuditReader().createQuery()
-				.forEntitiesAtRevision( IntTestEntity.class, 3 )
-				.addProjection( AuditEntity.property( "number" ).max() )
-				.addProjection( AuditEntity.property( "number" ).function( "avg" ) )
-				.getSingleResult();
+			Object[] ver3 = (Object[]) AuditReaderFactory.get( em ).createQuery()
+					.forEntitiesAtRevision( IntTestEntity.class, 3 )
+					.addProjection( AuditEntity.property( "number" ).max() )
+					.addProjection( AuditEntity.property( "number" ).function( "avg" ) )
+					.getSingleResult();
 
-		assert (Integer) ver1[0] == 10;
-		assert (Double) ver1[1] == 6.0;
+			assertEquals( 10, (Integer) ver1[0] );
+			assertEquals( 6.0, (Double) ver1[1] );
 
-		assert (Integer) ver2[0] == 10;
-		assert (Double) ver2[1] == 6.0;
+			assertEquals( 10, (Integer) ver2[0] );
+			assertEquals( 6.0, (Double) ver2[1] );
 
-		assert (Integer) ver3[0] == 52;
-		assert (Double) ver3[1] == 20.0;
-	}
-
-	@Test
-	@JiraKey(value = "HHH-8036")
-	public void testEntityIdProjection() {
-		Integer maxId = (Integer) getAuditReader().createQuery().forRevisionsOfEntity( IntTestEntity.class, true, true )
-				.addProjection( AuditEntity.id().max() )
-				.add( AuditEntity.revisionNumber().gt( 2 ) )
-				.getSingleResult();
-		Assert.assertEquals( Integer.valueOf( 2 ), maxId );
+			assertEquals( 52, (Integer) ver3[0] );
+			assertEquals( 20.0, (Double) ver3[1] );
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-8036")
-	public void testEntityIdRestriction() {
-		List<IntTestEntity> list = getAuditReader().createQuery().forRevisionsOfEntity(
-				IntTestEntity.class,
-				true,
-				true
-		)
-				.add( AuditEntity.id().between( 2, 3 ) )
-				.getResultList();
-		Assert.assertTrue(
-				TestTools.checkCollection(
-						list,
-						new IntTestEntity( 10, 2 ), new IntTestEntity( 8, 3 ), new IntTestEntity( 52, 2 )
-				)
-		);
+	public void testEntityIdProjection(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			Integer maxId = (Integer) AuditReaderFactory.get( em ).createQuery()
+					.forRevisionsOfEntity( IntTestEntity.class, true, true )
+					.addProjection( AuditEntity.id().max() )
+					.add( AuditEntity.revisionNumber().gt( 2 ) )
+					.getSingleResult();
+			assertEquals( Integer.valueOf( 2 ), maxId );
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-8036")
-	public void testEntityIdOrdering() {
-		List<IntTestEntity> list = getAuditReader().createQuery().forRevisionsOfEntity(
-				IntTestEntity.class,
-				true,
-				true
-		)
-				.add( AuditEntity.revisionNumber().lt( 2 ) )
-				.addOrder( AuditEntity.id().desc() )
-				.getResultList();
-		Assert.assertEquals( Arrays.asList( new IntTestEntity( 10, 2 ), new IntTestEntity( 2, 1 ) ), list );
-	}
-
-	@Test
-	@JiraKey(value = "HHH-8036")
-	public void testUnusualIdFieldName() {
-		UnusualIdNamingEntity entity = (UnusualIdNamingEntity) getAuditReader().createQuery()
-				.forRevisionsOfEntity( UnusualIdNamingEntity.class, true, true )
-				.add( AuditEntity.id().like( "id1" ) )
-				.getSingleResult();
-		Assert.assertEquals( new UnusualIdNamingEntity( "id1", "data1" ), entity );
-	}
-
-	@Test
-	@JiraKey(value = "HHH-8036")
-	public void testEntityIdModifiedFlagNotSupported() {
-		try {
-			getAuditReader().createQuery().forRevisionsOfEntity( IntTestEntity.class, true, true )
-					.add( AuditEntity.id().hasChanged() )
+	public void testEntityIdRestriction(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			List<IntTestEntity> list = AuditReaderFactory.get( em ).createQuery()
+					.forRevisionsOfEntity( IntTestEntity.class, true, true )
+					.add( AuditEntity.id().between( 2, 3 ) )
 					.getResultList();
-		}
-		catch (UnsupportedOperationException e1) {
+			assertTrue(
+					TestTools.checkCollection(
+							list,
+							new IntTestEntity( 10, 2 ), new IntTestEntity( 8, 3 ), new IntTestEntity( 52, 2 )
+					)
+			);
+		} );
+	}
+
+	@Test
+	@JiraKey(value = "HHH-8036")
+	public void testEntityIdOrdering(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			List<IntTestEntity> list = AuditReaderFactory.get( em ).createQuery()
+					.forRevisionsOfEntity( IntTestEntity.class, true, true )
+					.add( AuditEntity.revisionNumber().lt( 2 ) )
+					.addOrder( AuditEntity.id().desc() )
+					.getResultList();
+			assertEquals( Arrays.asList( new IntTestEntity( 10, 2 ), new IntTestEntity( 2, 1 ) ), list );
+		} );
+	}
+
+	@Test
+	@JiraKey(value = "HHH-8036")
+	public void testUnusualIdFieldName(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			UnusualIdNamingEntity entity = (UnusualIdNamingEntity) AuditReaderFactory.get( em ).createQuery()
+					.forRevisionsOfEntity( UnusualIdNamingEntity.class, true, true )
+					.add( AuditEntity.id().like( "id1" ) )
+					.getSingleResult();
+			assertEquals( new UnusualIdNamingEntity( "id1", "data1" ), entity );
+		} );
+	}
+
+	@Test
+	@JiraKey(value = "HHH-8036")
+	public void testEntityIdModifiedFlagNotSupported(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
 			try {
-				getAuditReader().createQuery().forRevisionsOfEntity( IntTestEntity.class, true, true )
-						.add( AuditEntity.id().hasNotChanged() )
+				AuditReaderFactory.get( em ).createQuery()
+						.forRevisionsOfEntity( IntTestEntity.class, true, true )
+						.add( AuditEntity.id().hasChanged() )
 						.getResultList();
 			}
-			catch (UnsupportedOperationException e2) {
-				return;
+			catch (UnsupportedOperationException e1) {
+				try {
+					AuditReaderFactory.get( em ).createQuery()
+							.forRevisionsOfEntity( IntTestEntity.class, true, true )
+							.add( AuditEntity.id().hasNotChanged() )
+							.getResultList();
+				}
+				catch (UnsupportedOperationException e2) {
+					return;
+				}
+				fail();
 			}
-			Assert.fail();
-		}
-		Assert.fail();
+			fail();
+		} );
 	}
 }

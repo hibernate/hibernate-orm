@@ -10,19 +10,18 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.orm.test.envers.AbstractEnversTest;
 import org.hibernate.mapping.PersistentClass;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Steve Ebersole
  */
-public class BasicModelingTest extends AbstractEnversTest {
+public class BasicModelingTest {
 	@Test
 	@JiraKey( value = "HHH-9042" )
 	public void testMetamodelBuilding() {

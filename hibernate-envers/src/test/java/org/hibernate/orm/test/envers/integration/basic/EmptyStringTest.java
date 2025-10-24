@@ -4,68 +4,61 @@
  */
 package org.hibernate.orm.test.envers.integration.basic;
 
-import java.util.Arrays;
-import jakarta.persistence.EntityManager;
-
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
-
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-import junit.framework.Assert;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @JiraKey(value = "HHH-7246")
 @RequiresDialect(OracleDialect.class)
-public class EmptyStringTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {StrTestEntity.class})
+public class EmptyStringTest {
 	private Integer emptyId = null;
 	private Integer nullId = null;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {StrTestEntity.class};
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			StrTestEntity emptyEntity = new StrTestEntity( "" );
+			em.persist( emptyEntity );
+			StrTestEntity nullEntity = new StrTestEntity( null );
+			em.persist( nullEntity );
+
+			emptyId = emptyEntity.getId();
+			nullId = nullEntity.getId();
+		} );
+
+		scope.inTransaction( em -> {
+			// Should not generate revision after NULL to "" modification and vice versa on Oracle.
+			StrTestEntity emptyEntity = em.find( StrTestEntity.class, emptyId );
+			emptyEntity.setStr( null );
+			em.merge( emptyEntity );
+			StrTestEntity nullEntity = em.find( StrTestEntity.class, nullId );
+			nullEntity.setStr( "" );
+			em.merge( nullEntity );
+		} );
 	}
 
 	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-
-		// Revision 1
-		em.getTransaction().begin();
-		StrTestEntity emptyEntity = new StrTestEntity( "" );
-		em.persist( emptyEntity );
-		StrTestEntity nullEntity = new StrTestEntity( null );
-		em.persist( nullEntity );
-		em.getTransaction().commit();
-
-		emptyId = emptyEntity.getId();
-		nullId = nullEntity.getId();
-
-		em.close();
-		em = getEntityManager();
-
-		// Should not generate revision after NULL to "" modification and vice versa on Oracle.
-		em.getTransaction().begin();
-		emptyEntity = em.find( StrTestEntity.class, emptyId );
-		emptyEntity.setStr( null );
-		em.merge( emptyEntity );
-		nullEntity = em.find( StrTestEntity.class, nullId );
-		nullEntity.setStr( "" );
-		em.merge( nullEntity );
-		em.getTransaction().commit();
-
-		em.close();
-	}
-
-	@Test
-	public void testRevisionsCounts() {
-		Assert.assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( StrTestEntity.class, emptyId ) );
-		Assert.assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( StrTestEntity.class, nullId ) );
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( StrTestEntity.class, emptyId ) );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( StrTestEntity.class, nullId ) );
+		} );
 	}
 }

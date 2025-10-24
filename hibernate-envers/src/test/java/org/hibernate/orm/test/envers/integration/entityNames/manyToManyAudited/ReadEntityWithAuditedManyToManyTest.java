@@ -4,25 +4,30 @@
  */
 package org.hibernate.orm.test.envers.integration.entityNames.manyToManyAudited;
 
-import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.envers.AuditReader;
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.MappingException;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.orm.test.envers.AbstractOneSessionTest;
-import org.hibernate.orm.test.envers.Priority;
-
-import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.junit.Test;
 
 /**
  * @author Hern&aacute;n Chanfreau
  */
 @RequiresDialect(H2Dialect.class)
-public class ReadEntityWithAuditedManyToManyTest extends AbstractOneSessionTest {
+@DomainModel(xmlMappings = "mappings/entityNames/manyToManyAudited/mappings.hbm.xml")
+@SessionFactory
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class ReadEntityWithAuditedManyToManyTest {
 
 	private long id_car1;
 	private long id_car2;
@@ -35,58 +40,51 @@ public class ReadEntityWithAuditedManyToManyTest extends AbstractOneSessionTest 
 	private Person person1_1;
 	private Car car1_2;
 
-	protected void initMappings() throws MappingException, URISyntaxException {
-		URL url = Thread.currentThread().getContextClassLoader().getResource(
-				"mappings/entityNames/manyToManyAudited/mappings.hbm.xml"
-		);
-		config.addFile( new File( url.toURI() ) );
-	}
-
-
 	@Test
-	@Priority(10)
-	public void initData() {
+	public void testGetEntityNameManyYoManyWithEntityName(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			Person pers1 = new Person( "Hernan", 28 );
+			Person pers2 = new Person( "Leandro", 29 );
+			Person pers3 = new Person( "Barba", 32 );
+			Person pers4 = new Person( "Camomo", 15 );
 
-		initializeSession();
+			//REV 1
+			session.getTransaction().begin();
+			List<Person> owners = new ArrayList<Person>();
+			owners.add( pers1 );
+			owners.add( pers2 );
+			owners.add( pers3 );
+			Car car1 = new Car( 5, owners );
 
-		Person pers1 = new Person( "Hernan", 28 );
-		Person pers2 = new Person( "Leandro", 29 );
-		Person pers3 = new Person( "Barba", 32 );
-		Person pers4 = new Person( "Camomo", 15 );
+			session.persist( car1 );
+			session.getTransaction().commit();
+			id_pers1 = pers1.getId();
+			id_car1 = car1.getId();
 
-		//REV 1
-		getSession().getTransaction().begin();
-		List<Person> owners = new ArrayList<Person>();
-		owners.add( pers1 );
-		owners.add( pers2 );
-		owners.add( pers3 );
-		Car car1 = new Car( 5, owners );
+			owners = new ArrayList<Person>();
+			owners.add( pers2 );
+			owners.add( pers3 );
+			owners.add( pers4 );
+			Car car2 = new Car( 27, owners );
+			//REV 2
+			session.getTransaction().begin();
+			Person person1 = (Person) session.get( "Personaje", id_pers1 );
+			person1.setName( "Hernan David" );
+			person1.setAge( 40 );
+			session.persist( car1 );
+			session.persist( car2 );
+			session.getTransaction().commit();
+			id_car2 = car2.getId();
 
-		getSession().persist( car1 );
-		getSession().getTransaction().commit();
-		id_pers1 = pers1.getId();
-		id_car1 = car1.getId();
-
-		owners = new ArrayList<Person>();
-		owners.add( pers2 );
-		owners.add( pers3 );
-		owners.add( pers4 );
-		Car car2 = new Car( 27, owners );
-		//REV 2
-		getSession().getTransaction().begin();
-		Person person1 = (Person) getSession().get( "Personaje", id_pers1 );
-		person1.setName( "Hernan David" );
-		person1.setAge( 40 );
-		getSession().persist( car1 );
-		getSession().persist( car2 );
-		getSession().getTransaction().commit();
-		id_car2 = car2.getId();
+			final var auditReader = AuditReaderFactory.get( session );
+			loadDataOnSessionAndAuditReader( session, auditReader );
+			checkEntityNames( session, auditReader );
+		} );
 	}
 
-	private void loadDataOnSessionAndAuditReader() {
-
-		car1_2 = getAuditReader().find( Car.class, id_car1, 2 );
-		Car car2_2 = getAuditReader().find( Car.class, id_car2, 2 );
+	private void loadDataOnSessionAndAuditReader(SessionImplementor session, AuditReader auditReader) {
+		car1_2 = auditReader.find( Car.class, id_car1, 2 );
+		Car car2_2 = auditReader.find( Car.class, id_car2, 2 );
 
 		// navigate through relations to load objects
 		for ( Person owner : car1_2.getOwners() ) {
@@ -100,39 +98,29 @@ public class ReadEntityWithAuditedManyToManyTest extends AbstractOneSessionTest 
 			}
 		}
 
-		car1 = (Car) getSession().get( Car.class, id_car1 );
-		person1 = (Person) getSession().get( "Personaje", id_pers1 );
-		person1_1 = getAuditReader().find( Person.class, "Personaje", id_pers1, 1 );
+		car1 = (Car) session.get( Car.class, id_car1 );
+		person1 = (Person) session.get( "Personaje", id_pers1 );
+		person1_1 = auditReader.find( Person.class, "Personaje", id_pers1, 1 );
 	}
 
+	private void checkEntityNames(SessionImplementor session, AuditReader auditReader) {
+		String currPerson1EN = session.getEntityName( person1 );
+		String currCar1EN = session.getEntityName( car1 );
 
-	private void checkEntityNames() {
-		String currPerson1EN = getSession().getEntityName( person1 );
-		String currCar1EN = getSession().getEntityName( car1 );
-
-		String person1_1EN = getAuditReader().getEntityName( id_pers1, 1, person1_1 );
+		String person1_1EN = auditReader.getEntityName( id_pers1, 1, person1_1 );
 		assert (currPerson1EN.equals( person1_1EN ));
 
-		String car1_2EN = getAuditReader().getEntityName( id_car1, 2, car1_2 );
+		String car1_2EN = auditReader.getEntityName( id_car1, 2, car1_2 );
 		assert (currCar1EN.equals( car1_2EN ));
 	}
 
 	@Test
-	public void testGetEntityNameManyYoManyWithEntityName() {
-
-		loadDataOnSessionAndAuditReader();
-
-		checkEntityNames();
-	}
-
-
-	@Test
-	public void testGetEntityNameManyYoManyWithEntityNameInNewSession() {
-		//force new session and AR
-		forceNewSession();
-		loadDataOnSessionAndAuditReader();
-
-		checkEntityNames();
-
+	public void testGetEntityNameManyYoManyWithEntityNameInNewSession(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			//force new session and AR
+			final var auditReader = AuditReaderFactory.get( session );
+			loadDataOnSessionAndAuditReader( session, auditReader );
+			checkEntityNames( session, auditReader );
+		} );
 	}
 }

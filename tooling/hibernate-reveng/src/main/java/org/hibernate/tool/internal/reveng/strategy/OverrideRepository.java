@@ -62,7 +62,6 @@ public class OverrideRepository  {
 
 	final private List<TableFilter> tableFilters;
 
-	final private List<Table> tables;
 	final private Map<TableIdentifier, List<ForeignKey>> foreignKeys; // key: TableIdentifier element: List of foreignkeys that references the Table
 
 	final private Map<TableColumnKey, String> typeForColumn;
@@ -108,7 +107,6 @@ public class OverrideRepository  {
 		//this.defaultSchema = null;
 		typeMappings = new HashMap<TypeMappingKey, List<SQLTypeMapping>>();
 		tableFilters = new ArrayList<TableFilter>();
-		tables = new ArrayList<Table>();
 		foreignKeys = new HashMap<TableIdentifier, List<ForeignKey>>();
 		typeForColumn = new HashMap<TableColumnKey, String>();
 		propertyNameForColumn = new HashMap<TableColumnKey, String>();
@@ -130,17 +128,15 @@ public class OverrideRepository  {
 		foreignKeyToInverseEntityInfo = new HashMap<String, AssociationInfo>();
 	}
 
-	public OverrideRepository addFile(File xmlFile) {
+	public void addFile(File xmlFile) {
 		log.info( "Override file: " + xmlFile.getPath() );
 		try {
-			addInputStream( new FileInputStream( xmlFile ) );
+			addInputStream( xmlFile );
 		}
 		catch ( Exception e ) {
 			log.error( "Could not configure overrides from file: " + xmlFile.getPath(), e );
 			throw new MappingException( "Could not configure overrides from file: " + xmlFile.getPath(), e );
 		}
-		return this;
-
 	}
 
 	/**
@@ -161,23 +157,22 @@ public class OverrideRepository  {
 		}
 	}
 
-
 	public OverrideRepository addInputStream(InputStream xmlInputStream) throws MappingException {
 		try {
 			final List<SAXParseException> errors = new ArrayList<SAXParseException>();
 			ErrorHandler errorHandler = new ErrorHandler() {
 				@Override
 				public void warning(SAXParseException exception) throws SAXException {
-					log.warn("warning while parsing xml", exception);			
+					log.warn("warning while parsing xml", exception);
 				}
 				@Override
 				public void error(SAXParseException exception) throws SAXException {
-					errors.add(exception);				
+					errors.add(exception);
 				}
 				@Override
 				public void fatalError(SAXParseException exception) throws SAXException {
-					error(exception);					
-				}				
+					error(exception);
+				}
 			};
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 			DocumentBuilder db = dbf.newDocumentBuilder();
@@ -194,9 +189,23 @@ public class OverrideRepository  {
 			log.error( "Could not configure overrides from input stream", e );
 			throw new MappingException( e );
 		}
+	}
+
+	public void addInputStream(File file) throws MappingException {
+		InputStream xmlInputStream = null;
+		try {
+			xmlInputStream = new FileInputStream( file );
+			addInputStream( xmlInputStream );
+		}
+		catch ( Exception e ) {
+			log.error( "Could not configure overrides from input stream", e );
+			throw new MappingException( e );
+		}
 		finally {
 			try {
-				xmlInputStream.close();
+				if (xmlInputStream != null) {
+					xmlInputStream.close();
+				}
 			}
 			catch ( IOException ioe ) {
 				log.error( "could not close input stream", ioe );
@@ -204,9 +213,8 @@ public class OverrideRepository  {
 		}
 	}
 
-	private OverrideRepository add(Document doc) {
+	private void add(Document doc) {
 		OverrideBinder.bindRoot(this, doc);
-		return this;
 	}
 
 	private String getPreferredHibernateType(int sqlType, int length, int precision, int scale, boolean nullable) {
@@ -220,11 +228,9 @@ public class OverrideRepository  {
 
 	private String scanForMatch(int sqlType, int length, int precision, int scale, boolean nullable, List<SQLTypeMapping> l) {
 		if(l!=null) {
-			Iterator<SQLTypeMapping> iterator = l.iterator();
-			while (iterator.hasNext() ) {
-				SQLTypeMapping element = iterator.next();
-				if(element.getJDBCType()!=sqlType) return null;
-				if(element.match(sqlType, length, precision, scale, nullable) ) {
+			for ( SQLTypeMapping element : l ) {
+				if ( element.getJDBCType() != sqlType ) return null;
+				if ( element.match( sqlType, length, precision, scale, nullable ) ) {
 					return element.getHibernateType();
 				}
 			}
@@ -232,15 +238,10 @@ public class OverrideRepository  {
 		return null;
 	}
 
-	public OverrideRepository addTypeMapping(SQLTypeMapping sqltype) {
+	public void addTypeMapping(SQLTypeMapping sqltype) {
 		TypeMappingKey key = new TypeMappingKey(sqltype);
-		List<SQLTypeMapping> list = typeMappings.get(key);
-		if(list==null) {
-			list = new ArrayList<SQLTypeMapping>();
-			typeMappings.put(key, list);
-		}
+		List<SQLTypeMapping> list = typeMappings.computeIfAbsent( key, k -> new ArrayList<>() );
 		list.add(sqltype);
-		return this;
 	}
 
 	static class TypeMappingKey {
@@ -260,8 +261,7 @@ public class OverrideRepository  {
 
 		public boolean equals(Object obj) {
 			if(obj==null) return false;
-			if(!(obj instanceof TypeMappingKey)) return false;
-			TypeMappingKey other = (TypeMappingKey) obj;
+			if(!(obj instanceof TypeMappingKey other)) return false;
 
 
 			return type==other.type && length==other.length;
@@ -277,11 +277,9 @@ public class OverrideRepository  {
 	}
 
 	protected String getPackageName(TableIdentifier identifier) {
-		Iterator<TableFilter> iterator = tableFilters.iterator();
-		while(iterator.hasNext() ) {
-			TableFilter tf = iterator.next();
-			String value = tf.getPackage(identifier);
-			if(value!=null) {
+		for ( TableFilter tf : tableFilters ) {
+			String value = tf.getPackage( identifier );
+			if ( value != null ) {
 				return value;
 			}
 		}
@@ -296,19 +294,14 @@ public class OverrideRepository  {
 			TableFilter tf = iterator.next();
 			Boolean value = tf.exclude(identifier);
 			if(value!=null) {
-				return value.booleanValue();
+				return value;
 			}
-			if(!tf.getExclude().booleanValue()) {
+			if(!tf.getExclude() ) {
 				hasInclude = true;
 			}
 		}
 
-		// can probably be simplified - but like this to be very explicit ;)
-		if(hasInclude) {
-			return true; // exclude all by default when at least one include specified
-		} else {
-			return false; // if nothing specified or just excludes we include everything
-		}
+		return hasInclude;
 	}
 
 	public void addTableFilter(TableFilter filter) {
@@ -382,16 +375,16 @@ public class OverrideRepository  {
 				String className = tableToClassName.get(tableIdentifier);
 
 				if(className!=null) {
-					 if(className.indexOf( "." )>=0) {
-						 return className;
-					 } else {
-						 String packageName = getPackageName(tableIdentifier);
-						 if(packageName==null) {
-							 return className;
-						 } else {
-							 return StringHelper.qualify(packageName, className);
-						 }
-					 }
+					if( className.contains( "." ) ) {
+						return className;
+					} else {
+						String packageName = getPackageName(tableIdentifier);
+						if(packageName==null) {
+							return className;
+						} else {
+							return StringHelper.qualify(packageName, className);
+						}
+					}
 				}
 
 				String packageName = getPackageName(tableIdentifier);
@@ -471,9 +464,9 @@ public class OverrideRepository  {
 
 
 			public String foreignKeyToInverseEntityName(String keyname,
-					TableIdentifier fromTable, List<?> fromColumnNames,
-					TableIdentifier referencedTable,
-					List<?> referencedColumnNames, boolean uniqueReference) {
+														TableIdentifier fromTable, List<?> fromColumnNames,
+														TableIdentifier referencedTable,
+														List<?> referencedColumnNames, boolean uniqueReference) {
 
 				String property = foreignKeyToInverseName.get(keyname);
 				if(property==null) {
@@ -493,14 +486,14 @@ public class OverrideRepository  {
 			}
 
 			public boolean excludeForeignKeyAsCollection(
-					String keyname, 
-					TableIdentifier fromTable, 
-					List<?> fromColumns, 
-					TableIdentifier referencedTable, 
+					String keyname,
+					TableIdentifier fromTable,
+					List<?> fromColumns,
+					TableIdentifier referencedTable,
 					List<?> referencedColumns) {
 				Boolean bool = foreignKeyInverseExclude.get(keyname);
 				if(bool!=null) {
-					return bool.booleanValue();
+					return bool;
 				} else {
 					return super.excludeForeignKeyAsCollection( keyname, fromTable, fromColumns,
 							referencedTable, referencedColumns );
@@ -508,14 +501,14 @@ public class OverrideRepository  {
 			}
 
 			public boolean excludeForeignKeyAsManytoOne(
-					String keyname, 
-					TableIdentifier fromTable, 
-					List<?> fromColumns, TableIdentifier 
-					referencedTable, 
+					String keyname,
+					TableIdentifier fromTable,
+					List<?> fromColumns, TableIdentifier
+							referencedTable,
 					List<?> referencedColumns) {
 				Boolean bool = (Boolean) foreignKeyToOneExclude.get(keyname);
 				if(bool!=null) {
-					return bool.booleanValue();
+					return bool;
 				} else {
 					return super.excludeForeignKeyAsManytoOne( keyname, fromTable, fromColumns,
 							referencedTable, referencedColumns );
@@ -581,17 +574,15 @@ public class OverrideRepository  {
 	}
 
 	private MultiValuedMap<String, SimpleMetaAttribute> findGeneralAttributes(TableIdentifier identifier) {
-		Iterator<TableFilter> iterator = tableFilters.iterator();
-		while(iterator.hasNext() ) {
-			TableFilter tf = iterator.next();
-			MultiValuedMap<String, SimpleMetaAttribute> value = tf.getMetaAttributes(identifier);
-			if(value!=null) {
+		for ( TableFilter tf : tableFilters ) {
+			MultiValuedMap<String, SimpleMetaAttribute> value = tf.getMetaAttributes( identifier );
+			if ( value != null ) {
 				return value;
 			}
 		}
 		return null;
 	}
-	
+
 	private Map<String, MetaAttribute> toMetaAttributes(MultiValuedMap<String, SimpleMetaAttribute> mvm) {
 		Map<String, MetaAttribute> result = new HashMap<String, MetaAttribute>();
 		for (MapIterator<String, SimpleMetaAttribute> iter = mvm.mapIterator(); iter.hasNext();) {
@@ -600,13 +591,13 @@ public class OverrideRepository  {
 			result.put(key, MetaAttributeHelper.toRealMetaAttribute(key, values));
 		}
 		return result;
- 	}
+	}
 
-    /**
-     * @deprecated Use {@link #getReverseEngineeringStrategy(RevengStrategy)}
-     *     with {@code delegate=null} to explicitly ignore the delegate.
-     */
-     @Deprecated
+	/**
+	 * @deprecated Use {@link #getReverseEngineeringStrategy(RevengStrategy)}
+	 *     with {@code delegate=null} to explicitly ignore the delegate.
+	 */
+	@Deprecated
 	public RevengStrategy getReverseEngineeringStrategy() {
 		return getReverseEngineeringStrategy(null);
 	}
@@ -614,36 +605,31 @@ public class OverrideRepository  {
 	public void addTable(Table table, String wantedClassName) {
 		for (ForeignKey fk : table.getForeignKeys().values()) {
 			TableIdentifier identifier = TableIdentifier.create(fk.getReferencedTable());
-			List<ForeignKey> existing = foreignKeys.get(identifier);
-			if(existing==null) {
-				existing = new ArrayList<ForeignKey>();
-				foreignKeys.put(identifier, existing);
-			}
+			List<ForeignKey> existing = foreignKeys.computeIfAbsent( identifier, k -> new ArrayList<>() );
 			existing.add( fk );
 		}
 
 		if(StringHelper.isNotEmpty(wantedClassName)) {
-      TableIdentifier tableIdentifier = TableIdentifier.create(table);
-      String className = wantedClassName;
+			TableIdentifier tableIdentifier = TableIdentifier.create(table);
+			String className = wantedClassName;
       /* If wantedClassName specifies a package, it is given by
          <hibernate-reverse-engineering><table class="xxx"> config so do no more. */
-			if(!wantedClassName.contains(".")) { 
-        /* Now look for the package name specified by 
+			if(!wantedClassName.contains(".")) {
+        /* Now look for the package name specified by
           <hibernate-reverse-engineering><table-filter package="xxx"> config. */
-        String packageName = getPackageName(tableIdentifier);
-        if (packageName != null && !packageName.isBlank()) {
-          className = packageName + "." + wantedClassName;
-        }
-      }
+				String packageName = getPackageName(tableIdentifier);
+				if (packageName != null && !packageName.isBlank()) {
+					className = packageName + "." + wantedClassName;
+				}
+			}
 			tableToClassName.put(tableIdentifier, className);
 		}
-		tables.add(table);
-  }
+	}
 
 	static class TableColumnKey {
-		private TableIdentifier query;
-		private String name;
-		
+		private final TableIdentifier query;
+		private final String name;
+
 		TableColumnKey(TableIdentifier query, String name){
 			this.query = query;
 			this.name = name;
@@ -670,13 +656,10 @@ public class OverrideRepository  {
 			} else if (!name.equals(other.name))
 				return false;
 			if (query == null) {
-				if (other.query != null)
-					return false;
-			} else if (!query.equals(other.query))
-				return false;
-			return true;
+				return other.query == null;
+			} else return query.equals( other.query );
 		}
-		
+
 	}
 
 	public void setTypeNameForColumn(TableIdentifier identifier, String columnName, String type) {
@@ -763,8 +746,8 @@ public class OverrideRepository  {
 	}
 
 	public void addMetaAttributeInfo(
-			TableIdentifier tableIdentifier, 
-			String name, 
+			TableIdentifier tableIdentifier,
+			String name,
 			MultiValuedMap<String, SimpleMetaAttribute> map) {
 		if(map!=null && !map.isEmpty()) {
 			columnMetaAttributes.put(new TableColumnKey( tableIdentifier, name ), map);
@@ -778,54 +761,53 @@ public class OverrideRepository  {
    are not null.
   */
 
-  private class TableToClassName {
-    Map<String, TableMapper> map = new HashMap<String, TableMapper>();
+	private static class TableToClassName {
+		Map<String, TableMapper> map = new HashMap<String, TableMapper>();
 
-    private String get(TableIdentifier tableIdentifier) {
-      TableMapper mapper = map.get(tableIdentifier.getName());
-      if (mapper != null) {
-        if (mapper.catalog == null || tableIdentifier.getCatalog() == null ||
-            mapper.catalog.equals(tableIdentifier.getCatalog())){
-          if (mapper.schema == null || tableIdentifier.getSchema() == null ||
-              mapper.schema.equals(tableIdentifier.getSchema())){
-            if (mapper.packageName.length() == 0) {
-              return mapper.className;
-            } else {
-              return  mapper.packageName + "." + mapper.className;
-            }
-          }
-        }
-      }
-      return null;
-    }
+		private String get(TableIdentifier tableIdentifier) {
+			TableMapper mapper = map.get(tableIdentifier.getName());
+			if (mapper != null) {
+				if (mapper.catalog == null || tableIdentifier.getCatalog() == null ||
+						mapper.catalog.equals(tableIdentifier.getCatalog())){
+					if (mapper.schema == null || tableIdentifier.getSchema() == null ||
+							mapper.schema.equals(tableIdentifier.getSchema())){
+						if ( mapper.packageName.isEmpty() ) {
+							return mapper.className;
+						} else {
+							return  mapper.packageName + "." + mapper.className;
+						}
+					}
+				}
+			}
+			return null;
+		}
 
-    private void put(TableIdentifier tableIdentifier, String wantedClassName) {
-      TableMapper tableMapper = new TableMapper(
-          tableIdentifier.getCatalog(),
-          tableIdentifier.getSchema(),
-          tableIdentifier.getName(),
-          wantedClassName);
-      map.put(tableIdentifier.getName(), tableMapper);
-    }
-  }
+		private void put(TableIdentifier tableIdentifier, String wantedClassName) {
+			TableMapper tableMapper = new TableMapper(
+					tableIdentifier.getCatalog(),
+					tableIdentifier.getSchema(),
+					wantedClassName );
+			map.put(tableIdentifier.getName(), tableMapper);
+		}
+	}
 
-  private class TableMapper {
-    String catalog;
-    String schema;
-    String className;
-    String packageName;
+	private static class TableMapper {
+		String catalog;
+		String schema;
+		String className;
+		String packageName;
 
-    private TableMapper(String catalog, String schema, String name, String wantedClassName) {
-      this.catalog = catalog;
-      this.schema = schema;
-      if (wantedClassName.contains(".")) {
-        int nameStartPos = wantedClassName.lastIndexOf(".");
-        this.className = wantedClassName.substring(nameStartPos+1);
-        this.packageName = wantedClassName.substring(0, nameStartPos);
-      } else {
-        this.className = wantedClassName;
-        this.packageName = "";
-      }
-    }
-  }
+		private TableMapper(String catalog, String schema, String wantedClassName) {
+			this.catalog = catalog;
+			this.schema = schema;
+			if (wantedClassName.contains(".")) {
+				int nameStartPos = wantedClassName.lastIndexOf(".");
+				this.className = wantedClassName.substring(nameStartPos+1);
+				this.packageName = wantedClassName.substring(0, nameStartPos);
+			} else {
+				this.className = wantedClassName;
+				this.packageName = "";
+			}
+		}
+	}
 }

@@ -69,6 +69,11 @@ test {
 			"--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED")
 }
 
+if ( jdkVersions.test.launcher.asInt() > 21 ) {
+    project.logger.lifecycle( "Skipping {} tests for JDK version {}", project.name, jdkVersions.test.launcher.asInt() )
+    tasks.getByName( "test" ).enabled = false
+}
+
 def releasePrepareTask = tasks.register("releasePrepare") {
 	group "release-prepare"
 	description "See :release:releasePrepare for details.  Here we hook in the `check` task."

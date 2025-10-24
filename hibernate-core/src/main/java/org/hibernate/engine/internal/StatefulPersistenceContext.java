@@ -405,7 +405,10 @@ class StatefulPersistenceContext implements PersistenceContext {
 		else {
 			newEntityHolder = null;
 		}
-		holder.entityInitializer = initializer;
+		if ( holder.processingState != processingState ) {
+			holder.entityInitializer = initializer;
+			holder.processingState = processingState;
+		}
 		return holder;
 	}
 
@@ -2174,7 +2177,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 		private Object entity;
 		private Object proxy;
 		private @Nullable EntityEntry entityEntry;
-		private EntityInitializer<?> entityInitializer;
+		private @Nullable EntityInitializer<?> entityInitializer;
+		private @Nullable JdbcValuesSourceProcessingState processingState;
 		private EntityHolderState state;
 
 		private EntityHolderImpl() {
@@ -2212,8 +2216,13 @@ class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		@Override
-		public EntityInitializer<?> getEntityInitializer() {
+		public @Nullable EntityInitializer<?> getEntityInitializer() {
 			return entityInitializer;
+		}
+
+		@Override
+		public @Nullable JdbcValuesSourceProcessingState getJdbcValuesProcessingState() {
+			return processingState;
 		}
 
 		@Override
@@ -2237,8 +2246,9 @@ class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		@Override
-		public void resetEntityInitialier(){
+		public void resetEntityInitialier() {
 			entityInitializer = null;
+			processingState = null;
 		}
 
 		public EntityHolderImpl withEntity(EntityKey entityKey, EntityPersister descriptor, Object entity) {
@@ -2253,6 +2263,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 			assert entityKey != null
 				&& descriptor != null
 				&& entityInitializer == null
+				&& processingState == null
 				&& state == EntityHolderState.UNINITIALIZED;
 			this.entityKey = entityKey;
 			this.descriptor = descriptor;

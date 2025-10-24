@@ -6,14 +6,13 @@ package org.hibernate.sql.results.internal;
 
 import jakarta.persistence.TupleElement;
 import org.hibernate.InstantiationException;
+import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
 import org.hibernate.sql.results.spi.RowTransformer;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.lang.reflect.Constructor;
 import java.util.List;
-
-import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.sql.results.graph.instantiation.internal.InstantiationHelper.findMatchingConstructor;
@@ -32,6 +31,7 @@ public class RowTransformerConstructorImpl<T> implements RowTransformer<T> {
 			TupleMetadata tupleMetadata,
 			TypeConfiguration typeConfiguration) {
 		this.type = type;
+		assert tupleMetadata != null : "TupleMetadata must not be null";
 		final List<TupleElement<?>> elements = tupleMetadata.getList();
 		final List<Class<?>> argumentTypes = elements.stream()
 				.map( RowTransformerConstructorImpl::resolveElementJavaType )

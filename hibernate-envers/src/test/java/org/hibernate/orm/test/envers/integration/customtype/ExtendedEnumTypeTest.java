@@ -10,16 +10,19 @@ import java.util.List;
 import org.hibernate.annotations.Type;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.boot.internal.EnversService;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CustomType;
 import org.hibernate.usertype.UserType;
 
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -28,9 +31,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Tests that a custom type which extends {@link org.hibernate.orm.test.envers.integration.customtype.EnumType}
@@ -42,7 +44,9 @@ import static org.junit.Assert.assertNull;
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-12304")
-public class ExtendedEnumTypeTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = ExtendedEnumTypeTest.Widget.class)
+public class ExtendedEnumTypeTest {
 
 	// An extended type to trigger the need for Envers to supply type information in the HBM mappings.
 	// This should be treated the same as any other property annotated as Enumerated or uses an Enum.
@@ -103,63 +107,60 @@ public class ExtendedEnumTypeTest extends BaseEnversJPAFunctionalTestCase {
 		}
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Widget.class };
-	}
-
 	private Integer widgetId;
 
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1 - insert
-		this.widgetId = doInJPA( this::entityManagerFactory, entityManager -> {
+		this.widgetId = scope.fromTransaction( entityManager -> {
 			final Widget widget = new Widget( Widget.Status.DRAFT );
 			entityManager.persist( widget );
 			return widget.getId();
 		} );
 
 		// Revision 2 - update
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final Widget widget = entityManager.find( Widget.class, this.widgetId );
 			widget.setStatus( Widget.Status.ARCHIVED );
 			entityManager.merge( widget );
 		} );
 
 		// Revision 3 - delete
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final Widget widget = entityManager.find( Widget.class, this.widgetId );
 			entityManager.remove( widget );
 		} );
 	}
 
 	@Test
-	public void testRevisionHistory() {
-		List revisions = getAuditReader().getRevisions( Widget.class, this.widgetId );
-		assertEquals( Arrays.asList( 1, 2, 3 ), revisions );
+	public void testRevisionHistory(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			List revisions = auditReader.getRevisions( Widget.class, this.widgetId );
+			assertEquals( Arrays.asList( 1, 2, 3 ), revisions );
 
-		final Widget rev1 = getAuditReader().find( Widget.class, this.widgetId, 1 );
-		assertEquals( Widget.Status.DRAFT, rev1.getStatus() );
+			final Widget rev1 = auditReader.find( Widget.class, this.widgetId, 1 );
+			assertEquals( Widget.Status.DRAFT, rev1.getStatus() );
 
-		final Widget rev2 = getAuditReader().find( Widget.class, this.widgetId, 2 );
-		assertEquals( Widget.Status.ARCHIVED, rev2.getStatus() );
+			final Widget rev2 = auditReader.find( Widget.class, this.widgetId, 2 );
+			assertEquals( Widget.Status.ARCHIVED, rev2.getStatus() );
 
-		final Widget rev3 = getAuditReader().find( Widget.class, this.widgetId, 3 );
-		assertNull( rev3 );
+			final Widget rev3 = auditReader.find( Widget.class, this.widgetId, 3 );
+			assertNull( rev3 );
+		} );
 	}
 
 	@Test
-	public void testEnumPropertyStorageType() {
+	public void testEnumPropertyStorageType(EntityManagerFactoryScope scope) {
 		// test that property 'status' translates to an enum type that is stored by name (e.g. STRING)
-		assertEnumProperty( Widget.class, ExtendedEnumType.class, "status", EnumType.STRING );
+		assertEnumProperty( scope, Widget.class, ExtendedEnumType.class, "status", EnumType.STRING );
 
 		// test that property 'status2' translates to an enum type that is stored by position (e.g. ORDINAL)
-		assertEnumProperty( Widget.class, ExtendedEnumType.class, "status2", EnumType.ORDINAL );
+		assertEnumProperty( scope, Widget.class, ExtendedEnumType.class, "status2", EnumType.ORDINAL );
 	}
 
-	private void assertEnumProperty(Class<?> entityClass, Class<?> typeClass, String propertyName, EnumType expectedType) {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	private void assertEnumProperty(EntityManagerFactoryScope scope, Class<?> entityClass, Class<?> typeClass, String propertyName, EnumType expectedType) {
+		scope.inEntityManager( entityManager -> {
 			final SessionFactoryImplementor sessionFactory = entityManager.unwrap( SessionImplementor.class ).getSessionFactory();
 
 			final EntityPersister entityPersister = sessionFactory.getMappingMetamodel().getEntityDescriptor( entityClass );

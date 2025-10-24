@@ -5,85 +5,82 @@
 package org.hibernate.orm.test.envers.integration.customtype;
 
 import java.util.Arrays;
-import java.util.Map;
-import jakarta.persistence.EntityManager;
 
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
 
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @JiraKey(value = "HHH-7870")
-public class ObjectUserTypeTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(
+		annotatedClasses = {ObjectUserTypeEntity.class},
+		integrationSettings = @Setting(name = EnversSettings.STORE_DATA_AT_DELETE, value = "true")
+)
+public class ObjectUserTypeTest {
 	private int id;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {ObjectUserTypeEntity.class};
-	}
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		options.put( EnversSettings.STORE_DATA_AT_DELETE, "true" );
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1 - add
-		em.getTransaction().begin();
-		ObjectUserTypeEntity entity = new ObjectUserTypeEntity( "builtInType1", "stringUserType1" );
-		em.persist( entity );
-		em.getTransaction().commit();
-
-		id = entity.getId();
+		scope.inTransaction( em -> {
+			ObjectUserTypeEntity entity = new ObjectUserTypeEntity( "builtInType1", "stringUserType1" );
+			em.persist( entity );
+			this.id = entity.getId();
+		} );
 
 		// Revision 2 - modify
-		em.getTransaction().begin();
-		entity = em.find( ObjectUserTypeEntity.class, entity.getId() );
-		entity.setUserType( 2 );
-		entity = em.merge( entity );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			ObjectUserTypeEntity entity = em.find( ObjectUserTypeEntity.class, this.id );
+			entity.setUserType( 2 );
+			em.merge( entity );
+		} );
 
 		// Revision 3 - remove
-		em.getTransaction().begin();
-		entity = em.find( ObjectUserTypeEntity.class, entity.getId() );
-		em.remove( entity );
-		em.getTransaction().commit();
-
-		em.close();
+		scope.inTransaction( em -> {
+			ObjectUserTypeEntity entity = em.find( ObjectUserTypeEntity.class, this.id );
+			em.remove( entity );
+		} );
 	}
 
 	@Test
-	public void testRevisionCount() {
-		Assert.assertEquals(
-				Arrays.asList( 1, 2, 3 ),
-				getAuditReader().getRevisions( ObjectUserTypeEntity.class, id )
-		);
+	public void testRevisionCount(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals(
+					Arrays.asList( 1, 2, 3 ),
+					auditReader.getRevisions( ObjectUserTypeEntity.class, id )
+			);
+		} );
 	}
 
 	@Test
-	public void testHistory() {
+	public void testHistory(EntityManagerFactoryScope scope) {
 		ObjectUserTypeEntity ver1 = new ObjectUserTypeEntity( id, "builtInType1", "stringUserType1" );
 		ObjectUserTypeEntity ver2 = new ObjectUserTypeEntity( id, "builtInType1", 2 );
 
-		Assert.assertEquals( ver1, getAuditReader().find( ObjectUserTypeEntity.class, id, 1 ) );
-		Assert.assertEquals( ver2, getAuditReader().find( ObjectUserTypeEntity.class, id, 2 ) );
-		Assert.assertEquals(
-				ver2,
-				getAuditReader().createQuery()
-						.forRevisionsOfEntity( ObjectUserTypeEntity.class, true, true )
-						.getResultList()
-						.get( 2 )
-		); // Checking delete state.
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( ver1, auditReader.find( ObjectUserTypeEntity.class, id, 1 ) );
+			assertEquals( ver2, auditReader.find( ObjectUserTypeEntity.class, id, 2 ) );
+			assertEquals(
+					ver2,
+					auditReader.createQuery()
+							.forRevisionsOfEntity( ObjectUserTypeEntity.class, true, true )
+							.getResultList()
+							.get( 2 )
+			); // Checking delete state.
+		} );
 	}
 }

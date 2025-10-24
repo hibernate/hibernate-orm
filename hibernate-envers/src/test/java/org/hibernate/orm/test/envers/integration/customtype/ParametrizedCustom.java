@@ -5,71 +5,63 @@
 package org.hibernate.orm.test.envers.integration.customtype;
 
 import java.util.Arrays;
-import jakarta.persistence.EntityManager;
 
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.orm.test.envers.entities.customtype.ParametrizedCustomTypeEntity;
 
-import org.junit.Test;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class ParametrizedCustom extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {ParametrizedCustomTypeEntity.class})
+public class ParametrizedCustom {
 	private Integer pcte_id;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {ParametrizedCustomTypeEntity.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-
-		ParametrizedCustomTypeEntity pcte = new ParametrizedCustomTypeEntity();
-
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1 (persisting 1 entity)
-		em.getTransaction().begin();
-
-		pcte.setStr( "U" );
-
-		em.persist( pcte );
-
-		em.getTransaction().commit();
+		this.pcte_id = scope.fromTransaction( em -> {
+			ParametrizedCustomTypeEntity pcte = new ParametrizedCustomTypeEntity();
+			pcte.setStr( "U" );
+			em.persist( pcte );
+			return pcte.getId();
+		} );
 
 		// Revision 2 (changing the value)
-		em.getTransaction().begin();
-
-		pcte = em.find( ParametrizedCustomTypeEntity.class, pcte.getId() );
-
-		pcte.setStr( "V" );
-
-		em.getTransaction().commit();
-
-		//
-
-		pcte_id = pcte.getId();
+		scope.inTransaction( em -> {
+			ParametrizedCustomTypeEntity pcte = em.find( ParametrizedCustomTypeEntity.class, this.pcte_id );
+			pcte.setStr( "V" );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		assert Arrays.asList( 1, 2 ).equals(
-				getAuditReader().getRevisions(
-						ParametrizedCustomTypeEntity.class,
-						pcte_id
-				)
-		);
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals(
+					Arrays.asList( 1, 2 ),
+					auditReader.getRevisions( ParametrizedCustomTypeEntity.class, pcte_id )
+			);
+		} );
 	}
 
 	@Test
-	public void testHistoryOfCcte() {
-		ParametrizedCustomTypeEntity rev1 = getAuditReader().find( ParametrizedCustomTypeEntity.class, pcte_id, 1 );
-		ParametrizedCustomTypeEntity rev2 = getAuditReader().find( ParametrizedCustomTypeEntity.class, pcte_id, 2 );
+	public void testHistoryOfCcte(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			ParametrizedCustomTypeEntity rev1 = auditReader.find( ParametrizedCustomTypeEntity.class, pcte_id, 1 );
+			ParametrizedCustomTypeEntity rev2 = auditReader.find( ParametrizedCustomTypeEntity.class, pcte_id, 2 );
 
-		assert "xUy".equals( rev1.getStr() );
-		assert "xVy".equals( rev2.getStr() );
+			assertEquals( "xUy", rev1.getStr() );
+			assertEquals( "xVy", rev2.getStr() );
+		} );
 	}
 }

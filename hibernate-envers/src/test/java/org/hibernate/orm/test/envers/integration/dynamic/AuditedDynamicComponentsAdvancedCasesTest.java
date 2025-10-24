@@ -4,6 +4,22 @@
  */
 package org.hibernate.orm.test.envers.integration.dynamic;
 
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.envers.query.AuditEntity;
+import org.hibernate.orm.test.envers.integration.components.dynamic.AdvancedEntity;
+import org.hibernate.orm.test.envers.integration.components.dynamic.Age;
+import org.hibernate.orm.test.envers.integration.components.dynamic.InternalComponent;
+import org.hibernate.orm.test.envers.integration.components.dynamic.ManyToManyEntity;
+import org.hibernate.orm.test.envers.integration.components.dynamic.ManyToOneEntity;
+import org.hibernate.orm.test.envers.integration.components.dynamic.OneToOneEntity;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -12,30 +28,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.Session;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.orm.test.envers.integration.components.dynamic.AdvancedEntity;
-import org.hibernate.orm.test.envers.integration.components.dynamic.Age;
-import org.hibernate.orm.test.envers.integration.components.dynamic.InternalComponent;
-import org.hibernate.orm.test.envers.integration.components.dynamic.ManyToManyEntity;
-import org.hibernate.orm.test.envers.integration.components.dynamic.ManyToOneEntity;
-import org.hibernate.orm.test.envers.integration.components.dynamic.OneToOneEntity;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-import junit.framework.Assert;
-
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.hibernate.cfg.AvailableSettings.JPA_TRANSACTION_COMPLIANCE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Lukasz Zuchowski (author at zuchos dot com)
- *         More advanced tests for dynamic component.
+ * More advanced tests for dynamic component.
  */
 @JiraKey(value = "HHH-8049")
-public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctionalTestCase {
+@EnversTest
+@Jpa(
+		xmlMappings = "mappings/dynamicComponents/mapAdvanced.hbm.xml",
+		integrationSettings = @Setting(name = JPA_TRANSACTION_COMPLIANCE, value = "false")
+)
+public class AuditedDynamicComponentsAdvancedCasesTest {
 
 	public static final String PROP_BOOLEAN = "propBoolean";
 	public static final String PROP_INT = "propInt";
@@ -51,17 +58,6 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 	public static final String AGE_USER_TYPE = "ageUserType";
 	public static final String INTERNAL_LIST_OF_USER_TYPES = "internalListOfUserTypes";
 
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		super.addSettings( settings );
-		settings.put( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "false" );
-	}
-
-	@Override
-	protected String[] getMappings() {
-		return new String[] { "mappings/dynamicComponents/mapAdvanced.hbm.xml" };
-	}
-
 	private OneToOneEntity getOneToOneEntity() {
 		return new OneToOneEntity( 1L, "OneToOne" );
 	}
@@ -73,7 +69,6 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 	private ManyToOneEntity getManyToOneEntity() {
 		return new ManyToOneEntity( 1L, "ManyToOne" );
 	}
-
 
 	private AdvancedEntity getAdvancedEntity(ManyToOneEntity manyToOne, OneToOneEntity oneToOne, ManyToManyEntity manyToManyEntity) {
 		AdvancedEntity advancedEntity = new AdvancedEntity();
@@ -115,266 +110,227 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 		return advancedEntity;
 	}
 
-	@Test
-	@Priority(10)
-	//smoke test to make sure that hibernate & envers are working with the entity&mappings
-	public void shouldInitData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		//given
 		ManyToOneEntity manyToOne = getManyToOneEntity();
 		OneToOneEntity oneToOne = getOneToOneEntity();
 		ManyToManyEntity manyToManyEntity = getManyToManyEntity();
 		AdvancedEntity advancedEntity = getAdvancedEntity( manyToOne, oneToOne, manyToManyEntity );
 
-		//rev 1
-		Session session = openSession();
-		session.getTransaction().begin();
-		session.persist( manyToOne );
-		session.persist( oneToOne );
-		session.persist( manyToManyEntity );
-		session.persist( advancedEntity );
-		session.getTransaction().commit();
+		scope.inEntityManager( em -> {
+			//rev 1
+			em.getTransaction().begin();
+			em.persist( manyToOne );
+			em.persist( oneToOne );
+			em.persist( manyToManyEntity );
+			em.persist( advancedEntity );
+			em.getTransaction().commit();
 
-		//rev 2
-		session.getTransaction().begin();
-		InternalComponent internalComponent = (InternalComponent) advancedEntity.getDynamicConfiguration()
-				.get( INTERNAL_COMPONENT );
-		internalComponent.setProperty( "new value" );
-		session.persist( advancedEntity );
-		session.getTransaction().commit();
+			//rev 2
+			em.getTransaction().begin();
+			InternalComponent internalComponent = (InternalComponent) advancedEntity.getDynamicConfiguration()
+					.get( INTERNAL_COMPONENT );
+			internalComponent.setProperty( "new value" );
+			em.persist( advancedEntity );
+			em.getTransaction().commit();
 
-		//rev 3
-		session.getTransaction().begin();
-		List<String> internalList = (List) advancedEntity.getDynamicConfiguration().get( INTERNAL_LIST );
-		internalList.add( "four" );
-		session.persist( advancedEntity );
-		session.getTransaction().commit();
+			//rev 3
+			em.getTransaction().begin();
+			List<String> internalList = (List) advancedEntity.getDynamicConfiguration().get( INTERNAL_LIST );
+			internalList.add( "four" );
+			em.persist( advancedEntity );
+			em.getTransaction().commit();
 
-		//rev 4
-		session.getTransaction().begin();
-		Map<String, String> map = (Map) advancedEntity.getDynamicConfiguration().get( INTERNAL_MAP );
-		map.put( "three", "3" );
-		session.persist( advancedEntity );
-		session.getTransaction().commit();
+			//rev 4
+			em.getTransaction().begin();
+			Map<String, String> map = (Map) advancedEntity.getDynamicConfiguration().get( INTERNAL_MAP );
+			map.put( "three", "3" );
+			em.persist( advancedEntity );
+			em.getTransaction().commit();
 
-		//rev 5
-		session.getTransaction().begin();
-		Map<String, ManyToManyEntity> mapWithManyToMany = (Map) advancedEntity.getDynamicConfiguration()
-				.get( INTERNAL_MAP_WITH_MANY_TO_MANY );
-		ManyToManyEntity manyToManyEntity2 = new ManyToManyEntity( 2L, "new value" );
-		mapWithManyToMany.put( "entity2", manyToManyEntity2 );
-		session.persist( manyToManyEntity2 );
-		session.persist( advancedEntity );
-		session.getTransaction().commit();
+			//rev 5
+			em.getTransaction().begin();
+			Map<String, ManyToManyEntity> mapWithManyToMany = (Map) advancedEntity.getDynamicConfiguration()
+					.get( INTERNAL_MAP_WITH_MANY_TO_MANY );
+			ManyToManyEntity manyToManyEntity2 = new ManyToManyEntity( 2L, "new value" );
+			mapWithManyToMany.put( "entity2", manyToManyEntity2 );
+			em.persist( manyToManyEntity2 );
+			em.persist( advancedEntity );
+			em.getTransaction().commit();
 
-		//rev 6
-		session.getTransaction().begin();
-		mapWithManyToMany = (Map) advancedEntity.getDynamicConfiguration().get( INTERNAL_MAP_WITH_MANY_TO_MANY );
-		mapWithManyToMany.clear();
-		session.persist( advancedEntity );
-		session.getTransaction().commit();
+			//rev 6
+			em.getTransaction().begin();
+			mapWithManyToMany = (Map) advancedEntity.getDynamicConfiguration().get( INTERNAL_MAP_WITH_MANY_TO_MANY );
+			mapWithManyToMany.clear();
+			em.persist( advancedEntity );
+			em.getTransaction().commit();
 
-		//rev 7
-		session.getTransaction().begin();
-		Set<InternalComponent> internalComponentSet = (Set) advancedEntity.getDynamicConfiguration()
-				.get( INTERNAL_SET_OF_COMPONENTS );
-		internalComponentSet.add( new InternalComponent( "drei" ) );
-		session.persist( advancedEntity );
-		session.getTransaction().commit();
+			//rev 7
+			em.getTransaction().begin();
+			Set<InternalComponent> internalComponentSet = (Set) advancedEntity.getDynamicConfiguration()
+					.get( INTERNAL_SET_OF_COMPONENTS );
+			internalComponentSet.add( new InternalComponent( "drei" ) );
+			em.persist( advancedEntity );
+			em.getTransaction().commit();
 
-		//rev 8
-		session.getTransaction().begin();
-		advancedEntity.getDynamicConfiguration().put( AGE_USER_TYPE, new Age( 19 ) );
-		session.persist( advancedEntity );
-		session.getTransaction().commit();
+			//rev 8
+			em.getTransaction().begin();
+			advancedEntity.getDynamicConfiguration().put( AGE_USER_TYPE, new Age( 19 ) );
+			em.persist( advancedEntity );
+			em.getTransaction().commit();
 
-		//rev 9
-		session.getTransaction().begin();
-		List<Age> ages = (List<Age>) advancedEntity.getDynamicConfiguration().get( INTERNAL_LIST_OF_USER_TYPES );
-		ages.add( new Age( 4 ) );
-		session.persist( advancedEntity );
-		session.getTransaction().commit();
+			//rev 9
+			em.getTransaction().begin();
+			List<Age> ages = (List<Age>) advancedEntity.getDynamicConfiguration().get( INTERNAL_LIST_OF_USER_TYPES );
+			ages.add( new Age( 4 ) );
+			em.persist( advancedEntity );
+			em.getTransaction().commit();
 
-		//rev this, should not create revision
-		session.getTransaction().begin();
-		session.getTransaction().commit();
+			//rev this, should not create revision
+			em.getTransaction().begin();
+			em.getTransaction().commit();
 
-		//sanity check. Loaded entity should be equal to one that we created.
-		AdvancedEntity advancedEntityActual = (AdvancedEntity) session.getReference( AdvancedEntity.class, 1L );
+			//sanity check. Loaded entity should be equal to one that we created.
+			AdvancedEntity advancedEntityActual = em.getReference( AdvancedEntity.class, 1L );
 
-		Assert.assertEquals( advancedEntity, advancedEntityActual );
-	}
-
-
-	@Test
-	public void shouldMakeRevisions() {
-		Session session = openSession();
-		session.getTransaction().begin();
-		//given & when shouldInitData
-		ManyToOneEntity manyToOne = getManyToOneEntity();
-		OneToOneEntity oneToOne = getOneToOneEntity();
-		ManyToManyEntity manyToManyEntity = getManyToManyEntity();
-		AdvancedEntity advancedEntity = getAdvancedEntity( manyToOne, oneToOne, manyToManyEntity );
-
-		//then v1
-		AdvancedEntity ver1 = getAuditReader().find(
-				AdvancedEntity.class,
-				advancedEntity.getId(),
-				1
-		);
-		Assert.assertEquals( advancedEntity, ver1 );
-
-		//then v2
-		InternalComponent internalComponent = (InternalComponent) advancedEntity.getDynamicConfiguration()
-				.get( INTERNAL_COMPONENT );
-		internalComponent.setProperty( "new value" );
-
-		AdvancedEntity ver2 = getAuditReader().find(
-				AdvancedEntity.class,
-				advancedEntity.getId(),
-				2
-		);
-		Assert.assertEquals( advancedEntity, ver2 );
-
-		//then v3
-
-		List internalList = (List) advancedEntity.getDynamicConfiguration().get( INTERNAL_LIST );
-		internalList.add( "four" );
-
-		AdvancedEntity ver3 = getAuditReader().find(
-				AdvancedEntity.class,
-				advancedEntity.getId(),
-				3
-		);
-		Assert.assertEquals( advancedEntity, ver3 );
-
-		//then v4
-		Map<String, String> map = (Map) advancedEntity.getDynamicConfiguration().get( INTERNAL_MAP );
-		map.put( "three", "3" );
-
-		AdvancedEntity ver4 = getAuditReader().find(
-				AdvancedEntity.class,
-				advancedEntity.getId(),
-				4
-		);
-		Assert.assertEquals( advancedEntity, ver4 );
-
-		//then v5
-		Map<String, ManyToManyEntity> mapWithManyToMany = (Map) advancedEntity.getDynamicConfiguration()
-				.get( INTERNAL_MAP_WITH_MANY_TO_MANY );
-		ManyToManyEntity manyToManyEntity2 = new ManyToManyEntity( 2L, "new value" );
-		mapWithManyToMany.put( "entity2", manyToManyEntity2 );
-
-		AdvancedEntity ver5 = getAuditReader().find(
-				AdvancedEntity.class,
-				advancedEntity.getId(),
-				5
-		);
-		Assert.assertEquals( advancedEntity, ver5 );
-
-		//then v6
-		mapWithManyToMany = (Map) advancedEntity.getDynamicConfiguration().get( INTERNAL_MAP_WITH_MANY_TO_MANY );
-		mapWithManyToMany.clear();
-
-		AdvancedEntity ver6 = getAuditReader().find(
-				AdvancedEntity.class,
-				advancedEntity.getId(),
-				6
-		);
-		Assert.assertEquals( advancedEntity, ver6 );
-
-		//then v7
-		Set<InternalComponent> internalComponentSet = (Set) advancedEntity.getDynamicConfiguration()
-				.get( INTERNAL_SET_OF_COMPONENTS );
-		internalComponentSet.add( new InternalComponent( "drei" ) );
-
-		AdvancedEntity ver7 = getAuditReader().find(
-				AdvancedEntity.class,
-				advancedEntity.getId(),
-				7
-		);
-		Assert.assertEquals( advancedEntity, ver7 );
-
-		//then v8
-		advancedEntity.getDynamicConfiguration().put( AGE_USER_TYPE, new Age( 19 ) );
-
-
-		AdvancedEntity ver8 = getAuditReader().find(
-				AdvancedEntity.class,
-				advancedEntity.getId(),
-				8
-		);
-		Assert.assertEquals( advancedEntity, ver8 );
-
-		//then v9
-		List<Age> ages = (List<Age>) advancedEntity.getDynamicConfiguration().get( INTERNAL_LIST_OF_USER_TYPES );
-		ages.add( new Age( 4 ) );
-
-		AdvancedEntity ver9 = getAuditReader().find(
-				AdvancedEntity.class,
-				advancedEntity.getId(),
-				9
-		);
-		Assert.assertEquals( advancedEntity, ver9 );
-
-		session.getTransaction().commit();
+			assertEquals( advancedEntity, advancedEntityActual );
+		} );
 	}
 
 	@Test
-	public void testOfQueryOnDynamicComponent() {
-		//given (and result of shouldInitData()
-		AdvancedEntity entity = getAdvancedEntity( getManyToOneEntity(), getOneToOneEntity(), getManyToManyEntity() );
+	public void shouldMakeRevisions(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			//given & when initData
+			ManyToOneEntity manyToOne = getManyToOneEntity();
+			OneToOneEntity oneToOne = getOneToOneEntity();
+			ManyToManyEntity manyToManyEntity = getManyToManyEntity();
+			AdvancedEntity advancedEntity = getAdvancedEntity( manyToOne, oneToOne, manyToManyEntity );
 
-		//when
-		ManyToOneEntity manyToOneEntity = (ManyToOneEntity) entity.getDynamicConfiguration().get( PROP_MANY_TO_ONE );
-		List resultList = getAuditReader().createQuery()
-				.forEntitiesAtRevision( AdvancedEntity.class, 1 )
-				.add(
-						AuditEntity.relatedId( "dynamicConfiguration_" + PROP_MANY_TO_ONE )
-								.eq( manyToOneEntity.getId() )
-				)
-				.getResultList();
+			final var auditReader = AuditReaderFactory.get( em );
 
-		//then
-		Assert.assertEquals( entity, resultList.get( 0 ) );
+			//then v1
+			AdvancedEntity ver1 = auditReader.find( AdvancedEntity.class, advancedEntity.getId(), 1 );
+			assertEquals( advancedEntity, ver1 );
 
-		//when
-		InternalComponent internalComponent = (InternalComponent) entity.getDynamicConfiguration().get( INTERNAL_COMPONENT );
-		resultList = getAuditReader().createQuery()
-				.forEntitiesAtRevision( AdvancedEntity.class, 1 )
-				.add(
-						AuditEntity.property( "dynamicConfiguration_" + INTERNAL_COMPONENT+"_property")
-								.eq( internalComponent.getProperty() )
-				)
-				.getResultList();
+			//then v2
+			InternalComponent internalComponent = (InternalComponent) advancedEntity.getDynamicConfiguration()
+					.get( INTERNAL_COMPONENT );
+			internalComponent.setProperty( "new value" );
 
-		//then
-		Assert.assertEquals( entity, resultList.get( 0 ) );
+			AdvancedEntity ver2 = auditReader.find( AdvancedEntity.class, advancedEntity.getId(), 2 );
+			assertEquals( advancedEntity, ver2 );
 
-		//when
-		try {
-			OneToOneEntity oneToOneEntity = (OneToOneEntity) entity.getDynamicConfiguration().get( PROP_ONE_TO_ONE );
-			getAuditReader().createQuery()
+			//then v3
+			List internalList = (List) advancedEntity.getDynamicConfiguration().get( INTERNAL_LIST );
+			internalList.add( "four" );
+
+			AdvancedEntity ver3 = auditReader.find( AdvancedEntity.class, advancedEntity.getId(), 3 );
+			assertEquals( advancedEntity, ver3 );
+
+			//then v4
+			Map<String, String> map = (Map) advancedEntity.getDynamicConfiguration().get( INTERNAL_MAP );
+			map.put( "three", "3" );
+
+			AdvancedEntity ver4 = auditReader.find( AdvancedEntity.class, advancedEntity.getId(), 4 );
+			assertEquals( advancedEntity, ver4 );
+
+			//then v5
+			Map<String, ManyToManyEntity> mapWithManyToMany = (Map) advancedEntity.getDynamicConfiguration()
+					.get( INTERNAL_MAP_WITH_MANY_TO_MANY );
+			ManyToManyEntity manyToManyEntity2 = new ManyToManyEntity( 2L, "new value" );
+			mapWithManyToMany.put( "entity2", manyToManyEntity2 );
+
+			AdvancedEntity ver5 = auditReader.find( AdvancedEntity.class, advancedEntity.getId(), 5 );
+			assertEquals( advancedEntity, ver5 );
+
+			//then v6
+			mapWithManyToMany = (Map) advancedEntity.getDynamicConfiguration().get( INTERNAL_MAP_WITH_MANY_TO_MANY );
+			mapWithManyToMany.clear();
+
+			AdvancedEntity ver6 = auditReader.find( AdvancedEntity.class, advancedEntity.getId(), 6 );
+			assertEquals( advancedEntity, ver6 );
+
+			//then v7
+			Set<InternalComponent> internalComponentSet = (Set) advancedEntity.getDynamicConfiguration()
+					.get( INTERNAL_SET_OF_COMPONENTS );
+			internalComponentSet.add( new InternalComponent( "drei" ) );
+
+			AdvancedEntity ver7 = auditReader.find( AdvancedEntity.class, advancedEntity.getId(), 7 );
+			assertEquals( advancedEntity, ver7 );
+
+			//then v8
+			advancedEntity.getDynamicConfiguration().put( AGE_USER_TYPE, new Age( 19 ) );
+
+			AdvancedEntity ver8 = auditReader.find( AdvancedEntity.class, advancedEntity.getId(), 8 );
+			assertEquals( advancedEntity, ver8 );
+
+			//then v9
+			List<Age> ages = (List<Age>) advancedEntity.getDynamicConfiguration().get( INTERNAL_LIST_OF_USER_TYPES );
+			ages.add( new Age( 4 ) );
+
+			AdvancedEntity ver9 = auditReader.find( AdvancedEntity.class, advancedEntity.getId(), 9 );
+			assertEquals( advancedEntity, ver9 );
+		} );
+	}
+
+	@Test
+	public void testOfQueryOnDynamicComponent(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			//given (and result of initData()
+			AdvancedEntity entity = getAdvancedEntity( getManyToOneEntity(), getOneToOneEntity(),
+					getManyToManyEntity() );
+
+			final var auditReader = AuditReaderFactory.get( em );
+
+			//when
+			ManyToOneEntity manyToOneEntity = (ManyToOneEntity) entity.getDynamicConfiguration()
+					.get( PROP_MANY_TO_ONE );
+			List resultList = auditReader.createQuery()
 					.forEntitiesAtRevision( AdvancedEntity.class, 1 )
-					.add( AuditEntity.property( "dynamicConfiguration_" + PROP_ONE_TO_ONE ).eq( oneToOneEntity ) )
+					.add(
+							AuditEntity.relatedId( "dynamicConfiguration_" + PROP_MANY_TO_ONE )
+									.eq( manyToOneEntity.getId() )
+					)
 					.getResultList();
 
 			//then
-			Assert.fail();
-		}
-		catch ( Exception e ) {
-			if ( getSession().getTransaction().isActive() ) {
-				getSession().getTransaction().rollback();
-			}
+			assertEquals( entity, resultList.get( 0 ) );
 
-			assertTyping( IllegalArgumentException.class, e );
-		}
+			//when
+			InternalComponent internalComponent = (InternalComponent) entity.getDynamicConfiguration()
+					.get( INTERNAL_COMPONENT );
+			resultList = auditReader.createQuery()
+					.forEntitiesAtRevision( AdvancedEntity.class, 1 )
+					.add(
+							AuditEntity.property( "dynamicConfiguration_" + INTERNAL_COMPONENT + "_property" )
+									.eq( internalComponent.getProperty() )
+					)
+					.getResultList();
+
+			//then
+			assertEquals( entity, resultList.get( 0 ) );
+
+			//when & then
+			OneToOneEntity oneToOneEntity = (OneToOneEntity) entity.getDynamicConfiguration().get( PROP_ONE_TO_ONE );
+			assertThrows( IllegalArgumentException.class, () ->
+					auditReader.createQuery()
+							.forEntitiesAtRevision( AdvancedEntity.class, 1 )
+							.add( AuditEntity.property( "dynamicConfiguration_" + PROP_ONE_TO_ONE )
+									.eq( oneToOneEntity ) )
+							.getResultList()
+			);
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		Assert.assertEquals(
-				Arrays.asList( 1, 2, 3, 4, 5, 6, 7, 8, 9 ),
-				getAuditReader().getRevisions( AdvancedEntity.class, 1L )
-		);
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals(
+					Arrays.asList( 1, 2, 3, 4, 5, 6, 7, 8, 9 ),
+					auditReader.getRevisions( AdvancedEntity.class, 1L )
+			);
+		} );
 	}
 }

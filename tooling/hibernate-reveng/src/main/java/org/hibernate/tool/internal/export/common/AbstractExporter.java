@@ -44,34 +44,34 @@ import org.jboss.logging.Logger;
 public abstract class AbstractExporter implements Exporter, ExporterConstants {
 
 	protected Logger log = Logger.getLogger(this.getClass());
-	
+
 	private TemplateHelper vh;
-	private Properties properties = new Properties();
+	private final Properties properties = new Properties();
 	private Metadata metadata = null;
 
 	private Iterator<Entry<Object, Object>> iterator;
 
-	private Cfg2HbmTool c2h;
-	private Cfg2JavaTool c2j;
+	private final Cfg2HbmTool c2h;
+	private final Cfg2JavaTool c2j;
 
 	public AbstractExporter() {
 		c2h = new Cfg2HbmTool();
 		c2j = new Cfg2JavaTool();
-		getProperties().put(ARTIFACT_COLLECTOR, new DefaultArtifactCollector());
-		getProperties().put(TEMPLATE_PATH, new String[0]);
+		properties.put(ARTIFACT_COLLECTOR, new DefaultArtifactCollector());
+		properties.put(TEMPLATE_PATH, new String[0]);
 	}
-	
+
 	protected MetadataDescriptor getMetadataDescriptor() {
 		return (MetadataDescriptor)getProperties().get(METADATA_DESCRIPTOR);
 	}
-	
+
 	public Metadata getMetadata() {
 		if (metadata == null) {
 			metadata = buildMetadata();
 		}
 		return metadata;
 	}
-	
+
 	protected File getOutputDirectory() {
 		return (File)getProperties().get(DESTINATION_FOLDER);
 	}
@@ -79,35 +79,35 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 	public Properties getProperties() {
 		return properties;
 	}
-	
+
 	public ArtifactCollector getArtifactCollector() {
 		return (ArtifactCollector)getProperties().get(ARTIFACT_COLLECTOR);
 	}
-	
+
 	public String getName() {
 		return this.getClass().getName();
 	}
-	
+
 	public Cfg2HbmTool getCfg2HbmTool() {
 		return c2h;
 	}
-	
+
 	public Cfg2JavaTool getCfg2JavaTool() {
 		return c2j;
 	}
-	
+
 	public void start() {
 		setTemplateHelper( new TemplateHelper() );
 		setupTemplates();
 		setupContext();
 		doStart();
-		cleanUpContext();		
+		cleanUpContext();
 		setTemplateHelper(null);
 		getArtifactCollector().formatFiles();
 	}
-	
+
 	abstract protected void doStart();
-	
+
 	protected void cleanUpContext() {
 		if(getProperties()!=null) {
 			iterator = getProperties().entrySet().iterator();
@@ -116,31 +116,31 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 				Object value = transformValue(element.getValue());
 				String key = element.getKey().toString();
 				if(key.startsWith(ExporterSettings.PREFIX_KEY)) {
-					getTemplateHelper().removeFromContext(key.substring(ExporterSettings.PREFIX_KEY.length()), value);
+					getTemplateHelper().removeFromContext(key.substring(ExporterSettings.PREFIX_KEY.length()));
 				}
-				getTemplateHelper().removeFromContext(key, value);
+				getTemplateHelper().removeFromContext(key);
 			}
 		}
 		if(getOutputDirectory()!=null) {
-			getTemplateHelper().removeFromContext("outputdir", getOutputDirectory());
+			getTemplateHelper().removeFromContext("outputdir");
 		}
 		String[] templatePath = (String[])getProperties().get(TEMPLATE_PATH);
 		if(templatePath!=null) {
-			getTemplateHelper().removeFromContext("template_path", templatePath);			
+			getTemplateHelper().removeFromContext("template_path");
 		}
-		getTemplateHelper().removeFromContext("exporter", this);
-		getTemplateHelper().removeFromContext("artifacts", getArtifactCollector());
-        if(getMetadata() != null) {
-        		getTemplateHelper().removeFromContext("md", metadata);
-        		getTemplateHelper().removeFromContext("props", getProperties());
-        		getTemplateHelper().removeFromContext("tables", metadata.collectTableMappings());
-        }        
-        getTemplateHelper().removeFromContext("c2h", getCfg2HbmTool());
-		getTemplateHelper().removeFromContext("c2j", getCfg2JavaTool());		
+		getTemplateHelper().removeFromContext("exporter");
+		getTemplateHelper().removeFromContext("artifacts");
+		if(getMetadata() != null) {
+			getTemplateHelper().removeFromContext("md");
+			getTemplateHelper().removeFromContext("props");
+			getTemplateHelper().removeFromContext("tables");
+		}
+		getTemplateHelper().removeFromContext("c2h");
+		getTemplateHelper().removeFromContext("c2j");
 	}
 
 	protected void setupContext() {
-		getTemplateHelper().setupContext();		
+		getTemplateHelper().setupContext();
 		getTemplateHelper().putInContext("exporter", this);
 		getTemplateHelper().putInContext("c2h", getCfg2HbmTool());
 		getTemplateHelper().putInContext("c2j", getCfg2JavaTool());
@@ -149,7 +149,7 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 		}
 		String[] templatePath = (String[])getProperties().get(TEMPLATE_PATH);
 		if(templatePath!=null) {
-			getTemplateHelper().putInContext("template_path", templatePath);		
+			getTemplateHelper().putInContext("template_path", templatePath);
 		}
 		if(getProperties()!=null) {
 			iterator = getProperties().entrySet().iterator();
@@ -170,16 +170,16 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 						catch (Exception e) {
 							throw new RuntimeException("Exception when instantiating tool " + element.getKey() + " with " + value,e);
 						}
-					} 
-				}								
+					}
+				}
 			}
 		}
 		getTemplateHelper().putInContext("artifacts", getArtifactCollector());
-        if(getMetadata() != null) {
-        		getTemplateHelper().putInContext("md", metadata);
-        		getTemplateHelper().putInContext("props", getProperties());
-        		getTemplateHelper().putInContext("tables", metadata.collectTableMappings());
-        }
+		if(getMetadata() != null) {
+			getTemplateHelper().putInContext("md", metadata);
+			getTemplateHelper().putInContext("props", getProperties());
+			getTemplateHelper().putInContext("tables", metadata.collectTableMappings());
+		}
 	}
 
 	protected void setupTemplates() {
@@ -187,9 +187,9 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 		if(log.isDebugEnabled()) {
 			log.debug(getClass().getName() + " outputdir:" + getOutputDirectory() + " path: " + toString(templatePath) );
 		}
-		getTemplateHelper().init(getOutputDirectory(), templatePath);		
+		getTemplateHelper().init(getOutputDirectory(), templatePath);
 	}
-	
+
 	protected void setTemplateHelper(TemplateHelper vh) {
 		this.vh = vh;
 	}
@@ -197,40 +197,40 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 	protected TemplateHelper getTemplateHelper() {
 		return vh;
 	}
-	
+
 	protected File getFileForClassName(File baseDir, String className, String extension) {
-    		String filename = StringHelper.unqualify(className) + extension;
-    		String packagename = StringHelper.qualifier(className); 	
-    		return new File(getDirForPackage(baseDir, packagename), filename);
-    }
-	
+		String filename = StringHelper.unqualify(className) + extension;
+		String packagename = StringHelper.qualifier(className);
+		return new File(getDirForPackage(baseDir, packagename), filename);
+	}
+
 	protected Metadata buildMetadata() {
 		return getMetadataDescriptor().createMetadata();
 	}
 
-    private File getDirForPackage(File baseDir, String packageName) {
-        String p = packageName == null ? "" : packageName;   
-        return new File( baseDir, p.replace('.', File.separatorChar) );    
-    }
+	private File getDirForPackage(File baseDir, String packageName) {
+		String p = packageName == null ? "" : packageName;
+		return new File( baseDir, p.replace('.', File.separatorChar) );
+	}
 
 	private String toString(Object[] a) {
-        if (a == null)
-            return "null";
-        if (a.length == 0)
-            return "[]";
-        StringBuffer buf = new StringBuffer();
-        for (int i = 0; i < a.length; i++) {
-            if (i == 0)
-                buf.append('[');
-            else
-                buf.append(", ");
- 
-            buf.append(String.valueOf(a[i]));
-        }
-        buf.append("]");
-        return buf.toString();
-    }
- 
+		if (a == null)
+			return "null";
+		if (a.length == 0)
+			return "[]";
+		StringBuilder buf = new StringBuilder();
+		for (int i = 0; i < a.length; i++) {
+			if (i == 0)
+				buf.append('[');
+			else
+				buf.append(", ");
+
+			buf.append(String.valueOf(a[i]));
+		}
+		buf.append("]");
+		return buf.toString();
+	}
+
 	private Object transformValue(Object value) {
 		if("true".equals(value)) {
 			return Boolean.TRUE;

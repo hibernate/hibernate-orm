@@ -3,9 +3,12 @@
 goal=
 if [ "$RDBMS" == "h2" ] || [ "$RDBMS" == "" ]; then
   # This is the default.
-  goal="preVerifyRelease"
-  # Settings needed for `preVerifyRelease` execution - for asciidoctor doc rendering
-	export GRADLE_OPTS=-Dorg.gradle.jvmargs='-Dlog4j2.disableJmx -Xmx4g -XX:MaxMetaspaceSize=768m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8'
+  #   - special check for Jenkins CI jobs where we don't want to run preVerifyRelease
+  if [[ -n "$CI_SYSTEM" && "$CI_SYSTEM" != "jenkins" ]]; then
+    goal="preVerifyRelease"
+    # Settings needed for `preVerifyRelease` execution - for asciidoctor doc rendering
+	  export GRADLE_OPTS=-Dorg.gradle.jvmargs='-Dlog4j2.disableJmx -Xmx4g -XX:MaxMetaspaceSize=768m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8'
+	fi
 elif [ "$RDBMS" == "hsqldb" ] || [ "$RDBMS" == "hsqldb_2_6" ]; then
   goal="-Pdb=hsqldb"
 elif [ "$RDBMS" == "mysql" ] || [ "$RDBMS" == "mysql_8_0" ]; then

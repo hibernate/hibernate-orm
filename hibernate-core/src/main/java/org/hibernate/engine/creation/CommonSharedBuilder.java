@@ -9,50 +9,37 @@ import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
-import org.hibernate.Session;
-import org.hibernate.StatelessSession;
 
 import java.sql.Connection;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
-/**
- * Common options for builders of {@linkplain Session stateful}
- * and {@linkplain StatelessSession stateless} sessions
- * which share state from an underlying session.
- *
- * @since 7.2
- *
- * @author Steve Ebersole
- */
+/// Common options for builders of [stateful][org.hibernate.Session] and
+/// [stateless][org.hibernate.StatelessSession] sessions which share state
+/// from an underlying stateful/stateless session.
+///
+/// @since 7.2
+///
+/// @author Steve Ebersole
 @Incubating
 public interface CommonSharedBuilder extends CommonBuilder {
 
-	/**
-	 * Signifies that the connection from the original session should be used to create the new session.
-	 * Implies that the overall "transaction context" should be shared as well.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
+	/// Signifies that the connection from the original session should be used to create the new session.
+	/// Implies that the overall "transaction context" should be shared as well.
+	///
+	/// @return `this`, for method chaining
 	CommonSharedBuilder connection();
 
-	/**
-	 * Signifies the interceptor from the original session should be used to create the new session.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
+	/// Signifies the interceptor from the original session should be used to create the new session.
+	///
+	/// @return `this`, for method chaining
 	CommonSharedBuilder interceptor();
 
-	/**
-	 * Signifies that the SQL {@linkplain org.hibernate.resource.jdbc.spi.StatementInspector statement inspector}
-	 * from the original session should be used.
-	 */
+	/// Signifies that the SQL statement inspector from the original session should be used to create the new session.
+	///
+	/// @return `this`, for method chaining
 	CommonSharedBuilder statementInspector();
 
-	/**
-	 * Signifies that no SQL {@linkplain org.hibernate.resource.jdbc.spi.StatementInspector statement inspector}
-	 * should be used.
-	 */
 	@Override
 	CommonSharedBuilder noStatementInspector();
 

@@ -12,38 +12,39 @@ import org.hibernate.engine.creation.CommonBuilder;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
-/**
- * Allows creation of a new {@link Session} with specific options
- * overriding the defaults from the {@link SessionFactory}.
- * <pre>
- * try (var session =
- *         sessionFactory.withOptions()
- *             .tenantIdentifier(tenantId)
- *             .initialCacheMode(CacheMode.PUT)
- *             .flushMode(FlushMode.COMMIT)
- *             .interceptor(new Interceptor() {
- *                 &#64;Override
- *                 public void preFlush(Iterator&lt;Object&gt; entities) {
- *                     ...
- *                 }
- *             })
- *             .openSession()) {
- *     ...
- * }
- * </pre>
- *
- * @author Steve Ebersole
- *
- * @see SessionFactory#withOptions()
- * @see SharedSessionBuilder
- */
+/// Allows creation of a new [Session] with specific options
+/// overriding the defaults from the [SessionFactory].
+///
+/// ```java
+/// try (var session = sessionFactory.withOptions()
+/// 		.tenantIdentifier(tenantId)
+/// 		.initialCacheMode(CacheMode.PUT)
+/// 		.flushMode(FlushMode.COMMIT)
+/// 		.interceptor(new Interceptor() {
+/// 			@Override
+/// 			public void preFlush(Iterator<Object> entities) {
+/// 				...
+/// 			}
+/// 		})
+/// 		.openSession()) {
+/// 			...
+/// 		}
+/// }
+/// ```
+///
+/// @see SessionFactory#withOptions()
+/// @see SharedSessionBuilder
+///
+/// @author Steve Ebersole
 public interface SessionBuilder extends CommonBuilder {
-	/**
-	 * Opens a session with the specified options.
-	 *
-	 * @return The session
-	 */
+	/// Open the session using the specified options.
+	/// @see #open
 	Session openSession();
+
+	@Override
+	default Session open() {
+		return openSession();
+	}
 
 	@Override
 	SessionBuilder interceptor(Interceptor interceptor);
@@ -81,6 +82,7 @@ public interface SessionBuilder extends CommonBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	SessionBuilder connection(Connection connection);
 
 	/**
@@ -93,6 +95,7 @@ public interface SessionBuilder extends CommonBuilder {
 	 *
 	 * @since 7.0
 	 */
+	@Override
 	SessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode);
 
 	/**

@@ -22,6 +22,13 @@ earlier versions, see any other pertinent migration guides as well.
 
 See the link:{releaseSeriesBase}[website] for the list of requirements for the {version} series.
 
+[[requirements-building]]
+=== Building
+
+Starting with version 7.2, Gradle 9 and Java 25 are required to build the project.
+However, the produced artifacts are still compatible with Java 17 and the produced Gradle plugin is still compatible with Gradle 8.
+
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // New Features
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

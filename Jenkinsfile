@@ -14,7 +14,7 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 @Library('hibernate-jenkins-pipeline-helpers') _
 import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 
-@Field final String DEFAULT_JDK_VERSION = '21'
+@Field final String DEFAULT_JDK_VERSION = '25'
 @Field final String DEFAULT_JDK_TOOL = "OpenJDK ${DEFAULT_JDK_VERSION} Latest"
 @Field final String NODE_PATTERN_BASE = 'Worker&&Containers'
 @Field List<BuildEnvironment> environments
@@ -43,6 +43,7 @@ stage('Configure') {
 		// We generally build with JDK 21, but our baseline is Java 17, so we test with JDK 17, to be sure everything works.
 		// Here we even compile the main code with JDK 17, to be sure no JDK 18+ classes are depended on.
 		new BuildEnvironment( mainJdkVersion: '17', testJdkVersion: '17' ),
+		new BuildEnvironment( mainJdkVersion: '21', testJdkVersion: '21' ),
 		// We want to enable preview features when testing newer builds of OpenJDK:
 		// even if we don't use these features, just enabling them can cause side effects
 		// and it's useful to test that.

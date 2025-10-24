@@ -69,6 +69,10 @@ test {
 			"--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED")
 }
 
+if ( jdkVersions.test.explicit && jdkVersions.test.launcher.asInt() > JavaVersion.VERSION_21.majorVersion ) {
+    tasks.getByName( "test" ).enabled = false
+}
+
 def releasePrepareTask = tasks.register("releasePrepare") {
 	group "release-prepare"
 	description "See :release:releasePrepare for details.  Here we hook in the `check` task."

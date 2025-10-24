@@ -211,4 +211,9 @@ public class DB2zDialect extends DB2Dialect {
 	public String getRowIdColumnString(String rowId) {
 		return rowId( rowId ) + " rowid not null generated always";
 	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInSubQuery() {
+		return false;
+	}
 }

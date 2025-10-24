@@ -20,6 +20,7 @@ import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
@@ -30,9 +31,10 @@ import org.hamcrest.Description;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.cfg.JdbcSettings.FORMAT_SQL;
 
 @SuppressWarnings({"rawtypes", "unchecked", "JUnitMalformedDeclaration"})
-@ServiceRegistry
+@ServiceRegistry(settings = @Setting(name = FORMAT_SQL, value = "false"))
 @RequiresDialect(value = SQLServerDialect.class, comment = "Unit test - limit to minimize complexity of checks")
 @DomainModel(annotatedClasses = {
 		CatalogFilterTest.CatalogNoneEntity0.class,

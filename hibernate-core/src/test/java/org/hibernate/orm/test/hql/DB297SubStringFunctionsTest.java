@@ -114,7 +114,7 @@ public class DB297SubStringFunctionsTest {
 			assertThat( value ).isEqualTo( "description" );
 		} );
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( "substring(" );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( "substr(" );
 	}
 
 	@Entity(name="AnEntity")

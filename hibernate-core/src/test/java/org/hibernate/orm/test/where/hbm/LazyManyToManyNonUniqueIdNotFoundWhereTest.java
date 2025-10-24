@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(xmlMappings = "hbm/where/LazyManyToManyNonUniqueIdNotFoundWhereTest.hbm.xml")
-@SessionFactory(exportSchema = false)
+@SessionFactory
 public class LazyManyToManyNonUniqueIdNotFoundWhereTest {
 	@AfterAll
 	static void dropSchema(SessionFactoryScope factoryScope) {
@@ -41,9 +41,9 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest {
 		factoryScope.inTransaction( session -> session.doWork( connection -> {
 			final Dialect dialect = session.getDialect();
 			try (final Statement statement = connection.createStatement()) {
+				statement.executeUpdate( dialect.getDropTableString( "MATERIAL_RATINGS" ) );
 				statement.executeUpdate( dialect.getDropTableString( "BUILDING_RATINGS" ) );
 				statement.executeUpdate( dialect.getDropTableString( "ASSOCIATION_TABLE" ) );
-				statement.executeUpdate( dialect.getDropTableString( "MATERIAL_RATINGS" ) );
 				statement.executeUpdate( dialect.getDropTableString( "MAIN_TABLE" ) );
 
 				statement.executeUpdate( """

@@ -119,7 +119,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 		}
 		scope.inEntityManager(
 				em -> {
-					final List results = em.createQuery( "from Box" ).getResultList();
+					final List<Box> results = em.createQuery( "from Box", Box.class ).getResultList();
 					assertThat( results.size(), is( 1 ) );
 				}
 		);
@@ -160,7 +160,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 
 		scope.inEntityManager(
 				em -> {
-					final List<Box> boxes = em.createQuery( "from Box" ).getResultList();
+					final List<Box> boxes = em.createQuery( "from Box", Box.class ).getResultList();
 					assertThat( boxes.size(), is( 1 ) );
 					assertThat( boxes.get( 0 ).getMuffinSet().size(), is( 1 ) );
 				}
@@ -202,7 +202,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 
 		scope.inEntityManager(
 				em -> {
-					final List<SmallBox> boxes = em.createQuery( "from SmallBox" ).getResultList();
+					final List<SmallBox> boxes = em.createQuery( "from SmallBox", SmallBox.class ).getResultList();
 					assertThat( boxes.size(), is( 1 ) );
 					assertTrue( boxes.get( 0 ).isEmpty() );
 				}
@@ -243,7 +243,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 
 		scope.inEntityManager(
 				em -> {
-					final List<Box> boxes = em.createQuery( "from Box" ).getResultList();
+					final List<Box> boxes = em.createQuery( "from Box", Box.class ).getResultList();
 					assertThat( boxes.size(), is( 1 ) );
 					assertThat( boxes.get( 0 ).getMuffinSet().size(), is( 1 ) );
 				}
@@ -286,7 +286,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 
 		scope.inEntityManager(
 				em -> {
-					final List<Box> boxes = em.createQuery( "from Box" ).getResultList();
+					final List<Box> boxes = em.createQuery( "from Box", Box.class ).getResultList();
 					assertThat( boxes.size(), is( 0 ) );
 				}
 		);

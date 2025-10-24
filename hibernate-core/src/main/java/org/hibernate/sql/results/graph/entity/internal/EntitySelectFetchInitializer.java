@@ -204,8 +204,10 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 				}
 			}
 			else if ( holder.getEntityInitializer() != this ) {
-				// the entity is already being loaded elsewhere
-				data.setState( State.INITIALIZED );
+				// the entity is already being loaded elsewhere in this processing level
+				if ( holder.getJdbcValuesProcessingState() == rowProcessingState.getJdbcValuesSourceProcessingState() ) {
+					data.setState( State.INITIALIZED );
+				}
 				return;
 			}
 			else if ( data.getInstance() == null ) {

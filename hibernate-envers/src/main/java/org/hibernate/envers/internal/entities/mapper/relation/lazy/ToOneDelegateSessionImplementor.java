@@ -23,6 +23,7 @@ public class ToOneDelegateSessionImplementor extends AbstractDelegateSessionImpl
 	private final Number revision;
 	private final boolean removed;
 	private final EnversService enversService;
+	private final boolean isTargetNotAudited;
 
 	public ToOneDelegateSessionImplementor(
 			AuditReaderImplementor versionsReader,
@@ -30,7 +31,8 @@ public class ToOneDelegateSessionImplementor extends AbstractDelegateSessionImpl
 			Object entityId,
 			Number revision,
 			boolean removed,
-			EnversService enversService) {
+			EnversService enversService,
+			boolean isTargetNotAudited) {
 		super( versionsReader.getSessionImplementor() );
 		this.versionsReader = versionsReader;
 		this.entityClass = entityClass;
@@ -38,6 +40,7 @@ public class ToOneDelegateSessionImplementor extends AbstractDelegateSessionImpl
 		this.revision = revision;
 		this.removed = removed;
 		this.enversService = enversService;
+		this.isTargetNotAudited = isTargetNotAudited;
 	}
 
 	@Override
@@ -49,7 +52,8 @@ public class ToOneDelegateSessionImplementor extends AbstractDelegateSessionImpl
 				entityId,
 				revision,
 				removed,
-				enversService
+				enversService,
+				isTargetNotAudited
 		);
 	}
 }

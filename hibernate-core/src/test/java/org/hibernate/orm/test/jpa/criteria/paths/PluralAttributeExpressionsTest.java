@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.jpa.criteria.paths;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -13,52 +11,46 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.orm.test.jpa.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.orm.test.jpa.metamodel.Address;
 import org.hibernate.orm.test.jpa.metamodel.Address_;
 import org.hibernate.orm.test.jpa.metamodel.Article;
 import org.hibernate.orm.test.jpa.metamodel.Article_;
 import org.hibernate.orm.test.jpa.metamodel.EntityWithMapEC;
 import org.hibernate.orm.test.jpa.metamodel.EntityWithMapEC_;
+import org.hibernate.orm.test.jpa.metamodel.Phone;
 import org.hibernate.orm.test.jpa.metamodel.Translation;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaExpression;
 
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jira;
 
+import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Steve Ebersole
  */
-public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTest {
-	@Override
-	public Class[] getAnnotatedClasses() {
-		List<Class> classes = new ArrayList<>();
-		Collections.addAll( classes, super.getAnnotatedClasses() );
-		classes.add( EntityWithMapEC.class );
-		classes.add( Article.class );
-		classes.add( Translation.class );
-
-		return classes.toArray( new Class[ classes.size() ] );
-	}
+@Jpa(annotatedClasses = {
+		Address.class, Phone.class, EntityWithMapEC.class, Article.class, Translation.class
+})
+public class PluralAttributeExpressionsTest {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// IS [NOT] EMPTY
 
 	@Test
-	public void testCollectionIsEmptyHql() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testCollectionIsEmptyHql(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			entityManager.createQuery( "select a from Address a where a.phones is empty" ).getResultList();
 		});
 	}
 
 	@Test
-	public void testCollectionIsEmptyCriteria() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testCollectionIsEmptyCriteria(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			final HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) entityManager.getCriteriaBuilder();
 
 			final CriteriaQuery<Address> criteria = cb.createQuery( Address.class );
@@ -73,16 +65,16 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 
 	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-11225")
-	public void testElementMapIsEmptyHql() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testElementMapIsEmptyHql(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			entityManager.createQuery( "select m from EntityWithMapEC m where m.elements is empty" ).getResultList();
 		});
 	}
 
 	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-11225")
-	public void testElementMapIsEmptyCriteria() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testElementMapIsEmptyCriteria(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			final HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) entityManager.getCriteriaBuilder();
 
 			final CriteriaQuery<EntityWithMapEC> criteria = cb.createQuery( EntityWithMapEC.class );
@@ -97,16 +89,16 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 
 	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-11225")
-	public void testEntityMapIsEmptyHql() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testEntityMapIsEmptyHql(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			entityManager.createQuery( "select a from Article a where a.translations is empty" ).getResultList();
 		});
 	}
 
 	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-11225")
-	public void testEntityMapIsEmptyCriteria() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testEntityMapIsEmptyCriteria(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			final HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) entityManager.getCriteriaBuilder();
 
 			final CriteriaQuery<Article> criteria = cb.createQuery( Article.class );
@@ -124,15 +116,15 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 	// SIZE
 
 	@Test
-	public void testCollectionSizeHql() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testCollectionSizeHql(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			entityManager.createQuery( "select a from Address a where size(a.phones) > 1" ).getResultList();
 		});
 	}
 
 	@Test
-	public void testCollectionSizeCriteria() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testCollectionSizeCriteria(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			final HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) entityManager.getCriteriaBuilder();
 
 			final CriteriaQuery<Address> criteria = cb.createQuery( Address.class );
@@ -147,16 +139,16 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 
 	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-11225")
-	public void testElementMapSizeHql() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testElementMapSizeHql(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			entityManager.createQuery( "select m from EntityWithMapEC m where size( m.elements ) > 1" ).getResultList();
 		});
 	}
 
 	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-11225")
-	public void testElementMapSizeCriteria() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testElementMapSizeCriteria(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			final HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) entityManager.getCriteriaBuilder();
 
 			final CriteriaQuery<EntityWithMapEC> criteria = cb.createQuery( EntityWithMapEC.class );
@@ -171,16 +163,16 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 
 	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-11225")
-	public void testEntityMapSizeHql() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testEntityMapSizeHql(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			entityManager.createQuery( "select a from Article a where size(a.translations) > 1" ).getResultList();
 		});
 	}
 
 	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-11225")
-	public void testEntityMapSizeCriteria() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testEntityMapSizeCriteria(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			final HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) entityManager.getCriteriaBuilder();
 
 			final CriteriaQuery<Article> criteria = cb.createQuery( Article.class );
@@ -195,8 +187,8 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 
 	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-19126")
-	public void testPluralMapPathJavaType() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testPluralMapPathJavaType(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
 			final CriteriaQuery<Article> criteria = cb.createQuery( Article.class );
@@ -209,8 +201,8 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 
 	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-19126")
-	public void testPluralListPathJavaType() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testPluralListPathJavaType(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
 			final CriteriaQuery<Address> criteria = cb.createQuery( Address.class );

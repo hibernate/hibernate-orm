@@ -25,19 +25,18 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.DependantValue;
-import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Value;
 
-public class CollectionSecondPass extends org.hibernate.boot.model.internal.CollectionSecondPass {
+public class CollectionBinderSecondPass extends org.hibernate.boot.model.internal.CollectionSecondPass {
 	
 	private static final long serialVersionUID = 
-			ObjectStreamClass.lookup(CollectionSecondPass.class).getSerialVersionUID();
+			ObjectStreamClass.lookup(CollectionBinderSecondPass.class).getSerialVersionUID();
 
 	private MetadataBuildingContext mdbc;
 
-    public CollectionSecondPass(MetadataBuildingContext mdbc, Collection coll) {
+    public CollectionBinderSecondPass(MetadataBuildingContext mdbc, Collection coll) {
         super(coll);
         this.mdbc = mdbc;
     }

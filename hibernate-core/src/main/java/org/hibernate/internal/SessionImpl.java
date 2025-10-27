@@ -758,7 +758,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public <T> T merge(T object, EntityGraph<?> loadGraph) {
+	public <T> T merge(T object, EntityGraph<? super T> loadGraph) {
 		final var effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
 		try {
 			effectiveEntityGraph.applyGraph( (RootGraphImplementor<?>) loadGraph, GraphSemantic.LOAD );

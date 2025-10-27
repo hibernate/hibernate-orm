@@ -57,14 +57,6 @@ gradlePlugin {
 			id = 'org.hibernate.orm.antlr'
 			implementationClass = 'org.hibernate.orm.antlr.AntlrPlugin'
 		}
-		jakartaPlugin {
-			id = 'org.hibernate.orm.jakarta'
-			implementationClass = 'org.hibernate.orm.jakarta.JakartaPlugin'
-		}
-		jakartaPublishPlugin {
-			id = 'org.hibernate.orm.jakarta-publish'
-			implementationClass = 'org.hibernate.orm.jakarta.JakartaPublishingPlugin'
-		}
 		reportsPlugin {
 			id = 'org.hibernate.orm.build.reports'
 			implementationClass = 'org.hibernate.orm.post.ReportGenerationPlugin'

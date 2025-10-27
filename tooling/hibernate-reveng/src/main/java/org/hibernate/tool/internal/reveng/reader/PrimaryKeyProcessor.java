@@ -17,12 +17,7 @@
  */
 package org.hibernate.tool.internal.reveng.reader;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.hibernate.JDBCException;
 import org.hibernate.mapping.Column;
@@ -57,30 +52,25 @@ public class PrimaryKeyProcessor {
 			while (primaryKeyIterator.hasNext() ) {
 				primaryKeyRs = primaryKeyIterator.next();
 				
-				/*String ownCatalog = primaryKeyRs.getString("TABLE_CAT");
-				 String ownSchema = primaryKeyRs.getString("TABLE_SCHEM");
-				 String ownTable = primaryKeyRs.getString("TABLE_NAME");*/
-				
 				String columnName = (String) primaryKeyRs.get("COLUMN_NAME");
-				short seq = ((Short)primaryKeyRs.get("KEY_SEQ")).shortValue();
+				short seq = (Short) primaryKeyRs.get("KEY_SEQ");
 				String name = (String) primaryKeyRs.get("PK_NAME");
 				
 				if(key==null) {
 					key = new PrimaryKey(table);
 					key.setName(name);
-					key.setTable(table);
 					if(table.getPrimaryKey()!=null) {
 						throw new RuntimeException(table + " already has a primary key!"); //TODO: ignore ?
 					}
 					table.setPrimaryKey(key);
 				} 
 				else {
-					if(!(name==key.getName() ) && name!=null && !name.equals(key.getName() ) ) {
+					if(!(Objects.equals(name, key.getName())) && name!=null && !name.equals(key.getName() ) ) {
 						throw new RuntimeException("Duplicate names found for primarykey. Existing name: " + key.getName() + " JDBC name: " + name + " on table " + table);
 					}	      		
 				}
 				
-				columns.add(new Object[] { Short.valueOf(seq), columnName});
+				columns.add(new Object[] {seq, columnName});
 			}
 		} finally {
 			if (primaryKeyIterator!=null) {
@@ -92,28 +82,22 @@ public class PrimaryKeyProcessor {
 			}
 		}
 	      
-	      // sort the columns accoring to the key_seq.
-	      Collections.sort(columns,new Comparator<Object[]>() {
-			public int compare(Object[] o1, Object[] o2) {
-				Short left = (Short)o1[0];
-				Short right = (Short)o2[0];
-				return left.compareTo(right);
-			}
-	      });
+	      columns.sort((o1, o2) -> {
+              Short left = (Short) o1[0];
+              Short right = (Short) o2[0];
+              return left.compareTo(right);
+          });
 	      
 	      List<String> t = new ArrayList<String>(columns.size());
-	      Iterator<?> cols = columns.iterator();
-	      while (cols.hasNext() ) {
-			Object[] element = (Object[]) cols.next();
-			t.add((String)element[1]);
-	      }
+        for (Object[] element : columns) {
+            t.add((String) element[1]);
+        }
 	      
 	      if(key==null) {
 	      	log.warn("The JDBC driver didn't report any primary key columns in " + table.getName() + ". Asking rev.eng. strategy" );
 	      	List<String> userPrimaryKey = RevengUtils.getPrimaryKeyInfoInRevengStrategy(revengStrategy, table, defaultCatalog, defaultSchema);	      	if(userPrimaryKey!=null && !userPrimaryKey.isEmpty()) {
 	      		key = new PrimaryKey(table);
 	      		key.setName(new Alias(15, "PK").toAliasString( table.getName()));
-	      		key.setTable(table);
 	      		if(table.getPrimaryKey()!=null) {
 	      			throw new RuntimeException(table + " already has a primary key!"); //TODO: ignore ?
 	      		}
@@ -148,13 +132,11 @@ public class PrimaryKeyProcessor {
 	      }
 	      	      
 	      if(key!=null) {
-	    	  cols = t.iterator();
-	    	  while (cols.hasNext() ) {
-	    		  String name = (String) cols.next();
-	    		  // should get column from table if it already exists!
-	    		  Column col = getColumn(metaDataDialect, table, name);
-	    		  key.addColumn(col);
-	    	  }
+              for (String name : t) {
+                  // should get column from table if it already exists!
+                  Column col = getColumn(metaDataDialect, table, name);
+                  key.addColumn(col);
+              }
 	    	  log.debug("primary key for " + table + " -> "  + key);
 	      } 
 	     	      

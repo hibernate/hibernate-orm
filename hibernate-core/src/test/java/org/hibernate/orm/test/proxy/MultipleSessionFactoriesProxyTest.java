@@ -4,21 +4,22 @@
  */
 package org.hibernate.orm.test.proxy;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.math.BigDecimal;
-
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
+import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.SerializationHelper;
-
+import org.hibernate.orm.test.annotations.embeddables.Investor;
+import org.hibernate.orm.test.annotations.embeddables.InvestorTypeContributor;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigDecimal;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * This integration test verifies that serialized entities
@@ -30,67 +31,76 @@ import org.junit.Test;
  *
  * @author Marcel Overdijk
  */
-public class MultipleSessionFactoriesProxyTest extends BaseCoreFunctionalTestCase {
+public class MultipleSessionFactoriesProxyTest {
 
-	@Override
-	public String[] getMappings() {
-		return new String[] { "proxy/DataPoint.hbm.xml" };
-	}
-
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
-	}
-
-	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.SESSION_FACTORY_NAME, "sf-name" ); // explicitly define the session factory name
-		cfg.setProperty( Environment.SESSION_FACTORY_NAME_IS_JNDI, false ); // do not bind it to jndi
+	private SessionFactory produceSessionFactory() {
+		try (InputStream is = Thread.currentThread().getContextClassLoader()
+				.getResourceAsStream( "org/hibernate/orm/test/proxy/DataPoint.hbm.xml" )) {
+			final Configuration cfg = new Configuration()
+					.addInputStream( is )
+					.addAnnotatedClass( Investor.class )
+					.registerTypeContributor( new InvestorTypeContributor() )
+					.setProperty( Environment.HBM2DDL_AUTO, "create-drop" )
+					.setProperty( Environment.SESSION_FACTORY_NAME, "sf-name" )
+					.setProperty( Environment.SESSION_FACTORY_NAME, "sf-name" );
+			ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
+			return cfg.buildSessionFactory();
+		}
+		catch (IOException e) {
+			throw new IllegalArgumentException( e );
+		}
 	}
 
 	@Test
 	@JiraKey(value = "HHH-17172")
 	public void testProxySerializationWithMultipleSessionFactories() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		Container container = new Container( "container" );
-		container.setOwner( new Owner( "owner" ) );
-		container.setInfo( new Info( "blah blah blah" ) );
-		container.getDataPoints().add( new DataPoint( new BigDecimal( 1 ), new BigDecimal( 1 ), "first data point" ) );
-		container.getDataPoints().add( new DataPoint( new BigDecimal( 2 ), new BigDecimal( 2 ), "second data point" ) );
-		s.persist( container );
-		s.flush();
-		s.clear();
+		SessionFactory sf = produceSessionFactory();
+		try {
+			Container c = sf.fromTransaction(
+					session -> {
+						Container container = new Container( "container" );
+						container.setOwner( new Owner( "owner" ) );
+						container.setInfo( new Info( "blah blah blah" ) );
+						container.getDataPoints()
+								.add( new DataPoint( new BigDecimal( 1 ), new BigDecimal( 1 ), "first data point" ) );
+						container.getDataPoints()
+								.add( new DataPoint( new BigDecimal( 2 ), new BigDecimal( 2 ), "second data point" ) );
+						session.persist( container );
+						session.flush();
+						session.clear();
 
-		container = s.getReference( Container.class, container.getId() );
-		assertFalse( Hibernate.isInitialized( container ) );
-		container.getId();
-		assertFalse( Hibernate.isInitialized( container ) );
-		container.getName();
-		assertTrue( Hibernate.isInitialized( container ) );
+						container = session.getReference( Container.class, container.getId() );
+						assertThat( Hibernate.isInitialized( container ) ).isFalse();
+						container.getId();
+						assertThat( Hibernate.isInitialized( container ) ).isFalse();
+						container.getName();
+						assertThat( Hibernate.isInitialized( container ) ).isTrue();
+						return container;
+					}
+			);
+			// Serialize the container.
+			byte[] bytes = SerializationHelper.serialize( c );
 
-		t.commit();
-		s.close();
+			// Now deserialize, which works at this stage, because the session factory UUID in the
+			// serialized object is the same as the current session factory.
+			SerializationHelper.deserialize( bytes );
 
-		// Serialize the container.
-		byte[] bytes = SerializationHelper.serialize( container );
+			// Now rebuild the session factory (it will get a new unique UUID).
+			// As configured for this test an explicit session factory name is used ("sf-name"),
+			// so we would expect the deserialization to work after rebuilding the session factory.
+			// Rebuilding the session factory simulates multiple JVM instances with different session
+			// factories (different UUID's, but same name!) trying to deserialize objects from a
+			// centralized cache (e.g. Hazelcast).
+			sf.close();
+			produceSessionFactory();
 
-		// Now deserialize, which works at this stage, because the session factory UUID in the
-		// serialized object is the same as the current session factory.
-		SerializationHelper.deserialize( bytes );
-
-		// Now rebuild the session factory (it will get a new unique UUID).
-		// As configured for this test an explicit session factory name is used ("sf-name"),
-		// so we would expect the deserialization to work after rebuilding the session factory.
-		// Rebuilding the session factory simulates multiple JVM instances with different session
-		// factories (different UUID's, but same name!) trying to deserialize objects from a
-		// centralized cache (e.g. Hazelcast).
-		rebuildSessionFactory();
-
-		// And this should be possible now: even though we lack of a matching session factory by
-		// UUID, it should seek a match by using the session factory name as valid alternative.
-		SerializationHelper.deserialize( bytes );
+			// And this should be possible now: even though we lack of a matching session factory by
+			// UUID, it should seek a match by using the session factory name as valid alternative.
+			SerializationHelper.deserialize( bytes );
+		}
+		finally {
+			sf.close();
+		}
 
 	}
 }

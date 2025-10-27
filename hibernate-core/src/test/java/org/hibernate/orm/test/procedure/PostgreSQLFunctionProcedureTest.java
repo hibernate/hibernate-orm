@@ -4,6 +4,28 @@
  */
 package org.hibernate.orm.test.procedure;
 
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.StoredProcedureQuery;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.jpa.HibernateHints;
+import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
+import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.type.StandardBasicTypes;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -11,40 +33,17 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
 import java.util.Set;
 
-import org.hibernate.Session;
-import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
-import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.PostgresPlusDialect;
-import org.hibernate.jpa.HibernateHints;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.type.StandardBasicTypes;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Before;
-import org.junit.Test;
-
-import jakarta.persistence.ParameterMode;
-import jakarta.persistence.StoredProcedureQuery;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Vlad Mihalcea
  */
 @RequiresDialect(PostgreSQLDialect.class)
-public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctionalTestCase {
+public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -54,28 +53,37 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 		};
 	}
 
+	@AfterEach
+	public void cleanupTestData() {
+		entityManagerFactory().unwrap( SessionFactory.class ).getSchemaManager().truncateMappedObjects();
+	}
+
 	@Override
-	protected void applyMetadataImplementor(MetadataImplementor metadataImplementor) {
-		final Database database = metadataImplementor.getDatabase();
+	public EntityManagerFactory produceEntityManagerFactory() {
+		EntityManagerFactoryBuilder entityManagerFactoryBuilder = Bootstrap.getEntityManagerFactoryBuilder(
+				buildPersistenceUnitDescriptor(),
+				buildSettings()
+		);
+		Database database = entityManagerFactoryBuilder.metadata().getDatabase();
 		final Namespace namespace = database.getDefaultNamespace();
 		database.addAuxiliaryDatabaseObject(
 				new NamedAuxiliaryDatabaseObject(
 						"fn_count_phones",
 						namespace,
 						"CREATE OR REPLACE FUNCTION fn_count_phones( " +
-								"   IN personId bigint) " +
-								"   RETURNS bigint AS " +
-								"$BODY$ " +
-								"    DECLARE " +
-								"        phoneCount bigint; " +
-								"    BEGIN " +
-								"        SELECT COUNT(*) INTO phoneCount " +
-								"        FROM phone  " +
-								"        WHERE person_id = personId; " +
-								"        RETURN phoneCount;" +
-								"    END; " +
-								"$BODY$ " +
-								"LANGUAGE plpgsql;",
+						"   IN personId bigint) " +
+						"   RETURNS bigint AS " +
+						"$BODY$ " +
+						"    DECLARE " +
+						"        phoneCount bigint; " +
+						"    BEGIN " +
+						"        SELECT COUNT(*) INTO phoneCount " +
+						"        FROM phone  " +
+						"        WHERE person_id = personId; " +
+						"        RETURN phoneCount;" +
+						"    END; " +
+						"$BODY$ " +
+						"LANGUAGE plpgsql;",
 						"drop function fn_count_phones(bigint)",
 						Set.of( PostgreSQLDialect.class.getName(), PostgresPlusDialect.class.getName() )
 				)
@@ -85,19 +93,19 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 						"fn_phones",
 						namespace,
 						"CREATE OR REPLACE FUNCTION fn_phones(personId BIGINT) " +
-								"   RETURNS REFCURSOR AS " +
-								"$BODY$ " +
-								"    DECLARE " +
-								"        phones REFCURSOR; " +
-								"    BEGIN " +
-								"        OPEN phones FOR  " +
-								"            SELECT *  " +
-								"            FROM phone   " +
-								"            WHERE person_id = personId;  " +
-								"        RETURN phones; " +
-								"    END; " +
-								"$BODY$ " +
-								"LANGUAGE plpgsql",
+						"   RETURNS REFCURSOR AS " +
+						"$BODY$ " +
+						"    DECLARE " +
+						"        phones REFCURSOR; " +
+						"    BEGIN " +
+						"        OPEN phones FOR  " +
+						"            SELECT *  " +
+						"            FROM phone   " +
+						"            WHERE person_id = personId;  " +
+						"        RETURN phones; " +
+						"    END; " +
+						"$BODY$ " +
+						"LANGUAGE plpgsql",
 						"drop function fn_phones(bigint, bigint)",
 						Set.of( PostgreSQLDialect.class.getName(), PostgresPlusDialect.class.getName() )
 				)
@@ -107,16 +115,16 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 						"singleRefCursor",
 						namespace,
 						"CREATE OR REPLACE FUNCTION singleRefCursor() " +
-								"   RETURNS REFCURSOR AS " +
-								"$BODY$ " +
-								"    DECLARE " +
-								"        p_recordset REFCURSOR; " +
-								"    BEGIN " +
-								"      OPEN p_recordset FOR SELECT 1; " +
-								"      RETURN p_recordset; " +
-								"    END; " +
-								"$BODY$ " +
-								"LANGUAGE plpgsql;",
+						"   RETURNS REFCURSOR AS " +
+						"$BODY$ " +
+						"    DECLARE " +
+						"        p_recordset REFCURSOR; " +
+						"    BEGIN " +
+						"      OPEN p_recordset FOR SELECT 1; " +
+						"      RETURN p_recordset; " +
+						"    END; " +
+						"$BODY$ " +
+						"LANGUAGE plpgsql;",
 						"drop function singleRefCursor()",
 						Set.of( PostgreSQLDialect.class.getName(), PostgresPlusDialect.class.getName() )
 				)
@@ -126,31 +134,32 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 						"fn_is_null",
 						namespace,
 						"CREATE OR REPLACE FUNCTION fn_is_null( " +
-								"   IN param varchar(255)) " +
-								"   RETURNS boolean AS " +
-								"$BODY$ " +
-								"    DECLARE " +
-								"        result boolean; " +
-								"    BEGIN " +
-								"        SELECT param is null INTO result; " +
-								"        RETURN result; " +
-								"    END; " +
-								"$BODY$ " +
-								"LANGUAGE plpgsql;",
+						"   IN param varchar(255)) " +
+						"   RETURNS boolean AS " +
+						"$BODY$ " +
+						"    DECLARE " +
+						"        result boolean; " +
+						"    BEGIN " +
+						"        SELECT param is null INTO result; " +
+						"        RETURN result; " +
+						"    END; " +
+						"$BODY$ " +
+						"LANGUAGE plpgsql;",
 						"drop function fn_is_null(varchar)",
 						Set.of( PostgreSQLDialect.class.getName(), PostgresPlusDialect.class.getName() )
 				)
 		);
+		return entityManagerFactoryBuilder.build();
 	}
 
-	@Before
+	@BeforeEach
 	public void init() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		inTransaction( entityManager -> {
 			Person person1 = new Person( 1L, "John Doe" );
 			person1.setNickName( "JD" );
 			person1.setAddress( "Earth" );
 			person1.setCreatedOn( Timestamp.from( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 )
-														.toInstant( ZoneOffset.UTC ) ) );
+					.toInstant( ZoneOffset.UTC ) ) );
 
 			entityManager.persist( person1 );
 
@@ -168,7 +177,7 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 
 	@Test
 	public void testFunctionProcedureOutParameter() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		inTransaction( entityManager -> {
 			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "fn_count_phones", Long.class );
 			query.registerStoredProcedureParameter( "personId", Long.class, ParameterMode.IN );
 			query.setHint( HibernateHints.HINT_CALLABLE_FUNCTION, "true" );
@@ -177,27 +186,26 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 
 			query.execute();
 			Long phoneCount = (Long) query.getSingleResult();
-			assertEquals( Long.valueOf( 2 ), phoneCount );
+			assertThat( phoneCount ).isEqualTo( 2 );
 		} );
 	}
 
 	@Test
 	public void testFunctionProcedureRefCursor() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		inTransaction( entityManager -> {
 			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "fn_phones" );
 			query.registerStoredProcedureParameter( 1, Long.class, ParameterMode.IN );
 			query.setHint( HibernateHints.HINT_CALLABLE_FUNCTION, "true" );
 
 			query.setParameter( 1, 1L );
 
-			List<Object[]> phones = query.getResultList();
-			assertEquals( 2, phones.size() );
+			assertThat( query.getResultList() ).hasSize( 2 );
 		} );
 	}
 
 	@Test
 	public void testFunctionProcedureRefCursorOld() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		inTransaction( entityManager -> {
 			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "fn_phones" );
 			query.registerStoredProcedureParameter( 1, void.class, ParameterMode.REF_CURSOR );
 			query.registerStoredProcedureParameter( 2, Long.class, ParameterMode.IN );
@@ -205,14 +213,13 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 
 			query.setParameter( 2, 1L );
 
-			List<Object[]> phones = query.getResultList();
-			assertEquals( 2, phones.size() );
+			assertThat( query.getResultList() ).hasSize( 2 );
 		} );
 	}
 
 	@Test
 	public void testFunctionWithJDBC() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		inTransaction( entityManager -> {
 			Session session = entityManager.unwrap( Session.class );
 			Long phoneCount = session.doReturningWork( connection -> {
 				CallableStatement function = null;
@@ -229,7 +236,7 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 					}
 				}
 			} );
-			assertEquals( Long.valueOf( 2 ), phoneCount );
+			assertThat( phoneCount ).isEqualTo( 2 );
 		} );
 	}
 
@@ -237,7 +244,7 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 	@JiraKey(value = "HHH-11863")
 	public void testSysRefCursorAsOutParameter() {
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		inTransaction( entityManager -> {
 			Integer value = null;
 
 			Session session = entityManager.unwrap( Session.class );
@@ -263,7 +270,7 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 			catch (Exception e) {
 				fail( e.getMessage() );
 			}
-			assertEquals( Integer.valueOf( 1 ), value );
+			assertThat( value ).isEqualTo( 1 );
 
 
 			StoredProcedureQuery function = entityManager.createStoredProcedureQuery( "singleRefCursor" );
@@ -273,24 +280,24 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 
 			value = (Integer) function.getSingleResult();
 
-			assertEquals( Integer.valueOf( 1 ), value );
+			assertThat( value ).isEqualTo( 1 );
 		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-11863")
 	public void testSysRefCursorAsOutParameterOld() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		inTransaction( entityManager -> {
 			StoredProcedureQuery function = entityManager.createStoredProcedureQuery( "singleRefCursor" );
 			function.registerStoredProcedureParameter( 1, void.class, ParameterMode.REF_CURSOR );
 			function.setHint( HibernateHints.HINT_CALLABLE_FUNCTION, "true" );
 
 			function.execute();
 
-			assertFalse( function.hasMoreResults() );
+			assertThat( function.hasMoreResults() ).isFalse();
 
 			Integer value = null;
-			try (ResultSet resultSet = (ResultSet) function.getOutputParameterValue( 1 ) ) {
+			try (ResultSet resultSet = (ResultSet) function.getOutputParameterValue( 1 )) {
 				while ( resultSet.next() ) {
 					value = resultSet.getInt( 1 );
 				}
@@ -299,7 +306,7 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 				fail( e.getMessage() );
 			}
 
-			assertEquals( Integer.valueOf( 1 ), value );
+			assertThat( value ).isEqualTo( 1 );
 		} );
 	}
 
@@ -307,7 +314,7 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 	@JiraKey(value = "HHH-12905")
 	public void testFunctionProcedureNullParameterHibernate() {
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		inTransaction( entityManager -> {
 			ProcedureCall procedureCall = entityManager.unwrap( Session.class )
 					.createStoredProcedureCall( "fn_is_null" );
 			procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN );
@@ -316,10 +323,10 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 
 			Boolean result = (Boolean) procedureCall.getSingleResult();
 
-			assertTrue( result );
+			assertThat( result ).isTrue();
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		inTransaction( entityManager -> {
 			ProcedureCall procedureCall = entityManager.unwrap( Session.class )
 					.createStoredProcedureCall( "fn_is_null" );
 			procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN );
@@ -328,7 +335,7 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 
 			Boolean result = (Boolean) procedureCall.getSingleResult();
 
-			assertFalse( result );
+			assertThat( result ).isFalse();
 		} );
 	}
 
@@ -336,7 +343,7 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 	@JiraKey(value = "HHH-12905")
 	public void testFunctionProcedureNullParameterHibernateWithoutEnablePassingNulls() {
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		inTransaction( entityManager -> {
 			ProcedureCall procedureCall = entityManager.unwrap( Session.class )
 					.createStoredProcedureCall( "fn_is_null" );
 			procedureCall.registerParameter( "param", StandardBasicTypes.STRING, ParameterMode.IN );
@@ -345,30 +352,24 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 
 			Boolean result = (Boolean) procedureCall.getSingleResult();
 
-			assertTrue( result );
+			assertThat( result ).isTrue();
 		} );
 	}
 
 	@Test
 	public void testFunctionProcedureNullParameterHibernateWithoutSettingTheParameter() {
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			try {
-				ProcedureCall procedureCall = entityManager.unwrap( Session.class )
-						.createStoredProcedureCall( "fn_is_null" );
-				procedureCall.registerParameter( "param", StandardBasicTypes.STRING, ParameterMode.IN );
-				procedureCall.markAsFunctionCall( Boolean.class );
+		IllegalArgumentException exception = assertThrows( IllegalArgumentException.class,
+				() -> inTransaction( entityManager -> {
+					ProcedureCall procedureCall = entityManager.unwrap( Session.class )
+							.createStoredProcedureCall( "fn_is_null" );
+					procedureCall.registerParameter( "param", StandardBasicTypes.STRING, ParameterMode.IN );
+					procedureCall.markAsFunctionCall( Boolean.class );
 
-				procedureCall.execute();
+					procedureCall.execute();
+				} ) );
 
-				fail( "Should have thrown exception" );
-			}
-			catch (IllegalArgumentException e) {
-				assertEquals(
-						"The parameter named [param] was not set! You need to call the setParameter method.",
-						e.getMessage()
-				);
-			}
-		} );
+		assertThat( exception.getMessage() )
+				.isEqualTo( "The parameter named [param] was not set! You need to call the setParameter method." );
 	}
 }

@@ -30,22 +30,11 @@ import org.hibernate.grammars.hql.HqlLexer;
  */
 public class AntlrSimpleHQLLexer implements SimpleHQLLexer {
 
-	private HqlLexer lexer;
+	private final HqlLexer lexer;
 	private Token token;
 
-	public AntlrSimpleHQLLexer(char[] cs, int length) {
+	public AntlrSimpleHQLLexer(char[] cs) {
 		lexer = new HqlLexer(CharStreams.fromString(new String(cs)));
-		// Commenting out, not sure if this is still relevant and/or needed
-//		{
-//			public void newline() {
-//				//super.newline();
-//			}
-//			
-//			public int getColumn() {
-//				return super.getCharPositionInLine();
-//			}
-//		};
-//		lexer.setTabSize(1);
 	}
 
 	public int getTokenLength() {
@@ -61,9 +50,6 @@ public class AntlrSimpleHQLLexer implements SimpleHQLLexer {
 
 	public int nextTokenId() {
 		token = lexer.nextToken();
-		if(token==null) {
-			System.out.println(token);
-		}
 		return token.getType();
 	}
 

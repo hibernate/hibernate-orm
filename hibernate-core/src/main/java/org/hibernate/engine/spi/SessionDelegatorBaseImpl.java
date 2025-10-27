@@ -846,7 +846,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> T merge(T object, EntityGraph<?> loadGraph) {
+	public <T> T merge(T object, EntityGraph<? super T> loadGraph) {
 		return delegate.merge( object, loadGraph );
 	}
 

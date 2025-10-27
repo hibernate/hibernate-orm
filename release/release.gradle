@@ -96,6 +96,16 @@ def stageMigrationGuideTask = tasks.register( "stageMigrationGuide", Copy ) {
     into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/migration-guide")
 }
 
+def stageDialectGuideTask = tasks.register( "stageDialectGuide", Copy ) {
+    group 'documentation'
+    description "Stages the Dialect Guide as part of preparing for release"
+
+    dependsOn ':documentation:renderDialectGuide'
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/dialect" ) }
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/dialect")
+}
+
 def stageIncubationReportTask = tasks.register( "stageIncubationReport", Copy ) { task ->
     group 'documentation'
     description "Stages ORM @Incubating report"
@@ -136,15 +146,6 @@ def stageLoggingReportTask = tasks.register( "stageLoggingReport", Copy ) { task
     into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/logging")
 }
 
-def stageDialectReportTask = tasks.register( "stageDialectReport", Copy ) { task ->
-    group 'documentation'
-    description "Stages the supported Dialects report"
-    dependsOn ':documentation:renderDialectReport'
-
-    from project( ":documentation" ).tasks.renderDialectReport
-    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/dialect")
-}
-
 def stageOrmReportsTask = tasks.register( "stageOrmReports" ) {
     group 'documentation'
     description "Stages all ORM reports as part of preparing for release"
@@ -154,7 +155,6 @@ def stageOrmReportsTask = tasks.register( "stageOrmReports" ) {
     dependsOn stageInternalsReportTask
     dependsOn stageDeprecationReportTask
     dependsOn stageLoggingReportTask
-    dependsOn stageDialectReportTask
 }
 
 def stageJavadocsTask = tasks.register( "stageJavadocs", Copy ) {
@@ -185,6 +185,7 @@ def assembleDocumentationTask = tasks.register( "assembleDocumentation" ) {
     dependsOn stageIntegrationGuideTask
     dependsOn stageTopicalGuideTask
     dependsOn stageMigrationGuideTask
+    dependsOn stageDialectGuideTask
     dependsOn stageOrmReportsTask
 }
 

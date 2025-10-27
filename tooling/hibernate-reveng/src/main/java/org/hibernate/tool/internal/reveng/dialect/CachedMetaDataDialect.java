@@ -27,40 +27,39 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.tool.api.reveng.RevengDialect;
 
 public class CachedMetaDataDialect implements RevengDialect {
-	
+
 	RevengDialect delegate;
-	private Map<StringKey, List<Map<String, Object>>> cachedTables = new HashMap<StringKey, List<Map<String, Object>>>();
-	private Map<StringKey, List<Map<String, Object>>> cachedColumns = new HashMap<StringKey, List<Map<String, Object>>>();
-	private Map<StringKey, List<Map<String, Object>>> cachedExportedKeys = new HashMap<StringKey, List<Map<String, Object>>>();
-	private Map<StringKey, List<Map<String, Object>>> cachedPrimaryKeys = new HashMap<StringKey, List<Map<String, Object>>>();
-	private Map<StringKey, List<Map<String, Object>>> cachedIndexInfo = new HashMap<StringKey, List<Map<String, Object>>>();
-	private Map<StringKey, List<Map<String, Object>>> cachedPrimaryKeyStrategyName = new HashMap<StringKey, List<Map<String, Object>>>();
+	private final Map<StringKey, List<Map<String, Object>>> cachedTables = new HashMap<StringKey, List<Map<String, Object>>>();
+	private final Map<StringKey, List<Map<String, Object>>> cachedColumns = new HashMap<StringKey, List<Map<String, Object>>>();
+	private final Map<StringKey, List<Map<String, Object>>> cachedExportedKeys = new HashMap<StringKey, List<Map<String, Object>>>();
+	private final Map<StringKey, List<Map<String, Object>>> cachedPrimaryKeys = new HashMap<StringKey, List<Map<String, Object>>>();
+	private final Map<StringKey, List<Map<String, Object>>> cachedIndexInfo = new HashMap<StringKey, List<Map<String, Object>>>();
+	private final Map<StringKey, List<Map<String, Object>>> cachedPrimaryKeyStrategyName = new HashMap<StringKey, List<Map<String, Object>>>();
 
 	public CachedMetaDataDialect(RevengDialect realMetaData) {
 		this.delegate = realMetaData;
 	}
-	
+
 	public void close() {
 		delegate.close();
 	}
 
 	public void configure(
 			ConnectionProvider connectionProvider) {
-        delegate.configure(connectionProvider);       
-    }
-	
+		delegate.configure(connectionProvider);
+	}
+
 	public void close(Iterator<?> iterator) {
-		if(iterator instanceof CachedIterator) {
-			CachedIterator ci = (CachedIterator) iterator;
+		if( iterator instanceof CachedIterator ci ) {
 			if(ci.getOwner()==this) {
 				ci.store();
 				return;
-			} 
+			}
 		}
 		delegate.close( iterator );
 	}
 
-	
+
 
 	public Iterator<Map<String, Object>> getColumns(String catalog, String schema, String table, String column) {
 		StringKey sk = new StringKey(new String[] { catalog, schema, table, column });
@@ -70,7 +69,7 @@ public class CachedMetaDataDialect implements RevengDialect {
 			return new CachedIterator(this, cachedColumns, sk, cached, delegate.getColumns( catalog, schema, table, column ));
 		} else {
 			return cached.iterator();
-		}		
+		}
 	}
 
 	public Iterator<Map<String, Object>> getExportedKeys(String catalog, String schema, String table) {
@@ -81,7 +80,7 @@ public class CachedMetaDataDialect implements RevengDialect {
 			return new CachedIterator(this, cachedExportedKeys, sk, cached, delegate.getExportedKeys( catalog, schema, table ));
 		} else {
 			return cached.iterator();
-		}		
+		}
 	}
 
 	public Iterator<Map<String, Object>> getIndexInfo(String catalog, String schema, String table) {
@@ -127,60 +126,58 @@ public class CachedMetaDataDialect implements RevengDialect {
 			return cached.iterator();
 		}
 	}
-	
+
 	public boolean needQuote(String name) {
 		return delegate.needQuote( name );
 	}
-	
+
 	private static class StringKey {
 		String[] keys;
-		
+
 		StringKey(String[] key) {
 			this.keys=key;
 		}
-		
+
 		public int hashCode() {
 			if (keys == null)
-	            return 0;
-	 
-	        int result = 1;
-	 
-	        for (int i = 0; i < keys.length; i++) {
-				Object element = keys[i];
-			    result = 31 * result + (element == null ? 0 : element.hashCode());
-	        }
-	        
-	        return result;	 
+				return 0;
+
+			int result = 1;
+
+			for ( Object element : keys ) {
+				result = 31 * result + (element == null ? 0 : element.hashCode());
+			}
+
+			return result;
 		}
-		
+
 		public boolean equals(Object obj) {
-			StringKey other = (StringKey) obj;
+			if (!(obj instanceof StringKey other)) return false;
 			String[] otherKeys = other.keys;
-			
 			if(otherKeys.length!=keys.length) {
 				return false;
 			}
-			
+
 			for (int i = otherKeys.length-1; i >= 0; i--) {
 				if(!safeEquals(otherKeys[i],(keys[i]))) {
 					return false;
 				}
 			}
-			
+
 			return true;
 		}
-		
+
 		private boolean safeEquals(Object obj1, Object obj2) {
 			if ( obj1 == null ) {
 				return obj2 == null;
 			}
-	        return obj1.equals( obj2 );
+			return obj1.equals( obj2 );
 		}
 	}
-	
+
 	private static class CachedIterator implements Iterator<Map<String, Object>> {
 
-		private List<Map<String, Object>> cache; 
+		private List<Map<String, Object>> cache;
 		private StringKey target;
 		private Map<StringKey, List<Map<String, Object>>> destination;
 		private Iterator<Map<String, Object>> realIterator;
@@ -192,12 +189,12 @@ public class CachedMetaDataDialect implements RevengDialect {
 			this.realIterator = realIterator;
 			this.cache = cache;
 		}
-		
+
 		public CachedMetaDataDialect getOwner() {
 			return owner;
 		}
 
-		public boolean hasNext() {			
+		public boolean hasNext() {
 			return realIterator.hasNext();
 		}
 
@@ -217,11 +214,11 @@ public class CachedMetaDataDialect implements RevengDialect {
 			cache = null;
 			target = null;
 			destination = null;
-			realIterator = null;			
+			realIterator = null;
 		}
 	}
 
-	
 
-		
+
+
 }

@@ -3,6 +3,29 @@ Hibernate 7 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.1.5.Final (October 27, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/35716
+
+** Bug
+    * [HHH-19888] - FetchPlusOffsetParameterBinder fails to apply static offset for root pagination
+    * [HHH-19872] - CriteriaUpdate error updating generic field in @MappedSuperclass
+    * [HHH-19862] - Can't update converted column throught CriteriaUpdate#set( SingularAttribute<? super T, Y> attribute, X value);
+    * [HHH-19813] - Incorrect default values for 'enableDirtyTracking' and 'enableLazyInitialization' in hibernate-maven-plugin
+
+** Sub-task
+    * [HHH-19820] - Make sure that the enhancer is not doing anything if all the enablement parameters are false
+    * [HHH-19817] - Add the JavaDoc Style documentation appropriate for Maven Plugins
+    * [HHH-19816] - Add Integration Tests for the Maven Enhance Plugin without using Maven Invoker
+    * [HHH-19815] - Review and Complete the documentation of the Enhance Plugin in the User's Guide
+    * [HHH-19814] - Document the Enhance Plugin changes in the Migration Guide
+
+** Task
+    * [HHH-19889] - Mention third-party dialects throughout the documentation
+    * [HHH-19869] - Regroup all dialect information under a single guide
+
+
 Changes in 7.1.4.Final (October 12, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -643,22 +643,56 @@ Notice that this code fragment is completely typesafe, again thanks to <<metamod
 [[controlling-merge]]
 === Controlling state retrieval during merge
 
-When <<persistence-operations,`merge()`>> is used with cascading, that is, when the `merge()` operation is applied to a root entity with associations mapped `cascade=MERGE`, Hibernate issues a single `select` statement to retrieve the current database state associated with the entity and its associated entities.
-In certain circumstances, this query might be suboptimal.
-However, this query does not occur if the root entity was already loaded into the persistence context before `merge()` is called.
+The <<persistence-operations,`merge()`>> operation is usually used when some interaction with a user or automated system spans multiple transactions, with each transaction having its own persistence context:
 
-Therefore, we may gain control over the way state is loaded before a `merge()` just by calling `find()` before calling `merge()`.
+1. an entity `e` is retrieved in one persistence context, and then the current transaction ends, resulting in destruction of the persistence context and in the entity becoming detached, then
+2.  `e` is modified in some way while detached, and then
+3. finally, the modification is made persistent by merging the detached instance in a second transaction, with a new persistence context, by calling `session.merge(e)`.
+
+In step 3, the original entity instance `e` remains detached, but `merge()` returns a distinct instance `f` representing the same row of the database and associated with the new persistence context.
+That is, `merge()` trades a detached instance for a <<persistence-contexts,persistent instance>> representing the same row.
+
+To determine the nature of the modification held in `e` and to guarantee correct semantics with respect to optimistic locking, Hibernate first ``select``s the current persistent state of the entity from the database before applying the modification to `f`.
+
+<<cascade,Cascade merge>> allows multiple modifications held in a graph of entity instances to be made persistent in one call to `merge()`.
+When `merge()` is used with cascading -- that is, when the `merge()` operation is applied to a root entity with associations mapped `cascade=MERGE` -- Hibernate issues a single `select` statement to retrieve the current database state of the root entity and all its associated entities.
+This behavior avoids the use of N+1 select statements for state retrieval during cascade merge but, in certain circumstances, the query might be suboptimal.
+On the other hand, this query does not occur if the root entity was already loaded into the persistence context before `merge()` is called.
+
+Therefore, when using the `EntityManager` API, we may gain control over the way state is loaded before a `merge()` just by calling `find()` before calling `merge()`.
+
+[source,java]
+----
+Book book = ... ;
+var graph = entityManager.createEntityGraph(Book.class);
+graph.addSubgraph(Book_.chapters);  // Book.chapters mapped cascade=MERGE
+entityManager.find(graph, book.getIsbn());  // force loading of the book
+entityManager.merge(book);  // merge the detached objet
+----
+
+The `Session` interface provides a streamlined alternative:
 
 [source,java]
 ----
 Book book = ... ;
 var graph = session.createEntityGraph(Book.class);
-graph.addSubgraph(Book_.chapters);  // Book.chapters mapped cascade=MERGE
-entityManager.find(graph, book.getIsbn());  // force loading of the book
-entityManager.merge(book);
+graph.addSubgraph(Book_.chapters);
+session.merge(book, graph);  // equivalent to find() then merge()
 ----
 
 When merging multiple root entities, `findMultiple()` may be used instead of `find()`.
+
+[source,java]
+----
+List<Book> books = ... ;
+var isbns = books.stream().map(Book::getIsbn).toList();
+var graph = session.createEntityGraph(Book.class);
+graph.addSubgraph(Book_.chapters);  // Book.chapters mapped cascade=MERGE
+session.findMultiple(graph, isbns);  // force loading of the books
+for (var book in books) {
+    session.merge(book);
+}
+----
 
 TIP: In some cases, `merge()` is much less efficient than the `upsert()` operation of <<stateless-sessions,`StatelessSession`>>.
 

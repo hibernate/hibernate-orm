@@ -22,9 +22,9 @@ import java.util.Set;
 
 final public class NameConverter {
 
-	private static Set<String> RESERVED_KEYWORDS;
+	private static final Set<String> RESERVED_KEYWORDS;
 	static {
-		RESERVED_KEYWORDS = new HashSet<String>();
+		RESERVED_KEYWORDS = new HashSet<>();
 		
 		RESERVED_KEYWORDS.add( "abstract" );
 		RESERVED_KEYWORDS.add( "continue" );
@@ -78,29 +78,26 @@ final public class NameConverter {
 		RESERVED_KEYWORDS.add( "while" );
 	}
 
-	private NameConverter() {
-
-	}
+	private NameConverter() {}
 	
 	/**
 	 * Converts a database name (table or column) to a java name (first letter capitalised). 
 	 * employee_name -> EmployeeName.
-	 *
+	 * <p>
 	 * Derived from middlegen's dbnameconverter.
 	 * @param s The database name to convert.
 	 * 
 	 * @return The converted database name.
 	 */
 	public static String toUpperCamelCase(String s) {
-		if ( "".equals(s) ) {
+		if (s.isEmpty()) {
 			return s;
 		}
-		StringBuffer result = new StringBuffer();
+		StringBuilder result = new StringBuilder();
 		
 		boolean capitalize = true;
 		boolean lastCapital = false;
 		boolean lastDecapitalized = false;
-		String p = null;
 		for (int i = 0; i < s.length(); i++) {
 			String c = s.substring(i, i + 1);
 			if ( "_".equals(c) || " ".equals(c) || "-".equals(c) ) {
@@ -121,26 +118,16 @@ final public class NameConverter {
 			//if(forceFirstLetter && result.length()==0) capitalize = false;
 			
 			if (capitalize) {
-				if (p == null || !p.equals("_") ) {
-					result.append(c.toUpperCase() );
-					capitalize = false;
-					p = c;
-				}
-				else {
-					result.append(c.toLowerCase() );
-					capitalize = false;
-					p = c;
-				}
-			}
+                result.append(c.toUpperCase());
+                capitalize = false;
+            }
 			else {
 				result.append(c.toLowerCase() );
 				lastDecapitalized = true;
-				p = c;
-			}
-			
-		}
-		String r = result.toString();
-		return r;
+            }
+
+        }
+        return result.toString();
 	}
 	
 	static public String simplePluralize(String singular) {

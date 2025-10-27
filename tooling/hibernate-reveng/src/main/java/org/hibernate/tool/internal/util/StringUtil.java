@@ -17,6 +17,7 @@
  */
 package org.hibernate.tool.internal.util;
 
+import java.util.Objects;
 import java.util.StringTokenizer;
 
 /**
@@ -44,7 +45,7 @@ public final class StringUtil {
         StringTokenizer tok = null;
         if (separator == null) {
             tok = new StringTokenizer(str);
-        } 
+        }
         else {
             tok = new StringTokenizer(str, separator);
         }
@@ -59,26 +60,24 @@ public final class StringUtil {
             lastTokenBegin = str.indexOf(list[i], lastTokenEnd);
             lastTokenEnd = lastTokenBegin + list[i].length();
             i++;
-        }  
+        }
         return list;
     }
 
     public static String leftPad(String str, int size) {
         size = (size - str.length() );
         if (size > 0) {
-            StringBuffer buffer = new StringBuffer(size);
-            for (int i = 0; i < size; i++) {
-                buffer.append(" ");
-            }
-            str = buffer.toString() + str;
+            str = " ".repeat(size) + str;
         }
         return str;
     }
 
-	public static boolean isEqual(String str1, String str2) {
-		if(str1==str2) return true;
-		if(str1!=null && str1.equals(str2) ) return true;
-		return false;
-	}
-	
+    public static boolean isEqual(String str1, String str2) {
+        return Objects.equals( str1, str2 );
+    }
+
+    public static boolean isEmptyOrNull(String string) {
+        return string == null || string.isEmpty();
+    }
+
 }

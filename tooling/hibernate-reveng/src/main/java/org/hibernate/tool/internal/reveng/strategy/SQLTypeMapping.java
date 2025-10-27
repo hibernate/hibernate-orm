@@ -24,15 +24,15 @@ public class SQLTypeMapping implements Comparable<SQLTypeMapping> {
 	public static final int UNKNOWN_PRECISION = Integer.MAX_VALUE;
 	public static final int UNKNOWN_SCALE = Integer.MAX_VALUE;
 	public static final Boolean UNKNOWN_NULLABLE = null;
-	
+
 	private final int jdbcType;
 	private int length = UNKNOWN_LENGTH;
 	private int precision = UNKNOWN_PRECISION;
 	private int scale = UNKNOWN_SCALE;
 	private Boolean nullable;
-	
+
 	private String hibernateType;
-	
+
 	public SQLTypeMapping(int jdbcType) {
 		this.jdbcType = jdbcType;
 	}
@@ -50,7 +50,7 @@ public class SQLTypeMapping implements Comparable<SQLTypeMapping> {
 	}
 
 	public void setLength(int length) {
-		this.length = length;		
+		this.length = length;
 	}
 
 	public void setHibernateType(String hibernateType) {
@@ -58,13 +58,13 @@ public class SQLTypeMapping implements Comparable<SQLTypeMapping> {
 	}
 
 	public void setNullable(Boolean nullable) {
-		this.nullable = nullable;		
+		this.nullable = nullable;
 	}
-	
+
 	public Boolean getNullable() {
 		return nullable;
 	}
-	
+
 	public int getJDBCType() {
 		return jdbcType;
 	}
@@ -76,7 +76,7 @@ public class SQLTypeMapping implements Comparable<SQLTypeMapping> {
 	public int getLength() {
 		return length;
 	}
-	
+
 	public String toString() {
 		return getJDBCType() + " l:" + getLength() + " p:" + getPrecision() + " s:" + getScale() + " n:" + getNullable() + " ht:" + getHibernateType();
 	}
@@ -102,9 +102,7 @@ public class SQLTypeMapping implements Comparable<SQLTypeMapping> {
 			if(matchlength==this.length || this.length == UNKNOWN_LENGTH) {
 				if(matchprecision==this.precision || this.precision == UNKNOWN_PRECISION) {
 					if(matchscale==this.scale || this.scale == UNKNOWN_SCALE ) {
-						if(this.nullable == UNKNOWN_NULLABLE || nullable.equals(Boolean.valueOf(matchnullable)) ) {
-						  return true;
-						}
+						return this.nullable == UNKNOWN_NULLABLE || nullable.equals( matchnullable );
 					}
 				}
 			}
@@ -113,8 +111,6 @@ public class SQLTypeMapping implements Comparable<SQLTypeMapping> {
 	}
 
 	public int compareTo(SQLTypeMapping other) {
-		if(other==null) return 1;
-		
 		if(this.jdbcType==other.jdbcType) {
 			if(this.length==other.length) {
 				if(this.precision==other.precision) {
@@ -123,27 +119,24 @@ public class SQLTypeMapping implements Comparable<SQLTypeMapping> {
 					} else {
 						return compare(this.scale, other.scale);
 					}
-				} 
+				}
 				else {
 					return compare(this.precision,other.precision);
 				}
-			} 
+			}
 			else {
 				return compare(this.length,other.length);
 			}
-		} 
+		}
 		else {
 			return compare(this.jdbcType,other.jdbcType);
-		}	
+		}
 	}
 
 	private int compare(int value, int other) {
-		if(value==other) return 0;
-		if(value>other) return 1;
-		if(value<other) return -1;
-		throw new IllegalStateException();
+		return Integer.compare( value, other );
 	}
-	
+
 	// complete ordering of the tri-state: false, true, UNKNOWN_NULLABLE
 	private int compare(Boolean value, Boolean other) {
 		if(value==other) return 0;
@@ -156,7 +149,7 @@ public class SQLTypeMapping implements Comparable<SQLTypeMapping> {
 			return -1;
 		}
 	}
-	
+
 	public boolean equals(Object obj) {
 		if (getClass().isAssignableFrom(obj.getClass())) {
 			SQLTypeMapping other = getClass().cast(obj);
@@ -165,10 +158,10 @@ public class SQLTypeMapping implements Comparable<SQLTypeMapping> {
 			return false;
 		}
 	}
-	
+
 	public int hashCode() {
-		return (jdbcType + length + precision + scale + (nullable==UNKNOWN_NULLABLE?1:nullable.hashCode())) % 17; 
+		return (jdbcType + length + precision + scale + (nullable==UNKNOWN_NULLABLE?1:nullable.hashCode())) % 17;
 	}
 
-	
+
 }

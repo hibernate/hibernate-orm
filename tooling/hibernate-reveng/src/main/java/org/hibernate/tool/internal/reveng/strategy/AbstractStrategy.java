@@ -46,7 +46,7 @@ public abstract class AbstractStrategy implements RevengStrategy {
 
 	static final private Logger log = Logger.getLogger(AbstractStrategy.class);
 	
-	private static Set<String> AUTO_OPTIMISTICLOCK_COLUMNS;
+	private static final Set<String> AUTO_OPTIMISTICLOCK_COLUMNS;
 
 	private RevengSettings settings = new RevengSettings(this);
 
@@ -162,7 +162,7 @@ public abstract class AbstractStrategy implements RevengStrategy {
 		String pkgName = settings.getDefaultPackageName();
 		String className = toUpperCamelCase( tableIdentifier.getName() );
 		
-		if(pkgName.length()>0) {			
+		if(!pkgName.isEmpty()) {
 			return StringHelper.qualify(pkgName, className);
 		}
 		else {
@@ -204,7 +204,7 @@ public abstract class AbstractStrategy implements RevengStrategy {
 
 	public boolean useColumnForOptimisticLock(TableIdentifier identifier, String column) {
 		if(settings.getDetectOptimsticLock()) {
-			return AUTO_OPTIMISTICLOCK_COLUMNS.contains(column.toLowerCase())?true:false;
+			return AUTO_OPTIMISTICLOCK_COLUMNS.contains(column.toLowerCase());
 		} else {
 			return false;
 		}
@@ -238,11 +238,7 @@ public abstract class AbstractStrategy implements RevengStrategy {
 		       // if the reference column is the first one then we are inverse.
 			   Column column = foreignKeyTable.getColumn(0);
 			   Column fkColumn = (Column) referencedColumns.get(0);
-			   if(fkColumn.equals(column)) {
-				   return true;   
-			   } else {
-				   return false;
-			   }
+            return fkColumn.equals(column);
 		}
 		return true;
 	}
@@ -259,26 +255,23 @@ public abstract class AbstractStrategy implements RevengStrategy {
 		if(settings.getDetectOneToOne()) {
 			// add support for non-PK associations
 			List<Column> fkColumns = foreignKey.getColumns();
-			List<Column> pkForeignTableColumns = null;
-			
+			List<Column> pkForeignTableColumns = Collections.emptyList();
+
 			if (foreignKey.getTable().hasPrimaryKey())
 				pkForeignTableColumns = foreignKey.getTable().getPrimaryKey().getColumns();
 
-			boolean equals =
-				fkColumns != null && pkForeignTableColumns != null
-				&& fkColumns.size() == pkForeignTableColumns.size();
+			boolean equals = fkColumns.size() == pkForeignTableColumns.size();
 
 			Iterator<Column> columns = foreignKey.getColumns().iterator();
 			while (equals && columns.hasNext()) {
-				Column fkColumn = (Column) columns.next();
-				equals = equals && pkForeignTableColumns.contains(fkColumn);
+				Column fkColumn = columns.next();
+				equals = pkForeignTableColumns.contains(fkColumn);
 			}
-
 			return equals;
 		} else {
 			return false;
 		}
-    }
+	}
 
 	public boolean isManyToManyTable(Table table) {
 		if(settings.getDetectManyToMany()) {
@@ -293,7 +286,7 @@ public abstract class AbstractStrategy implements RevengStrategy {
 			
 			// if we have more than 2 fk, means we have more than 2 table implied
 			// in this table --> cannot be a simple many-to-many
-			for (ForeignKey fkey : table.getForeignKeys().values()) {
+			for (ForeignKey fkey : table.getForeignKeyCollection()) {
 				foreignKeys.add( fkey );
 				if(foreignKeys.size()>2) {
 					return false; // early exit if we have more than two fk.
@@ -304,14 +297,11 @@ public abstract class AbstractStrategy implements RevengStrategy {
 			}
 			
 			// tests that all columns are implied in the fks
-			Set<Column> columns = new HashSet<Column>();
-			for (Column column : table.getColumns()) {
-				columns.add(column);
-			}
+            Set<Column> columns = new HashSet<>(table.getColumns());
 			
-			for (ForeignKey fkey : table.getForeignKeys().values()) {
+			for (ForeignKey fkey : table.getForeignKeyCollection()) {
 				if (columns.isEmpty()) break;
-				columns.removeAll(fkey.getColumns());
+				fkey.getColumns().forEach(columns::remove);
 			}
 			
 			return columns.isEmpty();

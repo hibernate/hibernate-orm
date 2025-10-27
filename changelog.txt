@@ -3,6 +3,16 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.34.Final (October 27, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/35683
+
+** Task
+    * [HHH-19889] - Mention third-party dialects throughout the documentation
+    * [HHH-19869] - Regroup all dialect information under a single guide
+
+
 Changes in 6.6.33.Final (October 10, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

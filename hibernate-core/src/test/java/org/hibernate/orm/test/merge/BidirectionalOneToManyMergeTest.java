@@ -4,10 +4,6 @@
  */
 package org.hibernate.orm.test.merge;
 
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Before;
-import org.junit.Test;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -17,42 +13,45 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Lisandro Fernandez (kelechul at gmail dot com)
  */
 @JiraKey("HHH-13815")
-public class BidirectionalOneToManyMergeTest extends org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				BidirectionalOneToManyMergeTest.Post.class,
+				BidirectionalOneToManyMergeTest.PostComment.class,
+		}
+)
+public class BidirectionalOneToManyMergeTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{
-				Post.class,
-				PostComment.class,
-		};
-	}
 
-	@Before
-	public void setUp() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	@BeforeAll
+	public void setUp(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			entityManager.persist(
-					new Post("High-Performance Java Persistence").setId(1L)
+					new Post( "High-Performance Java Persistence" ).setId( 1L )
 			);
-		});
+		} );
 	}
 
 	@Test
-	public void testMerge() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Post post = entityManager.find(Post.class, 1L);
-			post.addComment(new PostComment("This post rocks!", post));
+	public void testMerge(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			Post post = entityManager.find( Post.class, 1L );
+			post.addComment( new PostComment( "This post rocks!", post ) );
 			post.getComments().isEmpty();
-			entityManager.merge(post);
-		});
+			entityManager.merge( post );
+		} );
 	}
 
 	@Entity
@@ -101,15 +100,15 @@ public class BidirectionalOneToManyMergeTest extends org.hibernate.orm.test.jpa.
 		}
 
 		public Post addComment(PostComment comment) {
-			comments.add(comment);
-			comment.setPost(this);
+			comments.add( comment );
+			comment.setPost( this );
 
 			return this;
 		}
 
 		public Post removeComment(PostComment comment) {
-			comments.remove(comment);
-			comment.setPost(null);
+			comments.remove( comment );
+			comment.setPost( null );
 
 			return this;
 		}
@@ -165,9 +164,13 @@ public class BidirectionalOneToManyMergeTest extends org.hibernate.orm.test.jpa.
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (!(o instanceof PostComment)) return false;
-			return id != null && id.equals(((PostComment) o).getId());
+			if ( this == o ) {
+				return true;
+			}
+			if ( !(o instanceof PostComment) ) {
+				return false;
+			}
+			return id != null && id.equals( ((PostComment) o).getId() );
 		}
 
 		@Override

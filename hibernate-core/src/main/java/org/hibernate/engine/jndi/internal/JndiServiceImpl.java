@@ -4,7 +4,6 @@
  */
 package org.hibernate.engine.jndi.internal;
 
-import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Hashtable;
@@ -22,10 +21,10 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jndi.JndiException;
 import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.jndi.spi.JndiService;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.NullnessUtil;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+
 
 /**
  * Standard implementation of JNDI services.
@@ -33,11 +32,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 final class JndiServiceImpl implements JndiService {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			JndiServiceImpl.class.getName()
-	);
 
 	private final Hashtable<String,Object> initialContextSettings;
 
@@ -60,7 +54,7 @@ final class JndiServiceImpl implements JndiService {
 	private static Hashtable<String,Object> extractJndiProperties(Map<?,?> configurationValues) {
 		final Hashtable<String,Object> jndiProperties = new Hashtable<>();
 
-		for ( Map.Entry<?,?> entry : configurationValues.entrySet() ) {
+		for ( var entry : configurationValues.entrySet() ) {
 			if ( entry.getKey() instanceof String propertyName ) {
 				final Object propertyValue = entry.getValue();
 				if ( propertyName.startsWith( Environment.JNDI_PREFIX ) ) {
@@ -90,7 +84,7 @@ final class JndiServiceImpl implements JndiService {
 
 	@Override
 	public Object locate(String jndiName) {
-		final InitialContext initialContext = buildInitialContext();
+		final var initialContext = buildInitialContext();
 		final Name name = parseName( jndiName, initialContext );
 		try {
 			return initialContext.lookup( name );
@@ -135,13 +129,10 @@ final class JndiServiceImpl implements JndiService {
 	}
 
 	private static boolean allowedScheme(final String scheme) {
-		switch ( scheme ) {
-			case "java" :
-			case "osgi" :
-				return true;
-			default:
-				return false;
-		}
+		return switch ( scheme ) {
+			case "java", "osgi" -> true;
+			default -> false;
+		};
 	}
 
 	private void cleanUp(InitialContext initialContext) {
@@ -149,13 +140,13 @@ final class JndiServiceImpl implements JndiService {
 			initialContext.close();
 		}
 		catch ( NamingException e ) {
-			LOG.unableToCloseInitialContext(e.toString());
+			CORE_LOGGER.unableToCloseInitialContext(e.toString());
 		}
 	}
 
 	@Override
 	public void bind(String jndiName, Object value) {
-		final InitialContext initialContext = buildInitialContext();
+		final var initialContext = buildInitialContext();
 		final Name name = parseName( jndiName, initialContext );
 		try {
 			bind( name, value, initialContext );
@@ -167,7 +158,7 @@ final class JndiServiceImpl implements JndiService {
 
 	private void bind(Name name, Object value, Context context) {
 		try {
-			LOG.tracef( "Binding : %s", name );
+			CORE_LOGGER.tracef( "Binding: %s", name );
 			context.rebind( name, value );
 		}
 		catch ( Exception initialException ) {
@@ -185,7 +176,7 @@ final class JndiServiceImpl implements JndiService {
 
 				Context intermediateContext = null;
 				try {
-					LOG.tracev( "Intermediate lookup: {0}", intermediateContextName );
+					CORE_LOGGER.tracef( "Intermediate lookup: %s", intermediateContextName );
 					intermediateContext = (Context) intermediateContextBase.lookup( intermediateContextName );
 				}
 				catch ( NameNotFoundException handledBelow ) {
@@ -196,10 +187,10 @@ final class JndiServiceImpl implements JndiService {
 				}
 
 				if ( intermediateContext != null ) {
-					LOG.tracev( "Found intermediate context: {0}", intermediateContextName );
+					CORE_LOGGER.tracef( "Found intermediate context: %s", intermediateContextName );
 				}
 				else {
-					LOG.tracev( "Creating sub-context: {0}", intermediateContextName );
+					CORE_LOGGER.tracef( "Creating subcontext: %s", intermediateContextName );
 					try {
 						intermediateContext = intermediateContextBase.createSubcontext( intermediateContextName );
 					}
@@ -210,7 +201,7 @@ final class JndiServiceImpl implements JndiService {
 				intermediateContextBase = intermediateContext;
 				name = name.getSuffix( 1 );
 			}
-			LOG.tracev( "Binding : {0}", name );
+			CORE_LOGGER.tracef( "Binding: %s", name );
 			try {
 				intermediateContextBase.rebind( name, value );
 			}
@@ -218,12 +209,12 @@ final class JndiServiceImpl implements JndiService {
 				throw new JndiException( "Error performing intermediate bind [" + name + "]", e );
 			}
 		}
-		LOG.debugf( "Bound name: %s", name );
+		CORE_LOGGER.tracef( "Bound name: %s", name );
 	}
 
 	@Override
 	public void unbind(String jndiName) {
-		final InitialContext initialContext = buildInitialContext();
+		final var initialContext = buildInitialContext();
 		final Name name = parseName( jndiName, initialContext );
 		try {
 			initialContext.unbind( name );
@@ -238,7 +229,7 @@ final class JndiServiceImpl implements JndiService {
 
 	@Override
 	public void addListener(String jndiName, NamespaceChangeListener listener) {
-		final InitialContext initialContext = buildInitialContext();
+		final var initialContext = buildInitialContext();
 		final Name name = parseName( jndiName, initialContext );
 		try {
 			( (EventContext) initialContext ).addNamingListener( name, EventContext.OBJECT_SCOPE, listener );

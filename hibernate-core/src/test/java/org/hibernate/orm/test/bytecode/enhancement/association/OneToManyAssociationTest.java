@@ -74,7 +74,7 @@ public class OneToManyAssociationTest {
 
 		String name;
 
-		// HHH-13446 - Type not validated in bi-directional association mapping
+		// HHH-13446 - Type not validated in bidirectional association mapping
 		@OneToMany(cascade = CascadeType.ALL, mappedBy = "custId", fetch = FetchType.EAGER)
 		List<CustomerInventory> inventoryIdList = new ArrayList<>();
 

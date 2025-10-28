@@ -28,7 +28,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Steve Ebersole
  */
 public class EffectiveEntityGraph implements AppliedGraph, Serializable {
-	private static final Logger log = Logger.getLogger( EffectiveEntityGraph.class );
+	private static final Logger LOG = Logger.getLogger( EffectiveEntityGraph.class );
 
 	private final boolean allowOverwrite;
 
@@ -78,11 +78,8 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 		if ( semantic == null ) {
 			throw new IllegalArgumentException( "Graph semantic cannot be null" );
 		}
-
 		verifyWriteability();
-
-		log.debugf( "Setting effective graph state [%s] : %s", semantic.name(), graph );
-
+		LOG.tracef( "Setting effective graph state [%s] : %s", semantic.name(), graph );
 		this.semantic = semantic;
 		this.graph = graph;
 	}
@@ -107,43 +104,34 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	 * @throws IllegalStateException If previous state is still available (hasn't been cleared).
 	 */
 	public void applyConfiguredGraph(@Nullable Map<String,?> properties) {
-		if ( properties == null || properties.isEmpty() ) {
-			return;
-		}
-
-		RootGraphImplementor<?> fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJpaHintName() );
-		RootGraphImplementor<?> loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJpaHintName() );
-		if ( fetchHint == null ) {
-			fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJakartaHintName() );
-		}
-		if ( loadHint == null ) {
-			loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJakartaHintName() );
-		}
-
-		if ( fetchHint == null && loadHint == null ) {
-			log.debugf( "Neither LOAD nor FETCH graph were found in properties" );
-			return;
-		}
-
-		if ( fetchHint != null ) {
-			if ( loadHint != null ) {
-				// can't have both
-				throw new IllegalArgumentException(
-						"Passed properties contained both a LOAD and a FETCH graph which is illegal - " +
-								"only one should be passed"
-				);
+		if ( properties != null && !properties.isEmpty() ) {
+			var fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJpaHintName() );
+			var loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJpaHintName() );
+			if ( fetchHint == null ) {
+				fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJakartaHintName() );
+			}
+			if ( loadHint == null ) {
+				loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJakartaHintName() );
 			}
 
-			applyGraph( fetchHint, GraphSemantic.FETCH );
-		}
-		else {
-			assert loadHint != null : "@AssumeAssertion(nullness)";
-			applyGraph( loadHint, GraphSemantic.LOAD );
+			if ( fetchHint != null ) {
+				if ( loadHint != null ) {
+					// can't have both
+					throw new IllegalArgumentException(
+							"Passed properties contained both a LOAD and a FETCH graph which is illegal - " +
+							"only one should be passed"
+					);
+				}
+				applyGraph( fetchHint, GraphSemantic.FETCH );
+			}
+			else if ( loadHint != null ) {
+				applyGraph( loadHint, GraphSemantic.LOAD );
+			}
 		}
 	}
 
 	public void clear() {
-		this.semantic = null;
-		this.graph = null;
+		semantic = null;
+		graph = null;
 	}
 }

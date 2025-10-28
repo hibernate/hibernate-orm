@@ -16,6 +16,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public interface SqlTypedMapping {
 	@Nullable String getColumnDefinition();
 	@Nullable Long getLength();
+	@Nullable Integer getArrayLength();
 	@Nullable Integer getPrecision();
 	@Nullable Integer getScale();
 	@Nullable Integer getTemporalPrecision();
@@ -26,6 +27,7 @@ public interface SqlTypedMapping {
 
 	default Size toSize() {
 		final Size size = new Size();
+		size.setArrayLength( getArrayLength() );
 		size.setLength( getLength() );
 		if ( getTemporalPrecision() != null ) {
 			size.setPrecision( getTemporalPrecision() );

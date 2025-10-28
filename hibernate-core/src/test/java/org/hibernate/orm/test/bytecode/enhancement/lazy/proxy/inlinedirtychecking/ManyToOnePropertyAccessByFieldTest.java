@@ -121,15 +121,7 @@ public class ManyToOnePropertyAccessByFieldTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Request" ).executeUpdate();
-					session.createQuery( "delete from User" ).executeUpdate();
-					session.createQuery( "delete from Office" ).executeUpdate();
-					session.createQuery( "delete from Client" ).executeUpdate();
-					session.createQuery( "delete from Phone" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

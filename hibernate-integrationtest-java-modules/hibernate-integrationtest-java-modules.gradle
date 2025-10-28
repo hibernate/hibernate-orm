@@ -7,6 +7,11 @@ plugins {
 	id "local.java-module"
 }
 
+def skipJacoco = project.hasProperty('skipJacoco') ? project.getProperty('skipJacoco').toBoolean() : false
+if (!skipJacoco) {
+	plugins.apply('jacoco')
+}
+
 description = 'Integration tests for running Hibernate ORM in the Java module path'
 
 // See https://docs.gradle.org/6.7.1/userguide/java_testing.html#blackbox_integration_testing
@@ -18,6 +23,11 @@ dependencies {
 	api project( ':hibernate-core' )
 	api project( ':hibernate-envers' )
 	implementation project( ':hibernate-scan-jandex' )
+
+    // todo : to get rid of these
+    testImplementation testLibs.junit4
+    testImplementation testLibs.junit4Engine
+
 	//Provide the jakarta.cdi module, as it's required by module jakarta.transaction
 	//but not provided as transitive dependency of Narayana.
 	testRuntimeOnly( jakartaLibs.cdi )

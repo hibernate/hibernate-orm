@@ -4,44 +4,46 @@
  */
 package org.hibernate.stat.internal;
 
-import java.util.Collections;
 import java.util.Set;
 
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.stat.SessionStatistics;
+
+import static java.util.Collections.unmodifiableSet;
 
 /**
  * @author Gavin King
  */
 public class SessionStatisticsImpl implements SessionStatistics {
 
-	private final SessionImplementor session;
+	private final PersistenceContext persistenceContext;
 
 	public SessionStatisticsImpl(SessionImplementor session) {
-		this.session = session;
+		persistenceContext = session.getPersistenceContextInternal();
 	}
 
 	public int getEntityCount() {
-		return session.getPersistenceContextInternal().getNumberOfManagedEntities();
+		return persistenceContext.getNumberOfManagedEntities();
 	}
 
 	public int getCollectionCount() {
-		return session.getPersistenceContextInternal().getCollectionEntriesSize();
+		return persistenceContext.getCollectionEntriesSize();
 	}
 
 	public Set<?> getEntityKeys() {
-		return Collections.unmodifiableSet( session.getPersistenceContextInternal().getEntitiesByKey().keySet() );
+		return unmodifiableSet( persistenceContext.getEntitiesByKey().keySet() );
 	}
 
 	public Set<?> getCollectionKeys() {
-		return Collections.unmodifiableSet( session.getPersistenceContextInternal().getCollectionsByKey().keySet() );
+		return unmodifiableSet( persistenceContext.getCollectionsByKey().keySet() );
 	}
 
 	public String toString() {
-		return "SessionStatistics[" +
-				"entity count=" + getEntityCount() +
-				",collection count=" + getCollectionCount() +
-				']';
+		return "SessionStatistics["
+			+ "entity count=" + getEntityCount()
+			+ ",collection count=" + getCollectionCount()
+			+ ']';
 	}
 
 }

@@ -4,79 +4,71 @@
  */
 package org.hibernate.orm.test.hql;
 
-import java.util.List;
-
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.TypedQuery;
+import java.util.List;
 
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Christian Beikov
  */
-public class InferenceTest extends BaseCoreFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = InferenceTest.Person.class)
+@SessionFactory
+public class InferenceTest {
 
-	private Person person;
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Person.class
-		};
-	}
-
-	@Before
-	public void setUp() {
-		doInHibernate( this::sessionFactory, session -> {
-			person = new Person();
-			person.setName( "Johannes" );
-			person.setSurname( "Buehler" );
+	@BeforeEach
+	public void createTestData(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
+			var person = new Person( 1, "Johannes", "Buehler" );
 			session.persist( person );
 		} );
 	}
 
-	@After
-	public void cleanUp() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createMutationQuery( "delete from Person" ).executeUpdate();
-		} );
+	@AfterEach
+	public void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testBinaryArithmeticInference() {
-		doInHibernate( this::sessionFactory, session -> {
-			TypedQuery<Person> query = session.createQuery( "from Person p where p.id + 1 < :param", Person.class );
-			query.setParameter("param", 10);
-			List<Person> resultList = query.getResultList();
-			assertThat(resultList, hasItem(person));
+	public void testBinaryArithmeticInference(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
+			List<Person> resultList = session.createQuery( "from Person p where p.id + 1 < :param", Person.class )
+					.setParameter("param", 10)
+					.getResultList();
+			assertThat( resultList ).map( Person::getId ).contains( 1 );
 		} );
 
 	}
 
 	@Test
 	@JiraKey("HHH-17386")
-	public void testInferenceSourceResetForOnClause() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createQuery( "from Person p where p in (select p2 from Person p2 join Person p3 on exists (select 1 from Person p4))", Person.class )
-				.getResultList();
+	public void testInferenceSourceResetForOnClause(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
+			var hql = """
+					from Person p
+					where p in (
+						select p2
+						from Person p2
+							join Person p3
+								on exists (select 1 from Person p4)
+					)
+					""";
+			session.createQuery( hql, Person.class ).getResultList();
 		} );
 
 	}
@@ -84,29 +76,32 @@ public class InferenceTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@JiraKey("HHH-18046")
 	@SkipForDialect( dialectClass = CockroachDialect.class, reason = "CockroachDB doesn't support multiplication between int and float columns" )
-	public void testBinaryArithmeticParameterInference() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testBinaryArithmeticParameterInference(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 			JpaCriteriaQuery<Double> cq = cb.createQuery( Double.class );
 			JpaRoot<Person> root = cq.from( Person.class );
 			cq.select( cb.toDouble( cb.prod( root.get( "id" ), 0.5f ) ) );
 			Double result = session.createQuery( cq ).getSingleResult();
-			assertThat( result, is( person.getId() * 0.5d ) );
+			assertThat( result ).isEqualTo( 0.5d );
 		} );
 	}
 
 	@Entity(name = "Person")
 	public static class Person {
-
 		@Id
-		@GeneratedValue
 		private Integer id;
-
-		@Column
 		private String name;
-
-		@Column
 		private String surname;
+
+		public Person() {
+		}
+
+		public Person(Integer id, String name, String surname) {
+			this.id = id;
+			this.name = name;
+			this.surname = surname;
+		}
 
 		public String getName() {
 			return name;

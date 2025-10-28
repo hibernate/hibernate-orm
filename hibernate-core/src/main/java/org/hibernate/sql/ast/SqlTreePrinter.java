@@ -15,6 +15,7 @@ import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
@@ -33,14 +34,11 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
  */
 public class SqlTreePrinter {
 	public static void logSqlAst(Statement sqlAstStatement) {
-		if ( ! SqlAstTreeLogger.INSTANCE.isDebugEnabled() ) {
-			return;
+		if ( SqlAstTreeLogger.INSTANCE.isTraceEnabled() ) {
+			final SqlTreePrinter printer = new SqlTreePrinter();
+			printer.visitStatement( sqlAstStatement );
+			SqlAstTreeLogger.INSTANCE.tracef( "SQL AST Tree:%n%s", printer.buffer );
 		}
-
-		final SqlTreePrinter printer = new SqlTreePrinter();
-		printer.visitStatement( sqlAstStatement );
-
-		SqlAstTreeLogger.INSTANCE.debugf( "SQL AST Tree:%n%s", printer.buffer );
 	}
 
 	private final StringBuffer buffer = new StringBuffer();
@@ -128,7 +126,7 @@ public class SqlTreePrinter {
 
 	private String toDisplayText(TableGroup tableGroup) {
 		return tableGroup.getClass().getSimpleName() + " ("
-					+ tableGroup.getGroupAlias() + " : "
+					+ tableGroup.getGroupAlias() + ": "
 					+ tableGroup.getNavigablePath()
 					+ ")";
 	}
@@ -137,36 +135,35 @@ public class SqlTreePrinter {
 		if ( !tableGroup.isInitialized() ) {
 			return;
 		}
-		if ( tableGroup.getPrimaryTableReference() instanceof NamedTableReference ) {
+		final TableReference primaryTableReference = tableGroup.getPrimaryTableReference();
+		if ( primaryTableReference instanceof NamedTableReference ) {
 			logWithIndentation(
-					"primaryTableReference : %s as %s",
+					"primaryTableReference: %s as %s",
 					tableGroup.getPrimaryTableReference().getTableId(),
 					tableGroup.getPrimaryTableReference().getIdentificationVariable()
 			);
 		}
+		else if ( primaryTableReference instanceof ValuesTableReference ) {
+			logWithIndentation(
+					"primaryTableReference: values (..) as %s",
+					primaryTableReference.getIdentificationVariable()
+			);
+		}
+		else if ( primaryTableReference instanceof FunctionTableReference ) {
+			logWithIndentation(
+					"primaryTableReference: %s(...) as %s",
+					((FunctionTableReference) primaryTableReference).getFunctionExpression().getFunctionName(),
+					primaryTableReference.getIdentificationVariable()
+			);
+		}
 		else {
-			if ( tableGroup.getPrimaryTableReference() instanceof ValuesTableReference ) {
-				logWithIndentation(
-						"primaryTableReference : values (..) as %s",
-						tableGroup.getPrimaryTableReference().getIdentificationVariable()
-				);
-			}
-			else if ( tableGroup.getPrimaryTableReference() instanceof FunctionTableReference ) {
-				logWithIndentation(
-						"primaryTableReference : %s(...) as %s",
-						( (FunctionTableReference) tableGroup.getPrimaryTableReference() ).getFunctionExpression().getFunctionName(),
-						tableGroup.getPrimaryTableReference().getIdentificationVariable()
-				);
-			}
-			else {
-				logNode(
-						"PrimaryTableReference as " + tableGroup.getPrimaryTableReference().getIdentificationVariable(),
-						() -> {
-							Statement statement = ( (QueryPartTableReference) tableGroup.getPrimaryTableReference() ).getStatement();
-							visitStatement( statement );
-						}
-				);
-			}
+			logNode(
+					"PrimaryTableReference as " + primaryTableReference.getIdentificationVariable(),
+					() -> {
+						Statement statement = ((QueryPartTableReference) primaryTableReference).getStatement();
+						visitStatement( statement );
+					}
+			);
 		}
 
 		final List<TableReferenceJoin> tableReferenceJoins = tableGroup.getTableReferenceJoins();
@@ -205,7 +202,8 @@ public class SqlTreePrinter {
 
 	private void visitTableGroupJoin(TableGroupJoin tableGroupJoin) {
 		logNode(
-				tableGroupJoin.getJoinType().getText() + " join " + toDisplayText( tableGroupJoin.getJoinedGroup() ),
+				tableGroupJoin.getJoinType().getText() + "join "
+						+ toDisplayText( tableGroupJoin.getJoinedGroup() ),
 				() -> logTableGroupDetails( tableGroupJoin.getJoinedGroup() )
 		);
 	}
@@ -229,7 +227,7 @@ public class SqlTreePrinter {
 			subTreeHandler.run();
 		}
 		catch (Exception e) {
-			SqlAstTreeLogger.INSTANCE.debugf( e, "Error processing node {%s}", text );
+			SqlAstTreeLogger.INSTANCE.tracef( e, "Error processing node {%s}", text );
 		}
 		finally {
 			if ( indentContinuation ) {

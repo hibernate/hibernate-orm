@@ -16,6 +16,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
@@ -117,7 +118,11 @@ public sealed class Column
 	}
 
 	public JdbcMapping getType() {
-		return getValue().getSelectableType( getValue().getBuildingContext().getMetadataCollector(), getTypeIndex() );
+		return getValue().getSelectableType( getMetadataCollector(), getTypeIndex() );
+	}
+
+	private InFlightMetadataCollector getMetadataCollector() {
+		return getValue().getBuildingContext().getMetadataCollector();
 	}
 
 	public String getName() {
@@ -176,22 +181,16 @@ public sealed class Column
 	 * @return the quoted name as it would occur in the mapping file
 	 */
 	public String getQuotedName() {
-		return safeInterning(
-				quoted ?
-				"`" + name + "`" :
-				name
-		);
+		return safeInterning( quoted ? "`" + name + "`" : name );
 	}
 
 	/**
 	 * @return the quoted name using the quoting syntax of the given dialect
 	 */
 	public String getQuotedName(Dialect dialect) {
-		return safeInterning(
-				quoted ?
-				dialect.openQuote() + name + dialect.closeQuote() :
-				name
-		);
+		return safeInterning( quoted
+				? dialect.openQuote() + name + dialect.closeQuote()
+				: name );
 	}
 
 	@Override
@@ -469,7 +468,7 @@ public sealed class Column
 		if ( type == null ) {
 			throw new AssertionFailure( "no typing information available to determine column size" );
 		}
-		final JdbcMapping jdbcMapping = (JdbcMapping) type;
+		final var jdbcMapping = (JdbcMapping) type;
 		final Size size = dialect.getSizeStrategy().resolveSize(
 				jdbcMapping.getJdbcType(),
 				jdbcMapping.getJdbcJavaType(),
@@ -551,19 +550,19 @@ public sealed class Column
 	}
 
 	public boolean isSqlTypeLob(Metadata mapping) {
-		final Database database = mapping.getDatabase();
-		final DdlTypeRegistry ddlTypeRegistry = database.getTypeConfiguration().getDdlTypeRegistry();
-		final Dialect dialect = database.getDialect();
+		final var database = mapping.getDatabase();
+		final var ddlTypeRegistry = database.getTypeConfiguration().getDdlTypeRegistry();
+		final var dialect = database.getDialect();
 		if ( sqlTypeLob == null ) {
 			try {
 				final int typeCode = getSqlTypeCode( mapping );
-				final DdlType descriptor = ddlTypeRegistry.getDescriptor( typeCode );
-				if ( descriptor == null ) {
+				final var ddlType = ddlTypeRegistry.getDescriptor( typeCode );
+				if ( ddlType == null ) {
 					sqlTypeLob = JdbcType.isLob( typeCode );
 				}
 				else {
 					final Size size = getColumnSize( dialect, mapping );
-					sqlTypeLob = descriptor.isLob( size );
+					sqlTypeLob = ddlType.isLob( size );
 				}
 			}
 			catch ( MappingException cause ) {

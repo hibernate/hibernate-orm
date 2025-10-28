@@ -15,28 +15,39 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl;
 
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class EmbeddableImplicitOverrideTest
-	extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {EmbeddableImplicitOverrideTest.Book.class, EmbeddableImplicitOverrideTest.Country.class}
+)
+@SessionFactory
+@ServiceRegistry(
+		settingProviders = {
+				@SettingProvider(
+						settingName = MappingSettings.IMPLICIT_NAMING_STRATEGY,
+						provider = EmbeddableImplicitOverrideTest.ImplicitNamingStrategySettingProvider.class)
+		}
+)
+public class EmbeddableImplicitOverrideTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Book.class,
-			Country.class
-		};
+	public static class ImplicitNamingStrategySettingProvider implements SettingProvider.Provider<ImplicitNamingStrategyComponentPathImpl> {
+		@Override
+		public ImplicitNamingStrategyComponentPathImpl getSetting() {
+			return ImplicitNamingStrategyComponentPathImpl.INSTANCE;
+		}
 	}
 
-	@Override
-	protected void initialize(MetadataBuilder metadataBuilder) {
-		super.initialize(metadataBuilder);
+	// Preserved because of the doc inclusion
+	private void doesNothing(MetadataBuilder metadataBuilder) {
 		//tag::embeddable-multiple-ImplicitNamingStrategyComponentPathImpl[]
 		metadataBuilder.applyImplicitNamingStrategy(
 			ImplicitNamingStrategyComponentPathImpl.INSTANCE
@@ -45,8 +56,8 @@ public class EmbeddableImplicitOverrideTest
 	}
 
 	@Test
-	public void testLifecycle() {
-		doInHibernate(this::sessionFactory, session -> {
+	public void testLifecycle(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			Country canada = new Country();
 			canada.setName("Canada");
 			session.persist(canada);
@@ -56,7 +67,7 @@ public class EmbeddableImplicitOverrideTest
 			session.persist(usa);
 		});
 
-		doInHibernate(this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			Country canada = session.byNaturalId(Country.class).using("name", "Canada").load();
 			Country usa = session.byNaturalId(Country.class).using("name", "USA").load();
 

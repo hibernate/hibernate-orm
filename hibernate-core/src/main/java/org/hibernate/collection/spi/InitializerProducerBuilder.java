@@ -33,25 +33,18 @@ public class InitializerProducerBuilder {
 			Fetch indexFetch,
 			Fetch elementFetch,
 			DomainResultCreationState creationState) {
-		switch ( classification ) {
-			case ARRAY:
-				return createArrayInitializerProducer( navigablePath, attributeMapping, fetchParent, selected, indexFetch, elementFetch, creationState );
-			case BAG:
-			case ID_BAG:
-				return createBagInitializerProducer( navigablePath, attributeMapping, fetchParent, selected, elementFetch, creationState );
-			case LIST:
-				return createListInitializerProducer( navigablePath, attributeMapping, fetchParent, selected, indexFetch, elementFetch, creationState );
-			case MAP:
-			case ORDERED_MAP:
-			case SORTED_MAP:
-				return createMapInitializerProducer( navigablePath, attributeMapping, fetchParent, selected, indexFetch, elementFetch, creationState );
-			case SET:
-			case ORDERED_SET:
-			case SORTED_SET:
-				return createSetInitializerProducer( navigablePath, attributeMapping, fetchParent, selected, elementFetch, creationState );
-			default:
-				throw new IllegalArgumentException( "Unknown CollectionClassification : " + classification );
-		}
+		return switch ( classification ) {
+			case ARRAY ->
+					createArrayInitializerProducer( navigablePath, attributeMapping, fetchParent, selected, indexFetch, elementFetch, creationState );
+			case BAG, ID_BAG ->
+					createBagInitializerProducer( navigablePath, attributeMapping, fetchParent, selected, elementFetch, creationState );
+			case LIST ->
+					createListInitializerProducer( navigablePath, attributeMapping, fetchParent, selected, indexFetch, elementFetch, creationState );
+			case MAP, ORDERED_MAP, SORTED_MAP ->
+					createMapInitializerProducer( navigablePath, attributeMapping, fetchParent, selected, indexFetch, elementFetch, creationState );
+			case SET, ORDERED_SET, SORTED_SET ->
+					createSetInitializerProducer( navigablePath, attributeMapping, fetchParent, selected, elementFetch, creationState );
+		};
 	}
 
 	public static CollectionInitializerProducer createArrayInitializerProducer(
@@ -219,21 +212,19 @@ public class InitializerProducerBuilder {
 			Fetch indexFetch,
 			Fetch elementFetch,
 			DomainResultCreationState creationState) {
-		switch ( classification ) {
-			case ARRAY:
-				return createArrayInitializerProducer(
-						navigablePath,
-						attributeMapping,
-						fetchParent,
-						selected,
-						indexFetch,
-						elementFetch,
-						creationState
-				);
-			case BAG:
-			case ID_BAG:
+		return switch ( classification ) {
+			case ARRAY -> createArrayInitializerProducer(
+					navigablePath,
+					attributeMapping,
+					fetchParent,
+					selected,
+					indexFetch,
+					elementFetch,
+					creationState
+			);
+			case BAG, ID_BAG -> {
 				assert indexFetch == null;
-				return createBagInitializerProducer(
+				yield createBagInitializerProducer(
 						navigablePath,
 						attributeMapping,
 						fetchParent,
@@ -241,42 +232,34 @@ public class InitializerProducerBuilder {
 						elementFetch,
 						creationState
 				);
-			case LIST:
-				return createListInitializerProducer(
-						navigablePath,
-						attributeMapping,
-						fetchParent,
-						selected,
-						indexFetch,
-						elementFetch,
-						creationState
-				);
-			case MAP:
-			case ORDERED_MAP:
-			case SORTED_MAP:
-				return createMapInitializerProducer(
-						navigablePath,
-						attributeMapping,
-						fetchParent,
-						selected,
-						indexFetch,
-						elementFetch,
-						creationState
-				);
-			case SET:
-			case ORDERED_SET:
-			case SORTED_SET:
-				return createSetInitializerProducer(
-						navigablePath,
-						attributeMapping,
-						fetchParent,
-						selected,
-						elementFetch,
-						creationState
-				);
-			default:
-				throw new IllegalArgumentException( "Unknown CollectionClassification : " + classification );
-		}
+			}
+			case LIST -> createListInitializerProducer(
+					navigablePath,
+					attributeMapping,
+					fetchParent,
+					selected,
+					indexFetch,
+					elementFetch,
+					creationState
+			);
+			case MAP, ORDERED_MAP, SORTED_MAP -> createMapInitializerProducer(
+					navigablePath,
+					attributeMapping,
+					fetchParent,
+					selected,
+					indexFetch,
+					elementFetch,
+					creationState
+			);
+			case SET, ORDERED_SET, SORTED_SET -> createSetInitializerProducer(
+					navigablePath,
+					attributeMapping,
+					fetchParent,
+					selected,
+					elementFetch,
+					creationState
+			);
+		};
 	}
 
 	private InitializerProducerBuilder() {

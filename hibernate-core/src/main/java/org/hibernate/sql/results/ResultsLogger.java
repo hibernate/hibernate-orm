@@ -29,7 +29,7 @@ import java.lang.invoke.MethodHandles;
 @ValidIdRange( min = 90005001, max = 90005100 )
 @SubSystemLogging(
 		name = ResultsLogger.LOGGER_NAME,
-		description = "Logging related to `DomainResult` graphs which build individual parts of the domain model from JDBC or from cache"
+		description = "Logging related to DomainResult graphs which build individual parts of the domain model from JDBC or from cache"
 )
 @Internal
 public interface ResultsLogger extends BasicLogger {

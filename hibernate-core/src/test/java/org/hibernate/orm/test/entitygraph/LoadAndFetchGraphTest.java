@@ -162,15 +162,7 @@ public class LoadAndFetchGraphTest {
 
 	@AfterEach
 	void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from DEntity" ).executeUpdate();
-					session.createQuery( "delete from EEntity" ).executeUpdate();
-					session.createQuery( "delete from CEntity" ).executeUpdate();
-					session.createQuery( "delete from AEntity" ).executeUpdate();
-					session.createQuery( "delete from BEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

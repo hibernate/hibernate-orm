@@ -264,22 +264,18 @@ public class NestedStructEmbeddableTest implements AdditionalMappingContributor 
 
 	@AfterEach
 	protected void cleanupTest(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from StructHolder h" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
 	public void testUpdate(SessionFactoryScope scope) {
 		scope.inTransaction(
-				entityManager -> {
-					StructHolder structHolder = entityManager.find( StructHolder.class, 1L );
+				session -> {
+					StructHolder structHolder = session.find( StructHolder.class, 1L );
 					structHolder.setAggregate( EmbeddableAggregate.createAggregate2() );
-					entityManager.flush();
-					entityManager.clear();
-					structHolder = entityManager.find( StructHolder.class, 1L );
+					session.flush();
+					session.clear();
+					structHolder = session.find( StructHolder.class, 1L );
 					assertEquals( "XYZ", structHolder.struct.stringField );
 					assertEquals( 10, structHolder.struct.simpleEmbeddable.integerField );
 					assertStructEquals( EmbeddableAggregate.createAggregate2(), structHolder.getAggregate() );
@@ -290,8 +286,8 @@ public class NestedStructEmbeddableTest implements AdditionalMappingContributor 
 	@Test
 	public void testFetch(SessionFactoryScope scope) {
 		scope.inSession(
-				entityManager -> {
-					List<StructHolder> structHolders = entityManager.createQuery( "from StructHolder b where b.id = 1", StructHolder.class ).getResultList();
+				session -> {
+					List<StructHolder> structHolders = session.createQuery( "from StructHolder b where b.id = 1", StructHolder.class ).getResultList();
 					assertEquals( 1, structHolders.size() );
 					StructHolder structHolder = structHolders.get( 0 );
 					assertEquals( 1L, structHolder.getId() );
@@ -306,8 +302,8 @@ public class NestedStructEmbeddableTest implements AdditionalMappingContributor 
 	@Test
 	public void testFetchNull(SessionFactoryScope scope) {
 		scope.inSession(
-				entityManager -> {
-					List<StructHolder> structHolders = entityManager.createQuery( "from StructHolder b where b.id = 2", StructHolder.class ).getResultList();
+				session -> {
+					List<StructHolder> structHolders = session.createQuery( "from StructHolder b where b.id = 2", StructHolder.class ).getResultList();
 					assertEquals( 1, structHolders.size() );
 					StructHolder structHolder = structHolders.get( 0 );
 					assertEquals( 2L, structHolder.getId() );
@@ -321,8 +317,8 @@ public class NestedStructEmbeddableTest implements AdditionalMappingContributor 
 	@Test
 	public void testDomainResult(SessionFactoryScope scope) {
 		scope.inSession(
-				entityManager -> {
-					List<TheStruct> structs = entityManager.createQuery( "select b.struct from StructHolder b where b.id = 1", TheStruct.class ).getResultList();
+				session -> {
+					List<TheStruct> structs = session.createQuery( "select b.struct from StructHolder b where b.id = 1", TheStruct.class ).getResultList();
 					assertEquals( 1, structs.size() );
 					TheStruct theStruct = structs.get( 0 );
 					assertEquals( "XYZ", theStruct.stringField );
@@ -336,8 +332,8 @@ public class NestedStructEmbeddableTest implements AdditionalMappingContributor 
 	@Test
 	public void testSelectionItems(SessionFactoryScope scope) {
 		scope.inSession(
-				entityManager -> {
-					List<Tuple> tuples = entityManager.createQuery(
+				session -> {
+					List<Tuple> tuples = session.createQuery(
 							"select " +
 									"b.struct.nested.theInt," +
 									"b.struct.nested.theDouble," +
@@ -414,9 +410,9 @@ public class NestedStructEmbeddableTest implements AdditionalMappingContributor 
 	@Test
 	public void testDeleteWhere(SessionFactoryScope scope) {
 		scope.inTransaction(
-				entityManager -> {
-					entityManager.createMutationQuery( "delete StructHolder b where b.struct is not null" ).executeUpdate();
-					assertNull( entityManager.find( StructHolder.class, 1L ) );
+				session -> {
+					session.createMutationQuery( "delete StructHolder b where b.struct is not null" ).executeUpdate();
+					assertNull( session.find( StructHolder.class, 1L ) );
 
 				}
 		);
@@ -425,9 +421,9 @@ public class NestedStructEmbeddableTest implements AdditionalMappingContributor 
 	@Test
 	public void testUpdateAggregate(SessionFactoryScope scope) {
 		scope.inTransaction(
-				entityManager -> {
-					entityManager.createMutationQuery( "update StructHolder b set b.struct = null" ).executeUpdate();
-					assertNull( entityManager.find( StructHolder.class, 1L ).getAggregate() );
+				session -> {
+					session.createMutationQuery( "update StructHolder b set b.struct = null" ).executeUpdate();
+					assertNull( session.find( StructHolder.class, 1L ).getAggregate() );
 				}
 		);
 	}
@@ -435,11 +431,11 @@ public class NestedStructEmbeddableTest implements AdditionalMappingContributor 
 	@Test
 	public void testUpdateAggregateMember(SessionFactoryScope scope) {
 		scope.inTransaction(
-				entityManager -> {
-					entityManager.createMutationQuery( "update StructHolder b set b.struct.nested.theString = null" ).executeUpdate();
+				session -> {
+					session.createMutationQuery( "update StructHolder b set b.struct.nested.theString = null" ).executeUpdate();
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
 					struct.setTheString( null );
-					assertStructEquals( struct, entityManager.find( StructHolder.class, 1L ).getAggregate() );
+					assertStructEquals( struct, session.find( StructHolder.class, 1L ).getAggregate() );
 				}
 		);
 	}
@@ -447,12 +443,12 @@ public class NestedStructEmbeddableTest implements AdditionalMappingContributor 
 	@Test
 	public void testUpdateMultipleAggregateMembers(SessionFactoryScope scope) {
 		scope.inTransaction(
-				entityManager -> {
-					entityManager.createMutationQuery( "update StructHolder b set b.struct.nested.theString = null, b.struct.nested.theUuid = null" ).executeUpdate();
+				session -> {
+					session.createMutationQuery( "update StructHolder b set b.struct.nested.theString = null, b.struct.nested.theUuid = null" ).executeUpdate();
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
 					struct.setTheString( null );
 					struct.setTheUuid( null );
-					assertStructEquals( struct, entityManager.find( StructHolder.class, 1L ).getAggregate() );
+					assertStructEquals( struct, session.find( StructHolder.class, 1L ).getAggregate() );
 				}
 		);
 	}
@@ -460,9 +456,9 @@ public class NestedStructEmbeddableTest implements AdditionalMappingContributor 
 	@Test
 	public void testUpdateAllAggregateMembers(SessionFactoryScope scope) {
 		scope.inTransaction(
-				entityManager -> {
+				session -> {
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
-					entityManager.createMutationQuery(
+					session.createMutationQuery(
 							"update StructHolder b set " +
 									"b.struct.nested.theInt = :theInt," +
 									"b.struct.nested.theDouble = :theDouble," +
@@ -519,7 +515,7 @@ public class NestedStructEmbeddableTest implements AdditionalMappingContributor 
 							.setParameter( "mutableValue", struct.getMutableValue() )
 							.setParameter( "integerField", 5 )
 							.executeUpdate();
-					StructHolder structHolder = entityManager.find( StructHolder.class, 2L );
+					StructHolder structHolder = session.find( StructHolder.class, 2L );
 					assertEquals( 5, structHolder.struct.simpleEmbeddable.integerField );
 					assertStructEquals( EmbeddableAggregate.createAggregate1(), structHolder.getAggregate() );
 				}
@@ -529,9 +525,9 @@ public class NestedStructEmbeddableTest implements AdditionalMappingContributor 
 	@Test
 	public void testNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
-				entityManager -> {
+				session -> {
 					//noinspection unchecked
-					List<Object> resultList = entityManager.createNativeQuery(
+					List<Object> resultList = session.createNativeQuery(
 									"select b.struct from StructHolder b where b.id = 1",
 									// DB2 does not support structs on the driver level, and we instead do a XML serialization/deserialization
 									// So in order to receive the correct value, we have to specify the actual type that we expect
@@ -555,8 +551,8 @@ public class NestedStructEmbeddableTest implements AdditionalMappingContributor 
 	@Test
 	public void testFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
-				entityManager -> {
-					ProcedureCall structFunction = entityManager.createStoredProcedureCall( "structFunction" )
+				session -> {
+					ProcedureCall structFunction = session.createStoredProcedureCall( "structFunction" )
 							.markAsFunctionCall( TheStruct.class );
 					//noinspection unchecked
 					final List<Object> resultList = structFunction.getResultList();
@@ -575,8 +571,8 @@ public class NestedStructEmbeddableTest implements AdditionalMappingContributor 
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 does not support struct types in procedures")
 	public void testProcedure(SessionFactoryScope scope) {
 		scope.inTransaction(
-				entityManager -> {
-					final Dialect dialect = entityManager.getJdbcServices().getDialect();
+				session -> {
+					final Dialect dialect = session.getJdbcServices().getDialect();
 					final ParameterMode parameterMode;
 					if ( dialect instanceof PostgreSQLDialect ) {
 						parameterMode = ParameterMode.INOUT;
@@ -584,7 +580,7 @@ public class NestedStructEmbeddableTest implements AdditionalMappingContributor 
 					else {
 						parameterMode = ParameterMode.OUT;
 					}
-					ProcedureCall structFunction = entityManager.createStoredProcedureCall( "structProcedure" );
+					ProcedureCall structFunction = session.createStoredProcedureCall( "structProcedure" );
 					ProcedureParameter<TheStruct> resultParameter = structFunction.registerParameter(
 							"result",
 							TheStruct.class,

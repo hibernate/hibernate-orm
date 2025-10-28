@@ -4,6 +4,21 @@
  */
 package org.hibernate.orm.test.inheritance;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.ManyToMany;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,23 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
-import jakarta.persistence.ManyToMany;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = {
 		ManyToManyTreatJoinTest.ParentEntity.class,
 		ManyToManyTreatJoinTest.SingleBase.class,
@@ -42,7 +43,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 } )
 @SessionFactory( useCollectingStatementInspector = true )
 public class ManyToManyTreatJoinTest {
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final ParentEntity parent1 = new ParentEntity( 1 );
@@ -58,11 +59,9 @@ public class ManyToManyTreatJoinTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createQuery( "from ParentEntity", ParentEntity.class )
-				.getResultList()
-				.forEach( session::remove ) );
+		scope.dropData();
 	}
 
 	@Test
@@ -90,6 +89,21 @@ public class ManyToManyTreatJoinTest {
 			).getSingleResult();
 			assertThat( result ).isEqualTo( 1 );
 			// We always join the element table to restrict to the correct subtype
+			inspector.assertNumberOfJoins( 0, 2 );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	public void testSingleTableTreatJoinCondition(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			final Integer result = session.createSelectionQuery(
+					"select s.subProp from ParentEntity p join treat(p.singleEntities as SingleSub1) s on s.subProp<>2",
+					Integer.class
+			).getSingleResultOrNull();
+			assertThat( result ).isNull();
 			inspector.assertNumberOfJoins( 0, 2 );
 		} );
 	}
@@ -123,6 +137,21 @@ public class ManyToManyTreatJoinTest {
 	}
 
 	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	public void testJoinedTreatJoinCondition(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			final Integer result = session.createSelectionQuery(
+					"select s.subProp from ParentEntity p join treat(p.joinedEntities as JoinedSub1) s on s.subProp<>3",
+					Integer.class
+			).getSingleResultOrNull();
+			assertThat( result ).isNull();
+			inspector.assertNumberOfJoins( 0, 3 );
+		} );
+	}
+
+	@Test
 	public void testTablePerClassSelectChild(SessionFactoryScope scope) {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
 		inspector.clear();
@@ -150,6 +179,22 @@ public class ManyToManyTreatJoinTest {
 		} );
 	}
 
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	public void testTablePerClassTreatJoinCondition(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			final Integer result = session.createSelectionQuery(
+					"select s.subProp from ParentEntity p join treat(p.unionEntities as UnionSub1) s on s.subProp<>4",
+					Integer.class
+			).getSingleResultOrNull();
+			assertThat( result ).isNull();
+			inspector.assertNumberOfJoins( 0, 2 );
+		} );
+	}
+
+	@SuppressWarnings({"FieldCanBeLocal", "FieldMayBeFinal"})
 	@Entity( name = "ParentEntity" )
 	public static class ParentEntity {
 		@Id
@@ -184,6 +229,7 @@ public class ManyToManyTreatJoinTest {
 		}
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity( name = "SingleBase" )
 	@Inheritance( strategy = InheritanceType.SINGLE_TABLE )
 	public static abstract class SingleBase {
@@ -198,6 +244,7 @@ public class ManyToManyTreatJoinTest {
 		}
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity( name = "SingleSub1" )
 	public static class SingleSub1 extends SingleBase {
 		private Integer subProp;
@@ -211,6 +258,7 @@ public class ManyToManyTreatJoinTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "SingleSub2" )
 	public static class SingleSub2 extends SingleBase {
 		public SingleSub2() {
@@ -221,6 +269,7 @@ public class ManyToManyTreatJoinTest {
 		}
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity( name = "JoinedBase" )
 	@Inheritance( strategy = InheritanceType.JOINED )
 	public static abstract class JoinedBase {
@@ -235,6 +284,7 @@ public class ManyToManyTreatJoinTest {
 		}
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity( name = "JoinedSub1" )
 	public static class JoinedSub1 extends JoinedBase {
 		private Integer subProp;
@@ -248,6 +298,7 @@ public class ManyToManyTreatJoinTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "JoinedSub2" )
 	public static class JoinedSub2 extends JoinedBase {
 		public JoinedSub2() {
@@ -258,6 +309,7 @@ public class ManyToManyTreatJoinTest {
 		}
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity( name = "UnionBase" )
 	@Inheritance( strategy = InheritanceType.TABLE_PER_CLASS )
 	public static abstract class UnionBase {
@@ -272,6 +324,7 @@ public class ManyToManyTreatJoinTest {
 		}
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity( name = "UnionSub1" )
 	public static class UnionSub1 extends UnionBase {
 		private Integer subProp;
@@ -285,6 +338,7 @@ public class ManyToManyTreatJoinTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "UnionSub2" )
 	public static class UnionSub2 extends UnionBase {
 		public UnionSub2() {

@@ -43,11 +43,7 @@ public class InsertOrderingWithJoinedTableInheritance extends BaseInsertOrdering
 
 	@AfterEach
 	public void tearDown() {
-		sessionFactoryScope().inTransaction( session -> {
-			session.createQuery( "delete from Address" ).executeUpdate();
-			session.createQuery( "delete from Person" ).executeUpdate();
-			session.createQuery( "delete from SpecialPerson" ).executeUpdate();
-		} );
+		sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -105,10 +101,7 @@ public class InsertOrderingWithJoinedTableInheritance extends BaseInsertOrdering
 
 	@AfterEach
 	public void dropTestData() {
-		sessionFactoryScope().inTransaction( (session) -> {
-			session.createMutationQuery( "delete Person" ).executeUpdate();
-			session.createMutationQuery( "delete Address" ).executeUpdate();
-		} );
+		sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Address")

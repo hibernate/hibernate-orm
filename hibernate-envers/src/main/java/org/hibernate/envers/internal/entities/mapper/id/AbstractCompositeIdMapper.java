@@ -9,8 +9,10 @@ import java.util.Map;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.tools.Tools;
-import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.mapping.Component;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.spi.CompositeTypeImplementor;
+
 
 /**
  * An abstract identifier mapper implementation specific for composite identifiers.
@@ -20,13 +22,16 @@ import org.hibernate.service.ServiceRegistry;
  * @author Chris Cranford
  */
 public abstract class AbstractCompositeIdMapper extends AbstractIdMapper implements SimpleIdMapperBuilder {
-	protected final Class<?> compositeIdClass;
-
+	protected final CompositeTypeImplementor compositeType;
 	protected Map<PropertyData, AbstractIdMapper> ids;
 
-	protected AbstractCompositeIdMapper(Class<?> compositeIdClass, ServiceRegistry serviceRegistry) {
+	protected AbstractCompositeIdMapper(Component component) {
+		this( component.getServiceRegistry(), (CompositeTypeImplementor) component.getType() );
+	}
+
+	protected AbstractCompositeIdMapper(ServiceRegistry serviceRegistry, CompositeTypeImplementor compositeType) {
 		super( serviceRegistry );
-		this.compositeIdClass = compositeIdClass;
+		this.compositeType = compositeType;
 		ids = Tools.newLinkedHashMap();
 	}
 
@@ -46,14 +51,30 @@ public abstract class AbstractCompositeIdMapper extends AbstractIdMapper impleme
 			return null;
 		}
 
-		final Object compositeId = instantiateCompositeId();
-		for ( AbstractIdMapper mapper : ids.values() ) {
-			if ( !mapper.mapToEntityFromMap( compositeId, data ) ) {
-				return null;
+		if ( !compositeType.isMutable() ) {
+			return mapToImmutableIdFromMap( data );
+		}
+
+		final Object compositeId = instantiateCompositeId( null );
+
+		if ( compositeType.isMutable() ) {
+			for ( AbstractIdMapper mapper : ids.values() ) {
+				if ( !mapper.mapToEntityFromMap( compositeId, data ) ) {
+					return null;
+				}
 			}
 		}
 
 		return compositeId;
+	}
+
+	protected Object mapToImmutableIdFromMap(Map data) {
+		final var propertyNames = compositeType.getPropertyNames();
+		final var values = new Object[propertyNames.length];
+		for ( int i = 0; i < propertyNames.length; i++ ) {
+			values[i] = data.get( propertyNames[i] );
+		}
+		return instantiateCompositeId( values );
 	}
 
 	@Override
@@ -61,9 +82,13 @@ public abstract class AbstractCompositeIdMapper extends AbstractIdMapper impleme
 		// no-op; does nothing
 	}
 
-	protected Object instantiateCompositeId() {
+	protected Object instantiateCompositeId(Object[] values) {
 		try {
-			return ReflectHelper.getDefaultConstructor( compositeIdClass ).newInstance();
+			return compositeType.getMappingModelPart()
+					.getEmbeddableTypeDescriptor()
+					.getRepresentationStrategy()
+					.getInstantiator()
+					.instantiate( () -> values );
 		}
 		catch ( Exception e ) {
 			throw new AuditException( e );

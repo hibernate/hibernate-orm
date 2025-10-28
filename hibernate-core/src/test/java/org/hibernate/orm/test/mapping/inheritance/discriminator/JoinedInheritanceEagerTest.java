@@ -17,7 +17,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,19 +62,7 @@ public class JoinedInheritanceEagerTest {
 
 	@AfterEach
 	public void cleanUp(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					EntityA entityA = session.get( EntityA.class, 4L );
-					EntityB entityB = session.get( EntityB.class, 3L );
-					EntityD entityD = session.get( EntityD.class, 2L );
-					EntityC entityC = session.get( EntityC.class, 1L );
-
-					session.remove( entityD );
-					session.remove( entityC );
-					session.remove( entityA );
-					session.remove( entityB );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -89,7 +77,7 @@ public class JoinedInheritanceEagerTest {
 						fail( "Expected a resolution exception for property 'attributes'!" );
 					}
 					catch (IllegalArgumentException ex) {
-						Assert.assertTrue( ex.getCause().getMessage().contains( "Could not resolve attribute 'attributes' "));
+						Assertions.assertTrue( ex.getCause().getMessage().contains( "Could not resolve attribute 'attributes' "));
 					}
 					finally {
 						session.getTransaction().commit();

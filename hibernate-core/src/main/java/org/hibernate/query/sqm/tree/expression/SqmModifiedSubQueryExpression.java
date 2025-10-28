@@ -11,6 +11,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
+
 /**
  * Represents a {@link Modifier#ALL}, {@link Modifier#ANY}, {@link Modifier#SOME} modifier applied to a subquery as
  * part of a comparison.
@@ -87,5 +88,33 @@ public class SqmModifiedSubQueryExpression<T> extends AbstractSqmExpression<T> {
 		hql.append( " (" );
 		subQuery.appendHqlString( hql, context );
 		hql.append( ')' );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmModifiedSubQueryExpression<?> that
+			&& modifier == that.modifier
+			&& subQuery.equals( that.subQuery );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = subQuery.hashCode();
+		result = 31 * result + modifier.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmModifiedSubQueryExpression<?> that
+			&& modifier == that.modifier
+			&& subQuery.isCompatible( that.subQuery );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = subQuery.cacheHashCode();
+		result = 31 * result + modifier.hashCode();
+		return result;
 	}
 }

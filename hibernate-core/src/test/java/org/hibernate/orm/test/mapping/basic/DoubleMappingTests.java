@@ -77,9 +77,7 @@ public class DoubleMappingTests {
 
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.createMutationQuery("delete EntityOfDoubles").executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "EntityOfDoubles")

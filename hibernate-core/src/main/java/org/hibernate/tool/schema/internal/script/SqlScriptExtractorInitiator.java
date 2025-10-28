@@ -28,26 +28,26 @@ public class SqlScriptExtractorInitiator implements StandardServiceInitiator<Sql
 	@Override
 	public SqlScriptCommandExtractor initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final Object explicitSettingValue = configurationValues.get( HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR );
-
 		if ( explicitSettingValue == null ) {
 			return SingleLineSqlScriptExtractor.INSTANCE;
 		}
-
-		if ( explicitSettingValue instanceof SqlScriptCommandExtractor commandExtractor ) {
+		else if ( explicitSettingValue instanceof SqlScriptCommandExtractor commandExtractor ) {
 			return commandExtractor;
 		}
-
-		final String explicitSettingName = explicitSettingValue.toString().trim();
-
-		if ( explicitSettingName.isEmpty() || SingleLineSqlScriptExtractor.SHORT_NAME.equals( explicitSettingName ) ) {
-			return SingleLineSqlScriptExtractor.INSTANCE;
+		else {
+			final String explicitSettingName = explicitSettingValue.toString().trim();
+			if ( explicitSettingName.isEmpty()
+					|| SingleLineSqlScriptExtractor.SHORT_NAME.equals( explicitSettingName ) ) {
+				return SingleLineSqlScriptExtractor.INSTANCE;
+			}
+			else if ( MultiLineSqlScriptExtractor.SHORT_NAME.equals( explicitSettingName ) ) {
+				return MultiLineSqlScriptExtractor.INSTANCE;
+			}
+			else {
+				return instantiateExplicitCommandExtractor( explicitSettingName,
+						registry.requireService( ClassLoaderService.class ) );
+			}
 		}
-		else if ( MultiLineSqlScriptExtractor.SHORT_NAME.equals( explicitSettingName ) ) {
-			return MultiLineSqlScriptExtractor.INSTANCE;
-		}
-
-		final ClassLoaderService classLoaderService = registry.requireService( ClassLoaderService.class );
-		return instantiateExplicitCommandExtractor( explicitSettingName, classLoaderService );
 	}
 
 	private SqlScriptCommandExtractor instantiateExplicitCommandExtractor(

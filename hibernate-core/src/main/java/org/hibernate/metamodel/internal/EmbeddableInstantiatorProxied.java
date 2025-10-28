@@ -30,7 +30,7 @@ public class EmbeddableInstantiatorProxied implements StandardEmbeddableInstanti
 	@Override
 	public Object instantiate(ValueAccess valuesAccess) {
 		final Object proxy = factory.getProxy();
-		final Object[] values = valuesAccess == null ? null : valuesAccess.getValues();
+		final var values = valuesAccess == null ? null : valuesAccess.getValues();
 		if ( values != null ) {
 			embeddableMappingAccess.get().setValues( proxy, values );
 		}

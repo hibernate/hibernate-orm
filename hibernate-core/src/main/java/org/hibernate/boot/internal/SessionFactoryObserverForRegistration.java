@@ -25,7 +25,7 @@ class SessionFactoryObserverForRegistration implements SessionFactoryObserver {
 
 	@Override
 	public void sessionFactoryCreated(SessionFactory factory) {
-		final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) factory;
+		final var sessionFactory = (SessionFactoryImplementor) factory;
 		jndiService = sessionFactory.getServiceRegistry().getService( JndiService.class );
 		SessionFactoryRegistry.INSTANCE.addSessionFactory(
 				sessionFactory.getUuid(),
@@ -38,7 +38,7 @@ class SessionFactoryObserverForRegistration implements SessionFactoryObserver {
 
 	@Override
 	public void sessionFactoryClosed(SessionFactory factory) {
-		final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) factory;
+		final var sessionFactory = (SessionFactoryImplementor) factory;
 		SessionFactoryRegistry.INSTANCE.removeSessionFactory(
 				sessionFactory.getUuid(),
 				sessionFactory.getName(),

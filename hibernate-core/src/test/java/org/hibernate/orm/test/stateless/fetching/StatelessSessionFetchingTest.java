@@ -209,16 +209,6 @@ public class StatelessSessionFetchingTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete Task" ).executeUpdate();
-					session.createQuery( "delete Resource" ).executeUpdate();
-					session.createQuery( "delete User" ).executeUpdate();
-
-					session.createQuery( "delete Product" ).executeUpdate();
-					session.createQuery( "delete Producer" ).executeUpdate();
-					session.createQuery( "delete Vendor" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

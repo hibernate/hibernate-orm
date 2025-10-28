@@ -36,7 +36,7 @@ public class SequenceInformationExtractorLegacyImpl implements SequenceInformati
 		return extractionContext.getQueryResults(
 				lookupSql,
 				null,
-				(ExtractionContext.ResultSetProcessor<Iterable<SequenceInformation>>) resultSet -> {
+				resultSet -> {
 					final IdentifierHelper identifierHelper = extractionContext.getJdbcEnvironment()
 							.getIdentifierHelper();
 					final List<SequenceInformation> sequenceInformationList = new ArrayList<>();

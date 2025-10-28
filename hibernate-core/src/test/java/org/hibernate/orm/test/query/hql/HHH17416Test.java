@@ -40,7 +40,7 @@ public class HHH17416Test extends BaseSessionFactoryFunctionalTest {
 
 	@AfterEach
 	public void teardown() {
-		inTransaction(session -> session.createMutationQuery("delete from Person").executeUpdate());
+		sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

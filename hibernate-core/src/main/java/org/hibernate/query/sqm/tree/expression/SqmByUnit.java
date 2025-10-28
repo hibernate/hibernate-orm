@@ -58,10 +58,39 @@ public class SqmByUnit extends AbstractSqmExpression<Long> {
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitByUnit( this );
 	}
+
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		duration.appendHqlString( hql, context );
 		hql.append( " by " );
 		hql.append( unit.getUnit() );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmByUnit that
+			&& this.unit.equals( that.unit )
+			&& this.duration.equals( that.duration );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = unit.hashCode();
+		result = 31 * result + duration.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmByUnit that
+			&& this.unit.isCompatible( that.unit )
+			&& this.duration.isCompatible( that.duration );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = unit.cacheHashCode();
+		result = 31 * result + duration.cacheHashCode();
+		return result;
 	}
 }

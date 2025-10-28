@@ -17,11 +17,17 @@ import org.jboss.logging.Logger;
  */
 public class MessageKeyWatcherImpl implements MessageKeyWatcher, LogListener {
 	private final String messageKey;
+	private final boolean resetBeforeEach;
 	private final List<String> loggerNames = new ArrayList<>();
 	private final List<String> triggeredMessages = new ArrayList<>();
 
-	public MessageKeyWatcherImpl(String messageKey) {
+	public MessageKeyWatcherImpl(String messageKey, boolean resetBeforeEach) {
 		this.messageKey = messageKey;
+		this.resetBeforeEach = resetBeforeEach;
+	}
+
+	public MessageKeyWatcherImpl(MessageKeyInspection inspectionAnn) {
+		this( inspectionAnn.messageKey(), inspectionAnn.resetBeforeEach() );
 	}
 
 	public void addLoggerName(String name) {
@@ -33,7 +39,7 @@ public class MessageKeyWatcherImpl implements MessageKeyWatcher, LogListener {
 		if ( loggerAnn.loggerNameClass() != void.class ) {
 			logger = Logger.getLogger( loggerAnn.loggerNameClass() );
 		}
-		else if ( ! "".equals( loggerAnn.loggerName().trim() ) ) {
+		else if ( !loggerAnn.loggerName().trim().isEmpty() ) {
 			logger = Logger.getLogger( loggerAnn.loggerName().trim() );
 		}
 		else {
@@ -52,7 +58,7 @@ public class MessageKeyWatcherImpl implements MessageKeyWatcher, LogListener {
 		if ( loggerAnn.loggerNameClass() != void.class ) {
 			logger = Logger.getLogger( loggerAnn.loggerNameClass() );
 		}
-		else if ( ! "".equals( loggerAnn.loggerName().trim() ) ) {
+		else if ( !loggerAnn.loggerName().trim().isEmpty() ) {
 			logger = Logger.getLogger( loggerAnn.loggerName().trim() );
 		}
 		else {
@@ -71,6 +77,10 @@ public class MessageKeyWatcherImpl implements MessageKeyWatcher, LogListener {
 	@Override
 	public String getMessageKey() {
 		return messageKey;
+	}
+
+	public boolean isResetBeforeEach() {
+		return resetBeforeEach;
 	}
 
 	@Override

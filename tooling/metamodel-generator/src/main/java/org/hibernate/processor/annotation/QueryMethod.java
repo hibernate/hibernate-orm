@@ -90,16 +90,20 @@ public class QueryMethod extends AbstractQueryMethod {
 		final List<String> paramTypes = parameterTypes();
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
-		modifiers( paramTypes, declaration );
+		modifiers( declaration, paramTypes );
 		preamble( declaration, paramTypes );
+		nullChecks( declaration, paramTypes );
 		createSpecification( declaration );
 		handleRestrictionParameters( declaration, paramTypes );
 		collectOrdering( declaration, paramTypes, containerType );
 		chainSession( declaration );
-		tryReturn( declaration, paramTypes, containerType );
+		inTry( declaration );
+		createQuery( declaration, true );
+		setParameters( declaration, paramTypes );
+		declaration.append( ";\n" );
+		results( declaration, paramTypes, containerType );
 		castResult( declaration );
-		createQuery( declaration );
-		setParameters( declaration, paramTypes, "");
+		select( declaration );
 		handlePageParameters( declaration, paramTypes, containerType );
 		execute( declaration, initiallyUnwrapped() );
 		convertExceptions( declaration );
@@ -115,9 +119,17 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	@Override
-	void createQuery(StringBuilder declaration) {
-		final boolean specification = isUsingSpecification();
-		if ( specification ) {
+	void createQuery(StringBuilder declaration, boolean declareVariable) {
+		if ( declareVariable ) {
+			if ( dataRepository && !isReactive() ) {
+				declaration
+						.append('\t');
+			}
+			declaration
+					.append('\t');
+			declaration.append("var _select = ");
+		}
+		if ( isUsingSpecification() ) {
 			if ( isReactive() ) {
 				declaration
 						.append(localSessionName())
@@ -129,12 +141,14 @@ public class QueryMethod extends AbstractQueryMethod {
 				declaration
 						.append("_spec.createQuery(")
 						.append(localSessionName())
-						.append(")\n");
+						.append(getObjectCall())
+						.append(")");
 			}
 		}
 		else {
 			declaration
 					.append(localSessionName())
+					.append(getObjectCall())
 					.append('.')
 					.append(createQueryMethod())
 					.append("(")
@@ -145,7 +159,7 @@ public class QueryMethod extends AbstractQueryMethod {
 						.append(annotationMetaEntity.importType(returnTypeClass))
 						.append(".class");
 			}
-			declaration.append(")\n");
+			declaration.append(")");
 		}
 	}
 
@@ -223,18 +237,15 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	@Override
-	void setParameters(StringBuilder declaration, List<String> paramTypes, String indent) {
+	void setParameters(StringBuilder declaration, List<String> paramTypes) {
 		for ( int i = 0; i < paramNames.size(); i++ ) {
-			final String paramName = paramNames.get(i);
-			final String paramType = paramTypes.get(i);
-			if ( !isSpecialParam(paramType) ) {
+			if ( !isSpecialParam( paramTypes.get(i) ) ) {
+				final String paramName = paramNames.get(i);
 				final int ordinal = i+1;
 				if ( queryString.contains(":" + paramName) ) {
-					declaration.append(indent);
 					setNamedParameter( declaration, paramName );
 				}
 				else if ( queryString.contains("?" + ordinal) ) {
-					declaration.append(indent);
 					setOrdinalParameter( declaration, ordinal, paramName );
 				}
 			}
@@ -243,20 +254,20 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	private static void setOrdinalParameter(StringBuilder declaration, int i, String paramName) {
 		declaration
-				.append("\t\t\t.setParameter(")
+				.append("\n\t\t\t.setParameter(")
 				.append(i)
 				.append(", ")
 				.append(paramName)
-				.append(")\n");
+				.append(")");
 	}
 
 	private static void setNamedParameter(StringBuilder declaration, String paramName) {
 		declaration
-				.append("\t\t\t.setParameter(\"")
+				.append("\n\t\t\t.setParameter(\"")
 				.append(paramName)
 				.append("\", ")
 				.append(paramName)
-				.append(")\n");
+				.append(")");
 	}
 
 //	private String returnType() {
@@ -290,8 +301,7 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	private void comment(StringBuilder declaration) {
 		declaration
-				.append("\n/**");
-		declaration
+				.append("\n/**")
 				.append("\n * Execute the query {@value #")
 				.append(getConstantName())
 				.append("}.")
@@ -301,8 +311,9 @@ public class QueryMethod extends AbstractQueryMethod {
 				.append("\n **/\n");
 	}
 
-	private void modifiers(List<String> paramTypes, StringBuilder declaration) {
-		boolean hasVarargs = paramTypes.stream().anyMatch(ptype -> ptype.endsWith("..."));
+	private void modifiers(StringBuilder declaration, List<String> paramTypes) {
+		final boolean hasVarargs =
+				paramTypes.stream().anyMatch(ptype -> ptype.endsWith("..."));
 		if ( hasVarargs ) {
 			declaration
 					.append("@SafeVarargs\n");
@@ -321,9 +332,20 @@ public class QueryMethod extends AbstractQueryMethod {
 		}
 	}
 
+	void nullChecks(StringBuilder declaration, List<String> paramTypes) {
+		for ( int i = 0; i<paramNames.size(); i++ ) {
+			final String paramType = paramTypes.get( i );
+			// we don't do null checks on query parameters
+			if ( isSpecialParam(paramType) ) {
+				nullCheck( declaration, paramNames.get(i) );
+			}
+		}
+	}
+
 	@Override
 	public String getAttributeNameDeclarationString() {
-		StringBuilder declaration = new StringBuilder( queryString.length() + 200 );
+		final StringBuilder declaration =
+				new StringBuilder( queryString.length() + 200 );
 		declaration
 				.append("\n/**\n * @see ")
 				.append("#");
@@ -335,42 +357,33 @@ public class QueryMethod extends AbstractQueryMethod {
 				.append( " = \"" );
 		for ( int i = 0; i < queryString.length(); i++ ) {
 			final char c = queryString.charAt( i );
-			switch ( c ) {
-				case '\r':
-					declaration.append( "\\r" );
-					break;
-				case '\n':
-					declaration.append( "\\n" );
-					break;
-				case '\\':
-					declaration.append( "\\\\" );
-					break;
-				case '"':
-					declaration.append( "\\\"" );
-					break;
-				default:
-					declaration.append( c );
-					break;
-			}
+			declaration.append(switch ( c ) {
+				case '\r' -> "\\r";
+				case '\n' -> "\\n";
+				case '\\' -> "\\\\";
+				case '"' -> "\\\"";
+				default -> c;
+			});
 		}
-		return declaration.append("\";").toString();
+		return declaration
+				.append("\";")
+				.toString();
 	}
 
 	private String getConstantName() {
 		final String stem = getUpperUnderscoreCaseFromLowerCamelCase(methodName);
-		if ( paramTypes.isEmpty() ) {
-			return stem;
-		}
-		else {
-			return stem + "_"
-					+ paramTypes.stream()
-							.filter(type -> !isSpecialParam(type))
-							.map(type -> type.indexOf('<')>0 ? type.substring(0, type.indexOf('<')) : type)
-							.map(StringHelper::unqualify)
-							.map(type -> type.replace("[]", "Array"))
-							.reduce((x,y) -> x + '_' + y)
-							.orElse("");
-		}
+		return paramTypes.isEmpty()
+			|| paramTypes.stream().allMatch(AbstractQueryMethod::isSpecialParam)
+				? stem
+				: stem + "_" + paramTypes.stream()
+						.filter( type -> !isSpecialParam(type) )
+						.map( type -> type.indexOf('<') > 0
+								? type.substring(0, type.indexOf('<'))
+								: type )
+						.map( StringHelper::unqualify )
+						.map( type -> type.replace("[]", "Array") )
+						.reduce( (x, y) -> x + '_' + y )
+						.orElseThrow();
 	}
 
 	public String getTypeDeclaration() {

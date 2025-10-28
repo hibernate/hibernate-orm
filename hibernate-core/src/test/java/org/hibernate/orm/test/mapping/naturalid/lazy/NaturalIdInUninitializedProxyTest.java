@@ -21,8 +21,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * @author Gail Badner
@@ -52,12 +52,7 @@ public class NaturalIdInUninitializedProxyTest {
 
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					session.createQuery( "delete from EntityMutableNaturalId" ).executeUpdate();
-					session.createQuery( "delete from EntityImmutableNaturalId" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -71,7 +66,7 @@ public class NaturalIdInUninitializedProxyTest {
 
 		scope.inTransaction(
 				(session) -> {
-					final EntityMutableNaturalId e = session.get( EntityMutableNaturalId.class, 1 );
+					final EntityMutableNaturalId e = session.find( EntityMutableNaturalId.class, 1 );
 					assertEquals( "name", e.name );
 				}
 		);
@@ -88,7 +83,7 @@ public class NaturalIdInUninitializedProxyTest {
 
 		scope.inTransaction(
 				(session) -> {
-					final EntityImmutableNaturalId e = session.get( EntityImmutableNaturalId.class, 1 );
+					final EntityImmutableNaturalId e = session.find( EntityImmutableNaturalId.class, 1 );
 					assertEquals( "name", e.name );
 				}
 		);

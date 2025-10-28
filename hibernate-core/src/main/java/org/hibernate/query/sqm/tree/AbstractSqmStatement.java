@@ -4,20 +4,19 @@
  */
 package org.hibernate.query.sqm.tree;
 
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.internal.ParameterCollector;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 
 import jakarta.persistence.criteria.ParameterExpression;
 
+import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.query.sqm.tree.jpa.ParameterCollector.collectParameters;
 
 /**
@@ -48,7 +47,7 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 			return null;
 		}
 		else {
-			final Set<SqmParameter<?>> parameters = new HashSet<>( this.parameters.size() );
+			final Set<SqmParameter<?>> parameters = new LinkedHashSet<>( this.parameters.size() );
 			for ( SqmParameter<?> parameter : this.parameters ) {
 				parameters.add( parameter.copy( context ) );
 			}
@@ -64,9 +63,8 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 	@Override
 	public void addParameter(SqmParameter<?> parameter) {
 		if ( parameters == null ) {
-			parameters = new HashSet<>();
+			parameters = new LinkedHashSet<>();
 		}
-
 		parameters.add( parameter );
 	}
 
@@ -76,8 +74,9 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 			assert parameters == null : "SqmSelectStatement (as Criteria) should not have collected parameters";
 			return collectParameters( this );
 		}
-
-		return parameters == null ? Collections.emptySet() : Collections.unmodifiableSet( parameters );
+		else {
+			return parameters == null ? emptySet() : unmodifiableSet( parameters );
+		}
 	}
 
 	@Override
@@ -88,13 +87,16 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 	@Override
 	public Set<ParameterExpression<?>> getParameters() {
 		// At this level, the number of parameters may still be growing as
-		// nodes are added to the Criteria - so we re-calculate this every
-		// time.
-		//
-		// for a "finalized" set of parameters, use `#resolveParameters` instead
-		assert getQuerySource() == SqmQuerySource.CRITERIA;
-		return getSqmParameters().stream()
-				.filter( parameterExpression -> !( parameterExpression instanceof ValueBindJpaCriteriaParameter ) )
-				.collect( Collectors.toSet() );
+		// nodes are added to the Criteria, so we recalculate this every time.
+		// For a finalized set of parameters, use resolveParameters() instead
+		assert querySource == SqmQuerySource.CRITERIA;
+		return SqmUtil.getParameters( this );
+	}
+
+	private int aliasCounter = 0;
+
+	@Override
+	public String generateAlias() {
+		return "var_" + (++aliasCounter);
 	}
 }

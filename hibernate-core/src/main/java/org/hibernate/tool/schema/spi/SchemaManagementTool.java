@@ -27,6 +27,9 @@ public interface SchemaManagementTool extends Service {
 	default SchemaTruncator getSchemaTruncator(Map<String,Object> options) {
 		throw new UnsupportedOperationException("Schema truncator is not supported by this schema management tool.");
 	}
+	default GeneratorSynchronizer getSequenceSynchronizer(Map<String,Object> options) {
+		throw new UnsupportedOperationException("Schema populator is not supported by this schema management tool.");
+	}
 
 	/**
 	 * This allows to set an alternative implementation for the Database

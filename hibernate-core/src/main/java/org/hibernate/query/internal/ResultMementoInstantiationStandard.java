@@ -4,15 +4,16 @@
  */
 package org.hibernate.query.internal;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.named.ResultMementoInstantiation;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.internal.complete.CompleteResultBuilderInstantiation;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static java.util.Collections.unmodifiableList;
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
  * @author Steve Ebersole
@@ -34,21 +35,19 @@ public class ResultMementoInstantiationStandard implements ResultMementoInstanti
 	}
 
 	public List<ArgumentMemento> getArgumentMementos() {
-		return Collections.unmodifiableList( argumentMementos );
+		return unmodifiableList( argumentMementos );
 	}
 
 	@Override
 	public ResultBuilder resolve(
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
-		final List<ResultBuilder> argumentBuilders = CollectionHelper.arrayList( argumentMementos.size() );
-
+		final List<ResultBuilder> argumentBuilders = arrayList( argumentMementos.size() );
 		argumentMementos.forEach(
 				argumentMemento -> argumentBuilders.add(
 						argumentMemento.resolve( querySpaceConsumer, context )
 				)
 		);
-
 		return new CompleteResultBuilderInstantiation( instantiatedJtd, argumentBuilders );
 	}
 }

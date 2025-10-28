@@ -18,8 +18,6 @@ import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.jboss.logging.Logger;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
@@ -36,14 +34,14 @@ import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTyp
  * @author Steve Ebersole
  */
 public class SqmFunctionRegistry {
-	private static final Logger log = Logger.getLogger( SqmFunctionRegistry.class );
+//	private static final Logger LOG = Logger.getLogger( SqmFunctionRegistry.class );
 
 	private final CaseInsensitiveDictionary<SqmFunctionDescriptor> functionMap = new CaseInsensitiveDictionary<>();
 	private final CaseInsensitiveDictionary<SqmSetReturningFunctionDescriptor> setReturningFunctionMap = new CaseInsensitiveDictionary<>();
 	private final CaseInsensitiveDictionary<String> alternateKeyMap = new CaseInsensitiveDictionary<>();
 
 	public SqmFunctionRegistry() {
-		log.trace( "SqmFunctionRegistry created" );
+//		LOG.trace( "SqmFunctionRegistry created" );
 	}
 
 	public Set<String> getValidFunctionKeys() {
@@ -52,32 +50,28 @@ public class SqmFunctionRegistry {
 
 	/**
 	 * Useful for diagnostics - not efficient: do not use in production code.
-	 *
-	 * @return
 	 */
 	public Stream<Map.Entry<String, SqmFunctionDescriptor>> getFunctionsByName() {
 		final Map<String, SqmFunctionDescriptor> sortedFunctionMap = new TreeMap<>( CASE_INSENSITIVE_ORDER );
-		for ( Map.Entry<String, SqmFunctionDescriptor> e : functionMap.unmodifiableEntrySet() ) {
-			sortedFunctionMap.put( e.getKey(), e.getValue() );
+		for ( var entry : functionMap.unmodifiableEntrySet() ) {
+			sortedFunctionMap.put( entry.getKey(), entry.getValue() );
 		}
-		for ( Map.Entry<String, String> e : alternateKeyMap.unmodifiableEntrySet() ) {
-			sortedFunctionMap.put( e.getKey(), functionMap.get( e.getValue() ) );
+		for ( var entry : alternateKeyMap.unmodifiableEntrySet() ) {
+			sortedFunctionMap.put( entry.getKey(), functionMap.get( entry.getValue() ) );
 		}
 		return sortedFunctionMap.entrySet().stream();
 	}
 
 	/**
 	 * Useful for diagnostics - not efficient: do not use in production code.
-	 *
-	 * @return
 	 */
 	public Stream<Map.Entry<String, SqmSetReturningFunctionDescriptor>> getSetReturningFunctionsByName() {
 		final Map<String, SqmSetReturningFunctionDescriptor> sortedFunctionMap = new TreeMap<>( CASE_INSENSITIVE_ORDER );
-		for ( Map.Entry<String, SqmSetReturningFunctionDescriptor> e : setReturningFunctionMap.unmodifiableEntrySet() ) {
-			sortedFunctionMap.put( e.getKey(), e.getValue() );
+		for ( var entry : setReturningFunctionMap.unmodifiableEntrySet() ) {
+			sortedFunctionMap.put( entry.getKey(), entry.getValue() );
 		}
-		for ( Map.Entry<String, String> e : alternateKeyMap.unmodifiableEntrySet() ) {
-			sortedFunctionMap.put( e.getKey(), setReturningFunctionMap.get( e.getValue() ) );
+		for ( var entry : alternateKeyMap.unmodifiableEntrySet() ) {
+			sortedFunctionMap.put( entry.getKey(), setReturningFunctionMap.get( entry.getValue() ) );
 		}
 		return sortedFunctionMap.entrySet().stream();
 	}
@@ -125,27 +119,28 @@ public class SqmFunctionRegistry {
 	 */
 	public SqmFunctionDescriptor register(String registrationKey, SqmFunctionDescriptor function) {
 		final SqmFunctionDescriptor priorRegistration = functionMap.put( registrationKey, function );
-		log.debugf(
-				"Registered SqmFunctionTemplate [%s] under %s; prior registration was %s",
-				function,
-				registrationKey,
-				priorRegistration
-		);
+		// Incredibly verbose logging disabled
+//		LOG.tracef(
+//				"Registered SqmFunctionTemplate [%s] under %s; prior registration was %s",
+//				function,
+//				registrationKey,
+//				priorRegistration
+//		);
 		alternateKeyMap.remove( registrationKey );
 		return function;
 	}
 
 	/**
-	 * Register a set returning function descriptor by name
+	 * Register a set-returning function descriptor by name
 	 */
 	public SqmSetReturningFunctionDescriptor register(String registrationKey, SqmSetReturningFunctionDescriptor function) {
 		final SqmSetReturningFunctionDescriptor priorRegistration = setReturningFunctionMap.put( registrationKey, function );
-		log.debugf(
-				"Registered SqmSetReturningFunctionTemplate [%s] under %s; prior registration was %s",
-				function,
-				registrationKey,
-				priorRegistration
-		);
+//		LOG.tracef(
+//				"Registered SqmSetReturningFunctionTemplate [%s] under %s; prior registration was %s",
+//				function,
+//				registrationKey,
+//				priorRegistration
+//		);
 		alternateKeyMap.remove( registrationKey );
 		return function;
 	}
@@ -389,7 +384,8 @@ public class SqmFunctionRegistry {
 
 	public void registerAlternateKey(String alternateKey, String mappedKey) {
 		assert functionMap.containsKey( mappedKey );
-		log.debugf( "Registering alternate key : %s -> %s", alternateKey, mappedKey );
+		// Incredibly verbose logging disabled
+//		LOG.tracef( "Registering alternate key : %s -> %s", alternateKey, mappedKey );
 		alternateKeyMap.put( alternateKey, mappedKey );
 	}
 
@@ -575,8 +571,8 @@ public class SqmFunctionRegistry {
 	 * incoming registry, potentially overriding its registrations
 	 */
 	public void overlay(SqmFunctionRegistry registryToOverly) {
-		// NOTE : done in this "direction" as it is easier to access the
-		//		functionMap directly in performing this operation
+		// NOTE: done in this "direction" as it is easier to access the
+		//		 functionMap directly in performing this operation
 		functionMap.forEach( registryToOverly::register );
 		alternateKeyMap.forEach( registryToOverly::registerAlternateKey );
 	}

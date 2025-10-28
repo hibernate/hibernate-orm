@@ -158,13 +158,7 @@ public class BidirectionalProxyTest {
 
 	@AfterEach
 	public void clearTestData(SessionFactoryScope scope){
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from BEntity" ).executeUpdate();
-					session.createQuery( "delete from CEntity" ).executeUpdate();
-					session.createQuery( "delete from AEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name="CEntity")

@@ -11,6 +11,8 @@ import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.DB2LockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
@@ -64,6 +66,11 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 	}
 
 	@Override
+	protected LockingSupport buildLockingSupport() {
+		return DB2LockingSupport.forDB2z();
+	}
+
+	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 		if ( getVersion().isSameOrAfter( 12 ) ) {
@@ -71,6 +78,7 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 			functionFactory.listagg( null );
 			functionFactory.inverseDistributionOrderedSetAggregates();
 			functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+			functionFactory.regexpLike();
 		}
 	}
 
@@ -150,11 +158,6 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 	}
 
 	@Override
-	public boolean supportsSkipLocked() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsLateral() {
 		return true;
 	}
@@ -169,19 +172,11 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 		final StringBuilder pattern = new StringBuilder();
 		pattern.append("add_");
 		switch (unit) {
-			case NATIVE:
-			case NANOSECOND:
-				pattern.append("second");
-				break;
-			case WEEK:
-				//note: DB2 does not have add_weeks()
-				pattern.append("day");
-				break;
-			case QUARTER:
-				pattern.append("month");
-				break;
-			default:
-				pattern.append("?1");
+			case NATIVE, NANOSECOND -> pattern.append("second");
+			//note: DB2 does not have add_weeks()
+			case WEEK -> pattern.append("day");
+			case QUARTER -> pattern.append("month");
+			default -> pattern.append("?1");
 		}
 		pattern.append("s(");
 		final String timestampExpression;
@@ -204,17 +199,10 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 		pattern.append(timestampExpression);
 		pattern.append(",");
 		switch (unit) {
-			case NANOSECOND:
-				pattern.append("(?2)/1e9");
-				break;
-			case WEEK:
-				pattern.append("(?2)*7");
-				break;
-			case QUARTER:
-				pattern.append("(?2)*3");
-				break;
-			default:
-				pattern.append("?2");
+			case NANOSECOND -> pattern.append("(?2)/1e9");
+			case WEEK -> pattern.append("(?2)*7");
+			case QUARTER -> pattern.append("(?2)*3");
+			default -> pattern.append("?2");
 		}
 		pattern.append(")");
 		return pattern.toString();

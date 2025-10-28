@@ -202,11 +202,6 @@ public class QueryResultCacheTests {
 
 	@AfterEach
 	public void cleanupTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete AggregateEntity" ).executeUpdate();
-					session.createQuery( "delete TestEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

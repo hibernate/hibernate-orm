@@ -17,9 +17,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.SharedStatelessSessionBuilder;
 import org.hibernate.Transaction;
-import org.hibernate.action.spi.AfterTransactionCompletionProcess;
+import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -28,6 +30,7 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.graph.RootGraph;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.persister.entity.EntityPersister;
@@ -43,6 +46,8 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.type.format.FormatMapper;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
@@ -69,6 +74,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	 */
 	protected SharedSessionContract delegate() {
 		return delegate;
+	}
+
+	@Override
+	public SharedStatelessSessionBuilder statelessWithOptions() {
+		return delegate.statelessWithOptions();
 	}
 
 	@Override
@@ -408,6 +418,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
+	public TransactionCompletionCallbacks getTransactionCompletionCallbacks() {
+		return delegate.getTransactionCompletionCallbacks();
+	}
+
+	@Override
 	public EntityKey generateEntityKey(Object id, EntityPersister persister) {
 		return delegate.generateEntityKey( id, persister );
 	}
@@ -629,12 +644,12 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public <T> RootGraph<T> createEntityGraph(Class<T> rootType) {
+	public <T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType) {
 		return delegate.createEntityGraph( rootType );
 	}
 
 	@Override
-	public RootGraph<?> createEntityGraph(String graphName) {
+	public RootGraphImplementor<?> createEntityGraph(String graphName) {
 		return delegate.createEntityGraph( graphName );
 	}
 
@@ -644,7 +659,7 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public RootGraph<?> getEntityGraph(String graphName) {
+	public RootGraphImplementor<?> getEntityGraph(String graphName) {
 		return delegate.getEntityGraph( graphName );
 	}
 
@@ -684,17 +699,42 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public void registerProcess(AfterTransactionCompletionProcess process) {
-		delegate.registerProcess( process );
-	}
-
-	@Override
 	public Object loadFromSecondLevelCache(EntityPersister persister, EntityKey entityKey, Object instanceToLoad, LockMode lockMode) {
 		return delegate.loadFromSecondLevelCache( persister, entityKey, instanceToLoad, lockMode );
 	}
 
 	@Override
+	public SessionAssociationMarkers getSessionAssociationMarkers() {
+		return delegate.getSessionAssociationMarkers();
+	}
+
+	@Override
 	public boolean isIdentifierRollbackEnabled() {
 		return delegate.isIdentifierRollbackEnabled();
+	}
+
+	@Override
+	public void afterObtainConnection(Connection connection) throws SQLException {
+		delegate.afterObtainConnection( connection );
+	}
+
+	@Override
+	public void beforeReleaseConnection(Connection connection) throws SQLException {
+		delegate.beforeReleaseConnection(  connection );
+	}
+
+	@Override
+	public Transaction getCurrentTransaction() {
+		return delegate.getCurrentTransaction();
+	}
+
+	@Override
+	public SharedSessionBuilder sessionWithOptions() {
+		return delegate.sessionWithOptions();
+	}
+
+	@Override
+	public TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor() {
+		return delegate.getTransactionCompletionCallbacksImplementor();
 	}
 }

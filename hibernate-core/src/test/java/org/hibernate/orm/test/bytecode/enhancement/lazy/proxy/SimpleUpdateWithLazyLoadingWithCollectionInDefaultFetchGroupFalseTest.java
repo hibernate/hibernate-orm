@@ -104,10 +104,7 @@ public class SimpleUpdateWithLazyLoadingWithCollectionInDefaultFetchGroupFalseTe
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( s -> {
-			s.createQuery( "delete from Child" ).executeUpdate();
-			s.createQuery( "delete from Parent" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -121,7 +118,7 @@ public class SimpleUpdateWithLazyLoadingWithCollectionInDefaultFetchGroupFalseTe
 				.getMappingMetamodel()
 				.getEntityDescriptor( Child.class.getName() );
 
-		final int relativesAttributeIndex = childPersister.getEntityMetamodel().getPropertyIndex( "relatives" );
+		final int relativesAttributeIndex = childPersister.getPropertyIndex( "relatives" );
 
 		scope.inTransaction(
 				session -> {

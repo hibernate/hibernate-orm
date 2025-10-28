@@ -25,24 +25,28 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
-import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.JoinColumn;
 
+import static org.hibernate.boot.model.internal.AnnotatedJoinColumn.buildExplicitJoinTableJoinColumn;
+import static org.hibernate.boot.model.internal.AnnotatedJoinColumn.buildImplicitJoinTableJoinColumn;
+import static org.hibernate.boot.model.internal.AnnotatedJoinColumn.buildJoinColumn;
 import static org.hibernate.boot.model.internal.BinderHelper.findReferencedColumnOwner;
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
+import static org.hibernate.boot.model.internal.ForeignKeyType.EXPLICIT_PRIMARY_KEY_REFERENCE;
+import static org.hibernate.boot.model.internal.ForeignKeyType.NON_PRIMARY_KEY_REFERENCE;
+import static org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource.Nature.ELEMENT_COLLECTION;
+import static org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource.Nature.ENTITY;
+import static org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource.Nature.ENTITY_COLLECTION;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.isQuoted;
@@ -84,21 +88,21 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			MetadataBuildingContext context) {
-		final AnnotatedJoinColumns parent = new AnnotatedJoinColumns();
+		final var parent = new AnnotatedJoinColumns();
 		parent.setBuildingContext( context );
 		parent.setJoins( joins );
 		parent.setPropertyHolder( propertyHolder );
 		parent.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
 		parent.setMappedBy( mappedBy );
-		for ( JoinColumnOrFormula columnOrFormula : joinColumnOrFormulas ) {
-			final JoinFormula formula = columnOrFormula.formula();
-			final JoinColumn column = columnOrFormula.column();
+		for ( var columnOrFormula : joinColumnOrFormulas ) {
+			final var formula = columnOrFormula.formula();
+			final var column = columnOrFormula.column();
 			final String annotationString = formula.value();
 			if ( isNotBlank( annotationString ) ) {
 				AnnotatedJoinColumn.buildJoinFormula( formula, parent );
 			}
 			else {
-				AnnotatedJoinColumn.buildJoinColumn( column, mappedBy, parent, propertyHolder, inferredData );
+				buildJoinColumn( column, mappedBy, parent, propertyHolder, inferredData );
 			}
 		}
 
@@ -108,16 +112,15 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 	}
 
 	private static void handlePropertyRef(MemberDetails attributeMember, AnnotatedJoinColumns parent) {
-		final PropertyRef propertyRefUsage = attributeMember.getDirectAnnotationUsage( PropertyRef.class );
-		if ( propertyRefUsage == null ) {
-			return;
+		final var propertyRefUsage = attributeMember.getDirectAnnotationUsage( PropertyRef.class );
+		if ( propertyRefUsage != null ) {
+			final String referencedPropertyName = propertyRefUsage.value();
+			if ( isBlank( referencedPropertyName ) ) {
+				throw new AnnotationException(
+						"@PropertyRef did not specify target attribute name: " + attributeMember );
+			}
+			parent.referencedProperty = referencedPropertyName;
 		}
-
-		final String referencedPropertyName = propertyRefUsage.value();
-		if ( isBlank( referencedPropertyName ) ) {
-			throw new AnnotationException( "@PropertyRef did not specify target attribute name: " + attributeMember );
-		}
-		parent.referencedProperty = referencedPropertyName;
 	}
 
 	static AnnotatedJoinColumns buildJoinColumnsWithFormula(
@@ -126,7 +129,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			MetadataBuildingContext context) {
-		final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
+		final var joinColumns = new AnnotatedJoinColumns();
 		joinColumns.setBuildingContext( context );
 		joinColumns.setJoins( secondaryTables );
 		joinColumns.setPropertyHolder( propertyHolder );
@@ -167,15 +170,14 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		final String path = qualify( propertyHolder.getPath(), propertyName );
 		final JoinColumn[] overrides = propertyHolder.getOverriddenJoinColumn( path );
 		final JoinColumn[] actualColumns = overrides == null ? joinColumns : overrides;
-		final AnnotatedJoinColumns parent = new AnnotatedJoinColumns();
+		final var parent = new AnnotatedJoinColumns();
 		parent.setBuildingContext( context );
 		parent.setJoins( joins );
 		parent.setPropertyHolder( propertyHolder );
 		parent.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 		parent.setMappedBy( mappedBy );
-		final MemberDetails memberDetails = inferredData.getAttributeMember();
 		if ( isEmpty( actualColumns ) ) {
-			AnnotatedJoinColumn.buildJoinColumn(
+			buildJoinColumn(
 					null,
 					mappedBy,
 					parent,
@@ -186,8 +188,8 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		}
 		else {
 			parent.setMappedBy( mappedBy );
-			for ( JoinColumn actualColumn : actualColumns ) {
-				AnnotatedJoinColumn.buildJoinColumn(
+			for ( var actualColumn : actualColumns ) {
+				buildJoinColumn(
 						actualColumn,
 						mappedBy,
 						parent,
@@ -197,7 +199,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 				);
 			}
 		}
-		handlePropertyRef( memberDetails, parent );
+		handlePropertyRef( inferredData.getAttributeMember(), parent );
 		return parent;
 	}
 
@@ -211,18 +213,18 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			PropertyData inferredData,
 			String mappedBy,
 			MetadataBuildingContext context) {
-		final AnnotatedJoinColumns parent = new AnnotatedJoinColumns();
+		final var parent = new AnnotatedJoinColumns();
 		parent.setBuildingContext( context );
 		parent.setJoins( secondaryTables );
 		parent.setPropertyHolder( propertyHolder );
 		parent.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
 		parent.setMappedBy( mappedBy );
 		if ( joinColumns == null ) {
-			AnnotatedJoinColumn.buildImplicitJoinTableJoinColumn( parent, propertyHolder, inferredData );
+			buildImplicitJoinTableJoinColumn( parent, propertyHolder, inferredData );
 		}
 		else {
-			for ( JoinColumn joinColumn : joinColumns ) {
-				AnnotatedJoinColumn.buildExplicitJoinTableJoinColumn( parent, propertyHolder, inferredData, joinColumn );
+			for ( var joinColumn : joinColumns ) {
+				buildExplicitJoinTableJoinColumn( parent, propertyHolder, inferredData, joinColumn );
 			}
 		}
 		handlePropertyRef( inferredData.getAttributeMember(), parent );
@@ -230,20 +232,15 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 	}
 
 	Property resolveMapsId() {
-		final PersistentClass persistentClass = getPropertyHolder().getPersistentClass();
-		final KeyValue identifier = persistentClass.getIdentifier();
+		final var persistentClass = getPropertyHolder().getPersistentClass();
+		final var identifier = persistentClass.getIdentifier();
 		try {
-			if ( identifier instanceof Component embeddedIdType ) {
-				// an @EmbeddedId
-				return embeddedIdType.getProperty( getMapsId() );
-			}
-			else {
-				// a simple id or an @IdClass
-				return persistentClass.getProperty( getMapsId() );
-			}
+			return identifier instanceof Component embeddedIdType
+					? embeddedIdType.getProperty( mapsId )   // an @EmbeddedId
+					: persistentClass.getProperty( mapsId );  // a simple id or an @IdClass
 		}
 		catch (MappingException me) {
-			throw new AnnotationException( "Identifier field '" + getMapsId()
+			throw new AnnotationException( "Identifier field '" + mapsId
 					+ "' named in '@MapsId' does not exist in entity '" + persistentClass.getEntityName() + "'",
 					me );
 		}
@@ -255,10 +252,10 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 
 	@Override
 	public void addColumn(AnnotatedColumn child) {
-		if ( !( child instanceof AnnotatedJoinColumn ) ) {
+		if ( !( child instanceof AnnotatedJoinColumn joinColumn ) ) {
 			throw new AssertionFailure( "wrong sort of column" );
 		}
-		addColumn( (AnnotatedJoinColumn) child );
+		addColumn( joinColumn );
 	}
 
 	public void addColumn(AnnotatedJoinColumn child) {
@@ -329,15 +326,16 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 	 */
 	public ForeignKeyType getReferencedColumnsType(PersistentClass referencedEntity) {
 		if ( referencedProperty != null ) {
-			return ForeignKeyType.NON_PRIMARY_KEY_REFERENCE;
+			return NON_PRIMARY_KEY_REFERENCE;
 		}
 
 		if ( columns.isEmpty() ) {
 			return ForeignKeyType.IMPLICIT_PRIMARY_KEY_REFERENCE; //shortcut
 		}
 
-		final AnnotatedJoinColumn firstColumn = columns.get( 0 );
-		final Object columnOwner = findReferencedColumnOwner( referencedEntity, firstColumn, getBuildingContext() );
+		final var firstColumn = columns.get( 0 );
+		final var context = getBuildingContext();
+		final Object columnOwner = findReferencedColumnOwner( referencedEntity, firstColumn, context );
 		if ( columnOwner == null ) {
 			try {
 				throw new MappingException( "A '@JoinColumn' references a column named '"
@@ -351,18 +349,19 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 				throw new FailedSecondPassException( me.getMessage(), me );
 			}
 		}
-		final Table table = table( columnOwner );
+		final var table = table( columnOwner );
 //		final List<Selectable> keyColumns = referencedEntity.getKey().getSelectables();
-		final List<? extends Selectable> keyColumns = table.getPrimaryKey() == null
-				? referencedEntity.getKey().getSelectables()
-				: table.getPrimaryKey().getColumns();
+		final var keyColumns =
+				table.getPrimaryKey() == null
+						? referencedEntity.getKey().getSelectables()
+						: table.getPrimaryKey().getColumns();
 		boolean explicitColumnReference = false;
-		for ( AnnotatedJoinColumn column : columns ) {
+		for ( var column : columns ) {
 			if ( !column.isReferenceImplicit() ) {
 				explicitColumnReference = true;
-				if ( !keyColumns.contains( column( getBuildingContext(), table, column.getReferencedColumn() ) ) ) {
+				if ( !keyColumns.contains( column( context, table, column.getReferencedColumn() ) ) ) {
 					// we have a column which does not belong to the PK
-					return ForeignKeyType.NON_PRIMARY_KEY_REFERENCE;
+					return NON_PRIMARY_KEY_REFERENCE;
 				}
 			}
 		}
@@ -370,9 +369,9 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			// if we got to here, all the columns belong to the PK
 			return keyColumns.size() == columns.size()
 					// we have all the PK columns
-					? ForeignKeyType.EXPLICIT_PRIMARY_KEY_REFERENCE
+					? EXPLICIT_PRIMARY_KEY_REFERENCE
 					// we have a subset of the PK columns
-					: ForeignKeyType.NON_PRIMARY_KEY_REFERENCE;
+					: NON_PRIMARY_KEY_REFERENCE;
 		}
 		else {
 			// there were no nonempty referencedColumnNames
@@ -404,10 +403,11 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 	}
 
 	String buildDefaultColumnName(PersistentClass referencedEntity, String logicalReferencedColumn) {
-		final MetadataBuildingOptions options = getBuildingContext().getBuildingOptions();
-		final InFlightMetadataCollector collector = getBuildingContext().getMetadataCollector();
-		final Database database = collector.getDatabase();
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+		final var context = getBuildingContext();
+		final var options = context.getBuildingOptions();
+		final var collector = context.getMetadataCollector();
+		final var database = collector.getDatabase();
+		final var jdbcEnvironment = database.getJdbcEnvironment();
 		final Identifier columnIdentifier = columnIdentifier(
 				referencedEntity,
 				logicalReferencedColumn,
@@ -473,9 +473,10 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 
 	private Identifier handleElement(Identifier columnIdentifier) {
 		// HHH-11826 magic. See AnnotatedColumn and the HHH-6005 comments
-		if ( columnIdentifier.getText().contains( "_{element}_" ) ) {
+		final String identifierText = columnIdentifier.getText();
+		if ( identifierText.contains( "_{element}_" ) ) {
 			return Identifier.toIdentifier(
-					columnIdentifier.getText().replace( "_{element}_", "_" ),
+					identifierText.replace( "_{element}_", "_" ),
 					columnIdentifier.isQuoted()
 			);
 		}
@@ -488,7 +489,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			boolean isRefColumnQuoted, Identifier logicalTableName, Identifier columnIdentifier) {
 		return !columnIdentifier.isQuoted()
 			&& ( isRefColumnQuoted || logicalTableName.isQuoted() )
-				? Identifier.quote( columnIdentifier )
+				? columnIdentifier.quoted()
 				: columnIdentifier;
 	}
 
@@ -496,7 +497,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			boolean isRefColumnQuoted, String logicalTableName, Identifier columnIdentifier) {
 		//one element was quoted so we quote
 		return isRefColumnQuoted || isQuoted( logicalTableName )
-				? Identifier.quote( columnIdentifier )
+				? columnIdentifier.quoted()
 				: columnIdentifier;
 	}
 
@@ -511,13 +512,13 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 
 	private ImplicitJoinColumnNameSource.Nature getImplicitNature() {
 		if ( getPropertyHolder().isEntity() ) {
-			return ImplicitJoinColumnNameSource.Nature.ENTITY;
+			return ENTITY;
 		}
 		else if ( isElementCollection() ) {
-			return ImplicitJoinColumnNameSource.Nature.ELEMENT_COLLECTION;
+			return ELEMENT_COLLECTION;
 		}
 		else {
-			return ImplicitJoinColumnNameSource.Nature.ENTITY_COLLECTION;
+			return ENTITY_COLLECTION;
 		}
 	}
 
@@ -598,10 +599,10 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 				return null;
 			}
 
-			final Property mappedByProperty =
+			final var mappedByProperty =
 					collector.getEntityBinding( getMappedByEntityName() )
 							.getProperty( getMappedByPropertyName() );
-			final SimpleValue value = (SimpleValue) mappedByProperty.getValue();
+			final var value = (SimpleValue) mappedByProperty.getValue();
 			if ( value.getSelectables().isEmpty() ) {
 				throw new AnnotationException(
 						String.format(
@@ -613,8 +614,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 						)
 				);
 			}
-			final Selectable selectable = value.getSelectables().get( 0 );
-			if ( !(selectable instanceof Column column) ) {
+			if ( !(value.getSelectables().get( 0 ) instanceof Column column) ) {
 				throw new AnnotationException(
 						String.format(
 								Locale.ENGLISH,

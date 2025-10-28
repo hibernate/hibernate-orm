@@ -4,22 +4,15 @@
  */
 package org.hibernate.id.enhanced;
 
-import java.lang.invoke.MethodHandles;
-import java.util.Iterator;
 import java.util.Properties;
-import java.util.Set;
 import java.util.function.BiConsumer;
 
-import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
-import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -30,20 +23,21 @@ import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.SequenceMismatchStrategy;
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 import org.hibernate.type.Type;
 
-import org.jboss.logging.Logger;
 
 import jakarta.persistence.SequenceGenerator;
 
 import static java.util.Collections.singleton;
+import static org.hibernate.cfg.MappingSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY;
 import static org.hibernate.id.IdentifierGeneratorHelper.getNamingStrategy;
 import static org.hibernate.id.enhanced.OptimizerFactory.determineImplicitOptimizerName;
+import static org.hibernate.id.enhanced.SequenceGeneratorLogger.SEQUENCE_GENERATOR_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
@@ -104,7 +98,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
  *   <tr>
  *     <td>{@value #VALUE_COLUMN_PARAM}</td>
  *     <td>{@value #DEF_VALUE_COLUMN}</td>
- *     <td>The name of column which holds the sequence value for the given segment</td>
+ *     <td>The name of the column which holds the sequence value for the given segment</td>
  *   </tr>
  * </table>
  *
@@ -113,13 +107,6 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
  */
 public class SequenceStyleGenerator
 		implements PersistentIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, BeforeExecutionGenerator {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			SequenceStyleGenerator.class.getName()
-	);
-
 
 	// general purpose parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -164,7 +151,7 @@ public class SequenceStyleGenerator
 	private DatabaseStructure databaseStructure;
 	private Optimizer optimizer;
 	private Type identifierType;
-	private String options;
+	private Table table;
 
 	/**
 	 * Getter for property 'databaseStructure'.
@@ -199,16 +186,17 @@ public class SequenceStyleGenerator
 
 	@Override
 	public void configure(GeneratorCreationContext creationContext, Properties parameters) throws MappingException {
-		final ServiceRegistry serviceRegistry = creationContext.getServiceRegistry();
-		final JdbcEnvironment jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
-		final Dialect dialect = jdbcEnvironment.getDialect();
+		final var serviceRegistry = creationContext.getServiceRegistry();
+		final var jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
+		final var dialect = jdbcEnvironment.getDialect();
 
-		this.identifierType = creationContext.getType();
+		identifierType = creationContext.getType();
+		table = creationContext.getValue().getTable();
 
-		final QualifiedName sequenceName = determineSequenceName( parameters, jdbcEnvironment, serviceRegistry );
+		final var sequenceName = determineSequenceName( parameters, jdbcEnvironment, serviceRegistry );
 		final int initialValue = determineInitialValue( parameters );
 		int incrementSize = determineIncrementSize( parameters );
-		final OptimizerDescriptor optimizationStrategy = determineOptimizationStrategy( parameters, incrementSize );
+		final var optimizationStrategy = determineOptimizationStrategy( parameters, incrementSize );
 
 		boolean forceTableUse = getBoolean( FORCE_TBL_PARAM, parameters );
 		final boolean physicalSequence = isPhysicalSequence( jdbcEnvironment, forceTableUse );
@@ -228,10 +216,10 @@ public class SequenceStyleGenerator
 				&& optimizationStrategy.isPooled()
 				&& !dialect.getSequenceSupport().supportsPooledSequences() ) {
 			forceTableUse = true;
-			LOG.forcingTableUse();
+			SEQUENCE_GENERATOR_LOGGER.forcingTableUse();
 		}
 
-		this.databaseStructure = buildDatabaseStructure(
+		databaseStructure = buildDatabaseStructure(
 				identifierType,
 				parameters,
 				jdbcEnvironment,
@@ -247,8 +235,6 @@ public class SequenceStyleGenerator
 				getInt( INITIAL_PARAM, parameters, -1 )
 		);
 		databaseStructure.configure( optimizer );
-
-		options = parameters.getProperty( OPTIONS );
 	}
 
 	private int adjustIncrementSize(
@@ -260,9 +246,9 @@ public class SequenceStyleGenerator
 			ServiceRegistry serviceRegistry,
 			String contributor,
 			GeneratorCreationContext creationContext) {
-		final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
-		final SequenceMismatchStrategy sequenceMismatchStrategy = configurationService.getSetting(
-				AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY,
+		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
+		final var sequenceMismatchStrategy = configurationService.getSetting(
+				SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY,
 				SequenceMismatchStrategy::interpret,
 				SequenceMismatchStrategy.EXCEPTION
 		);
@@ -270,51 +256,82 @@ public class SequenceStyleGenerator
 		if ( sequenceMismatchStrategy != SequenceMismatchStrategy.NONE
 				&& optimizationStrategy.isPooled()
 				&& physicalSequence ) {
-			final Database database = creationContext.getDatabase();
-			final String databaseSequenceName = database != null ?
-					database.getPhysicalNamingStrategy().toPhysicalSequenceName(
-							sequenceName.getObjectName(),
-							jdbcEnvironment
-					).getText() :
-					sequenceName.getObjectName().getText();
-			final Number databaseIncrementValue =
-					isSchemaToBeRecreated( contributor, configurationService ) ? null
-							: getSequenceIncrementValue( jdbcEnvironment, databaseSequenceName );
-			if ( databaseIncrementValue != null && databaseIncrementValue.intValue() != incrementSize) {
-				final int dbIncrementValue = databaseIncrementValue.intValue();
-				switch ( sequenceMismatchStrategy ) {
-					case EXCEPTION:
-						throw new MappingException(
-								String.format(
-										"The increment size of the [%s] sequence is set to [%d] in the entity mapping "
-												+ "while the associated database sequence increment size is [%d].",
-										databaseSequenceName, incrementSize, dbIncrementValue
-								)
-						);
-					case FIX:
-						incrementSize = dbIncrementValue;
-					case LOG:
-						//TODO: the log message is correct for the case of FIX, but wrong for LOG
-						LOG.sequenceIncrementSizeMismatch( databaseSequenceName, incrementSize, dbIncrementValue );
-						break;
-				}
-			}
+			incrementSize =
+					validatedIncrementSize(
+							jdbcEnvironment,
+							sequenceName,
+							incrementSize,
+							contributor,
+							creationContext,
+							configurationService,
+							sequenceMismatchStrategy
+					);
 		}
 		return determineAdjustedIncrementSize( optimizationStrategy, incrementSize );
 	}
 
+	private int validatedIncrementSize(
+			JdbcEnvironment jdbcEnvironment,
+			QualifiedName sequenceName,
+			int incrementSize,
+			String contributor,
+			GeneratorCreationContext creationContext,
+			ConfigurationService configurationService,
+			SequenceMismatchStrategy sequenceMismatchStrategy) {
+		final var database = creationContext.getDatabase();
+		final Identifier databaseSequenceIdentifier =
+				database != null
+						? database.getPhysicalNamingStrategy()
+								.toPhysicalSequenceName( sequenceName.getObjectName(), jdbcEnvironment )
+						: sequenceName.getObjectName();
+		final String databaseSequenceName = databaseSequenceIdentifier.getText();
+		final Number databaseIncrementValue =
+				isSchemaToBeRecreated( contributor, configurationService ) ? null
+						: getSequenceIncrementValue( jdbcEnvironment, databaseSequenceName );
+		if ( databaseIncrementValue != null && databaseIncrementValue.intValue() != incrementSize ) {
+			final int dbIncrementValue = databaseIncrementValue.intValue();
+			return switch ( sequenceMismatchStrategy ) {
+				case NONE -> incrementSize;
+				case FIX -> {
+					// log at TRACE level
+					SEQUENCE_GENERATOR_LOGGER.sequenceIncrementSizeMismatchFixed(
+							databaseSequenceName, incrementSize, dbIncrementValue );
+					yield dbIncrementValue;
+				}
+				case LOG -> {
+					// log at WARN level
+					SEQUENCE_GENERATOR_LOGGER.sequenceIncrementSizeMismatch(
+							databaseSequenceName, incrementSize, dbIncrementValue );
+					yield incrementSize;
+				}
+				case EXCEPTION -> throw new MappingException(
+						String.format(
+								"The increment size of the [%s] sequence is set to [%d] in the entity mapping "
+									+ "but the mapped database sequence increment size is [%d]",
+								databaseSequenceName, incrementSize, dbIncrementValue
+						)
+				);
+			};
+		}
+		else {
+			return incrementSize;
+		}
+	}
+
 	private boolean isSchemaToBeRecreated(String contributor, ConfigurationService configurationService) {
-		final Set<ActionGrouping> actions =
-				ActionGrouping.interpret( singleton( contributor ), configurationService.getSettings() );
+		final var actions =
+				ActionGrouping.interpret( singleton( contributor ),
+						configurationService.getSettings() );
 		// We know this will only contain at most 1 action
-		final Iterator<ActionGrouping> it = actions.iterator();
-		final Action dbAction = it.hasNext() ? it.next().getDatabaseAction() : null;
-		return dbAction == Action.CREATE || dbAction == Action.CREATE_DROP;
+		final var iterator = actions.iterator();
+		final var action = iterator.hasNext() ? iterator.next().databaseAction() : null;
+		return action == Action.CREATE || action == Action.CREATE_DROP;
 	}
 
 	@Override
 	public void registerExportables(Database database) {
 		databaseStructure.registerExportables( database );
+		databaseStructure.registerExtraExportables( table, optimizer );
 	}
 
 	@Override
@@ -332,12 +349,11 @@ public class SequenceStyleGenerator
 	 * @param jdbcEnv The JdbcEnvironment
 	 * @return The sequence name
 	 */
-	@SuppressWarnings("UnusedParameters")
 	protected QualifiedName determineSequenceName(
 			Properties params,
 			JdbcEnvironment jdbcEnv,
 			ServiceRegistry serviceRegistry) {
-		final IdentifierHelper identifierHelper = jdbcEnv.getIdentifierHelper();
+		final var identifierHelper = jdbcEnv.getIdentifierHelper();
 		final Identifier catalog = identifierHelper.toIdentifier( getString( CATALOG, params ) );
 		final Identifier schema =  identifierHelper.toIdentifier( getString( SCHEMA, params ) );
 		final String sequenceName = getString( SEQUENCE_PARAM, params, () -> getString( ALT_SEQUENCE_PARAM, params ) );
@@ -367,7 +383,7 @@ public class SequenceStyleGenerator
 
 	/**
 	 * Determine the name of the column used to store the generator value in
-	 * the db.
+	 * the database.
 	 * <p>
 	 * Called during {@linkplain #configure configuration} <b>when resolving to a
 	 * physical table</b>.
@@ -396,8 +412,8 @@ public class SequenceStyleGenerator
 	}
 
 	/**
-	 * Determine the increment size to be applied.  The exact implications of
-	 * this value depends on the {@linkplain #getOptimizer() optimizer} being used.
+	 * Determine the increment size to be applied. The exact implications of
+	 * this value depend on the {@linkplain #getOptimizer() optimizer} in use.
 	 * <p>
 	 * Called during {@linkplain #configure configuration}.
 	 *
@@ -425,16 +441,16 @@ public class SequenceStyleGenerator
 
 	/**
 	 * In certain cases we need to adjust the increment size based on the
-	 * selected optimizer.  This is the hook to achieve that.
+	 * selected optimizer. This is the hook to achieve that.
 	 *
 	 * @param optimizationStrategy The optimizer strategy (name)
-	 * @param incrementSize The {@link #determineIncrementSize determined increment size}
+	 * @param incrementSize The {@linkplain #determineIncrementSize determined increment size}
 	 * @return The adjusted increment size.
 	 */
 	protected int determineAdjustedIncrementSize(OptimizerDescriptor optimizationStrategy, int incrementSize) {
 		if ( optimizationStrategy == StandardOptimizerDescriptor.NONE  ) {
 			if ( incrementSize < -1 ) {
-				LOG.honoringOptimizerSetting(
+				SEQUENCE_GENERATOR_LOGGER.honoringOptimizerSetting(
 						StandardOptimizerDescriptor.NONE.getExternalName(),
 						INCREMENT_PARAM,
 						incrementSize,
@@ -444,7 +460,7 @@ public class SequenceStyleGenerator
 				return -1;
 			}
 			else if ( incrementSize > 1 ) {
-				LOG.honoringOptimizerSetting(
+				SEQUENCE_GENERATOR_LOGGER.honoringOptimizerSetting(
 						StandardOptimizerDescriptor.NONE.getExternalName(),
 						INCREMENT_PARAM,
 						incrementSize,
@@ -538,7 +554,7 @@ public class SequenceStyleGenerator
 	// IdentifierGenerator implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
+	public Object generate(SharedSessionContractImplementor session, Object object) {
 		return optimizer.generate( databaseStructure.buildCallback( session ) );
 	}
 
@@ -565,9 +581,8 @@ public class SequenceStyleGenerator
 	 * @return sequence increment value
 	 */
 	private Number getSequenceIncrementValue(JdbcEnvironment jdbcEnvironment, String sequenceName) {
-		for ( SequenceInformation information :
-				jdbcEnvironment.getExtractedDatabaseMetaData().getSequenceInformationList() ) {
-			final QualifiedSequenceName name = information.getSequenceName();
+		for ( var information : jdbcEnvironment.getExtractedDatabaseMetaData().getSequenceInformationList() ) {
+			final var name = information.getSequenceName();
 			if ( sequenceName.equalsIgnoreCase( name.getSequenceName().getText() )
 					&& isDefaultSchema( jdbcEnvironment, name.getCatalogName(), name.getSchemaName() ) ) {
 				final Number incrementValue = information.getIncrementValue();

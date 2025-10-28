@@ -4,7 +4,6 @@
  */
 package org.hibernate.sql.ast.spi;
 
-import org.hibernate.sql.ast.SqlTreeCreationLogger;
 
 /**
  * Standard SqlAliasBase impl
@@ -27,7 +26,7 @@ public class SqlAliasBaseImpl implements SqlAliasBase {
 	@Override
 	public String generateNewAlias() {
 		final String alias = stem + "_" + ( aliasCount++ );
-		SqlTreeCreationLogger.LOGGER.debugf( "Created new SQL alias : %s", alias );
+//		SqlTreeCreationLogger.LOGGER.tracef( "Created new SQL alias: %s", alias );
 		return alias;
 	}
 

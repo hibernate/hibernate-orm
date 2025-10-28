@@ -36,10 +36,11 @@ import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.ReplicationMode;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SharedSessionBuilder;
+import org.hibernate.SharedStatelessSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.Transaction;
 import org.hibernate.UnknownProfileException;
-import org.hibernate.action.spi.AfterTransactionCompletionProcess;
+import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -66,6 +67,8 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.type.format.FormatMapper;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -106,6 +109,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public <T> T execute(Callback<T> callback) {
 		return delegate.execute( callback );
+	}
+
+	@Override
+	public SharedStatelessSessionBuilder statelessWithOptions() {
+		return delegate.statelessWithOptions();
 	}
 
 	@Override
@@ -379,6 +387,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public boolean isAutoCloseSessionEnabled() {
+		return delegate.isAutoCloseSessionEnabled();
+	}
+
+	@Override
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
 		return delegate.getLoadQueryInfluencers();
 	}
@@ -422,6 +435,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public Transaction accessTransaction() {
 		return delegate.accessTransaction();
+	}
+
+	@Override
+	public Transaction getCurrentTransaction() {
+		return delegate.getCurrentTransaction();
 	}
 
 	@Override
@@ -873,6 +891,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public Object find(String entityName, Object primaryKey) {
+		return delegate.find( entityName, primaryKey );
+	}
+
+	@Override
+	public Object find(String entityName, Object primaryKey, FindOption... options) {
+		return delegate.find( entityName, primaryKey, options );
+	}
+
+	@Override
 	public <T> T getReference(Class<T> entityClass, Object id) {
 		return delegate.getReference( entityClass, id );
 	}
@@ -1143,8 +1171,13 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void registerProcess(AfterTransactionCompletionProcess process) {
-		delegate.registerProcess( process );
+	public TransactionCompletionCallbacks getTransactionCompletionCallbacks() {
+		return delegate.getTransactionCompletionCallbacks();
+	}
+
+	@Override
+	public TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor() {
+		return delegate.getTransactionCompletionCallbacksImplementor();
 	}
 
 	@Override
@@ -1238,7 +1271,22 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public SessionAssociationMarkers getSessionAssociationMarkers() {
+		return delegate.getSessionAssociationMarkers();
+	}
+
+	@Override
 	public boolean isIdentifierRollbackEnabled() {
 		return delegate.isIdentifierRollbackEnabled();
+	}
+
+	@Override
+	public void afterObtainConnection(Connection connection) throws SQLException {
+		delegate.afterObtainConnection( connection );
+	}
+
+	@Override
+	public void beforeReleaseConnection(Connection connection) throws SQLException {
+		delegate.beforeReleaseConnection( connection );
 	}
 }

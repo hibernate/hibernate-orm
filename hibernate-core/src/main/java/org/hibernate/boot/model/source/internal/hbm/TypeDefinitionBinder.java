@@ -7,13 +7,14 @@ package org.hibernate.boot.model.source.internal.hbm;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTypeDefinitionType;
 import org.hibernate.boot.model.TypeDefinition;
 
-import org.jboss.logging.Logger;
+
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+import static org.hibernate.boot.model.source.internal.hbm.ConfigParameterHelper.extractConfigParameters;
 
 /**
  * @author Steve Ebersole
  */
 public class TypeDefinitionBinder {
-	private static final Logger log = Logger.getLogger( TypeDefinitionBinder.class );
 
 	/**
 	 * Handling for a {@code <typedef/>} declaration
@@ -25,20 +26,17 @@ public class TypeDefinitionBinder {
 			HbmLocalMetadataBuildingContext context,
 			JaxbHbmTypeDefinitionType typeDefinitionBinding) {
 
-		final TypeDefinition definition = new TypeDefinition(
+		final var definition = new TypeDefinition(
 				typeDefinitionBinding.getName(),
 				context.getBootstrapContext().getClassLoaderService()
 						.classForName( typeDefinitionBinding.getClazz() ),
 				null,
-				ConfigParameterHelper.extractConfigParameters( typeDefinitionBinding )
+				extractConfigParameters( typeDefinitionBinding )
 		);
 
-		if ( log.isDebugEnabled() ) {
-			log.debugf(
-					"Processed type-definition : %s -> %s",
-					definition.getName(),
-					definition.getTypeImplementorClass().getName()
-			);
+		if ( BOOT_LOGGER.isTraceEnabled() ) {
+			BOOT_LOGGER.processedTypeDefinition( definition.getName(),
+					definition.getTypeImplementorClass().getName() );
 		}
 
 		context.getMetadataCollector().getTypeDefinitionRegistry().register( definition );

@@ -30,17 +30,17 @@ import jakarta.persistence.Table;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hibernate.Hibernate.getLobHelper;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-11477")
 // Note that Cockroach doesn't support LOB functions. See https://github.com/cockroachdb/cockroach/issues/26725
 @RequiresDialect(PostgreSQLDialect.class)
-@DomainModel(
-		annotatedClasses = LobStringTest.TestEntity.class
-)
+@DomainModel(annotatedClasses = LobStringTest.TestEntity.class)
 @SessionFactory
 public class LobStringTest {
 
@@ -56,7 +56,7 @@ public class LobStringTest {
 
 			entity.setFirstLobField( value1 );
 			entity.setSecondLobField( value2 );
-			entity.setClobField( session.getLobHelper().createClob( value2 ) );
+			entity.setClobField( getLobHelper().createClob( value2 ) );
 			session.persist( entity );
 		} );
 
@@ -68,10 +68,7 @@ public class LobStringTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete from TestEntity" ).executeUpdate()
-		);
+		scope.dropData();
 	}
 
 	@Test

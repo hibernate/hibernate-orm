@@ -10,6 +10,7 @@ import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -19,7 +20,7 @@ import jakarta.persistence.criteria.Nulls;
 /**
  * @author Steve Ebersole
  */
-public class SqmSortSpecification implements JpaOrder {
+public class SqmSortSpecification implements JpaOrder, SqmCacheable {
 	@SuppressWarnings("rawtypes")
 	private final SqmExpression sortExpression;
 	private final SortDirection sortOrder;
@@ -141,23 +142,34 @@ public class SqmSortSpecification implements JpaOrder {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
-			return true;
-		}
-		else if ( !(o instanceof SqmSortSpecification that) ) {
-			return false;
-		}
-		else {
-			// used in SqmInterpretationsKey.equals()
-			return Objects.equals( sortExpression, that.sortExpression )
-				&& sortOrder == that.sortOrder
-				&& nullPrecedence == that.nullPrecedence;
-		}
+	public boolean equals(Object other) {
+		return other instanceof SqmSortSpecification that
+			&& sortExpression.equals( that.sortExpression )
+			&& this.sortOrder == that.sortOrder
+			&& this.nullPrecedence == that.nullPrecedence;
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( sortExpression, sortOrder, nullPrecedence );
+		int result = sortExpression.hashCode();
+		result = 31 * result + sortOrder.hashCode();
+		result = 31 * result + Objects.hashCode( nullPrecedence );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object other) {
+		return other instanceof SqmSortSpecification that
+			&& sortExpression.isCompatible( that.sortExpression )
+			&& this.sortOrder == that.sortOrder
+			&& this.nullPrecedence == that.nullPrecedence;
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = sortExpression.cacheHashCode();
+		result = 31 * result + sortOrder.hashCode();
+		result = 31 * result + Objects.hashCode( nullPrecedence );
+		return result;
 	}
 }

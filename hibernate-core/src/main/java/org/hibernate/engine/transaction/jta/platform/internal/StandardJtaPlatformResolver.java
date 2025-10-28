@@ -21,7 +21,7 @@ import org.jboss.logging.Logger;
 public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 	public static final StandardJtaPlatformResolver INSTANCE = new StandardJtaPlatformResolver();
 
-	private static final Logger log = Logger.getLogger( StandardJtaPlatformResolver.class );
+	private static final Logger LOG = Logger.getLogger( StandardJtaPlatformResolver.class );
 
 	@Override
 	public JtaPlatform resolveJtaPlatform(Map<?,?> configurationValues, ServiceRegistryImplementor registry) {
@@ -30,7 +30,7 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 		// Initially look for a JtaPlatformProvider
 		for ( JtaPlatformProvider provider : classLoaderService.loadJavaServices( JtaPlatformProvider.class ) ) {
 			final JtaPlatform providedPlatform = provider.getProvidedJtaPlatform();
-			log.tracef( "Located JtaPlatformProvider [%s] provided JtaPlatform : %s", provider, providedPlatform );
+			LOG.tracef( "Located JtaPlatformProvider [%s] provided JtaPlatform : %s", provider, providedPlatform );
 			if ( providedPlatform!= null ) {
 				return providedPlatform;
 			}
@@ -62,20 +62,11 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 		catch (ClassLoadingException ignore) {
 		}
 
-
-		// JBoss ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Narayana ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		try {
-			classLoaderService.classForName( JBossStandAloneJtaPlatform.JBOSS_TM_CLASS_NAME );
-			classLoaderService.classForName( JBossStandAloneJtaPlatform.JBOSS_UT_CLASS_NAME );
-
-			// we know that the JBoss TS classes are available
-			// if neither of these look-ups resulted in an error (no such class), then JBossTM is available on
-			// the classpath
-			//
-			// todo : we cannot really distinguish between the need for JBossStandAloneJtaPlatform versus JBossApServerJtaPlatform
-			// but discussions with David led to the JtaPlatformProvider solution above, so inside JBoss AS we
-			// should be relying on that
-			return new JBossStandAloneJtaPlatform();
+			classLoaderService.classForName( NarayanaJtaPlatform.TM_CLASS_NAME );
+			classLoaderService.classForName( NarayanaJtaPlatform.UT_CLASS_NAME );
+			return new NarayanaJtaPlatform();
 		}
 		catch (ClassLoadingException ignore) {
 		}
@@ -97,7 +88,7 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 		}
 
 		// Finally, return the default...
-		log.debugf( "Could not resolve JtaPlatform, using default [%s]", NoJtaPlatform.class.getName() );
+		LOG.tracef( "Could not resolve JtaPlatform, using default [%s]", NoJtaPlatform.class.getName() );
 		return NoJtaPlatform.INSTANCE;
 	}
 }

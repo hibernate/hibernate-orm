@@ -40,12 +40,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope){
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from DataPoint" ).executeUpdate();
-					session.createQuery( "delete from TextHolder" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

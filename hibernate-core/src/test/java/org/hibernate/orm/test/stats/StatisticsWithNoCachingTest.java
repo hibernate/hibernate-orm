@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Gail Badner
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel
 @SessionFactory
 @ServiceRegistry(

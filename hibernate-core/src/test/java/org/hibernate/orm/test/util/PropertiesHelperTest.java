@@ -3,28 +3,29 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.util;
-import java.util.Properties;
-
-import org.junit.Before;
-import org.junit.Test;
 
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import java.util.Properties;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
  */
-public class PropertiesHelperTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class PropertiesHelperTest {
 	private Properties props;
 
-	@Before
-	public void setUp() throws Exception {
+	@BeforeEach
+	public void setUp() {
 		props = new Properties();
 
 		props.setProperty( "my.nonexistent.prop", "${}" );
@@ -58,20 +59,20 @@ public class PropertiesHelperTest extends BaseUnitTestCase {
 		str = ConfigurationHelper.getString( "my.nonexistent.prop", props );
 		assertNull( str );
 		str = ConfigurationHelper.getString( "my.string.prop", props, "na" );
-		assertEquals( "replacement did not occur", "string", str );
+		assertEquals( "string", str, "replacement did not occur" );
 		str = ConfigurationHelper.getString( "my.string.prop", props, "did.not.exist" );
-		assertEquals( "replacement did not occur", "string", str );
+		assertEquals( "string", str, "replacement did not occur" );
 
 		boolean bool = ConfigurationHelper.getBoolean( "my.nonexistent.prop", props );
-		assertFalse( "non-exists as boolean", bool );
+		assertFalse( bool, "non-exists as boolean" );
 		bool = ConfigurationHelper.getBoolean( "my.nonexistent.prop", props, false );
-		assertFalse( "non-exists as boolean", bool );
+		assertFalse( bool, "non-exists as boolean" );
 		bool = ConfigurationHelper.getBoolean( "my.nonexistent.prop", props, true );
-		assertTrue( "non-exists as boolean", bool );
+		assertTrue( bool, "non-exists as boolean" );
 		bool = ConfigurationHelper.getBoolean( "my.boolean.prop", props );
-		assertTrue( "boolean replacement did not occur", bool );
+		assertTrue( bool, "boolean replacement did not occur" );
 		bool = ConfigurationHelper.getBoolean( "my.boolean.prop", props, false );
-		assertTrue( "boolean replacement did not occur", bool );
+		assertTrue( bool, "boolean replacement did not occur" );
 
 		int i = ConfigurationHelper.getInt( "my.nonexistent.prop", props, -1 );
 		assertEquals( -1, i );
@@ -81,19 +82,19 @@ public class PropertiesHelperTest extends BaseUnitTestCase {
 		Integer I = ConfigurationHelper.getInteger( "my.nonexistent.prop", props );
 		assertNull( I );
 		I = ConfigurationHelper.getInteger( "my.integer.prop", props );
-		assertEquals( I, new Integer( 1 ) );
+		assertEquals( Integer.valueOf( 1 ), I );
 
 		str = props.getProperty( "partial.prop1" );
-		assertEquals( "partial replacement (ends)", "tmp/middle/dir/tmp.txt", str );
+		assertEquals( "tmp/middle/dir/tmp.txt", str, "partial replacement (ends)" );
 
 		str = props.getProperty( "partial.prop2" );
-		assertEquals( "partial replacement (midst)", "basedir/tmp/myfile.txt", str );
+		assertEquals( "basedir/tmp/myfile.txt", str, "partial replacement (midst)" );
 	}
 
 	@Test
 	public void testParseExceptions() {
 		boolean b = ConfigurationHelper.getBoolean( "parse.error", props );
-		assertFalse( "parse exception case - boolean", b );
+		assertFalse( b, "parse exception case - boolean" );
 
 		try {
 			ConfigurationHelper.getInt( "parse.error", props, 20 );

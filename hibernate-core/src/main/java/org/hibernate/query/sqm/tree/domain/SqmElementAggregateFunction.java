@@ -118,7 +118,7 @@ public class SqmElementAggregateFunction<T> extends AbstractSqmSpecificPluralPar
 
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
-		hql.append(functionName).append( "(" );
+		hql.append( functionName ).append( "(" );
 		getLhs().appendHqlString( hql, context );
 		hql.append( ')' );
 	}

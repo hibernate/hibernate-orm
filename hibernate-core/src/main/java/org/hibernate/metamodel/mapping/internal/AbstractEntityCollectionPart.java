@@ -15,7 +15,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.OneToMany;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.AssociationKey;
@@ -27,13 +26,11 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchOptions;
@@ -214,11 +211,11 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final AssociationKey associationKey = resolveFetchAssociationKey();
+		final var associationKey = resolveFetchAssociationKey();
 		final boolean added = creationState.registerVisitedAssociationKey( associationKey );
 
-		final TableGroup partTableGroup = resolveTableGroup( fetchablePath, creationState );
-		final EntityFetch fetch = buildEntityFetchJoined(
+		final var partTableGroup = resolveTableGroup( fetchablePath, creationState );
+		final var fetch = buildEntityFetchJoined(
 				fetchParent,
 				this,
 				partTableGroup,
@@ -273,19 +270,15 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 	protected abstract AssociationKey resolveFetchAssociationKey();
 
 	private TableGroup resolveTableGroup(NavigablePath fetchablePath, DomainResultCreationState creationState) {
-		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
+		final var fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
 		return fromClauseAccess.resolveTableGroup( fetchablePath, (np) -> {
-			final PluralTableGroup parentTableGroup = (PluralTableGroup) fromClauseAccess.getTableGroup( np.getParent() );
-			switch ( nature ) {
-				case ELEMENT: {
-					return parentTableGroup.getElementTableGroup();
-				}
-				case INDEX: {
-					return resolveIndexTableGroup( parentTableGroup, fetchablePath, fromClauseAccess, creationState );
-				}
-			}
+			final var parentTableGroup = (PluralTableGroup) fromClauseAccess.getTableGroup( np.getParent() );
+			return switch ( nature ) {
+				case ELEMENT -> parentTableGroup.getElementTableGroup();
+				case INDEX -> resolveIndexTableGroup( parentTableGroup, fetchablePath, fromClauseAccess, creationState );
+				default -> throw new IllegalStateException( "Could not find table group for: " + np );
+			};
 
-			throw new IllegalStateException( "Could not find table group for: " + np );
 		} );
 	}
 
@@ -318,11 +311,10 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 			String sourceAlias,
 			final SqlAliasBase sqlAliasBase,
 			SqlAstCreationState creationState) {
-		final SqlAstCreationContext creationContext = creationState.getCreationContext();
-		final TableReference primaryTableReference = getEntityMappingType().createPrimaryTableReference(
-				sqlAliasBase,
-				creationState
-		);
+		final var creationContext = creationState.getCreationContext();
+		final var primaryTableReference =
+				getEntityMappingType()
+						.createPrimaryTableReference( sqlAliasBase, creationState );
 
 		final TableGroup tableGroup = new StandardTableGroup(
 				canUseInnerJoins,
@@ -334,7 +326,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				true,
 				sqlAliasBase,
 				getEntityMappingType().getRootEntityDescriptor()::containsTableReference,
-				(tableExpression, tg) -> getEntityMappingType().createTableReferenceJoin(
+				(tableExpression, group) -> getEntityMappingType().createTableReferenceJoin(
 						tableExpression,
 						sqlAliasBase,
 						primaryTableReference,
@@ -357,19 +349,21 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 			Collection collectionBootDescriptor,
 			EntityMappingType elementTypeDescriptor,
 			MappingModelCreationProcess creationProcess) {
-		final Value bootModelValue = nature == Nature.INDEX
-				? ( (IndexedCollection) collectionBootDescriptor ).getIndex()
-				: collectionBootDescriptor.getElement();
-		final PersistentClass entityBinding =
+		final Value bootModelValue =
+				nature == Nature.INDEX
+						? ( (IndexedCollection) collectionBootDescriptor ).getIndex()
+						: collectionBootDescriptor.getElement();
+		final var entityBinding =
 				creationProcess.getCreationContext().getMetadata()
 						.getEntityBinding( elementTypeDescriptor.getEntityName() );
 
 		final String referencedPropertyName;
 		if ( bootModelValue instanceof OneToMany ) {
 			final String mappedByProperty = collectionDescriptor.getMappedByProperty();
-			referencedPropertyName = isEmpty( mappedByProperty )
-					? null
-					: mappedByProperty;
+			referencedPropertyName =
+					isEmpty( mappedByProperty )
+							? null
+							: mappedByProperty;
 		}
 		else if ( bootModelValue instanceof ToOne toOne ) {
 			referencedPropertyName = toOne.getReferencedPropertyName();

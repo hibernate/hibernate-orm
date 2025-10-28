@@ -13,6 +13,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 
 import org.hamcrest.number.IsCloseTo;
@@ -25,6 +26,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -58,6 +60,11 @@ public class StandardFunctionTests {
 					em.persist(entity);
 				}
 		);
+	}
+
+	@AfterAll
+	public void truncateDate(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
 	@Test
@@ -560,7 +567,10 @@ public class StandardFunctionTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unsupported binary operator: <date> - <timestamp(6)>")
+	@SkipForDialect(dialectClass = CockroachDialect.class,
+			reason = "unsupported binary operator: <date> - <timestamp(6)>")
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Intervals or datetimes are incompatible for the operation")
 	public void testIntervalDiffExpressionsDifferentTypes(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -582,6 +592,7 @@ public class StandardFunctionTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExtractDayOfWeekYearMonth.class)
 	public void testExtractFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -683,7 +694,7 @@ public class StandardFunctionTests {
 	}
 
 	@Test
-//	@FailureExpected
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExtractDayOfWeekYearMonth.class)
 	public void testExtractFunctionWithAssertions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

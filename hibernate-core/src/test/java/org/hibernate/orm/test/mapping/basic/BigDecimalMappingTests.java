@@ -65,9 +65,7 @@ public class BigDecimalMappingTests {
 
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.createMutationQuery("delete EntityOfBigDecimals").executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "EntityOfBigDecimals")

@@ -1,6 +1,5 @@
 [[schema-generation]]
 == Schema Generation
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-schemagen: {core-project-dir}/src/test/java/org/hibernate/orm/test/schema
 :example-dir-schemagen-resources: {core-project-dir}/src/test/resources
@@ -15,7 +14,7 @@ it's much more flexible to manage the schema using incremental migration scripts
 ====
 
 Traditionally, the process of generating  schema from entity mapping has been called `HBM2DDL`.
-To get a list of Hibernate-native and Jakarta Persistence-specific configuration properties consider reading the <<appendices/Configurations.adoc#configurations-hbmddl,Configurations>> section.
+To get a list of Hibernate-native and Jakarta Persistence-specific configuration properties consider reading the <<appendices/SettingsReference.adoc#settings-schema,Configurations>> section.
 
 Considering the following Domain Model:
 
@@ -33,7 +32,7 @@ If the `hibernate.hbm2ddl.auto` configuration is set to `create`, Hibernate is g
 [[sql-schema-generation-domain-model-example]]
 .Auto-generated database schema
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/sql-schema-generation-domain-model-example.sql[]
 ----
@@ -60,7 +59,7 @@ If we configure Hibernate to import the script above:
 [[schema-generation-import-file-configuration-example]]
 .Enabling schema generation import file
 ====
-[source, XML, indent=0]
+[source, xml, indent=0]
 ----
 <property
     name="hibernate.hbm2ddl.import_files"
@@ -113,7 +112,7 @@ a `ConstraintViolationException` is going to be thrown.
 include::{example-dir-schemagen}/CheckTest.java[tag=schema-generation-database-checks-persist-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/schema-generation-database-checks-persist-example.sql[]
 ----
@@ -132,7 +131,7 @@ With Hibernate, you can specify a default value for a given database column usin
 include::{example-dir-schemagen}/ColumnDefaultTest.java[tag=schema-generation-column-default-value-mapping-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/schema-generation-column-default-value-mapping-example.sql[]
 ----
@@ -155,7 +154,7 @@ This way, when the `name` and or `clientId` attribute is null, the database will
 include::{example-dir-schemagen}/ColumnDefaultTest.java[tag=schema-generation-column-default-value-persist-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/schema-generation-column-default-value-persist-example.sql[]
 ----
@@ -181,7 +180,7 @@ Considering the following entity mapping, Hibernate generates the unique constra
 include::{example-dir-schemagen}/UniqueConstraintTest.java[tag=schema-generation-columns-unique-constraint-mapping-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/schema-generation-columns-unique-constraint-mapping-example.sql[]
 ----
@@ -198,7 +197,7 @@ it's no longer possible to add two books with the same title and for the same au
 include::{example-dir-schemagen}/UniqueConstraintTest.java[tag=schema-generation-columns-unique-constraint-persist-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/schema-generation-columns-unique-constraint-persist-example.sql[]
 ----
@@ -223,7 +222,7 @@ Considering the following entity mapping. Hibernate generates the index when cre
 include::{example-dir-schemagen}/IndexTest.java[tag=schema-generation-columns-index-mapping-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/schema-generation-columns-index-mapping-example.sql[]
 ----

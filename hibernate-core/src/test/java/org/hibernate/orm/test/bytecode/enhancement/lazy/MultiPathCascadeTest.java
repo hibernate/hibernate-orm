@@ -41,13 +41,7 @@ public class MultiPathCascadeTest {
 
 	@AfterEach
 	public void cleanupTest(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from A" );
-					session.createQuery( "delete from G" );
-					session.createQuery( "delete from H" );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

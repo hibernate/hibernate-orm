@@ -18,14 +18,14 @@ import java.util.Map;
  * @author Sanne Grinovero
  * @since 6.2
  */
-public final class MapBackedClassValue<V> implements ReadOnlyMap<Class,V> {
+public final class MapBackedClassValue<V> implements ReadOnlyMap<Class<?>,V> {
 
 	private volatile Map<Class<?>, V> map;
 
 	private final ClassValue<V> classValue = new ClassValue<>() {
 		@Override
 		protected V computeValue(final Class<?> type) {
-			final Map<Class<?>, V> m = map;
+			final var m = map;
 			if ( m == null ) {
 				throw new IllegalStateException( "This MapBackedClassValue has been disposed" );
 			}
@@ -44,7 +44,7 @@ public final class MapBackedClassValue<V> implements ReadOnlyMap<Class,V> {
 	}
 
 	@Override
-	public V get(Class key) {
+	public V get(Class<?> key) {
 		return classValue.get( key );
 	}
 
@@ -54,11 +54,11 @@ public final class MapBackedClassValue<V> implements ReadOnlyMap<Class,V> {
 	 */
 	@Override
 	public void dispose() {
-		Map<Class<?>, V> existing = this.map;
-		this.map = null;
+		final var existing = map;
+		map = null;
 		if ( existing != null ) {
-			for ( Map.Entry<Class<?>, V> entry : existing.entrySet() ) {
-				this.classValue.remove( entry.getKey() );
+			for ( var entry : existing.entrySet() ) {
+				classValue.remove( entry.getKey() );
 			}
 		}
 	}

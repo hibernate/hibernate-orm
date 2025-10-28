@@ -256,10 +256,7 @@ public class NotFoundIgnoreOneToOneTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete Coin" ).executeUpdate();
-			session.createMutationQuery( "delete Currency" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Coin")

@@ -4,17 +4,14 @@
  */
 package org.hibernate.metamodel;
 
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -81,14 +78,14 @@ public interface MappingMetamodel extends Metamodel {
 	/**
 	 * Get an entity mapping descriptor based on its Class.
 	 *
-	 * @throws IllegalArgumentException if the name does not refer to an entity
+	 * @throws IllegalArgumentException if the class is not an entity class
 	 *
 	 * @see #findEntityDescriptor
 	 */
 	EntityPersister getEntityDescriptor(Class<?> entityJavaType);
 
 	/**
-	 * Find an entity mapping descriptor based on its Hibernate entity-name.
+	 * Find an entity mapping descriptor based on its Hibernate entity name.
 	 *
 	 * @apiNote Returns {@code null} rather than throwing exception
 	 */
@@ -163,22 +160,6 @@ public interface MappingMetamodel extends Metamodel {
 	 * @see #findCollectionDescriptor
 	 */
 	CollectionPersister findCollectionDescriptor(String role);
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// JPA entity graphs
-
-	RootGraph<?> findNamedGraph(String name);
-	void addNamedEntityGraph(String graphName, RootGraph<?> entityGraph);
-	void forEachNamedGraph(Consumer<RootGraph<?>> action);
-	RootGraph<?> defaultGraph(String entityName);
-	RootGraph<?> defaultGraph(Class<?> entityJavaType);
-	RootGraph<?> defaultGraph(EntityPersister entityDescriptor);
-	RootGraph<?> defaultGraph(EntityDomainType<?> entityDomainType);
-
-	List<RootGraph<?>> findRootGraphsForType(Class<?> baseEntityJavaType);
-	List<RootGraph<?>> findRootGraphsForType(String baseEntityName);
-	List<RootGraph<?>> findRootGraphsForType(EntityPersister baseEntityDescriptor);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SQM model -> Mapping model

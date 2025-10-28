@@ -6,7 +6,7 @@ package org.hibernate.processor.test.data.embeddedid;
 
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
@@ -14,10 +14,11 @@ import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsStr
 /**
  * @author Gavin King
  */
-public class EmbeddedIdTest extends CompilationTest {
+@CompilationTest
+class EmbeddedIdTest {
 	@Test
 	@WithClasses({ Thing.class, ThingRepo.class })
-	public void test() {
+	void test() {
 		System.out.println( getMetaModelSourceAsString( ThingRepo.class ) );
 		assertMetamodelClassGeneratedFor( Thing.class, true );
 		assertMetamodelClassGeneratedFor( Thing.class );

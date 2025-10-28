@@ -64,7 +64,7 @@ public class PropertyAccessMapImpl implements PropertyAccess {
 		}
 
 		@Override
-		public @Nullable Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
+		public @Nullable Object getForInsert(Object owner, Map<Object, Object> mergeMap, SharedSessionContractImplementor session) {
 			return get( owner );
 		}
 
@@ -103,7 +103,7 @@ public class PropertyAccessMapImpl implements PropertyAccess {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
+		@SuppressWarnings({"unchecked", "rawtypes"})
 		public void set(Object target, @Nullable Object value) {
 			( (Map) target ).put( propertyName, value );
 		}

@@ -7,32 +7,23 @@ package org.hibernate.query.internal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.function.BiConsumer;
 
-import org.hibernate.Filter;
 import org.hibernate.Incubating;
 import org.hibernate.QueryParameterException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.cache.spi.QueryKey;
-import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FilterImpl;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.type.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypedExpressible;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -71,19 +62,20 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			SessionFactoryImplementor sessionFactory,
 			ParameterMetadataImplementor parameterMetadata) {
 		this.parameterMetadata = parameterMetadata;
-		final Set<? extends QueryParameter<?>> queryParameters = parameterMetadata.getRegistrations();
+		final var queryParameters = parameterMetadata.getRegistrations();
 		this.parameterBindingMap = linkedMapOfSize( queryParameters.size() );
 		this.parameterBindingMapByNameOrPosition = mapOfSize( queryParameters.size() );
-		for ( QueryParameter<?> queryParameter : queryParameters ) {
+		for ( var queryParameter : queryParameters ) {
 			parameterBindingMap.put( queryParameter, createBinding( sessionFactory, parameterMetadata, queryParameter ) );
 		}
-		for ( Map.Entry<QueryParameter<?>, QueryParameterBinding<?>> entry : parameterBindingMap.entrySet() ) {
-			final QueryParameter<?> queryParameter = entry.getKey();
+		for ( var entry : parameterBindingMap.entrySet() ) {
+			final var queryParameter = entry.getKey();
+			final var parameterBinding = entry.getValue();
 			if ( queryParameter.isNamed() ) {
-				parameterBindingMapByNameOrPosition.put( queryParameter.getName(), entry.getValue() );
+				parameterBindingMapByNameOrPosition.put( queryParameter.getName(), parameterBinding );
 			}
-			else if ( queryParameter.getPosition() != null ) {
-				parameterBindingMapByNameOrPosition.put( queryParameter.getPosition(), entry.getValue() );
+			else if ( queryParameter.isOrdinal() ) {
+				parameterBindingMapByNameOrPosition.put( queryParameter.getPosition(), parameterBinding );
 			}
 		}
 	}
@@ -98,16 +90,17 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		this.parameterMetadata = original.parameterMetadata;
 		this.parameterBindingMap = linkedMapOfSize( original.parameterBindingMap.size() );
 		this.parameterBindingMapByNameOrPosition = mapOfSize( original.parameterBindingMapByNameOrPosition.size() );
-		for ( Map.Entry<QueryParameter<?>, QueryParameterBinding<?>> entry : original.parameterBindingMap.entrySet() ) {
+		for ( var entry : original.parameterBindingMap.entrySet() ) {
 			parameterBindingMap.put( entry.getKey(), createBinding( sessionFactory, entry.getValue() ) );
 		}
-		for ( Map.Entry<QueryParameter<?>, QueryParameterBinding<?>> entry : parameterBindingMap.entrySet() ) {
-			final QueryParameter<?> queryParameter = entry.getKey();
+		for ( var entry : parameterBindingMap.entrySet() ) {
+			final var queryParameter = entry.getKey();
+			final var parameterBinding = entry.getValue();
 			if ( queryParameter.isNamed() ) {
-				parameterBindingMapByNameOrPosition.put( queryParameter.getName(), entry.getValue() );
+				parameterBindingMapByNameOrPosition.put( queryParameter.getName(), parameterBinding );
 			}
 			else if ( queryParameter.getPosition() != null ) {
-				parameterBindingMapByNameOrPosition.put( queryParameter.getPosition(), entry.getValue() );
+				parameterBindingMapByNameOrPosition.put( queryParameter.getPosition(), parameterBinding );
 			}
 		}
 	}
@@ -128,7 +121,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	@Override
 	public <P> QueryParameterBinding<P> getBinding(QueryParameterImplementor<P> parameter) {
-		final QueryParameterBinding<?> binding = parameterBindingMap.get( parameter );
+		final var binding = parameterBindingMap.get( parameter );
 		if ( binding == null ) {
 			throw new IllegalArgumentException(
 					"Cannot create binding for parameter reference [" + parameter + "] - reference is not a parameter of this query"
@@ -140,7 +133,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	@Override
 	public <P> QueryParameterBinding<P> getBinding(int position) {
-		final QueryParameterBinding<?> binding = parameterBindingMapByNameOrPosition.get( position );
+		final var binding = parameterBindingMapByNameOrPosition.get( position );
 		if ( binding == null ) {
 			// Invoke this method to throw the exception
 			parameterMetadata.getQueryParameter( position );
@@ -151,7 +144,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	@Override
 	public <P> QueryParameterBinding<P> getBinding(String name) {
-		final QueryParameterBinding<?> binding = parameterBindingMapByNameOrPosition.get( name );
+		final var binding = parameterBindingMapByNameOrPosition.get( name );
 		if ( binding == null ) {
 			// Invoke this method to throw the exception
 			parameterMetadata.getQueryParameter( name );
@@ -162,9 +155,9 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	@Override
 	public void validate() {
-		for ( Map.Entry<QueryParameter<?>, QueryParameterBinding<?>> entry : parameterBindingMap.entrySet() ) {
+		for ( var entry : parameterBindingMap.entrySet() ) {
 			if ( !entry.getValue().isBound() ) {
-				final QueryParameter<?> queryParameter = entry.getKey();
+				final var queryParameter = entry.getKey();
 				if ( queryParameter.isNamed() ) {
 					throw new QueryParameterException( "No argument for named parameter ':" + queryParameter.getName() + "'" );
 				}
@@ -177,7 +170,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	@Override
 	public boolean hasAnyMultiValuedBindings() {
-		for ( QueryParameterBinding<?> binding : parameterBindingMap.values() ) {
+		for ( var binding : parameterBindingMap.values() ) {
 			if ( binding.isMultiValued() ) {
 				return true;
 			}
@@ -192,8 +185,8 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	@Override
 	public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor session) {
-		final MutableCacheKeyImpl mutableCacheKey = new MutableCacheKeyImpl( parameterBindingMap.size() );
-		final JavaType<Object> tenantIdentifierJavaType = session.getFactory().getTenantIdentifierJavaType();
+		final var mutableCacheKey = new MutableCacheKeyImpl( parameterBindingMap.size() );
+		final var tenantIdentifierJavaType = session.getFactory().getTenantIdentifierJavaType();
 		final Object tenantId = session.getTenantIdentifierValue();
 		mutableCacheKey.addValue( tenantIdentifierJavaType.getMutabilityPlan().disassemble( tenantId, session ) );
 		mutableCacheKey.addHashCode( tenantId == null ? 0 : tenantIdentifierJavaType.extractHashCode( tenantId ) );
@@ -204,14 +197,13 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	}
 
 	private void handleQueryParameters(SharedSessionContractImplementor session, MutableCacheKeyImpl mutableCacheKey) {
-		final TypeConfiguration typeConfiguration = session.getFactory().getTypeConfiguration();
+		final var typeConfiguration = session.getFactory().getTypeConfiguration();
 		// We know that parameters are consumed in processing order, this ensures consistency of generated cache keys
-		for ( Map.Entry<QueryParameter<?>, QueryParameterBinding<?>> entry : parameterBindingMap.entrySet() ) {
-			final QueryParameter<?> queryParameter = entry.getKey();
-			final QueryParameterBinding<?> binding = entry.getValue();
+		for ( var entry : parameterBindingMap.entrySet() ) {
+			final var queryParameter = entry.getKey();
+			final var binding = entry.getValue();
 			assert binding.isBound() : "Found unbound query parameter while generating cache key";
-			final MappingModelExpressible<?> mappingType =
-					determineMappingType( binding, queryParameter, typeConfiguration );
+			final var mappingType = determineMappingType( binding, queryParameter, typeConfiguration );
 			if ( binding.isMultiValued() ) {
 				for ( Object bindValue : binding.getBindValues() ) {
 					assert bindValue != null;
@@ -227,14 +219,14 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	private static void handleFilterParameters(SharedSessionContractImplementor session, MutableCacheKeyImpl mutableCacheKey) {
 		// Note: The following loops rely on getEnabledFilters() and getParameters() to return sorted maps
-		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
-		for ( Map.Entry<String, Filter> entry : loadQueryInfluencers.getEnabledFilters().entrySet() ) {
-			final FilterImpl filter = (FilterImpl) entry.getValue();
-			final FilterDefinition filterDefinition = filter.getFilterDefinition();
-			for ( Map.Entry<String, ?> paramEntry : filter.getParameters().entrySet() ) {
+		final var loadQueryInfluencers = session.getLoadQueryInfluencers();
+		for ( var entry : loadQueryInfluencers.getEnabledFilters().entrySet() ) {
+			final var filter = (FilterImpl) entry.getValue();
+			final var filterDefinition = filter.getFilterDefinition();
+			for ( var paramEntry : filter.getParameters().entrySet() ) {
 				final String parameterName = paramEntry.getKey();
 				final Object paramValue = paramEntry.getValue();
-				final JdbcMapping jdbcMapping = filterDefinition.getParameterJdbcMapping( parameterName );
+				final var jdbcMapping = filterDefinition.getParameterJdbcMapping( parameterName );
 				assert jdbcMapping != null :
 						// should not happen because FilterImpl protects against it
 						"Undefined filter parameter '" + parameterName + "'";
@@ -245,26 +237,26 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	private static MappingModelExpressible<?> determineMappingType(
 			QueryParameterBinding<?> binding, QueryParameter<?> queryParameter, TypeConfiguration typeConfiguration) {
-		final BindableType<?> bindType = binding.getBindType();
+		final var bindType = binding.getBindType();
 		if ( bindType instanceof MappingModelExpressible<?> mappingModelExpressible ) {
 			return mappingModelExpressible;
 		}
 
-		final MappingModelExpressible<?> type = binding.getType();
+		final var type = binding.getType();
 		if ( type != null ) {
 			return type;
 		}
 
 		if ( bindType instanceof JavaTypedExpressible<?> javaTypedExpressible ) {
-			final JavaType<?> jtd = javaTypedExpressible.getExpressibleJavaType();
-			if ( jtd.getJavaTypeClass() != null ) {
+			final var javaTypeClass = javaTypedExpressible.getExpressibleJavaType().getJavaTypeClass();
+			if ( javaTypeClass != null ) {
 				// avoid dynamic models
-				return typeConfiguration.getBasicTypeForJavaType( jtd.getJavaTypeClass() );
+				return typeConfiguration.getBasicTypeForJavaType( javaTypeClass );
 			}
 		}
 
 		if ( binding.isMultiValued() ) {
-			final Iterator<?> iterator = binding.getBindValues().iterator();
+			final var iterator = binding.getBindValues().iterator();
 			final Object firstNonNullBindValue = iterator.hasNext() ? iterator.next() : null;
 			if ( firstNonNullBindValue != null ) {
 				return typeConfiguration.getBasicTypeForJavaType( firstNonNullBindValue.getClass() );

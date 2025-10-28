@@ -67,12 +67,7 @@ public class ManyToManyWithMaykeyAndSchemaDefinitionTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope){
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from EntityA" ).executeUpdate();
-					session.createQuery( "delete from EntityB" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

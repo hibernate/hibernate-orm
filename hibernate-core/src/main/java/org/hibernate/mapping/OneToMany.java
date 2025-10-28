@@ -11,11 +11,12 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 import org.hibernate.type.MappingContext;
+
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 
 /**
  * A mapping model object representing a {@linkplain jakarta.persistence.OneToMany many-to-one association}.
@@ -183,7 +184,7 @@ public class OneToMany implements Value {
 	@Override
 	public boolean[] getColumnInsertability() {
 		//TODO: we could just return all false...
-		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
+		return EMPTY_BOOLEAN_ARRAY;
 	}
 
 	@Override
@@ -194,7 +195,7 @@ public class OneToMany implements Value {
 	@Override
 	public boolean[] getColumnUpdateability() {
 		//TODO: we could just return all false...
-		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
+		return EMPTY_BOOLEAN_ARRAY;
 	}
 
 	@Override
@@ -215,9 +216,7 @@ public class OneToMany implements Value {
 	}
 
 	public void setIgnoreNotFound(boolean ignoreNotFound) {
-		this.notFoundAction = ignoreNotFound
-				? NotFoundAction.IGNORE
-				: null;
+		notFoundAction = ignoreNotFound ? NotFoundAction.IGNORE : null;
 	}
 
 	@Override
@@ -233,5 +232,10 @@ public class OneToMany implements Value {
 	@Override
 	public String toString() {
 		return getClass().getSimpleName();
+	}
+
+	@Override
+	public boolean isPartitionKey() {
+		return false;
 	}
 }

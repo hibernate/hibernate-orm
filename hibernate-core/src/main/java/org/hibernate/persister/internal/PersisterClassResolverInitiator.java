@@ -36,7 +36,7 @@ public class PersisterClassResolverInitiator implements StandardServiceInitiator
 		}
 
 		@SuppressWarnings("unchecked")
-		final Class<? extends PersisterClassResolver> customImplClass =
+		final var customImplClass =
 				customImpl instanceof Class
 						? (Class<? extends PersisterClassResolver>) customImpl
 						: locate( registry, customImpl.toString() );

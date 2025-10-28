@@ -10,7 +10,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -32,11 +34,17 @@ public class PostgreSQLCastingInetJdbcType implements JdbcType {
 	@Override
 	public void appendWriteExpression(
 			String writeExpression,
+			@Nullable Size size,
 			SqlAppender appender,
 			Dialect dialect) {
 		appender.append( "cast(" );
 		appender.append( writeExpression );
 		appender.append( " as inet)" );
+	}
+
+	@Override
+	public boolean isWriteExpressionTyped(Dialect dialect) {
+		return true;
 	}
 
 	@Override

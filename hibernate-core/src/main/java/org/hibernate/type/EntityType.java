@@ -13,14 +13,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.engine.spi.EntityUniqueKey;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifier;
@@ -280,7 +277,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	private Object extractIdentifier(Object entity, SessionFactoryImplementor factory) {
-		final EntityPersister concretePersister = getAssociatedEntityPersister( factory );
+		final var concretePersister = getAssociatedEntityPersister( factory );
 		return concretePersister == null
 				? null
 				: concretePersister.getIdentifier( entity );
@@ -341,7 +338,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 
 	@Override
 	public int getHashCode(Object x, SessionFactoryImplementor factory) {
-		final EntityPersister persister = getAssociatedEntityPersister( factory );
+		final var persister = getAssociatedEntityPersister( factory );
 		if ( isReferenceToPrimaryKey() ) {
 			return persister.getIdentifierType().getHashCode( getId( x, persister ), factory );
 		}
@@ -362,7 +359,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return true;
 		}
 		else {
-			final EntityPersister persister = getAssociatedEntityPersister( factory );
+			final var persister = getAssociatedEntityPersister( factory );
 			if ( isReferenceToPrimaryKey() ) {
 				final Object xid = getId( x, persister );
 				final Object yid = getId( y, persister );
@@ -388,7 +385,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	private static Object getId(Object entity, EntityPersister persister) {
-		final LazyInitializer lazyInitializer = extractLazyInitializer( entity );
+		final var lazyInitializer = extractLazyInitializer( entity );
 		if ( lazyInitializer != null ) {
 			return lazyInitializer.getInternalIdentifier();
 		}
@@ -418,7 +415,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	public EntityPersister getAssociatedEntityPersister(final SessionFactoryImplementor factory) {
-		final EntityPersister persister = associatedEntityPersister;
+		final var persister = associatedEntityPersister;
 		//The following branch implements a simple lazy-initialization, but rather than the canonical
 		//form it returns the local variable to avoid a second volatile read: associatedEntityPersister
 		//needs to be volatile as the initialization might happen by a different thread than the readers.
@@ -460,7 +457,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	private Object getUniqueKey(Object value, SharedSessionContractImplementor session) {
-		final LazyInitializer lazyInitializer = extractLazyInitializer( value );
+		final var lazyInitializer = extractLazyInitializer( value );
 		if ( lazyInitializer != null ) {
 			// If the value is a Proxy and the property access is field, the value returned by
 			// attributeMapping.getAttributeMetadata().getPropertyAccess().getGetter().get( object )
@@ -471,13 +468,12 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		else if ( isPersistentAttributeInterceptable( value ) ) {
 			// If the value is an instance of PersistentAttributeInterceptable, and it is
 			// not initialized, we need to force initialization the get the property value
-			final PersistentAttributeInterceptor interceptor =
-					asPersistentAttributeInterceptable( value ).$$_hibernate_getInterceptor();
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor ) {
+			if ( asPersistentAttributeInterceptable( value ).$$_hibernate_getInterceptor()
+					instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor ) {
 				lazinessInterceptor.forceInitialize( value, null );
 			}
 		}
-		final EntityPersister entityPersister = getAssociatedEntityPersister( session.getFactory() );
+		final var entityPersister = getAssociatedEntityPersister( session.getFactory() );
 		final Object propertyValue = entityPersister.getPropertyValue( value, uniqueKeyPropertyName );
 		// We now have the value of the property-ref we reference. However,
 		// we need to dig a little deeper, as that property might also be
@@ -498,7 +494,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return null;
 		}
 		else {
-			final EntityPersister entityPersister = getAssociatedEntityPersister( sessionFactory );
+			final var entityPersister = getAssociatedEntityPersister( sessionFactory );
 			final Object propertyValue = entityPersister.getPropertyValue( value, uniqueKeyPropertyName );
 			// We now have the value of the property-ref we reference.  However,
 			// we need to dig a little deeper, as that property might also be
@@ -543,10 +539,11 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	private static String identifierString(Object entity, EntityPersister persister) {
-		final LazyInitializer lazyInitializer = extractLazyInitializer( entity );
-		final Object id = lazyInitializer != null
-				? lazyInitializer.getInternalIdentifier()
-				: persister.getIdentifier( entity );
+		final var lazyInitializer = extractLazyInitializer( entity );
+		final Object id =
+				lazyInitializer != null
+						? lazyInitializer.getInternalIdentifier()
+						: persister.getIdentifier( entity );
 		return persister.getIdentifierType().toLoggableString( id, persister.getFactory() );
 	}
 
@@ -666,24 +663,25 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 */
 	protected final Object resolveIdentifier(Object id, SharedSessionContractImplementor session)
 			throws HibernateException {
-
 		// If the association is lazy, retrieve the concrete type if required
-		final String entityName = eager
+		final String entityName = associatedEntityName( id, session );
+		final Object proxyOrEntity = session.internalLoad( entityName, id, eager, isNullable() );
+		final var lazyInitializer = extractLazyInitializer( proxyOrEntity );
+		if ( lazyInitializer != null ) {
+			final boolean isProxyUnwrapEnabled =
+					unwrapProxy
+						&& getAssociatedEntityPersister( session.getFactory() ).isInstrumented();
+			lazyInitializer.setUnwrap( isProxyUnwrapEnabled );
+		}
+		return proxyOrEntity;
+	}
+
+	private String associatedEntityName(Object id, SharedSessionContractImplementor session) {
+		return eager
 				? getAssociatedEntityName()
 				: getAssociatedEntityPersister( session.getFactory() )
 						.resolveConcreteProxyTypeForId( id, session )
 						.getEntityName();
-
-		final Object proxyOrEntity = session.internalLoad( entityName, id, eager, isNullable() );
-
-		final LazyInitializer lazyInitializer = extractLazyInitializer( proxyOrEntity );
-		if ( lazyInitializer != null ) {
-			final boolean isProxyUnwrapEnabled =
-					unwrapProxy && getAssociatedEntityPersister( session.getFactory() ).isInstrumented();
-			lazyInitializer.setUnwrap( isProxyUnwrapEnabled );
-		}
-
-		return proxyOrEntity;
 	}
 
 	protected boolean isNull(Object owner, SharedSessionContractImplementor session) {
@@ -707,11 +705,11 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			String uniqueKeyPropertyName,
 			Object key,
 			SharedSessionContractImplementor session) throws HibernateException {
-		final SessionFactoryImplementor factory = session.getFactory();
+		final var factory = session.getFactory();
 
 		//TODO: implement 2nd level caching?! natural id caching ?! proxies?!
 
-		final EntityUniqueKey entityUniqueKey = new EntityUniqueKey(
+		final var entityUniqueKey = new EntityUniqueKey(
 				entityName,
 				uniqueKeyPropertyName,
 				key,
@@ -719,7 +717,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				session.getFactory()
 		);
 
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final var persistenceContext = session.getPersistenceContextInternal();
 		final Object entity = persistenceContext.getEntity( entityUniqueKey );
 		final Object result;
 		if ( entity == null ) {

@@ -8,32 +8,29 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-import java.sql.Statement;
 import java.util.function.Function;
 
 import org.hibernate.engine.jdbc.internal.FormatStyle;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.AbstractWork;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * @author Steve Ebersole
  */
 public class TemporaryTableHelper {
-	private final static CoreMessageLogger log = CoreLogging.messageLogger( TemporaryTableHelper.class );
 
 	public static final String SESSION_ID_COLUMN_NAME = "hib_sess_id";
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Creation
 
-	public static class TemporaryTableCreationWork extends AbstractWork {
+	public static class TemporaryTableCreationWork extends AbstractReturningWork<Boolean> {
 		private final TemporaryTable temporaryTable;
 		private final TemporaryTableExporter exporter;
 		private final SessionFactoryImplementor sessionFactory;
@@ -58,29 +55,28 @@ public class TemporaryTableHelper {
 		}
 
 		@Override
-		public void execute(Connection connection) {
-			final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-
+		public Boolean execute(Connection connection) {
+			final var jdbcServices = sessionFactory.getJdbcServices();
 			try {
 				final String creationCommand = exporter.getSqlCreateCommand( temporaryTable );
 				logStatement( creationCommand, jdbcServices );
-
-				try (Statement statement = connection.createStatement()) {
+				try ( var statement = connection.createStatement() ) {
 					statement.executeUpdate( creationCommand );
 					jdbcServices.getSqlExceptionHelper().handleAndClearWarnings( statement, WARNING_HANDLER );
+					return Boolean.TRUE;
 				}
 				catch (SQLException e) {
-					log.debugf(
-							"unable to create temporary table [%s]; `%s` failed : %s",
+					CORE_LOGGER.unableToCreateTempTable(
 							temporaryTable.getQualifiedTableName(),
 							creationCommand,
-							e.getMessage()
+							e
 					);
 				}
 			}
 			catch( Exception e ) {
-				log.debugf( "Error creating temporary table(s) : %s", e.getMessage() );
+				CORE_LOGGER.errorCreatingTempTable( e );
 			}
+			return Boolean.FALSE;
 		}
 	}
 
@@ -114,27 +110,25 @@ public class TemporaryTableHelper {
 
 		@Override
 		public void execute(Connection connection) {
-			final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-
+			final var jdbcServices = sessionFactory.getJdbcServices();
 			try {
 				final String dropCommand = exporter.getSqlDropCommand( temporaryTable );
 				logStatement( dropCommand, jdbcServices );
-
-				try (Statement statement = connection.createStatement()) {
+				try ( var statement = connection.createStatement() ) {
 					statement.executeUpdate( dropCommand );
-					jdbcServices.getSqlExceptionHelper().handleAndClearWarnings( statement, WARNING_HANDLER );
+					jdbcServices.getSqlExceptionHelper()
+							.handleAndClearWarnings( statement, WARNING_HANDLER );
 				}
 				catch (SQLException e) {
-					log.debugf(
-							"unable to drop temporary table [%s]; `%s` failed : %s",
+					CORE_LOGGER.unableToDropTempTable(
 							temporaryTable.getQualifiedTableName(),
 							dropCommand,
-							e.getMessage()
+							e
 					);
 				}
 			}
 			catch( Exception e ) {
-				log.debugf( "Error dropping temporary table(s) : %s", e.getMessage() );
+				CORE_LOGGER.errorDroppingTempTable( e );
 			}
 		}
 	}
@@ -148,7 +142,7 @@ public class TemporaryTableHelper {
 			TemporaryTableExporter exporter,
 			Function<SharedSessionContractImplementor,String> sessionUidAccess,
 			SharedSessionContractImplementor session) {
-		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+		final var jdbcCoordinator = session.getJdbcCoordinator();
 		PreparedStatement preparedStatement = null;
 		try {
 			final String sql = exporter.getSqlTruncateCommand( temporaryTable, sessionUidAccess, session );
@@ -160,7 +154,7 @@ public class TemporaryTableHelper {
 			jdbcCoordinator.getResultSetReturn().executeUpdate( preparedStatement, sql );
 		}
 		catch( Throwable t ) {
-			log.unableToCleanupTemporaryIdTable(t);
+			CORE_LOGGER.unableToCleanupTemporaryIdTable(t);
 		}
 		finally {
 			if ( preparedStatement != null ) {
@@ -183,23 +177,23 @@ public class TemporaryTableHelper {
 	private static final SqlExceptionHelper.WarningHandler WARNING_HANDLER =
 			new SqlExceptionHelper.WarningHandlerLoggingSupport() {
 				public boolean doProcess() {
-					return log.isDebugEnabled();
+					return CORE_LOGGER.isDebugEnabled();
 				}
 
 				public void prepare(SQLWarning warning) {
-					log.warningsCreatingTempTable( warning );
+					CORE_LOGGER.warningsCreatingTempTable( warning );
 				}
 
 				@Override
 				protected void logWarning(String description, String message) {
-					log.debug( description );
-					log.debug( message );
+					CORE_LOGGER.debug( description );
+					CORE_LOGGER.debug( message );
 				}
 			};
 
 
 	private static void logStatement(String sql, JdbcServices jdbcServices) {
-		final SqlStatementLogger statementLogger = jdbcServices.getSqlStatementLogger();
-		statementLogger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
+		jdbcServices.getSqlStatementLogger()
+				.logStatement( sql, FormatStyle.BASIC.getFormatter() );
 	}
 }

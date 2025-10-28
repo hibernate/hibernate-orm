@@ -24,7 +24,7 @@ import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
 public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 
 	final AnnotationMetaEntity annotationMetaEntity;
-	private final ExecutableElement method;
+	final ExecutableElement method;
 	final String sessionType;
 	final String sessionName;
 
@@ -61,6 +61,10 @@ public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 
 	String localSessionName() {
 		return isReactiveSessionAccess() ? "_session" : sessionName;
+	}
+
+	String getObjectCall() {
+		return annotationMetaEntity.isProvidedSessionAccess() ? ".getObject()" : "";
 	}
 
 	@Override

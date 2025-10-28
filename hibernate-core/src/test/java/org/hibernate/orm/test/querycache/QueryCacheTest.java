@@ -28,7 +28,7 @@ import org.hibernate.transform.Transformers;
 import org.hibernate.type.Type;
 
 import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProvider;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -81,10 +81,7 @@ public class QueryCacheTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createQuery( "from java.lang.Object" ).list().forEach( session::remove )
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@AfterAll
@@ -808,7 +805,7 @@ public class QueryCacheTest {
 		private static final ThreadLocal<SQLException> CONNECTION_RETRIEVAL_EXCEPTION_TO_THROW = new ThreadLocal<>();
 
 		public ProxyConnectionProvider() {
-			setConnectionProvider( SharedDriverManagerConnectionProviderImpl.getInstance() );
+			setConnectionProvider( SharedDriverManagerConnectionProvider.getInstance() );
 		}
 
 		static void runWithConnectionRetrievalFailure(SQLException exceptionToThrow, Runnable runnable) {

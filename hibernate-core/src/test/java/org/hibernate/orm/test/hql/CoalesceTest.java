@@ -4,11 +4,13 @@
  */
 package org.hibernate.orm.test.hql;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,10 +22,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Johannes Buehler
  */
-@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( value = "HHH-10463")
 @DomainModel(annotatedClasses = org.hibernate.testing.orm.domain.gambit.EntityOfBasics.class)
 @SessionFactory
+@SkipForDialect(dialectClass = InformixDialect.class,
+		reason = "Informix does not allow JDBC parameters as arguments to the COALESCE function (not even with a cast)")
 public class CoalesceTest {
 	final String QRY_STR = "from EntityOfBasics e where e.theString = coalesce(:p , e.theString)";
 

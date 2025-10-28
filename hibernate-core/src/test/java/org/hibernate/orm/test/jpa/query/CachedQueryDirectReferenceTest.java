@@ -75,10 +75,7 @@ public class CachedQueryDirectReferenceTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				em ->
-						em.createQuery( "delete from ImmutableEmployee" ).executeUpdate()
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

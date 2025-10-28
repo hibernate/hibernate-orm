@@ -56,12 +56,7 @@ public class EagerOneToOneMappedByInDoubleEmbeddedTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from EntityB" ).executeUpdate();
-					session.createQuery( "delete from EntityA" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -20,6 +20,7 @@ import org.hibernate.Internal;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SchemaAutoTooling;
@@ -312,6 +313,18 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_IDENTIFIER_RESOLVER
 	 */
 	CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver();
+
+	/**
+	 * Obtain a reference to the current {@linkplain TenantSchemaMapper tenant schema mapper},
+	 * which is used to {@linkplain java.sql.Connection#setSchema set the schema} to the
+	 * {@linkplain TenantSchemaMapper#schemaName schema belonging to the current tenant}
+	 * each time a connection is obtained.
+	 *
+	 * @see org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_SCHEMA_MAPPER
+	 *
+	 * @since 7.1
+	 */
+	TenantSchemaMapper<Object> getTenantSchemaMapper();
 
 	/**
 	 * @see org.hibernate.cfg.TransactionSettings#JTA_TRACK_BY_THREAD

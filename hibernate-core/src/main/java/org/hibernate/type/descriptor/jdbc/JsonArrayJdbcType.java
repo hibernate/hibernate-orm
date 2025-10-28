@@ -9,13 +9,15 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
+import org.hibernate.type.descriptor.jdbc.spi.JsonGeneratingVisitor;
+import org.hibernate.type.format.StringJsonDocumentWriter;
 
 /**
  * Specialized type mapping for {@code JSON_ARRAY} and the JSON ARRAY SQL data type.
@@ -58,20 +60,24 @@ public class JsonArrayJdbcType extends ArrayJdbcType {
 		if ( string == null ) {
 			return null;
 		}
-		return JsonHelper.arrayFromString( javaType, this.getElementJdbcType(), string, options );
+		if ( ((BasicPluralJavaType<?>) javaType).getElementJavaType() instanceof UnknownBasicJavaType<?> ) {
+			return options.getJsonFormatMapper().fromString( string, javaType, options );
+		}
+		else {
+			return JsonHelper.arrayFromString( javaType, this.getElementJdbcType(), string, options );
+		}
 	}
 
 	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {
-		final JdbcType elementJdbcType = getElementJdbcType();
-		final Object[] domainObjects = javaType.unwrap( value, Object[].class, options );
-		if ( elementJdbcType instanceof JsonJdbcType jsonElementJdbcType ) {
-			final EmbeddableMappingType embeddableMappingType = jsonElementJdbcType.getEmbeddableMappingType();
-			return JsonHelper.arrayToString( embeddableMappingType, domainObjects, options );
+		final JavaType<?> elementJavaType = ( (BasicPluralJavaType<?>) javaType ).getElementJavaType();
+		if ( elementJavaType instanceof UnknownBasicJavaType<?> ) {
+			return options.getJsonFormatMapper().toString( value, javaType, options);
 		}
 		else {
-			assert !( elementJdbcType instanceof AggregateJdbcType );
-			final JavaType<?> elementJavaType = ( (BasicPluralJavaType<?>) javaType ).getElementJavaType();
-			return JsonHelper.arrayToString( elementJavaType, elementJdbcType, domainObjects, options );
+			final Object[] domainObjects = javaType.unwrap( value, Object[].class, options );
+			final StringJsonDocumentWriter writer = new StringJsonDocumentWriter();
+			JsonGeneratingVisitor.INSTANCE.visitArray( elementJavaType, getElementJdbcType(), domainObjects, options, writer );
+			return writer.getJson();
 		}
 	}
 

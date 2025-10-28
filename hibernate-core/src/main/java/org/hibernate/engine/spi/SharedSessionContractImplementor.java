@@ -16,9 +16,10 @@ import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.StatelessSession;
-import org.hibernate.action.spi.AfterTransactionCompletionProcess;
+import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.query.Query;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
@@ -74,12 +75,13 @@ public interface SharedSessionContractImplementor
 	/**
 	 * Obtain the {@linkplain SessionFactoryImplementor factory} which created this session.
 	 */
+	@Override
 	SessionFactoryImplementor getFactory();
 
 	/**
 	 * Obtain the {@linkplain SessionFactoryImplementor factory} which created this session.
 	 */
-//	@Override
+	@Override
 	default SessionFactoryImplementor getSessionFactory() {
 		return getFactory();
 	}
@@ -246,6 +248,31 @@ public interface SharedSessionContractImplementor
 	Transaction accessTransaction();
 
 	/**
+	 * The current {@link Transaction} object associated with this session,
+	 * if it has already been created, or {@code null} otherwise.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	Transaction getCurrentTransaction();
+
+	/**
+	 * Access to register callbacks for transaction completion processing.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	TransactionCompletionCallbacks getTransactionCompletionCallbacks();
+
+	/**
+	 * Access to registered callbacks for transaction completion processing.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor();
+
+	/**
 	 * Instantiate an {@link EntityKey} with the given id and for the
 	 * entity represented by the given {@link EntityPersister}.
 	 *
@@ -378,6 +405,7 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @return The flush mode
 	 */
+	@Override
 	FlushMode getHibernateFlushMode();
 
 	/**
@@ -405,6 +433,16 @@ public interface SharedSessionContractImplementor
 	 */
 	default EventSource asEventSource() {
 		throw new ClassCastException( "session is not an EventSource" );
+	}
+
+	/**
+	 * Whether the session {@linkplain StatelessSessionImplementor stateless}, as opposed tp
+	 * {@linkplain SessionImplementor stateful}.
+	 *
+	 * @apiNote Essentially, whether casting this session to {@linkplain StatelessSessionImplementor} will succeed.
+	 */
+	default boolean isStateless() {
+		return false;
 	}
 
 	/**
@@ -550,15 +588,6 @@ public interface SharedSessionContractImplementor
 	void lock(String entityName, Object child, LockOptions lockOptions);
 
 	/**
-	 * Registers the given process for execution after transaction completion.
-	 *
-	 * @param process The process to register
-	 * @since 7.0
-	 */
-	@Incubating
-	void registerProcess(AfterTransactionCompletionProcess process);
-
-	/**
 	 * Attempts to load the entity from the second-level cache.
 	 *
 	 * @param persister The persister for the entity being requested for load
@@ -572,4 +601,24 @@ public interface SharedSessionContractImplementor
 	 */
 	@Incubating
 	Object loadFromSecondLevelCache(EntityPersister persister, EntityKey entityKey, Object instanceToLoad, LockMode lockMode);
+
+	/**
+	 * Wrap all state that lazy loading interceptors might need to
+	 * manage association with this session, or to handle lazy loading
+	 * after detachment via the UUID of the SessionFactory.
+	 * N.B. this captures the current Session, however it can get
+	 * updated to a null session (for detached entities) or updated to
+	 * a different Session.
+	 */
+	@Incubating
+	SessionAssociationMarkers getSessionAssociationMarkers();
+
+	@Override
+	<T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType);
+
+	@Override
+	RootGraphImplementor<?> createEntityGraph(String graphName);
+
+	@Override
+	RootGraphImplementor<?> getEntityGraph(String graphName);
 }

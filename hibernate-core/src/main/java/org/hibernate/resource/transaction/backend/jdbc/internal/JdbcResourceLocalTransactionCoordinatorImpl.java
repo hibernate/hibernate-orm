@@ -12,7 +12,6 @@ import jakarta.persistence.RollbackException;
 import jakarta.transaction.Status;
 
 import org.hibernate.resource.transaction.spi.IsolationDelegate;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransactionAccess;
@@ -25,7 +24,7 @@ import org.hibernate.resource.transaction.spi.TransactionObserver;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import static java.util.Collections.emptyList;
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 
 /**
  * An implementation of {@link TransactionCoordinator} based on managing a
@@ -36,7 +35,6 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * @see JdbcResourceTransaction
  */
 public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionCoordinator {
-	private static final CoreMessageLogger log = messageLogger( JdbcResourceLocalTransactionCoordinatorImpl.class );
 
 	private final TransactionCoordinatorBuilder transactionCoordinatorBuilder;
 	private final JdbcResourceTransactionAccess jdbcResourceTransactionAccess;
@@ -92,7 +90,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	@Override
 	public void explicitJoin() {
 		// nothing to do here, but log a warning
-		log.callingJoinTransactionOnNonJtaEntityManager();
+		JDBC_LOGGER.callingJoinTransactionOnNonJtaEntityManager();
 	}
 
 	@Override
@@ -151,6 +149,8 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		// report entering into a "transactional context"
 		transactionCoordinatorOwner.startTransactionBoundary();
 
+		JDBC_LOGGER.notifyingResourceLocalObserversAfterBegin();
+
 		// trigger the Transaction-API-only after-begin callback
 		transactionCoordinatorOwner.afterTransactionBegin();
 
@@ -158,16 +158,15 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		for ( TransactionObserver observer : observers() ) {
 			observer.afterBegin();
 		}
-		log.trace( "ResourceLocalTransactionCoordinatorImpl#afterBeginCallback" );
 	}
 
 	private void beforeCompletionCallback() {
-		log.trace( "ResourceLocalTransactionCoordinatorImpl#beforeCompletionCallback" );
+		JDBC_LOGGER.notifyingResourceLocalObserversBeforeCompletion();
 		try {
 			transactionCoordinatorOwner.beforeTransactionCompletion();
 			synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();
-			for ( TransactionObserver observer : observers() ) {
-				observer.beforeCompletion();
+			for ( var transactionObserver : observers() ) {
+				transactionObserver.beforeCompletion();
 			}
 		}
 		catch (RuntimeException e) {
@@ -180,12 +179,12 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	}
 
 	private void afterCompletionCallback(boolean successful) {
-		log.tracef( "ResourceLocalTransactionCoordinatorImpl#afterCompletionCallback(%s)", successful );
+		JDBC_LOGGER.notifyingResourceLocalObserversAfterCompletion();
 		final int statusToSend = successful ? Status.STATUS_COMMITTED : Status.STATUS_ROLLEDBACK;
 		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( statusToSend );
 		transactionCoordinatorOwner.afterTransactionCompletion( successful, false );
-		for ( TransactionObserver observer : observers() ) {
-			observer.afterCompletion( successful, false );
+		for ( var transactionObserver : observers() ) {
+			transactionObserver.afterCompletion( successful, false );
 		}
 	}
 
@@ -230,7 +229,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 		protected void errorIfInvalid() {
 			if ( invalid ) {
-				throw new IllegalStateException( "Physical-transaction delegate is no longer valid" );
+				throw new IllegalStateException( "Physical transaction delegate is no longer valid" );
 			}
 		}
 
@@ -262,14 +261,14 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 				}
 				catch (RuntimeException e2) {
 					e.addSuppressed( e2 );
-					log.debug( "Encountered failure rolling back failed commit", e2 );
+					JDBC_LOGGER.encounteredFailureRollingBackFailedCommit( e2 );
 				}
 				throw e;
 			}
 		}
 
 		private void commitRollbackOnly() {
-			log.debug( "On commit, transaction was marked for rollback only, rolling back" );
+			JDBC_LOGGER.onCommitMarkedRollbackOnlyRollingBack();
 			rollback();
 			if ( jpaCompliance.isJpaTransactionComplianceEnabled() ) {
 				throw new RollbackException( "Transaction was marked for rollback only" );
@@ -291,7 +290,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 		@Override
 		public TransactionStatus getStatus() {
-			final TransactionStatus status = jdbcResourceTransaction.getStatus();
+			final var status = jdbcResourceTransaction.getStatus();
 			return rollbackOnly && status == TransactionStatus.ACTIVE
 					? TransactionStatus.MARKED_ROLLBACK
 					: status;
@@ -300,8 +299,8 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		@Override
 		public void markRollbackOnly() {
 			if ( getStatus() != TransactionStatus.ROLLED_BACK ) {
-				if ( log.isDebugEnabled() ) {
-					log.debug( "JDBC transaction marked for rollback only (exception provided for stack trace)",
+				if ( JDBC_LOGGER.isTraceEnabled() ) {
+					JDBC_LOGGER.jdbcTransactionMarkedForRollbackOnly(
 							new Exception( "exception just for purpose of providing stack trace" ) );
 				}
 				rollbackOnly = true;

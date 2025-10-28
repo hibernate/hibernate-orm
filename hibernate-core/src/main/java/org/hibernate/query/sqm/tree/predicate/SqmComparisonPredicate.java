@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
+
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
 
 /**
@@ -115,5 +116,41 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 		hql.append( operator.sqlText() );
 		hql.append( ' ' );
 		rightHandExpression.appendHqlString( hql, context );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmComparisonPredicate that
+			&& this.isNegated() == that.isNegated()
+			&& this.operator == that.operator
+			&& this.leftHandExpression.equals( that.leftHandExpression )
+			&& this.rightHandExpression.equals( that.rightHandExpression );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + operator.hashCode();
+		result = 31 * result + leftHandExpression.hashCode();
+		result = 31 * result + rightHandExpression.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmComparisonPredicate that
+			&& this.isNegated() == that.isNegated()
+			&& this.operator == that.operator
+			&& this.leftHandExpression.isCompatible( that.leftHandExpression )
+			&& this.rightHandExpression.isCompatible( that.rightHandExpression );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + operator.hashCode();
+		result = 31 * result + leftHandExpression.cacheHashCode();
+		result = 31 * result + rightHandExpression.cacheHashCode();
+		return result;
 	}
 }

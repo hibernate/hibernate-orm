@@ -71,13 +71,7 @@ public class OrderByToOneTest {
 
 	@AfterEach
 	protected void cleanupTest(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from TaskVersion" ).executeUpdate();
-					session.createMutationQuery( "delete from UUser" ).executeUpdate();
-					session.createMutationQuery( "delete from Task" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

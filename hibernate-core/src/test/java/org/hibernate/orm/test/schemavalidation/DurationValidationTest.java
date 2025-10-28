@@ -19,7 +19,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
+import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
@@ -64,8 +64,8 @@ public class DurationValidationTest implements ExecutionOptions {
 
 	private static Stream<Arguments> jdbcMetadataExtractorStrategies() {
 		return Stream.of(
-				arguments( JdbcMetadaAccessStrategy.GROUPED.toString() ),
-				arguments( JdbcMetadaAccessStrategy.INDIVIDUALLY.toString() )
+				arguments( JdbcMetadataAccessStrategy.GROUPED.toString() ),
+				arguments( JdbcMetadataAccessStrategy.INDIVIDUALLY.toString() )
 		);
 	}
 

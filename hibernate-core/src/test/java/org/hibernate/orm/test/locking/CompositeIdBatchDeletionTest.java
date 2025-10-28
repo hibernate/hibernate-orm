@@ -34,6 +34,7 @@ import jakarta.persistence.Table;
 import static jakarta.persistence.FetchType.LAZY;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				CompositeIdBatchDeletionTest.Operator.class,
@@ -55,90 +56,69 @@ public class CompositeIdBatchDeletionTest {
 
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					Operator operator = new Operator( OPERATOR_ID );
-					Operator operator2 = new Operator( OPERATOR_ID_2 );
-					Product product = new Product( PRODUCT_ID, operator, "test" );
-					Product product2 = new Product( PRODUCT_ID_2, operator, "test 2" );
-					session.persist( operator );
-					session.persist( operator2 );
-					session.persist( product );
-					session.persist( product2 );
+		scope.inTransaction(session -> {
+			var operator = new Operator( OPERATOR_ID );
+			var operator2 = new Operator( OPERATOR_ID_2 );
+			var product = new Product( PRODUCT_ID, operator, "test" );
+			var product2 = new Product( PRODUCT_ID_2, operator, "test 2" );
+			session.persist( operator );
+			session.persist( operator2 );
+			session.persist( product );
+			session.persist( product2 );
 
-				}
-		);
+		} );
 	}
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Product" ).executeUpdate();
-					session.createMutationQuery( "delete from Operator" ).executeUpdate();
-				}
-		);
+		scope.dropData();
 	}
 
 	@Test
 	public void testDelete(SessionFactoryScope scope) {
-		ProductPK productPK = new ProductPK( PRODUCT_ID, OPERATOR_ID );
-		scope.inTransaction(
-				session -> {
-					Product product = session.find( Product.class, productPK );
-					session.remove( product );
-				}
-		);
+		var productPK = new ProductPK( PRODUCT_ID, OPERATOR_ID );
+		scope.inTransaction(session -> {
+			var product = session.find( Product.class, productPK );
+			session.remove( product );
+		} );
 
-		scope.inTransaction(
-				session -> {
-					Product product = session.find( Product.class, productPK );
-					assertThat( product ).isNull();
-				}
-		);
+		scope.inTransaction(session -> {
+			Product product = session.find( Product.class, productPK );
+			assertThat( product ).isNull();
+		} );
 	}
 
 	@Test
 	public void testUpdate(SessionFactoryScope scope) {
-		ProductPK productPK = new ProductPK( PRODUCT_ID, OPERATOR_ID );
+		var productPK = new ProductPK( PRODUCT_ID, OPERATOR_ID );
+		var newDescription = "new description";
 
-		String newDescription = "new description";
+		scope.inTransaction( session -> {
+			var product = session.find( Product.class, productPK );
+			product.setDescription( newDescription );
+		} );
 
-		scope.inTransaction(
-				session -> {
-					Product product = session.find( Product.class, productPK );
-					product.setDescription( newDescription );
-				}
-		);
-
-		scope.inTransaction(
-				session -> {
-					Product product = session.find( Product.class, productPK );
-					assertThat( product ).isNotNull();
-					assertThat( product.getDescription() ).isEqualTo( newDescription );
-				}
-		);
+		scope.inTransaction( session -> {
+			var product = session.find( Product.class, productPK );
+			assertThat( product ).isNotNull();
+			assertThat( product.getDescription() ).isEqualTo( newDescription );
+		} );
 	}
 
 	@Test
 	public void testDelete2(SessionFactoryScope scope) {
+		var productPK = new ProductPK( PRODUCT_ID, OPERATOR_ID );
+		var productPK2 = new ProductPK( PRODUCT_ID_2, OPERATOR_ID_2 );
+		scope.inTransaction( session -> {
+			session.getReference( Product.class, productPK2 );
+			var product = session.find( Product.class, productPK );
+			session.remove( product );
+		} );
 
-		ProductPK productPK = new ProductPK( PRODUCT_ID, OPERATOR_ID );
-		ProductPK productPK2 = new ProductPK( PRODUCT_ID_2, OPERATOR_ID_2 );
-		scope.inTransaction(
-				session -> {
-					session.getReference( Product.class, productPK2 );
-					Product product = session.find( Product.class, productPK );
-					session.remove( product );
-				}
-		);
-
-		scope.inTransaction(
-				session -> {
-					Product product = session.find( Product.class, productPK );
-					assertThat( product ).isNull();
-				}
-		);
+		scope.inTransaction(session -> {
+			Product product = session.find( Product.class, productPK );
+			assertThat( product ).isNull();
+		} );
 	}
 
 	@IdClass(ProductPK.class)

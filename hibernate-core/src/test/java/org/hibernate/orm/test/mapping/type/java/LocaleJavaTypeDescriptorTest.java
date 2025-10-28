@@ -4,14 +4,13 @@
  */
 package org.hibernate.orm.test.mapping.type.java;
 
-import static org.junit.Assert.assertEquals;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.type.descriptor.java.LocaleJavaType;
+import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
 
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.type.descriptor.java.LocaleJavaType;
-
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests of the {@link LocaleJavaType} class.

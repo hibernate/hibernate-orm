@@ -4,25 +4,32 @@
  */
 package org.hibernate.orm.test.boot.database.qualfiedTableNaming;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
+import jakarta.persistence.Table;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
-
 import org.hibernate.testing.jdbc.JdbcMocks;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+
+import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER;
+import static org.hibernate.cfg.JdbcSettings.DIALECT;
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -30,26 +37,19 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Steve Ebersole
  */
-public class QualifiedTableNamingTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Box.class };
-	}
-
-	@Override
-	protected boolean createSchema() {
-		return false;
-	}
-
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		super.addSettings( settings );
-		settings.put( AvailableSettings.DIALECT, TestDialect.class );
-		settings.put( AvailableSettings.CONNECTION_PROVIDER, MockedConnectionProvider.class.getName() );
-	}
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ServiceRegistry(settings = {
+		@Setting(name=DIALECT, value = "org.hibernate.orm.test.boot.database.qualfiedTableNaming.QualifiedTableNamingTest$TestDialect"),
+		@Setting(name = CONNECTION_PROVIDER, value = "org.hibernate.orm.test.boot.database.qualfiedTableNaming.QualifiedTableNamingTest$MockedConnectionProvider")
+})
+@DomainModel(annotatedClasses = QualifiedTableNamingTest.Box.class)
+@SessionFactory(exportSchema = false)
+public class QualifiedTableNamingTest {
 
 	@Test
-	public void testQualifiedNameSeparator() throws Exception {
+	public void testQualifiedNameSeparator(DomainModelScope modelScope, SessionFactoryScope factoryScope) throws Exception {
+		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
+
 		Namespace.Name namespaceName = new Namespace.Name(
 				Identifier.toIdentifier( "DB1" ),
 				Identifier.toIdentifier( "PUBLIC" )
@@ -57,28 +57,28 @@ public class QualifiedTableNamingTest extends BaseNonConfigCoreFunctionalTestCas
 
 		String expectedName = null;
 
-		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {
+		for ( Namespace namespace : modelScope.getDomainModel().getDatabase().getNamespaces() ) {
 			if ( !namespace.getName().equals( namespaceName ) ) {
 				continue;
 			}
 
 			assertEquals( 1, namespace.getTables().size() );
 
-			expectedName = sessionFactory().getSqlStringGenerationContext().format(
-					namespace.getTables().iterator().next().getQualifiedTableName()
-			);
+			final SqlStringGenerationContext generationContext = sessionFactory.getSqlStringGenerationContext();
+			expectedName = generationContext.format( namespace.getTables().iterator().next().getQualifiedTableName() );
 		}
+
 
 		assertNotNull( expectedName );
 
-		SingleTableEntityPersister persister = (SingleTableEntityPersister) sessionFactory().getRuntimeMetamodels()
+		SingleTableEntityPersister persister = (SingleTableEntityPersister) sessionFactory.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( Box.class.getName());
 		assertEquals( expectedName, persister.getTableName() );
 	}
 
 	@Entity(name = "Box")
-	@jakarta.persistence.Table(name = "Box", schema = "PUBLIC", catalog = "DB1")
+	@Table(name = "Box", schema = "PUBLIC", catalog = "DB1")
 	public static class Box {
 		@Id
 		public Integer id;

@@ -15,7 +15,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeJavaClassMappings;
  */
 public interface BasicJavaType<T> extends JavaType<T> {
 	/**
-	 * Obtain the "recommended" {@link JdbcType SQL type descriptor}
+	 * Obtain the "recommended" {@linkplain JdbcType SQL type descriptor}
 	 * for this Java type. Often, but not always, the source of this
 	 * recommendation is the JDBC specification.
 	 *
@@ -25,8 +25,8 @@ public interface BasicJavaType<T> extends JavaType<T> {
 	 */
 	default JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
 		// match legacy behavior
-		int jdbcTypeCode = JdbcTypeJavaClassMappings.INSTANCE.determineJdbcTypeCodeForJavaClass( getJavaTypeClass() );
-		final JdbcType descriptor = indicators.getJdbcType( indicators.resolveJdbcTypeCode( jdbcTypeCode ) );
+		final int jdbcTypeCode = JdbcTypeJavaClassMappings.INSTANCE.determineJdbcTypeCodeForJavaClass( getJavaTypeClass() );
+		final var descriptor = indicators.getJdbcType( indicators.resolveJdbcTypeCode( jdbcTypeCode ) );
 		return descriptor instanceof AdjustableJdbcType adjustableJdbcType
 				? adjustableJdbcType.resolveIndicatedType( indicators, this )
 				: descriptor;

@@ -4,19 +4,20 @@
  */
 package org.hibernate.event.spi;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Abstract supertype of {@link AbstractPostDatabaseOperationEvent}
- * and {@link AbstractPostDatabaseOperationEvent}.
+ * Base for events which denote database operations.
+ *
+ * @see AbstractPreDatabaseOperationEvent
+ * @see AbstractPostDatabaseOperationEvent
  *
  * @author Gavin King
  *
  * @since 7
  */
 public abstract class AbstractDatabaseOperationEvent extends AbstractEvent {
-
 	private final Object entity;
 	private final Object id;
 	private final EntityPersister persister;
@@ -30,7 +31,7 @@ public abstract class AbstractDatabaseOperationEvent extends AbstractEvent {
 	 * @param persister The entity's persister.
 	 */
 	public AbstractDatabaseOperationEvent(
-			EventSource source,
+			SharedSessionContractImplementor source,
 			Object entity,
 			Object id,
 			EntityPersister persister) {
@@ -42,8 +43,6 @@ public abstract class AbstractDatabaseOperationEvent extends AbstractEvent {
 
 	/**
 	 * Retrieves the entity involved in the database operation.
-	 *
-	 * @return The entity.
 	 */
 	public Object getEntity() {
 		return entity;
@@ -51,8 +50,6 @@ public abstract class AbstractDatabaseOperationEvent extends AbstractEvent {
 
 	/**
 	 * The id to be used in the database operation.
-	 *
-	 * @return The id.
 	 */
 	public Object getId() {
 		return id;
@@ -60,20 +57,8 @@ public abstract class AbstractDatabaseOperationEvent extends AbstractEvent {
 
 	/**
 	 * The persister for the entity.
-	 *
-	 * @return The entity persister.
 	 */
 	public EntityPersister getPersister() {
 		return persister;
-	}
-
-	/**
-	 * The factory which owns the persister for the entity.
-	 *
-	 * @return The factory
-	 */
-	@Override
-	public SessionFactoryImplementor getFactory() {
-		return persister.getFactory();
 	}
 }

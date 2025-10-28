@@ -4,7 +4,6 @@
  */
 package org.hibernate.type.descriptor.converter.internal;
 
-import java.lang.reflect.Array;
 import java.util.Collection;
 
 import org.hibernate.internal.build.AllowReflection;
@@ -12,53 +11,58 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.BasicCollectionJavaType;
 
+import static java.lang.reflect.Array.newInstance;
+
 /**
  * Handles conversion to/from a collection of a converted element type.
  */
-public class CollectionConverter<X extends Collection<Object>, Y> implements BasicValueConverter<X, Y> {
+public class CollectionConverter<X extends Collection<E>, E, R> implements BasicValueConverter<X, R[]> {
 
-	private final BasicValueConverter<Object, Object> elementConverter;
+	private final BasicValueConverter<E, R> elementConverter;
 	private final BasicCollectionJavaType<X, ?> domainJavaType;
-	private final JavaType<Y> relationalJavaType;
+	private final JavaType<R[]> relationalJavaType;
 
 	public CollectionConverter(
-			BasicValueConverter<Object, Object> elementConverter,
-			BasicCollectionJavaType<X, ?> domainJavaType,
-			JavaType<Y> relationalJavaType) {
+			BasicValueConverter<E, R> elementConverter,
+			BasicCollectionJavaType<X, E> domainJavaType,
+			JavaType<R[]> relationalJavaType) {
 		this.elementConverter = elementConverter;
 		this.domainJavaType = domainJavaType;
 		this.relationalJavaType = relationalJavaType;
 	}
 
 	@Override
-	public X toDomainValue(Y relationalForm) {
+	public X toDomainValue(R[] relationalForm) {
 		if ( relationalForm == null ) {
 			return null;
 		}
-		final Object[] relationalArray = (Object[]) relationalForm;
-		final X domainForm = domainJavaType.getSemantics().instantiateRaw( relationalArray.length, null );
-		for ( int i = 0; i < relationalArray.length; i++ ) {
-			domainForm.add( elementConverter.toDomainValue( relationalArray[i] ) );
+		final X domainForm =
+				domainJavaType.getSemantics()
+						.instantiateRaw( relationalForm.length, null );
+		for ( R r : relationalForm ) {
+			domainForm.add( elementConverter.toDomainValue( r ) );
 		}
 		return domainForm;
 	}
 
 	@Override
-	@AllowReflection
-	public Y toRelationalValue(X domainForm) {
+	public R[] toRelationalValue(X domainForm) {
 		if ( domainForm == null ) {
 			return null;
 		}
-		final Object[] relationalArray = (Object[]) Array.newInstance(
-				elementConverter.getRelationalJavaType().getJavaTypeClass(),
-				domainForm.size()
-		);
+		final R[] relationalArray = newRelationalArray( domainForm.size() );
 		int i = 0;
-		for ( Object domainValue : domainForm ) {
+		for ( var domainValue : domainForm ) {
 			relationalArray[i++] = elementConverter.toRelationalValue( domainValue );
 		}
+		return relationalArray;
+	}
+
+	@AllowReflection
+	private R[] newRelationalArray(int size) {
+		final Object result = newInstance( elementConverter.getRelationalJavaType().getJavaTypeClass(), size );
 		//noinspection unchecked
-		return (Y) relationalArray;
+		return (R[]) result;
 	}
 
 	@Override
@@ -67,7 +71,7 @@ public class CollectionConverter<X extends Collection<Object>, Y> implements Bas
 	}
 
 	@Override
-	public JavaType<Y> getRelationalJavaType() {
+	public JavaType<R[]> getRelationalJavaType() {
 		return relationalJavaType;
 	}
 

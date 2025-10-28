@@ -292,6 +292,14 @@ public class EmbeddableAggregate {
 		this.mutableValue = mutableValue;
 	}
 
+	static void assertArraysEquals(EmbeddableAggregate [] a1, EmbeddableAggregate []a2) {
+		Assertions.assertTrue( (a1 == null && a2 == null) || (a1 != null && a2 != null) );
+		Assertions.assertEquals( a1.length, a2.length );
+		for (int i = 0; i < a1.length; i++) {
+			assertEquals(a1[i], a2[i]);
+		}
+	}
+
 	static void assertEquals(EmbeddableAggregate a1, EmbeddableAggregate a2) {
 		Assertions.assertEquals( a1.theInt, a2.theInt );
 		Assertions.assertEquals( a1.theDouble, a2.theDouble );
@@ -336,6 +344,13 @@ public class EmbeddableAggregate {
 			assertNotNull( a2.mutableValue );
 			Assertions.assertEquals( a1.mutableValue.getState(), a2.mutableValue.getState() );
 		}
+	}
+
+	public static EmbeddableAggregate[] createAggregateArray1() {
+		return new EmbeddableAggregate[] {createAggregate1(),createAggregate2()};
+	}
+	public static EmbeddableAggregate[] createAggregateArray2() {
+		return new EmbeddableAggregate[] {createAggregate3()};
 	}
 
 	public static EmbeddableAggregate createAggregate1() {

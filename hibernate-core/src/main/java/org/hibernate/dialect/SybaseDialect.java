@@ -15,6 +15,8 @@ import org.hibernate.dialect.function.SybaseTruncFunction;
 import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SybaseJconnIdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.TransactSQLLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.sql.ast.SybaseSqlAstTranslator;
 import org.hibernate.dialect.sql.ast.SybaseSqmToSqlAstConverter;
 import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
@@ -63,7 +65,6 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
@@ -208,6 +209,11 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public LockingSupport getLockingSupport() {
+		return TransactSQLLockingSupport.SYBASE;
+	}
+
+	@Override
 	public boolean supportsNullPrecedence() {
 		return false;
 	}
@@ -254,7 +260,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 						ObjectNullAsBinaryTypeJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeRegistry()
-								.getDescriptor( Object.class )
+								.resolveDescriptor( Object.class )
 				)
 		);
 		typeContributions.contributeType(
@@ -262,7 +268,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 						ObjectNullAsBinaryTypeJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeRegistry()
-								.getDescriptor( Object.class )
+								.resolveDescriptor( Object.class )
 				)
 		);
 	}
@@ -282,7 +288,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
 
 		functionFactory.stddev();
 		functionFactory.variance();
@@ -498,15 +504,15 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 		// Default to MIXED because the jconnect driver doesn't seem to report anything useful
 		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
-		if ( dbMetaData == null ) {
+		if ( metadata == null ) {
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 
-		return super.buildIdentifierHelper( builder, dbMetaData );
+		return super.buildIdentifierHelper( builder, metadata );
 	}
 
 	@Override
@@ -579,6 +585,11 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		return false;
 	}
 
+	@Override
+	public boolean addPartitionKeyToPrimaryKey() {
+		return true;
+	}
+
 	private static class JTDSSchemaNameResolver implements SchemaNameResolver {
 		@Override
 		public String resolveSchemaName(Connection connection, Dialect dialect) throws SQLException {
@@ -593,8 +604,8 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 				);
 			}
 
-			try (final java.sql.Statement statement = connection.createStatement()) {
-				try (ResultSet resultSet = statement.executeQuery( command )) {
+			try ( var statement = connection.createStatement() ) {
+				try ( var resultSet = statement.executeQuery( command ) ) {
 					return resultSet.next() ? resultSet.getString( 1 ) : null;
 				}
 			}

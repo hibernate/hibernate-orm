@@ -121,10 +121,10 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> {
 			return indexedPath;
 		}
 		SqmFrom<?, ?> path = pathRegistry.findFromByPath( navigablePath.getParent() );
+		final SqmJoin<Object, ?> join;
 		if ( path == null ) {
 			final SqmPathSource<C> referencedPathSource = getReferencedPathSource();
 			final SqmFrom<?, Object> parent = pathRegistry.resolveFrom( getLhs() );
-			final SqmJoin<Object, ?> join;
 			final SqmExpression<?> index;
 			if ( referencedPathSource instanceof ListPersistentAttribute<?, ?> ) {
 				join = new SqmListJoin<>(
@@ -154,11 +154,15 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> {
 			}
 			join.setJoinPredicate( creationState.getCreationContext().getNodeBuilder().equal( index, selector ) );
 			parent.addSqmJoin( join );
-			pathRegistry.register( path = join );
+			pathRegistry.register( join );
+		}
+		else {
+			//noinspection unchecked
+			join = (SqmJoin<Object, ?>) path;
 		}
 		final SqmIndexedCollectionAccessPath<Object> result = new SqmIndexedCollectionAccessPath<>(
 				navigablePath,
-				path,
+				join,
 				selector
 		);
 		pathRegistry.register( result );

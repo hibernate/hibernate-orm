@@ -26,9 +26,11 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
@@ -66,6 +68,8 @@ public class JoinedInheritanceForeignKeyTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason="Informix has a strange syntax for 'alter table ... add constraint'")
 	public void testForeignKeyHasCorrectName() throws Exception {
 		createSchema( new Class[] {Role.class, User.class, Person.class} );
 		checkAlterTableStatement( new AlterTableStatement(

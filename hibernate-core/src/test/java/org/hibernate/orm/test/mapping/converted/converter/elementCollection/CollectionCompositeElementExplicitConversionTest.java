@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test;
 
 import org.hamcrest.CoreMatchers;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * Similar to {@link CollectionCompositeElementConversionTest} except here we have an

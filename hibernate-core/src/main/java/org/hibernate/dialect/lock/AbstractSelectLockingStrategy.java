@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect.lock;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
@@ -20,6 +21,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import static org.hibernate.Timeouts.NO_WAIT_MILLI;
+import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
+import static org.hibernate.Timeouts.WAIT_FOREVER;
+import static org.hibernate.Timeouts.WAIT_FOREVER_MILLI;
 import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
@@ -38,7 +43,7 @@ public abstract class AbstractSelectLockingStrategy implements LockingStrategy {
 	protected AbstractSelectLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		this.lockable = lockable;
 		this.lockMode = lockMode;
-		this.waitForeverSql = generateLockString( LockOptions.WAIT_FOREVER );
+		this.waitForeverSql = generateLockString( WAIT_FOREVER );
 	}
 
 	protected EntityPersister getLockable() {
@@ -49,6 +54,16 @@ public abstract class AbstractSelectLockingStrategy implements LockingStrategy {
 		return lockMode;
 	}
 
+	protected String generateLockString(Timeout lockTimeout) {
+		// for now, use the deprecated form passing the milliseconds to avoid copy/paste.
+		// move that logic here when we can remove that overload.
+		return generateLockString( lockTimeout.milliseconds() );
+	}
+
+	/**
+	 * @deprecated Use {@linkplain #generateLockString(Timeout)} instead.
+	 */
+	@Deprecated
 	protected String generateLockString(int lockTimeout) {
 		final SessionFactoryImplementor factory = lockable.getFactory();
 		final LockOptions lockOptions = new LockOptions( lockMode );
@@ -122,23 +137,19 @@ public abstract class AbstractSelectLockingStrategy implements LockingStrategy {
 	}
 
 	protected String determineSql(int timeout) {
-		switch (timeout) {
-			case LockOptions.WAIT_FOREVER:
-				return waitForeverSql;
-			case LockOptions.NO_WAIT:
-				return getNoWaitSql();
-			case LockOptions.SKIP_LOCKED:
-				return getSkipLockedSql();
-			default:
-				return generateLockString( timeout );
-		}
+		return switch ( timeout ) {
+			case WAIT_FOREVER_MILLI -> waitForeverSql;
+			case NO_WAIT_MILLI -> getNoWaitSql();
+			case SKIP_LOCKED_MILLI -> getSkipLockedSql();
+			default -> generateLockString( timeout );
+		};
 	}
 
 	private String noWaitSql;
 
 	protected String getNoWaitSql() {
 		if ( noWaitSql == null ) {
-			noWaitSql = generateLockString( LockOptions.NO_WAIT );
+			noWaitSql = generateLockString( NO_WAIT_MILLI );
 		}
 		return noWaitSql;
 	}
@@ -147,7 +158,7 @@ public abstract class AbstractSelectLockingStrategy implements LockingStrategy {
 
 	protected String getSkipLockedSql() {
 		if ( skipLockedSql == null ) {
-			skipLockedSql = generateLockString( LockOptions.SKIP_LOCKED );
+			skipLockedSql = generateLockString( SKIP_LOCKED_MILLI );
 		}
 		return skipLockedSql;
 	}

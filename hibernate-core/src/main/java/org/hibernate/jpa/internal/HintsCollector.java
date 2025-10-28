@@ -28,35 +28,27 @@ public class HintsCollector {
 
 	private static Set<String> buildHintsSet() {
 		final HashSet<String> hints = new HashSet<>();
-
 		applyHints( hints, HibernateHints.class );
 		applyHints( hints, SpecHints.class );
-
 		return unmodifiableSet( hints );
 	}
 
 	private static void applyHints(HashSet<String> hints, Class<?> hintsClass) {
-		final Field[] fields = hintsClass.getDeclaredFields();
-		for ( int i = 0; i < fields.length; i++ ) {
-			final Field field = fields[i];
-			if ( !field.getName().startsWith( "HINT_" ) ) {
-				continue;
+		for ( final Field field : hintsClass.getDeclaredFields() ) {
+			if ( field.getName().startsWith( "HINT_" )
+					&& field.getType().equals( String.class ) ) {
+				// the field's value is the hint name
+				try {
+					hints.add( (String) field.get( hintsClass ) );
+				}
+				catch (IllegalAccessException e) {
+					throw new HibernateException(
+							"Unable to generate set of all hints - " + hintsClass.getName(),
+							e
+					);
+				}
 			}
 
-			if ( !field.getType().equals( String.class ) ) {
-				continue;
-			}
-
-			// the field's value is the hint name
-			try {
-				hints.add( (String) field.get( hintsClass ) );
-			}
-			catch (IllegalAccessException e) {
-				throw new HibernateException(
-						"Unable to generate set of all hints - " + hintsClass.getName(),
-						e
-				);
-			}
 		}
 	}
 }

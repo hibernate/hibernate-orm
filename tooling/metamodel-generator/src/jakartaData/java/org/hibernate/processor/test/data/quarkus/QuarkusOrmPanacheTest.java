@@ -8,7 +8,7 @@ import org.hibernate.StatelessSession;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
 
 import jakarta.inject.Inject;
@@ -22,11 +22,12 @@ import java.lang.reflect.Modifier;
 /**
  * @author Gavin King
  */
-public class QuarkusOrmPanacheTest extends CompilationTest {
+@CompilationTest
+class QuarkusOrmPanacheTest {
 
 	@Test
 	@WithClasses({ PanacheBook.class, JakartaDataBookRepository.class })
-	public void testJakartaDataRepositoryMetamodel() throws Exception {
+	void testJakartaDataRepositoryMetamodel() throws Exception {
 		// JD repository
 		System.out.println( TestUtil.getMetaModelSourceAsString( JakartaDataBookRepository.class ) );
 		Class<?> repositoryClass = getMetamodelClassFor( JakartaDataBookRepository.class );

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
@@ -132,9 +133,13 @@ public class Database {
 		return physicalImplicitNamespaceName;
 	}
 
+	public @Nullable Namespace findNamespace(Identifier catalogName, Identifier schemaName) {
+		return namespaceMap.get( new Namespace.Name( catalogName, schemaName ) );
+	}
+
 	public Namespace locateNamespace(Identifier catalogName, Identifier schemaName) {
-		final Namespace.Name name = new Namespace.Name( catalogName, schemaName );
-		final Namespace namespace = namespaceMap.get( name );
+		final var name = new Namespace.Name( catalogName, schemaName );
+		final var namespace = namespaceMap.get( name );
 		return namespace == null ? makeNamespace( name ) : namespace;
 	}
 

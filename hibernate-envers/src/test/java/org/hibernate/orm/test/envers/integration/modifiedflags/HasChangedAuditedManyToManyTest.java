@@ -11,11 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.integration.entityNames.manyToManyAudited.Car;
 import org.hibernate.orm.test.envers.integration.entityNames.manyToManyAudited.Person;
 
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
@@ -26,6 +28,7 @@ import static org.hibernate.orm.test.envers.tools.TestTools.makeList;
  * @author Hern&aacute;n Chanfreau
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
+@RequiresDialect(H2Dialect.class)
 public class HasChangedAuditedManyToManyTest extends AbstractModifiedFlagsOneSessionTest {
 
 	private long id_car1;

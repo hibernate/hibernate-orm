@@ -10,13 +10,10 @@ import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -31,6 +28,10 @@ import org.hibernate.sql.results.internal.NavigablePathMapToInitializer;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingResolution;
+
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+import static org.hibernate.sql.results.ResultsLogger.RESULTS_MESSAGE_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -74,7 +75,7 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 		}
 
 		this.needsResolve = needsResolve;
-		this.valueIndexesToCacheIndexes = cacheIndex == 0 ? ArrayHelper.EMPTY_INT_ARRAY : valueIndexesToCacheIndexes;
+		this.valueIndexesToCacheIndexes = cacheIndex == 0 ? EMPTY_INT_ARRAY : valueIndexesToCacheIndexes;
 		this.rowToCacheSize = cacheIndex;
 	}
 
@@ -109,37 +110,34 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 
 	@Override
 	public JdbcValuesMappingResolution resolveAssemblers(SessionFactoryImplementor sessionFactory) {
-		final JdbcValuesMappingResolutionImpl resolution = this.resolution;
 		if ( resolution != null ) {
 			return resolution;
 		}
-		final AssemblerCreationStateImpl creationState = new AssemblerCreationStateImpl(
-				this,
-				sessionFactory.getSqlTranslationEngine()
-		);
-
-		DomainResultAssembler<?>[] domainResultAssemblers =
-				resolveAssemblers( creationState ).toArray(new DomainResultAssembler[0]);
-		creationState.initializerMap.logInitializers();
-		return this.resolution = new JdbcValuesMappingResolutionImpl(
-				domainResultAssemblers,
-				creationState.hasCollectionInitializers,
-				creationState.initializerListBuilder.build()
-		);
+		else {
+			final AssemblerCreationStateImpl creationState =
+					new AssemblerCreationStateImpl( this,
+							sessionFactory.getSqlTranslationEngine() );
+			final var domainResultAssemblers = resolveAssemblers( creationState );
+			creationState.initializerMap.logInitializers();
+			resolution = new JdbcValuesMappingResolutionImpl(
+					domainResultAssemblers,
+					creationState.hasCollectionInitializers,
+					creationState.initializerListBuilder.build()
+			);
+			return resolution;
+		}
 	}
 
-	private List<DomainResultAssembler<?>> resolveAssemblers(AssemblerCreationState creationState) {
-		final List<DomainResultAssembler<?>> assemblers = CollectionHelper.arrayList( domainResults.size() );
-
-		//noinspection ForLoopReplaceableByForEach
-		for ( int i = 0; i < domainResults.size(); i++ ) {
-			final DomainResultAssembler<?> resultAssembler = domainResults.get( i )
-					.createResultAssembler( null, creationState );
-
+	private DomainResultAssembler<?>[] resolveAssemblers(AssemblerCreationState creationState) {
+		final int size = domainResults.size();
+		final List<DomainResultAssembler<?>> assemblers = arrayList( size );
+		for ( int i = 0; i < size; i++ ) {
+			final DomainResultAssembler<?> resultAssembler =
+					domainResults.get( i )
+							.createResultAssembler( null, creationState );
 			assemblers.add( resultAssembler );
 		}
-
-		return assemblers;
+		return assemblers.toArray( new DomainResultAssembler[0] );
 	}
 
 	@Override
@@ -232,19 +230,13 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 			if ( existing != null ) {
 				if ( fetchedModelPart.getNavigableRole().equals(
 						existing.getInitializedPart().getNavigableRole() ) ) {
-					ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef(
-							"Returning previously-registered initializer : %s",
-							existing
-					);
+					RESULTS_MESSAGE_LOGGER.tracef( "Returning previously-registered initializer: %s", existing );
 					return existing;
 				}
 			}
 
 			final Initializer<?> initializer = producer.createInitializer( resultGraphNode, parent, this );
-			ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef(
-					"Registering initializer : %s",
-					initializer
-			);
+			RESULTS_MESSAGE_LOGGER.tracef( "Registering initializer: %s", initializer );
 
 			if ( initializer instanceof AbstractImmediateCollectionInitializer ) {
 				hasCollectionInitializers = true;
@@ -259,6 +251,5 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 		public SqlAstCreationContext getSqlAstCreationContext() {
 			return sqlAstCreationContexty;
 		}
-
 	}
 }

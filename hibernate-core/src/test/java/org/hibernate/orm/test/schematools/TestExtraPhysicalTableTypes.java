@@ -4,23 +4,21 @@
  */
 package org.hibernate.orm.test.schematools;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
 import org.hibernate.tool.schema.extract.internal.ExtractionContextImpl;
 import org.hibernate.tool.schema.extract.internal.InformationExtractorJdbcDatabaseMetaDataImpl;
@@ -28,155 +26,139 @@ import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
+import org.junit.jupiter.api.Test;
 
-import org.junit.After;
-import org.junit.Assume;
-import org.junit.Test;
+import java.sql.Connection;
+import java.sql.SQLException;
 
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-
-import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
-
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.hibernate.cfg.SchemaToolingSettings.EXTRA_PHYSICAL_TABLE_TYPES;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-10298")
 public class TestExtraPhysicalTableTypes {
-
-	private StandardServiceRegistry ssr;
-	private MetadataImplementor metadata;
-	@After
-	public void tearDown() {
-		StandardServiceRegistryBuilder.destroy( ssr );
-	}
-
 	@Test
-	public void testAddOneExtraPhysicalTableType() throws Exception {
-		buildMetadata( "BASE TABLE" );
-		DdlTransactionIsolator ddlTransactionIsolator = buildDdlTransactionIsolator();
-		try {
-			InformationExtractorJdbcDatabaseMetaDataImplTest informationExtractor = buildInformationExtractorJdbcDatabaseMetaDataImplTest(
-					ddlTransactionIsolator
+	@ServiceRegistry(settings = @Setting(name = EXTRA_PHYSICAL_TABLE_TYPES, value = "BASE TABLE"))
+	public void testAddOneExtraPhysicalTableType(ServiceRegistryScope registryScope) throws Exception{
+		var model = buildMetadata( registryScope );
+		try (var ddlTransactionIsolator = buildDdlTransactionIsolator( registryScope )) {
+			var informationExtractor = buildInformationExtractor(
+					ddlTransactionIsolator,
+					registryScope,
+					model
 			);
 			assertThat( informationExtractor.isPhysicalTableType( "BASE TABLE" ), is( true ) );
 			assertThat( informationExtractor.isPhysicalTableType( "TABLE" ), is( true ) );
 		}
-		finally {
-			ddlTransactionIsolator.release();
-		}
 	}
 
 	@Test
-	public void testAddingMultipleExtraPhysicalTableTypes() throws Exception {
-		buildMetadata( "BASE, BASE TABLE" );
-		DdlTransactionIsolator ddlTransactionIsolator = buildDdlTransactionIsolator();
-		try {
-			InformationExtractorJdbcDatabaseMetaDataImplTest informationExtractor = buildInformationExtractorJdbcDatabaseMetaDataImplTest(
-					ddlTransactionIsolator
+	@ServiceRegistry(settings = @Setting(name = EXTRA_PHYSICAL_TABLE_TYPES, value = "BASE, BASE TABLE"))
+	public void testAddingMultipleExtraPhysicalTableTypes(ServiceRegistryScope registryScope) throws Exception {
+		var model = buildMetadata( registryScope );
+		try (var ddlTransactionIsolator = buildDdlTransactionIsolator( registryScope )) {
+			var informationExtractor = buildInformationExtractor(
+					ddlTransactionIsolator,
+					registryScope,
+					model
 			);
 			assertThat( informationExtractor.isPhysicalTableType( "BASE TABLE" ), is( true ) );
 			assertThat( informationExtractor.isPhysicalTableType( "BASE" ), is( true ) );
 			assertThat( informationExtractor.isPhysicalTableType( "TABLE" ), is( true ) );
 			assertThat( informationExtractor.isPhysicalTableType( "TABLE 1" ), is( false ) );
 		}
-		finally {
-			ddlTransactionIsolator.release();
-		}
 	}
 
 	@Test
-	public void testExtraPhysicalTableTypesPropertyEmptyStringValue() throws Exception {
-		buildMetadata( "  " );
-		Dialect dialect = metadata.getDatabase().getDialect();
+	@ServiceRegistry(settings = @Setting(name = EXTRA_PHYSICAL_TABLE_TYPES, value = " "))
+	public void testExtraPhysicalTableTypesPropertyEmptyStringValue(ServiceRegistryScope registryScope) throws Exception {
+		var model = buildMetadata( registryScope );
+
+		var dialect = model.getDatabase().getDialect();
 		// As of 2.0.202 H2 reports tables as BASE TABLE so we add the type through the dialect
-		Assume.assumeFalse( dialect instanceof H2Dialect && dialect.getVersion().isSameOrAfter( 2 ) );
-		DdlTransactionIsolator ddlTransactionIsolator = buildDdlTransactionIsolator();
-		try {
-			InformationExtractorJdbcDatabaseMetaDataImplTest informationExtractor = buildInformationExtractorJdbcDatabaseMetaDataImplTest(
-					ddlTransactionIsolator
+		assumeFalse( dialect instanceof H2Dialect && dialect.getVersion().isSameOrAfter( 2 ) );
+
+		try (var ddlTransactionIsolator = buildDdlTransactionIsolator( registryScope )) {
+			var informationExtractor = buildInformationExtractor(
+					ddlTransactionIsolator,
+					registryScope,
+					model
 			);
 			assertThat( informationExtractor.isPhysicalTableType( "BASE TABLE" ), is( false ) );
 			assertThat( informationExtractor.isPhysicalTableType( "TABLE" ), is( true ) );
 		}
-		finally {
-			ddlTransactionIsolator.release();
-		}
 	}
 
 	@Test
-	public void testNoExtraPhysicalTableTypesProperty() throws Exception {
-		buildMetadata( null );
-		Dialect dialect = metadata.getDatabase().getDialect();
+	@ServiceRegistry
+	public void testNoExtraPhysicalTableTypesProperty(ServiceRegistryScope registryScope) throws Exception {
+		var model = buildMetadata( registryScope );
+
+		var dialect = model.getDatabase().getDialect();
 		// As of 2.0.202 H2 reports tables as BASE TABLE so we add the type through the dialect
-		Assume.assumeFalse( dialect instanceof H2Dialect && dialect.getVersion().isSameOrAfter( 2 ) );
-		DdlTransactionIsolator ddlTransactionIsolator = buildDdlTransactionIsolator();
-		try {
-			InformationExtractorJdbcDatabaseMetaDataImplTest informationExtractor = buildInformationExtractorJdbcDatabaseMetaDataImplTest(
-					ddlTransactionIsolator
+		assumeFalse( dialect instanceof H2Dialect && dialect.getVersion().isSameOrAfter( 2 ) );
+
+		try (var ddlTransactionIsolator = buildDdlTransactionIsolator( registryScope )) {
+			var informationExtractor = buildInformationExtractor(
+					ddlTransactionIsolator,
+					registryScope,
+					model
 			);
 			assertThat( informationExtractor.isPhysicalTableType( "BASE TABLE" ), is( false ) );
 			assertThat( informationExtractor.isPhysicalTableType( "TABLE" ), is( true ) );
 		}
-		finally {
-			ddlTransactionIsolator.release();
-		}
 	}
 
-	private InformationExtractorJdbcDatabaseMetaDataImplTest buildInformationExtractorJdbcDatabaseMetaDataImplTest(DdlTransactionIsolator ddlTransactionIsolator)
-			throws SQLException {
+	private InformationExtractorJdbcDatabaseMetaDataImplTest buildInformationExtractor(
+			DdlTransactionIsolator ddlTransactionIsolator,
+			ServiceRegistryScope registryScope,
+			MetadataImplementor metadata) throws SQLException {
 		Database database = metadata.getDatabase();
 
 		SqlStringGenerationContext sqlStringGenerationContext =
 				SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() );
 
 		DatabaseInformation dbInfo = new DatabaseInformationImpl(
-				ssr,
+				registryScope.getRegistry(),
 				database.getJdbcEnvironment(),
 				sqlStringGenerationContext,
 				ddlTransactionIsolator,
-				database.getServiceRegistry().getService( SchemaManagementTool.class )
+				registryScope.getRegistry().requireService( SchemaManagementTool.class )
 		);
 
 		ExtractionContextImpl extractionContext = new ExtractionContextImpl(
-				ssr,
+				registryScope.getRegistry(),
 				database.getJdbcEnvironment(),
 				sqlStringGenerationContext,
-				ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess(),
+				registryScope.getRegistry().requireService( JdbcServices.class ).getBootstrapJdbcConnectionAccess(),
 				(ExtractionContext.DatabaseObjectAccess) dbInfo
 
 		);
-		return new InformationExtractorJdbcDatabaseMetaDataImplTest(
-				extractionContext );
+		return new InformationExtractorJdbcDatabaseMetaDataImplTest( extractionContext );
 	}
 
-	private DdlTransactionIsolator buildDdlTransactionIsolator() {
-		final ConnectionProvider connectionProvider = ssr.getService( ConnectionProvider.class );
+	private DdlTransactionIsolator buildDdlTransactionIsolator(ServiceRegistryScope registryScope) {
+		final ConnectionProvider connectionProvider = registryScope.getRegistry().requireService( ConnectionProvider.class );
 		return new DdlTransactionIsolatorTestingImpl(
-				ssr,
+				registryScope.getRegistry(),
 				new JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess( connectionProvider )
 		);
 	}
 
-	private void buildMetadata(String extraPhysicalTableTypes) {
-		if ( extraPhysicalTableTypes == null ) {
-			ssr = ServiceRegistryUtil.serviceRegistry();
-		}
-		else {
-			ssr = ServiceRegistryUtil.serviceRegistryBuilder()
-					.applySetting( Environment.EXTRA_PHYSICAL_TABLE_TYPES, extraPhysicalTableTypes )
-					.build();
-		}
-		metadata = (MetadataImplementor) new MetadataSources( ssr )
+	private MetadataImplementor buildMetadata(ServiceRegistryScope registryScope) {
+		var metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
 				.buildMetadata();
 		metadata.orderColumns( false );
 		metadata.validate();
+		return metadata;
 	}
 
-	public class InformationExtractorJdbcDatabaseMetaDataImplTest extends InformationExtractorJdbcDatabaseMetaDataImpl {
+	public static class InformationExtractorJdbcDatabaseMetaDataImplTest extends InformationExtractorJdbcDatabaseMetaDataImpl {
 
 		private final ExtractionContext extractionContext;
 
@@ -194,7 +176,7 @@ public class TestExtraPhysicalTableTypes {
 		}
 	}
 
-	class DdlTransactionIsolatorImpl implements  DdlTransactionIsolator{
+	static class DdlTransactionIsolatorImpl implements  DdlTransactionIsolator{
 
 		@Override
 		public JdbcContext getJdbcContext() {

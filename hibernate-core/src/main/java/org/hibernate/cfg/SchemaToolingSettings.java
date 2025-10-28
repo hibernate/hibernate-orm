@@ -7,6 +7,7 @@ package org.hibernate.cfg;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
+import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
 import org.hibernate.tool.schema.UniqueConstraintSchemaUpdateStrategy;
 
 /**
@@ -192,9 +193,9 @@ public interface SchemaToolingSettings {
 	String HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
 
 	/**
-	 * For cases where the {@value #JAKARTA_HBM2DDL_SCRIPTS_ACTION} value indicates that schema commands
-	 * should be written to DDL script file, specifies if schema commands should be appended to
-	 * the end of the file rather than written at the beginning of the file.
+	 * For cases where the {@value #JAKARTA_HBM2DDL_SCRIPTS_ACTION} value indicates that schema
+	 * commands should be written to a DDL script file, specifies if schema commands should be
+	 * appended to the end of the file rather than written at the beginning of the file.
 	 * <p>
 	 * Values are: {@code true} for appending schema commands to the end of the file, {@code false}
 	 * for writing schema commands at the beginning.
@@ -216,14 +217,15 @@ public interface SchemaToolingSettings {
 	 * <p>
 	 * The correct extractor to use depends on the format of the SQL script:
 	 * <ul>
-	 * <li>if the script has one complete SQL statement per line, use
+	 * <li>if the script has one complete SQL statement per line, use {@code single-line} or
 	 *     {@link org.hibernate.tool.schema.internal.script.SingleLineSqlScriptExtractor}, or
-	 * <li>if a script contains statements spread over multiple lines, use
+	 * <li>if a script contains statements spread over multiple lines, use {@code multi-line} or
 	 *     {@link org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor}.
 	 * </ul>
 	 *
 	 * @settingDefault {@code org.hibernate.tool.schema.internal.script.SingleLineSqlScriptExtractor}.
 	 *
+	 * @see org.hibernate.tool.schema.spi.SqlScriptCommandExtractor
 	 * @see org.hibernate.tool.schema.internal.script.SingleLineSqlScriptExtractor
 	 * @see org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor
 	 */
@@ -231,9 +233,9 @@ public interface SchemaToolingSettings {
 
 	/**
 	 * Used to specify the {@link org.hibernate.tool.schema.spi.SchemaFilterProvider} to be
-	 * used by create, drop, migrate and validate operations on the database schema. A
+	 * used by create, drop, migrate, and validate operations on the database schema. A
 	 * {@code SchemaFilterProvider} provides filters that can be used to limit the scope of
-	 * these operations to specific namespaces, tables and sequences. All objects are
+	 * these operations to specific namespaces, tables, and sequences. All objects are
 	 * included by default.
 	 *
 	 * @since 5.1
@@ -243,12 +245,12 @@ public interface SchemaToolingSettings {
 	/**
 	 * Setting to choose the strategy used to access the JDBC Metadata.
 	 * <p>
-	 * Valid options are defined by {@link org.hibernate.tool.schema.JdbcMetadaAccessStrategy}.
-	 * {@link org.hibernate.tool.schema.JdbcMetadaAccessStrategy#GROUPED} is the default.
+	 * Valid options are defined by {@link JdbcMetadataAccessStrategy}.
+	 * {@link JdbcMetadataAccessStrategy#GROUPED} is the default.
 	 *
 	 * @settingDefault Grouped, unless {@value #ENABLE_SYNONYMS} is enabled
 	 *
-	 * @see org.hibernate.tool.schema.JdbcMetadaAccessStrategy
+	 * @see JdbcMetadataAccessStrategy
 	 */
 	String HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY = "hibernate.hbm2ddl.jdbc_metadata_extraction_strategy";
 
@@ -293,10 +295,13 @@ public interface SchemaToolingSettings {
 	String HBM2DDL_DEFAULT_CONSTRAINT_MODE = "hibernate.hbm2ddl.default_constraint_mode";
 
 	/**
-	 * Specifies the default storage engine for a relational databases that supports
-	 * multiple storage engines. This property must be set either as an {@link Environment}
-	 * variable or JVM System Property, since the {@link org.hibernate.dialect.Dialect} is
-	 * instantiated before Hibernate property resolution.
+	 * Specifies the default storage engine for a relational database that supports
+	 * multiple storage engines.
+	 *
+	 * This property can be set as an {@link Environment} variable, a JVM System Property
+	 * or a configuration property.
+	 * <p>
+	 * For MySQL, the legal values are {@code innodb} (the default) and {@code myisam}.
 	 *
 	 * @since 5.2.9
 	 */
@@ -314,7 +319,7 @@ public interface SchemaToolingSettings {
 	/**
 	 * Specifies a comma-separated list of extra table types, in addition to the
 	 * default types {@code "TABLE"} and {@code "VIEW"}, to recognize as physical
-	 * tables when performing schema update, creation and validation.
+	 * tables when performing schema update, creation, and validation.
 	 *
 	 * @since 5.0
 	 */

@@ -4,11 +4,7 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.PropertyData;
@@ -18,6 +14,10 @@ import org.hibernate.envers.internal.tools.EntityTools;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.persister.entity.EntityPersister;
 import org.jboss.logging.Logger;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -48,14 +48,14 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 
 	@Override
 	public boolean mapToMapFromEntity(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
 		final HashMap<String, Object> newData = new HashMap<>();
 
 		// If this property is originally non-insertable, but made insertable because it is in a many-to-one "fake"
-		// bi-directional relation, we always store the "old", unchanged data, to prevent storing changes made
+		// bidirectional relation, we always store the "old", unchanged data, to prevent storing changes made
 		// to this field. It is the responsibility of the collection to properly update it if it really changed.
 		Object entity = nonInsertableFake ? oldObj : newObj;
 
@@ -70,7 +70,7 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 
 	@Override
 	public void mapModifiedFlagsToMapFromEntity(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
@@ -89,7 +89,7 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 		}
 	}
 
-	protected boolean checkModified(SessionImplementor session, Object newObj, Object oldObj) {
+	protected boolean checkModified(SharedSessionContractImplementor session, Object newObj, Object oldObj) {
 		if ( nonInsertableFake ) {
 			return false;
 		}

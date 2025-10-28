@@ -7,12 +7,14 @@ package org.hibernate.query.sqm.tree.predicate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -159,6 +161,38 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 			listExpressions.get( i ).appendHqlString( hql, context );
 		}
 		hql.append( ')' );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmInListPredicate<?> that
+			&& this.isNegated() == that.isNegated()
+			&& this.testExpression.equals( that.testExpression )
+			&& Objects.equals( this.listExpressions, that.listExpressions );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + testExpression.hashCode();
+		result = 31 * result + Objects.hashCode( listExpressions );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmInListPredicate<?> that
+			&& this.isNegated() == that.isNegated()
+			&& this.testExpression.isCompatible( that.testExpression )
+			&& SqmCacheable.areCompatible( this.listExpressions, that.listExpressions );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + testExpression.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( listExpressions );
+		return result;
 	}
 
 	@Override

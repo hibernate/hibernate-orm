@@ -4,22 +4,21 @@
  */
 package org.hibernate.orm.test.exceptionhandling;
 
-import static org.junit.Assert.fail;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
-
-import org.hibernate.Session;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.transaction.TransactionUtil;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.fail;
 
 @JiraKey(value = "HHH-12666")
 @RequiresDialect(H2Dialect.class)
@@ -32,32 +31,24 @@ public class IdentifierGenerationExceptionHandlingTest extends BaseExceptionHand
 	}
 
 	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Owner.class,
-				OwnerAddress.class
-		};
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { Owner.class, OwnerAddress.class };
 	}
 
 	@Test
 	public void testIdentifierGeneratorException() {
-		OwnerAddress address = new OwnerAddress();
-		address.owner = null;
-
-		Session s = openSession();
-		s.beginTransaction();
-		try {
-			s.persist( address );
-			s.flush();
-			fail( "should have thrown an exception" );
-		}
-		catch (RuntimeException expected) {
-			exceptionExpectations.onIdentifierGeneratorFailure( expected );
-		}
-		finally {
-			s.getTransaction().rollback();
-			s.close();
-		}
+		TransactionUtil.inTransaction( sessionFactory(), (s) -> {
+			var address = new OwnerAddress();
+			address.owner = null;
+			try {
+				s.persist( address );
+				s.flush();
+				fail( "should have thrown an exception" );
+			}
+			catch (RuntimeException expected) {
+				exceptionExpectations.onIdentifierGeneratorFailure( expected );
+			}
+		} );
 	}
 
 	@Entity(name = "OwnerAddress")

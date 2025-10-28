@@ -4,13 +4,6 @@
  */
 package org.hibernate.orm.test.filter;
 
-import java.sql.Timestamp;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,7 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-
+import org.hamcrest.MatcherAssert;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
@@ -29,7 +22,6 @@ import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.query.Query;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -38,8 +30,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.sql.Timestamp;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Andrea Boriero
@@ -72,10 +70,7 @@ public class OneToManyWithDynamicFilterTest extends AbstractStatefulStatelessFil
 
 	@AfterEach
 	void tearDown() {
-		scope.inTransaction( session -> {
-			session.createQuery( "DELETE FROM ArticleTrading" ).executeUpdate();
-			session.createQuery( "DELETE FROM ArticleRevision" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@ParameterizedTest
@@ -93,11 +88,12 @@ public class OneToManyWithDynamicFilterTest extends AbstractStatefulStatelessFil
 			query.setParameter( "p_0", 1L );
 			query.setParameter( "p_1", "no_classification" );
 			final List<Long> list = query.getResultList();
-			assertThat( list.size(), is( 1 ) );
+			MatcherAssert.assertThat( list.size(), is( 1 ) );
 
 		} );
 	}
 
+	@SuppressWarnings({"unused", "FieldCanBeLocal", "FieldMayBeFinal", "MismatchedQueryAndUpdateOfCollection"})
 	@Entity(name = "ArticleRevision")
 	@Table(name = "REVISION")
 	@FilterDefs({
@@ -140,6 +136,7 @@ public class OneToManyWithDynamicFilterTest extends AbstractStatefulStatelessFil
 		}
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity(name = "ArticleTrading")
 	@Table(name = "TRADING")
 	public static class ArticleTrading {

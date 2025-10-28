@@ -77,9 +77,7 @@ public class SetOperationTests {
 
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> session.createQuery( "delete from EntityOfSets where name is not null" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

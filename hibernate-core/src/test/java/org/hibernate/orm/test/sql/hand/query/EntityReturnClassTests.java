@@ -121,6 +121,6 @@ public class EntityReturnClassTests {
 
 	@AfterEach
 	void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.createMutationQuery( "delete Speech" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

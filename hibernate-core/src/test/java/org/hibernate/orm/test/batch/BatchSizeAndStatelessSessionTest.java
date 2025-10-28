@@ -35,9 +35,7 @@ public class BatchSizeAndStatelessSessionTest {
 
 	@AfterEach
 	public void cleanup( SessionFactoryScope scope ) {
-		scope.inTransaction(
-				session -> session.createMutationQuery( "delete from TestEntity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

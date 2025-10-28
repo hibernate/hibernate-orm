@@ -50,10 +50,7 @@ public class UpdateJoinTests {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from Contact" ).executeUpdate();
-			session.createMutationQuery( "delete from BasicEntity" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

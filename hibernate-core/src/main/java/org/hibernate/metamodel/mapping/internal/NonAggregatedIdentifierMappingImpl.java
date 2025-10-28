@@ -9,35 +9,25 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.EntityHolder;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.MergeContext;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
-import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -47,6 +37,8 @@ import org.hibernate.sql.results.graph.embeddable.internal.NonAggregatedIdentifi
 import org.hibernate.sql.results.graph.embeddable.internal.NonAggregatedIdentifierMappingResult;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
  * A "non-aggregated" composite identifier.
@@ -93,8 +85,8 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		else {
 			// cid = getIdentifierMapper
 			// idClass = getIdentifier
-			final Component virtualIdSource = bootEntityDescriptor.getIdentifierMapper();
-			final Component idClassSource = (Component) bootEntityDescriptor.getIdentifier();
+			final var virtualIdSource = bootEntityDescriptor.getIdentifierMapper();
+			final var idClassSource = (Component) bootEntityDescriptor.getIdentifier();
 
 			virtualIdEmbeddable = new VirtualIdEmbeddable(
 					virtualIdSource,
@@ -195,26 +187,22 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			SqmToSqlAstConverter walker,
 			SqlAstCreationState sqlAstCreationState) {
 		if ( hasContainingClass() ) {
-			final SelectableMappings selectableMappings = getEmbeddableTypeDescriptor();
-			final List<ColumnReference> columnReferences = CollectionHelper.arrayList( selectableMappings.getJdbcTypeCount() );
-			final NavigablePath navigablePath = tableGroup.getNavigablePath()
-					.append( getNavigableRole().getNavigableName() );
-			final TableReference defaultTableReference = tableGroup.resolveTableReference(
-					navigablePath,
-					getContainingTableExpression()
-			);
+			final var selectableMappings = getEmbeddableTypeDescriptor();
+			final List<ColumnReference> columnReferences = arrayList( selectableMappings.getJdbcTypeCount() );
+			final var navigablePath = tableGroup.getNavigablePath().append( getNavigableRole().getNavigableName() );
+			final var defaultTableReference =
+					tableGroup.resolveTableReference( navigablePath, getContainingTableExpression() );
 			identifierValueMapper.forEachSelectable(
 					0,
 					(columnIndex, selection) -> {
-						final TableReference tableReference = defaultTableReference.resolveTableReference( selection.getContainingTableExpression() ) != null
-								? defaultTableReference
-								: tableGroup.resolveTableReference(
-								navigablePath,
-								selection.getContainingTableExpression()
-						);
-						final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver()
-								.resolveSqlExpression( tableReference, selection );
-
+						final var tableReference =
+								defaultTableReference.resolveTableReference( selection.getContainingTableExpression() ) != null
+										? defaultTableReference
+										: tableGroup.resolveTableReference( navigablePath,
+												selection.getContainingTableExpression() );
+						final var columnReference =
+								sqlAstCreationState.getSqlExpressionResolver()
+										.resolveSqlExpression( tableReference, selection );
 						columnReferences.add( (ColumnReference) columnReference );
 					}
 			);
@@ -242,29 +230,27 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 	@Override
 	public Object getIdentifier(Object entity, MergeContext mergeContext) {
 		if ( hasContainingClass() ) {
-			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
+			final var lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
 			if ( lazyInitializer != null ) {
 				return lazyInitializer.getInternalIdentifier();
 			}
-			final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
+			final var embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
 			final Object[] propertyValues = new Object[embeddableTypeDescriptor.getNumberOfAttributeMappings()];
 			for ( int i = 0; i < propertyValues.length; i++ ) {
-				final AttributeMapping attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
+				final var attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
 				final Object o = attributeMapping.getValue( entity );
 				if ( o == null ) {
-					final AttributeMapping idClassAttributeMapping = identifierValueMapper.getAttributeMapping( i );
-					if ( idClassAttributeMapping.getPropertyAccess().getGetter().getReturnTypeClass().isPrimitive() ) {
-						propertyValues[i] = idClassAttributeMapping.getExpressibleJavaType().getDefaultValue();
-					}
-					else {
-						propertyValues[i] = null;
-					}
+					final var idClassAttributeMapping = identifierValueMapper.getAttributeMapping( i );
+					propertyValues[i] =
+							idClassAttributeMapping.getPropertyAccess().getGetter().getReturnTypeClass().isPrimitive()
+									? idClassAttributeMapping.getExpressibleJavaType().getDefaultValue()
+									: null;
 				}
 				//JPA 2 @MapsId + @IdClass points to the pk of the entity
 				else if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping
 						&& !( identifierValueMapper.getAttributeMapping( i ) instanceof ToOneAttributeMapping ) ) {
 					final Object toOne = getIfMerged( o, mergeContext );
-					final ModelPart targetPart =
+					final var targetPart =
 							toOneAttributeMapping.getForeignKeyDescriptor()
 									.getPart( toOneAttributeMapping.getSideNature().inverse() );
 					propertyValues[i] =
@@ -296,31 +282,31 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
 		final Object[] propertyValues = new Object[identifierValueMapper.getNumberOfAttributeMappings()];
-		final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
+		final var embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
 		for ( int i = 0; i < propertyValues.length; i++ ) {
-			final AttributeMapping attribute = embeddableTypeDescriptor.getAttributeMapping( i );
-			final AttributeMapping mappedIdAttributeMapping = identifierValueMapper.getAttributeMapping( i );
-			Object o = mappedIdAttributeMapping.getValue( id );
+			final var attribute = embeddableTypeDescriptor.getAttributeMapping( i );
+			final var mappedIdAttributeMapping = identifierValueMapper.getAttributeMapping( i );
+			Object object = mappedIdAttributeMapping.getValue( id );
 			if ( attribute instanceof ToOneAttributeMapping toOneAttributeMapping
 					&& !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
-				final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType().getEntityPersister();
-				final EntityKey entityKey = session.generateEntityKey( o, entityPersister );
-				final PersistenceContext persistenceContext = session.getPersistenceContext();
-				final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
+				final var entityPersister = toOneAttributeMapping.getEntityMappingType().getEntityPersister();
+				final var entityKey = session.generateEntityKey( object, entityPersister );
+				final var persistenceContext = session.getPersistenceContext();
+				final var holder = persistenceContext.getEntityHolder( entityKey );
 				// use the managed object i.e. proxy or initialized entity
-				o = holder == null ? null : holder.getManagedObject();
-				if ( o == null ) {
+				object = holder == null ? null : holder.getManagedObject();
+				if ( object == null ) {
 					// get the association out of the entity itself
-					o = entityDescriptor.getPropertyValue(
+					object = entityDescriptor.getPropertyValue(
 							entity,
 							toOneAttributeMapping.getAttributeName()
 					);
-					if ( o == null ) {
+					if ( object == null ) {
 						if ( holder != null && holder.isEventuallyInitialized() ) {
-							o = holder.getEntity();
+							object = holder.getEntity();
 						}
 						else {
-							o = session.internalLoad(
+							object = session.internalLoad(
 									entityPersister.getEntityName(),
 									entityKey.getIdentifier(),
 									true,
@@ -330,7 +316,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 					}
 				}
 			}
-			propertyValues[i] = o;
+			propertyValues[i] = object;
 		}
 		embeddableTypeDescriptor.setValues( entity, propertyValues );
 	}

@@ -9,6 +9,7 @@ import java.util.Locale;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.orm.test.dialect.LimitQueryOptions;
 import org.hibernate.query.spi.Limit;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -17,6 +18,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hibernate.Timeouts.NO_WAIT;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -47,7 +49,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
 						"select distinct top(?) f1 as f53245 from table849752 order by f234, f67 desc) row_)" +
 						" select f53245 from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( input, toRowSelection( 10, 15 ) ).toLowerCase(Locale.ROOT) );
+				withLimit( input, toRowSelection( 10, 15 ) ).toLowerCase(Locale.ROOT) );
 	}
 
 	@Test
@@ -57,7 +59,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 		assertEquals(
 				"with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
 						query + ") row_) select * from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 25 ) )
+				withLimit( query, toRowSelection( 1, 25 ) )
 		);
 	}
 
@@ -68,7 +70,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 		assertEquals(
 				"with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
 						query + ") row_) select * from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 25 ) )
+				withLimit( query, toRowSelection( 1, 25 ) )
 		);
 	}
 
@@ -81,7 +83,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 						"select E.fieldA as col0_,E.fieldB\r\n as col1_" +
 						"FROM Employee E WHERE E.firstName = :firstName) row_) select col0_,col1_ from query_ " +
 						"where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 25 ) )
+				withLimit( query, toRowSelection( 1, 25 ) )
 		);
 	}
 
@@ -98,7 +100,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
 						fromColumnNameSQL + ") row_) " +
 						"select rid1688_,deviati16_1688_,sortindex1688_ from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( fromColumnNameSQL, toRowSelection( 1, 10 ) )
+				withLimit( fromColumnNameSQL, toRowSelection( 1, 10 ) )
 		);
 	}
 
@@ -111,7 +113,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
 						"select column1 as col0_, column2 as col1_, column3 as col2_, column4 as col3_ from table1) row_) " +
 						"select col0_,col1_,col2_,col3_ from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( notAliasedSQL, toRowSelection( 3, 5 ) )
+				withLimit( notAliasedSQL, toRowSelection( 3, 5 ) )
 		);
 	}
 
@@ -123,7 +125,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
 						"select column1 c1, column c2, column c3, column c4 from table1) row_) " +
 						"select c1,c2,c3,c4 from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( aliasedSQLNoAs, toRowSelection( 3, 5 ) )
+				withLimit( aliasedSQLNoAs, toRowSelection( 3, 5 ) )
 		);
 	}
 
@@ -134,7 +136,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 		assertEquals( "with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
 				"select column1 c1, from_column c2 from table1) row_) " +
 				"select c1,c2 from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql(sql, toRowSelection(3, 5)));
+				withLimit(sql, toRowSelection(3, 5)));
 	}
 
 	@Test
@@ -151,7 +153,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
 						subselectInSelectClauseSQL + ") row_) " +
 						"select col_0_0_,col_1_0_ from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( subselectInSelectClauseSQL, toRowSelection( 2, 5 ) )
+				withLimit( subselectInSelectClauseSQL, toRowSelection( 2, 5 ) )
 		);
 	}
 
@@ -166,7 +168,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"select top(?) col0_.CONTENTID as CONTENT1_12_ " +
 						"where col0_.CONTENTTYPE='PAGE' and (col0_.CONTENTID in " +
 						"(select distinct col2_.PREVVER from CONTENT col2_ where (col2_.PREVVER is not null)))",
-				dialect.getLimitHandler().processSql( selectDistinctSubselectSQL, toRowSelection( 0, 5 ) )
+				withLimit( selectDistinctSubselectSQL, toRowSelection( 0, 5 ) )
 		);
 	}
 
@@ -181,7 +183,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ " +
 				"from (" + selectDistinctSubselectSQL + ") row_) " +
 				"select CONTENT1_12_ from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( selectDistinctSubselectSQL, toRowSelection( 1, 5 ) )
+				withLimit( selectDistinctSubselectSQL, toRowSelection( 1, 5 ) )
 		);
 	}
 
@@ -200,7 +202,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 						"(select case when persistent0_.name = 'Smith' then 'Neo' else persistent0_.id end) as col1_ " +
 						"from C_Customer persistent0_ where persistent0_.type='Va' order by persistent0_.Order) " +
 						"row_) select col0_,tmp1,col1_ from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( caseSensitiveSQL, toRowSelection( 1, 2 ) )
+				withLimit( caseSensitiveSQL, toRowSelection( 1, 2 ) )
 		);
 	}
 
@@ -213,7 +215,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
 						"select top(?) aggregate_function(distinct p.n) as f1 from table849752 p order by f1) row_) " +
 						"select f1 from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( distinctInAggregateSQL, toRowSelection( 2, 5 ) )
+				withLimit( distinctInAggregateSQL, toRowSelection( 2, 5 ) )
 		);
 	}
 
@@ -226,7 +228,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
 						"select top(?) aggregate_function(distinct p.n) as col0_ from table849752 p order by f1) row_) " +
 						"select col0_ from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( distinctInAggregateSQL, toRowSelection( 2, 5 ) )
+				withLimit( distinctInAggregateSQL, toRowSelection( 2, 5 ) )
 		);
 	}
 
@@ -239,7 +241,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
 						"select top(?) aggregate_function(distinct p.n) f1 from table849752 p order by f1) row_) " +
 						"select f1 from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( distinctInAggregateSQL, toRowSelection( 2, 5 ) )
+				withLimit( distinctInAggregateSQL, toRowSelection( 2, 5 ) )
 		);
 	}
 
@@ -252,7 +254,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 		assertEquals(
 				"select top(?) product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
 						"from Product2 product2x0_ order by product2x0_.id",
-				dialect.getLimitHandler().processSql( query, toRowSelection( 0, 1 ) )
+				withLimit( query, toRowSelection( 0, 1 ) )
 		);
 
 		final String distinctQuery = "select distinct product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
@@ -261,7 +263,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 		assertEquals(
 				"select distinct top(?) product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
 						"from Product2 product2x0_ order by product2x0_.id",
-				dialect.getLimitHandler().processSql( distinctQuery, toRowSelection( 0, 5 ) )
+				withLimit( distinctQuery, toRowSelection( 0, 5 ) )
 		);
 	}
 
@@ -276,7 +278,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 						"select top(?) cast(lc302_doku6_.redniBrojStavke as varchar(255)) as col_0_0_, lc302_doku6_.dokumentiID as col_1_0_ " +
 						"from LC302_Dokumenti lc302_doku6_ order by lc302_doku6_.dokumentiID DESC) row_) " +
 						"select col_0_0_,col_1_0_ from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 3 ) )
+				withLimit( query, toRowSelection( 1, 3 ) )
 		);
 	}
 
@@ -291,7 +293,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 						"select top(?) cast(lc302_doku6_.redniBrojStavke as varchar(255)) f1, lc302_doku6_.dokumentiID f2 " +
 						"from LC302_Dokumenti lc302_doku6_ order by lc302_doku6_.dokumentiID DESC) row_) " +
 						"select f1,f2 from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 3 ) )
+				withLimit( query, toRowSelection( 1, 3 ) )
 		);
 	}
 
@@ -306,7 +308,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 						"select top(?) cast(lc302_doku6_.redniBrojStavke as varchar(255)) as col0_, lc302_doku6_.dokumentiID as col1_ " +
 						"from LC302_Dokumenti lc302_doku6_ order by lc302_doku6_.dokumentiID DESC) row_) " +
 						"select col0_,col1_ from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 3 ) )
+				withLimit( query, toRowSelection( 1, 3 ) )
 		);
 	}
 
@@ -319,7 +321,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
 						"select top(?) t1.*, t2.* from tab1 t1, tab2 t2 where t1.ref = t2.ref order by t1.id desc) row_) " +
 						"select * from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 3 ) )
+				withLimit( query, toRowSelection( 1, 3 ) )
 		);
 	}
 
@@ -332,7 +334,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
 						"select top(?) * from tab1 t1, tab2 t2 where t1.ref = t2.ref order by t1.id desc) row_) " +
 						"select * from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 3 ) )
+				withLimit( query, toRowSelection( 1, 3 ) )
 		);
 	}
 
@@ -344,7 +346,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 		assertEquals( "with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
 						"select [Created From Nonstock Item] as col0_, field2 as col1_ from table1) row_) " +
 						"select col0_,col1_ from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 5 ) )
+				withLimit( query, toRowSelection( 1, 5 ) )
 		);
 	}
 
@@ -356,7 +358,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 		assertEquals( "with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
 						"select [Created From Item] c1, field2 as col0_ from table1) row_) " +
 						"select c1,col0_ from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 5 ) )
+				withLimit( query, toRowSelection( 1, 5 ) )
 		);
 	}
 
@@ -368,7 +370,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 		assertEquals( "with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
 						"select [Created From Item] as c1, field2 as col0_ from table1) row_) " +
 						"select c1,col0_ from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 5 ) )
+				withLimit( query, toRowSelection( 1, 5 ) )
 		);
 	}
 
@@ -381,7 +383,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
 						"select top(?) t1.c1 as col_0_0, (select case when count(t2.c1)>0 then 'ADDED' else 'UNMODIFIED' end from table2 t2 WHERE (t2.c1 in (?))) as col_1_0 from table1 t1 WHERE 1=1 ORDER BY t1.c1 ASC) row_) " +
 						"select col_0_0,col_1_0 from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 5 ) )
+				withLimit( query, toRowSelection( 1, 5 ) )
 		);
 	}
 
@@ -393,7 +395,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 		assertEquals(
 				"with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
 						"select top(?) t1.c1 as col_0_0 FROM table1 t1 where t1.c1 = '(123' ORDER BY t1.c1 ASC) row_) select col_0_0 from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 5 ) )
+				withLimit( query, toRowSelection( 1, 5 ) )
 		);
 	}
 
@@ -404,7 +406,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 
 		assertEquals(
 				"select top(?) t1.c1 as col_0_0, (select case when count(t2.c1)>0 then 'ADDED' else 'UNMODIFIED' end from table2 t2 WHERE (t2.c1 in (?))) as col_1_0 from table1 t1 WHERE 1=1 ORDER BY t1.c1 ASC",
-				dialect.getLimitHandler().processSql( query, toRowSelection( 0, 5 ) )
+				withLimit( query, toRowSelection( 0, 5 ) )
 		);
 	}
 
@@ -417,14 +419,14 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 		final String query1 = "WITH a (c1, c2) AS (SELECT c1, c2 FROM t) SELECT c1, c2 FROM a";
 		assertEquals(
 				"WITH a (c1, c2) AS (SELECT c1, c2 FROM t) SELECT top(?) c1, c2 FROM a",
-				dialect.getLimitHandler().processSql( query1, selection )
+				withLimit( query1, selection )
 		);
 
 		// test top-based CTE with single CTE query_ definition and various tab, newline spaces
 		final String query2 = "  \n\tWITH a (c1\n\t,c2)\t\nAS (SELECT\n\tc1,c2 FROM t)\t\nSELECT c1, c2 FROM a";
 		assertEquals(
 				"WITH a (c1\n\t,c2)\t\nAS (SELECT\n\tc1,c2 FROM t)\t\nSELECT top(?) c1, c2 FROM a",
-				dialect.getLimitHandler().processSql( query2, selection )
+				withLimit( query2, selection )
 		);
 
 		// test top-based CTE with multiple CTE query_ definitions with no odd formatting
@@ -433,7 +435,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 		assertEquals(
 				"WITH a (c1, c2) AS (SELECT c1, c2 FROM t1), b (b1, b2) AS (SELECT b1, b2 FROM t2) " +
 						"SELECT top(?) c1, c2, b1, b2 FROM t1, t2 WHERE t1.c1 = t2.b1",
-				dialect.getLimitHandler().processSql( query3, selection )
+				withLimit( query3, selection )
 		);
 
 		// test top-based CTE with multiple CTE query_ definitions and various tab, newline spaces
@@ -442,7 +444,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 		assertEquals(
 				"WITH a (c1, c2) AS\n\r (SELECT c1, c2 FROM t1)\n\r, b (b1, b2)\tAS\t(SELECT b1, b2 FROM t2)" +
 						"    SELECT top(?) c1, c2, b1, b2 FROM t1, t2 WHERE t1.c1 = t2.b1",
-				dialect.getLimitHandler().processSql( query4, selection )
+				withLimit( query4, selection )
 		);
 	}
 
@@ -458,7 +460,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 						"(order by current_timestamp) as rownumber_ from (SELECT c1 as col0_, c2 as col1_ " +
 						"FROM a) row_) select col0_,col1_ from query_ where rownumber_>=? " +
 						"and rownumber_<?",
-				dialect.getLimitHandler().processSql( query1, selection )
+				withLimit( query1, selection )
 		);
 
 		// test non-top based CTE with single CTE query_ definition and various tab, newline spaces
@@ -468,7 +470,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 						" over (order by current_timestamp) as rownumber_ from (SELECT c1 as col0_, c2 " +
 						"as col1_ FROM a) row_) select col0_,col1_ from query_ where rownumber_>=" +
 						"? and rownumber_<?",
-				dialect.getLimitHandler().processSql( query2, selection )
+				withLimit( query2, selection )
 		);
 
 		// test non-top based CTE with multiple CTE query_ definitions with no odd formatting
@@ -479,7 +481,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 						"select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
 						"SELECT c1 as col0_, c2 as col1_, b1 as col2_, b2 as col3_ FROM t1, t2 WHERE t1.c1 = t2.b1) row_)" +
 						" select col0_,col1_,col2_,col3_ from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( query3, selection )
+				withLimit( query3, selection )
 		);
 
 		// test top-based CTE with multiple CTE query_ definitions and various tab, newline spaces
@@ -490,7 +492,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 						"select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
 						"SELECT c1 as col0_, c2 as col1_, b1 as col2_, b2 as col3_ FROM t1, t2 WHERE t1.c1 = t2.b1) row_)" +
 						" select col0_,col1_,col2_,col3_ from query_ where rownumber_>=? and rownumber_<?",
-				dialect.getLimitHandler().processSql( query4, selection )
+				withLimit( query4, selection )
 		);
 	}
 
@@ -510,8 +512,8 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	public void testAppendLockHintReadPastLockingNoTimeOut() {
 		final String expectedLockHint = "tab1 with (updlock,rowlock,readpast,nowait)";
 
-		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE_SKIPLOCKED );
-		lockOptions.setTimeOut( LockOptions.NO_WAIT );
+		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE_SKIPLOCKED )
+				.setTimeout( NO_WAIT );
 		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
 
 		assertEquals( expectedLockHint, lockHint );
@@ -533,8 +535,8 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	public void testAppendLockHintPessimisticReadNoTimeOut() {
 		final String expectedLockHint = "tab1 with (holdlock,rowlock,nowait)";
 
-		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_READ );
-		lockOptions.setTimeOut( LockOptions.NO_WAIT );
+		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_READ )
+				.setTimeout( NO_WAIT );
 		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
 
 		assertEquals( expectedLockHint, lockHint );
@@ -556,8 +558,8 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	public void testAppendLockHintWriteWithNoTimeOut() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock,nowait)";
 
-		LockOptions lockOptions = new LockOptions( LockMode.WRITE );
-		lockOptions.setTimeOut( LockOptions.NO_WAIT );
+		LockOptions lockOptions = new LockOptions( LockMode.WRITE )
+				.setTimeout( NO_WAIT );
 
 		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
 
@@ -580,8 +582,8 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	public void testAppendLockHintUpgradeNoWaitNoTimeout() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock,nowait)";
 
-		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE_NOWAIT );
-		lockOptions.setTimeOut( LockOptions.NO_WAIT );
+		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE_NOWAIT )
+				.setTimeout( NO_WAIT );
 		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
 
 		assertEquals( expectedLockHint, lockHint );
@@ -603,8 +605,8 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	public void testAppendLockHintUpgradeNoTimeout() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock,nowait)";
 
-		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
-		lockOptions.setTimeOut( LockOptions.NO_WAIT );
+		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE )
+				.setTimeout( NO_WAIT );
 		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
 
 		assertEquals( expectedLockHint, lockHint );
@@ -626,11 +628,15 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	public void testAppendLockHintPessimisticWriteNoTimeOut() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock,nowait)";
 
-		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
-		lockOptions.setTimeOut( LockOptions.NO_WAIT );
+		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE )
+				.setTimeout( NO_WAIT );
 		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
 
 		assertEquals( expectedLockHint, lockHint );
+	}
+
+	private String withLimit(String sql, Limit limit) {
+		return dialect.getLimitHandler().processSql( sql, -1, null, new LimitQueryOptions( limit ) );
 	}
 
 	private Limit toRowSelection(int firstRow, int maxRows) {

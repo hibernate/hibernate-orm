@@ -12,15 +12,14 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.PropertyValueException;
 import org.hibernate.TransientPropertyValueException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
@@ -36,41 +35,41 @@ import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.internal.OrphanRemovalAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.internal.UnresolvedEntityInsertActions;
-import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
-import org.hibernate.cache.CacheException;
-import org.hibernate.engine.internal.NonNullableTransientDependencies;
+import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static java.lang.System.arraycopy;
+import static org.hibernate.action.internal.ActionLogging.ACTION_LOGGER;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Responsible for maintaining the queue of actions related to events.
  * <p>
- * The {@code ActionQueue} holds the DML operations queued as part of a session's transactional-write-behind semantics.
- * The DML operations are queued here until a flush forces them to be executed against the database.
+ * The {@code ActionQueue} holds the DML operations queued as part of a
+ * session's transactional-write-behind semantics. The DML operations are
+ * queued here until a flush forces them to be executed against the database.
+ *
+ * @apiNote This class is logically part of the {@linkplain Executable action}
+ *          subsystem and so it would more naturally belong in the package
+ *          {@link org.hibernate.action.spi}. It is located here for purely
+ *          historical reasons.
  *
  * @author Steve Ebersole
  * @author Gail Badner
  * @author Anton Marsden
  */
-public class ActionQueue {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ActionQueue.class );
+public class ActionQueue implements TransactionCompletionCallbacks {
 
 	private final SessionImplementor session;
 
@@ -101,8 +100,7 @@ public class ActionQueue {
 
 
 	private transient boolean isTransactionCoordinatorShared;
-	private AfterTransactionCompletionProcessQueue afterTransactionProcesses;
-	private BeforeTransactionCompletionProcessQueue beforeTransactionProcesses;
+	private TransactionCompletionCallbacksImplementor transactionCompletionCallbacks;;
 
 	// Extract this as a constant to perform efficient iterations:
 	// method values() otherwise allocates a new array on each invocation.
@@ -234,13 +232,14 @@ public class ActionQueue {
 	public ActionQueue(SessionImplementor session) {
 		this.session = session;
 		isTransactionCoordinatorShared = false;
+		transactionCompletionCallbacks = new TransactionCompletionCallbacksImpl( session );
 	}
 
 	public void clear() {
-		for ( OrderedActions value : ORDERED_OPERATIONS ) {
-			final ExecutableList<?> list = value.getActions( this );
-			if ( list != null ) {
-				list.clear();
+		for ( var value : ORDERED_OPERATIONS ) {
+			final var queue = value.getActions( this );
+			if ( queue != null ) {
+				queue.clear();
 			}
 		}
 		if ( unresolvedInsertions != null ) {
@@ -254,7 +253,7 @@ public class ActionQueue {
 	 * @param action The action representing the entity insertion
 	 */
 	public void addAction(EntityInsertAction action) {
-		LOG.tracev( "Adding an EntityInsertAction for [{0}] object", action.getEntityName() );
+		ACTION_LOGGER.addingEntityInsertAction( action.getEntityName() );
 		addInsertAction( action );
 	}
 
@@ -262,18 +261,20 @@ public class ActionQueue {
 		if ( insert.isEarlyInsert() ) {
 			// For early inserts, must execute inserts before finding non-nullable transient entities.
 			// TODO: find out why this is necessary
-			LOG.tracev( "Executing inserts before finding non-nullable transient entities for early insert: [{0}]", insert );
+			ACTION_LOGGER.executingInsertsBeforeFindingNonNullableTransientEntitiesForEarlyInsert( insert );
 			executeInserts();
 		}
-		final NonNullableTransientDependencies nonNullableTransientDependencies = insert.findNonNullableTransientEntities();
+		final var nonNullableTransientDependencies = insert.findNonNullableTransientEntities();
 		if ( nonNullableTransientDependencies == null ) {
-			LOG.tracev( "Adding insert with no non-nullable, transient entities: [{0}]", insert );
+			ACTION_LOGGER.addingInsertWithNoNonNullableTransientEntities( insert );
 			addResolvedEntityInsertAction( insert );
 		}
 		else {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Adding insert with non-nullable, transient entities; insert=[{0}], dependencies=[{1}]", insert,
-							nonNullableTransientDependencies.toLoggableString( insert.getSession() ) );
+			if ( ACTION_LOGGER.isTraceEnabled() ) {
+				ACTION_LOGGER.addingInsertWithNonNullableTransientEntities(
+						insert,
+						nonNullableTransientDependencies.toLoggableString( insert.getSession() )
+				);
 			}
 			if ( unresolvedInsertions == null ) {
 				unresolvedInsertions = new UnresolvedEntityInsertActions();
@@ -284,20 +285,20 @@ public class ActionQueue {
 
 	private void addResolvedEntityInsertAction(AbstractEntityInsertAction insert) {
 		if ( insert.isEarlyInsert() ) {
-			LOG.trace( "Executing insertions before resolved early-insert" );
+			ACTION_LOGGER.executingInsertionsBeforeResolvedEarlyInsert();
 			executeInserts();
-			LOG.debug( "Executing identity-insert immediately" );
+			ACTION_LOGGER.executingIdentityInsertImmediately();
 			execute( insert );
 		}
 		else {
-			LOG.trace( "Adding resolved non-early insert action." );
+			ACTION_LOGGER.addingResolvedNonEarlyInsertAction();
 			OrderedActions.EntityInsertAction.ensureInitialized( this );
 			insertions.add( insert );
 		}
 		if ( !insert.isVeto() ) {
 			insert.makeEntityManaged();
 			if ( unresolvedInsertions != null ) {
-				for ( AbstractEntityInsertAction resolvedAction :
+				for ( var resolvedAction :
 						unresolvedInsertions.resolveDependentActions( insert.getInstance(), session ) ) {
 					addResolvedEntityInsertAction( resolvedAction );
 				}
@@ -317,7 +318,7 @@ public class ActionQueue {
 	 * @param action The action representing the entity insertion
 	 */
 	public void addAction(EntityIdentityInsertAction action) {
-		LOG.tracev( "Adding an EntityIdentityInsertAction for [{0}] object", action.getEntityName() );
+		ACTION_LOGGER.addingEntityIdentityInsertAction( action.getEntityName() );
 		addInsertAction( action );
 	}
 
@@ -374,7 +375,7 @@ public class ActionQueue {
 						.isDeletedOrGone() ) {
 			// We need to check if this collection's owner is an orphan being removed,
 			// which case we should remove the collection first to avoid constraint violations
-			for ( OrphanRemovalAction orphanRemoval : orphanRemovals ) {
+			for ( var orphanRemoval : orphanRemovals ) {
 				if ( orphanRemoval.getInstance() == action.getAffectedOwner() ) {
 					OrderedActions.OrphanCollectionRemoveAction.ensureInitialized( this );
 					orphanCollectionRemovals.add( action );
@@ -416,20 +417,16 @@ public class ActionQueue {
 	}
 
 	private void registerCleanupActions(Executable executable) {
-		if ( executable.getBeforeTransactionCompletionProcess() != null ) {
-			if ( beforeTransactionProcesses == null ) {
-				beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
-			}
-			beforeTransactionProcesses.register( executable.getBeforeTransactionCompletionProcess() );
+		final var beforeCompletionCallback = executable.getBeforeTransactionCompletionProcess();
+		if ( beforeCompletionCallback != null ) {
+			transactionCompletionCallbacks.registerCallback( beforeCompletionCallback );
 		}
-		if ( session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
+		if ( getSessionFactoryOptions().isQueryCacheEnabled() ) {
 			invalidateSpaces( executable.getPropertySpaces() );
 		}
-		if ( executable.getAfterTransactionCompletionProcess() != null ) {
-			if ( afterTransactionProcesses == null ) {
-				afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
-			}
-			afterTransactionProcesses.register( executable.getAfterTransactionCompletionProcess() );
+		final var afterCompletionCallback = executable.getAfterTransactionCompletionProcess();
+		if ( afterCompletionCallback != null ) {
+			transactionCompletionCallbacks.registerCallback( afterCompletionCallback );
 		}
 	}
 
@@ -459,18 +456,14 @@ public class ActionQueue {
 		}
 	}
 
-	public void registerProcess(AfterTransactionCompletionProcess process) {
-		if ( afterTransactionProcesses == null ) {
-			afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
-		}
-		afterTransactionProcesses.register( process );
+	@Override
+	public void registerCallback(BeforeCompletionCallback process) {
+		transactionCompletionCallbacks.registerCallback( process );
 	}
 
-	public void registerProcess(BeforeTransactionCompletionProcess process) {
-		if ( beforeTransactionProcesses == null ) {
-			beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
-		}
-		beforeTransactionProcesses.register( process );
+	@Override
+	public void registerCallback(AfterCompletionCallback process) {
+		transactionCompletionCallbacks.registerCallback( process );
 	}
 
 	/**
@@ -491,12 +484,12 @@ public class ActionQueue {
 	 */
 	public void executeActions() throws HibernateException {
 		if ( hasUnresolvedEntityInsertActions() ) {
-			final AbstractEntityInsertAction insertAction =
+			final var insertAction =
 					unresolvedInsertions.getDependentEntityInsertActions()
 							.iterator().next();
-			final NonNullableTransientDependencies transientEntities = insertAction.findNonNullableTransientEntities();
+			final var transientEntities = insertAction.findNonNullableTransientEntities();
 			final Object transientEntity = transientEntities.getNonNullableTransientEntities().iterator().next();
-			final String path = transientEntities.getNonNullableTransientPropertyPaths(transientEntity).iterator().next();
+			final String path = transientEntities.getNonNullableTransientPropertyPaths( transientEntity ).iterator().next();
 			final String transientEntityName = session.bestGuessEntityName( transientEntity );
 			final String entityName = insertAction.getEntityName();
 			throw new TransientPropertyValueException(
@@ -508,7 +501,7 @@ public class ActionQueue {
 					path );
 		}
 
-		for ( OrderedActions action : ORDERED_OPERATIONS ) {
+		for ( var action : ORDERED_OPERATIONS ) {
 			executeActions( action.getActions( this ) );
 		}
 	}
@@ -526,11 +519,10 @@ public class ActionQueue {
 	}
 
 	private void prepareActions(@Nullable ExecutableList<?> queue) throws HibernateException {
-		if ( queue == null ) {
-			return;
-		}
-		for ( Executable executable : queue ) {
-			executable.beforeExecutions();
+		if ( queue != null ) {
+			for ( var executable : queue ) {
+				executable.beforeExecutions();
+			}
 		}
 	}
 
@@ -542,9 +534,15 @@ public class ActionQueue {
 	public void afterTransactionCompletion(boolean success) {
 		if ( !isTransactionCoordinatorShared ) {
 			// Execute completion actions only in transaction owner (aka parent session).
-			if ( afterTransactionProcesses != null ) {
-				afterTransactionProcesses.afterTransactionCompletion( success );
-			}
+			transactionCompletionCallbacks.afterTransactionCompletion( success );
+		}
+	}
+
+	@Internal
+	public void executePendingBulkOperationCleanUpActions() {
+		if ( !isTransactionCoordinatorShared && transactionCompletionCallbacks != null ) {
+			// Execute completion actions only in transaction owner (aka parent session).
+			transactionCompletionCallbacks.executePendingBulkOperationCleanUpActions();
 		}
 	}
 
@@ -554,9 +552,7 @@ public class ActionQueue {
 	public void beforeTransactionCompletion() {
 		if ( !isTransactionCoordinatorShared ) {
 			// Execute completion actions only in transaction owner (aka parent session).
-			if ( beforeTransactionProcesses != null ) {
-				beforeTransactionProcesses.beforeTransactionCompletion();
-			}
+			transactionCompletionCallbacks.beforeTransactionCompletion();
 			// Make sure to always execute pending batches before the transaction completes.
 			// One such pending batch could be the pessimistic version increment for an entity
 			session.getJdbcCoordinator().executeBatch();
@@ -586,9 +582,9 @@ public class ActionQueue {
 		if ( tables.isEmpty() ) {
 			return false;
 		}
-		for ( OrderedActions action : ORDERED_OPERATIONS ) {
-			final ExecutableList<?> list = action.getActions( this );
-			if ( areTablesToBeUpdated( list, tables ) ) {
+		for ( var action : ORDERED_OPERATIONS ) {
+			final var queue = action.getActions( this );
+			if ( areTablesToBeUpdated( queue, tables ) ) {
 				return true;
 			}
 		}
@@ -598,27 +594,26 @@ public class ActionQueue {
 		return areTablesToBeUpdated( unresolvedInsertions, tables );
 	}
 
-	private static boolean areTablesToBeUpdated(@Nullable ExecutableList<?> actions, Set<? extends Serializable> tableSpaces) {
-		if ( actions == null || actions.isEmpty() ) {
+	private static boolean areTablesToBeUpdated(@Nullable ExecutableList<?> queue, Set<? extends Serializable> tableSpaces) {
+		if ( queue == null || queue.isEmpty() ) {
 			return false;
 		}
-
-		for ( Serializable actionSpace : actions.getQuerySpaces() ) {
-			if ( tableSpaces.contains( actionSpace ) ) {
-				LOG.debugf( "Changes must be flushed to space: %s", actionSpace );
-				return true;
+		else {
+			for ( var actionSpace : queue.getQuerySpaces() ) {
+				if ( tableSpaces.contains( actionSpace ) ) {
+					ACTION_LOGGER.changesMustBeFlushedToSpace( actionSpace );
+					return true;
+				}
 			}
+			return false;
 		}
-
-		return false;
 	}
 
 	private static boolean areTablesToBeUpdated(UnresolvedEntityInsertActions actions, Set<? extends Serializable> tableSpaces) {
-		for ( Executable action : actions.getDependentEntityInsertActions() ) {
-			final Serializable[] spaces = action.getPropertySpaces();
-			for ( Serializable space : spaces ) {
+		for ( var action : actions.getDependentEntityInsertActions() ) {
+			for ( var space : action.getPropertySpaces() ) {
 				if ( tableSpaces.contains( space ) ) {
-					LOG.debugf( "Changes must be flushed to space: %s", space );
+					ACTION_LOGGER.changesMustBeFlushedToSpace( space );
 					return true;
 				}
 			}
@@ -629,51 +624,44 @@ public class ActionQueue {
 	/**
 	 * Perform {@link Executable#execute()} on each element of the list
 	 *
-	 * @param list The list of Executable elements to be performed
+	 * @param queue The list of Executable elements to be performed
 	 *
 	 */
-	private <E extends ComparableExecutable> void executeActions(@Nullable ExecutableList<E> list)
+	private <E extends ComparableExecutable> void executeActions(@Nullable ExecutableList<E> queue)
 			throws HibernateException {
-		if ( list == null || list.isEmpty() ) {
-			return;
-		}
-		// todo : consider ways to improve the double iteration of Executables here:
-		//		1) we explicitly iterate list here to perform Executable#execute()
-		//		2) ExecutableList#getQuerySpaces also iterates the Executables to collect query spaces.
-		try {
-			for ( ComparableExecutable e : list ) {
-				try {
-					e.execute();
-				}
-				finally {
-					if ( e.getBeforeTransactionCompletionProcess() != null ) {
-						if ( beforeTransactionProcesses == null ) {
-							beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
-						}
-						beforeTransactionProcesses.register( e.getBeforeTransactionCompletionProcess() );
+		if ( queue != null && !queue.isEmpty() ) {
+			// todo : consider ways to improve the double iteration of Executables here:
+			//		1) we explicitly iterate list here to perform Executable#execute()
+			//		2) ExecutableList#getQuerySpaces also iterates the Executables to collect query spaces.
+			try {
+				for ( var executable : queue ) {
+					try {
+						executable.execute();
 					}
-					if ( e.getAfterTransactionCompletionProcess() != null ) {
-						if ( afterTransactionProcesses == null ) {
-							afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
+					finally {
+						final var beforeCompletionProcess = executable.getBeforeTransactionCompletionProcess();
+						if ( beforeCompletionProcess != null ) {
+							transactionCompletionCallbacks.registerCallback( beforeCompletionProcess );
 						}
-						afterTransactionProcesses.register( e.getAfterTransactionCompletionProcess() );
+						final var afterCompletionProcess = executable.getAfterTransactionCompletionProcess();
+						if ( afterCompletionProcess != null ) {
+							transactionCompletionCallbacks.registerCallback( afterCompletionProcess );
+						}
 					}
 				}
 			}
-		}
-		finally {
-			if ( session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
-				// Strictly speaking, only a subset of the list may have been processed if a RuntimeException occurs.
-				// We still invalidate all spaces. I don't see this as a big deal - after all, RuntimeExceptions are
-				// unexpected.
-				invalidateSpaces( list.getQuerySpaces().toArray(new String[0]) );
+			finally {
+				if ( getSessionFactoryOptions().isQueryCacheEnabled() ) {
+					// Strictly speaking, only a subset of the list may have been processed if a RuntimeException occurs.
+					// We still invalidate all spaces. I don't see this as a big deal - after all, RuntimeExceptions are
+					// unexpected.
+					invalidateSpaces( queue.getQuerySpaces().toArray( new String[0] ) );
+				}
 			}
-			// @NonNull String @Nullable [] - array nullable, elements not
-			// @Nullable String @NonNull [] - elements nullable, array not
-		}
 
-		list.clear();
-		session.getJdbcCoordinator().executeBatch();
+			queue.clear();
+			session.getJdbcCoordinator().executeBatch();
+		}
 	}
 
 	/**
@@ -695,11 +683,8 @@ public class ActionQueue {
 	 */
 	private void invalidateSpaces(String @Nullable [] spaces) {
 		if ( spaces != null && spaces.length > 0 ) {
-			for ( String space : spaces ) {
-				if ( afterTransactionProcesses == null ) {
-					afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
-				}
-				afterTransactionProcesses.addSpaceToInvalidate( space );
+			for ( var space : spaces ) {
+				transactionCompletionCallbacks.addSpaceToInvalidate( space );
 			}
 			// Performance win: If we are processing an ExecutableList, this will only be called once
 			session.getFactory().getCache().getTimestampsCache().preInvalidate( spaces, session );
@@ -725,59 +710,38 @@ public class ActionQueue {
 				+ "]";
 	}
 
-	private static String toString(@Nullable ExecutableList<?> q) {
-		return q == null ? "ExecutableList{size=0}" : q.toString();
+	private static String toString(@Nullable ExecutableList<?> queue) {
+		return queue == null ? "ExecutableList{size=0}" : queue.toString();
 	}
 
 	public int numberOfCollectionRemovals() {
-		if ( collectionRemovals == null ) {
-			return 0;
-		}
-		return collectionRemovals.size();
+		return collectionRemovals == null ? 0 : collectionRemovals.size();
 	}
 
 	public int numberOfCollectionUpdates() {
-		if ( collectionUpdates == null ) {
-			return 0;
-		}
-		return collectionUpdates.size();
+		return collectionUpdates == null ? 0 : collectionUpdates.size();
 	}
 
 	public int numberOfCollectionCreations() {
-		if ( collectionCreations == null ) {
-			return 0;
-		}
-		return collectionCreations.size();
+		return collectionCreations == null ? 0 : collectionCreations.size();
 	}
 
 	public int numberOfDeletions() {
-		int del = deletions == null ? 0 : deletions.size();
-		int orph = orphanRemovals == null ? 0 : orphanRemovals.size();
-		return del + orph;
+		final int deletes = deletions == null ? 0 : deletions.size();
+		final int orphans = orphanRemovals == null ? 0 : orphanRemovals.size();
+		return deletes + orphans;
 	}
 
 	public int numberOfUpdates() {
-		if ( updates == null ) {
-			return 0;
-		}
-		return updates.size();
+		return updates == null ? 0 : updates.size();
 	}
 
 	public int numberOfInsertions() {
-		if ( insertions == null ) {
-			return 0;
-		}
-		return insertions.size();
+		return insertions == null ? 0 : insertions.size();
 	}
 
-	public TransactionCompletionProcesses getTransactionCompletionProcesses() {
-		if ( beforeTransactionProcesses == null ) {
-			beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
-		}
-		if ( afterTransactionProcesses == null ) {
-			afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
-		}
-		return new TransactionCompletionProcesses( beforeTransactionProcesses, afterTransactionProcesses );
+	public TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacks() {
+		return transactionCompletionCallbacks.forSharing();
 	}
 
 	/**
@@ -785,15 +749,14 @@ public class ActionQueue {
 	 * Transaction completion processes are always executed by transaction owner (primary session),
 	 * but can be registered using secondary session too.
 	 *
-	 * @param processes Transaction completion processes.
+	 * @param callbacks Transaction completion callbacks.
 	 * @param isTransactionCoordinatorShared Flag indicating shared transaction context.
 	 */
-	public void setTransactionCompletionProcesses(
-			TransactionCompletionProcesses processes,
+	public void setTransactionCompletionCallbacks(
+			TransactionCompletionCallbacksImplementor callbacks,
 			boolean isTransactionCoordinatorShared) {
 		this.isTransactionCoordinatorShared = isTransactionCoordinatorShared;
-		this.beforeTransactionProcesses = processes.beforeTransactionCompletionProcesses;
-		this.afterTransactionProcesses = processes.afterTransactionCompletionProcesses;
+		this.transactionCompletionCallbacks = callbacks;
 	}
 
 	public void sortCollectionActions() {
@@ -824,12 +787,16 @@ public class ActionQueue {
 		}
 	}
 
+	private SessionFactoryOptions getSessionFactoryOptions() {
+		return session.getFactory().getSessionFactoryOptions();
+	}
+
 	private boolean isOrderUpdatesEnabled() {
-		return session.getFactory().getSessionFactoryOptions().isOrderUpdatesEnabled();
+		return getSessionFactoryOptions().isOrderUpdatesEnabled();
 	}
 
 	private boolean isOrderInsertsEnabled() {
-		return session.getFactory().getSessionFactoryOptions().isOrderInsertsEnabled();
+		return getSessionFactoryOptions().isOrderInsertsEnabled();
 	}
 
 	public void clearFromFlushNeededCheck(int previousCollectionRemovalSize) {
@@ -852,16 +819,14 @@ public class ActionQueue {
 		}
 	}
 
-	@SuppressWarnings("SimplifiableConditionalExpression")
 	public boolean hasAfterTransactionActions() {
-		return isTransactionCoordinatorShared ? false
-				: afterTransactionProcesses != null && afterTransactionProcesses.hasActions();
+		return !isTransactionCoordinatorShared
+			&& transactionCompletionCallbacks.hasAfterCompletionCallbacks();
 	}
 
-	@SuppressWarnings("SimplifiableConditionalExpression")
 	public boolean hasBeforeTransactionActions() {
-		return isTransactionCoordinatorShared ? false
-				: beforeTransactionProcesses != null && beforeTransactionProcesses.hasActions();
+		return !isTransactionCoordinatorShared
+			&& transactionCompletionCallbacks.hasBeforeCompletionCallbacks();
 	}
 
 	public boolean hasAnyQueuedActions() {
@@ -875,16 +840,16 @@ public class ActionQueue {
 			|| nonempty( collectionCreations );
 	}
 
-	private boolean nonempty(@Nullable ExecutableList<?> list) {
-		return list != null && !list.isEmpty();
+	private boolean nonempty(@Nullable ExecutableList<?> queue) {
+		return queue != null && !queue.isEmpty();
 	}
 
 	public void unScheduleUnloadedDeletion(Object newEntity) {
-		final EntityPersister entityPersister = session.getEntityPersister( null, newEntity );
+		final var entityPersister = session.getEntityPersister( null, newEntity );
 		final Object identifier = entityPersister.getIdentifier( newEntity, session );
 		if ( deletions != null ) {
 			for ( int i = 0; i < deletions.size(); i++ ) {
-				final EntityDeleteAction action = deletions.get( i );
+				final var action = deletions.get( i );
 				if ( action.getInstance() == null
 						&& action.getEntityName().equals( entityPersister.getEntityName() )
 						&& entityPersister.getIdentifierMapping().areEqual( action.getId(), identifier, session ) ) {
@@ -899,15 +864,13 @@ public class ActionQueue {
 	}
 
 	public void unScheduleDeletion(EntityEntry entry, Object rescuedEntity) {
-		final LazyInitializer lazyInitializer = extractLazyInitializer( rescuedEntity );
-		if ( lazyInitializer != null ) {
-			if ( !lazyInitializer.isUninitialized() ) {
-				rescuedEntity = lazyInitializer.getImplementation( session );
-			}
+		final var lazyInitializer = extractLazyInitializer( rescuedEntity );
+		if ( lazyInitializer != null && !lazyInitializer.isUninitialized() ) {
+			rescuedEntity = lazyInitializer.getImplementation( session );
 		}
 		if ( deletions != null ) {
 			for ( int i = 0; i < deletions.size(); i++ ) {
-				final EntityDeleteAction action = deletions.get( i );
+				final var action = deletions.get( i );
 				if ( action.getInstance() == rescuedEntity ) {
 					deletions.remove( i );
 					return;
@@ -916,7 +879,7 @@ public class ActionQueue {
 		}
 		if ( orphanRemovals != null ) {
 			for ( int i = 0; i < orphanRemovals.size(); i++ ) {
-				final EntityDeleteAction action = orphanRemovals.get( i );
+				final var action = orphanRemovals.get( i );
 				if ( action.getInstance() == rescuedEntity ) {
 					orphanRemovals.remove( i );
 					return;
@@ -933,20 +896,20 @@ public class ActionQueue {
 	 * @throws IOException Indicates an error writing to the stream
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		LOG.trace( "Serializing action-queue" );
+		ACTION_LOGGER.serializingActionQueue();
 		if ( unresolvedInsertions == null ) {
 			unresolvedInsertions = new UnresolvedEntityInsertActions();
 		}
 		unresolvedInsertions.serialize( oos );
 
-		for ( OrderedActions action : ORDERED_OPERATIONS ) {
-			final ExecutableList<?> l = action.getActions( this );
-			if ( l == null ) {
+		for ( var action : ORDERED_OPERATIONS ) {
+			final var queue = action.getActions( this );
+			if ( queue == null ) {
 				oos.writeBoolean( false );
 			}
 			else {
 				oos.writeBoolean( true );
-				l.writeExternal( oos );
+				queue.writeExternal( oos );
 			}
 		}
 	}
@@ -962,135 +925,29 @@ public class ActionQueue {
 	 */
 	public static ActionQueue deserialize(ObjectInputStream ois, EventSource session)
 			throws IOException, ClassNotFoundException {
-		final boolean traceEnabled = LOG.isTraceEnabled();
+		final boolean traceEnabled = ACTION_LOGGER.isTraceEnabled();
 		if ( traceEnabled ) {
-			LOG.trace( "Deserializing action-queue" );
+			ACTION_LOGGER.deserializingActionQueue();
 		}
-		ActionQueue rtn = new ActionQueue( session );
-
-		rtn.unresolvedInsertions = UnresolvedEntityInsertActions.deserialize( ois, session );
-
-		for ( OrderedActions action : ORDERED_OPERATIONS ) {
-			ExecutableList<?> l = action.getActions( rtn );
-			boolean notNull = ois.readBoolean();
+		final var actionQueue = new ActionQueue( session );
+		actionQueue.unresolvedInsertions = UnresolvedEntityInsertActions.deserialize( ois, session );
+		for ( var action : ORDERED_OPERATIONS ) {
+			final boolean notNull = ois.readBoolean();
 			if ( notNull ) {
-				if ( l == null ) {
-					//sorry.. trying hard to avoid generic initializations mess.
-					action.ensureInitialized( rtn );
-					l = action.getActions( rtn );
+				var queue = action.getActions( actionQueue );
+				if ( queue == null ) {
+					// trying hard to avoid generic initializations mess
+					action.ensureInitialized( actionQueue );
+					queue = action.getActions( actionQueue );
 				}
-				l.readExternal( ois );
-
+				queue.readExternal( ois );
 				if ( traceEnabled ) {
-					LOG.tracev( "Deserialized [{0}] entries", l.size() );
+					ACTION_LOGGER.deserializedEntries( queue.size() );
 				}
-				l.afterDeserialize( session );
+				queue.afterDeserialize( session );
 			}
 		}
-
-		return rtn;
-	}
-
-	private abstract static class AbstractTransactionCompletionProcessQueue<T> {
-		protected SessionImplementor session;
-		// Concurrency handling required when transaction completion process is dynamically registered
-		// inside event listener (HHH-7478).
-		protected ConcurrentLinkedQueue<@NonNull T> processes = new ConcurrentLinkedQueue<>();
-
-		private AbstractTransactionCompletionProcessQueue(SessionImplementor session) {
-			this.session = session;
-		}
-
-		public void register(@Nullable T process) {
-			if ( process != null ) {
-				processes.add( process );
-			}
-		}
-
-		public boolean hasActions() {
-			return !processes.isEmpty();
-		}
-	}
-
-	/**
-	 * Encapsulates behavior needed for before transaction processing
-	 */
-	private static class BeforeTransactionCompletionProcessQueue
-			extends AbstractTransactionCompletionProcessQueue<BeforeTransactionCompletionProcess> {
-
-		private BeforeTransactionCompletionProcessQueue(SessionImplementor session) {
-			super( session );
-		}
-
-		public void beforeTransactionCompletion() {
-			BeforeTransactionCompletionProcess process;
-			while ( ( process = processes.poll() ) != null ) {
-				try {
-					process.doBeforeTransactionCompletion( session );
-				}
-				catch (HibernateException he) {
-					throw he;
-				}
-				catch (Exception e) {
-					throw new HibernateException( "Unable to perform beforeTransactionCompletion callback: " + e.getMessage(), e );
-				}
-			}
-		}
-	}
-
-	/**
-	 * Encapsulates behavior needed for after transaction processing
-	 */
-	private static class AfterTransactionCompletionProcessQueue
-			extends AbstractTransactionCompletionProcessQueue<AfterTransactionCompletionProcess> {
-		private final Set<String> querySpacesToInvalidate = new HashSet<>();
-
-		private AfterTransactionCompletionProcessQueue(SessionImplementor session) {
-			super( session );
-		}
-
-		public void addSpaceToInvalidate(String space) {
-			querySpacesToInvalidate.add( space );
-		}
-
-		public void afterTransactionCompletion(boolean success) {
-			AfterTransactionCompletionProcess process;
-			while ( ( process = processes.poll() ) != null ) {
-				try {
-					process.doAfterTransactionCompletion( success, session );
-				}
-				catch (CacheException ce) {
-					LOG.unableToReleaseCacheLock( ce );
-					// continue loop
-				}
-				catch (Exception e) {
-					throw new HibernateException( "Unable to perform afterTransactionCompletion callback: " + e.getMessage(), e );
-				}
-			}
-
-			if ( session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
-				session.getFactory().getCache().getTimestampsCache().invalidate(
-						querySpacesToInvalidate.toArray(new String[0]),
-						session
-				);
-			}
-			querySpacesToInvalidate.clear();
-		}
-	}
-
-	/**
-	 * Wrapper class allowing to bind the same transaction completion process queues in different sessions.
-	 */
-	public static class TransactionCompletionProcesses {
-		private final BeforeTransactionCompletionProcessQueue beforeTransactionCompletionProcesses;
-		private final AfterTransactionCompletionProcessQueue afterTransactionCompletionProcesses;
-
-		private TransactionCompletionProcesses(
-				BeforeTransactionCompletionProcessQueue beforeTransactionCompletionProcessQueue,
-				AfterTransactionCompletionProcessQueue afterTransactionCompletionProcessQueue) {
-			this.beforeTransactionCompletionProcesses = beforeTransactionCompletionProcessQueue;
-			this.afterTransactionCompletionProcesses = afterTransactionCompletionProcessQueue;
-		}
+		return actionQueue;
 	}
 
 	/**
@@ -1123,12 +980,12 @@ public class ActionQueue {
 			// The current index of the insert info within an insert schedule
 			private int index;
 
-			public InsertInfo(AbstractEntityInsertAction insertAction, int index) {
+			private InsertInfo(AbstractEntityInsertAction insertAction, int index) {
 				this.insertAction = insertAction;
 				this.index = index;
 			}
 
-			public void buildDirectDependencies(IdentityHashMap<Object, InsertInfo> insertInfosByEntity) {
+			private void buildDirectDependencies(IdentityHashMap<Object, InsertInfo> insertInfosByEntity) {
 				final Object[] propertyValues = insertAction.getState();
 				final Type[] propertyTypes = insertAction.getPersister().getPropertyTypes();
 				for ( int i = 0, propertyTypesLength = propertyTypes.length; i < propertyTypesLength; i++ ) {
@@ -1136,10 +993,10 @@ public class ActionQueue {
 				}
 			}
 
-			public void propagateChildDependencies() {
+			private void propagateChildDependencies() {
 				if ( outgoingDependencies != null ) {
-					for ( InsertInfo childDependency : outgoingDependencies ) {
-						if (childDependency.transitiveIncomingDependencies == null) {
+					for ( var childDependency : outgoingDependencies ) {
+						if ( childDependency.transitiveIncomingDependencies == null ) {
 							childDependency.transitiveIncomingDependencies = new HashSet<>();
 						}
 						childDependency.transitiveIncomingDependencies.add( this );
@@ -1147,20 +1004,20 @@ public class ActionQueue {
 				}
 			}
 
-			public void buildTransitiveDependencies(Set<InsertInfo> visited) {
+			private void buildTransitiveDependencies(Set<InsertInfo> visited) {
 				if ( transitiveIncomingDependencies != null ) {
 					visited.addAll( transitiveIncomingDependencies );
-					for ( InsertInfo insertInfo : transitiveIncomingDependencies.toArray(new InsertInfo[0]) ) {
+					for ( var insertInfo : transitiveIncomingDependencies.toArray( new InsertInfo[0] ) ) {
 						insertInfo.addTransitiveDependencies(this, visited);
 					}
 					visited.clear();
 				}
 			}
 
-			public void addTransitiveDependencies(InsertInfo origin, Set<InsertInfo> visited) {
+			private void addTransitiveDependencies(InsertInfo origin, Set<InsertInfo> visited) {
 				if ( transitiveIncomingDependencies != null ) {
-					for ( InsertInfo insertInfo : transitiveIncomingDependencies ) {
-						if ( visited.add(insertInfo) ) {
+					for ( var insertInfo : transitiveIncomingDependencies ) {
+						if ( visited.add( insertInfo ) ) {
 							origin.transitiveIncomingDependencies.add( insertInfo );
 							insertInfo.addTransitiveDependencies( origin, visited );
 						}
@@ -1169,75 +1026,67 @@ public class ActionQueue {
 			}
 
 			private void addDirectDependency(Type type, @Nullable Object value, IdentityHashMap<Object, InsertInfo> insertInfosByEntity) {
-				if ( value == null ) {
-					return;
-				}
-				if ( type instanceof EntityType entityType ) {
-					final InsertInfo insertInfo = insertInfosByEntity.get( value );
-					if ( insertInfo != null ) {
-						if ( entityType.isOneToOne()
-								&& entityType.getForeignKeyDirection() == ForeignKeyDirection.TO_PARENT ) {
-							if ( !entityType.isReferenceToPrimaryKey() ) {
-								if ( outgoingDependencies == null ) {
-									outgoingDependencies = new HashSet<>();
+				if ( value != null ) {
+					if ( type instanceof EntityType entityType ) {
+						final var insertInfo = insertInfosByEntity.get( value );
+						if ( insertInfo != null ) {
+							if ( entityType.isOneToOne()
+									&& entityType.getForeignKeyDirection() == ForeignKeyDirection.TO_PARENT ) {
+								if ( !entityType.isReferenceToPrimaryKey() ) {
+									if ( outgoingDependencies == null ) {
+										outgoingDependencies = new HashSet<>();
+									}
+									outgoingDependencies.add( insertInfo );
 								}
-								outgoingDependencies.add(insertInfo);
 							}
-						}
-						else {
-							if ( transitiveIncomingDependencies == null ) {
-								transitiveIncomingDependencies = new HashSet<>();
-							}
-							transitiveIncomingDependencies.add( insertInfo );
-						}
-					}
-				}
-				else if ( type instanceof CollectionType collectionType ) {
-					final PluralAttributeMapping pluralAttributeMapping = insertAction.getSession()
-							.getFactory()
-							.getMappingMetamodel()
-							.getCollectionDescriptor( collectionType.getRole() )
-							.getAttributeMapping();
-					// We only care about mappedBy one-to-many associations, because for these,
-					// the elements depend on the collection owner
-					if ( pluralAttributeMapping.getCollectionDescriptor().isOneToMany()
-							&& pluralAttributeMapping.getElementDescriptor() instanceof EntityCollectionPart ) {
-						final Iterator<?> elementsIterator = collectionType.getElementsIterator( value );
-						while ( elementsIterator.hasNext() ) {
-							final Object element = elementsIterator.next();
-							final InsertInfo insertInfo = insertInfosByEntity.get( element );
-							if ( insertInfo != null ) {
-								if ( outgoingDependencies == null ) {
-									outgoingDependencies = new HashSet<>();
+							else {
+								if ( transitiveIncomingDependencies == null ) {
+									transitiveIncomingDependencies = new HashSet<>();
 								}
-								outgoingDependencies.add( insertInfo );
+								transitiveIncomingDependencies.add( insertInfo );
 							}
 						}
 					}
-				}
-				else if ( type instanceof ComponentType compositeType ) {
-					// Support recursive checks of composite type properties for associations and collections.
-					final SharedSessionContractImplementor session = insertAction.getSession();
-					final Object[] componentValues = compositeType.getPropertyValues( value, session );
-					for ( int j = 0; j < componentValues.length; ++j ) {
-						final Type componentValueType = compositeType.getSubtypes()[j];
-						final Object componentValue = componentValues[j];
-						addDirectDependency( componentValueType, componentValue, insertInfosByEntity );
+					else if ( type instanceof CollectionType collectionType ) {
+						final var pluralAttributeMapping =
+								insertAction.getSession().getFactory().getMappingMetamodel()
+										.getCollectionDescriptor( collectionType.getRole() )
+										.getAttributeMapping();
+						// We only care about mappedBy one-to-many associations, because for these,
+						// the elements depend on the collection owner
+						if ( pluralAttributeMapping.getCollectionDescriptor().isOneToMany()
+								&& pluralAttributeMapping.getElementDescriptor() instanceof EntityCollectionPart ) {
+							final var elementsIterator = collectionType.getElementsIterator( value );
+							while ( elementsIterator.hasNext() ) {
+								final Object element = elementsIterator.next();
+								final InsertInfo insertInfo = insertInfosByEntity.get( element );
+								if ( insertInfo != null ) {
+									if ( outgoingDependencies == null ) {
+										outgoingDependencies = new HashSet<>();
+									}
+									outgoingDependencies.add( insertInfo );
+								}
+							}
+						}
+					}
+					else if ( type instanceof ComponentType compositeType ) {
+						// Support recursive checks of composite type properties for associations and collections.
+						final var session = insertAction.getSession();
+						final Object[] componentValues = compositeType.getPropertyValues( value, session );
+						for ( int j = 0; j < componentValues.length; ++j ) {
+							final Type componentValueType = compositeType.getSubtypes()[j];
+							final Object componentValue = componentValues[j];
+							addDirectDependency( componentValueType, componentValue, insertInfosByEntity );
+						}
 					}
 				}
 			}
 
 			@Override
-			public boolean equals(@Nullable Object o) {
-				if ( this == o )  {
-					return true;
-				}
-				if ( o == null || getClass() != o.getClass() ) {
-					return false;
-				}
-
-				final InsertInfo that = (InsertInfo) o;
-				return insertAction.equals( that.insertAction );
+			public boolean equals(@Nullable Object object) {
+				return this == object
+					|| object instanceof InsertInfo that
+						&& insertAction.equals( that.insertAction );
 			}
 
 			@Override
@@ -1265,17 +1114,18 @@ public class ActionQueue {
 			final InsertInfo[] insertInfos = new InsertInfo[insertInfoCount];
 			// A map of all insert infos keyed by the entity instance
 			// This is needed to discover insert infos for direct dependencies
-			final IdentityHashMap<Object, InsertInfo> insertInfosByEntity = new IdentityHashMap<>( insertInfos.length );
+			final IdentityHashMap<Object, InsertInfo> insertInfosByEntity =
+					new IdentityHashMap<>( insertInfos.length );
 			// Construct insert infos and build a map for that, keyed by entity instance
 			for (int i = 0; i < insertInfoCount; i++) {
-				final AbstractEntityInsertAction insertAction = insertions.get(i);
-				final InsertInfo insertInfo = new InsertInfo(insertAction, i);
-				insertInfosByEntity.put(insertAction.getInstance(), insertInfo);
+				final var insertAction = insertions.get(i);
+				final var insertInfo = new InsertInfo( insertAction, i );
+				insertInfosByEntity.put( insertAction.getInstance(), insertInfo );
 				insertInfos[i] = insertInfo;
 			}
 			// First we must discover the direct dependencies
 			for (int i = 0; i < insertInfoCount; i++) {
-				insertInfos[i].buildDirectDependencies(insertInfosByEntity);
+				insertInfos[i].buildDirectDependencies( insertInfosByEntity );
 			}
 			// Then we can propagate child dependencies to the insert infos incoming dependencies
 			for (int i = 0; i < insertInfoCount; i++) {
@@ -1290,87 +1140,89 @@ public class ActionQueue {
 				insertInfo.buildTransitiveDependencies( visited );
 
 				final String entityName = insertInfo.insertAction.getPersister().getEntityName();
-				EntityInsertGroup entityInsertGroup = insertInfosByEntityName.get(entityName);
+				var entityInsertGroup = insertInfosByEntityName.get( entityName );
 				if (entityInsertGroup == null) {
-					insertInfosByEntityName.put(entityName, entityInsertGroup = new EntityInsertGroup(entityName));
+					entityInsertGroup = new EntityInsertGroup( entityName );
+					insertInfosByEntityName.put( entityName, entityInsertGroup );
 				}
-				entityInsertGroup.add(insertInfo);
+				entityInsertGroup.add( insertInfo );
 			}
 			// Now we can go through the EntityInsertGroups and schedule all the ones
 			// for which we have already scheduled all the dependentEntityNames
-			final Set<String> scheduledEntityNames = new HashSet<>(insertInfosByEntityName.size());
+			final Set<String> scheduledEntityNames = new HashSet<>( insertInfosByEntityName.size() );
 			int schedulePosition = 0;
 			int lastScheduleSize;
 			do {
 				lastScheduleSize = scheduledEntityNames.size();
-				final Iterator<EntityInsertGroup> iterator = insertInfosByEntityName.values().iterator();
-				while (iterator.hasNext()) {
-					final EntityInsertGroup insertGroup = iterator.next();
-					if (scheduledEntityNames.containsAll(insertGroup.dependentEntityNames)) {
-						schedulePosition = schedule(insertInfos, insertGroup.insertInfos, schedulePosition);
-						scheduledEntityNames.add(insertGroup.entityName);
+				final var iterator = insertInfosByEntityName.values().iterator();
+				while ( iterator.hasNext() ) {
+					final var insertGroup = iterator.next();
+					if ( scheduledEntityNames.containsAll( insertGroup.dependentEntityNames) ) {
+						schedulePosition = schedule( insertInfos, insertGroup.insertInfos, schedulePosition );
+						scheduledEntityNames.add( insertGroup.entityName );
 						iterator.remove();
 					}
 				}
 				// we try to schedule entity groups over and over again, until we can't schedule any further
-			} while (lastScheduleSize != scheduledEntityNames.size());
+			}
+			while ( lastScheduleSize != scheduledEntityNames.size() );
 			if ( !insertInfosByEntityName.isEmpty() ) {
-				LOG.warn("The batch containing " + insertions.size() + " statements could not be sorted. " +
-					"This might indicate a circular entity relationship.");
+				ACTION_LOGGER.batchCouldNotBeSorted( insertions.size() );
 			}
 			insertions.clear();
-			for (InsertInfo insertInfo : insertInfos) {
-				insertions.add(insertInfo.insertAction);
+			for ( var insertInfo : insertInfos ) {
+				insertions.add( insertInfo.insertAction );
 			}
 		}
 
 		private int schedule(InsertInfo [] insertInfos, List<InsertInfo> insertInfosToSchedule, int schedulePosition) {
 			final InsertInfo[] newInsertInfos = new InsertInfo[insertInfos.length];
 			// The bitset is there to quickly query if an index is already scheduled
-			final BitSet bitSet = new BitSet(insertInfos.length);
+			final BitSet bitSet = new BitSet( insertInfos.length );
 			// Remember the smallest index of the insertInfosToSchedule to check if we actually need to reorder anything
 			int smallestScheduledIndex = -1;
 			// The biggestScheduledIndex is needed as upper bound for shifting elements that were replaced by insertInfosToSchedule
 			int biggestScheduledIndex = -1;
-			for (int i = 0; i < insertInfosToSchedule.size(); i++) {
+			for ( int i = 0; i < insertInfosToSchedule.size(); i++ ) {
 				final int index = insertInfosToSchedule.get(i).index;
 				bitSet.set(index);
-				smallestScheduledIndex = Math.min(smallestScheduledIndex, index);
-				biggestScheduledIndex = Math.max(biggestScheduledIndex, index);
+				smallestScheduledIndex = Math.min( smallestScheduledIndex, index );
+				biggestScheduledIndex = Math.max( biggestScheduledIndex, index );
 			}
 			final int nextSchedulePosition = schedulePosition + insertInfosToSchedule.size();
-			if (smallestScheduledIndex == schedulePosition && biggestScheduledIndex == nextSchedulePosition) {
+			if ( smallestScheduledIndex == schedulePosition && biggestScheduledIndex == nextSchedulePosition ) {
 				// In this case, the order is already correct and we can skip some copying
 				return nextSchedulePosition;
 			}
 			// The index to which we start to shift elements that appear within the range of [schedulePosition, nextSchedulePosition)
 			int shiftSchedulePosition = nextSchedulePosition;
 			for (int i = 0; i < insertInfosToSchedule.size(); i++) {
-				final InsertInfo insertInfoToSchedule = insertInfosToSchedule.get(i);
+				final var insertInfoToSchedule = insertInfosToSchedule.get(i);
 				final int targetSchedulePosition = schedulePosition + i;
 				newInsertInfos[targetSchedulePosition] = insertInfoToSchedule;
 				insertInfoToSchedule.index = targetSchedulePosition;
-				final InsertInfo oldInsertInfo = insertInfos[targetSchedulePosition];
+				final var oldInsertInfo = insertInfos[targetSchedulePosition];
 				// Move the insert info previously located at the target schedule position to the current shift position
-				if (!bitSet.get(targetSchedulePosition)) {
+				if ( !bitSet.get( targetSchedulePosition ) ) {
 					oldInsertInfo.index = shiftSchedulePosition;
 					// Also set this index in the bitset to skip copying the value later, as it is considered scheduled
-					bitSet.set(targetSchedulePosition);
+					bitSet.set( targetSchedulePosition );
 					newInsertInfos[shiftSchedulePosition++]= oldInsertInfo;
 				}
 			}
 			// We have to shift all the elements up to the biggestMovedIndex + 1
 			biggestScheduledIndex++;
-			for (int i = bitSet.nextClearBit(schedulePosition); i < biggestScheduledIndex; i++) {
+			for ( int i = bitSet.nextClearBit(schedulePosition); i < biggestScheduledIndex; i++ ) {
 				// Only copy the old insert info over if it wasn't already scheduled
-				if (!bitSet.get(i)) {
-					final InsertInfo insertInfo = insertInfos[i];
+				if ( !bitSet.get(i) ) {
+					final var insertInfo = insertInfos[i];
 					insertInfo.index = shiftSchedulePosition;
 					newInsertInfos[shiftSchedulePosition++] = insertInfo;
 				}
 			}
 			// Copy over the newly reordered array part into the main array
-			System.arraycopy(newInsertInfos, schedulePosition, insertInfos, schedulePosition, biggestScheduledIndex - schedulePosition);
+			arraycopy( newInsertInfos, schedulePosition, insertInfos, schedulePosition,
+					biggestScheduledIndex - schedulePosition );
 			return nextSchedulePosition;
 		}
 
@@ -1385,9 +1237,9 @@ public class ActionQueue {
 
 			public void add(InsertInfo insertInfo) {
 				insertInfos.add(insertInfo);
-				if (insertInfo.transitiveIncomingDependencies != null) {
-					for (InsertInfo dependency : insertInfo.transitiveIncomingDependencies) {
-						dependentEntityNames.add(dependency.insertAction.getEntityName());
+				if ( insertInfo.transitiveIncomingDependencies != null ) {
+					for ( var dependency : insertInfo.transitiveIncomingDependencies ) {
+						dependentEntityNames.add( dependency.insertAction.getEntityName() );
 					}
 				}
 			}

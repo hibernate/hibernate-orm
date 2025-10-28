@@ -49,17 +49,14 @@ public class DynamicStatusLazyGroupOnBasicFieldTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						scope.getSessionFactory().getSchemaManager().truncateMappedObjects()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
 	public void test(SessionFactoryScope scope) {
 		final EntityPersister persister = scope.getSessionFactory().getMappingMetamodel()
 				.findEntityDescriptor( Person.class );
-		assertThat( persister.getEntityMetamodel().isDynamicUpdate() ).isTrue();
+		assertThat( persister.isDynamicUpdate() ).isTrue();
 	}
 
 	@Test

@@ -12,14 +12,15 @@ import org.hibernate.annotations.processing.Find;
 import org.hibernate.annotations.processing.HQL;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfMethodInMetamodelFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
 
+@CompilationTest
 @WithClasses({InnerInterfaceTest.MyEntity.class, InnerInterfaceTest.Queries.class})
-public class InnerInterfaceTest extends CompilationTest {
+class InnerInterfaceTest {
 
 	@Entity
 	public static class MyEntity {
@@ -39,7 +40,7 @@ public class InnerInterfaceTest extends CompilationTest {
 
 
 	@Test
-	public void test() {
+	void test() {
 		System.out.println( getMetaModelSourceAsString( InnerInterfaceTest.MyEntity.class ) );
 		System.out.println( getMetaModelSourceAsString( InnerInterfaceTest.Queries.class ) );
 		assertMetamodelClassGeneratedFor( InnerInterfaceTest.MyEntity.class );

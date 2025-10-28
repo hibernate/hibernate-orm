@@ -4,46 +4,31 @@
  */
 package org.hibernate.orm.test.jpa.persistenceunit;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.internal.util.ConfigHelper.findAsResource;
+import jakarta.persistence.PersistenceUnitTransactionType;
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.lang.invoke.MethodHandles;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
-
-import org.hibernate.testing.logger.LoggerInspectionRule;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Rule;
-import org.junit.jupiter.api.Test;
-
-import org.jboss.logging.Logger;
-
-import jakarta.persistence.PersistenceUnitTransactionType;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.internal.util.ConfigHelper.findAsResource;
 
 @JiraKey("HHH-18231")
 public class PersistenceXmlParserTest {
 
-	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, PersistenceXmlParser.class.getName() )
-	);
-
 	@Test
 	public void create_classLoaders() {
 		var parser = PersistenceXmlParser.create(
-				Map.of( AvailableSettings.CLASSLOADERS, Arrays.asList( new TestClassLoader( "pu1" ) ) ),
+				Map.of( AvailableSettings.CLASSLOADERS, List.of( new TestClassLoader( "pu1" ) ) ),
 				new TestClassLoader( "pu2" ),
 				null
 		);
@@ -58,7 +43,7 @@ public class PersistenceXmlParserTest {
 		var myClassLoaderService = new ClassLoaderServiceImpl( new TestClassLoader( "pu3" ) );
 		var parser = PersistenceXmlParser.create(
 				// Should be ignored
-				Map.of( AvailableSettings.CLASSLOADERS, Arrays.asList( new TestClassLoader( "pu1" ) ) ),
+				Map.of( AvailableSettings.CLASSLOADERS, List.of( new TestClassLoader( "pu1" ) ) ),
 				// Should be ignored
 				new TestClassLoader( "pu2" ),
 				myClassLoaderService
@@ -124,7 +109,7 @@ public class PersistenceXmlParserTest {
 		}
 
 		@Override
-		protected Enumeration<URL> findResources(String name) throws IOException {
+		protected Enumeration<URL> findResources(String name) {
 			return name.equals( "META-INF/persistence.xml" ) ?
 					Collections.enumeration( List.of( url ) ) :
 					Collections.emptyEnumeration();

@@ -14,6 +14,8 @@ import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.AggregateSupportImpl;
 import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.lock.internal.MariaDBLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.type.MariaDBCastingJsonArrayJdbcTypeConstructor;
@@ -67,6 +69,10 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	public MariaDBLegacyDialect(DialectResolutionInfo info) {
 		super( createVersion( info ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
 		registerKeywords( info );
+	}
+
+	protected LockingSupport buildLockingSupport() {
+		return new MariaDBLockingSupport( getVersion() );
 	}
 
 	@Override
@@ -211,6 +217,11 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	}
 
 	@Override
+	public boolean supportsNamedColumnCheck() {
+		return false;
+	}
+
+	@Override
 	public boolean doesRoundTemporalOnOverflow() {
 		// See https://jira.mariadb.org/browse/MDEV-16991
 		return false;
@@ -253,22 +264,6 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	}
 
 	@Override
-	public boolean supportsSkipLocked() {
-		//only supported on MySQL and as of 10.6
-		return getVersion().isSameOrAfter( 10, 6 );
-	}
-
-	@Override
-	public boolean supportsNoWait() {
-		return getVersion().isSameOrAfter( 10, 3 );
-	}
-
-	@Override
-	public boolean supportsWait() {
-		return getVersion().isSameOrAfter( 10, 3 );
-	}
-
-	@Override
 	boolean supportsForShare() {
 		//only supported on MySQL
 		return false;
@@ -286,14 +281,14 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 
 		// some MariaDB drivers does not return case strategy info
 		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 
-		return super.buildIdentifierHelper( builder, dbMetaData );
+		return super.buildIdentifierHelper( builder, metadata );
 	}
 
 	@Override

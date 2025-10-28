@@ -22,7 +22,12 @@ import static java.util.regex.Pattern.compile;
  */
 public abstract class AbstractLimitHandler implements LimitHandler {
 
-	public static LimitHandler NO_LIMIT = new AbstractLimitHandler(){};
+	public static LimitHandler NO_LIMIT = new AbstractLimitHandler(){
+		@Override
+		public boolean processSqlMutatesState() {
+			return false;
+		}
+	};
 
 	private static final Pattern SELECT_PATTERN =
 			compile( "^\\s*select\\b", CASE_INSENSITIVE );

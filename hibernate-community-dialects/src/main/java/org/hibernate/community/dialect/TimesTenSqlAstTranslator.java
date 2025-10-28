@@ -6,21 +6,17 @@ package org.hibernate.community.dialect;
 
 import java.util.List;
 
+import org.hibernate.Locking;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -41,42 +37,26 @@ public class TimesTenSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
+			Locking.FollowOn followOnStrategy) {
+		if ( followOnStrategy == Locking.FollowOn.FORCE ) {
+			return LockStrategy.FOLLOW_ON;
+		}
+
 		// TimesTen supports locks with aggregates but not with set operators
 		// See https://docs.oracle.com/cd/E11882_01/timesten.112/e21642/state.htm#TTSQL329
 		LockStrategy strategy = LockStrategy.CLAUSE;
 		if ( getQueryPartStack().findCurrentFirst( part -> part instanceof QueryGroup ? part : null ) != null ) {
-			if ( Boolean.FALSE.equals( followOnLocking ) ) {
+			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
 				throw new IllegalQueryOperationException( "Locking with set operators is not supported!" );
 			}
-			strategy = LockStrategy.FOLLOW_ON;
+			else if ( followOnStrategy != Locking.FollowOn.IGNORE ) {
+				strategy = LockStrategy.NONE;
+			}
+			else {
+				strategy = LockStrategy.FOLLOW_ON;
+			}
 		}
 		return strategy;
-	}
-
-	@Override
-	protected void renderTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
-		appendSql( WHITESPACE );
-		if ( tableGroupJoin.getJoinType() != SqlAstJoinType.CROSS ) {
-			// No support for cross joins, so we emulate it with an inner join and always true on condition
-			appendSql( tableGroupJoin.getJoinType().getText() );
-		}
-		appendSql( "join " );
-
-		final Predicate predicate;
-		if ( tableGroupJoin.getPredicate() == null ) {
-			predicate = new BooleanExpressionPredicate( new QueryLiteral<>( true, getBooleanType() ) );
-		}
-		else {
-			predicate = tableGroupJoin.getPredicate();
-		}
-		if ( predicate != null && !predicate.isEmpty() ) {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
-		}
-		else {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
-		}
 	}
 
 	@Override

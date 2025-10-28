@@ -11,15 +11,17 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.spi.ServiceContributor;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
 /**
  * @asciidoc
  *
  * Used to define the ServiceRegistry to be used for testing.  Can be used alone:
  *
- * [source, JAVA, indent=0]
+ * [source, java, indent=0]
  * ----
  * @ServiceRegistry ( ... )
  * class MyTest extends ServiceRegistryAware {
@@ -44,7 +46,7 @@ import org.hibernate.service.spi.ServiceContributor;
  * or {@link SessionFactoryImplementor} via {@link SessionFactory},
  * with or without {@link ServiceRegistryScopeAware}.  E.g.
  *
- * [source, JAVA, indent=0]
+ * [source, java, indent=0]
  * ----
  * @ServiceRegistry ( ... )
  * @TestDomain ( ... )
@@ -78,6 +80,8 @@ public @interface ServiceRegistry {
 
 	SettingConfiguration[] settingConfigurations() default {};
 
+	ResolvableSetting[] resolvableSettings() default {};
+
 	/**
 	 * A Hibernate Service registration
 	 */
@@ -94,5 +98,13 @@ public @interface ServiceRegistry {
 		Class<?>[] impls();
 	}
 
+	@interface ResolvableSetting {
+		String settingName();
+		Class<? extends SettingResolver> resolver();
+	}
+
+	interface SettingResolver {
+		Object resolve(StandardServiceRegistryBuilder registryBuilder, ExtensionContext junitContext);
+	}
 
 }

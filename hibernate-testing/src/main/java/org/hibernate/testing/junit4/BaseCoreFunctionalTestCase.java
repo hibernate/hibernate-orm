@@ -63,8 +63,10 @@ import static org.junit.Assert.fail;
  * Applies functional testing logic for core Hibernate testing on top of {@link BaseUnitTestCase}
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use JUnit 5/6
  */
-@SuppressWarnings("deprecation")
+@Deprecated
 public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	public static final String VALIDATE_DATA_CLEANUP = "hibernate.test.validateDataCleanup";
 
@@ -375,17 +377,21 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@After
 	public final void afterTest() throws Exception {
-		// see https://github.com/hibernate/hibernate-orm/pull/3412#issuecomment-678338398
-		if ( getDialect() instanceof H2Dialect ) {
-			ReflectHelper.getMethod( Class.forName( "org.h2.util.DateTimeUtils" ), "resetCalendar" )
-					.invoke( null );
+		try {
+			// see https://github.com/hibernate/hibernate-orm/pull/3412#issuecomment-678338398
+			if ( getDialect() instanceof H2Dialect ) {
+				ReflectHelper.getMethod( Class.forName( "org.h2.util.DateTimeUtils" ), "resetCalendar" )
+						.invoke( null );
+			}
+			completeStrayTransaction();
+			if ( isCleanupTestDataRequired() ) {
+				cleanupTestData();
+			}
+			cleanupTest();
 		}
-		completeStrayTransaction();
-		if ( isCleanupTestDataRequired() ) {
-			cleanupTestData();
+		finally {
+			cleanupSession();
 		}
-		cleanupTest();
-		cleanupSession();
 		assertAllDataRemoved();
 	}
 

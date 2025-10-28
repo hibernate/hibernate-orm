@@ -20,7 +20,6 @@ import org.hibernate.id.enhanced.NoopOptimizer;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.id.enhanced.PooledOptimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -30,11 +29,11 @@ import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 
-import org.jboss.logging.Logger;
 
-import java.lang.invoke.MethodHandles;
 
+import static org.hibernate.id.enhanced.SequenceGeneratorLogger.SEQUENCE_GENERATOR_LOGGER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
@@ -44,9 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class NegativeValueSequenceTest {
 
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, SequenceStyleGenerator.class.getName() )
-	);
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( SEQUENCE_GENERATOR_LOGGER );
 
 	@Test
 	@JiraKey( value = "HHH-5933")
@@ -59,14 +56,14 @@ public class NegativeValueSequenceTest {
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 
-			Triggerable triggerable = logInspection.watchForLogMessages( "HHH000116" );
+			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090205" );
 
 			Metadata metadata = new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( NegativeOneIncrementSize.class )
 					.buildMetadata();
 
 			// NegativeOneIncrementSize ID has allocationSize == -1, so warning should not be triggered.
-			assertEquals( false, triggerable.wasTriggered() );
+			assertFalse( triggerable.wasTriggered() );
 
 			sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
 
@@ -107,14 +104,14 @@ public class NegativeValueSequenceTest {
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 
-			Triggerable triggerable = logInspection.watchForLogMessages( "HHH000116" );
+			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090205" );
 
 			Metadata metadata = new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( NegativeTwoIncrementSize.class )
 					.buildMetadata();
 
 			// NegativeTwoIncrementSize ID has allocationSize == -2, so warning should be triggered.
-			assertEquals( true, triggerable.wasTriggered() );
+			assertTrue( triggerable.wasTriggered() );
 
 			sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
 
@@ -156,14 +153,14 @@ public class NegativeValueSequenceTest {
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 
-			Triggerable triggerable = logInspection.watchForLogMessages( "HHH000116" );
+			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090205" );
 
 			Metadata metadata = new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( PositiveOneIncrementSize.class )
 					.buildMetadata();
 
 			// PositiveOneIncrementSize ID has allocationSize == 1, so warning should not be triggered.
-			assertEquals( false, triggerable.wasTriggered() );
+			assertFalse( triggerable.wasTriggered() );
 
 			sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
 
@@ -205,7 +202,7 @@ public class NegativeValueSequenceTest {
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 
-			Triggerable triggerable = logInspection.watchForLogMessages( "HHH000116" );
+			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090205" );
 
 			Metadata metadata = new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( PositiveTwoIncrementSize.class )
@@ -213,7 +210,7 @@ public class NegativeValueSequenceTest {
 
 			// NoopOptimizer is preferred (due to setting AvailableSettings.PREFERRED_POOLED_OPTIMIZER to "false")
 			// PositiveTwoIncrementSize ID has allocationSize == 2, so warning should be triggered.
-			assertEquals( true, triggerable.wasTriggered() );
+			assertTrue( triggerable.wasTriggered() );
 
 			sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
 
@@ -255,7 +252,7 @@ public class NegativeValueSequenceTest {
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 
-			Triggerable triggerable = logInspection.watchForLogMessages( "HHH000116" );
+			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090205" );
 
 			Metadata metadata = new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( PositiveTwoIncrementSize.class )
@@ -263,7 +260,7 @@ public class NegativeValueSequenceTest {
 
 			// PositiveTwoIncrementSize ID has allocationSize == 2, so PooledOptimizer should be used.
 			// Warning should not be triggered.
-			assertEquals( false, triggerable.wasTriggered() );
+			assertFalse( triggerable.wasTriggered() );
 
 			sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
 
@@ -305,14 +302,14 @@ public class NegativeValueSequenceTest {
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 
-			Triggerable triggerable = logInspection.watchForLogMessages( "HHH000116" );
+			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090205" );
 
 			Metadata metadata = new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( NegativeTwoIncrementSizePositiveInitialValue.class )
 					.buildMetadata();
 
 			// NegativeTwoIncrementSizePositiveInitialValue ID has allocationSize == -2, so warning should be triggered.
-			assertEquals( true, triggerable.wasTriggered() );
+			assertTrue( triggerable.wasTriggered() );
 
 			sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
 

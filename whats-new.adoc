@@ -1,376 +1,133 @@
-= What's New in 7.0
-:toc:
+= What's New in 7.2
+:toc2:
+:sectanchors:
 :toclevels: 4
+:version: 7.2
 :docsBase: https://docs.jboss.org/hibernate/orm
-:versionDocBase: {docsBase}/7.0
+:versionDocBase: {docsBase}/{version}
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
 :migrationGuide: {versionDocBase}/migration-guide/migration-guide.html
 
-Describes the new features and capabilities added to Hibernate ORM in 7.0.
+Describes the new features and capabilities added to Hibernate ORM in {version}.
 
-If migrating from 6.6, be sure to also check out the link:{migrationGuide}[Migration Guide] for discussion of impactful changes.
+IMPORTANT: If migrating from earlier versions, be sure to also check out the link:{migrationGuide}[Migration Guide] for discussion of impactful changes.
 
-[[relicense]]
-== Apache License
+[[embedded-table]]
+== @EmbeddedTable
 
-Starting with 7.0, Hibernate ORM will be licensed under the Apache License 2.0.
+The Jakarta Persistence compliant way to specify the table to which an embedded value maps is tedious, at best, requiring us of multiple `@AttributeOverride` and/or `@AssociationOverride` annotations -
 
-Details can be seen at https://hibernate.atlassian.net/browse/HHH-19145.
-
-As part of this effort, the Hibernate team reached out to the authors of
-"non-trivial" contributions to request permission to relicense their
-work under the Apache License.  The response was overwhelming positive, although
-we never heard back from some contributors and another explicitly disagreed.
-This required a few actions on our part:
-
-* Dropping `hibernate-ucp` - see https://hibernate.atlassian.net/browse/HHH-19162
-* Dropping `TeradataDialect` - see https://hibernate.atlassian.net/browse/HHH-19057
-
-[[java-17]]
-== Java 17
-
-Java 17 is the new baseline Java version.
-
-
-[[jpa-32]]
-== Jakarta Persistence 3.2
-
-7.0 migrates to Jakarta Persistence 3.2, which is fairly disruptive.
-See this https://in.relation.to/2024/04/01/jakarta-persistence-3/[blog post] for a good discussion of the changes.
-
-- https://ci.hibernate.org/view/ORM/job/hibernate-orm-tck-3.2/job/wip%252F7.0/24/[TCK Results] with Java 17
-- https://ci.hibernate.org/view/ORM/job/hibernate-orm-tck-3.2/job/wip%252F7.0/25/[TCK Results] with Java 21
-
-
-[[hibernate-models]]
-== Hibernate Models
-
-For many years Hibernate has used the Hibernate Commons Annotations (HCANN) library for handling various low-level tasks
-related to understanding the structure of an application domain model, reading annotations and weaving in XML
-mapping documents.
-The https://github.com/hibernate/hibernate-models[Hibernate Models] project was developed to be a better alternative
-to HCANN.
-7.0 uses Hibernate Models in place of HCANN.
-
-[[soft-delete-timestamp]]
-== @SoftDelete with TIMESTAMP
-
-Soft-delete now supports the strategy of tracking the timestamp at which the soft-delete occurred,
-in addition to the previous truth-based strategies.
-See the link:{userGuideBase}#soft-delete[User Guide] for details.
-
-[[embedded-column-naming]]
-== @EmbeddedColumnNaming
-
-A long-requested feature for both Hibernate and Jakarta Persistence has been the ability to
-define a prefix for the names of columns associated with an embedded value.
-
-7.0 adds support for this using the new `@EmbeddedColumnNaming` annotation.  The annotation
-accepts a format pattern, so is more flexible than just a prefix.
-
+====
 [source,java]
 ----
-@Embeddable
-class Address {
-    String street;
-    String city;
-	...
-}
-
 @Entity
+@Table(name="primary")
+@SecondaryTable(name="secondary")
 class Person {
-    ...
-    @Embedded
-    @EmbeddedColumnNaming("home_%")
-    Address homeAddress;
+	...
 
     @Embedded
-    @EmbeddedColumnNaming("work_%")
-    Address workAddress;
+    @AttributeOverride(name="street",
+        column=@Column(table="secondary"))
+    @AttributeOverride(name="city",
+        column=@Column(table="secondary"))
+    @AttributeOverride(name="state",
+        column=@Column(table="secondary"))
+    @AttributeOverride(name="zip",
+        column=@Column(table="secondary"))
+    Address address;
 }
 ----
-
-[NOTE]
-====
-This feature is considered incubating.
 ====
 
-See the link:{userGuideBase}#embeddable-column-naming[User Guide] for details.
+Hibernate now provides the `EmbeddedTable` annotation to help make this easier -
 
-
-[[NamedEntityGraph]]
-== @NamedEntityGraph
-
-A new annotation (`@org.hibernate.annotations.NamedEntityGraph`) has been added to allow
-specifying a named entity-graph using Hibernate's ability to parse a string representation of the graph.
-
-
+====
 [source,java]
 ----
 @Entity
-@NamedEntityGraph( graph="title, isbn, author(name, phoneNumber)" )
-class Book {
-	// ...
+@Table(name="primary")
+@SecondaryTable(name="secondary")
+class Person {
+	...
+
+    @Embedded
+    @EmbeddedTable("secondary")
+    Address address;
 }
 ----
-
-
-See `org.hibernate.graph.GraphParser` for details on the syntax and the
-link:{userGuideBase}#fetching-strategies-dynamic-fetching-entity-graph-parsing-annotation[User Guide] for additional details.
-
-
-[[session-find-multiple]]
-== findMultiple() and getMultiple()
-
-The new operations `Session.findMultiple()` and `StatelessSession.getMultiple()` provide a convenient way to fetch a batch of entities by id.
-Combined with the `BatchSize` option, allows breaking up the JDBC calls into "batches".
-
-
-[[operation-options]]
-== FindOption, LockOption, RefreshOption
-
-As a more typesafe replacement for hints, Jakarta Persistence now allows for "option objects" which indicate these hints.  Not only is it more typesafe, but also more concise - a double win!
-
-These "option objects" come in 3 flavors depending on what operation is being performed -
-
-FindOption:: Used to indicate options for find operations :
-    * `Session.find`
-    * `Session.findMultiple`
-    * etc
-LockOption:: Used to indicate options for `Session.lock`
-RefreshOption:: Used to indicate options for `Session.refresh`
-
-Each of these are interfaces.  Jakarta Persistence does provide some built-in options:
-
-CacheRetrieveMode:: Is now a `FindOption`.
-CacheStoreMode:: Is now a `FindOption` and a `RefreshOption`.
-LockModeType:: Is now a `FindOption` and a `RefreshOption`.
-Timeout (new):: Is a `FindOption`, a `RefreshOption` and a `LockOption`.  See also `org.hibernate.Timeouts` for some magic values.
-PessimisticLockScope:: Is now a `FindOption`, a `RefreshOption` and a `LockOption`
-
-Hibernate provides a few additional options:
-
-ReadOnlyMode (new):: Is a `FindOption` which indicates whether the entities and collections being loaded should be considered read-only.
-EnabledFetchProfile (new):: Is a `FindOption` indicating a fetch-profile to be enabled for the find operation.
-LockMode:: Is now a `FindOption` and a `RefreshOption` (expanded version of JPA's `LockModeType`).
-CacheMode:: Is now a `FindOption`.
-BatchSize (new):: Is now a `FindOption`.
-
-
-All operations which accept options (which previously accepted hints) accept a varargs grouping of them.  E.g.
-
-====
-[source, java, indent=0]
-----
-Book loaded = session.find(
-    Book.class,
-    1,
-    LockMode.PESSIMISTIC_WRITE,
-    Timeouts.NO_WAIT,
-    new EnabledFetchProfile("with-authors")
-);
-----
 ====
 
+The annotation is only legal on top-level embedded.  Placement on nested embedded values will be ignored.
 
-[[QuerySpecification]]
-== QuerySpecification, Restriction, and Range
+[[MultiFindOption]]
+== Introduction of FindMultipleOption
 
-A new API has been added for incremental definition of a query, with support for selections -
+Previous versions of Hibernate supported loading multiple entities of a type via the `Session#byMultipleIds` method.
+7.0 added `Session#findMultiple` methods which accepted `FindOption` configuration; but, for options specific to multiple-id loading, users still had to revert to `Session#byMultipleIds`.
+7.2 covers this gap and introduces new `FindMultipleOption` configuration -
 
-====
-[source, java, indent=0]
-----
-SelectionQuery<Book> qry = SelectionSpecification.create(
-    Book.class,
-    "from Book"
-).restrict(
-    Restriction.restrict(
-        Book_.suggestedCost,
-        Range.closed(10.00, 19.99)
-    )
-).sort(
-    Order.asc(Book_.suggestedCost)
-).createQuery(session);
-----
-====
+* `SessionCheckMode`
+* `OrderingMode`
+* `RemovalsMode`
 
-as well as mutations -
+`Session#byMultipleIds` and `MultiIdentifierLoadAccess` have been deprecated.
+
+[[child-stateless-sessions]]
+== Child StatelessSession
+
+Creation of child `StatelessSession` is now supported, just as with child `Session`.
+This is a `StatelessSession` which shares "transactional context" with a parent `Session` or `StatelessSession`.
+Use `Session#statelessWithOptions` or `StatelessSession#statelessWithOptions` instead of `#sessionWithOptions`.
 
 ====
-[source, java, indent=0]
-----
-MutationQuery<Book> qry = MutationSpecification.create(
-    Book.class,
-    "delete Book"
-).restrict(
-    Restriction.restrict(
-        Book_.suggestedCost,
-        Range.closed(10.00, 19.99)
-    )
-).createQuery(session);
-----
-====
-
-[NOTE]
-====
-This feature is considered incubating.
-====
-
-See the link:{userGuideBase}#QuerySpecification[User Guide] for details.
-
-
-[[session-managed-entities]]
-== Direct access to first-level cache
-
-The new operation `Session.getManagedEntities()` allows the application to iterate over all entities in the first-level cache, or over all entities of a given type.
-
-[NOTE]
-====
-This feature is considered incubating.
-====
-
-
-[[metamode-param-binding]]
-== Use of metamodel in query parameter binding
-
-When an argument to a query parameter is of ambiguous type, the static metamodel may now be used to disambiguate.
-
 [source,java]
-session.createSelectionQuery("from Thing where uniqueKey = ?1")
-        .setParameter(1, key, Thing_.uniqueKey.getType())
-        .getSingleResult();
-
-
-[[enum-checks]]
-== Converted Enums and Check Constraints
-
-Hibernate previously added support for generating check constraints for enums mapped using `@Enumerated`
-as part of schema generation.  7.0 adds the same capability for enums mapped using an `AttributeConverter`,
-by asking the converter to convert all the enum constants on start up.
-
-
-[[json-xml-functions]]
-== JSON and XML functions
-
-Support for most of the JSON and XML functions that the SQL standard specifies was added to HQL/Criteria.
-The implementations retain the SQL standard semantics and will throw an error if emulation on a database is impossible.
-
-New functions include:
-
-* construction functions like `json_array()`, `json_object()`, `xmlelement()` and `xmlforest()`
-* query functions like `json_value()`, `json_query()` and `xmlquery()`
-* aggregation functions like `json_agg()`, `json_object_agg()` and `xmlagg()`
-* manipulation functions like `json_set()`, `json_mergepatch()`
-* many others
-
-
-[[set-returning-functions]]
-== Set-returning Functions
-
-A set-returning function is a new type of function that can return rows and is exclusive to the `from` clause.
-The concept is known in many different database SQL dialects and is sometimes referred to as table valued function or table function.
-
-Custom set-returning functions can be registered via a `FunctionContributor`.
-Out-of-the-box, some common set-returning functions are already supported or emulated
-
-* `unnest()` - allows to turn an array into rows
-* `generate_series()` - can be used to create a series of values as rows
-* `json_table()` - turns a JSON document into rows
-* `xmltable()` - turns an XML document into rows
-
-
-[[any-discriminator]]
-== @AnyDiscriminatorImplicitValues
-
-The new  `@AnyDiscriminatorImplicitValues` offers 2 related improvements for the mapping of discriminator values
-for `@Any` and `ManyToAny` associations.
-
-First, it allows control over how Hibernate determines the discriminator value to store in the database for
-implicit discriminator mappings.  Historically, Hibernate would always use the full name of the associated
-entity.
-
-Second, it allows mixing of explicit and implicit value strategies.
-
-[NOTE]
-====
-This feature is considered incubating.
+----
+Session parent = ...;
+StatelessSession child = parent
+    .statelessWithOptions()
+    .connection()
+    ...
+    .open();
+----
 ====
 
-See the link:{userGuideBase}#associations-any[User Guide] for details.
+[[vector-module-enhancements]]
+== Hibernate-Vector module enhancements
 
-
-[[stateless-session-multiple]]
-== StatelessSession and Batch Operations
-
-`StatelessSession` now supports explicit batch operations via `insertMultiple()`, `updateMultiple()`, or `deleteMultiple()`.
-
-[NOTE]
-====
-This feature is considered incubating.
-====
-
-
-[[stateless-session-cache]]
-== StatelessSession and Second Level Cache
-
-Previously, stateless sessions never interacted with the second-level cache.
-This reflected their original intended role in bulk processing.
-With the advent of Jakarta Data and Hibernate Data Repositories, the responsibilities of `StatelessSession` have now expanded, and this behavior is no longer appropriate.
-Thus, a stateless session now makes use of the second-level cache by default.
-
-See the link:{migrationGuide}#stateless-session-cache[Migration Guide] for additional details.
-
-
-
-[[stateless-session-jdbc-batching]]
-== StatelessSession and JDBC Batching
-
-Automatic JDBC batching has the side effect of delaying the execution of the batched operation, and this undermines the synchronous nature of operations performed through a stateless session.
-In Hibernate 7, the configuration property `hibernate.jdbc.batch_size` now has no effect on a stateless session.
-Automatic batching may be enabled by explicitly calling `setJdbcBatchSize()`.
-However, the preferred approach is to <<stateless-session-multiple,explicitly batch operations>> via `insertMultiple()`, `updateMultiple()`, or `deleteMultiple()`.
-
-
-[[transaction-api]]
-== Improvements to Transaction
-
-The `Transaction` interface leaks the SPI type `TransactionStatus` via `getStatus()`, and the JTA-defined type `Synchronization` via `registerSynchronization()`, which breaks layering in a fairly harmless way.
-New operations were added to the `Transaction` interface, allowing code to inspect the status of the transaction or register callbacks without the use of layer-breaking operations.
-
-[NOTE]
-====
-This feature is considered incubating.
-====
-
-[[collection-id-java-class]]
-== @CollectionIdJavaClass
-
-`@CollectionIdJavaClass` is an alternative to `@CollectionIdJavaType` for simpler cases of id-bag mappings.  E.g.
+Support for binary, float16 and sparse vectors were added.
 
 ====
 [source, java, indent=0]
 ----
-@Bag
-@CollectionId(generator="increment")
-@CollectionIdJavaClass(Integer.class)
-Collection<Person> authors;
+@Entity
+public class MyEntity {
+	@Id
+	UUID id;
+	@JdbcTypeCode(SqlTypes.VECTOR_BINARY)
+	@Array(length = 24) // Refers to the bit count
+	byte[] binaryVector;
+	@JdbcTypeCode(SqlTypes.VECTOR_FLOAT16)
+	@Array(length = 3)
+	float[] float16Vector;
+	@Array(length = 3)
+	SparseFloatVector sparseFloat32Vector;
+}
 ----
 ====
 
+The Hibernate Vector module currently ships with 3 sparse vector types:
 
-[[schema-manager-populate]]
-== Data population
+* `SparseByteVector`
+* `SparseFloatVector`
+* `SparseDoubleVector`
 
-Setting `jakarta.persistence.schema-generation.database.action=populate` or calling `SchemaManager.populate()` populates an existing schema with initial data in `/import.sql` or other SQL scripts specified via `jakarta.persistence.sql-load-script-source`.
+In addition to accessing the sparse indices and values, they also implement the `List` interface to provide access
+as if it were a dense vector.
 
+Also, support for vectors in the following databases was added:
 
-[[xml-mapping]]
-== XML mappings
-
-Hibernate's legacy `hbm.xml` mapping schema has been deprecated for quite some time, replaced by a new `mapping.xml`
-schema, which is now stabilized and should be prefered.
-Support for `hbm.xml` mappings will be removed in 8.0.
-
-We offer a transformation of `hbm.xml` files into `mapping.xml` files, which is available both at build-time (Gradle plugin) and at run-time (using `hibernate.transform_hbm_xml.enabled=true`).
-
+* https://dev.mysql.com/doc/refman/9.4/en/vector-functions.html[MySQL 9.0+]
+* https://www.ibm.com/docs/en/db2/12.1.0?topic=list-vector-values[DB2 12.1+]
+* https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-vector-engine-guide/sap-hana-cloud-sap-hana-database-vector-engine-guide[SAP HANA Cloud QRC 4/2024+]
+* https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type?view=sql-server-ver17[SQL Server 2025+]

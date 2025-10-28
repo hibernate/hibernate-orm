@@ -84,7 +84,10 @@ import java.util.concurrent.locks.ReentrantLock;
  * @param <V> the type of mapped values
  *
  * @author Doug Lea
+ * @deprecated We shouldn't maintain a cache implementation in the Hibernate ORM codebase,
+ * so this will be eventually removed as we encourage to plug-in external implementations for all caching needs.
  */
+@Deprecated(forRemoval = true)
 public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		implements ConcurrentMap<K, V>, Serializable {
 

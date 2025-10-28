@@ -4,14 +4,11 @@
  */
 package org.hibernate.id.enhanced;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Constructor;
 import java.util.Properties;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.CoreMessageLogger;
+import static org.hibernate.cfg.MappingSettings.PREFERRED_POOLED_OPTIMIZER;
+import static org.hibernate.id.enhanced.OptimizerLogger.OPTIMIZER_MESSAGE_LOGGER;
 
-import org.jboss.logging.Logger;
 
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
@@ -21,33 +18,32 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  * @author Steve Ebersole
  */
 public class OptimizerFactory {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			OptimizerFactory.class.getName()
-	);
 
 	private static final Class<?>[] CTOR_SIG = new Class[] { Class.class, int.class };
 
 	private static Optimizer buildOptimizer(OptimizerDescriptor descriptor, Class<?> returnClass, int incrementSize) {
+		final var optimizer = createOptimizer( descriptor, returnClass, incrementSize );
+		return optimizer != null ? optimizer : buildFallbackOptimizer( returnClass, incrementSize );
+	}
+
+	private static Optimizer createOptimizer(OptimizerDescriptor descriptor, Class<?> returnClass, int incrementSize) {
 		final Class<? extends Optimizer> optimizerClass;
 		try {
 			optimizerClass = descriptor.getOptimizerClass();
 		}
 		catch ( Throwable ignore ) {
-			LOG.unableToLocateCustomOptimizerClass( descriptor.getExternalName() );
+			OPTIMIZER_MESSAGE_LOGGER.unableToLocateCustomOptimizerClass( descriptor.getExternalName() );
 			return buildFallbackOptimizer( returnClass, incrementSize );
 		}
 
 		try {
-			final Constructor<? extends Optimizer> ctor = optimizerClass.getConstructor( CTOR_SIG );
+			final var ctor = optimizerClass.getConstructor( CTOR_SIG );
 			return ctor.newInstance( returnClass, incrementSize );
 		}
 		catch ( Throwable ignore ) {
-			LOG.unableToInstantiateOptimizer( descriptor.getExternalName() );
+			OPTIMIZER_MESSAGE_LOGGER.unableToInstantiateOptimizer( descriptor.getExternalName() );
 		}
-
-		return buildFallbackOptimizer( returnClass, incrementSize );
+		return null;
 	}
 
 	private static Optimizer buildFallbackOptimizer(Class<?> returnClass, int incrementSize) {
@@ -65,7 +61,7 @@ public class OptimizerFactory {
 	 * @return The built optimizer
 	 */
 	public static Optimizer buildOptimizer(OptimizerDescriptor type, Class<?> returnClass, int incrementSize, long explicitInitialValue) {
-		final Optimizer optimizer = buildOptimizer( type, returnClass, incrementSize );
+		final var optimizer = buildOptimizer( type, returnClass, incrementSize );
 		if ( optimizer instanceof InitialValueAwareOptimizer initialValueAwareOptimizer ) {
 			initialValueAwareOptimizer.injectInitialValue( explicitInitialValue );
 		}
@@ -80,16 +76,13 @@ public class OptimizerFactory {
 			return StandardOptimizerDescriptor.NONE.getExternalName();
 		}
 		else {
-			// see if the user defined a preferred pooled optimizer...
+			// see if the user defined a preferred pooled optimizer
 			final String preferredPooledOptimizerStrategy =
-					configSettings.getProperty( AvailableSettings.PREFERRED_POOLED_OPTIMIZER );
-			if ( isNotEmpty( preferredPooledOptimizerStrategy ) ) {
-				return preferredPooledOptimizerStrategy;
-			}
-			else {
-				// otherwise fallback to the fallback strategy
-				return StandardOptimizerDescriptor.POOLED.getExternalName();
-			}
+					configSettings.getProperty( PREFERRED_POOLED_OPTIMIZER );
+			return isNotEmpty( preferredPooledOptimizerStrategy )
+					? preferredPooledOptimizerStrategy
+					// otherwise fall back to the fallback strategy
+					: StandardOptimizerDescriptor.POOLED.getExternalName();
 		}
 	}
 

@@ -9,7 +9,6 @@ import java.util.Objects;
 
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.type.BindingContext;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -29,7 +28,7 @@ public class ArraysOfSameTypeArgumentValidator implements ArgumentsValidator {
 			BindingContext bindingContext) {
 		BasicPluralType<?, ?> arrayType = null;
 		for ( int i = 0; i < arguments.size(); i++ ) {
-			final SqmExpressible<?> expressible = arguments.get( i ).getExpressible();
+			final var expressible = arguments.get( i ).getExpressible();
 			final DomainType<?> sqmType;
 			if ( expressible != null && ( sqmType = expressible.getSqmType() ) != null ) {
 				if ( arrayType == null ) {
@@ -61,8 +60,9 @@ public class ArraysOfSameTypeArgumentValidator implements ArgumentsValidator {
 	}
 
 	private static boolean isCompatible(BasicPluralType<?,?> arrayType, DomainType<?> sqmType) {
-		return arrayType == sqmType || sqmType instanceof BasicPluralType<?, ?> basicPluralType
-			&& Objects.equals( arrayType.getElementType(), basicPluralType.getElementType() );
+		return arrayType == sqmType
+			|| sqmType instanceof BasicPluralType<?, ?> basicPluralType
+				&& Objects.equals( arrayType.getElementType(), basicPluralType.getElementType() );
 	}
 
 	@Override

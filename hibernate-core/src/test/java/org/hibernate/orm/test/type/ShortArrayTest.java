@@ -4,10 +4,12 @@
  */
 package org.hibernate.orm.test.type;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -22,7 +24,8 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.BasicType;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
@@ -43,6 +46,7 @@ import static org.hamcrest.core.Is.is;
  * @author Jordan Gigov
  * @author Christian Beikov
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @BootstrapServiceRegistry(
 		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
@@ -53,7 +57,7 @@ public class ShortArrayTest {
 
 	private BasicType<Short[]> arrayType;
 
-	@BeforeAll
+	@BeforeEach
 	public void startUp(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			arrayType = em.getTypeConfiguration().getBasicTypeForJavaType( Short[].class );
@@ -72,6 +76,11 @@ public class ShortArrayTest {
 			q.setParameter( "data", new Short[] { null, null, 0 } );
 			q.executeUpdate();
 		} );
+	}
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
 	@Test
@@ -100,6 +109,10 @@ public class ShortArrayTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "The statement failed because binary large objects are not allowed in the Union, Intersect, or Minus ")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 10, minorVersion = 6,
+			reason = "Bug in MariaDB https://jira.mariadb.org/browse/MDEV-21530")
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TypedQuery<TableWithShortArrays> tq = em.createNamedQuery( "TableWithShortArrays.JPQL.getByData", TableWithShortArrays.class );
@@ -127,11 +140,12 @@ public class ShortArrayTest {
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE requires a special function to compare XML")
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA requires a special function to compare LOBs")
 	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "MySQL supports distinct from through a special operator")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix can't compare LOBs")
 	public void testNativeQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final Dialect dialect = em.getDialect();
 			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
-			final String param = arrayType.getJdbcType().wrapWriteExpression( ":data", dialect );
+			final String param = arrayType.getJdbcType().wrapWriteExpression( ":data", null, dialect );
 			TypedQuery<TableWithShortArrays> tq = em.createNativeQuery(
 					"SELECT * FROM table_with_short_arrays t WHERE the_array " + op + " " + param,
 					TableWithShortArrays.class

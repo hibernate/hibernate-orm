@@ -10,16 +10,13 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.binder.AttributeBinder;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static java.util.Collections.emptyMap;
@@ -41,14 +38,14 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 			MetadataBuildingContext buildingContext,
 			PersistentClass persistentClass,
 			Property property) {
-		final InFlightMetadataCollector collector = buildingContext.getMetadataCollector();
+		final var collector = buildingContext.getMetadataCollector();
 
 		final String returnedClassName = property.getReturnedClassName();
-		final BasicType<Object> tenantIdType =
+		final var tenantIdType =
 				collector.getTypeConfiguration().getBasicTypeRegistry()
 						.getRegisteredType( returnedClassName );
 
-		final FilterDefinition filterDefinition = collector.getFilterDefinition( FILTER_NAME );
+		final var filterDefinition = collector.getFilterDefinition( FILTER_NAME );
 		if ( filterDefinition == null ) {
 			collector.addFilterDefinition(
 					new FilterDefinition(
@@ -93,7 +90,7 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 		if ( property.getColumnSpan() != 1 ) {
 			throw new MappingException( "@TenantId attribute must be mapped to a single column or formula" );
 		}
-		final Selectable selectable = property.getSelectables().get( 0 );
+		final var selectable = property.getSelectables().get( 0 );
 		if ( selectable instanceof Formula formula ) {
 			return formula.getFormula();
 		}

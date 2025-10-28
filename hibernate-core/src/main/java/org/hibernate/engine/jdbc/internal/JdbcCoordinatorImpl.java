@@ -7,7 +7,6 @@ package org.hibernate.engine.jdbc.internal;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
-import org.hibernate.engine.jdbc.batch.JdbcBatchLogging;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
@@ -18,11 +17,8 @@ import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.jdbc.spi.ResultSetReturn;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
-import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl;
 import org.hibernate.resource.jdbc.internal.LogicalConnectionProvidedImpl;
 import org.hibernate.resource.jdbc.internal.ResourceRegistryStandardImpl;
@@ -39,6 +35,8 @@ import java.sql.Statement;
 import java.util.function.Supplier;
 
 import static org.hibernate.ConnectionReleaseMode.AFTER_STATEMENT;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
+import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_MESSAGE_LOGGER;
 
 /**
  * Standard implementation of {@link JdbcCoordinator}.
@@ -48,7 +46,7 @@ import static org.hibernate.ConnectionReleaseMode.AFTER_STATEMENT;
  * @author Sanne Grinovero
  */
 public class JdbcCoordinatorImpl implements JdbcCoordinator {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JdbcCoordinatorImpl.class );
+	private static final boolean TRACE_ENABLED = JDBC_LOGGER.isTraceEnabled();
 
 	private transient final LogicalConnectionImplementor logicalConnection;
 	private transient final JdbcSessionOwner owner;
@@ -76,23 +74,23 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			Connection userSuppliedConnection,
 			JdbcSessionOwner owner,
 			JdbcServices jdbcServices) {
-		this.isUserSuppliedConnection = userSuppliedConnection != null;
-
-		final ResourceRegistry resourceRegistry =
-				new ResourceRegistryStandardImpl( owner.getJdbcSessionContext().getEventHandler() );
-		if ( isUserSuppliedConnection ) {
-			this.logicalConnection = new LogicalConnectionProvidedImpl( userSuppliedConnection, resourceRegistry );
-		}
-		else {
-			this.logicalConnection = new LogicalConnectionManagedImpl(
-					owner.getJdbcConnectionAccess(),
-					owner.getJdbcSessionContext(),
-					owner.getSqlExceptionHelper(),
-					resourceRegistry
-			);
-		}
 		this.owner = owner;
 		this.jdbcServices = jdbcServices;
+		this.isUserSuppliedConnection = userSuppliedConnection != null;
+		this.logicalConnection = createLogicalConnection( userSuppliedConnection, owner );
+		if ( TRACE_ENABLED ) {
+			JDBC_LOGGER.createdJdbcCoordinator( hashCode() );
+		}
+	}
+
+	private static LogicalConnectionImplementor createLogicalConnection(
+			Connection userSuppliedConnection,
+			JdbcSessionOwner owner) {
+		final var resourceRegistry =
+				new ResourceRegistryStandardImpl( owner.getJdbcSessionContext().getEventHandler() );
+		return userSuppliedConnection == null
+				? new LogicalConnectionManagedImpl( owner, resourceRegistry )
+				: new LogicalConnectionProvidedImpl( userSuppliedConnection, resourceRegistry );
 	}
 
 	private JdbcCoordinatorImpl(
@@ -103,6 +101,9 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		this.isUserSuppliedConnection = isUserSuppliedConnection;
 		this.owner = owner;
 		this.jdbcServices = owner.getJdbcSessionContext().getJdbcServices();
+		if ( TRACE_ENABLED ) {
+			JDBC_LOGGER.createdJdbcCoordinator( hashCode() );
+		}
 	}
 
 	@Override
@@ -144,12 +145,15 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public Connection close() {
-		LOG.tracev( "Closing JDBC container [{0}]", this );
-		Connection connection;
+		if ( TRACE_ENABLED ) {
+			JDBC_LOGGER.closingJdbcCoordinator( hashCode() );
+		}
+		final Connection connection;
 		try {
 			if ( currentBatch != null ) {
-				LOG.closingUnreleasedBatch();
+				JDBC_LOGGER.closingUnreleasedBatch( hashCode() );
 				currentBatch.release();
+				currentBatch = null;
 			}
 		}
 		finally {
@@ -169,14 +173,17 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 					currentBatch.execute();
 				}
 				finally {
-					currentBatch.release();
+					if ( currentBatch != null ) {
+						currentBatch.release();
+						currentBatch = null;
+					}
 				}
 			}
 		}
 
-		currentBatch = owner.getJdbcSessionContext().getBatchBuilder()
-				.buildBatch( key, batchSize, statementGroupSupplier, this );
-
+		currentBatch =
+				owner.getJdbcSessionContext().getBatchBuilder()
+						.buildBatch( key, batchSize, statementGroupSupplier, this );
 		return currentBatch;
 	}
 
@@ -187,7 +194,10 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 				currentBatch.execute();
 			}
 			finally {
-				currentBatch.release();
+				if ( currentBatch != null ) { // abortBatch() might have been called
+					currentBatch.release();
+					currentBatch = null;
+				}
 			}
 		}
 	}
@@ -195,12 +205,18 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void conditionallyExecuteBatch(BatchKey key) {
 		if ( currentBatch != null && !currentBatch.getKey().equals( key ) ) {
-			JdbcBatchLogging.BATCH_LOGGER.debugf( "Conditionally executing batch - %s", currentBatch.getKey() );
+			if ( BATCH_MESSAGE_LOGGER.isTraceEnabled() ) {
+				BATCH_MESSAGE_LOGGER.conditionallyExecuteBatch(
+						currentBatch.getKey().toLoggableString() );
+			}
 			try {
 				currentBatch.execute();
 			}
 			finally {
-				currentBatch.release();
+				if ( currentBatch != null ) { // abortBatch() might have been called
+					currentBatch.release();
+					currentBatch = null;
+				}
 			}
 		}
 	}
@@ -208,7 +224,12 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void abortBatch() {
 		if ( currentBatch != null ) {
+			if ( BATCH_MESSAGE_LOGGER.isTraceEnabled() ) {
+				BATCH_MESSAGE_LOGGER.abortBatch(
+						currentBatch.getKey().toLoggableString() );
+			}
 			currentBatch.release();
+			currentBatch = null;
 		}
 	}
 
@@ -259,21 +280,23 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		}
 		final long millisecondsRemaining = transactionTimeOutInstant - System.currentTimeMillis();
 		if ( millisecondsRemaining <= 0L ) {
-			throw new TransactionException( "transaction timeout expired" );
+			throw new TransactionException( "Transaction timeout expired" );
 		}
 		return Math.max( (int) (millisecondsRemaining / 1000), 1 );
 	}
 
 	@Override
 	public void afterStatementExecution() {
-		final ConnectionReleaseMode connectionReleaseMode = connectionReleaseMode();
-		LOG.tracev( "Starting after statement execution processing [{0}]", connectionReleaseMode );
+		final var connectionReleaseMode = connectionReleaseMode();
+		if ( TRACE_ENABLED ) {
+			JDBC_LOGGER.statementExecutionComplete( connectionReleaseMode, hashCode() );
+		}
 		if ( connectionReleaseMode == AFTER_STATEMENT ) {
 			if ( ! releasesEnabled ) {
-				LOG.debug( "Skipping aggressive release due to manual disabling" );
+				JDBC_LOGGER.trace( "Skipping aggressive release due to manual disabling" );
 			}
 			else if ( hasRegisteredResources() ) {
-				LOG.debug( "Skipping aggressive release due to registered resources" );
+				JDBC_LOGGER.trace( "Skipping aggressive release due to registered resources" );
 			}
 			else {
 				getLogicalConnection().afterStatement();
@@ -302,14 +325,14 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public <T> T coordinateWork(WorkExecutorVisitable<T> work) {
-		final Connection connection = getLogicalConnection().getPhysicalConnection();
+		final var connection = getLogicalConnection().getPhysicalConnection();
 		try {
 			final T result = work.accept( new WorkExecutor<>(), connection );
 			afterStatementExecution();
 			return result;
 		}
 		catch ( SQLException e ) {
-			throw sqlExceptionHelper().convert( e, "error executing work" );
+			throw sqlExceptionHelper().convert( e, "Error executing work" );
 		}
 	}
 
@@ -323,9 +346,11 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	@SuppressWarnings("unchecked")
 	public void registerLastQuery(Statement statement) {
-		LOG.tracev( "Registering last query statement [{0}]", statement );
+//		if ( TRACE_ENABLED ) {
+//			LOG.tracef( "Registering last query statement [%s] @%s", statement, hashCode() );
+//		}
 		if ( statement instanceof JdbcWrapper ) {
-			final JdbcWrapper<Statement> wrapper = (JdbcWrapper<Statement>) statement;
+			final var wrapper = (JdbcWrapper<Statement>) statement;
 			registerLastQuery( wrapper.getWrappedObject() );
 		}
 		else {
@@ -349,7 +374,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	private SqlExceptionHelper safeSqlExceptionHelper() {
-		final SqlExceptionHelper sqlExceptionHelper = sqlExceptionHelper();
+		final var sqlExceptionHelper = sqlExceptionHelper();
 		//Should always be non-null, but to make sure as the implementation is lazy:
 		return sqlExceptionHelper == null ? new SqlExceptionHelper( false ) : sqlExceptionHelper;
 	}
@@ -371,17 +396,28 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public void afterTransactionBegin() {
+		if ( TRACE_ENABLED ) {
+			JDBC_LOGGER.transactionAfterBegin( hashCode() );
+		}
 		owner.afterTransactionBegin();
 	}
 
 	@Override
 	public void beforeTransactionCompletion() {
+		if ( TRACE_ENABLED ) {
+			JDBC_LOGGER.transactionBeforeCompletion( hashCode() );
+		}
 		owner.beforeTransactionCompletion();
 		logicalConnection.beforeTransactionCompletion();
 	}
 
 	@Override
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
+		if ( TRACE_ENABLED ) {
+			JDBC_LOGGER.transactionAfterCompletion(
+					successful ? "successful" : "unsuccessful",
+					hashCode() );
+		}
 		afterTransaction();
 		owner.afterTransactionCompletion( successful, delayed );
 	}
@@ -405,7 +441,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	 */
 	@Override
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		if ( ! isReadyForSerialization() ) {
+		if ( !isReadyForSerialization() ) {
 			throw new HibernateException( "Cannot serialize Session while connected" );
 		}
 		oos.writeBoolean( isUserSuppliedConnection );
@@ -423,21 +459,13 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	 * @throws IOException Trouble accessing the stream
 	 * @throws ClassNotFoundException Trouble reading the stream
 	 */
-	public static JdbcCoordinatorImpl deserialize(
-			ObjectInputStream ois,
-			JdbcSessionOwner owner) throws IOException, ClassNotFoundException {
+	public static JdbcCoordinatorImpl deserialize(ObjectInputStream ois, JdbcSessionOwner owner)
+			throws IOException, ClassNotFoundException {
 		final boolean isUserSuppliedConnection = ois.readBoolean();
-		final LogicalConnectionImplementor logicalConnection;
-		if ( isUserSuppliedConnection ) {
-			logicalConnection = LogicalConnectionProvidedImpl.deserialize( ois );
-		}
-		else {
-			logicalConnection = LogicalConnectionManagedImpl.deserialize(
-					ois,
-					owner.getJdbcConnectionAccess(),
-					owner.getJdbcSessionContext()
-			);
-		}
+		final var logicalConnection =
+				isUserSuppliedConnection
+						? LogicalConnectionProvidedImpl.deserialize( ois )
+						: LogicalConnectionManagedImpl.deserialize( ois, owner );
 		return new JdbcCoordinatorImpl( logicalConnection, isUserSuppliedConnection, owner );
 	}
 }

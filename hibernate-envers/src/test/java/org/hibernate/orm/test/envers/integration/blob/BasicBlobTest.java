@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import org.hamcrest.Matchers;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.proxy.BlobProxy;
@@ -82,11 +83,13 @@ public class BasicBlobTest extends BaseEnversJPAFunctionalTestCase {
 			comment = "The driver closes the stream, so it cannot be reused by envers")
 	@SkipForDialect(value = SQLServerDialect.class,
 			comment = "The driver closes the stream, so it cannot be reused by envers")
+	@SkipForDialect(value = InformixDialect.class)
 	public void testGenerateProxyStream() throws URISyntaxException {
 		final Path path = Path.of( Thread.currentThread().getContextClassLoader()
 				.getResource( "org/hibernate/orm/test/envers/integration/blob/blob.txt" ).toURI() );
 
 		try (final InputStream stream = new BufferedInputStream( Files.newInputStream( path ) )) {
+			final long length = Files.size( path );
 			doInJPA( this::entityManagerFactory, entityManager -> {
 				final Asset asset = new Asset();
 				asset.setFileName( "blob.txt" );
@@ -106,7 +109,7 @@ public class BasicBlobTest extends BaseEnversJPAFunctionalTestCase {
 				// H2, MySQL, Oracle, SQL Server work this way.
 				//
 				//
-				Blob blob = BlobProxy.generateProxy( stream, 9192L );
+				Blob blob = BlobProxy.generateProxy( stream, length );
 
 				asset.setData( blob );
 				entityManager.persist( asset );

@@ -4,14 +4,6 @@
  */
 package org.hibernate.orm.test.insertordering;
 
-import org.hibernate.cfg.Environment;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.junit.Test;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,72 +17,79 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistryFunctionalTesting;
+import org.hibernate.testing.orm.junit.ServiceRegistryProducer;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
 import java.io.Serializable;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.hibernate.cfg.BatchSettings.ORDER_INSERTS;
+import static org.hibernate.cfg.BatchSettings.ORDER_UPDATES;
+import static org.hibernate.cfg.BatchSettings.STATEMENT_BATCH_SIZE;
+import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-16485")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJdbcDriverProxying.class)
-public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
-
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+@ServiceRegistryFunctionalTesting
+@DomainModel(annotatedClasses = {
+		InsertOrderingRCATest.WeightedCause.class,
+		InsertOrderingRCATest.TimeManipulation.class,
+		InsertOrderingRCATest.Symptom.class,
+		InsertOrderingRCATest.SimpleCondition.class,
+		InsertOrderingRCATest.RCATemplate.class,
+		InsertOrderingRCATest.ParameterExpression.class,
+		InsertOrderingRCATest.NumberedExpression.class,
+		InsertOrderingRCATest.MathExpression.class,
+		InsertOrderingRCATest.FieldExpression.class,
+		InsertOrderingRCATest.Expression.class,
+		InsertOrderingRCATest.ConstantExpression.class,
+		InsertOrderingRCATest.ConditionAndExpression.class,
+		InsertOrderingRCATest.ConditionalExpression.class,
+		InsertOrderingRCATest.Condition.class,
+		InsertOrderingRCATest.CompoundCondition.class,
+		InsertOrderingRCATest.Cause.class,
+		InsertOrderingRCATest.CalculationExpression.class,
+		InsertOrderingRCATest.AlertCondition.class,
+		InsertOrderingRCATest.BaseEntity.class
+})
+@SessionFactory
+public class InsertOrderingRCATest implements ServiceRegistryProducer {
+	private final PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
 
 	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
-			WeightedCause.class,
-			TimeManipulation.class,
-			Symptom.class,
-			SimpleCondition.class,
-			RCATemplate.class,
-			ParameterExpression.class,
-			NumberedExpression.class,
-			MathExpression.class,
-			FieldExpression.class,
-			Expression.class,
-			ConstantExpression.class,
-			ConditionAndExpression.class,
-			ConditionalExpression.class,
-			Condition.class,
-			CompoundCondition.class,
-			Cause.class,
-			CalculationExpression.class,
-			AlertCondition.class,
-			BaseEntity.class
-		};
+	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder) {
+		return builder.applySetting( ORDER_INSERTS, true )
+				.applySetting( ORDER_UPDATES, true )
+				.applySetting( STATEMENT_BATCH_SIZE, 50 )
+				.applySetting( CONNECTION_PROVIDER, connectionProvider )
+				.build();
 	}
 
-	@Override
-	protected void addSettings(Map settings) {
-		settings.put(Environment.ORDER_INSERTS, "true");
-		settings.put(Environment.ORDER_UPDATES, "true");
-		settings.put(Environment.STATEMENT_BATCH_SIZE, "50");
-		settings.put(
-			org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
-			connectionProvider
-		);
-	}
-
-	@Override
-	public void releaseResources() {
-		super.releaseResources();
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 		connectionProvider.stop();
 	}
 
-	@Override
-	protected boolean rebuildSessionFactoryOnError() {
-		return false;
-	}
-
 	@Test
-	public void testBatching() throws SQLException {
-		doInHibernate(this::sessionFactory, session -> {
+	public void testBatching(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
 			connectionProvider.clear();
 			for (RCATemplate template : DefaultTemplatesVault.getDefaultRCATemplates()) {
 				session.persist(template);
@@ -98,6 +97,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 		});
 	}
 
+	@SuppressWarnings("unused")
 	@Entity(name = "WeightedCause")
 	@Table(name = "rca_weighted_cause")
 	public static class WeightedCause extends BaseEntity {
@@ -144,14 +144,10 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 
 			WeightedCause cause1 = (WeightedCause) o;
 
-			if (cause != null ? !cause.equals(cause1.cause) : cause1.cause != null) {
+			if ( !Objects.equals( cause, cause1.cause ) ) {
 				return false;
 			}
-			if (weight != null ? !weight.equals(cause1.weight) : cause1.weight != null) {
-				return false;
-			}
-
-			return true;
+			return Objects.equals( weight, cause1.weight );
 		}
 
 		@Override
@@ -162,6 +158,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 			return result;
 		}
 	}
+	@SuppressWarnings("unused")
 	@Entity(name = "TimeManipulation")
 	@Table(name = "rca_time_manipulation")
 	public static class TimeManipulation extends BaseEntity implements Serializable {
@@ -222,6 +219,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 			this.paramName = paramName;
 		}
 	}
+	@SuppressWarnings("unused")
 	@Entity(name = "Symptom")
 	@Table(name = "rca_symptom")
 	public static class Symptom extends BaseEntity implements Serializable {
@@ -308,14 +306,10 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 			if (condition != null ? !condition.equals(symptom.condition) : symptom.condition != null) {
 				return false;
 			}
-			if (name != null ? !name.equals(symptom.name) : symptom.name != null) {
+			if ( !Objects.equals( name, symptom.name ) ) {
 				return false;
 			}
-			if (objectType != null ? !objectType.equals(symptom.objectType) : symptom.objectType != null) {
-				return false;
-			}
-
-			return true;
+			return Objects.equals( objectType, symptom.objectType );
 		}
 
 		@Override
@@ -327,6 +321,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 			return result;
 		}
 	}
+	@SuppressWarnings("unused")
 	@Entity(name = "SimpleCondition")
 	public static class SimpleCondition extends Condition {
 		private Expression left;
@@ -390,11 +385,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 			if (op != that.op) {
 				return false;
 			}
-			if (right != null ? !right.equals(that.right) : that.right != null) {
-				return false;
-			}
-
-			return true;
+			return Objects.equals( right, that.right );
 		}
 
 		@Override
@@ -406,6 +397,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 			return result;
 		}
 	}
+	@SuppressWarnings("unused")
 	@Entity(name = "RCATemplate")
 	public static class RCATemplate extends BaseEntity {
 		private String name;
@@ -453,6 +445,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 
 	}
+	@SuppressWarnings("unused")
 	@Entity(name = "ParameterExpression")
 	public static class ParameterExpression extends Expression {
 		private String parameterName;
@@ -498,14 +491,10 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 
 			ParameterExpression that = (ParameterExpression) o;
 
-			if (defaultValue != null ? !defaultValue.equals(that.defaultValue) : that.defaultValue != null) {
+			if ( !Objects.equals( defaultValue, that.defaultValue ) ) {
 				return false;
 			}
-			if (parameterName != null ? !parameterName.equals(that.parameterName) : that.parameterName != null) {
-				return false;
-			}
-
-			return true;
+			return Objects.equals( parameterName, that.parameterName );
 		}
 
 		@Override
@@ -518,7 +507,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 	@Entity(name = "NumberedExpression")
 	@Table(name = "rca_numbered_exception")
-	public static class NumberedExpression extends BaseEntity implements Comparable {
+	public static class NumberedExpression extends BaseEntity implements Comparable<NumberedExpression> {
 		private Long num;
 		private Expression expression;
 
@@ -549,8 +538,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 
 		@Override
-		public int compareTo(Object o) {
-			NumberedExpression other = (NumberedExpression) o;
+		public int compareTo(NumberedExpression other) {
 			return (int) (this.num - other.num);
 		}
 
@@ -568,14 +556,10 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 
 			NumberedExpression that = (NumberedExpression) o;
 
-			if (expression != null ? !expression.equals(that.expression) : that.expression != null) {
+			if ( !Objects.equals( expression, that.expression ) ) {
 				return false;
 			}
-			if (num != null ? !num.equals(that.num) : that.num != null) {
-				return false;
-			}
-
-			return true;
+			return Objects.equals( num, that.num );
 		}
 
 		@Override
@@ -586,6 +570,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 			return result;
 		}
 	}
+	@SuppressWarnings("unused")
 	@Entity(name = "MathExpression")
 	public static class MathExpression extends Expression {
 		private Expression left;
@@ -649,11 +634,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 			if (op != that.op) {
 				return false;
 			}
-			if (right != null ? !right.equals(that.right) : that.right != null) {
-				return false;
-			}
-
-			return true;
+			return Objects.equals( right, that.right );
 		}
 
 		@Override
@@ -665,6 +646,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 			return result;
 		}
 	}
+	@SuppressWarnings("unused")
 	@Entity(name = "FieldExpression")
 	public static class FieldExpression extends Expression {
 		private String objectType;
@@ -708,14 +690,10 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 
 			FieldExpression that = (FieldExpression) o;
 
-			if (name != null ? !name.equals(that.name) : that.name != null) {
+			if ( !Objects.equals( name, that.name ) ) {
 				return false;
 			}
-			if (objectType != null ? !objectType.equals(that.objectType) : that.objectType != null) {
-				return false;
-			}
-
-			return true;
+			return Objects.equals( objectType, that.objectType );
 		}
 
 		@Override
@@ -760,11 +738,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 
 			Expression that = (Expression) o;
 
-			if (type != that.type) {
-				return false;
-			}
-
-			return true;
+			return type == that.type;
 		}
 
 		@Override
@@ -774,6 +748,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 			return result;
 		}
 	}
+	@SuppressWarnings("unused")
 	@Entity(name = "ConstantExpression")
 	public static class ConstantExpression extends Expression {
 		private String value;
@@ -809,11 +784,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 
 			ConstantExpression that = (ConstantExpression) o;
 
-			if (value != null ? !value.equals(that.value) : that.value != null) {
-				return false;
-			}
-
-			return true;
+			return Objects.equals( value, that.value );
 		}
 
 		@Override
@@ -823,6 +794,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 			return result;
 		}
 	}
+	@SuppressWarnings("unused")
 	@Entity(name = "ConditionAndExpression")
 	@Table(name = "rca_cond_and_expr")
 	public static class ConditionAndExpression extends BaseEntity {
@@ -857,6 +829,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 			this.expression = expression;
 		}
 	}
+	@SuppressWarnings("unused")
 	@Entity(name = "ConditionalExpression")
 	public static class ConditionalExpression extends Expression {
 		private Set<ConditionAndExpression> possibilities;
@@ -885,6 +858,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 	@Table(name = "rca_condition")
 	public static abstract class Condition extends BaseEntity implements Serializable {
 	}
+	@SuppressWarnings("unused")
 	@Entity(name = "CompoundCondition")
 	public static class CompoundCondition extends Condition {
 		private Condition first;
@@ -954,11 +928,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 			if (op != that.op) {
 				return false;
 			}
-			if (second != null ? !second.equals(that.second) : that.second != null) {
-				return false;
-			}
-
-			return true;
+			return Objects.equals( second, that.second );
 		}
 
 		@Override
@@ -970,6 +940,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 			return result;
 		}
 	}
+	@SuppressWarnings("unused")
 	@Entity
 	@Table(name = "rca_cause")
 	public static class Cause extends BaseEntity implements Serializable {
@@ -1160,14 +1131,10 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 			if (name != null ? !name.equals(cause.name) : cause.name != null) {
 				return false;
 			}
-			if (nodeType != null ? !nodeType.equals(cause.nodeType) : cause.nodeType != null) {
+			if ( !Objects.equals( nodeType, cause.nodeType ) ) {
 				return false;
 			}
-			if (relationType != cause.relationType) {
-				return false;
-			}
-
-			return true;
+			return relationType == cause.relationType;
 		}
 
 		@Override
@@ -1181,6 +1148,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 			return result;
 		}
 	}
+	@SuppressWarnings("unused")
 	@Entity(name = "CalculationExpression")
 	public static class CalculationExpression extends Expression {
 		private DataManipulationFunction function;
@@ -1241,11 +1209,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 			if (function != that.function) {
 				return false;
 			}
-			if (objectType != null ? !objectType.equals(that.objectType) : that.objectType != null) {
-				return false;
-			}
-
-			return true;
+			return Objects.equals( objectType, that.objectType );
 		}
 
 		@Override
@@ -1257,6 +1221,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 			return result;
 		}
 	}
+	@SuppressWarnings("unused")
 	@Entity(name = "AlertCondition")
 	public static class AlertCondition extends Condition {
 		private String ruleName;
@@ -1286,11 +1251,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 
 			AlertCondition that = (AlertCondition) o;
 
-			if (ruleName != null ? !ruleName.equals(that.ruleName) : that.ruleName != null) {
-				return false;
-			}
-
-			return true;
+			return Objects.equals( ruleName, that.ruleName );
 		}
 
 		@Override
@@ -1345,6 +1306,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 		END
 	}
 
+	@SuppressWarnings({"FieldMayBeFinal", "NonFinalFieldInEnum"})
 	public enum Operator {
 		EQUALS(" = "),
 		NOT_EQUALS(" != "),
@@ -1356,7 +1318,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 
 		private String readable;
 
-		private Operator(String readable) {
+		Operator(String readable) {
 			this.readable = readable;
 		}
 
@@ -1375,19 +1337,13 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 
 		@Override
 		public String toString() {
-			switch (this) {
-				case ADD:
-					return "+";
-				case SUBTRACT:
-					return "-";
-				case MULTIPLY:
-					return "*";
-				case DIVIDE:
-					return "/";
-				case MAX:
-					return "max";
-			}
-			return null;
+			return switch ( this ) {
+				case ADD -> "+";
+				case SUBTRACT -> "-";
+				case MULTIPLY -> "*";
+				case DIVIDE -> "/";
+				case MAX -> "max";
+			};
 		}
 
 
@@ -1424,6 +1380,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 		JOB_BACKING_UP_HOST, JOB_USES_BACKUPCLIENT, JOB_USES_BACKUP_POOL, JOB_USES_MEDIA_SERVER, RECOVERPOINT_CG_COPY_ACTIVE_RPA, JOB_USES_TAPE_DRIVE
 	}
 
+	@SuppressWarnings("unused")
 	public static class DefaultTemplatesVault {
 
 		public static final String NO_AGENT_RAN_ON_CLIENT = "No agent ran on client";
@@ -2044,8 +2001,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 			generalMessageParams.add(rpaFifthWichIsNowForth);
 			rpaThroughputHigh.setGeneralMessageTemplateParams(generalMessageParams);
 
-			WeightedCause cause = new WeightedCause(rpaThroughputHigh, 100);
-			return cause;
+			return new WeightedCause(rpaThroughputHigh, 100);
 		}
 
 		private static WeightedCause buildCGCopyFF() {
@@ -2069,8 +2025,7 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 				fetchConditions, condition, "Cg Copy {param} has a high latency on writing to remote storage (Fast Forward)", DataManipulationFunction.EXISTS,
 				messageArgs1, null);
 
-			WeightedCause cause = new WeightedCause(rpaFastForward, 80);
-			return cause;
+			return new WeightedCause(rpaFastForward, 80);
 		}
 
 		private static RCATemplate buildRPOViolationTemplate() {

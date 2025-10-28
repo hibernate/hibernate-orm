@@ -9,18 +9,16 @@ import java.util.function.Supplier;
 
 import org.hibernate.InstantiationException;
 import org.hibernate.PropertyNotFoundException;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.ValueAccess;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
 
 /**
  * Support for instantiating embeddables as POJO representation
  */
 public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator implements StandardEmbeddableInstantiator {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EmbeddableInstantiatorPojoStandard.class );
 
 	private final Supplier<EmbeddableMappingType> embeddableMappingAccess;
 	private final Constructor<?> constructor;
@@ -36,7 +34,7 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 			return getDefaultConstructor( mappedPojoClass );
 		}
 		catch ( PropertyNotFoundException e ) {
-			LOG.noDefaultConstructor( mappedPojoClass.getName() );
+			CORE_LOGGER.noDefaultConstructor( mappedPojoClass.getName() );
 			return null;
 		}
 	}
@@ -54,7 +52,7 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 		}
 
 		try {
-			final Object[] values = valuesAccess == null ? null : valuesAccess.getValues();
+			final var values = valuesAccess == null ? null : valuesAccess.getValues();
 			final Object instance = constructor.newInstance();
 			if ( values != null ) {
 				// At this point, createEmptyCompositesEnabled is always true.

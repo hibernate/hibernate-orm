@@ -40,11 +40,12 @@ import jakarta.persistence.PessimisticLockException;
 import jakarta.persistence.QueryTimeoutException;
 import jakarta.persistence.RollbackException;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+
 /**
  * @author Andrea Boriero
  */
 public class ExceptionConverterImpl implements ExceptionConverter {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( ExceptionConverterImpl.class );
 
 	private final SharedSessionContractImplementor session;
 	private final boolean isJpaBootstrap;
@@ -134,7 +135,7 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			}
 			catch (Exception ne) {
 				//we do not want the subsequent exception to swallow the original one
-				log.unableToMarkForRollbackOnTransientObjectException( ne );
+				CORE_LOGGER.unableToMarkForRollbackOnTransientObjectException( ne );
 			}
 			//Spec 3.2.3 Synchronization rules
 			return new IllegalStateException( exception );
@@ -207,7 +208,7 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 		}
 		else if ( exception instanceof PessimisticEntityLockException lockException ) {
 			// assume lock timeout occurred if a timeout or NO WAIT was specified
-			return lockOptions != null && lockOptions.getTimeOut() > -1
+			return lockOptions != null && lockOptions.getTimeout().milliseconds() > -1
 					? new LockTimeoutException( lockException.getMessage(), lockException, lockException.getEntity() )
 					: new PessimisticLockException( lockException.getMessage(), lockException, lockException.getEntity() );
 		}
@@ -222,7 +223,7 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 		}
 		else {
 			// assume lock timeout occurred if a timeout or NO WAIT was specified
-			return lockOptions != null && lockOptions.getTimeOut() > -1
+			return lockOptions != null && lockOptions.getTimeout().milliseconds() > -1
 					? new LockTimeoutException( exception.getMessage(), exception )
 					: new PessimisticLockException( exception.getMessage(), exception );
 		}
@@ -235,7 +236,7 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			}
 			catch (Exception ne) {
 				//we do not want the subsequent exception to swallow the original one
-				log.unableToMarkForRollbackOnPersistenceException( ne );
+				CORE_LOGGER.unableToMarkForRollbackOnPersistenceException( ne );
 			}
 		}
 	}

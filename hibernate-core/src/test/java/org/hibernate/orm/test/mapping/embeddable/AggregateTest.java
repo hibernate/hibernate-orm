@@ -42,12 +42,7 @@ public class AggregateTest extends BaseSessionFactoryFunctionalTest {
 
 	@AfterEach
 	protected void cleanupTest() {
-		inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from JsonHolder h" ).executeUpdate();
-					session.createMutationQuery( "delete from XmlHolder h" ).executeUpdate();
-				}
-		);
+		sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

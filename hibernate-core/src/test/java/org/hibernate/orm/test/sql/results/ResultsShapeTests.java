@@ -265,13 +265,6 @@ public class ResultsShapeTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete LineItem" ).executeUpdate();
-			session.createMutationQuery( "delete Order" ).executeUpdate();
-			session.createMutationQuery( "delete Payment" ).executeUpdate();
-			session.createMutationQuery( "delete Product" ).executeUpdate();
-			session.createMutationQuery( "delete Vendor" ).executeUpdate();
-			session.createMutationQuery( "delete SalesAssociate" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

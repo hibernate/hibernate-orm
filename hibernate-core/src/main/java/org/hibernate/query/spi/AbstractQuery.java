@@ -19,15 +19,16 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.metamodel.Type;
-
 import jakarta.persistence.Timeout;
+import jakarta.persistence.metamodel.Type;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.Internal;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
+import org.hibernate.Timeouts;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.jpa.AvailableHints;
@@ -40,14 +41,12 @@ import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.named.NamedQueryMemento;
 
-import static org.hibernate.LockOptions.WAIT_FOREVER;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
 import static org.hibernate.jpa.HibernateHints.HINT_COMMENT;
 import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
-import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 import static org.hibernate.jpa.HibernateHints.HINT_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_RETRIEVE_MODE;
@@ -62,8 +61,15 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 
 /**
+ * Base implementation of {@link org.hibernate.query.Query}.
+ *
+ * @apiNote This class is now considered internal implementation
+ * and will move to an internal package in a future version.
+ * Application programs should never depend directly on this class.
+ *
  * @author Steve Ebersole
  */
+@Internal
 public abstract class AbstractQuery<R>
 		extends AbstractSelectionQuery<R>
 		implements QueryImplementor<R> {
@@ -275,15 +281,16 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	public QueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
-		super.setLockMode( alias, lockMode );
+	public QueryImplementor<R> setLockMode(LockModeType lockModeType) {
+		getSession().checkOpen();
+		super.setHibernateLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
 		return this;
 	}
 
 	@Override
-	public QueryImplementor<R> setLockMode(LockModeType lockModeType) {
+	public QueryImplementor<R> setLockScope(Locking.Scope lockScope) {
 		getSession().checkOpen();
-		super.setHibernateLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
+		super.setLockScope( lockScope );
 		return this;
 	}
 
@@ -330,41 +337,35 @@ public abstract class AbstractQuery<R>
 
 	@Override
 	protected void collectHints(Map<String, Object> hints) {
-		if ( getQueryOptions().getTimeout() != null ) {
-			hints.put( HINT_TIMEOUT, getQueryOptions().getTimeout() );
-			hints.put( HINT_SPEC_QUERY_TIMEOUT, getQueryOptions().getTimeout() * 1000 );
-			hints.put( HINT_JAVAEE_QUERY_TIMEOUT, getQueryOptions().getTimeout() * 1000 );
+		final var queryOptions = getQueryOptions();
+		final var lockOptions = getLockOptions();
+
+		if ( queryOptions.getTimeout() != null ) {
+			hints.put( HINT_TIMEOUT, queryOptions.getTimeout() );
+			hints.put( HINT_SPEC_QUERY_TIMEOUT, queryOptions.getTimeout() * 1000 );
+			hints.put( HINT_JAVAEE_QUERY_TIMEOUT, queryOptions.getTimeout() * 1000 );
 		}
 
-		if ( getLockOptions().getTimeOut() != WAIT_FOREVER ) {
-			hints.put( HINT_SPEC_LOCK_TIMEOUT, getLockOptions().getTimeOut() );
-			hints.put( HINT_JAVAEE_LOCK_TIMEOUT, getLockOptions().getTimeOut() );
+		if ( lockOptions.getTimeout().milliseconds() != Timeouts.WAIT_FOREVER_MILLI ) {
+			hints.put( HINT_SPEC_LOCK_TIMEOUT, lockOptions.getTimeOut() );
+			hints.put( HINT_JAVAEE_LOCK_TIMEOUT, lockOptions.getTimeOut() );
 		}
 
-		if ( getLockOptions().getLockScope() == PessimisticLockScope.EXTENDED ) {
-			hints.put( HINT_SPEC_LOCK_SCOPE, getLockOptions().getLockScope() );
-			hints.put( HINT_JAVAEE_LOCK_SCOPE, getLockOptions().getLockScope() );
-		}
-
-		if ( getLockOptions().hasAliasSpecificLockModes() ) {
-			for ( Map.Entry<String, LockMode> entry : getLockOptions().getAliasSpecificLocks() ) {
-				hints.put(
-						HINT_NATIVE_LOCK_MODE + '.' + entry.getKey(),
-						entry.getValue().name()
-				);
-			}
+		if ( lockOptions.getLockScope() == PessimisticLockScope.EXTENDED ) {
+			hints.put( HINT_SPEC_LOCK_SCOPE, lockOptions.getLockScope() );
+			hints.put( HINT_JAVAEE_LOCK_SCOPE, lockOptions.getLockScope() );
 		}
 
 		putIfNotNull( hints, HINT_COMMENT, getComment() );
-		putIfNotNull( hints, HINT_FETCH_SIZE, getQueryOptions().getFetchSize() );
-		putIfNotNull( hints, HINT_FLUSH_MODE,  getQueryOptions().getFlushMode() );
+		putIfNotNull( hints, HINT_FETCH_SIZE, queryOptions.getFetchSize() );
+		putIfNotNull( hints, HINT_FLUSH_MODE,  queryOptions.getFlushMode() );
 
 		if ( getCacheMode() != null ) {
 			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );
-			putIfNotNull( hints, HINT_SPEC_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
-			putIfNotNull( hints, HINT_SPEC_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
-			putIfNotNull( hints, HINT_JAVAEE_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
-			putIfNotNull( hints, HINT_JAVAEE_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
+			putIfNotNull( hints, HINT_SPEC_CACHE_RETRIEVE_MODE, queryOptions.getCacheRetrieveMode() );
+			putIfNotNull( hints, HINT_SPEC_CACHE_STORE_MODE, queryOptions.getCacheStoreMode() );
+			putIfNotNull( hints, HINT_JAVAEE_CACHE_RETRIEVE_MODE, queryOptions.getCacheRetrieveMode() );
+			putIfNotNull( hints, HINT_JAVAEE_CACHE_STORE_MODE, queryOptions.getCacheStoreMode() );
 		}
 
 		if ( isCacheable() ) {

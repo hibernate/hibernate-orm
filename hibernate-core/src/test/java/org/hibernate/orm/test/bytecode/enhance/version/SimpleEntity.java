@@ -17,7 +17,7 @@ import jakarta.persistence.Table;
  */
 @Entity(name = "SimpleEntity")
 @Table(name = "SimpleEntity")
-@EnhancementInfo(version = "5.3.0.Final")
+@EnhancementInfo(version = "5.3.0.Final", includesDirtyChecking = false, includesAssociationManagement = false)
 public class SimpleEntity implements ManagedEntity {
 	@Id
 	private Integer id;

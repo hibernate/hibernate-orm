@@ -31,17 +31,7 @@ public class CascadePersistTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from C1" ).executeUpdate();
-					entityManager.createQuery( "delete from C2" ).executeUpdate();
-					entityManager.createQuery( "delete from B1" ).executeUpdate();
-					entityManager.createQuery( "delete from B2" ).executeUpdate();
-					entityManager.createQuery( "delete from B3" ).executeUpdate();
-					entityManager.createQuery( "delete from B4" ).executeUpdate();
-					entityManager.createQuery( "delete from A" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

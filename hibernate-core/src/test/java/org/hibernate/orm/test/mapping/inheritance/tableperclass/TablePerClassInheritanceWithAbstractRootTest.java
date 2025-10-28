@@ -147,16 +147,7 @@ public class TablePerClassInheritanceWithAbstractRootTest {
 
 	@AfterEach
 	public void cleanupTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "from DomesticCustomer", DomesticCustomer.class ).list().forEach(
-							cust -> session.remove( cust )
-					);
-					session.createQuery( "from ForeignCustomer", ForeignCustomer.class ).list().forEach(
-							cust -> session.remove( cust )
-					);
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Customer")

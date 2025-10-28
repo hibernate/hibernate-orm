@@ -62,12 +62,7 @@ public class OneToManySelfReferenceTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "update Event e set e.parent = null" ).executeUpdate();
-					session.createQuery( "delete from Event" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

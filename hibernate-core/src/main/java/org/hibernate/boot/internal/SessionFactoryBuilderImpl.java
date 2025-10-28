@@ -4,7 +4,6 @@
  */
 package org.hibernate.boot.internal;
 
-import java.util.Map;
 import java.util.function.Supplier;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
@@ -23,6 +22,7 @@ import org.hibernate.bytecode.internal.SessionFactoryObserverForBytecodeEnhancer
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -58,7 +58,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		this.bootstrapContext = context;
 
 		if ( metadata.getSqlFunctionMap() != null ) {
-			for ( Map.Entry<String, SqmFunctionDescriptor> sqlFunctionEntry : metadata.getSqlFunctionMap().entrySet() ) {
+			for ( var sqlFunctionEntry : metadata.getSqlFunctionMap().entrySet() ) {
 				applySqlFunction( sqlFunctionEntry.getKey(), sqlFunctionEntry.getValue() );
 			}
 		}
@@ -249,6 +249,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> resolver) {
 		this.optionsBuilder.applyCurrentTenantIdentifierResolver( resolver );
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyTenantSchemaMapper(TenantSchemaMapper<?> mapper) {
+		this.optionsBuilder.applyTenantSchemaMapper( mapper );
 		return this;
 	}
 

@@ -146,7 +146,7 @@ public class MutationDelegateJoinedInheritanceTest {
 			assertThat( entity.getUpdateDate() ).isNotNull();
 
 			inspector.assertIsSelect( 0 );
-			assertThat( inspector.getSqlQueries().get( 0 ) ).contains( "update" );
+			assertThat( inspector.getSqlQueries().get( 1 ) ).contains( "update " );
 			inspector.assertExecutedCount(
 					delegate != null && delegate.supportsArbitraryValues() ? 2 : 3
 			);
@@ -174,7 +174,7 @@ public class MutationDelegateJoinedInheritanceTest {
 			assertThat( entity.getChildUpdateDate() ).isNotNull();
 
 			inspector.assertIsSelect( 0 );
-			assertThat( inspector.getSqlQueries().get( 0 ) ).contains( "update" );
+			assertThat( inspector.getSqlQueries().get( 1 ) ).contains( "update " );
 			// Note: this is a current restriction, mutation delegates only retrieve generated values
 			// on the "root" table, and we expect other values to be read through a subsequent select
 			inspector.assertIsSelect( 2 );

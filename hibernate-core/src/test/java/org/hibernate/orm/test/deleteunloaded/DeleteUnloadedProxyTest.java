@@ -29,11 +29,7 @@ public class DeleteUnloadedProxyTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from ParentSub" ).executeUpdate();
-			session.createMutationQuery( "delete from Child" ).executeUpdate();
-			session.createMutationQuery( "delete from Parent" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 	@Test
 	public void testAttached(SessionFactoryScope scope) {

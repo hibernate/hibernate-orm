@@ -8,9 +8,9 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostCommitDeleteEventListener;
 import org.hibernate.event.spi.PostCommitInsertEventListener;
 import org.hibernate.event.spi.PostCommitUpdateEventListener;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
+
+import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 
 /**
  * Historically, the listeners for the post-commit events simply reused the
@@ -22,9 +22,8 @@ import org.hibernate.jpa.event.spi.CallbackRegistry;
  * @author Steve Ebersole
  */
 class PostCommitEventListenerGroupImpl<T> extends EventListenerGroupImpl<T> {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( PostCommitEventListenerGroupImpl.class );
 
-	private final Class extendedListenerContract;
+	private final Class<?> extendedListenerContract;
 
 	public PostCommitEventListenerGroupImpl(
 			EventType<T> eventType,
@@ -33,13 +32,13 @@ class PostCommitEventListenerGroupImpl<T> extends EventListenerGroupImpl<T> {
 		super( eventType, callbackRegistry, isJpaBootstrap );
 
 		if ( eventType == EventType.POST_COMMIT_DELETE ) {
-			this.extendedListenerContract = PostCommitDeleteEventListener.class;
+			extendedListenerContract = PostCommitDeleteEventListener.class;
 		}
 		else if ( eventType == EventType.POST_COMMIT_INSERT ) {
-			this.extendedListenerContract = PostCommitInsertEventListener.class;
+			extendedListenerContract = PostCommitInsertEventListener.class;
 		}
 		else if ( eventType == EventType.POST_COMMIT_UPDATE ) {
-			this.extendedListenerContract = PostCommitUpdateEventListener.class;
+			extendedListenerContract = PostCommitUpdateEventListener.class;
 		}
 		else {
 			throw new IllegalStateException( "Unexpected usage of PostCommitEventListenerGroupImpl" );
@@ -54,7 +53,7 @@ class PostCommitEventListenerGroupImpl<T> extends EventListenerGroupImpl<T> {
 
 	private void checkAgainstExtendedContract(T listener) {
 		if ( !extendedListenerContract.isInstance( listener ) ) {
-			log.warnf(
+			EVENT_LISTENER_LOGGER.warnf(
 					"Encountered event listener [%s] for post-commit event [%s] "
 							+ "which did not implement the corresponding extended "
 							+ "listener contract [%s]",

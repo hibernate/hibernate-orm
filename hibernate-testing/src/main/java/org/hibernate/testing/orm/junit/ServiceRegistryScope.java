@@ -9,6 +9,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.service.Service;
 
 /**
@@ -50,4 +52,15 @@ public interface ServiceRegistryScope {
 
 		return action.apply( service );
 	}
+
+	default HibernatePersistenceConfiguration createPersistenceConfiguration(String persistenceUnitName) {
+		final HibernatePersistenceConfiguration configuration = new HibernatePersistenceConfiguration( persistenceUnitName );
+		final StandardServiceRegistry registry = getRegistry();
+
+		final ConfigurationService configurationService = registry.requireService( ConfigurationService.class );
+		configuration.properties( configurationService.getSettings() );
+
+		return configuration;
+	}
+
 }

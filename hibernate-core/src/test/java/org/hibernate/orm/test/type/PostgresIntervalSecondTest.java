@@ -11,6 +11,7 @@ import java.time.Duration;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.type.PostgreSQLCastingIntervalSecondJdbcType;
 import org.hibernate.dialect.type.PostgreSQLIntervalSecondJdbcType;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -36,6 +37,7 @@ import jakarta.persistence.Table;
  * Test to see if using `@org.hibernate.annotations.JdbcTypeCode` or `@org.hibernate.annotations.JdbcType`
  * will override a default JdbcType set by a {@link AvailableSettings#PREFERRED_DURATION_JDBC_TYPE config property}.
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
 @DomainModel(annotatedClasses = { PostgresIntervalSecondTest.EntityWithIntervalSecondDuration.class })
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.PREFERRED_DURATION_JDBC_TYPE, value = "NUMERIC"))
@@ -59,7 +61,7 @@ public class PostgresIntervalSecondTest {
 		assertThat( durationJdbcType ).isEqualTo( NumericJdbcType.INSTANCE );
 
 		final JdbcType intervalType = jdbcTypeRegistry.getDescriptor( SqlTypes.INTERVAL_SECOND );
-		assertThat( intervalType ).isOfAnyClassIn( PostgreSQLIntervalSecondJdbcType.class );
+		assertThat( intervalType ).isOfAnyClassIn( PostgreSQLIntervalSecondJdbcType.class, PostgreSQLCastingIntervalSecondJdbcType.class );
 
 		// a simple duration field with no overrides - so should be using a default JdbcType
 		assertThat( entityDescriptor.findAttributeMapping( "duration" )

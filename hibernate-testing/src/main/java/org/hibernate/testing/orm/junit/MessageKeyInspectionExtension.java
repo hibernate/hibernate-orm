@@ -30,9 +30,13 @@ public class MessageKeyInspectionExtension implements TestInstancePostProcessor,
 			return;
 		}
 
-		// find the annotation, create the watcher and add it to the context
+		// find the annotation, if one
 		final MessageKeyInspection inspection = testInstance.getClass().getAnnotation( MessageKeyInspection.class );
-		final MessageKeyWatcherImpl watcher = new MessageKeyWatcherImpl( inspection.messageKey() );
+		if ( inspection == null ) {
+			return;
+		}
+		// create the watcher and add it to the context
+		final MessageKeyWatcherImpl watcher = new MessageKeyWatcherImpl( inspection);
 		watcher.addLogger( inspection.logger() );
 
 		instanceStore.put( KEY, watcher );
@@ -48,7 +52,7 @@ public class MessageKeyInspectionExtension implements TestInstancePostProcessor,
 		final Method method = context.getRequiredTestMethod();
 
 		final ExtensionContext.Store methodStore = resolveMethodStore( context );
-		final MessageKeyWatcher existing = (MessageKeyWatcher) methodStore.get( KEY );
+		final MessageKeyWatcherImpl existing = (MessageKeyWatcherImpl) methodStore.get( KEY );
 		if ( existing != null ) {
 			prepareForUse( existing );
 			// already there - nothing to do
@@ -58,7 +62,7 @@ public class MessageKeyInspectionExtension implements TestInstancePostProcessor,
 		// if the test-method is annotated, use a one-off watcher for that message
 		final MessageKeyInspection inspectionAnn = method.getAnnotation( MessageKeyInspection.class );
 		if ( inspectionAnn != null ) {
-			final MessageKeyWatcherImpl watcher = new MessageKeyWatcherImpl( inspectionAnn.messageKey() );
+			final MessageKeyWatcherImpl watcher = new MessageKeyWatcherImpl( inspectionAnn );
 			watcher.addLogger( inspectionAnn.logger() );
 			methodStore.put( KEY, watcher );
 			prepareForUse( watcher );
@@ -67,15 +71,17 @@ public class MessageKeyInspectionExtension implements TestInstancePostProcessor,
 
 		// look for a class/instance-level watcher
 		final ExtensionContext.Store instanceStore = resolveInstanceStore( context.getRequiredTestInstance(), context );
-		final MessageKeyWatcher instanceLevelWatcher = (MessageKeyWatcher) instanceStore.get( KEY );
+		final MessageKeyWatcherImpl instanceLevelWatcher = (MessageKeyWatcherImpl) instanceStore.get( KEY );
 		if ( instanceLevelWatcher != null ) {
 			methodStore.put( KEY, instanceLevelWatcher );
 			prepareForUse( instanceLevelWatcher );
 		}
 	}
 
-	private void prepareForUse(MessageKeyWatcher watcher) {
-		watcher.reset();
+	private void prepareForUse(MessageKeyWatcherImpl watcher) {
+		if ( watcher.isResetBeforeEach() ) {
+			watcher.reset();
+		}
 	}
 
 	public static ExtensionContext.Store resolveMethodStore(ExtensionContext context) {

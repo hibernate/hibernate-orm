@@ -669,7 +669,7 @@ predicate
 	| expression NOT? MEMBER OF? path											# MemberOfPredicate
 	| expression NOT? IN inList													# InPredicate
 	| expression NOT? BETWEEN expression AND expression							# BetweenPredicate
-	| expression NOT? (LIKE | ILIKE) expression likeEscape?						# LikePredicate
+	| expression NOT? (LIKE | ILIKE) REGEXP? expression likeEscape?				# LikePredicate
 	| expression NOT? CONTAINS expression										# ContainsPredicate
 	| expression NOT? INCLUDES expression										# IncludesPredicate
 	| expression NOT? INTERSECTS expression										# IntersectsPredicate
@@ -1998,6 +1998,7 @@ xmltableDefaultClause
 	| PRECEDING
 	| QUARTER
 	| RANGE
+	| REGEXP
 	| RESPECT
 	| RETURNING
 //	| RIGHT

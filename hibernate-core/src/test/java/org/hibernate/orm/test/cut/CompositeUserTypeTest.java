@@ -34,12 +34,7 @@ public class CompositeUserTypeTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Transaction" ).executeUpdate();
-					session.createMutationQuery( "delete from MutualFund" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

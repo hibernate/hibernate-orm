@@ -9,16 +9,19 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 import org.hibernate.MappingException;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.orm.test.envers.AbstractOneSessionTest;
 import org.hibernate.orm.test.envers.Priority;
 
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@RequiresDialect(H2Dialect.class)
 public class SingleDomainObjectToMultipleTablesTest extends AbstractOneSessionTest {
 	private long carId = 0;
 	private long ownerId = 0;

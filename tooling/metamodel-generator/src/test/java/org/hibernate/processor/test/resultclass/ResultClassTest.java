@@ -8,7 +8,7 @@ import jakarta.persistence.EntityManager;
 import org.assertj.core.api.Assertions;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -20,10 +20,11 @@ import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsStr
 import static org.hibernate.processor.test.util.TestUtil.getMethodFromMetamodelFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ResultClassTest extends CompilationTest {
+@CompilationTest
+class ResultClassTest {
 	@Test
 	@WithClasses({Post.class, NameValue.class})
-	public void test() {
+	void test() {
 		System.out.println( getMetaModelSourceAsString( Post.class ) );
 		assertMetamodelClassGeneratedFor( Post.class );
 

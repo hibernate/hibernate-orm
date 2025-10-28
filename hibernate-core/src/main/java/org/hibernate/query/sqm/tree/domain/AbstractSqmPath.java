@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.hibernate.AssertionFailure;
@@ -45,8 +46,8 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 
 	/**
 	 * For HQL and Criteria processing - used to track reusable paths relative to this path.
-	 * E.g., given `p.mate.mate` the SqmRoot identified by `p` would
-	 * have a reusable path for the `p.mate` path.
+	 * E.g., given {@code p.mate.mate} the {@code SqmRoot} identified by {@code p} would
+	 * have a reusable path for the {@code p.mate} path.
 	 */
 	private Map<String, SqmPath<?>> reusablePaths;
 
@@ -148,6 +149,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	@Override
 	public SqmPathSource<T> getResolvedModel() {
 		final SqmPathSource<T> pathSource = getReferencedPathSource();
+
 		if ( pathSource.isGeneric()
 				&& getLhs().getResolvedModel().getPathType() instanceof SqmManagedDomainType<?> lhsType ) {
 			final var concreteAttribute = lhsType.findConcreteGenericAttribute( pathSource.getPathName() );
@@ -338,6 +340,33 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		return resolvePath( (PersistentAttribute<T, M>) attribute );
 	}
 
+	// The equals/hashCode and isCompatible/cacheHashCode implementations are based on NavigablePath to match paths
+	// "syntactically" for regular uses in expressions and predicates, which is good enough since the NavigablePath
+	// contains all the important information. Deep equality for SqmFrom is determined through SqmFromClause
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof AbstractSqmPath<?> that
+			&& this.getClass() == that.getClass()
+			&& Objects.equals( this.navigablePath, that.navigablePath );
+	}
+
+	@Override
+	public int hashCode() {
+		return navigablePath.hashCode();
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof AbstractSqmPath<?> that
+			&& this.getClass() == that.getClass()
+			&& Objects.equals( this.navigablePath, that.navigablePath );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return navigablePath.hashCode();
+	}
 
 	@Override
 	public String toString() {

@@ -4,7 +4,6 @@
  */
 package org.hibernate.property.access.internal;
 
-import jakarta.persistence.AccessType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.GetterFieldImpl;
@@ -18,6 +17,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import static org.hibernate.internal.util.ReflectHelper.getterMethodOrNull;
+import static org.hibernate.property.access.internal.AccessStrategyHelper.fieldOrNull;
+import static org.hibernate.property.access.internal.AccessStrategyHelper.getAccessType;
 
 /**
  * A {@link PropertyAccess} based on mix of getter method or field.
@@ -32,26 +33,26 @@ public class PropertyAccessGetterImpl implements PropertyAccess {
 	public PropertyAccessGetterImpl(PropertyAccessStrategy strategy, Class<?> containerJavaType, String propertyName) {
 		this.strategy = strategy;
 
-		final AccessType propertyAccessType = AccessStrategyHelper.getAccessType( containerJavaType, propertyName );
+		final var propertyAccessType = getAccessType( containerJavaType, propertyName );
 		switch ( propertyAccessType ) {
 			case FIELD: {
-				Field field = AccessStrategyHelper.fieldOrNull( containerJavaType, propertyName );
+				final var field = fieldOrNull( containerJavaType, propertyName );
 				if ( field == null ) {
 					throw new PropertyAccessBuildingException(
 							"Could not locate field for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
 					);
 				}
-				this.getter = fieldGetter( containerJavaType, propertyName, field );
+				getter = fieldGetter( containerJavaType, propertyName, field );
 				break;
 			}
 			case PROPERTY: {
-				Method getterMethod = getterMethodOrNull( containerJavaType, propertyName );
+				final var getterMethod = getterMethodOrNull( containerJavaType, propertyName );
 				if ( getterMethod == null ) {
 					throw new PropertyAccessBuildingException(
 							"Could not locate getter for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
 					);
 				}
-				this.getter = propertyGetter( containerJavaType, propertyName, getterMethod );
+				getter = propertyGetter( containerJavaType, propertyName, getterMethod );
 				break;
 			}
 			default: {

@@ -67,10 +67,33 @@ public class SqmGroupedPredicate extends AbstractSqmPredicate {
 	public SqmPredicate not() {
 		return new SqmNegatedPredicate( this, nodeBuilder() );
 	}
+
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( '(' );
 		subPredicate.appendHqlString( hql, context );
 		hql.append( ')' );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmGroupedPredicate that
+			&& subPredicate.equals( that.subPredicate );
+	}
+
+	@Override
+	public int hashCode() {
+		return subPredicate.hashCode();
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmGroupedPredicate that
+			&& subPredicate.isCompatible( that.subPredicate );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return subPredicate.cacheHashCode();
 	}
 }

@@ -4,9 +4,7 @@
  */
 package org.hibernate.boot.beanvalidation;
 
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -16,11 +14,11 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.boot.beanvalidation.BeanValidationLogger.BEAN_VALIDATION_LOGGER;
 
 /**
  * In {@link Integrator} for Bean Validation.
@@ -28,11 +26,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class BeanValidationIntegrator implements Integrator {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			BeanValidationIntegrator.class.getName()
-	);
 
 	public static final String APPLY_CONSTRAINTS = "hibernate.validator.apply_to_ddl";
 
@@ -53,9 +46,12 @@ public class BeanValidationIntegrator implements Integrator {
 	public static void validateFactory(Object object) {
 		try {
 			// this direct usage of ClassLoader should be fine since the classes exist in the same jar
-			final Class<?> activatorClass = BeanValidationIntegrator.class.getClassLoader().loadClass( ACTIVATOR_CLASS_NAME );
+			final var activatorClass =
+					BeanValidationIntegrator.class.getClassLoader()
+							.loadClass( ACTIVATOR_CLASS_NAME );
 			try {
-				final Method validateMethod = activatorClass.getMethod( VALIDATE_SUPPLIED_FACTORY_METHOD_NAME, Object.class );
+				final var validateMethod =
+						activatorClass.getMethod( VALIDATE_SUPPLIED_FACTORY_METHOD_NAME, Object.class );
 				try {
 					validateMethod.invoke( null, object );
 				}
@@ -89,64 +85,36 @@ public class BeanValidationIntegrator implements Integrator {
 			Metadata metadata,
 			BootstrapContext bootstrapContext,
 			SessionFactoryImplementor sessionFactory) {
-		final ServiceRegistryImplementor serviceRegistry = sessionFactory.getServiceRegistry();
-		final ConfigurationService cfgService = serviceRegistry.requireService( ConfigurationService.class );
-		// IMPL NOTE : see the comments on ActivationContext.getValidationModes() as to why this is multi-valued...
-		Object modeSetting = cfgService.getSettings().get( JAKARTA_MODE_PROPERTY );
-		if ( modeSetting == null ) {
-			modeSetting = cfgService.getSettings().get( MODE_PROPERTY );
+		final var serviceRegistry = sessionFactory.getServiceRegistry();
+		// IMPL NOTE: see the comments on ActivationContext.getValidationModes() as to why this is multi-valued...
+		final var modes = getValidationModes( serviceRegistry );
+		switch ( modes.size() ) {
+			case 0:
+				// should never happen, since getValidationModes()
+				// always returns at least one mode
+				return;
+			case 1:
+				if ( modes.contains( ValidationMode.NONE ) ) {
+					// we have nothing to do; just return
+					return;
+				}
+				break;
+			default:
+				BEAN_VALIDATION_LOGGER.multipleValidationModes( ValidationMode.loggable( modes ) );
 		}
-		final Set<ValidationMode> modes = ValidationMode.getModes( modeSetting );
-		if ( modes.size() > 1 ) {
-			LOG.multipleValidationModes( ValidationMode.loggable( modes ) );
-		}
-		if ( modes.size() == 1 && modes.contains( ValidationMode.NONE ) ) {
-			// we have nothing to do; just return
-			return;
-		}
+		activate( metadata, sessionFactory, serviceRegistry, modes );
+	}
 
-		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
-
+	private void activate(Metadata metadata, SessionFactoryImplementor sessionFactory, ServiceRegistryImplementor serviceRegistry, Set<ValidationMode> modes) {
+		final var classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		// see if the Bean Validation API is available on the classpath
 		if ( isBeanValidationApiAvailable( classLoaderService ) ) {
 			// and if so, call out to the TypeSafeActivator
 			try {
-				final Class<?> typeSafeActivatorClass = loadTypeSafeActivatorClass( classLoaderService );
-				final Method activateMethod = typeSafeActivatorClass.getMethod( ACTIVATE_METHOD_NAME, ActivationContext.class );
-				final ActivationContext activationContext = new ActivationContext() {
-					@Override
-					public Set<ValidationMode> getValidationModes() {
-						return modes;
-					}
-
-					@Override
-					public Metadata getMetadata() {
-						return metadata;
-					}
-
-					@Override
-					public SessionFactoryImplementor getSessionFactory() {
-						return sessionFactory;
-					}
-
-					@Override
-					public SessionFactoryServiceRegistry getServiceRegistry() {
-						return (SessionFactoryServiceRegistry) serviceRegistry;
-					}
-				};
-
-				try {
-					activateMethod.invoke( null, activationContext );
-				}
-				catch (InvocationTargetException e) {
-					if ( e.getTargetException() instanceof HibernateException exception ) {
-						throw exception;
-					}
-					throw new IntegrationException( "Error activating Bean Validation integration", e.getTargetException() );
-				}
-				catch (Exception e) {
-					throw new IntegrationException( "Error activating Bean Validation integration", e );
-				}
+				final var activationContext =
+						new ActivationContextImpl( modes, metadata, sessionFactory,
+								(SessionFactoryServiceRegistry) serviceRegistry );
+				callActivateMethod( classLoaderService, activationContext );
 			}
 			catch (NoSuchMethodException e) {
 				throw new HibernateException( "Unable to locate TypeSafeActivator#activate method", e );
@@ -159,14 +127,45 @@ public class BeanValidationIntegrator implements Integrator {
 		}
 	}
 
+	private void callActivateMethod(ClassLoaderService classLoaderService, ActivationContext activationContext)
+			throws NoSuchMethodException {
+		final var activateMethod =
+				loadTypeSafeActivatorClass( classLoaderService )
+						.getMethod( ACTIVATE_METHOD_NAME, ActivationContext.class );
+		try {
+			activateMethod.invoke( null, activationContext );
+		}
+		catch (InvocationTargetException e) {
+			final var targetException = e.getTargetException();
+			throw targetException instanceof HibernateException exception
+					? exception
+					: new IntegrationException( "Error activating Bean Validation integration",
+							targetException );
+		}
+		catch (Exception e) {
+			throw new IntegrationException( "Error activating Bean Validation integration", e );
+		}
+	}
+
+	private static Set<ValidationMode> getValidationModes(ServiceRegistry serviceRegistry) {
+		final var settings =
+				serviceRegistry.requireService( ConfigurationService.class )
+						.getSettings();
+		Object modeSetting = settings.get( JAKARTA_MODE_PROPERTY );
+		if ( modeSetting == null ) {
+			modeSetting = settings.get( MODE_PROPERTY );
+		}
+		return ValidationMode.parseValidationModes( modeSetting );
+	}
+
 	private boolean isBeanValidationApiAvailable(ClassLoaderService classLoaderService) {
 		try {
 			classLoaderService.classForName( JAKARTA_BV_CHECK_CLASS );
+			return true;
 		}
 		catch (Exception e) {
 			return false;
 		}
-		return true;
 	}
 
 	/**
@@ -195,5 +194,33 @@ public class BeanValidationIntegrator implements Integrator {
 	@Override
 	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
 		// nothing to do here afaik
+	}
+
+	private record ActivationContextImpl(
+			Set<ValidationMode> modes,
+			Metadata metadata,
+			SessionFactoryImplementor sessionFactory,
+			SessionFactoryServiceRegistry serviceRegistry)
+				implements ActivationContext {
+
+		@Override
+		public Set<ValidationMode> getValidationModes() {
+			return modes;
+		}
+
+		@Override
+		public Metadata getMetadata() {
+			return metadata;
+		}
+
+		@Override
+		public SessionFactoryImplementor getSessionFactory() {
+			return sessionFactory;
+		}
+
+		@Override
+		public SessionFactoryServiceRegistry getServiceRegistry() {
+			return serviceRegistry;
+		}
 	}
 }

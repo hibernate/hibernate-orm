@@ -29,7 +29,7 @@ import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 public class ReadOnlyNamedQueryTest extends AbstractReadOnlyTest {
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createMutationQuery( "delete from TestEntity" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

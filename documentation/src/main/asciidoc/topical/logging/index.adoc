@@ -1,0 +1,20 @@
+:shared-attributes-dir: {doc-main-dir}/asciidoc/shared
+:html-meta-canonical-link: https://docs.hibernate.org/stable/orm/topical/html_single/logging/
+
+include::{shared-attributes-dir}/common-attributes.adoc[]
+include::{shared-attributes-dir}/url-attributes.adoc[]
+include::{shared-attributes-dir}/filesystem-attributes.adoc[]
+include::{shared-attributes-dir}/renderer-attributes.adoc[]
+
+:jboss-logging-url: https://github.com/jboss-logging
+
+[[root]]
+= Logging
+
+Hibernate uses the link:{jboss-logging-url}[JBoss Logging] library for its logging API.
+
+JBoss Logging is a logging facade, similar to SLF4J.
+
+[[logger-names]]
+== Logger Names
+

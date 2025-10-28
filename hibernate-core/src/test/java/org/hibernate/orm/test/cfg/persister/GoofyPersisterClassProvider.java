@@ -19,6 +19,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
@@ -34,6 +35,7 @@ import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.Generator;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.IdentifierGenerator;
@@ -159,6 +161,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 
 		@Override
 		public TableDetails getIdentifierTableDetails() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void forEachTableDetails(Consumer<TableDetails> consumer) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -375,7 +382,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public int getVersionProperty() {
+		public int getVersionPropertyIndex() {
 			return 0;
 		}
 
@@ -1062,6 +1069,61 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		public String getAttributeMutationTableName(int i) {
 			return "";
 		}
+
+		@Override
+		public boolean isPolymorphic() {
+			return false;
+		}
+
+		@Override
+		public boolean isDynamicUpdate() {
+			return false;
+		}
+
+		@Override
+		public boolean isDynamicInsert() {
+			return false;
+		}
+
+		@Override
+		public OnDeleteAction[] getPropertyOnDeleteActions() {
+			return new OnDeleteAction[0];
+		}
+
+		@Override
+		public Generator[] getGenerators() {
+			return new Generator[0];
+		}
+
+		@Override
+		public boolean hasImmutableNaturalId() {
+			return false;
+		}
+
+		@Override
+		public boolean isNaturalIdentifierInsertGenerated() {
+			return false;
+		}
+
+		@Override
+		public boolean isLazy() {
+			return false;
+		}
+
+		@Override
+		public int getPropertySpan() {
+			return 0;
+		}
+
+		@Override
+		public boolean hasPreInsertGeneratedProperties() {
+			return false;
+		}
+
+		@Override
+		public boolean hasPreUpdateGeneratedProperties() {
+			return false;
+		}
 	}
 
 	public static class NoopCollectionPersister implements CollectionPersister {
@@ -1133,10 +1195,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 
 		public boolean isManyToMany() {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		public String getManyToManyFilterFragment(TableGroup tableGroup, Map<String, Filter> enabledFilters) {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
 		public boolean hasIndex() {

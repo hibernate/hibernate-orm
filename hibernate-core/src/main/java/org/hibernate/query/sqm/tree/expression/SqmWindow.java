@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaWindow;
@@ -16,6 +17,7 @@ import org.hibernate.query.common.FrameMode;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
@@ -285,5 +287,57 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 			default:
 				throw new UnsupportedOperationException( "Unsupported frame kind: " + kind );
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmWindow sqmWindow
+			&& Objects.equals( partitions, sqmWindow.partitions )
+			&& Objects.equals( orderList, sqmWindow.orderList )
+			&& mode == sqmWindow.mode
+			&& startKind == sqmWindow.startKind
+			&& Objects.equals( startExpression, sqmWindow.startExpression )
+			&& endKind == sqmWindow.endKind
+			&& Objects.equals( endExpression, sqmWindow.endExpression )
+			&& exclusion == sqmWindow.exclusion;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = Objects.hashCode( partitions );
+		result = 31 * result + Objects.hashCode( orderList );
+		result = 31 * result + mode.hashCode();
+		result = 31 * result + startKind.hashCode();
+		result = 31 * result + Objects.hashCode( startExpression );
+		result = 31 * result + endKind.hashCode();
+		result = 31 * result + Objects.hashCode( endExpression );
+		result = 31 * result + exclusion.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmWindow sqmWindow
+			&& SqmCacheable.areCompatible( partitions, sqmWindow.partitions )
+			&& SqmCacheable.areCompatible( orderList, sqmWindow.orderList )
+			&& mode == sqmWindow.mode
+			&& startKind == sqmWindow.startKind
+			&& SqmCacheable.areCompatible( startExpression, sqmWindow.startExpression )
+			&& endKind == sqmWindow.endKind
+			&& SqmCacheable.areCompatible( endExpression, sqmWindow.endExpression )
+			&& exclusion == sqmWindow.exclusion;
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = SqmCacheable.cacheHashCode( partitions );
+		result = 31 * result + SqmCacheable.cacheHashCode( orderList );
+		result = 31 * result + mode.hashCode();
+		result = 31 * result + startKind.hashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( startExpression );
+		result = 31 * result + endKind.hashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( endExpression );
+		result = 31 * result + exclusion.hashCode();
+		return result;
 	}
 }

@@ -14,6 +14,8 @@ import org.hibernate.CacheMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdMultiLoadAccess;
+import org.hibernate.OrderingMode;
+import org.hibernate.RemovalsMode;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -38,8 +40,8 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 	private GraphSemantic graphSemantic;
 
 	private Integer batchSize;
-	private boolean returnOfDeletedEntitiesEnabled;
-	private boolean orderedReturnEnabled = true;
+	private RemovalsMode removalsMode = RemovalsMode.REPLACE;
+	private OrderingMode orderingMode = OrderingMode.ORDERED;
 
 	public NaturalIdMultiLoadAccessStandard(EntityPersister entityDescriptor, SharedSessionContractImplementor session) {
 		this.entityDescriptor = entityDescriptor;
@@ -92,13 +94,13 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 
 	@Override
 	public NaturalIdMultiLoadAccess<T> enableReturnOfDeletedEntities(boolean enabled) {
-		returnOfDeletedEntitiesEnabled = enabled;
+		this.removalsMode = enabled ? RemovalsMode.INCLUDE : RemovalsMode.REPLACE;
 		return this;
 	}
 
 	@Override
 	public NaturalIdMultiLoadAccess<T> enableOrderedReturn(boolean enabled) {
-		orderedReturnEnabled = enabled;
+		this.orderingMode = enabled ? OrderingMode.ORDERED : OrderingMode.UNORDERED;
 		return this;
 	}
 
@@ -163,13 +165,13 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 	}
 
 	@Override
-	public boolean isReturnOfDeletedEntitiesEnabled() {
-		return returnOfDeletedEntitiesEnabled;
+	public RemovalsMode getRemovalsMode() {
+		return removalsMode;
 	}
 
 	@Override
-	public boolean isOrderReturnEnabled() {
-		return orderedReturnEnabled;
+	public OrderingMode getOrderingMode() {
+		return orderingMode;
 	}
 
 	@Override

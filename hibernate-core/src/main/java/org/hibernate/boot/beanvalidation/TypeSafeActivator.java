@@ -7,14 +7,11 @@ package org.hibernate.boot.beanvalidation;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import jakarta.validation.NoProviderFoundException;
 import jakarta.validation.constraints.Digits;
@@ -25,7 +22,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.hibernate.AssertionFailure;
-import org.hibernate.MappingException;
+import org.hibernate.boot.beanvalidation.GroupsPerOperation.Operation;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -36,34 +33,29 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SingleTableSubclass;
 
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
-import org.jboss.logging.Logger;
 
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
-import jakarta.validation.metadata.BeanDescriptor;
 import jakarta.validation.metadata.ConstraintDescriptor;
 import jakarta.validation.metadata.PropertyDescriptor;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.disjoint;
 import static org.hibernate.boot.beanvalidation.BeanValidationIntegrator.APPLY_CONSTRAINTS;
+import static org.hibernate.boot.beanvalidation.BeanValidationLogger.BEAN_VALIDATION_LOGGER;
 import static org.hibernate.boot.beanvalidation.GroupsPerOperation.buildGroupsForOperation;
+import static org.hibernate.boot.model.internal.BinderHelper.findPropertyByName;
 import static org.hibernate.cfg.ValidationSettings.CHECK_NULLABILITY;
 import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_FACTORY;
 import static org.hibernate.cfg.ValidationSettings.JPA_VALIDATION_FACTORY;
-import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
@@ -75,7 +67,6 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  */
 class TypeSafeActivator {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, TypeSafeActivator.class.getName() );
 
 	/**
 	 * Used to validate a supplied ValidatorFactory instance as being castable to ValidatorFactory.
@@ -96,25 +87,25 @@ class TypeSafeActivator {
 		try {
 			factory = getValidatorFactory( context );
 		}
-		catch (IntegrationException e) {
-			final Set<ValidationMode> validationModes = context.getValidationModes();
+		catch (IntegrationException exception) {
+			final var validationModes = context.getValidationModes();
 			if ( validationModes.contains( ValidationMode.CALLBACK ) ) {
-				throw new IntegrationException( "Jakarta Validation provider was not available, but 'callback' validation mode was requested", e );
+				throw new IntegrationException( "Jakarta Validation provider was not available, but 'callback' validation mode was requested", exception );
 			}
 			else if ( validationModes.contains( ValidationMode.DDL ) ) {
-				throw new IntegrationException( "Jakarta Validation provider was not available, but 'ddl' validation mode was requested", e );
+				throw new IntegrationException( "Jakarta Validation provider was not available, but 'ddl' validation mode was requested", exception );
 			}
 			else {
-				if ( e.getCause() != null && e.getCause() instanceof NoProviderFoundException ) {
+				if ( exception.getCause() instanceof NoProviderFoundException ) {
 					// all good, we are looking at the ValidationMode.AUTO, and there are no providers available.
 					// Hence, we just don't enable the Jakarta Validation integration:
-					LOG.debug( "Unable to acquire Jakarta Validation ValidatorFactory, skipping activation" );
+					BEAN_VALIDATION_LOGGER.validationFactorySkipped();
 					return;
 				}
 				else {
 					// There is a Jakarta Validation provider, but it failed to bootstrap the factory for some reason,
 					// we should fail and let the user deal with it:
-					throw e;
+					throw exception;
 
 				}
 			}
@@ -132,7 +123,7 @@ class TypeSafeActivator {
 	}
 
 	private static boolean isValidationEnabled(ActivationContext context) {
-		final Set<ValidationMode> modes = context.getValidationModes();
+		final var modes = context.getValidationModes();
 		return modes.contains( ValidationMode.CALLBACK )
 			|| modes.contains( ValidationMode.AUTO );
 	}
@@ -153,12 +144,15 @@ class TypeSafeActivator {
 				.getSettings().get( CHECK_NULLABILITY ) == null;
 	}
 
-	private static void setupListener(ValidatorFactory validatorFactory, SessionFactoryServiceRegistry serviceRegistry, SessionFactoryImplementor sessionFactory) {
-		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
-		final ConfigurationService cfgService = serviceRegistry.requireService( ConfigurationService.class );
-		final BeanValidationEventListener listener =
+	private static void setupListener(
+			ValidatorFactory validatorFactory,
+			SessionFactoryServiceRegistry serviceRegistry,
+			SessionFactoryImplementor sessionFactory) {
+		final var classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
+		final var cfgService = serviceRegistry.requireService( ConfigurationService.class );
+		final var listener =
 				new BeanValidationEventListener( validatorFactory, cfgService.getSettings(), classLoaderService );
-		final EventListenerRegistry listenerRegistry = serviceRegistry.requireService( EventListenerRegistry.class );
+		final var listenerRegistry = sessionFactory.getEventListenerRegistry();
 		listenerRegistry.addDuplicationStrategy( DuplicationStrategyImpl.INSTANCE );
 		listenerRegistry.appendListeners( EventType.PRE_INSERT, listener );
 		listenerRegistry.appendListeners( EventType.PRE_UPDATE, listener );
@@ -171,19 +165,19 @@ class TypeSafeActivator {
 	private static boolean isConstraintBasedValidationEnabled(ActivationContext context) {
 		if ( context.getServiceRegistry().requireService( ConfigurationService.class )
 				.getSetting( APPLY_CONSTRAINTS, StandardConverters.BOOLEAN, true ) ) {
-			final Set<ValidationMode> modes = context.getValidationModes();
+			final var modes = context.getValidationModes();
 			return modes.contains( ValidationMode.DDL )
 				|| modes.contains( ValidationMode.AUTO );
 		}
 		else {
-			LOG.debug( "Skipping application of relational constraints from legacy Hibernate Validator" );
+			BEAN_VALIDATION_LOGGER.skippingLegacyHVConstraints();
 			return false;
 		}
 	}
 
 	private static void applyRelationalConstraints(ValidatorFactory factory, ActivationContext context) {
 		if ( isConstraintBasedValidationEnabled( context ) ) {
-			final SessionFactoryServiceRegistry serviceRegistry = context.getServiceRegistry();
+			final var serviceRegistry = context.getServiceRegistry();
 			applyRelationalConstraints(
 					factory,
 					context.getMetadata().getEntityBindings(),
@@ -200,20 +194,17 @@ class TypeSafeActivator {
 			Map<String,Object> settings,
 			Dialect dialect,
 			ClassLoaderAccess classLoaderAccess) {
-		final Class<?>[] groupsArray =
-				buildGroupsForOperation( GroupsPerOperation.Operation.DDL, settings, classLoaderAccess );
-		final Set<Class<?>> groups = new HashSet<>( asList( groupsArray ) );
+		final var groups = Set.of( buildGroupsForOperation( Operation.DDL, settings, classLoaderAccess ) );
 		final Map<Class<? extends Annotation>, Boolean> constraintCompositionTypeCache = new HashMap<>();
-
-		for ( PersistentClass persistentClass : persistentClasses ) {
+		for ( var persistentClass : persistentClasses ) {
 			final String className = persistentClass.getClassName();
 			if ( isNotEmpty( className ) ) {
-				final Class<?> clazz = entityClass( classLoaderAccess, className );
+				final var entityClass = entityClass( classLoaderAccess, className );
 				try {
 					applyDDL(
 							"",
 							persistentClass,
-							clazz,
+							entityClass,
 							factory,
 							groups,
 							true,
@@ -222,7 +213,7 @@ class TypeSafeActivator {
 					);
 				}
 				catch (Exception e) {
-					LOG.unableToApplyConstraints( className, e );
+					BEAN_VALIDATION_LOGGER.unableToApplyConstraints( className, e );
 				}
 			}
 		}
@@ -247,26 +238,27 @@ class TypeSafeActivator {
 			Dialect dialect,
 			Map<Class<? extends Annotation>, Boolean> constraintCompositionTypeCache
 	) {
-		final BeanDescriptor descriptor = factory.getValidator().getConstraintsForClass( clazz );
+		final var beanDescriptor = factory.getValidator().getConstraintsForClass( clazz );
 		//cno bean level constraints can be applied, go to the properties
-		for ( PropertyDescriptor propertyDesc : descriptor.getConstrainedProperties() ) {
-			final Property property =
-					findPropertyByName( persistentClass, prefix + propertyDesc.getPropertyName() );
+		for ( var propertyDescriptor : beanDescriptor.getConstrainedProperties() ) {
+			final var property =
+					findPropertyByName( persistentClass,
+							prefix + propertyDescriptor.getPropertyName() );
 			if ( property != null ) {
 				final boolean hasNotNull = applyConstraints(
-						propertyDesc.getConstraintDescriptors(),
+						propertyDescriptor.getConstraintDescriptors(),
 						property,
-						propertyDesc,
+						propertyDescriptor,
 						groups,
 						activateNotNull,
 						false,
 						dialect,
 						constraintCompositionTypeCache
 				);
-				if ( property.isComposite() && propertyDesc.isCascaded() ) {
-					final Component component = (Component) property.getValue();
+				if ( property.isComposite() && propertyDescriptor.isCascaded() ) {
+					final var component = (Component) property.getValue();
 					applyDDL(
-							prefix + propertyDesc.getPropertyName() + ".",
+							prefix + propertyDescriptor.getPropertyName() + ".",
 							persistentClass,
 							component.getComponentClass(),
 							factory,
@@ -295,33 +287,33 @@ class TypeSafeActivator {
 
 		boolean firstItem = true;
 		boolean composedResultHasNotNull = false;
-		for ( ConstraintDescriptor<?> descriptor : constraintDescriptors ) {
+		for ( var constraintDescriptor : constraintDescriptors ) {
 			boolean hasNotNull = false;
 
-			if ( groups == null || !disjoint( descriptor.getGroups(), groups ) ) {
+			if ( groups == null || !disjoint( constraintDescriptor.getGroups(), groups ) ) {
 				if ( canApplyNotNull ) {
-					hasNotNull = isNotNullDescriptor( descriptor );
+					hasNotNull = isNotNullDescriptor( constraintDescriptor );
 				}
 
 				// apply bean validation specific constraints
-				applyDigits( property, descriptor );
-				applySize( property, descriptor, propertyDesc );
-				applyMin( property, descriptor, dialect );
-				applyMax( property, descriptor, dialect );
+				applyDigits( property, constraintDescriptor );
+				applySize( property, constraintDescriptor, propertyDesc );
+				applyMin( property, constraintDescriptor, dialect );
+				applyMax( property, constraintDescriptor, dialect );
 
 				// Apply Hibernate Validator specific constraints - we cannot import any HV specific classes though!
 				// No need to check explicitly for @Range. @Range is a composed constraint using @Min and @Max which
-				// will be taken care later.
-				applyLength( property, descriptor, propertyDesc );
+				// will be taken care of later.
+				applyLength( property, constraintDescriptor, propertyDesc );
 
 				// Composing constraints
-				if ( !descriptor.getComposingConstraints().isEmpty() ) {
+				if ( !constraintDescriptor.getComposingConstraints().isEmpty() ) {
 					// pass an empty set as composing constraints inherit the main constraint and thus are matching already
 					final boolean hasNotNullFromComposingConstraints = applyConstraints(
-							descriptor.getComposingConstraints(),
+							constraintDescriptor.getComposingConstraints(),
 							property, propertyDesc, null,
 							canApplyNotNull,
-							isConstraintCompositionOfTypeOr( descriptor, constraintCompositionTypeCache ),
+							isConstraintCompositionOfTypeOr( constraintDescriptor, constraintCompositionTypeCache ),
 							dialect,
 							constraintCompositionTypeCache
 					);
@@ -354,38 +346,38 @@ class TypeSafeActivator {
 
 	private static boolean isConstraintCompositionOfTypeOr(
 			ConstraintDescriptor<?> descriptor,
-			Map<Class<? extends Annotation>, Boolean> constraintCompositionTypeCache
-	) {
+			Map<Class<? extends Annotation>, Boolean> constraintCompositionTypeCache) {
 		if ( descriptor.getComposingConstraints().size() < 2 ) {
 			return false;
 		}
-
-		final Class<? extends Annotation> composedAnnotation = descriptor.getAnnotation().annotationType();
-		return constraintCompositionTypeCache.computeIfAbsent( composedAnnotation, value -> {
-			for ( Annotation annotation : value.getAnnotations() ) {
-				if ( "org.hibernate.validator.constraints.ConstraintComposition"
-						.equals( annotation.annotationType().getName() ) ) {
-					try {
-						Method valueMethod = annotation.annotationType().getMethod( "value" );
-						Object result = valueMethod.invoke( annotation );
-						return result != null && "OR".equals( result.toString() );
+		else {
+			final var composedAnnotation = descriptor.getAnnotation().annotationType();
+			return constraintCompositionTypeCache.computeIfAbsent( composedAnnotation, value -> {
+				for ( var annotation : value.getAnnotations() ) {
+					if ( "org.hibernate.validator.constraints.ConstraintComposition"
+							.equals( annotation.annotationType().getName() ) ) {
+						try {
+							final Method valueMethod = annotation.annotationType().getMethod( "value" );
+							final Object result = valueMethod.invoke( annotation );
+							return result != null && "OR".equals( result.toString() );
 					}
-					catch ( NoSuchMethodException | IllegalAccessException | InvocationTargetException ex ) {
-						LOG.debug( "ConstraintComposition type could not be determined. Assuming AND", ex );
+					catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
+						BEAN_VALIDATION_LOGGER.constraintCompositionTypeUnknown( ex );
 						return false;
 					}
+					}
 				}
-			}
-			return false;
-		});
+				return false;
+			} );
+		}
 	}
 
 	private static void applyMin(Property property, ConstraintDescriptor<?> descriptor, Dialect dialect) {
 		if ( Min.class.equals( descriptor.getAnnotation().annotationType() ) ) {
 			@SuppressWarnings("unchecked")
-			final ConstraintDescriptor<Min> minConstraint = (ConstraintDescriptor<Min>) descriptor;
+			final var minConstraint = (ConstraintDescriptor<Min>) descriptor;
 			final long min = minConstraint.getAnnotation().value();
-			for ( Selectable selectable : property.getSelectables() ) {
+			for ( var selectable : property.getSelectables() ) {
 				if ( selectable instanceof Column column ) {
 					applySQLCheck( column, column.getQuotedName( dialect ) + ">=" + min );
 				}
@@ -396,9 +388,9 @@ class TypeSafeActivator {
 	private static void applyMax(Property property, ConstraintDescriptor<?> descriptor, Dialect dialect) {
 		if ( Max.class.equals( descriptor.getAnnotation().annotationType() ) ) {
 			@SuppressWarnings("unchecked")
-			final ConstraintDescriptor<Max> maxConstraint = (ConstraintDescriptor<Max>) descriptor;
+			final var maxConstraint = (ConstraintDescriptor<Max>) descriptor;
 			final long max = maxConstraint.getAnnotation().value();
-			for ( Selectable selectable : property.getSelectables() ) {
+			for ( var selectable : property.getSelectables() ) {
 				if ( selectable instanceof Column column ) {
 					applySQLCheck( column, column.getQuotedName( dialect ) + "<=" + max );
 				}
@@ -409,8 +401,8 @@ class TypeSafeActivator {
 	private static void applySQLCheck(Column column, String checkConstraint) {
 		// need to check whether the new check is already part of the existing check,
 		// because applyDDL can be called multiple times
-		for ( CheckConstraint constraint : column.getCheckConstraints() ) {
-			if ( constraint.getConstraint().equalsIgnoreCase( checkConstraint ) ) {
+		for ( var columnCheckConstraint : column.getCheckConstraints() ) {
+			if ( columnCheckConstraint.getConstraint().equalsIgnoreCase( checkConstraint ) ) {
 				return; //EARLY EXIT
 			}
 		}
@@ -418,10 +410,10 @@ class TypeSafeActivator {
 	}
 
 	private static boolean isNotNullDescriptor(ConstraintDescriptor<?> descriptor) {
-		final Class<? extends Annotation> annotationType = descriptor.getAnnotation().annotationType();
+		final var annotationType = descriptor.getAnnotation().annotationType();
 		return NotNull.class.equals(annotationType)
-				|| NotEmpty.class.equals(annotationType)
-				|| NotBlank.class.equals(annotationType);
+			|| NotEmpty.class.equals(annotationType)
+			|| NotBlank.class.equals(annotationType);
 	}
 
 	private static void markNotNull(Property property) {
@@ -429,16 +421,13 @@ class TypeSafeActivator {
 		if ( !( property.getPersistentClass() instanceof SingleTableSubclass ) ) {
 			// composite should not add not-null on all columns
 			if ( !property.isComposite() ) {
-				for ( Selectable selectable : property.getSelectables() ) {
+				property.setOptional( false );
+				for ( var selectable : property.getSelectables() ) {
 					if ( selectable instanceof Column column ) {
 						column.setNullable( false );
 					}
 					else {
-						LOG.debugf(
-								"@NotNull was applied to attribute [%s] which is defined (at least partially) " +
-										"by formula(s); formula portions will be skipped",
-								property.getName()
-						);
+						BEAN_VALIDATION_LOGGER.notNullOnFormulaPortion( property.getName() );
 					}
 				}
 			}
@@ -449,10 +438,10 @@ class TypeSafeActivator {
 	private static void applyDigits(Property property, ConstraintDescriptor<?> descriptor) {
 		if ( Digits.class.equals( descriptor.getAnnotation().annotationType() ) ) {
 			@SuppressWarnings("unchecked")
-			final ConstraintDescriptor<Digits> digitsConstraint = (ConstraintDescriptor<Digits>) descriptor;
+			final var digitsConstraint = (ConstraintDescriptor<Digits>) descriptor;
 			final int integerDigits = digitsConstraint.getAnnotation().integer();
 			final int fractionalDigits = digitsConstraint.getAnnotation().fraction();
-			for ( Selectable selectable : property.getSelectables() ) {
+			for ( var selectable : property.getSelectables() ) {
 				if ( selectable instanceof Column column ) {
 					column.setPrecision( integerDigits + fractionalDigits );
 					column.setScale( fractionalDigits );
@@ -466,11 +455,11 @@ class TypeSafeActivator {
 		if ( Size.class.equals( descriptor.getAnnotation().annotationType() )
 				&& String.class.equals( propertyDescriptor.getElementClass() ) ) {
 			@SuppressWarnings("unchecked")
-			final ConstraintDescriptor<Size> sizeConstraint = (ConstraintDescriptor<Size>) descriptor;
+			final var sizeConstraint = (ConstraintDescriptor<Size>) descriptor;
 			final int max = sizeConstraint.getAnnotation().max();
-			for ( Column col : property.getColumns() ) {
+			for ( var column : property.getColumns() ) {
 				if ( max < Integer.MAX_VALUE ) {
-					col.setLength( max );
+					column.setLength( max );
 				}
 			}
 		}
@@ -480,7 +469,7 @@ class TypeSafeActivator {
 		if ( isValidatorLengthAnnotation( descriptor )
 				&& String.class.equals( propertyDescriptor.getElementClass() ) ) {
 			final int max = (Integer) descriptor.getAttributes().get( "max" );
-			for ( Selectable selectable : property.getSelectables() ) {
+			for ( var selectable : property.getSelectables() ) {
 				if ( selectable instanceof Column column ) {
 					if ( max < Integer.MAX_VALUE ) {
 						column.setLength( max );
@@ -495,88 +484,23 @@ class TypeSafeActivator {
 				.equals( descriptor.getAnnotation().annotationType().getName() );
 	}
 
-	/**
-	 * Locate the property by path in a recursive way, including IdentifierProperty in the loop if propertyName is
-	 * {@code null}.  If propertyName is {@code null} or empty, the IdentifierProperty is returned
-	 */
-	private static Property findPropertyByName(PersistentClass associatedClass, String propertyName) {
-		Property property = null;
-		final Property idProperty = associatedClass.getIdentifierProperty();
-		final String idName = idProperty != null ? idProperty.getName() : null;
-		try {
-			if ( isEmpty( propertyName ) || propertyName.equals( idName ) ) {
-				//default to id
-				property = idProperty;
-			}
-			else {
-				if ( propertyName.indexOf( idName + "." ) == 0 ) {
-					property = idProperty;
-					propertyName = propertyName.substring( idName.length() + 1 );
-				}
-				final StringTokenizer tokens = new StringTokenizer( propertyName, ".", false );
-				while ( tokens.hasMoreTokens() ) {
-					final String element = tokens.nextToken();
-					if ( property == null ) {
-						property = associatedClass.getProperty( element );
-					}
-					else {
-						if ( !property.isComposite() ) {
-							return null;
-						}
-						else {
-							property = ( (Component) property.getValue() ).getProperty( element );
-						}
-					}
-				}
-			}
-		}
-		catch ( MappingException e ) {
-			try {
-				//if we do not find it try to check the identifier mapper
-				if ( associatedClass.getIdentifierMapper() == null ) {
-					return null;
-				}
-				else {
-					final StringTokenizer tokens = new StringTokenizer( propertyName, ".", false );
-					while ( tokens.hasMoreTokens() ) {
-						final String element = tokens.nextToken();
-						if ( property == null ) {
-							property = associatedClass.getIdentifierMapper().getProperty( element );
-						}
-						else {
-							if ( !property.isComposite() ) {
-								return null;
-							}
-							else {
-								property = ( (Component) property.getValue() ).getProperty( element );
-							}
-						}
-					}
-				}
-			}
-			catch ( MappingException ee ) {
-				return null;
-			}
-		}
-		return property;
-	}
-
 	private static ValidatorFactory getValidatorFactory(ActivationContext context) {
-		// IMPL NOTE : We can either be provided a ValidatorFactory or make one.  We can be provided
-		// a ValidatorFactory in 2 different ways.  So here we "get" a ValidatorFactory in the following order:
+		// IMPL NOTE: We can either be provided a ValidatorFactory or make one. We can be provided
+		//            a ValidatorFactory in 2 different ways. So here we "get" a ValidatorFactory
+		//            in the following order:
 		//		1) Look into SessionFactoryOptions.getValidatorFactoryReference()
 		//		2) Look into ConfigurationService
 		//		3) build a new ValidatorFactory
 
 		// 1 - look in SessionFactoryOptions.getValidatorFactoryReference()
-		final ValidatorFactory providedFactory =
+		final var providedFactory =
 				resolveProvidedFactory( context.getSessionFactory().getSessionFactoryOptions() );
 		if ( providedFactory != null ) {
 			return providedFactory;
 		}
 
 		// 2 - look in ConfigurationService
-		final ValidatorFactory configuredFactory =
+		final var configuredFactory =
 				resolveProvidedFactory( context.getServiceRegistry().requireService( ConfigurationService.class ) );
 		if ( configuredFactory != null ) {
 			return configuredFactory;

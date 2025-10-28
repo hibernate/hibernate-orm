@@ -15,17 +15,17 @@ import java.util.Set;
 public class Employee {
 	private String name;
 	private Date hireDate;
-	private Map managerBySite = new HashMap();
-	private Set underlings = new HashSet();
+	private Map<Site,Employee> managerBySite = new HashMap<>();
+	private Set<Employee> underlings = new HashSet<>();
 
 	Employee() {}
 	public Employee(String name) {
 		this.name=name;
 	}
-	public Map getManagerBySite() {
+	public Map<Site,Employee> getManagerBySite() {
 		return managerBySite;
 	}
-	public void setManagerBySite(Map managerBySite) {
+	public void setManagerBySite(Map<Site,Employee> managerBySite) {
 		this.managerBySite = managerBySite;
 	}
 	public String getName() {
@@ -34,10 +34,10 @@ public class Employee {
 	public void setName(String name) {
 		this.name = name;
 	}
-	public Set getUnderlings() {
+	public Set<Employee> getUnderlings() {
 		return underlings;
 	}
-	public void setUnderlings(Set underlings) {
+	public void setUnderlings(Set<Employee> underlings) {
 		this.underlings = underlings;
 	}
 	public Date getHireDate() {

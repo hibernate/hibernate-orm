@@ -46,6 +46,11 @@ public class SelectStatement extends AbstractStatement implements SqlAstNode, Ex
 		this.domainResults = domainResults;
 	}
 
+	@Override
+	public boolean isSelection() {
+		return true;
+	}
+
 	public QuerySpec getQuerySpec() {
 		return queryPart.getFirstQuerySpec();
 	}
@@ -64,24 +69,21 @@ public class SelectStatement extends AbstractStatement implements SqlAstNode, Ex
 	}
 
 	@Override
-	public DomainResult createDomainResult(String resultVariable, DomainResultCreationState creationState) {
-		final SelectClause selectClause = queryPart.getFirstQuerySpec().getSelectClause();
-		final TypeConfiguration typeConfiguration = creationState.getSqlAstCreationState()
-				.getCreationContext()
-				.getMappingMetamodel()
-				.getTypeConfiguration();
-		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
-		if ( selectClause.getSqlSelections().size() == 1 ) {
-			final SqlSelection first = selectClause.getSqlSelections().get( 0 );
+	public DomainResult<?> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
+		final List<SqlSelection> sqlSelections =
+				queryPart.getFirstQuerySpec().getSelectClause().getSqlSelections();
+		if ( sqlSelections.size() == 1 ) {
+			final SqlSelection first = sqlSelections.get( 0 );
 			final JdbcMapping jdbcMapping = first.getExpressionType().getSingleJdbcMapping();
-
-			final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
-					this,
-					jdbcMapping.getJdbcJavaType(),
-					null,
-					typeConfiguration
-			);
-
+			final SqlSelection sqlSelection =
+					creationState.getSqlAstCreationState().getSqlExpressionResolver()
+							.resolveSqlSelection(
+									this,
+									jdbcMapping.getJdbcJavaType(),
+									null,
+									creationState.getSqlAstCreationState().getCreationContext()
+											.getTypeConfiguration()
+							);
 			return new BasicResult<>(
 					sqlSelection.getValuesArrayPosition(),
 					resultVariable,
@@ -95,20 +97,22 @@ public class SelectStatement extends AbstractStatement implements SqlAstNode, Ex
 
 	@Override
 	public void applySqlSelections(DomainResultCreationState creationState) {
-		final SelectClause selectClause = queryPart.getFirstQuerySpec().getSelectClause();
-		final TypeConfiguration typeConfiguration = creationState.getSqlAstCreationState()
-				.getCreationContext()
-				.getMappingMetamodel()
-				.getTypeConfiguration();
-		for ( SqlSelection sqlSelection : selectClause.getSqlSelections() ) {
+		final TypeConfiguration typeConfiguration =
+				creationState.getSqlAstCreationState().getCreationContext()
+						.getTypeConfiguration();
+		final SqlExpressionResolver expressionResolver =
+				creationState.getSqlAstCreationState().getSqlExpressionResolver();
+		for ( SqlSelection sqlSelection :
+				queryPart.getFirstQuerySpec().getSelectClause().getSqlSelections() ) {
 			sqlSelection.getExpressionType().forEachJdbcType(
 					(index, jdbcMapping) -> {
-						creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
-								this,
-								jdbcMapping.getJdbcJavaType(),
-								null,
-								typeConfiguration
-						);
+						expressionResolver
+								.resolveSqlSelection(
+										this,
+										jdbcMapping.getJdbcJavaType(),
+										null,
+										typeConfiguration
+								);
 					}
 			);
 		}

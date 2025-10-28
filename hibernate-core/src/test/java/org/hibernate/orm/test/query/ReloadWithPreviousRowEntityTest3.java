@@ -62,13 +62,7 @@ public class ReloadWithPreviousRowEntityTest3 {
 
 	@AfterEach
 	public void dropTestData(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					session.createQuery( "delete from Student" ).executeUpdate();
-					session.createQuery( "delete from Teacher" ).executeUpdate();
-					session.createQuery( "delete from Skill" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

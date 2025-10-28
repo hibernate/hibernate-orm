@@ -4,18 +4,17 @@
  */
 package org.hibernate.dialect.function;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.type.BindingContext;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -35,9 +34,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
@@ -45,7 +42,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static java.util.Arrays.asList;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
+import static org.hibernate.type.SqlTypes.isNumericType;
 
 /**
  * @author Christian Beikov
@@ -90,15 +89,20 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			Predicate filter,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		final boolean caseWrapper = filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause();
+		final boolean caseWrapper =
+				filter != null && !filterClauseSupported( translator );
 		sqlAppender.appendSql( "avg(" );
 		final Expression arg;
-		if ( sqlAstArguments.get( 0 ) instanceof Distinct ) {
+		final var argNode = sqlAstArguments.get( 0 );
+		if ( argNode instanceof Distinct distinct ) {
 			sqlAppender.appendSql( "distinct " );
-			arg = ( (Distinct) sqlAstArguments.get( 0 ) ).getExpression();
+			arg = distinct.getExpression();
+		}
+		else if ( argNode instanceof Expression expression ) {
+			arg = expression;
 		}
 		else {
-			arg = (Expression) sqlAstArguments.get( 0 );
+			throw new AssertionFailure( "Unexpected argument type" );
 		}
 		if ( caseWrapper ) {
 			translator.getCurrentClauseStack().push( Clause.WHERE );
@@ -128,7 +132,7 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		if ( sourceMapping.getJdbcType().isInteger() ) {
 			castFunction.render(
 					sqlAppender,
-					Arrays.asList( realArg, new CastTarget( doubleType ) ),
+					asList( realArg, new CastTarget( doubleType ) ),
 					doubleType,
 					translator
 			);
@@ -163,34 +167,31 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 						)
 				);
 			}
-			final SqmTypedNode<?> argument = arguments.get( 0 );
-			final SqmExpressible<?> expressible = argument.getExpressible();
-			final DomainType<?> domainType;
-			if ( expressible != null && ( domainType = expressible.getSqmType() ) != null ) {
-				final JdbcType jdbcType = getJdbcType( domainType, bindingContext.getTypeConfiguration() );
-				if ( !isNumeric( jdbcType ) ) {
-					throw new FunctionArgumentException(
-							String.format(
-									"Parameter %d of function '%s()' has type '%s', but argument is of type '%s'",
-									1,
-									functionName,
-									NUMERIC,
-									domainType.getTypeName()
-							)
-					);
+			final var expressible = arguments.get( 0 ).getExpressible();
+			if ( expressible != null ) {
+				final var domainType = expressible.getSqmType();
+				if ( domainType != null ) {
+					final var jdbcType = getJdbcType( domainType, bindingContext.getTypeConfiguration() );
+					if ( !isNumeric( jdbcType ) ) {
+						throw new FunctionArgumentException(
+								String.format(
+										"Parameter %d of function '%s()' has type '%s', but argument is of type '%s'",
+										1,
+										functionName,
+										NUMERIC,
+										domainType.getTypeName()
+								)
+						);
+					}
 				}
 			}
 		}
 
 		private static boolean isNumeric(JdbcType jdbcType) {
 			final int sqlTypeCode = jdbcType.getDefaultSqlTypeCode();
-			if ( SqlTypes.isNumericType( sqlTypeCode ) ) {
-				return true;
-			}
-			if ( jdbcType instanceof ArrayJdbcType arrayJdbcType ) {
-				return isNumeric( arrayJdbcType.getElementJdbcType() );
-			}
-			return false;
+			return isNumericType( sqlTypeCode )
+				|| jdbcType instanceof ArrayJdbcType arrayJdbcType
+						&& isNumeric( arrayJdbcType.getElementJdbcType() );
 		}
 
 		private static JdbcType getJdbcType(DomainType<?> domainType, TypeConfiguration typeConfiguration) {
@@ -198,14 +199,11 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 				return jdbcMapping.getJdbcType();
 			}
 			else {
-				final JavaType<?> javaType = domainType.getExpressibleJavaType();
-				if ( javaType.getJavaTypeClass().isEnum() ) {
-					// we can't tell if the enum is mapped STRING or ORDINAL
-					return ObjectJdbcType.INSTANCE;
-				}
-				else {
-					return javaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
-				}
+				final var javaType = domainType.getExpressibleJavaType();
+				return javaType.getJavaTypeClass().isEnum()
+						// we can't tell if the enum is mapped STRING or ORDINAL
+						? ObjectJdbcType.INSTANCE
+						: javaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
 			}
 		}
 
@@ -220,23 +218,24 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		private final BasicType<Double> doubleType;
 
 		public ReturnTypeResolver(TypeConfiguration typeConfiguration) {
-			this.doubleType = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE );
+			doubleType = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE );
 		}
 
 		@Override
 		public BasicValuedMapping resolveFunctionReturnType(
 				Supplier<BasicValuedMapping> impliedTypeAccess,
 				List<? extends SqlAstNode> arguments) {
-			final BasicValuedMapping impliedType = impliedTypeAccess.get();
+			final var impliedType = impliedTypeAccess.get();
 			if ( impliedType != null ) {
 				return impliedType;
 			}
-			Expression expression = (Expression) arguments.get( 0 );
-			final JdbcMapping jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
-			if ( jdbcMapping instanceof BasicPluralType<?, ?> ) {
-				return (BasicValuedMapping) jdbcMapping;
+			else {
+				var expression = (Expression) arguments.get( 0 );
+				final var jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
+				return jdbcMapping instanceof BasicPluralType<?, ?>
+						? (BasicValuedMapping) jdbcMapping
+						: doubleType;
 			}
-			return doubleType;
 		}
 
 		@Override
@@ -245,9 +244,9 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 				@Nullable SqmToSqlAstConverter converter,
 				List<? extends SqmTypedNode<?>> arguments,
 				TypeConfiguration typeConfiguration) {
-			final SqmExpressible<?> expressible = arguments.get( 0 ).getExpressible();
-			final DomainType<?> domainType;
-			if ( expressible != null && ( domainType = expressible.getSqmType() ) != null ) {
+			final var expressible = arguments.get( 0 ).getExpressible();
+			if ( expressible != null ) {
+				final var domainType = expressible.getSqmType();
 				if ( domainType instanceof BasicPluralType<?, ?> ) {
 					return (ReturnableType<?>) domainType;
 				}

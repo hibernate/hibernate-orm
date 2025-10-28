@@ -9,7 +9,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serial;
 import java.io.Serializable;
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -29,11 +28,9 @@ import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.CoreMessageLogger;
+import static org.hibernate.context.internal.CurrentSessionLogging.CURRENT_SESSION_LOGGER;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
-
-import org.jboss.logging.Logger;
 
 /**
  * A {@link org.hibernate.context.spi.CurrentSessionContext} impl which scopes the notion of current
@@ -59,11 +56,6 @@ import org.jboss.logging.Logger;
  * @author Sanne Grinovero
  */
 public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			ThreadLocalSessionContext.class.getName()
-	);
 
 	private static final Class<?>[] SESSION_PROXY_INTERFACES = new Class<?>[] {
 			Session.class,
@@ -172,8 +164,8 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	}
 
 	protected Session wrap(Session session) {
-		final TransactionProtectionWrapper wrapper = new TransactionProtectionWrapper( session );
-		final Session wrapped = (Session) Proxy.newProxyInstance(
+		final var wrapper = new TransactionProtectionWrapper( session );
+		final var wrapped = (Session) Proxy.newProxyInstance(
 				Session.class.getClassLoader(),
 				SESSION_PROXY_INTERFACES,
 				wrapper
@@ -194,25 +186,20 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 
 	private static void terminateOrphanedSession(Session orphan) {
 		if ( orphan != null ) {
-			LOG.alreadySessionBound();
-			try {
-				final Transaction orphanTransaction = orphan.getTransaction();
+			CURRENT_SESSION_LOGGER.alreadySessionBound();
+			try ( orphan ) {
+				final var orphanTransaction = orphan.getTransaction();
 				if ( orphanTransaction != null && orphanTransaction.getStatus() == TransactionStatus.ACTIVE ) {
 					try {
 						orphanTransaction.rollback();
 					}
-					catch( Throwable t ) {
-						LOG.debug( "Unable to rollback transaction for orphaned session", t );
+					catch (Throwable t) {
+						CURRENT_SESSION_LOGGER.unableToRollbackTransactionForOrphanedSession( t );
 					}
 				}
 			}
-			finally {
-				try {
-					orphan.close();
-				}
-				catch( Throwable t ) {
-					LOG.debug( "Unable to close orphaned session", t );
-				}
+			catch (Throwable t) {
+				CURRENT_SESSION_LOGGER.unableToCloseOrphanedSession( t );
 			}
 
 		}
@@ -237,13 +224,13 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	}
 
 	private static void doBind(Session session, SessionFactory factory) {
-		Session orphanedPreviousSession = sessionMap().put( factory, session );
+		final var orphanedPreviousSession = sessionMap().put( factory, session );
 		terminateOrphanedSession( orphanedPreviousSession );
 	}
 
 	private static Session doUnbind(SessionFactory factory) {
-		final Map<SessionFactory, Session> sessionMap = sessionMap();
-		final Session session = sessionMap.remove( factory );
+		final var sessionMap = sessionMap();
+		final var session = sessionMap.remove( factory );
 		if ( sessionMap.isEmpty() ) {
 			//Do not use set(null) as it would prevent the initialValue to be invoked again in case of need.
 			CONTEXT_TL.remove();
@@ -293,10 +280,12 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 				return this.equals( Proxy.getInvocationHandler( args[0] ) );
 			}
 			else if ( "hashCode".equals( methodName ) && method.getParameterCount() == 0 ) {
-				return this.hashCode();
+				return hashCode();
 			}
 			else if ( "toString".equals( methodName ) && method.getParameterCount() == 0 ) {
-				return String.format( Locale.ROOT, "ThreadLocalSessionContext.TransactionProtectionWrapper[%s]", realSession );
+				return String.format( Locale.ROOT,
+						"ThreadLocalSessionContext.TransactionProtectionWrapper[%s]",
+						realSession );
 			}
 
 
@@ -305,20 +294,21 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 				// If close() is called, guarantee unbind()
 				if ( "close".equals( methodName ) ) {
 					unbind( realSession.getSessionFactory() );
+					CURRENT_SESSION_LOGGER.allowingInvocationToProceed(methodName);
 				}
 				else if ( "getStatistics".equals( methodName )
 						|| "isOpen".equals( methodName )
 						|| "getListeners".equals( methodName ) ) {
 					// allow these to go through the real session no matter what
-					LOG.tracef( "Allowing invocation [%s] to proceed to real session", methodName );
+					CURRENT_SESSION_LOGGER.allowingInvocationToProceed(methodName);
 				}
 				else if ( !realSession.isOpen() ) {
-					// essentially, if the real session is closed allow any
-					// method call to pass through since the real session
-					// will complain by throwing an appropriate exception;
-					// NOTE that allowing close() above has the same basic effect,
-					//   but we capture that there simply to doAfterTransactionCompletion the unbind...
-					LOG.tracef( "Allowing invocation [%s] to proceed to real (closed) session", methodName );
+					// essentially, if the real session is closed, allow any method
+					// call to pass through since the real session will complain by
+					// throwing an appropriate exception; note that allowing close()
+					// above has the same basic effect, but we capture that there
+					// just to unbind().
+					CURRENT_SESSION_LOGGER.allowingInvocationToProceedToClosedSession(methodName);
 				}
 				else if ( realSession.getTransaction().getStatus() != TransactionStatus.ACTIVE ) {
 					// limit the methods available if no transaction is active
@@ -331,14 +321,14 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 							|| "getSessionFactory".equals( methodName )
 							|| "getJdbcCoordinator".equals( methodName )
 							|| "getTenantIdentifier".equals( methodName ) ) {
-						LOG.tracef( "Allowing invocation [%s] to proceed to real (non-transacted) session", methodName );
+						CURRENT_SESSION_LOGGER.allowingInvocationToProceedToNonTransactedSession(methodName);
 					}
 					else {
-						throw new HibernateException( "Calling method '" + methodName + "' is not valid without an active transaction (Current status: "
+						throw new HibernateException( "Calling method '" + methodName
+								+ "' is not valid without an active transaction (Current status: "
 								+ realSession.getTransaction().getStatus() + ")" );
 					}
 				}
-				LOG.tracef( "Allowing proxy invocation [%s] to proceed to real session", methodName );
 				return method.invoke( realSession, args );
 			}
 			catch ( InvocationTargetException e ) {
@@ -375,7 +365,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 		@Serial
 		private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
 			// on the inverse, it makes sense that if a ThreadLocalSessionContext-
-			// bound session then gets deserialized to go ahead and re-bind it to
+			// bound session then gets deserialized to go ahead and rebind it to
 			// the ThreadLocalSessionContext session map.
 			ois.defaultReadObject();
 			realSession.getTransaction().registerSynchronization( buildCleanupSynch() );

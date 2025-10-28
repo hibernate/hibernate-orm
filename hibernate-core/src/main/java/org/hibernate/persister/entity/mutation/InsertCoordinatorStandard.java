@@ -38,7 +38,6 @@ import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
-import org.hibernate.tuple.entity.EntityMetamodel;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -67,7 +66,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			batchKey = new BasicBatchKey( entityPersister.getEntityName() + "#INSERT" );
 		}
 
-		if ( entityPersister.getEntityMetamodel().isDynamicInsert() ) {
+		if ( entityPersister.isDynamicInsert() ) {
 			// the entity specified dynamic-insert - skip generating the
 			// static inserts as we will create them every time
 			staticInsertGroup = null;
@@ -121,7 +120,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 		final boolean needsDynamicInsert = preInsertInMemoryValueGeneration( values, entity, session );
 		final EntityPersister persister = entityPersister();
 		final boolean forceIdentifierBinding = persister.getGenerator().generatedOnExecution() && id != null;
-		if ( persister.getEntityMetamodel().isDynamicInsert()
+		if ( persister.isDynamicInsert()
 				|| needsDynamicInsert || forceIdentifierBinding ) {
 			return doDynamicInserts( id, values, entity, session, forceIdentifierBinding );
 		}
@@ -132,17 +131,16 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	protected boolean preInsertInMemoryValueGeneration(Object[] values, Object entity, SharedSessionContractImplementor session) {
 		final EntityPersister persister = entityPersister();
-		final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
 		boolean foundStateDependentGenerator = false;
-		if ( entityMetamodel.hasPreInsertGeneratedValues() ) {
-			final Generator[] generators = entityMetamodel.getGenerators();
+		if ( persister.hasPreInsertGeneratedProperties() ) {
+			final Generator[] generators = persister.getGenerators();
 			for ( int i = 0; i < generators.length; i++ ) {
 				final Generator generator = generators[i];
 				if ( generator != null
 						&& generator.generatesOnInsert()
 						&& generator.generatedBeforeExecution( entity, session ) ) {
 					values[i] = ( (BeforeExecutionGenerator) generator ).generate( session, entity, values[i], INSERT );
-					persister.setPropertyValue( entity, i, values[i] );
+					persister.setValue( entity, i, values[i] );
 					foundStateDependentGenerator = foundStateDependentGenerator || generator.generatedOnExecution();
 				}
 			}

@@ -115,10 +115,7 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 		final TableMapping tableDetails = statementDetails.getMutatingTableDetails();
 		if ( inclusionChecker != null && !inclusionChecker.include( tableDetails ) ) {
 			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-				MODEL_MUTATION_LOGGER.tracef(
-						"Skipping execution of secondary insert : %s",
-						tableDetails.getTableName()
-				);
+				MODEL_MUTATION_LOGGER.skippingSecondaryInsert( tableDetails.getTableName() );
 			}
 			return;
 		}

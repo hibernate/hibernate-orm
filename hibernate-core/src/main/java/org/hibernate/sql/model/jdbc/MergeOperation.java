@@ -23,13 +23,12 @@ public class MergeOperation extends AbstractJdbcMutation {
 			MutationTarget<?> mutationTarget,
 			String sql,
 			List<? extends JdbcParameterBinder> parameterBinders) {
-		super( tableDetails, mutationTarget, sql, false, Expectation.None.INSTANCE, parameterBinders );
+		super( tableDetails, mutationTarget, sql, false, new Expectation.RowCount(), parameterBinders );
 	}
 
 	@Override
 	public MutationType getMutationType() {
 		return MutationType.UPDATE;
 	}
-
 
 }

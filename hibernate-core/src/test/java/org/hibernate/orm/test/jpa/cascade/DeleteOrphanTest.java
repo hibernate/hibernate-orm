@@ -31,12 +31,7 @@ public class DeleteOrphanTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Soldier" ).executeUpdate();
-					entityManager.createQuery( "delete from Troop" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

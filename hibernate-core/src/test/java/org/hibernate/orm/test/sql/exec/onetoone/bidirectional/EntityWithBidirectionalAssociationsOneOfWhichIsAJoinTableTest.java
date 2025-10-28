@@ -66,12 +66,7 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Parent" ).executeUpdate();
-					session.createQuery( "delete from Male" ).executeUpdate();
-					session.createQuery( "delete from Female" ).executeUpdate();
-				} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

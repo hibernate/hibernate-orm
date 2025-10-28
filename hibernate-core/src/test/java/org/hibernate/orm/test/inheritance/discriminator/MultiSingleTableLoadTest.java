@@ -62,14 +62,7 @@ public class MultiSingleTableLoadTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Holder" ).executeUpdate();
-					session.createQuery( "delete from A" ).executeUpdate();
-					session.createQuery( "delete from Y" ).executeUpdate();
-					session.createQuery( "delete from Z" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

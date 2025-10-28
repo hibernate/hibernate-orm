@@ -53,9 +53,10 @@ public class DateJdbcType implements JdbcType {
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
+		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		return typeConfiguration.getCurrentBaseSqlTypeIndicators().preferJdbcDatetimeTypes()
-				? typeConfiguration.getJavaTypeRegistry().getDescriptor( Date.class )
-				: typeConfiguration.getJavaTypeRegistry().getDescriptor( LocalDate.class );
+				? javaTypeRegistry.getDescriptor( Date.class )
+				: javaTypeRegistry.getDescriptor( LocalDate.class );
 	}
 
 	@Override

@@ -4,14 +4,18 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -25,6 +29,7 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResult;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -38,6 +43,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 	private final boolean containsAnyNonScalars;
 	private final EmbeddableMappingType fetchContainer;
 	private final BasicFetch<?> discriminatorFetch;
+	private final @Nullable DomainResult<Boolean> nullIndicatorResult;
 
 	public EmbeddableResultImpl(
 			NavigablePath navigablePath,
@@ -53,13 +59,15 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 		this.fetchContainer = modelPart.getEmbeddableTypeDescriptor();
 		this.resultVariable = resultVariable;
 
-		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
+		final var fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
 
-		fromClauseAccess.resolveTableGroup(
+		final TableGroup embeddableTableGroup = fromClauseAccess.resolveTableGroup(
 				getNavigablePath(),
 				np -> {
-					final EmbeddableValuedModelPart embeddedValueMapping = modelPart.getEmbeddableTypeDescriptor().getEmbeddedValueMapping();
-					final TableGroup tableGroup = fromClauseAccess.findTableGroup( NullnessUtil.castNonNull( np.getParent() ).getParent() );
+					final var embeddedValueMapping = modelPart.getEmbeddableTypeDescriptor().getEmbeddedValueMapping();
+					final TableGroup tableGroup =
+							fromClauseAccess.findTableGroup( NullnessUtil.castNonNull( np.getParent() ).getParent() );
 					final TableGroupJoin tableGroupJoin = embeddedValueMapping.createTableGroupJoin(
 							np,
 							tableGroup,
@@ -68,19 +76,42 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 							SqlAstJoinType.INNER,
 							true,
 							false,
-							creationState.getSqlAstCreationState()
+							sqlAstCreationState
 					);
 					tableGroup.addTableGroupJoin( tableGroupJoin );
 					return tableGroupJoin.getJoinedGroup();
 				}
 		);
 
-		this.discriminatorFetch = creationState.visitEmbeddableDiscriminatorFetch( this, false );
+		discriminatorFetch = creationState.visitEmbeddableDiscriminatorFetch( this, false );
+		nullIndicatorResult = nullIndicatorResult( creationState, embeddableTableGroup, sqlAstCreationState );
 
 		afterInitialize( this, creationState );
 
 		// after-after-initialize :D
 		containsAnyNonScalars = determineIfContainedAnyScalars( getFetches() );
+	}
+
+	private DomainResult<Boolean> nullIndicatorResult(
+			DomainResultCreationState creationState,
+			TableGroup embeddableTableGroup,
+			SqlAstCreationState sqlAstCreationState) {
+		final var aggregateMapping = fetchContainer.getAggregateMapping();
+		if ( aggregateMapping != null ) {
+			final TableReference tableReference =
+					embeddableTableGroup.resolveTableReference( aggregateMapping.getContainingTableExpression() );
+			final Expression aggregateExpression =
+					sqlAstCreationState.getSqlExpressionResolver()
+							.resolveSqlExpression( tableReference, aggregateMapping );
+			final BasicType<Boolean> booleanType =
+					sqlAstCreationState.getCreationContext()
+							.getTypeConfiguration().getBasicTypeForJavaType( Boolean.class );
+			return new NullnessPredicate( aggregateExpression, false, booleanType )
+					.createDomainResult( null, creationState );
+		}
+		else {
+			return null;
+		}
 	}
 
 	private static boolean determineIfContainedAnyScalars(ImmutableFetchList fetches) {
@@ -89,7 +120,6 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 				return true;
 			}
 		}
-
 		return false;
 	}
 
@@ -141,6 +171,6 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 
 	@Override
 	public Initializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
-		return new EmbeddableInitializerImpl( this, discriminatorFetch, parent, creationState, true );
+		return new EmbeddableInitializerImpl( this, discriminatorFetch, nullIndicatorResult, parent, creationState, true );
 	}
 }

@@ -4,17 +4,18 @@
  */
 package org.hibernate.envers.internal.entities.mapper.id;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.hibernate.Session;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.mapping.Component;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.spi.CompositeTypeImplementor;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * An implementation of an identifier mapper for {@link jakarta.persistence.IdClass} or multiple
@@ -24,17 +25,12 @@ import org.hibernate.service.ServiceRegistry;
  * @author Chris Cranford
  */
 public class MultipleIdMapper extends AbstractCompositeIdMapper implements SimpleIdMapperBuilder {
-
-	private final boolean embedded;
-
 	public MultipleIdMapper(Component component) {
-		super( component.getComponentClass(), component.getServiceRegistry() );
-		this.embedded = component.isEmbedded();
+		super( component );
 	}
 
-	private MultipleIdMapper(boolean embedded, Class<?> compositeIdClass, ServiceRegistry serviceRegistry) {
-		super( compositeIdClass, serviceRegistry );
-		this.embedded = embedded;
+	private MultipleIdMapper(CompositeTypeImplementor compositeType, ServiceRegistry serviceRegistry) {
+		super( serviceRegistry, compositeType );
 	}
 
 	@Override
@@ -43,9 +39,9 @@ public class MultipleIdMapper extends AbstractCompositeIdMapper implements Simpl
 	}
 
 	@Override
-	public void mapToMapFromId(Session session, Map<String, Object> data, Object obj) {
-		if ( compositeIdClass.isInstance( obj ) ) {
-			if ( embedded ) {
+	public void mapToMapFromId(SharedSessionContractImplementor session, Map<String, Object> data, Object obj) {
+		if ( compositeType.getReturnedClass().isInstance( obj ) ) {
+			if ( compositeType.isEmbedded() ) {
 				final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( obj );
 				if ( lazyInitializer != null ) {
 					obj = lazyInitializer.getInternalIdentifier();
@@ -77,7 +73,7 @@ public class MultipleIdMapper extends AbstractCompositeIdMapper implements Simpl
 
 	@Override
 	public void mapToMapFromEntity(Map<String, Object> data, Object obj) {
-		if ( embedded ) {
+		if ( compositeType.isEmbedded() ) {
 			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( obj );
 			if ( lazyInitializer != null ) {
 				obj = lazyInitializer.getInternalIdentifier();
@@ -100,7 +96,7 @@ public class MultipleIdMapper extends AbstractCompositeIdMapper implements Simpl
 
 	@Override
 	public IdMapper prefixMappedProperties(String prefix) {
-		final MultipleIdMapper ret = new MultipleIdMapper( embedded, compositeIdClass, getServiceRegistry() );
+		final MultipleIdMapper ret = new MultipleIdMapper( compositeType, getServiceRegistry() );
 
 		for ( PropertyData propertyData : ids.keySet() ) {
 			final String propertyName = propertyData.getName();
@@ -116,7 +112,7 @@ public class MultipleIdMapper extends AbstractCompositeIdMapper implements Simpl
 			return null;
 		}
 
-		final Object compositeId = instantiateCompositeId();
+		final Object compositeId = instantiateCompositeId( null );
 		for ( AbstractIdMapper mapper : ids.values() ) {
 			mapper.mapToEntityFromEntity( compositeId, data );
 		}

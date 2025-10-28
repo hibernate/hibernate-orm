@@ -46,18 +46,36 @@ public class DomainModelExtension
 
 	private static final String MODEL_KEY = MetadataImplementor.class.getName();
 
+	public static DomainModelScope requireDomainModelScope(Object testInstance, ExtensionContext context) {
+		var scope = findDomainModelScope( testInstance, context );
+		if ( scope == null ) {
+			throw new RuntimeException( "Could not locate DomainModelScope : " + context.getDisplayName() );
+		}
+		return scope;
+	}
+
+	public static DomainModelScope getOrCreateDomainModelScope(Object testInstance, ExtensionContext context) {
+		var scope = findDomainModelScope( testInstance, context );
+		if ( scope == null ) {
+			final ServiceRegistryScope serviceRegistryScope = ServiceRegistryExtension.findServiceRegistryScope(
+					testInstance,
+					context
+			);
+			scope = new DomainModelScopeImpl( serviceRegistryScope, serviceRegistry -> {
+				return (MetadataImplementor) new MetadataSources( serviceRegistry ).buildMetadata();
+			} );
+		}
+		return scope;
+	}
+
+
 	/**
 	 * Intended for use from external consumers.  Will never create a scope, just
 	 * attempt to consume an already created and stored one
 	 */
 	public static DomainModelScope findDomainModelScope(Object testInstance, ExtensionContext context) {
 		final ExtensionContext.Store store = locateExtensionStore( testInstance, context );
-		final DomainModelScope existing = (DomainModelScope) store.get( MODEL_KEY );
-		if ( existing != null ) {
-			return existing;
-		}
-
-		throw new RuntimeException( "Could not locate DomainModelScope : " + context.getDisplayName() );
+		return (DomainModelScope) store.get( MODEL_KEY );
 	}
 
 	public static DomainModelScope resolveForMethodLevelSessionFactoryScope(ExtensionContext context) {
@@ -147,7 +165,8 @@ public class DomainModelExtension
 	}
 
 	private static DomainModelScope createDomainModelScope(
-			Object testInstance, Optional<DomainModel> domainModelAnnRef,
+			Object testInstance,
+			Optional<DomainModel> domainModelAnnRef,
 			ExtensionContext context) {
 		final ServiceRegistryScope serviceRegistryScope = ServiceRegistryExtension.findServiceRegistryScope(
 				testInstance,
@@ -300,7 +319,7 @@ public class DomainModelExtension
 		return false;
 	}
 
-	public static class DomainModelScopeImpl implements DomainModelScope, ExtensionContext.Store.CloseableResource {
+	public static class DomainModelScopeImpl implements DomainModelScope, AutoCloseable {
 		private final ServiceRegistryScope serviceRegistryScope;
 		private final DomainModelProducer producer;
 

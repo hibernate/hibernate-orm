@@ -7,15 +7,15 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.CompositeType;
@@ -23,6 +23,8 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.MappingContext;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
  * @author Christian Beikov
@@ -41,8 +43,7 @@ public class SelectableMappingsImpl implements SelectableMappings {
 						? entityType.getIdentifierOrUniqueKeyType( mapping )
 						: valueType;
 		if ( keyType instanceof CompositeType compositeType ) {
-			Type[] subtypes = compositeType.getSubtypes();
-			for ( Type subtype : subtypes ) {
+			for ( Type subtype : compositeType.getSubtypes() ) {
 				resolveJdbcMappings( jdbcMappings, mapping, subtype );
 			}
 		}
@@ -62,65 +63,47 @@ public class SelectableMappingsImpl implements SelectableMappings {
 			Dialect dialect,
 			SqmFunctionRegistry sqmFunctionRegistry,
 			RuntimeModelCreationContext creationContext) {
-		if ( insertable.length == 0 ) {
-			return from(
-					containingTableExpression,
-					value,
-					propertyOrder,
-					mappingContext,
-					typeConfiguration,
-					dialect,
-					sqmFunctionRegistry,
-					creationContext
-			);
-		}
-		final List<JdbcMapping> jdbcMappings = new ArrayList<>();
-		resolveJdbcMappings( jdbcMappings, mappingContext, value.getType() );
-
-		final List<Selectable> selectables = value.getVirtualSelectables();
-
-		final SelectableMapping[] selectableMappings = new SelectableMapping[jdbcMappings.size()];
-		for ( int i = 0; i < selectables.size(); i++ ) {
-			selectableMappings[propertyOrder[i]] = SelectableMappingImpl.from(
-					containingTableExpression,
-					selectables.get( i ),
-					jdbcMappings.get( propertyOrder[i] ),
-					typeConfiguration,
-					insertable[i],
-					updateable[i],
-					false,
-					dialect,
-					sqmFunctionRegistry,
-					creationContext
-			);
-		}
-
-		return new SelectableMappingsImpl( selectableMappings );
+		return from(
+				containingTableExpression,
+				value,
+				propertyOrder,
+				null,
+				mappingContext,
+				typeConfiguration,
+				insertable,
+				updateable,
+				dialect,
+				sqmFunctionRegistry,
+				creationContext
+		);
 	}
 
-	private static SelectableMappings from(
+	public static SelectableMappings from(
 			String containingTableExpression,
 			Value value,
 			int[] propertyOrder,
-			MappingContext mapping,
+			@Nullable SelectablePath parentSelectablePath,
+			MappingContext mappingContext,
 			TypeConfiguration typeConfiguration,
+			boolean[] insertable,
+			boolean[] updateable,
 			Dialect dialect,
 			SqmFunctionRegistry sqmFunctionRegistry,
 			RuntimeModelCreationContext creationContext) {
 		final List<JdbcMapping> jdbcMappings = new ArrayList<>();
-		resolveJdbcMappings( jdbcMappings, mapping, value.getType() );
+		resolveJdbcMappings( jdbcMappings, mappingContext, value.getType() );
 
-		final List<Selectable> selectables = value.getVirtualSelectables();
-
-		final SelectableMapping[] selectableMappings = new SelectableMapping[jdbcMappings.size()];
+		final var selectables = value.getVirtualSelectables();
+		final var selectableMappings = new SelectableMapping[jdbcMappings.size()];
 		for ( int i = 0; i < selectables.size(); i++ ) {
 			selectableMappings[propertyOrder[i]] = SelectableMappingImpl.from(
 					containingTableExpression,
 					selectables.get( i ),
+					parentSelectablePath,
 					jdbcMappings.get( propertyOrder[i] ),
 					typeConfiguration,
-					false,
-					false,
+					i < insertable.length && insertable[i],
+					i < updateable.length && updateable[i],
 					false,
 					dialect,
 					sqmFunctionRegistry,
@@ -133,14 +116,12 @@ public class SelectableMappingsImpl implements SelectableMappings {
 
 	public static SelectableMappings from(EmbeddableMappingType embeddableMappingType) {
 		final int propertySpan = embeddableMappingType.getNumberOfAttributeMappings();
-		final List<SelectableMapping> selectableMappings = CollectionHelper.arrayList( propertySpan );
-
+		final List<SelectableMapping> selectableMappings = arrayList( propertySpan );
 		embeddableMappingType.forEachAttributeMapping(
 				(index, attributeMapping) -> attributeMapping.forEachSelectable(
 						(columnIndex, selection) -> selectableMappings.add( selection )
 				)
 		);
-
 		return new SelectableMappingsImpl( selectableMappings.toArray( new SelectableMapping[0] ) );
 	}
 

@@ -11,11 +11,12 @@ import java.nio.file.Files;
 import java.util.List;
 
 import org.gradle.api.GradleException;
-import org.gradle.api.Project;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.internal.file.FileOperations;
 import org.gradle.api.logging.Logger;
 
+import org.gradle.api.logging.Logging;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
@@ -30,54 +31,61 @@ import static org.hibernate.orm.tooling.gradle.Helper.determineClassName;
  * @author Steve Ebersole
  */
 public class EnhancementHelper {
+	private static final Logger logger = Logging.getLogger( EnhancementHelper.class);
+
 	public static void enhance(
 			DirectoryProperty classesDirectoryProperty,
 			ClassLoader classLoader,
-			HibernateOrmSpec ormDsl,
-			Project project) {
+			HibernateOrmSpec ormDsl) {
 		final Directory classesDirectory = classesDirectoryProperty.get();
 		final File classesDir = classesDirectory.getAsFile();
 
-		final EnhancementSpec enhancementDsl = ormDsl.getEnhancement();
+		final EnhancementSpec enhancementDsl = ormDsl.getEnhancement().get();
 
 		List<String> classesToEnhance = enhancementDsl.getClassNames().get();
 
 		if ( !enhancementDsl.getEnableLazyInitialization().get() ) {
-			project.getLogger().warn( "The 'enableLazyInitialization' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning" );
+			logger.warn( "The 'enableLazyInitialization' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning" );
+		}
+		if ( enhancementDsl.getEnableAssociationManagement().get() ) {
+			logger.warn("Management of bidirectional association persistent attributes is deprecated and will be removed. Set the value to 'false' to get rid of this warning" );
 		}
 		if ( !enhancementDsl.getEnableDirtyTracking().get() ) {
-			project.getLogger().warn( "The 'enableDirtyTracking' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning" );
+			logger.warn( "The 'enableDirtyTracking' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning" );
 		}
-		final Enhancer enhancer = generateEnhancer( classLoader, ormDsl );
+		if ( enhancementDsl.getEnableExtendedEnhancement().get() ) {
+			logger.warn("Extended enhancement is deprecated and will be removed. Set the value to 'false' to get rid of this warning" );
+		}
+		final Enhancer enhancer = generateEnhancer( classLoader, enhancementDsl );
 
-		discoverTypes( classesDir, classesDir, enhancer, project );
-		doEnhancement( classesDir, classesDir, enhancer, project, classesToEnhance );
+		discoverTypes( classesDir, classesDir, enhancer, ormDsl.getFileOperations() );
+		doEnhancement( classesDir, classesDir, enhancer, ormDsl.getFileOperations(), classesToEnhance );
 	}
 
-	private static void discoverTypes(File classesDir, File dir, Enhancer enhancer, Project project) {
+	private static void discoverTypes(File classesDir, File dir, Enhancer enhancer, FileOperations fileOperations) {
 		for ( File subLocation : dir.listFiles() ) {
 			if ( subLocation.isDirectory() ) {
-				discoverTypes( classesDir, subLocation, enhancer, project );
+				discoverTypes( classesDir, subLocation, enhancer, fileOperations );
 			}
 			else if ( subLocation.isFile() && subLocation.getName().endsWith( ".class" ) ) {
 				final String className = determineClassName( classesDir, subLocation );
 				final long lastModified = subLocation.lastModified();
 
-				discoverTypes( subLocation, className, enhancer, project );
+				discoverTypes( subLocation, className, enhancer);
 
 				final boolean timestampReset = subLocation.setLastModified( lastModified );
 				if ( !timestampReset ) {
-					project.getLogger().debug( "`{}`.setLastModified failed", project.relativePath( subLocation ) );
+					logger.debug( "`{}`.setLastModified failed", fileOperations.relativePath( subLocation ) );
 				}
 
 			}
 		}
 	}
 
-	private static void doEnhancement(File classesDir, File dir, Enhancer enhancer, Project project, List<String> classesToEnhance) {
+	private static void doEnhancement(File classesDir, File dir, Enhancer enhancer, FileOperations fileOperations, List<String> classesToEnhance) {
 		for ( File subLocation : dir.listFiles() ) {
 			if ( subLocation.isDirectory() ) {
-				doEnhancement( classesDir, subLocation, enhancer, project, classesToEnhance );
+				doEnhancement( classesDir, subLocation, enhancer, fileOperations, classesToEnhance );
 			}
 			else if ( subLocation.isFile() && subLocation.getName().endsWith( ".class" ) ) {
 				final String className = determineClassName( classesDir, subLocation );
@@ -87,11 +95,11 @@ public class EnhancementHelper {
 					continue;
 				}
 
-				enhance( subLocation, className, enhancer, project );
+				enhance( subLocation, className, enhancer );
 
 				final boolean timestampReset = subLocation.setLastModified( lastModified );
 				if ( !timestampReset ) {
-					project.getLogger().debug( "`{}`.setLastModified failed", project.relativePath( subLocation ) );
+					logger.debug( "`{}`.setLastModified failed", fileOperations.relativePath( subLocation ) );
 				}
 
 			}
@@ -101,11 +109,10 @@ public class EnhancementHelper {
 	private static void discoverTypes(
 			File javaClassFile,
 			String className,
-			Enhancer enhancer,
-			Project project) {
+			Enhancer enhancer) {
 		try {
 			enhancer.discoverTypes( className, Files.readAllBytes( javaClassFile.toPath() ) );
-			project.getLogger().info( "Successfully discovered types for class : " + className );
+			logger.info( "Successfully discovered types for class : " + className );
 		}
 		catch (Exception e) {
 			throw new GradleException( "Unable to discover types for class : " + className, e );
@@ -115,15 +122,14 @@ public class EnhancementHelper {
 	private static void enhance(
 			File javaClassFile,
 			String className,
-			Enhancer enhancer,
-			Project project) {
+			Enhancer enhancer) {
 		final byte[] enhancedBytecode = doEnhancement( javaClassFile, className, enhancer );
 		if ( enhancedBytecode != null ) {
-			writeOutEnhancedClass( enhancedBytecode, javaClassFile, project.getLogger() );
-			project.getLogger().info( "Successfully enhanced class : " + className );
+			writeOutEnhancedClass( enhancedBytecode, javaClassFile );
+			logger.info( "Successfully enhanced class : " + className );
 		}
 		else {
-			project.getLogger().info( "Skipping class : " + className );
+			logger.info( "Skipping class : " + className );
 		}
 	}
 
@@ -136,8 +142,7 @@ public class EnhancementHelper {
 		}
 	}
 
-	public static Enhancer generateEnhancer(ClassLoader classLoader, HibernateOrmSpec ormDsl) {
-		final EnhancementSpec enhancementDsl = ormDsl.getEnhancement();
+	public static Enhancer generateEnhancer(ClassLoader classLoader, EnhancementSpec enhancementDsl) {
 
 		final EnhancementContext enhancementContext = new DefaultEnhancementContext() {
 			@Override
@@ -175,7 +180,7 @@ public class EnhancementHelper {
 		return buildDefaultBytecodeProvider().getEnhancer( enhancementContext );
 	}
 
-	private static void writeOutEnhancedClass(byte[] enhancedBytecode, File file, Logger logger) {
+	private static void writeOutEnhancedClass(byte[] enhancedBytecode, File file) {
 		try {
 			if ( file.delete() ) {
 				if ( !file.createNewFile() ) {

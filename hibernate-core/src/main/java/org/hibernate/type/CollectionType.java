@@ -5,7 +5,6 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.lang.invoke.MethodHandles;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -25,27 +24,19 @@ import org.hibernate.MappingException;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentArrayHolder;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 
-import org.jboss.logging.Logger;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
@@ -58,8 +49,6 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Gavin King
  */
 public abstract class CollectionType extends AbstractType implements AssociationType {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, CollectionType.class.getName() );
 
 	@Internal
 	public static final Object UNFETCHED_COLLECTION = new MarkerObject( "UNFETCHED COLLECTION" );
@@ -89,11 +78,11 @@ public abstract class CollectionType extends AbstractType implements Association
 	public boolean contains(Object collection, Object childObject, SharedSessionContractImplementor session) {
 		// we do not have to worry about queued additions to uninitialized
 		// collections, since they can only occur for inverse collections!
-		final Iterator<?> elems = getElementsIterator( collection );
+		final var elems = getElementsIterator( collection );
 		while ( elems.hasNext() ) {
 			final Object maybeProxy = elems.next();
 			// worrying about proxies is perhaps a little bit of overkill here...
-			final LazyInitializer initializer = extractLazyInitializer( maybeProxy );
+			final var initializer = extractLazyInitializer( maybeProxy );
 			final Object element =
 					initializer != null && !initializer.isUninitialized()
 							? initializer.getImplementation()
@@ -177,7 +166,7 @@ public abstract class CollectionType extends AbstractType implements Association
 		else {
 			if ( !getReturnedClass().isInstance( value )
 					&& !(value instanceof PersistentCollection) ) {
-				final CollectionPersister persister = getPersister( factory );
+				final var persister = getPersister( factory );
 				final Type keyType = persister.getKeyType();
 				final Type identifierType = persister.getIdentifierType();
 				// its most likely the collection-key
@@ -376,7 +365,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @return The collection owner's key
 	 */
 	public @Nullable Object getKeyOfOwner(Object owner, SharedSessionContractImplementor session) {
-		final EntityEntry entityEntry = session.getPersistenceContextInternal().getEntry( owner );
+		final var entityEntry = session.getPersistenceContextInternal().getEntry( owner );
 		if ( entityEntry == null ) {
 			// This just handles a particular case of component
 			// projection, perhaps get rid of it and throw an exception
@@ -407,9 +396,9 @@ public abstract class CollectionType extends AbstractType implements Association
 			return key;
 		}
 		else {
-			final EntityPersister ownerPersister = getPersister( session ).getOwnerEntityPersister();
+			final var ownerPersister = getPersister( session ).getOwnerEntityPersister();
 			// TODO: Fix this so it will work for non-POJO entity mode
-			final Class<?> keyClass = keyClass( session );
+			final var keyClass = keyClass( session );
 			if ( ownerPersister.getMappedClass().isAssignableFrom( keyClass )
 					&& keyClass.isInstance( key ) ) {
 				// the key is the owning entity itself, so get the ID from the key
@@ -461,7 +450,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	@Override
 	public String getAssociatedEntityName(SessionFactoryImplementor factory)
 			throws MappingException {
-		final CollectionPersister persister = factory.getMappingMetamodel().getCollectionDescriptor( role );
+		final var persister = factory.getMappingMetamodel().getCollectionDescriptor( role );
 		if ( persister.getElementType().isEntityType() ) {
 			return persister.getElementPersister().getEntityName();
 		}
@@ -487,12 +476,12 @@ public abstract class CollectionType extends AbstractType implements Association
 			Object owner,
 			Map<Object, Object> copyCache,
 			SharedSessionContractImplementor session) {
-		final Collection result = (Collection) target;
+		final var result = (Collection) target;
 		result.clear();
 
 		// copy elements into newly empty target collection
 		final Type elemType = getElementType( session.getFactory() );
-		for ( Object element : (Collection) original ) {
+		for ( Object element : (Collection<?>) original ) {
 			result.add( elemType.replace( element, null, session, owner, copyCache ) );
 		}
 
@@ -522,9 +511,9 @@ public abstract class CollectionType extends AbstractType implements Association
 			Object owner,
 			Map<Object, Object> copyCache,
 			SharedSessionContractImplementor session) {
-		final CollectionEntry ce = session.getPersistenceContextInternal().getCollectionEntry( result );
-		if ( ce != null ) {
-			ce.resetStoredSnapshot( result,
+		final var collectionEntry = session.getPersistenceContextInternal().getCollectionEntry( result );
+		if ( collectionEntry != null ) {
+			collectionEntry.resetStoredSnapshot( result,
 					createSnapshot( original, result, elemType, owner, copyCache, session ) );
 		}
 	}
@@ -583,8 +572,8 @@ public abstract class CollectionType extends AbstractType implements Association
 			targetMap = hashMap;
 			snapshot = hashMap;
 		}
-		final Map<?, ?> resultSnapshot = (Map<?,?>) result.getStoredSnapshot();
-		for ( Map.Entry<K,V> entry : map.entrySet() ) {
+		final var resultSnapshot = (Map<?,?>) result.getStoredSnapshot();
+		for ( var entry : map.entrySet() ) {
 			final K key = entry.getKey();
 			final V value = entry.getValue();
 			final Object resultSnapshotValue = resultSnapshot == null ? null : resultSnapshot.get( key );
@@ -668,13 +657,13 @@ public abstract class CollectionType extends AbstractType implements Association
 					target instanceof PersistentCollection<?> collection
 							&& !collection.isDirty();
 			if ( target instanceof PersistentCollection<?> oldCollection
-				&& oldCollection.isDirectlyAccessible() ) {
+					&& oldCollection.isDirectlyAccessible() ) {
 				// When a replacement or merge is requested and the underlying collection is directly accessible,
 				// use a new persistent collection, to avoid potential issues like the underlying collection being
 				// unmodifiable and hence failing the element replacement
-				final CollectionPersister collectionPersister = getPersister( session );
+				final var collectionPersister = getPersister( session );
 				final Object key = oldCollection.getKey();
-				final PersistentCollection<?> newCollection = instantiate( session, collectionPersister, key );
+				final var newCollection = instantiate( session, collectionPersister, key );
 				newCollection.initializeEmptyCollection( collectionPersister );
 				newCollection.setSnapshot( key, oldCollection.getRole(), oldCollection.getStoredSnapshot() );
 				session.getPersistenceContextInternal()
@@ -710,19 +699,20 @@ public abstract class CollectionType extends AbstractType implements Association
 			Object target,
 			SharedSessionContractImplementor session,
 			Map<Object, Object> copyCache) {
-		final PersistentCollection<?> collection = (PersistentCollection<?>) original;
+		final var collection = (PersistentCollection<?>) original;
 		if ( collection.hasQueuedOperations() ) {
 			if ( original == target ) {
 				// A managed entity with an uninitialized collection is being merged,
 				// We need to replace any detached entities in the queued operations
 				// with managed copies.
-				final AbstractPersistentCollection<?> pc = (AbstractPersistentCollection<?>) original;
-				pc.replaceQueuedOperationValues( getPersister( session ), copyCache );
+				final var apc = (AbstractPersistentCollection<?>) original;
+				apc.replaceQueuedOperationValues( getPersister( session ), copyCache );
 			}
 			else {
 				// original is a detached copy of the collection;
 				// it contains queued operations, which will be ignored
-				LOG.ignoreQueuedOperationsOnMerge( collectionInfoString( getRole(), collection.getKey() ) );
+				CORE_LOGGER.ignoreQueuedOperationsOnMerge(
+						collectionInfoString( getRole(), collection.getKey() ) );
 			}
 		}
 		return target;
@@ -741,13 +731,13 @@ public abstract class CollectionType extends AbstractType implements Association
 			return map;
 		}
 		else {
-			final PersistenceContext persistenceContext = session.getPersistenceContext();
-			final PersistentCollection<?> collectionHolder = persistenceContext.getCollectionHolder( target );
+			final var persistenceContext = session.getPersistenceContext();
+			final var collectionHolder = persistenceContext.getCollectionHolder( target );
 			if ( collectionHolder != null ) {
 				if ( collectionHolder instanceof PersistentArrayHolder<?> arrayHolder ) {
 					persistenceContext.removeCollectionHolder( target );
 					arrayHolder.beginRead();
-					final PluralAttributeMapping attributeMapping =
+					final var attributeMapping =
 							persistenceContext.getCollectionEntry( collectionHolder )
 									.getLoadedPersister().getAttributeMapping();
 					arrayHolder.injectLoadedState( attributeMapping, null );
@@ -786,11 +776,11 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @return The collection
 	 */
 	public Object getCollection(Object key, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) {
-		final CollectionPersister persister = getPersister( session );
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final CollectionKey collectionKey = new CollectionKey( persister, key );
+		final var persister = getPersister( session );
+		final var persistenceContext = session.getPersistenceContextInternal();
+		final var collectionKey = new CollectionKey( persister, key );
 		// check if collection is currently being loaded
-		final LoadingCollectionEntry loadingCollectionEntry =
+		final var loadingCollectionEntry =
 				persistenceContext.getLoadContexts().findLoadingCollectionEntry( collectionKey );
 		PersistentCollection<?> collection =
 				loadingCollectionEntry == null ? null
@@ -817,8 +807,8 @@ public abstract class CollectionType extends AbstractType implements Association
 			Boolean overridingEager,
 			CollectionPersister persister,
 			SharedSessionContractImplementor session) {
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final PersistentCollection<?> collection = instantiate( session, persister, key );
+		final var persistenceContext = session.getPersistenceContextInternal();
+		final var collection = instantiate( session, persister, key );
 		collection.setOwner( owner );
 		persistenceContext.addUninitializedCollection( persister, collection, key );
 		// some collections are not lazy:
@@ -831,9 +821,9 @@ public abstract class CollectionType extends AbstractType implements Association
 		if ( hasHolder() ) {
 			persistenceContext.addCollectionHolder( collection );
 		}
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Created collection wrapper: "
-						+ collectionInfoString( persister, collection, key, session ) );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.createdCollectionWrapper(
+					collectionInfoString( persister, collection, key, session ) );
 		}
 		return collection;
 	}

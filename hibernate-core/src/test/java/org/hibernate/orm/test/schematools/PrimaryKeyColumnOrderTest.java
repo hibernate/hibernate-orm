@@ -24,7 +24,7 @@ import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
-import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
+import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
 import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
 import org.hibernate.tool.schema.extract.internal.ExtractionContextImpl;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
@@ -54,34 +54,26 @@ import jakarta.persistence.Table;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialect(H2Dialect.class)
 @RequiresDialect(OracleDialect.class)
-@DomainModel(
-		annotatedClasses = {
-				PrimaryKeyColumnOrderTest.TestEntity.class
-		}
-)
-@SessionFactory(
-		exportSchema = false
-)
+@DomainModel(annotatedClasses = PrimaryKeyColumnOrderTest.TestEntity.class)
+@SessionFactory(exportSchema = false)
 public class PrimaryKeyColumnOrderTest extends BaseSessionFactoryFunctionalTest {
 
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createNativeQuery(
-										"create table TEST_ENTITY ( Z int , A int NOT NULL , B int NOT NULL , CONSTRAINT PK_TEST_ENTITY PRIMARY KEY ( B, A ))" )
-								.executeUpdate()
+		//noinspection deprecation
+		scope.inTransaction(session ->
+			session.createNativeQuery(
+							"create table TEST_ENTITY ( Z int , A int NOT NULL , B int NOT NULL , CONSTRAINT PK_TEST_ENTITY PRIMARY KEY ( B, A ))" )
+					.executeUpdate()
 		);
 	}
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createNativeQuery( "drop table TEST_ENTITY" ).executeUpdate()
-		);
+		scope.dropData();
 	}
 
 	@Test
@@ -89,7 +81,7 @@ public class PrimaryKeyColumnOrderTest extends BaseSessionFactoryFunctionalTest 
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting(
 						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
-						JdbcMetadaAccessStrategy.GROUPED
+						JdbcMetadataAccessStrategy.GROUPED
 				)
 				.build();
 		DdlTransactionIsolator ddlTransactionIsolator = null;

@@ -65,12 +65,7 @@ public class LazyLoadingTest {
 
 	@AfterEach
 	public void cleanUpData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.remove( session.get( Store.class, 1 ) );
-					session.remove( session.get( Product.class, "007" ) );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

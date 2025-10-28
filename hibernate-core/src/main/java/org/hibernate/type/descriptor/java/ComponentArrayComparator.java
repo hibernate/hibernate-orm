@@ -11,16 +11,16 @@ import java.util.Comparator;
  *
  * @author Christian Beikov
  */
-public class ComponentArrayComparator implements Comparator<Object[]> {
+public class ComponentArrayComparator<E> implements Comparator<E[]> {
 
-	private final JavaType<Object>[] components;
+	private final JavaType<E>[] components;
 
-	public ComponentArrayComparator(JavaType<Object>[] components) {
+	public ComponentArrayComparator(JavaType<E>[] components) {
 		this.components = components;
 	}
 
 	@Override
-	public int compare(Object[] o1, Object[] o2) {
+	public int compare(E[] o1, E[] o2) {
 		for ( int i = 0; i < components.length; i++ ) {
 			final int cmp = components[i].getComparator().compare( o1[i], o2[i] );
 			if ( cmp != 0 ) {

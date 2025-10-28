@@ -10,6 +10,7 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import org.hibernate.QueryException;
 import org.hibernate.query.criteria.JpaSelection;
@@ -37,7 +38,7 @@ import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
  */
 public class SqmFieldLiteral<T>
 		implements SqmExpression<T>, SqmBindableType<T>, SqmSelectableNode<T>, SemanticPathPart {
-	private final T value;
+	private final @Nullable T value;
 	private final JavaType<T> fieldJavaType;
 	private final String fieldName;
 	private final NodeBuilder nodeBuilder;
@@ -123,11 +124,8 @@ public class SqmFieldLiteral<T>
 
 	@Override
 	public JavaType<T> getExpressibleJavaType() {
-		if ( expressible == this ) {
-			return fieldJavaType;
-		}
+		return expressible == this ? fieldJavaType : expressible.getExpressibleJavaType();
 
-		return expressible.getExpressibleJavaType();
 	}
 
 	@Override
@@ -314,4 +312,24 @@ public class SqmFieldLiteral<T>
 		return null;
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmFieldLiteral<?> that
+			&& Objects.equals( value, that.value );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( value );
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
+	}
 }

@@ -4,7 +4,8 @@
  */
 
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.6.21'
+    //NOTE : kotlin version updated for configuration cache support
+    id 'org.jetbrains.kotlin.jvm' version '2.0.20'
     id 'org.hibernate.orm'
 }
 
@@ -12,8 +13,8 @@ repositories {
     mavenCentral()
 
     maven {
-        name 'jboss-snapshots-repository'
-        url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
+        name = 'ossrh-snapshots-repository'
+        url = 'https://oss.sonatype.org/content/repositories/snapshots'
     }
 }
 
@@ -23,13 +24,25 @@ dependencies {
     implementation 'org.hibernate.orm:hibernate-core:6.1.0.Final'
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        jvmTarget = "17"
+        freeCompilerArgs += ["-Xjdk-release=17"]
+    }
+}
+
 hibernate {
     useSameVersion = false
     enhancement {
         enableLazyInitialization.set(true)
-        lazyInitialization = true
+        enableLazyInitialization = true
 
         enableDirtyTracking.set(true)
-        dirtyTracking = true
+        enableDirtyTracking = true
     }
 }

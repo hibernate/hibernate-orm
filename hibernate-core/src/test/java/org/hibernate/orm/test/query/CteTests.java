@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.query.Query;
@@ -130,6 +131,8 @@ public class CteTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Apparently nested CTEs are not supported")
 	public void testNested(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -675,9 +678,6 @@ public class CteTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "update Contact set alternativeContact = null" ).executeUpdate();
-			session.createMutationQuery( "delete Contact" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

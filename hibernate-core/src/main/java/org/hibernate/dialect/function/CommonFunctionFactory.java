@@ -404,6 +404,20 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * For MariaDB
+	 */
+	public void median_medianOver() {
+		functionRegistry.patternDescriptorBuilder(
+						"median",
+						"median(?1) over ()"
+				)
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+	}
+
+	/**
 	 * Warning: the semantics of this function are inconsistent between DBs.
 	 * <ul>
 	 * <li>On Postgres it means {@code stdev_samp()}
@@ -421,8 +435,8 @@ public class CommonFunctionFactory {
 	/**
 	 * Warning: the semantics of this function are inconsistent between DBs.
 	 * <ul>
-	 * <li>On Postgres it means {@code var_samp()}
-	 * <li>On Oracle, DB2, MySQL it means {@code var_pop()}
+	 * <li>On Postgres and Informix it means {@code var_samp()} (the unbiased estimator)
+	 * <li>On Oracle, DB2, MySQL it means {@code var_pop()} (the MLE)
 	 * </ul>
 	 */
 	public void variance() {
@@ -505,7 +519,16 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	private static final String VAR_POP_SUM_COUNT_PATTERN = "(sum(power(?1,2))-(power(sum(?1),2)/count(?1)))/nullif(count(?1),0)";
 	private static final String VAR_SAMP_SUM_COUNT_PATTERN = "(sum(power(?1,2))-(power(sum(?1),2)/count(?1)))/nullif(count(?1)-1,0)";
+
+	public void varPop_sumCount() {
+		functionRegistry.patternAggregateDescriptorBuilder( "var_pop", VAR_POP_SUM_COUNT_PATTERN )
+				.setInvariantType( doubleType )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( NUMERIC )
+				.register();
+	}
 
 	/**
 	 * DB2 before 11
@@ -747,7 +770,11 @@ public class CommonFunctionFactory {
 	}
 
 	public void repeat_rpad() {
-		functionRegistry.patternDescriptorBuilder( "repeat", "rpad(?1,?2*length(?1),?1)" )
+		repeat_rpad( "length" );
+	}
+
+	public void repeat_rpad(String lengthFunctionName) {
+		functionRegistry.patternDescriptorBuilder( "repeat", "rpad(?1,?2*" + lengthFunctionName + "(?1),?1)" )
 				.setInvariantType(stringType)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(STRING, INTEGER)
@@ -2636,6 +2663,49 @@ public class CommonFunctionFactory {
 				.setParameterTypes( TEMPORAL_UNIT, TEMPORAL )
 				.setArgumentListSignature( "(TEMPORAL_UNIT field, TEMPORAL datetime)" )
 				.register();
+	}
+
+	public void regexpLike() {
+		functionRegistry.namedDescriptorBuilder( "regexp_like"  )
+				.setArgumentCountBetween( 2, 3 )
+				.setParameterTypes( STRING, STRING, STRING )
+				.setInvariantType( booleanType )
+				.register();
+	}
+
+	/**
+	 * For legacy PostgreSQL and CockroachDB
+	 */
+	public void regexpLike_postgresql(boolean supportsStandard) {
+		functionRegistry.register( "regexp_like", new RegexpLikeOperatorFunction( typeConfiguration, supportsStandard ) );
+	}
+
+	/**
+	 * For MariaDB, legacy MySQL, SingleStore and SQLite
+	 */
+	public void regexpLike_regexp() {
+		functionRegistry.register( "regexp_like", new RegexpPredicateFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * For HSQLDB
+	 */
+	public void regexpLike_hsql() {
+		functionRegistry.register( "regexp_like", new HSQLRegexpLikeFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * For Oracle and SQL Server
+	 */
+	public void regexpLike_predicateFunction() {
+		functionRegistry.register( "regexp_like", new RegexpLikePredicateFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * For SAP HANA
+	 */
+	public void regexpLike_like_regexp() {
+		functionRegistry.register( "regexp_like", new HANARegexpLikeFunction( typeConfiguration ) );
 	}
 
 	/**

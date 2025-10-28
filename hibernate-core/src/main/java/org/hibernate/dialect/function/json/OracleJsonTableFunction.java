@@ -101,7 +101,7 @@ public class OracleJsonTableFunction extends JsonTableFunction {
 						selectableMappings,
 						definition.name(),
 						typeConfiguration.getBasicTypeRegistry().resolve(
-								typeConfiguration.getJavaTypeRegistry().getDescriptor( String.class ),
+								typeConfiguration.getJavaTypeRegistry().resolveDescriptor( String.class ),
 								JsonAsStringJdbcType.CLOB_INSTANCE
 						),
 						converter
@@ -130,6 +130,7 @@ public class OracleJsonTableFunction extends JsonTableFunction {
 						"decode(" + Template.TEMPLATE + "." + name + ",'true'," + trueFragment + ",'false'," + falseFragment + ")",
 						null,
 						"varchar2(5)",
+						null,
 						null,
 						null,
 						null,

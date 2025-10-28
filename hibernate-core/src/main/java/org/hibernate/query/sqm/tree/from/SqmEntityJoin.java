@@ -227,6 +227,4 @@ public class SqmEntityJoin<L,R>
 				pathRegistry.findFromByPath( getRoot().getNavigablePath() )
 		);
 	}
-
-
 }

@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * A {@link ArgumentsValidator} that validates the array type is compatible with the element type.
  */
-public class GenerateSeriesArgumentTypeResolver extends AbstractFunctionArgumentTypeResolver {
+public class GenerateSeriesArgumentTypeResolver implements AbstractFunctionArgumentTypeResolver {
 
 	private final BasicType<Duration> durationType;
 

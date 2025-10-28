@@ -30,7 +30,7 @@ import static org.hibernate.sql.results.graph.instantiation.internal.Instantiati
  * @author Steve Ebersole
  */
 public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationResult<R> {
-	private static final Logger log = Logger.getLogger( DynamicInstantiationResultImpl.class );
+	private static final Logger LOG = Logger.getLogger( DynamicInstantiationResultImpl.class );
 
 	private final String resultVariable;
 
@@ -96,7 +96,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 				else {
 					if ( !aliases.add( argumentAlias ) ) {
 						duplicatedAliases.add( argumentAlias );
-						log.debugf(
+						LOG.debugf(
 								"Query defined duplicate resultVariable encountered multiple declarations of [%s]",
 								argumentAlias
 						);
@@ -126,8 +126,8 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 			AssemblerCreationState creationState) {
 
 		if ( nature == DynamicInstantiationNature.LIST ) {
-			if ( log.isDebugEnabled() && areAnyArgumentsAliased ) {
-				log.debug( "One or more arguments for List dynamic instantiation (`new list(...)`) specified an alias; ignoring" );
+			if ( LOG.isDebugEnabled() && areAnyArgumentsAliased ) {
+				LOG.debug( "One or more arguments for List dynamic instantiation (`new list(...)`) specified an alias; ignoring" );
 			}
 			return (DomainResultAssembler<R>)
 					new DynamicInstantiationAssemblerListImpl( (JavaType<List<?>>) javaType, argumentReaders );
@@ -174,8 +174,8 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 			return new DynamicInstantiationAssemblerConstructorImpl<>( constructor, javaType, argumentReaders );
 		}
 
-		if ( log.isDebugEnabled() ) {
-			log.debugf(
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf(
 					"Could not locate appropriate constructor for dynamic instantiation of [%s]; attempting bean-injection instantiation",
 					javaType.getTypeName()
 			);

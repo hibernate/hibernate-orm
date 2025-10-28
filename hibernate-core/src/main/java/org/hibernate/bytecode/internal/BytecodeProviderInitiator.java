@@ -4,8 +4,6 @@
  */
 package org.hibernate.bytecode.internal;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.ServiceLoader;
 
@@ -30,7 +28,7 @@ public final class BytecodeProviderInitiator implements StandardServiceInitiator
 
 	@Override
 	public BytecodeProvider initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
-		final Collection<BytecodeProvider> bytecodeProviders =
+		final var bytecodeProviders =
 				registry.requireService( ClassLoaderService.class )
 						.loadJavaServices( BytecodeProvider.class );
 		return getBytecodeProvider( bytecodeProviders );
@@ -52,16 +50,18 @@ public final class BytecodeProviderInitiator implements StandardServiceInitiator
 
 	@Internal
 	public static BytecodeProvider getBytecodeProvider(Iterable<BytecodeProvider> bytecodeProviders) {
-		final Iterator<BytecodeProvider> iterator = bytecodeProviders.iterator();
+		final var iterator = bytecodeProviders.iterator();
 		if ( !iterator.hasNext() ) {
 			// If no BytecodeProvider service is available, default to the "no-op" enhancer
 			return new org.hibernate.bytecode.internal.none.BytecodeProviderImpl();
 		}
-
-		final BytecodeProvider provider = iterator.next();
-		if ( iterator.hasNext() ) {
-			throw new IllegalStateException( "Found multiple BytecodeProvider service registrations, cannot determine which one to use" );
+		else {
+			final var provider = iterator.next();
+			if ( iterator.hasNext() ) {
+				throw new IllegalStateException(
+						"Found multiple BytecodeProvider service registrations, cannot determine which one to use" );
+			}
+			return provider;
 		}
-		return provider;
 	}
 }

@@ -66,12 +66,7 @@ public class CacheOneToManyAndIdClassTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope){
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Detail" ).executeUpdate();
-					session.createMutationQuery( "delete from Content" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

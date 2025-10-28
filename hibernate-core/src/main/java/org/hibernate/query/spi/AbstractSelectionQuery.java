@@ -12,7 +12,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Spliterator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -20,6 +19,8 @@ import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.Internal;
+import org.hibernate.Locking;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.QueryFlushMode;
@@ -31,7 +32,6 @@ import org.hibernate.ScrollMode;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
@@ -53,6 +53,7 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.metamodel.Type;
 
+import static java.util.Spliterator.NONNULL;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static org.hibernate.CacheMode.fromJpaModes;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
@@ -64,11 +65,19 @@ import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
 import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_LOCKING;
+import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_STRATEGY;
 import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 
 /**
+ * Base implementation of {@link SelectionQuery}.
+ *
+ * @apiNote This class is now considered internal implementation
+ * and will move to an internal package in a future version.
+ * Application programs should never depend directly on this class.
+ *
  * @author Steve Ebersole
  */
+@Internal
 public abstract class AbstractSelectionQuery<R>
 		extends AbstractCommonQueryContract
 		implements SelectionQuery<R>, DomainQueryExecutionContext {
@@ -158,7 +167,7 @@ public abstract class AbstractSelectionQuery<R>
 
 	protected HashSet<String> beforeQueryHandlingFetchProfiles() {
 		beforeQuery();
-		final MutableQueryOptions options = getQueryOptions();
+		final var options = getQueryOptions();
 		return getSession().getLoadQueryInfluencers()
 				.adjustFetchProfiles( options.getDisabledFetchProfiles(), options.getEnabledFetchProfiles() );
 	}
@@ -166,22 +175,22 @@ public abstract class AbstractSelectionQuery<R>
 	protected void beforeQuery() {
 		getQueryParameterBindings().validate();
 
-		final SharedSessionContractImplementor session = getSession();
-		final MutableQueryOptions options = getQueryOptions();
+		final var session = getSession();
+		final var options = getQueryOptions();
 
-		session.prepareForQueryExecution( requiresTxn( options.getLockOptions().findGreatestLockMode() ) );
+		session.prepareForQueryExecution( requiresTxn( options.getLockOptions().getLockMode() ) );
 		prepareForExecution();
 
 		assert sessionFlushMode == null;
 		assert sessionCacheMode == null;
 
-		final FlushMode effectiveFlushMode = getQueryOptions().getFlushMode();
+		final var effectiveFlushMode = getQueryOptions().getFlushMode();
 		if ( effectiveFlushMode != null && session instanceof SessionImplementor statefulSession ) {
 			sessionFlushMode = statefulSession.getHibernateFlushMode();
 			statefulSession.setHibernateFlushMode( effectiveFlushMode );
 		}
 
-		final CacheMode effectiveCacheMode = getCacheMode();
+		final var effectiveCacheMode = getCacheMode();
 		if ( effectiveCacheMode != null ) {
 			sessionCacheMode = session.getCacheMode();
 			session.setCacheMode( effectiveCacheMode );
@@ -207,7 +216,7 @@ public abstract class AbstractSelectionQuery<R>
 	protected void afterQuery(boolean success) {
 		afterQuery();
 
-		final SharedSessionContractImplementor session = getSession();
+		final var session = getSession();
 		if ( !session.isTransactionInProgress() ) {
 			session.getJdbcCoordinator().getLogicalConnection().afterTransaction();
 		}
@@ -239,7 +248,7 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
-		final HashSet<String> fetchProfiles = beforeQueryHandlingFetchProfiles();
+		final var fetchProfiles = beforeQueryHandlingFetchProfiles();
 		try {
 			return doScroll( scrollMode );
 		}
@@ -258,8 +267,7 @@ public abstract class AbstractSelectionQuery<R>
 	@Override
 	public Stream<R> stream() {
 		final ScrollableResults<R> results = scroll( ScrollMode.FORWARD_ONLY );
-		final Spliterator<R> spliterator =
-				spliteratorUnknownSize( new ScrollableResultsIterator<>( results ), Spliterator.NONNULL );
+		final var spliterator = spliteratorUnknownSize( new ScrollableResultsIterator<>( results ), NONNULL );
 		return StreamSupport.stream( spliterator, false ).onClose( results::close );
 	}
 
@@ -382,7 +390,7 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public SelectionQuery<R> enableFetchProfile(String profileName) {
-		if ( this.getSessionFactory().containsFetchProfileDefinition( profileName ) ) {
+		if ( getSessionFactory().containsFetchProfileDefinition( profileName ) ) {
 			getQueryOptions().enableFetchProfile( profileName );
 			return this;
 		}
@@ -420,8 +428,7 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public SelectionQuery<R> setLockMode(String alias, LockMode lockMode) {
-		getQueryOptions().getLockOptions().setAliasSpecificLockMode( alias, lockMode );
-		return this;
+		return setHibernateLockMode( lockMode );
 	}
 
 	/**
@@ -448,8 +455,20 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
+	public SelectionQuery<R> setLockScope(Locking.Scope lockScope) {
+		getLockOptions().setScope( lockScope );
+		return this;
+	}
+
+	@Override
 	public SelectionQuery<R> setLockScope(PessimisticLockScope lockScope) {
 		getLockOptions().setLockScope( lockScope );
+		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> setFollowOnStrategy(Locking.FollowOn followOnStrategy) {
+		getLockOptions().setFollowOnStrategy( followOnStrategy );
 		return this;
 	}
 
@@ -470,26 +489,32 @@ public abstract class AbstractSelectionQuery<R>
 
 		putIfNotNull( hints, HINT_FETCH_SIZE, getFetchSize() );
 
+		final var queryOptions = getQueryOptions();
+
 		if ( isCacheable() ) {
 			hints.put( HINT_CACHEABLE, true );
 			putIfNotNull( hints, HINT_CACHE_REGION, getCacheRegion() );
-
 			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );
-			putIfNotNull( hints, JAKARTA_SHARED_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
-			putIfNotNull( hints, JAKARTA_SHARED_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
+			putIfNotNull( hints, JAKARTA_SHARED_CACHE_RETRIEVE_MODE, queryOptions.getCacheRetrieveMode() );
+			putIfNotNull( hints, JAKARTA_SHARED_CACHE_STORE_MODE, queryOptions.getCacheStoreMode() );
 			//noinspection deprecation
-			putIfNotNull( hints, JPA_SHARED_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
+			putIfNotNull( hints, JPA_SHARED_CACHE_RETRIEVE_MODE, queryOptions.getCacheRetrieveMode() );
 			//noinspection deprecation
-			putIfNotNull( hints, JPA_SHARED_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
+			putIfNotNull( hints, JPA_SHARED_CACHE_STORE_MODE, queryOptions.getCacheStoreMode() );
 		}
 
-		final AppliedGraph appliedGraph = getQueryOptions().getAppliedGraph();
-		if ( appliedGraph != null && appliedGraph.getSemantic() != null ) {
-			hints.put( appliedGraph.getSemantic().getJakartaHintName(), appliedGraph );
-			hints.put( appliedGraph.getSemantic().getJpaHintName(), appliedGraph );
+		final var appliedGraph = queryOptions.getAppliedGraph();
+		if ( appliedGraph != null ) {
+			final var semantic = appliedGraph.getSemantic();
+			if ( semantic != null ) {
+				hints.put( semantic.getJakartaHintName(), appliedGraph );
+				hints.put( semantic.getJpaHintName(), appliedGraph );
+			}
 		}
 
-		putIfNotNull( hints, HINT_FOLLOW_ON_LOCKING, getQueryOptions().getLockOptions().getFollowOnLocking() );
+		final var lockOptions = queryOptions.getLockOptions();
+		putIfNotNull( hints, HINT_FOLLOW_ON_LOCKING, lockOptions.getFollowOnLocking() );
+		putIfNotNull( hints, HINT_FOLLOW_ON_STRATEGY, lockOptions.getFollowOnStrategy() );
 	}
 
 	@Override

@@ -63,4 +63,25 @@ public class SqmEvery<T> extends AbstractSqmExpression<T> {
 		subquery.appendHqlString( hql, context );
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmEvery<?> sqmAny
+			&& this.subquery.equals( sqmAny.subquery );
+	}
+
+	@Override
+	public int hashCode() {
+		return subquery.hashCode();
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmEvery<?> sqmAny
+			&& this.subquery.isCompatible( sqmAny.subquery );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return subquery.cacheHashCode();
+	}
 }

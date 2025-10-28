@@ -17,21 +17,20 @@ import org.junit.jupiter.api.Test;
  * @author Andrey Vlasov
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsIdentityColumns.class )
 @DomainModel( annotatedClasses = Sub.class )
 @SessionFactory
 public class JoinedSubclassHierarchyWithIdentityGenerationTest {
 	@Test
 	public void shouldPersistDebtorAccountWhenParentServiceAgreementPersisted(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(s) -> {
-					s.persist( new Sub() );
-				}
-		);
+		scope.inTransaction( (s) -> {
+			s.persist( new Sub() );
+		} );
 	}
 
 	@AfterEach
 	public void cleanTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (s) -> s.createQuery( "delete Sub" ).executeUpdate() );
+		scope.dropData();
 	}
 }

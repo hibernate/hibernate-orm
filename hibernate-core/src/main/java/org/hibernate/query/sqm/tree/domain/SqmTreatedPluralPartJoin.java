@@ -135,8 +135,6 @@ public class SqmTreatedPluralPartJoin extends SqmPluralPartJoin implements SqmTr
 		return super.treatAs( treatTarget, alias, fetch );
 	}
 
-
-
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( "treat(" );

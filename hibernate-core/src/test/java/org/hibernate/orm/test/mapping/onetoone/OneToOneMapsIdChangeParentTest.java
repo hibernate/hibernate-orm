@@ -9,9 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 
-import org.hibernate.internal.CoreMessageLogger;
 
-import org.hibernate.persister.entity.mutation.UpdateCoordinatorStandard;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
@@ -20,12 +18,11 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 
-import org.jboss.logging.Logger;
 
-import java.lang.invoke.MethodHandles;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Vlad Mihalcea
@@ -40,15 +37,9 @@ import static org.junit.Assert.assertTrue;
 public class OneToOneMapsIdChangeParentTest {
 
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger(
-					MethodHandles.lookup(),
-					CoreMessageLogger.class,
-					UpdateCoordinatorStandard.class.getName()
-			)
-	);
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( CORE_LOGGER );
 
-	private Triggerable triggerable = logInspection.watchForLogMessages( "HHH000502:" );
+	private final Triggerable triggerable = logInspection.watchForLogMessages( "HHH000502:" );
 
 
 	@Test

@@ -47,13 +47,7 @@ public class EagerKeyManyToOneTest {
 
 	@AfterEach
 	public void cleanUp(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from CardField" ).executeUpdate();
-					session.createQuery( "delete from Card" ).executeUpdate();
-					session.createQuery( "delete from Key" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

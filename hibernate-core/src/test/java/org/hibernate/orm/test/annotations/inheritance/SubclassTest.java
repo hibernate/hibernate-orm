@@ -172,19 +172,7 @@ public class SubclassTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from A320b" ).executeUpdate();
-					session.createQuery( "delete from Plane" ).executeUpdate();
-					session.createQuery( "delete from A320" ).executeUpdate();
-
-					session.createQuery( "delete from Noise" ).executeUpdate();
-					session.createQuery( "delete from Rock" ).executeUpdate();
-					session.createQuery( "delete from Apple" ).executeUpdate();
-					session.createQuery( "delete from Music" ).executeUpdate();
-					session.createQuery( "delete from Funk" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 }

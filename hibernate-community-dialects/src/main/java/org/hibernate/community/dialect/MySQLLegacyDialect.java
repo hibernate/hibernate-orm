@@ -22,19 +22,21 @@ import org.hibernate.dialect.MySQLServerConfiguration;
 import org.hibernate.dialect.MySQLStorageEngine;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.Replacer;
-import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.MySQLLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.MySQLLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.MySQLCastingJsonArrayJdbcTypeConstructor;
 import org.hibernate.dialect.type.MySQLCastingJsonJdbcType;
 import org.hibernate.engine.jdbc.Size;
@@ -155,6 +157,8 @@ public class MySQLLegacyDialect extends Dialect {
 
 	private final boolean noBackslashEscapesEnabled;
 
+	private final LockingSupport lockingSupport;
+
 	public MySQLLegacyDialect() {
 		this( DEFAULT_VERSION );
 	}
@@ -176,6 +180,8 @@ public class MySQLLegacyDialect extends Dialect {
 		maxVarcharLength = maxVarcharLength( getMySQLVersion(), bytesPerCharacter ); //conservative assumption
 		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
 		noBackslashEscapesEnabled = noBackslashEscapes;
+
+		lockingSupport = buildLockingSupport();
 	}
 
 	public MySQLLegacyDialect(DialectResolutionInfo info) {
@@ -185,19 +191,25 @@ public class MySQLLegacyDialect extends Dialect {
 
 	protected static DatabaseVersion createVersion(DialectResolutionInfo info) {
 		final String versionString = info.getDatabaseVersion();
-		final String[] components = StringHelper.split( ".", versionString );
-		if ( components.length >= 3 ) {
-			try {
-				final int majorVersion = Integer.parseInt( components[0] );
-				final int minorVersion = Integer.parseInt( components[1] );
-				final int patchLevel = Integer.parseInt( components[2] );
-				return DatabaseVersion.make( majorVersion, minorVersion, patchLevel );
-			}
-			catch (NumberFormatException ex) {
-				// Ignore
+		if ( versionString != null ) {
+			final String[] components = StringHelper.split( ".", versionString );
+			if ( components.length >= 3 ) {
+				try {
+					final int majorVersion = Integer.parseInt( components[0] );
+					final int minorVersion = Integer.parseInt( components[1] );
+					final int patchLevel = Integer.parseInt( components[2] );
+					return DatabaseVersion.make( majorVersion, minorVersion, patchLevel );
+				}
+				catch (NumberFormatException ex) {
+					// Ignore
+				}
 			}
 		}
 		return info.makeCopyOrDefault( DEFAULT_VERSION );
+	}
+
+	protected LockingSupport buildLockingSupport() {
+		return new MySQLLockingSupport( getMySQLVersion() );
 	}
 
 	@Override
@@ -685,6 +697,7 @@ public class MySQLLegacyDialect extends Dialect {
 		functionRegistry.registerAlternateKey( "char", "chr" );
 
 		functionFactory.listagg_groupConcat();
+		functionFactory.regexpLike_regexp();
 
 		if ( getMySQLVersion().isSameOrAfter( 5, 7 ) ) {
 			functionFactory.jsonValue_mysql();
@@ -705,6 +718,7 @@ public class MySQLLegacyDialect extends Dialect {
 			if ( getMySQLVersion().isSameOrAfter( 8 ) ) {
 				functionFactory.unnest_emulated();
 				functionFactory.jsonTable_mysql();
+				functionFactory.regexpLike();
 			}
 			if ( supportsRecursiveCTE() ) {
 				functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
@@ -1047,32 +1061,19 @@ public class MySQLLegacyDialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-
-		return new LocalTemporaryTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						rootEntityDescriptor,
-						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new LocalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
+		return new LocalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+	}
 
-		return new LocalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						rootEntityDescriptor,
-						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+	@Override
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return MySQLLocalTemporaryTableStrategy.INSTANCE;
 	}
 
 	@Override
@@ -1082,22 +1083,22 @@ public class MySQLLegacyDialect extends Dialect {
 
 	@Override
 	public String getTemporaryTableCreateCommand() {
-		return "create temporary table if not exists";
+		return MySQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateCommand();
 	}
 
 	@Override
 	public String getTemporaryTableDropCommand() {
-		return "drop temporary table";
+		return MySQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableDropCommand();
 	}
 
 	@Override
 	public AfterUseAction getTemporaryTableAfterUseAction() {
-		return AfterUseAction.DROP;
+		return MySQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableAfterUseAction();
 	}
 
 	@Override
 	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return BeforeUseAction.CREATE;
+		return MySQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableBeforeUseAction();
 	}
 
 	@Override
@@ -1159,12 +1160,8 @@ public class MySQLLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLockTimeouts() {
-		// yes, we do handle "lock timeout" conditions in the exception conversion delegate,
-		// but that's a hardcoded lock timeout period across the whole entire MySQL database.
-		// MySQL does not support specifying lock timeouts as part of the SQL statement, which is really
-		// what this meta method is asking.
-		return false;
+	public LockingSupport getLockingSupport() {
+		return lockingSupport;
 	}
 
 	@Override
@@ -1199,15 +1196,15 @@ public class MySQLLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 
-		if ( dbMetaData == null ) {
+		if ( metadata == null ) {
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 
-		return super.buildIdentifierHelper( builder, dbMetaData );
+		return super.buildIdentifierHelper( builder, metadata );
 	}
 
 	@Override
@@ -1463,27 +1460,6 @@ public class MySQLLegacyDialect extends Dialect {
 	@Override
 	public boolean supportsRecursiveCTE() {
 		return getMySQLVersion().isSameOrAfter( 8, 0, 14 );
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		return getMySQLVersion().isSameOrAfter( 8 );
-	}
-
-	@Override
-	public boolean supportsNoWait() {
-		return getMySQLVersion().isSameOrAfter( 8 );
-	}
-
-	@Override
-	public boolean supportsWait() {
-		//only supported on MariaDB
-		return false;
-	}
-
-	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return supportsAliasLocks() ? RowLockStrategy.TABLE : RowLockStrategy.NONE;
 	}
 
 	@Override

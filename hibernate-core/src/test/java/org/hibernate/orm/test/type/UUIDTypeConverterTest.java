@@ -30,6 +30,7 @@ import jakarta.persistence.Table;
 
 import static org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator.safeRandomUUID;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				UUIDTypeConverterTest.Image.class,
@@ -44,36 +45,22 @@ public class UUIDTypeConverterTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Image" ).executeUpdate();
-					session.createMutationQuery( "delete from MarbleBox" ).executeUpdate();
-					session.createMutationQuery( "delete from Marble" ).executeUpdate();
-				}
-		);
+		scope.dropData();
 	}
 
 	@Test
 	public void testMerge(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.merge( new Image() )
-		);
+		scope.inTransaction(session -> session.merge( new Image() ) );
 	}
 
 	@Test
 	public void testMergeAndFlushDetached(SessionFactoryScope scope) {
-		Image image = scope.fromTransaction(
-				session ->
-						session.merge( new Image() )
-		);
-		scope.inTransaction(
-				session -> {
-					image.setThumbId( safeRandomUUID() );
-					session.merge( image );
-					session.flush();
-				}
-		);
+		Image image = scope.fromTransaction( session -> session.merge( new Image() ) );
+		scope.inTransaction( session -> {
+			image.setThumbId( safeRandomUUID() );
+			session.merge( image );
+			session.flush();
+		} );
 	}
 
 	@Test
@@ -103,21 +90,14 @@ public class UUIDTypeConverterTest {
 
 	@Test
 	public void testMergeDetached(SessionFactoryScope scope) {
-		MarbleBox marbleBox = scope.fromTransaction(
-				session -> {
-
-					MarbleBox saved = session.merge( new MarbleBox( List.of( new Marble() ) ) );
-
-					return saved;
-				}
+		MarbleBox marbleBox = scope.fromTransaction(session ->
+				session.merge( new MarbleBox( List.of( new Marble() ) ) )
 		);
 
-		scope.inTransaction(
-				session -> {
-					marbleBox.getMarbles().get( 0 ).setMaterialId( safeRandomUUID() );
-					session.merge( marbleBox );
-				}
-		);
+		scope.inTransaction(session -> {
+			marbleBox.getMarbles().get( 0 ).setMaterialId( safeRandomUUID() );
+			session.merge( marbleBox );
+		} );
 	}
 
 	@MappedSuperclass

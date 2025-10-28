@@ -22,7 +22,7 @@ public class JdbcTimeJavaTypeDescriptorTest extends AbstractDescriptorTest<Date>
 
 	@Override
 	protected Data<Date> getTestData() {
-		return new Data<Date>( original, copy, different );
+		return new Data<>( original, copy, different );
 	}
 
 	@Override

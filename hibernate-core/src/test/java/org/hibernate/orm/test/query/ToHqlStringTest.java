@@ -48,7 +48,7 @@ public class ToHqlStringTest {
 					criteriaQuery = criteriaQuery.select( countDistinct );
 
 					TypedQuery<Long> query = entityManager.createQuery( criteriaQuery );
-					( (SqmQuery) query ).getSqmStatement().toHqlString();
+					( (SqmQuery<?>) query ).getSqmStatement().toHqlString();
 				}
 		);
 	}
@@ -58,7 +58,7 @@ public class ToHqlStringTest {
 		scope.inTransaction(
 				entityManager -> {
 					Query query = entityManager.createQuery( "select count (distinct t) from TestEntity t" );
-					( (SqmQuery) query ).getSqmStatement().toHqlString();
+					( (SqmQuery<?>) query ).getSqmStatement().toHqlString();
 				}
 		);
 	}
@@ -69,7 +69,7 @@ public class ToHqlStringTest {
 				entityManager -> {
 					Query query = entityManager.createQuery( "select new org.hibernate.orm.test.query.ToHqlStringTest$TestDto("
 					+ " t.id, t.name ) from TestEntity t" );
-					( (SqmQuery) query ).getSqmStatement().toHqlString();
+					( (SqmQuery<?>) query ).getSqmStatement().toHqlString();
 				}
 		);
 	}
@@ -87,7 +87,7 @@ public class ToHqlStringTest {
 					criteriaQuery = criteriaQuery.select( entity );
 
 					TypedQuery<Object> query = entityManager.createQuery( criteriaQuery );
-					String hqlString = ( (SqmQuery) query ).getSqmStatement().toHqlString();
+					String hqlString = ( (SqmQuery<?>) query ).getSqmStatement().toHqlString();
 					final int fromIndex = hqlString.indexOf( " from " );
 					final String alias = hqlString.substring( "select ".length(), fromIndex );
 					assertThat( hqlString.substring( fromIndex ), containsString( alias ) );
@@ -109,7 +109,7 @@ public class ToHqlStringTest {
 					);
 
 					TypedQuery<Object> query = entityManager.createQuery( criteriaQuery );
-					String hqlString = ( (SqmQuery) query ).getSqmStatement().toHqlString();
+					String hqlString = ( (SqmQuery<?>) query ).getSqmStatement().toHqlString();
 					assertThat( hqlString, containsString( "where lower('Foo') = 'foo'" ) );
 				}
 		);
@@ -129,7 +129,7 @@ public class ToHqlStringTest {
 					) );
 
 					TypedQuery<Object> query = entityManager.createQuery( criteriaQuery );
-					String hqlString = ( (SqmQuery) query ).getSqmStatement().toHqlString();
+					String hqlString = ( (SqmQuery<?>) query ).getSqmStatement().toHqlString();
 					assertThat( hqlString, containsString( "where myFunction(0, 10)" ) );
 				}
 		);

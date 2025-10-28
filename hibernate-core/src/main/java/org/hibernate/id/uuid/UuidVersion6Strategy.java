@@ -40,23 +40,16 @@ public class UuidVersion6Strategy implements UUIDGenerationStrategy, UuidValueGe
 		static final long EPOCH_1582_SECONDS = LocalDate.of( 1582, 10, 15 )
 				.atStartOfDay( ZoneId.of( "UTC" ) )
 				.toInstant().getEpochSecond();
-
 	}
 
 	private record State(long lastTimestamp, int lastSequence) {
 		public State getNextState() {
 			final long now = instantToTimestamp();
-			if ( this.lastTimestamp < now ) {
-				return new State(
-						now,
-						randomSequence()
-				);
+			if ( lastTimestamp < now ) {
+				return new State( now, randomSequence() );
 			}
 			else if ( lastSequence == 0x3FFF ) {
-				return new State(
-						this.lastTimestamp + 1,
-						randomSequence()
-				);
+				return new State( lastTimestamp + 1, randomSequence() );
 			}
 			else {
 				return new State( lastTimestamp, lastSequence + 1 );
@@ -68,7 +61,7 @@ public class UuidVersion6Strategy implements UUIDGenerationStrategy, UuidValueGe
 		}
 
 		private static long instantToTimestamp() {
-			final Instant instant = Instant.now();
+			final var instant = Instant.now();
 			final long seconds = instant.getEpochSecond() - Holder.EPOCH_1582_SECONDS;
 			return seconds * 10_000_000 + instant.getNano() / 100;
 		}
@@ -101,20 +94,19 @@ public class UuidVersion6Strategy implements UUIDGenerationStrategy, UuidValueGe
 
 	@Override
 	public UUID generateUuid(final SharedSessionContractImplementor session) {
-		final State state = lastState.updateAndGet( State::getNextState );
-
+		final var state = lastState.updateAndGet( State::getNextState );
 		return new UUID(
-				// MSB bits 0-47 - most significant 32 bits of the 60-bit starting timestamp
+				// MSB bits 0-47 - the most significant 32 bits of the 60-bit starting timestamp
 				state.lastTimestamp << 4 & 0xFFFF_FFFF_FFFF_0000L
 				// MSB bits 48-51 - version = 6
 				| 0x6000L
-				// MSB bits 52-63 - least significant 12 bits from the 60-bit starting timestamp
+				// MSB bits 52-63 - the least significant 12 bits from the 60-bit starting timestamp
 				| state.lastTimestamp & 0x0FFFL,
 				// LSB bits 0-1 - variant = 4
 				0x8000_0000_0000_0000L
 				// LSB bits 2-15 - clock sequence
 				| (long) state.lastSequence << 48
-				// LSB bits 16-63 - pseudorandom data, least significant bit of the first octet is set to 1
+				// LSB bits 16-63 - pseudorandom data, the least significant bit of the first octet is set to 1
 				| randomNode()
 		);
 	}

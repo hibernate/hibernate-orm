@@ -26,7 +26,7 @@ public class SchemaToolingAutoActionTests {
 
 		final ActionGrouping actionGrouping = ActionGrouping.interpret( props );
 
-		assertThat( actionGrouping.getDatabaseAction(), is( Action.CREATE_DROP ) );
+		assertThat( actionGrouping.databaseAction(), is( Action.CREATE_DROP ) );
 
 	}
 }

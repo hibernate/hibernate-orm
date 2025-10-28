@@ -208,12 +208,6 @@ public class MergeProxyTest {
 
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Activity" ).executeUpdate();
-					session.createQuery( "delete from Instruction" ).executeUpdate();
-					session.createQuery( "delete from WebApplication" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

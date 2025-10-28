@@ -4,15 +4,16 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.LockOptions;
-import org.hibernate.query.ResultListTransformer;
-import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.sqm.spi.InterpretationsKeySource;
+import org.hibernate.query.sqm.tree.SqmStatement;
 
 
 /**
@@ -23,13 +24,13 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 	public static SqmInterpretationsKey createInterpretationsKey(InterpretationsKeySource keySource) {
 		if ( isCacheable ( keySource ) ) {
 			final Object query = keySource.getQueryStringCacheKey();
+			final int hashCode = query instanceof SqmStatement<?> statement ? statement.cacheHashCode() : query.hashCode();
 			return new SqmInterpretationsKey(
 					query,
-					query.hashCode(),
+					keySource.unnamedParameterIndices(),
+					hashCode,
 					keySource.getResultType(),
 					keySource.getQueryOptions().getLockOptions(),
-					keySource.getQueryOptions().getTupleTransformer(),
-					keySource.getQueryOptions().getResultListTransformer(),
 					memoryEfficientDefensiveSetCopy( keySource.getLoadQueryInfluencers().getEnabledFetchProfileNames() )
 			);
 		}
@@ -84,27 +85,25 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 	}
 
 	private final Object query;
+	private final int @Nullable [] unnamedParameterIndices;
 	private final Class<?> resultType;
 	private final LockOptions lockOptions;
-	private final TupleTransformer<?> tupleTransformer;
-	private final ResultListTransformer<?> resultListTransformer;
 	private final Collection<String> enabledFetchProfiles;
 	private final int hashCode;
 
 	private SqmInterpretationsKey(
 			Object query,
+			int @Nullable [] unnamedParameterIndices,
 			int hash,
 			Class<?> resultType,
 			LockOptions lockOptions,
-			TupleTransformer<?> tupleTransformer,
-			ResultListTransformer<?> resultListTransformer,
 			Collection<String> enabledFetchProfiles) {
+		assert query.getClass() == String.class || query instanceof SqmStatement<?>;
 		this.query = query;
+		this.unnamedParameterIndices = unnamedParameterIndices;
 		this.hashCode = hash;
 		this.resultType = resultType;
 		this.lockOptions = lockOptions;
-		this.tupleTransformer = tupleTransformer;
-		this.resultListTransformer = resultListTransformer;
 		this.enabledFetchProfiles = enabledFetchProfiles;
 	}
 
@@ -112,12 +111,11 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 	public QueryInterpretationCache.Key prepareForStore() {
 		return new SqmInterpretationsKey(
 				query,
+				unnamedParameterIndices,
 				hashCode,
 				resultType,
 				// Since lock options might be mutable, we need a copy for the cache key
 				lockOptions.makeDefensiveCopy(),
-				tupleTransformer,
-				resultListTransformer,
 				enabledFetchProfiles
 		);
 	}
@@ -136,16 +134,22 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 			return false;
 		}
 		return this.hashCode == that.hashCode //check this first as some other checks are expensive
-			&& this.query.equals( that.query )
+			&& ( query.getClass() == String.class
+				? query.equals( that.query )
+				: ((SqmStatement<?>) query).isCompatible( that.query ) )
+			&& Arrays.equals( this.unnamedParameterIndices, that.unnamedParameterIndices )
 			&& Objects.equals( this.resultType, that.resultType )
 			&& Objects.equals( this.lockOptions, that.lockOptions )
-			&& Objects.equals( this.tupleTransformer, that.tupleTransformer )
-			&& Objects.equals( this.resultListTransformer, that.resultListTransformer )
 			&& Objects.equals( this.enabledFetchProfiles, that.enabledFetchProfiles );
 	}
 
 	@Override
 	public int hashCode() {
 		return hashCode;
+	}
+
+	@Override
+	public String toString() {
+		return query.toString() + " : " + resultType.getSimpleName();
 	}
 }

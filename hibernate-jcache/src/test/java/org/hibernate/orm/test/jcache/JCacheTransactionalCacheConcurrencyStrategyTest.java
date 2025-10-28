@@ -4,74 +4,94 @@
  */
 package org.hibernate.orm.test.jcache;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.cfg.Environment;
-
-import org.hibernate.testing.jdbc.SQLStatementInterceptor;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingConfiguration;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import java.util.ArrayList;
+import java.util.List;
 
-public class JCacheTransactionalCacheConcurrencyStrategyTest
-		extends BaseNonConfigCoreFunctionalTestCase {
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.cfg.CacheSettings.CACHE_REGION_FACTORY;
+import static org.hibernate.cfg.TransactionSettings.ENABLE_LAZY_LOAD_NO_TRANS;
+import static org.hibernate.cfg.TransactionSettings.TRANSACTION_COORDINATOR_STRATEGY;
 
-	private SQLStatementInterceptor sqlStatementInterceptor;
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ServiceRegistry(
+		settings = {
+				@Setting( name = CACHE_REGION_FACTORY, value = "jcache"),
+				@Setting( name = TRANSACTION_COORDINATOR_STRATEGY, value = "jta"),
+				@Setting( name = ENABLE_LAZY_LOAD_NO_TRANS, value = "true"),
+		},
+		settingConfigurations = @SettingConfiguration(configurer = TestingJtaBootstrap.class)
+)
+@DomainModel(annotatedClasses = {
+		JCacheTransactionalCacheConcurrencyStrategyTest.Parent.class,
+		JCacheTransactionalCacheConcurrencyStrategyTest.Child.class
+})
+@SessionFactory(useCollectingStatementInspector = true)
+public class JCacheTransactionalCacheConcurrencyStrategyTest {
 
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		sqlStatementInterceptor = new SQLStatementInterceptor( sfb );
-	}
+	@Test
+	public void testTransactional(SessionFactoryScope factoryScope) {
+		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		settings.put( Environment.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
+		factoryScope.inTransaction( (session) -> {
+			Parent parent = new Parent( 1, "first" );
+			for ( int i = 0; i < 2; i++ ) {
+				final Child child = new Child( i, "child #" + i, parent );
+				parent.addChild( child );
+			}
+			session.persist( parent );
+		} );
 
-		TestingJtaBootstrap.prepare( settings );
-		settings.put( Environment.TRANSACTION_COORDINATOR_STRATEGY, "jta" );
-		settings.put( Environment.CACHE_REGION_FACTORY, "jcache" );
-	}
+		factoryScope.inTransaction(  (session) -> {
+			sqlCollector.clear();
 
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Parent.class,
-				Child.class
-		};
+			Parent parent = session.find( Parent.class, 1 );
+			assertThat( sqlCollector.getSqlQueries() ).isEmpty();
+			assertThat( parent.getChildren() ).hasSize( 2 );
+		} );
 	}
 
 	@Entity(name = "Parent")
 	@Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
 	public static class Parent {
-
 		@Id
-		@GeneratedValue
-		private Long id;
+		private Integer id;
+		private String name;
 
 		@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "parent")
 		@Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
-		private List<Child> children = new ArrayList<Child>();
+		private List<Child> children = new ArrayList<>();
 
-		public Long getId() {
+		public Parent() {
+		}
+
+		public Parent(Integer id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+
+		public Integer getId() {
 			return id;
 		}
 
-		public void setId(Long id) {
+		public void setId(Integer id) {
 			this.id = id;
 		}
 
@@ -90,26 +110,36 @@ public class JCacheTransactionalCacheConcurrencyStrategyTest
 			return c;
 		}
 
+		void addChild(Child c) {
+			children.add( c );
+		}
 	}
 
 	@Entity(name = "Child")
 	@Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
 	public static class Child {
-
 		@Id
-		@GeneratedValue
-		private Long id;
+		private Integer id;
+		private String name;
 
-		@ManyToOne(
-				fetch = FetchType.LAZY
-		)
+		@ManyToOne(fetch = FetchType.LAZY)
 		private Parent parent;
 
-		public Long getId() {
+		public Child() {
+		}
+
+		public Child(Integer id, String name, Parent parent) {
+			this.id = id;
+			this.name = name;
+			this.parent = parent;
+			parent.addChild(this);
+		}
+
+		public Integer getId() {
 			return id;
 		}
 
-		public void setId(Long id) {
+		public void setId(Integer id) {
 			this.id = id;
 		}
 
@@ -122,38 +152,5 @@ public class JCacheTransactionalCacheConcurrencyStrategyTest
 		}
 	}
 
-
-	@Test
-	public void testTransactional() {
-		Parent parent = new Parent();
-
-		doInHibernate( this::sessionFactory, session -> {
-			for ( int i = 0; i < 2; i++ ) {
-				parent.addChild();
-
-				session.persist( parent );
-			}
-		} );
-
-		doInHibernate( this::sessionFactory, session -> {
-			sqlStatementInterceptor.getSqlQueries().clear();
-
-			Parent _parent = session.find( Parent.class, parent.getId() );
-
-			assertEquals( 0, sqlStatementInterceptor.getSqlQueries().size() );
-
-			assertEquals( 2, _parent.getChildren().size() );
-		} );
-
-		doInHibernate( this::sessionFactory, session -> {
-			sqlStatementInterceptor.getSqlQueries().clear();
-
-			Parent _parent = session.find( Parent.class, parent.getId() );
-
-			assertEquals( 2, _parent.getChildren().size() );
-
-			assertEquals( 0, sqlStatementInterceptor.getSqlQueries().size() );
-		} );
-	}
 
 }

@@ -122,7 +122,7 @@ public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartP
 
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
-		hql.append(functionName).append( "(" );
+		hql.append( functionName ).append( "(" );
 		getLhs().appendHqlString( hql, context );
 		hql.append( ')' );
 	}

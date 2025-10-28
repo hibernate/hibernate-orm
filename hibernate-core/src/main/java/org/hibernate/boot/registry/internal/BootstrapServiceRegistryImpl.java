@@ -16,8 +16,6 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.integrator.internal.IntegratorServiceImpl;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.internal.AbstractServiceRegistryImpl;
@@ -28,6 +26,8 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.service.internal.ServiceLogger.SERVICE_LOGGER;
 
 /**
  * {@link ServiceRegistry} implementation containing specialized "bootstrap" services, specifically:<ul>
@@ -40,8 +40,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class BootstrapServiceRegistryImpl
 		implements ServiceRegistryImplementor, BootstrapServiceRegistry, ServiceBinding.ServiceLifecycleOwner {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BootstrapServiceRegistryImpl.class );
 
 	private final boolean autoCloseRegistry;
 	private boolean active = true;
@@ -240,22 +238,22 @@ public class BootstrapServiceRegistryImpl
 
 	@Override
 	public <R extends Service> R initiateService(ServiceInitiator<R> serviceInitiator) {
-		throw new ServiceException( "Boot-strap registry should only contain provided services" );
+		throw new ServiceException( "Bootstrap registry should only contain provided services" );
 	}
 
 	@Override
 	public <R extends Service> void configureService(ServiceBinding<R> binding) {
-		throw new ServiceException( "Boot-strap registry should only contain provided services" );
+		throw new ServiceException( "Bootstrap registry should only contain provided services" );
 	}
 
 	@Override
 	public <R extends Service> void injectDependencies(ServiceBinding<R> binding) {
-		throw new ServiceException( "Boot-strap registry should only contain provided services" );
+		throw new ServiceException( "Bootstrap registry should only contain provided services" );
 	}
 
 	@Override
 	public <R extends Service> void startService(ServiceBinding<R> binding) {
-		throw new ServiceException( "Boot-strap registry should only contain provided services" );
+		throw new ServiceException( "Bootstrap registry should only contain provided services" );
 	}
 
 	@Override
@@ -266,7 +264,7 @@ public class BootstrapServiceRegistryImpl
 				stoppable.stop();
 			}
 			catch ( Exception e ) {
-				LOG.unableToStopService( service.getClass(), e );
+				SERVICE_LOGGER.unableToStopService( binding.getServiceRole().getName(), e );
 			}
 		}
 	}
@@ -277,10 +275,7 @@ public class BootstrapServiceRegistryImpl
 			childRegistries = new HashSet<>();
 		}
 		if ( !childRegistries.add( child ) ) {
-			LOG.warnf(
-					"Child ServiceRegistry [%s] was already registered; this will end badly later...",
-					child
-			);
+			SERVICE_LOGGER.childAlreadyRegistered( child );
 		}
 	}
 
@@ -292,17 +287,11 @@ public class BootstrapServiceRegistryImpl
 		childRegistries.remove( child );
 		if ( childRegistries.isEmpty() ) {
 			if ( autoCloseRegistry ) {
-				LOG.debug(
-						"Implicitly destroying Boot-strap registry on de-registration " +
-								"of all child ServiceRegistries"
-				);
+				SERVICE_LOGGER.destroyingBootstrapRegistry();
 				destroy();
 			}
 			else {
-				LOG.debug(
-						"Skipping implicitly destroying Boot-strap registry on de-registration " +
-								"of all child ServiceRegistries"
-				);
+				SERVICE_LOGGER.skippingBootstrapRegistryDestruction();
 			}
 		}
 	}

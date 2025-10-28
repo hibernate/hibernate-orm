@@ -31,8 +31,8 @@ public class EmbeddableInstantiatorPojoOptimized extends AbstractPojoInstantiato
 	@Override
 	public Object instantiate(ValueAccess valuesAccess) {
 		final Object embeddable = instantiationOptimizer.newInstance();
-		final EmbeddableMappingType embeddableMapping = embeddableMappingAccess.get();
-		final Object[] values = valuesAccess.getValues();
+		final var embeddableMapping = embeddableMappingAccess.get();
+		final var values = valuesAccess.getValues();
 		if ( values != null ) {
 			embeddableMapping.setValues( embeddable, values );
 		}

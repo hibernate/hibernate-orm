@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
@@ -32,6 +33,7 @@ import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,12 +80,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 
 	@AfterEach
 	public void cleanupTestData() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
-					entityManager.createQuery( "delete from Product" ).executeUpdate();
-				}
-		);
+		entityManagerFactory().unwrap(SessionFactory.class).getSchemaManager().truncate();
 	}
 
 	@Test
@@ -305,9 +302,10 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		);
 	}
 
-	@Test @SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "numeric overflows")
+	@Test
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "does not support extract(epoch)")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "datediff overflow limits")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.date multi overflows")
 	public void testDateTimeOperations() {
 		HibernateCriteriaBuilder builder = (HibernateCriteriaBuilder) this.builder;
 		doInJPA(
@@ -376,6 +374,13 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 					assertEquals( 150*60L, entityManager.createQuery(criteria).getSingleResult() );
 				}
 		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "numeric overflows")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "does not support extract(epoch)")
+	void testDurationBetween() {
+		HibernateCriteriaBuilder builder = (HibernateCriteriaBuilder) this.builder;
 		doInJPA(
 				this::entityManagerFactory,
 				entityManager -> {

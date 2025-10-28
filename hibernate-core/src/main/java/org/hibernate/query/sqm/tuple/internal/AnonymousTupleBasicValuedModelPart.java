@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tuple.internal;
 
 import java.util.function.BiConsumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
@@ -65,6 +66,7 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 						"",
 						selectionExpression,
 						new SelectablePath( partName ),
+						null,
 						null,
 						null,
 						null,
@@ -164,12 +166,12 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 	}
 
 	@Override
-	public String getCustomReadExpression() {
+	public @Nullable String getCustomReadExpression() {
 		return selectableMapping.getCustomReadExpression();
 	}
 
 	@Override
-	public String getCustomWriteExpression() {
+	public @Nullable String getCustomWriteExpression() {
 		return selectableMapping.getCustomWriteExpression();
 	}
 
@@ -204,27 +206,32 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 	}
 
 	@Override
-	public String getColumnDefinition() {
+	public @Nullable String getColumnDefinition() {
 		return selectableMapping.getColumnDefinition();
 	}
 
 	@Override
-	public Long getLength() {
+	public @Nullable Long getLength() {
 		return selectableMapping.getLength();
 	}
 
 	@Override
-	public Integer getPrecision() {
+	public @Nullable Integer getArrayLength() {
+		return selectableMapping.getArrayLength();
+	}
+
+	@Override
+	public @Nullable Integer getPrecision() {
 		return selectableMapping.getPrecision();
 	}
 
 	@Override
-	public Integer getScale() {
+	public @Nullable Integer getScale() {
 		return selectableMapping.getScale();
 	}
 
 	@Override
-	public Integer getTemporalPrecision() {
+	public @Nullable Integer getTemporalPrecision() {
 		return selectableMapping.getTemporalPrecision();
 	}
 

@@ -63,13 +63,7 @@ public class ManyToOneEmbeddedIdWithLazyToOneFKTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from System" ).executeUpdate();
-					session.createQuery( "delete from SystemUser" ).executeUpdate();
-					session.createQuery( "delete from Subsystem" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

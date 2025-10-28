@@ -4,12 +4,24 @@
  */
 package org.hibernate.processor.annotation;
 
-
 import javax.lang.model.element.ExecutableElement;
-
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.IntersectionType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
+import javax.lang.model.type.WildcardType;
+import java.util.Collection;
 import java.util.Set;
 
 import static java.lang.Character.toUpperCase;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toSet;
+import static javax.lang.model.type.TypeKind.VOID;
 import static org.hibernate.processor.util.Constants.EVENT;
 import static org.hibernate.processor.util.Constants.INJECT;
 import static org.hibernate.processor.util.Constants.JD_LIFECYCLE_EVENT;
@@ -17,6 +29,7 @@ import static org.hibernate.processor.util.Constants.LIST;
 import static org.hibernate.processor.util.Constants.NONNULL;
 import static org.hibernate.processor.util.Constants.TYPE_LITERAL;
 import static org.hibernate.processor.util.Constants.UNI;
+import static org.hibernate.processor.util.TypeUtils.resolveTypeName;
 
 public class LifecycleMethod extends AbstractAnnotatedMethod {
 	private final String entity;
@@ -28,6 +41,8 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 	private final ParameterKind parameterKind;
 	private final boolean returnArgument;
 	private final boolean hasGeneratedId;
+	private final Collection<String> methodTypeParameters;
+	private final TypeElement element;
 
 	public enum ParameterKind {
 		NORMAL,
@@ -48,7 +63,8 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			boolean addNonnullAnnotation,
 			ParameterKind parameterKind,
 			boolean returnArgument,
-			boolean hasGeneratedId) {
+			boolean hasGeneratedId,
+			TypeElement element) {
 		super(annotationMetaEntity, method, sessionName, sessionType);
 		this.entity = entity;
 		this.actualEntity = actualEntity;
@@ -59,6 +75,11 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		this.parameterKind = parameterKind;
 		this.returnArgument = returnArgument;
 		this.hasGeneratedId = hasGeneratedId;
+		this.methodTypeParameters = method.getTypeParameters().stream()
+				.map( TypeParameterElement::asType )
+				.map( TypeMirror::toString )
+				.collect( toSet() );
+		this.element = element;
 	}
 
 	@Override
@@ -216,11 +237,13 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			declaration
 					.append("\t\tif (")
 					.append(sessionName)
+					.append(getObjectCall())
 					.append(".getIdentifier(")
 					.append(parameterName)
 					.append(") == null)\n")
 					.append("\t\t\t")
 					.append(sessionName)
+					.append(getObjectCall())
 					.append('.')
 					.append("insert");
 			argument( declaration );
@@ -231,6 +254,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		declaration
 				.append("\t\t")
 				.append(sessionName)
+				.append(getObjectCall())
 				.append('.')
 				.append(operationName);
 		argument( declaration );
@@ -331,27 +355,86 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 	private void preamble(StringBuilder declaration) {
 		declaration
 				.append("\n@Override\npublic ")
+				.append(parameterTypeBopunds())
 				.append(returnType())
 				.append(' ')
 				.append(methodName)
 				.append('(');
 		notNull(declaration);
+		final var parameters = method.getParameters();
+		assert parameters.size() == 1;
+		final VariableElement element = parameters.get(0);
 		declaration
-				.append(annotationMetaEntity.importType(entity))
+				.append(resolveAsString(element.asType()))
 				.append(' ')
-				.append(parameterName)
+				.append(element.getSimpleName())
 				.append(')')
 				.append(" {\n");
 	}
 
-	private String returnType() {
-		final String entityType = annotationMetaEntity.importType(entity);
-		if ( isReactive() ) {
-			return annotationMetaEntity.importType(UNI)
-					+ '<' + (returnArgument ? entityType : "Void") + '>';
+	private String parameterTypeBopunds() {
+		if ( method.getTypeParameters().isEmpty() ) {
+			return "";
+		}
+		return method.getTypeParameters().stream()
+				.map( this::resolveTypeParameter )
+				.collect( joining( ", ", " <", "> " ) );
+	}
+
+	private String resolveAsString(TypeMirror type) {
+		if ( type.getKind().isPrimitive() || type.getKind() == VOID ) {
+			return type.toString();
+		}
+		else if ( type instanceof DeclaredType declaredType ) {
+			final var element = annotationMetaEntity.importType(
+					((TypeElement) declaredType.asElement()).getQualifiedName().toString()
+			);
+			if ( declaredType.getTypeArguments().isEmpty() ) {
+				return element;
+			}
+			return element + declaredType.getTypeArguments().stream().map( this::resolveAsString )
+					.collect( joining( ",", "<", ">" ) );
+		}
+		else if ( type instanceof TypeVariable typeVariable ) {
+			final var value = typeVariable.toString();
+			if ( methodTypeParameters.contains( value ) ) {
+				return value;
+			}
+			return annotationMetaEntity.importType( resolveTypeName( element, method.getEnclosingElement(), value ) );
+		}
+		else if ( type instanceof WildcardType wildcardType ) {
+			return "?"
+				+ (wildcardType.getExtendsBound() == null ? ""
+					: " extends " + resolveAsString( wildcardType.getExtendsBound() ))
+				+ (wildcardType.getSuperBound() == null ? ""
+					: " super " + resolveAsString( wildcardType.getExtendsBound() ));
+		}
+		else if ( type instanceof ArrayType arrayType ) {
+			return resolveAsString( arrayType.getComponentType() ) + "[]";
+		}
+		else if ( type instanceof IntersectionType intersectionType ) {
+			return intersectionType.getBounds().stream().map( this::resolveAsString ).collect( joining( "&" ) );
 		}
 		else {
-			return returnArgument ? entityType : "void";
+			return type.toString();
+		}
+	}
+
+	private String resolveTypeParameter(TypeParameterElement p) {
+		final var type = (TypeVariable) p.asType();
+		return type.toString()
+			+ (type.getUpperBound().getKind() == TypeKind.NULL ? ""
+				: " extends " + resolveAsString( type.getUpperBound() ))
+			+ (type.getLowerBound().getKind() == TypeKind.NULL ? ""
+				: " super " + resolveAsString( type.getLowerBound() ));
+	}
+
+	private String returnType() {
+		if ( returnArgument ) {
+			return resolveAsString(method.getReturnType());
+		}
+		else {
+			return isReactive() ? annotationMetaEntity.importType(UNI) + "<Void>" : "void";
 		}
 	}
 

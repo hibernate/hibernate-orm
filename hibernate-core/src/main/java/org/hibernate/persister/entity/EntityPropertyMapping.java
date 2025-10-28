@@ -14,8 +14,6 @@ import org.hibernate.QueryException;
 import org.hibernate.Remove;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Collection;
@@ -32,6 +30,8 @@ import org.hibernate.type.SpecialOneToOneType;
 import org.hibernate.type.Type;
 import org.hibernate.type.MappingContext;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+
 /**
  * @author Gavin King
  *
@@ -40,7 +40,6 @@ import org.hibernate.type.MappingContext;
 @Deprecated(since = "6", forRemoval = true)
 @Remove
 class EntityPropertyMapping {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityPropertyMapping.class );
 
 	private final Map<String, Type> typesByPropertyPath = new HashMap<>();
 	private final AbstractEntityPersister persister;
@@ -95,19 +94,20 @@ class EntityPropertyMapping {
 	}
 
 	private void logDuplicateRegistration(String path, Type existingType, Type type) {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
-					"Skipping duplicate registration of path [{0}], existing type = [{1}], incoming type = [{2}]",
-					path,
-					existingType,
-					type
-			);
-		}
+		// Disabled because this resulted in many useless messages
+//		if ( LOG.isTraceEnabled() ) {
+//			LOG.tracev(
+//					"Skipping duplicate registration of path [{0}], existing type = [{1}], incoming type = [{2}]",
+//					path,
+//					existingType,
+//					type
+//			);
+//		}
 	}
 
 	private void logIncompatibleRegistration(String path, Type existingType, Type type) {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.tracev(
 					"Skipped adding attribute [{1}] to base type [{0}] as more than one subtype defined the attribute using incompatible types (strictly speaking the attributes are not inherited); existing type = [{2}], incoming type = [{3}]",
 					getEntityName(),
 					path,
@@ -330,9 +330,9 @@ class EntityPropertyMapping {
 
 		if ( etype.isReferenceToPrimaryKey() ) {
 			if ( !hasNonIdentifierPropertyNamedId ) {
-				String idpath1 = extendPath( path, EntityPersister.ENTITY_ID );
-				addPropertyPath( idpath1, idtype, columns, columnReaders, columnReaderTemplates, factory );
-				initPropertyPaths( idpath1, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
+				String idpath = extendPath( path, AbstractEntityPersister.ENTITY_ID );
+				addPropertyPath( idpath, idtype, columns, columnReaders, columnReaderTemplates, factory );
+				initPropertyPaths( idpath, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
 			}
 		}
 
@@ -350,7 +350,7 @@ class EntityPropertyMapping {
 		try {
 			return factory.getReferencedPropertyType(
 					entityType.getAssociatedEntityName(),
-					EntityPersister.ENTITY_ID
+					AbstractEntityPersister.ENTITY_ID
 			) != null;
 		}
 		catch (MappingException e) {

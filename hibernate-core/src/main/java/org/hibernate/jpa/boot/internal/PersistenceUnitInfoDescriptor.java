@@ -10,8 +10,6 @@ import java.util.Properties;
 
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.internal.enhance.EnhancingClassTransformerImpl;
 
@@ -23,12 +21,12 @@ import jakarta.persistence.PersistenceUnitTransactionType;
 
 import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 
+import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
+
 /**
  * @author Steve Ebersole
  */
 public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor {
-
-	private static final CoreMessageLogger LOGGER = CoreLogging.messageLogger( PersistenceUnitInfoDescriptor.class );
 
 	private final PersistenceUnitInfo persistenceUnitInfo;
 	private ClassTransformer classTransformer;
@@ -132,8 +130,8 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 		// During testing, we will return a null temp class loader
 		// in cases where we don't care about enhancement
 		if ( persistenceUnitInfo.getNewTempClassLoader() != null ) {
-			if ( LOGGER.isDebugEnabled() ) {
-				LOGGER.debug( "Pushing class transformers for PU named '" + getName() + "' on loading classloader " + enhancementContext.getLoadingClassLoader() );
+			if ( JPA_LOGGER.isTraceEnabled() ) {
+				JPA_LOGGER.pushingClassTransformers( getName(), String.valueOf( enhancementContext.getLoadingClassLoader() ) );
 			}
 			final EnhancingClassTransformerImpl classTransformer =
 					new EnhancingClassTransformerImpl( enhancementContext );

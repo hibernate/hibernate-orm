@@ -202,7 +202,7 @@ public class XmlFormatterTest implements SessionFactoryScopeAware {
 
 	private String collectionToString(Collection<?> value, Type elementType, FormatMapper formatMapper) {
 		final JavaType<Object> javaType = scope.getSessionFactory().getTypeConfiguration().getJavaTypeRegistry()
-				.resolveDescriptor( new ParameterizedTypeImpl( Collection.class, new Type[] {elementType}, null ) );
+				.getDescriptor( new ParameterizedTypeImpl( Collection.class, new Type[] {elementType}, null ) );
 		final WrapperOptions wrapperOptions = scope.getSessionFactory().getWrapperOptions();
 		final String actualValue = formatMapper.toString(
 				value,
@@ -221,8 +221,9 @@ public class XmlFormatterTest implements SessionFactoryScopeAware {
 	}
 
 	private String arrayToString(Object value, FormatMapper formatMapper) {
-		final JavaType<Object> javaType = scope.getSessionFactory().getTypeConfiguration().getJavaTypeRegistry()
-				.resolveDescriptor( value.getClass() );
+		final JavaType<Object> javaType =
+				scope.getSessionFactory().getTypeConfiguration().getJavaTypeRegistry()
+						.getDescriptor( value.getClass() );
 		final WrapperOptions wrapperOptions = scope.getSessionFactory().getWrapperOptions();
 		final String actualValue = formatMapper.toString(
 				value,
@@ -242,7 +243,7 @@ public class XmlFormatterTest implements SessionFactoryScopeAware {
 
 	private String mapToString(Map<?, ?> value, Type keyType, Type elementType, FormatMapper formatMapper) {
 		final JavaType<Object> javaType = scope.getSessionFactory().getTypeConfiguration().getJavaTypeRegistry()
-				.resolveDescriptor( new ParameterizedTypeImpl( Map.class, new Type[] {keyType, elementType}, null ) );
+				.getDescriptor( new ParameterizedTypeImpl( Map.class, new Type[] {keyType, elementType}, null ) );
 		final WrapperOptions wrapperOptions = scope.getSessionFactory().getWrapperOptions();
 		final String actualValue = formatMapper.toString(
 				value,

@@ -8,6 +8,8 @@ import java.net.InetAddress;
 
 import org.hibernate.internal.util.BytesHelper;
 
+import static java.lang.System.currentTimeMillis;
+
 /**
  * The base class for identifier generators that use a UUID algorithm. This
  * class implements the algorithm, subclasses define the identifier
@@ -34,7 +36,7 @@ public abstract class AbstractUUIDGenerator implements IdentifierGenerator {
 	}
 
 	private static short counter = (short) 0;
-	private static final int JVM = (int) ( System.currentTimeMillis() >>> 8 );
+	private static final int JVM = (int) ( currentTimeMillis() >>> 8 );
 
 	public AbstractUUIDGenerator() {
 	}
@@ -72,10 +74,10 @@ public abstract class AbstractUUIDGenerator implements IdentifierGenerator {
 	 * Unique down to millisecond
 	 */
 	protected short getHiTime() {
-		return (short) ( System.currentTimeMillis() >>> 32 );
+		return (short) ( currentTimeMillis() >>> 32 );
 	}
 
 	protected int getLoTime() {
-		return (int) System.currentTimeMillis();
+		return (int) currentTimeMillis();
 	}
 }

@@ -8,29 +8,19 @@ import org.hibernate.Internal;
 import org.hibernate.annotations.Source;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.engine.jdbc.spi.StatementPreparer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.BeforeExecutionGenerator;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import org.jboss.logging.Logger;
 
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Member;
-import java.sql.CallableStatement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.EnumSet;
 
-import static java.sql.Types.TIMESTAMP;
-import static org.hibernate.generator.EventTypeSets.INSERT_AND_UPDATE;
+import static org.hibernate.generator.internal.CurrentTimestampGeneration.getCurrentTimestamp;
+import static org.hibernate.generator.internal.CurrentTimestampGeneration.getGeneratorDelegate;
 
 /**
  * Value generation strategy using the query {@link Dialect#getCurrentTimestampSelectString()}.
@@ -52,30 +42,26 @@ import static org.hibernate.generator.EventTypeSets.INSERT_AND_UPDATE;
 @Internal
 public class SourceGeneration implements BeforeExecutionGenerator {
 
-	private static final CoreMessageLogger log = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			SourceGeneration.class.getName()
-	);
-
 	private final JavaType<?> propertyType;
-	private final CurrentTimestampGeneration.CurrentTimestampGeneratorDelegate valueGenerator;
+	private final CurrentTimestampGeneration.GeneratorDelegate valueGenerator;
 
 	public SourceGeneration(Source annotation, Member member, GeneratorCreationContext context) {
 		this( annotation.value(), context.getProperty().getType().getReturnedClass(), context );
 	}
 
 	public SourceGeneration(SourceType sourceType, Class<?> propertyType, GeneratorCreationContext context) {
-		this.propertyType = context.getDatabase().getTypeConfiguration().getJavaTypeRegistry().getDescriptor( propertyType );
-		this.valueGenerator = CurrentTimestampGeneration.getGeneratorDelegate( sourceType, propertyType, context );
+		this.propertyType =
+				context.getDatabase().getTypeConfiguration().getJavaTypeRegistry()
+						.resolveDescriptor( propertyType );
+		this.valueGenerator = getGeneratorDelegate( sourceType, propertyType, context );
 	}
 
 	/**
-	 * @return {@link EventTypeSets#INSERT_ONLY}
+	 * @return {@link EventTypeSets#ALL}
 	 */
 	@Override
 	public EnumSet<EventType> getEventTypes() {
-		return INSERT_AND_UPDATE;
+		return EventTypeSets.ALL;
 	}
 
 	@Override
@@ -83,61 +69,5 @@ public class SourceGeneration implements BeforeExecutionGenerator {
 		return valueGenerator == null
 				? propertyType.wrap( getCurrentTimestamp( session ), session )
 				: valueGenerator.generate();
-	}
-
-	private Timestamp getCurrentTimestamp(SharedSessionContractImplementor session) {
-		final Dialect dialect = session.getJdbcServices().getJdbcEnvironment().getDialect();
-		final boolean callable = dialect.isCurrentTimestampSelectStringCallable();
-		final String timestampSelectString = dialect.getCurrentTimestampSelectString();
-		final JdbcCoordinator coordinator = session.getJdbcCoordinator();
-		final StatementPreparer statementPreparer = coordinator.getStatementPreparer();
-		PreparedStatement statement = null;
-		try {
-			statement = statementPreparer.prepareStatement( timestampSelectString, callable );
-			final Timestamp ts = callable
-					? extractCalledResult( statement, coordinator, timestampSelectString )
-					: extractResult( statement, coordinator, timestampSelectString );
-			logResult( ts );
-			return ts;
-		}
-		catch (SQLException e) {
-			throw session.getJdbcServices().getSqlExceptionHelper().convert(
-					e,
-					"could not obtain current timestamp from database",
-					timestampSelectString
-			);
-		}
-		finally {
-			if ( statement != null ) {
-				coordinator.getLogicalConnection().getResourceRegistry().release( statement );
-				coordinator.afterStatementExecution();
-			}
-		}
-	}
-
-	private static Timestamp extractResult(PreparedStatement statement, JdbcCoordinator coordinator, String sql)
-			throws SQLException {
-		final ResultSet resultSet = coordinator.getResultSetReturn().extract( statement, sql );
-		resultSet.next();
-		return resultSet.getTimestamp( 1 );
-	}
-
-	private static Timestamp extractCalledResult(PreparedStatement statement, JdbcCoordinator coordinator, String sql)
-			throws SQLException {
-		final CallableStatement callable = (CallableStatement) statement;
-		callable.registerOutParameter( 1, TIMESTAMP );
-		coordinator.getResultSetReturn().execute( callable, sql );
-		return callable.getTimestamp( 1 );
-	}
-
-	private static void logResult(Timestamp ts) {
-		if ( log.isTraceEnabled() ) {
-			log.tracev(
-					"Current timestamp retrieved from db : {0} (nanos={1}, time={2})",
-					ts,
-					ts.getNanos(),
-					ts.getTime()
-			);
-		}
 	}
 }

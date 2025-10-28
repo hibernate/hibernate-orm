@@ -112,9 +112,6 @@ public class DynamicBatchFetchTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createQuery( "delete A" ).executeUpdate();
-			session.createQuery( "delete B" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

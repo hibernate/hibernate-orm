@@ -117,11 +117,7 @@ public class NaturalIdInUninitializedAssociationTest {
 
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.remove( session.get( AnEntity.class, 3 ) );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "AnEntity")

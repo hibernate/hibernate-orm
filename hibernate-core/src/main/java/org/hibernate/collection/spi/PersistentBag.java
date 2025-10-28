@@ -7,7 +7,6 @@ package org.hibernate.collection.spi;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -20,6 +19,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
+
+import static java.util.Collections.emptyMap;
 
 /**
  * An unordered, un-keyed collection that can contain the same element
@@ -110,8 +111,8 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	public void injectLoadedState(PluralAttributeMapping attributeMapping, List<?> loadingState) {
 		assert collection == null;
 
-		final CollectionPersister collectionDescriptor = attributeMapping.getCollectionDescriptor();
-		final CollectionSemantics<?,?> collectionSemantics = collectionDescriptor.getCollectionSemantics();
+		final var collectionDescriptor = attributeMapping.getCollectionDescriptor();
+		final var collectionSemantics = collectionDescriptor.getCollectionSemantics();
 
 		final int elementCount = loadingState == null ? 0 : loadingState.size();
 
@@ -135,15 +136,15 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 		}
 
 		// HHH-11032 - Group objects by Type.getHashCode() to reduce the complexity of the search
-		final Map<Integer, List<Object>> hashToInstancesBag = groupByEqualityHash( collection, elementType );
-		final Map<Integer, List<Object>> hashToInstancesSn = groupByEqualityHash( sn, elementType );
+		final var hashToInstancesBag = groupByEqualityHash( collection, elementType );
+		final var hashToInstancesSn = groupByEqualityHash( sn, elementType );
 		if ( hashToInstancesBag.size() != hashToInstancesSn.size() ) {
 			return false;
 		}
 
 		// First iterate over the hashToInstancesBag entries to see if the number
 		// of List values is different for any hash value.
-		for ( Map.Entry<Integer, List<Object>> hashToInstancesBagEntry : hashToInstancesBag.entrySet() ) {
+		for ( var hashToInstancesBagEntry : hashToInstancesBag.entrySet() ) {
 			final Integer hash = hashToInstancesBagEntry.getKey();
 			final List<Object> instancesBag = hashToInstancesBagEntry.getValue();
 			final List<Object> instancesSn = hashToInstancesSn.get( hash );
@@ -157,7 +158,7 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 		// 2) the same number of values with the same hash value.
 
 		// Now check if the number of occurrences of each element is the same.
-		for ( Map.Entry<Integer, List<Object>> hashToInstancesBagEntry : hashToInstancesBag.entrySet() ) {
+		for ( var hashToInstancesBagEntry : hashToInstancesBag.entrySet() ) {
 			final Integer hash = hashToInstancesBagEntry.getKey();
 			final List<Object> instancesBag = hashToInstancesBagEntry.getValue();
 			final List<Object> instancesSn = hashToInstancesSn.get( hash );
@@ -182,11 +183,11 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	 */
 	private Map<Integer, List<Object>> groupByEqualityHash(Collection<?> searchedBag, Type elementType) {
 		if ( searchedBag.isEmpty() ) {
-			return Collections.emptyMap();
+			return emptyMap();
 		}
-		Map<Integer, List<Object>> map = new HashMap<>();
-		for ( Object o : searchedBag ) {
-			map.computeIfAbsent( nullableHashCode( o, elementType ), k -> new ArrayList<>() ).add( o );
+		final Map<Integer, List<Object>> map = new HashMap<>();
+		for ( Object object : searchedBag ) {
+			map.computeIfAbsent( nullableHashCode( object, elementType ), k -> new ArrayList<>() ).add( object );
 		}
 		return map;
 	}
@@ -329,6 +330,43 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 			}
 		}
 		return deletes.iterator();
+	}
+
+	@Override
+	public boolean hasDeletes(CollectionPersister persister) {
+		final Type elementType = persister.getElementType();
+		final List<?> sn = (List<?>) getSnapshot();
+		if ( sn == null) {
+			// workaround for missing snapshot
+			// related to HHH-13053
+			return false;
+		}
+		final Iterator<?> olditer = sn.iterator();
+		int i = 0;
+		final Iterator<E> bagiter = collection.iterator();
+		while ( olditer.hasNext() ) {
+			final Object old = olditer.next();
+			final Iterator<E> newiter = collection.iterator();
+			boolean found = false;
+			if ( collection.size() > i && i++ > 0 && elementType.isSame( old, bagiter.next() ) ) {
+				//a shortcut if its location didn't change!
+				found = true;
+			}
+			else {
+				//search for it
+				//note that this code is incorrect for other than one-to-many
+				while ( newiter.hasNext() ) {
+					if ( elementType.isSame( old, newiter.next() ) ) {
+						found = true;
+						break;
+					}
+				}
+			}
+			if ( !found ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

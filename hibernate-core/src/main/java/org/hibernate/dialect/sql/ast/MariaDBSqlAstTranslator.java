@@ -14,7 +14,6 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
@@ -38,13 +37,14 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
 
 /**
  * A SQL AST translator for MariaDB.
  *
  * @author Christian Beikov
  */
-public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithOnDuplicateKeyUpdate<T> {
 
 	private final MariaDBDialect dialect;
 
@@ -222,11 +222,6 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		}
 	}
 
-	@Override
-	protected String getForShare(int timeoutMillis) {
-		return " lock in share mode";
-	}
-
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart && supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
@@ -281,7 +276,8 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
 		if ( lhsExpressionType != null && lhsExpressionType.getJdbcTypeCount() == 1
-				&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().isJson() ) {
+				&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().isJson()
+				&& getDialect().getVersion().isSameOrAfter( 10, 7 ) ) {
 			switch ( operator ) {
 				case DISTINCT_FROM:
 					appendSql( "case when json_equals(" );
@@ -409,5 +405,29 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		appendSql( " like concat('%',replace(replace(replace(" );
 		needle.accept( this );
 		appendSql( ",'~','~~'),'?','~?'),'%','~%'),'%') escape '~'" );
+	}
+
+	/*
+		Upsert Template: (for an entity WITHOUT @Version)
+			INSERT INTO employees (id, name, salary, version)
+				VALUES (?, ?, ?, ?)
+			ON DUPLICATE KEY UPDATE
+				name = values(name),
+				salary = values(salary)
+	*/
+	@Override
+	protected void renderUpdatevalue(ColumnValueBinding columnValueBinding) {
+		appendSql( "values(" );
+		appendSql( columnValueBinding.getColumnReference().getColumnExpression() );
+		appendSql( ")" );
+	}
+
+	@Override
+	protected void appendAssignmentColumn(ColumnReference column) {
+		column.appendColumnForWrite(
+				this,
+				getAffectedTableNames().size() > 1 && !(getStatement() instanceof InsertSelectStatement)
+						? determineColumnReferenceQualifier( column )
+						: null );
 	}
 }

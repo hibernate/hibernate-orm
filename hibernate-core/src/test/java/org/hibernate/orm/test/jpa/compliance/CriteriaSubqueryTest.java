@@ -52,10 +52,7 @@ public class CriteriaSubqueryTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager ->
-						entityManager.createQuery( "delete from TestEntity" ).executeUpdate()
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

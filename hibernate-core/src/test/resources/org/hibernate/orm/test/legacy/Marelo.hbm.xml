@@ -28,7 +28,7 @@
 
     <!-- Associations -->
 
-    <!-- bi-directional one-to-one association to Commento -->
+    <!-- bidirectional one-to-one association to Commento -->
     <many-to-one name="commento" entity-name="Commento" unique="false" insert="false" update="false">
         <column name="MLCOM"/>
     </many-to-one>

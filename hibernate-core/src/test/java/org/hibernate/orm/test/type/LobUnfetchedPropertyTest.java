@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.type;
 
+import static org.hibernate.Hibernate.getLobHelper;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -14,7 +15,6 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.NClob;
 import java.sql.SQLException;
-import java.util.Arrays;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
@@ -27,6 +27,7 @@ import jakarta.persistence.Lob;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.SybaseDialect;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
@@ -37,8 +38,10 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey("HHH-12555")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class)
 @DomainModel(
@@ -49,12 +52,16 @@ import org.junit.jupiter.api.Test;
 @SessionFactory
 @BytecodeEnhanced
 public class LobUnfetchedPropertyTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
 	public void testBlob(SessionFactoryScope scope) throws SQLException {
 		final int id = scope.fromTransaction( s -> {
 			FileBlob file = new FileBlob();
-			file.setBlob( s.getLobHelper().createBlob( "TEST CASE".getBytes() ) );
+			file.setBlob( getLobHelper().createBlob( "TEST CASE".getBytes() ) );
 			// merge transient entity
 			file = (FileBlob) s.merge( file );
 			return file.getId();
@@ -65,9 +72,7 @@ public class LobUnfetchedPropertyTest {
 			assertFalse( Hibernate.isPropertyInitialized( file, "blob" ) );
 			Blob blob = file.getBlob();
 			try {
-				assertTrue(
-					Arrays.equals( "TEST CASE".getBytes(), blob.getBytes( 1, (int) file.getBlob().length() ) )
-				);
+				assertArrayEquals( "TEST CASE".getBytes(), blob.getBytes( 1, (int) file.getBlob().length() ) );
 			}
 			catch (SQLException ex) {
 				fail( "could not determine Lob length" );
@@ -76,10 +81,11 @@ public class LobUnfetchedPropertyTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = FirebirdDialect.class, reason = "Driver cannot determine clob length" )
 	public void testClob(SessionFactoryScope scope) throws SQLException {
 		final int id = scope.fromTransaction( s -> {
 			FileClob file = new FileClob();
-			file.setClob( s.getLobHelper().createClob( "TEST CASE" ) );
+			file.setClob( getLobHelper().createClob( "TEST CASE" ) );
 			// merge transient entity
 			file = (FileClob) s.merge( file );
 			return file.getId();
@@ -111,7 +117,7 @@ public class LobUnfetchedPropertyTest {
 	public void testNClob(SessionFactoryScope scope) {
 		final int id = scope.fromTransaction( s -> {
 			FileNClob file = new FileNClob();
-			file.setClob( s.getLobHelper().createNClob( "TEST CASE" ) );
+			file.setClob( getLobHelper().createNClob( "TEST CASE" ) );
 			// merge transient entity
 			file = (FileNClob) s.merge( file );
 			return file.getId();

@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Jan Schatteman
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				MultiNaturalIdLoadTest.SimpleNaturalIdEntity.class,
@@ -65,13 +66,7 @@ class MultiNaturalIdLoadTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete SimpleNaturalIdEntity" ).executeUpdate();
-					session.createMutationQuery( "delete SimpleMutableNaturalIdEntity" ).executeUpdate();
-					session.createMutationQuery( "delete CompositeNaturalIdEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

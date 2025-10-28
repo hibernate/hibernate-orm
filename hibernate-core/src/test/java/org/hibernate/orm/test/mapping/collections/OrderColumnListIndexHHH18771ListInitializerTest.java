@@ -10,9 +10,10 @@ import java.util.List;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.ListIndexBase;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -25,32 +26,33 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Selaron
  */
-public class OrderColumnListIndexHHH18771ListInitializerTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				Phone.class,
-		};
-	}
+@Jpa( annotatedClasses = {
+		OrderColumnListIndexHHH18771ListInitializerTest.Person.class, OrderColumnListIndexHHH18771ListInitializerTest.Phone.class
+} )
+public class OrderColumnListIndexHHH18771ListInitializerTest {
 
 	@Test
-	public void testLifecycle() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Person person = new Person( 1L );
 			entityManager.persist( person );
 			person.addPhone( new Phone( 1L ) );
 			person.getChildren().add( new Person( 2L ) );
 			person.getChildren().get( 0 ).setMother( person );
 		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.find( Person.class, 1L );
+		scope.inTransaction( entityManager -> {
+			Person person = entityManager.find( Person.class, 1L );
+			assertNotNull( person );
+			assertEquals( 1, person.getPhones().size() );
+			assertNotNull( person.getPhones().get( 0 ) );
+			assertEquals( 1, person.getChildren().size() );
+			assertEquals( person, person.getChildren().get( 0 ).getMother() );
 		} );
 	}
 

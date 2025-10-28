@@ -25,7 +25,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class JdbcEventHandler {
-	private static final Logger log = Logger.getLogger( JdbcEventHandler.class );
+	private static final Logger LOG = Logger.getLogger( JdbcEventHandler.class );
 
 	private final StatisticsImplementor statistics;
 	private final SessionEventListenerManager sessionListener;
@@ -124,7 +124,6 @@ public class JdbcEventHandler {
 		if ( jdbcCoordinatorSupplier != null ) {
 			final JdbcCoordinator jdbcCoordinator = jdbcCoordinatorSupplier.get();
 			if ( jdbcCoordinator != null ) {
-				log.debug( "Aborting batches as part of ResourceRegistryStandardImpl#releaseResources" );
 				jdbcCoordinator.abortBatch();
 			}
 		}

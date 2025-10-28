@@ -43,8 +43,12 @@ import org.hibernate.graph.GraphSemantic;
  * @author Eric Dalquist
  * @author Steve Ebersole
  *
- * @see Session#byId(Class)
+ * @see Session#byId
+ *
+ * @deprecated Use forms of {@linkplain Session#find} accepting
+ * {@linkplain jakarta.persistence.FindOption} instead of {@linkplain Session#byId}.
  */
+@Deprecated(since = "7.1", forRemoval = true)
 public interface IdentifierLoadAccess<T> {
 
 	/**

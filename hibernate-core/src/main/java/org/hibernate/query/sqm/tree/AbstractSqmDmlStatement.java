@@ -21,6 +21,7 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -64,7 +65,7 @@ public abstract class AbstractSqmDmlStatement<E>
 
 	protected void putAllCtes(SqmCteContainer cteContainer) {
 		for ( SqmCteStatement<?> cteStatement : cteContainer.getCteStatements() ) {
-			if ( cteStatements.putIfAbsent( cteStatement.getName(), cteStatement ) != null ) {
+			if ( cteStatements.putIfAbsent( cteStatement.getCteTable().getCteName(), cteStatement ) != null ) {
 				throw new IllegalArgumentException( "A CTE with the label " + cteStatement.getCteTable().getCteName() + " already exists" );
 			}
 		}
@@ -92,23 +93,24 @@ public abstract class AbstractSqmDmlStatement<E>
 		return (JpaCteCriteria<X>) cteStatements.get( cteName );
 	}
 
-	@Override
+	@Override @Deprecated
 	public <X> JpaCteCriteria<X> with(AbstractQuery<X> criteria) {
-		return withInternal( SqmCreationHelper.acquireUniqueAlias(), criteria );
+		// Use of acquireUniqueAlias() results in interpretation cache miss
+		return withInternal( "_" + SqmCreationHelper.acquireUniqueAlias(), criteria );
 	}
 
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionAll(
 			AbstractQuery<X> baseCriteria,
 			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
-		return withInternal( SqmCreationHelper.acquireUniqueAlias(), baseCriteria, false, recursiveCriteriaProducer );
+		return withInternal( generateAlias(), baseCriteria, false, recursiveCriteriaProducer );
 	}
 
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionDistinct(
 			AbstractQuery<X> baseCriteria,
 			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
-		return withInternal( SqmCreationHelper.acquireUniqueAlias(), baseCriteria, true, recursiveCriteriaProducer );
+		return withInternal( generateAlias(), baseCriteria, true, recursiveCriteriaProducer );
 	}
 
 	@Override
@@ -203,5 +205,35 @@ public abstract class AbstractSqmDmlStatement<E>
 			}
 			sb.setLength( sb.length() - 2 );
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof AbstractSqmDmlStatement<?> that
+			&& getClass() == that.getClass()
+			&& getTarget().equals( that.getTarget() )
+			&& Objects.equals( cteStatements, that.cteStatements );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = getTarget().hashCode();
+		result = 31 * result + Objects.hashCode( cteStatements );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof AbstractSqmDmlStatement<?> that
+			&& getClass() == that.getClass()
+			&& getTarget().isCompatible( that.getTarget() )
+			&& SqmCacheable.areCompatible( cteStatements, that.cteStatements );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = getTarget().cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( cteStatements );
+		return result;
 	}
 }

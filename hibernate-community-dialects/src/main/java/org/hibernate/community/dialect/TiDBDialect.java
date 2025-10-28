@@ -17,6 +17,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.MySQLServerConfiguration;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -28,6 +29,8 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+
+import static org.hibernate.community.dialect.lock.internal.TiDBLockingSupport.TIDB_LOCKING_SUPPORT;
 
 /**
  * A {@linkplain Dialect SQL dialect} for TiDB.
@@ -125,18 +128,8 @@ public class TiDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	public boolean supportsSkipLocked() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsNoWait() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsWait() {
-		return true;
+	public LockingSupport getLockingSupport() {
+		return TIDB_LOCKING_SUPPORT;
 	}
 
 	@Override

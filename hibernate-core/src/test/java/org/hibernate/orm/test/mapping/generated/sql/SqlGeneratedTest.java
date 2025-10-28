@@ -7,6 +7,7 @@ package org.hibernate.orm.test.mapping.generated.sql;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.Generated;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.generator.EventType;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -19,18 +20,19 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Gavin King
  */
-@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = SqlGeneratedTest.OrderLine.class)
 @SessionFactory
 @SkipForDialect(dialectClass = SybaseASEDialect.class,
 		reason = "The name 'current_timestamp' is illegal in this context. Only constants, constant expressions, or variables allowed here.")
+@SkipForDialect( dialectClass = InformixDialect.class,
+		reason = "No 'current_timestamp' function on Informix (test passes with 'current')")
 public class SqlGeneratedTest {
 
 	@Test
@@ -76,7 +78,7 @@ public class SqlGeneratedTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createQuery( "delete WithDefault" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name="WithDefault")

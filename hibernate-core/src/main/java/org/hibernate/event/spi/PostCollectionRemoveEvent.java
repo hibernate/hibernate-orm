@@ -18,6 +18,20 @@ public class PostCollectionRemoveEvent extends AbstractCollectionEvent {
 			PersistentCollection<?> collection,
 			EventSource source,
 			Object loadedOwner) {
-		super( collectionPersister, collection, source, loadedOwner, getOwnerIdOrNull( loadedOwner, source ) );
+		super(
+				collectionPersister,
+				collection,
+				source,
+				loadedOwner,
+				getOwnerIdOrNull( loadedOwner, source )
+		);
+	}
+
+	public PostCollectionRemoveEvent(
+			PersistentCollection<?> collection,
+			Object id,
+			String entityName,
+			Object loadedOwner) {
+		super( collection, entityName, loadedOwner, id );
 	}
 }

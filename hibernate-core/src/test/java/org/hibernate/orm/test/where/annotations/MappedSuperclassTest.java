@@ -27,12 +27,7 @@ public class MappedSuperclassTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from SubClass" ).executeUpdate();
-					entityManager.createQuery( "delete from Child" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -22,8 +22,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Vlad Mihalcea
@@ -75,13 +75,14 @@ public class FormulaWithPartitionByTest {
 
 	@AfterEach
 	void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createQuery( "delete from DisplayItem" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "DisplayItem")
 	public static class DisplayItem implements Serializable {
 
 		@Id
+		@Column(name = "DISPLAY_ITEM_ID")
 		private Integer id;
 
 		@Column(name = "DISCOUNT_CODE")
@@ -90,7 +91,7 @@ public class FormulaWithPartitionByTest {
 		@Column(name = "DISCOUNT_VALUE")
 		private Double discountValue;
 
-		@Formula("ROW_NUMBER() OVER( PARTITION BY DISCOUNT_CODE ORDER BY SIGN(DISCOUNT_VALUE) DESC )")
+		@Formula("ROW_NUMBER() OVER(PARTITION BY DISCOUNT_CODE ORDER BY DISPLAY_ITEM_ID)")
 		private Integer itemsByCode;
 
 		public Integer getId() {

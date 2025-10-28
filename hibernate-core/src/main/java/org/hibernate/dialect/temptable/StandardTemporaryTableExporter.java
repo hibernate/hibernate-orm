@@ -20,25 +20,59 @@ public class StandardTemporaryTableExporter implements TemporaryTableExporter {
 		this.dialect = dialect;
 	}
 
+	@Deprecated(forRemoval = true, since = "7.1")
 	protected String getCreateCommand() {
 		return dialect.getTemporaryTableCreateCommand();
 	}
 
+	protected String getCreateCommand(TemporaryTableStrategy temporaryTableStrategy) {
+		return temporaryTableStrategy.getTemporaryTableCreateCommand();
+	}
+
+	@Deprecated(forRemoval = true, since = "7.1")
 	protected String getCreateOptions() {
 		return dialect.getTemporaryTableCreateOptions();
 	}
 
+	protected String getCreateOptions(TemporaryTableStrategy temporaryTableStrategy) {
+		return temporaryTableStrategy.getTemporaryTableCreateOptions();
+	}
+
+	@Deprecated(forRemoval = true, since = "7.1")
 	protected String getDropCommand() {
 		return dialect.getTemporaryTableDropCommand();
 	}
 
+	protected String getDropCommand(TemporaryTableStrategy temporaryTableStrategy) {
+		return temporaryTableStrategy.getTemporaryTableDropCommand();
+	}
+
+	@Deprecated(forRemoval = true, since = "7.1")
 	protected String getTruncateTableCommand() {
 		return dialect.getTemporaryTableTruncateCommand();
 	}
 
+	protected String getTruncateTableCommand(TemporaryTableStrategy temporaryTableStrategy) {
+		return temporaryTableStrategy.getTemporaryTableTruncateCommand();
+	}
+
+	private TemporaryTableStrategy getDefaultTemporaryTableStrategy(TemporaryTable temporaryTable) {
+		final TemporaryTableStrategy temporaryTableStrategy = switch ( temporaryTable.getTemporaryTableKind() ) {
+					case LOCAL -> dialect.getLocalTemporaryTableStrategy();
+					case GLOBAL -> dialect.getGlobalTemporaryTableStrategy();
+					case PERSISTENT -> dialect.getPersistentTemporaryTableStrategy();
+				};
+		if ( temporaryTableStrategy == null ) {
+			throw new IllegalStateException(
+					"Dialect returns null TemporaryTableStrategy for temporary table " + temporaryTable.getQualifiedTableName() + " of type " + temporaryTable.getTemporaryTableKind() );
+		}
+		return temporaryTableStrategy;
+	}
+
 	@Override
 	public String getSqlCreateCommand(TemporaryTable temporaryTable) {
-		final StringBuilder buffer = new StringBuilder( getCreateCommand() ).append( ' ' );
+		final TemporaryTableStrategy temporaryTableStrategy = getDefaultTemporaryTableStrategy( temporaryTable );
+		final StringBuilder buffer = new StringBuilder( getCreateCommand( temporaryTableStrategy ) ).append( ' ' );
 		buffer.append( temporaryTable.getQualifiedTableName() );
 		buffer.append( '(' );
 
@@ -49,23 +83,25 @@ public class StandardTemporaryTableExporter implements TemporaryTableExporter {
 
 			buffer.append( databaseTypeName );
 
-			final String columnAnnotation = dialect.getCreateTemporaryTableColumnAnnotation( sqlTypeCode );
+			final String columnAnnotation = temporaryTableStrategy.getCreateTemporaryTableColumnAnnotation( sqlTypeCode );
 			if ( !columnAnnotation.isEmpty() ) {
 				buffer.append( ' ' ).append( columnAnnotation );
 			}
 
-			if ( column.isNullable() ) {
-				final String nullColumnString = dialect.getNullColumnString( databaseTypeName );
-				if ( !databaseTypeName.contains( nullColumnString ) ) {
-					buffer.append( nullColumnString );
+			if ( temporaryTableStrategy.supportsTemporaryTableNullConstraint() ) {
+				if ( column.isNullable() ) {
+					final String nullColumnString = dialect.getNullColumnString( databaseTypeName );
+					if ( !databaseTypeName.contains( nullColumnString ) ) {
+						buffer.append( nullColumnString );
+					}
 				}
-			}
-			else {
-				buffer.append( " not null" );
+				else {
+					buffer.append( " not null" );
+				}
 			}
 			buffer.append( ", " );
 		}
-		if ( dialect.supportsTemporaryTablePrimaryKey() ) {
+		if ( temporaryTableStrategy.supportsTemporaryTablePrimaryKey() ) {
 			buffer.append( "primary key (" );
 			for ( TemporaryTableColumn column : temporaryTable.getColumnsForExport() ) {
 				if ( column.isPrimaryKey() ) {
@@ -81,7 +117,7 @@ public class StandardTemporaryTableExporter implements TemporaryTableExporter {
 		}
 		buffer.append( ')' );
 
-		final String createOptions = getCreateOptions();
+		final String createOptions = getCreateOptions( temporaryTableStrategy );
 		if ( createOptions != null ) {
 			buffer.append( ' ' ).append( createOptions );
 		}
@@ -90,24 +126,26 @@ public class StandardTemporaryTableExporter implements TemporaryTableExporter {
 	}
 
 	@Override
-	public String getSqlDropCommand(TemporaryTable idTable) {
-		return getDropCommand() + " " + idTable.getQualifiedTableName();
+	public String getSqlDropCommand(TemporaryTable temporaryTable) {
+		final TemporaryTableStrategy temporaryTableStrategy = getDefaultTemporaryTableStrategy( temporaryTable );
+		return getDropCommand( temporaryTableStrategy ) + " " + temporaryTable.getQualifiedTableName();
 	}
 
 	@Override
 	public String getSqlTruncateCommand(
-			TemporaryTable idTable,
+			TemporaryTable temporaryTable,
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			SharedSessionContractImplementor session) {
-		if ( idTable.getSessionUidColumn() != null ) {
+		final TemporaryTableStrategy temporaryTableStrategy = getDefaultTemporaryTableStrategy( temporaryTable );
+		if ( temporaryTable.getSessionUidColumn() != null ) {
 			final ParameterMarkerStrategy parameterMarkerStrategy =
 					session.getSessionFactory().getParameterMarkerStrategy();
-			return getTruncateTableCommand() + " " + idTable.getQualifiedTableName()
-					+ " where " + idTable.getSessionUidColumn().getColumnName() + " = "
+			return getTruncateTableCommand( temporaryTableStrategy ) + " " + temporaryTable.getQualifiedTableName()
+					+ " where " + temporaryTable.getSessionUidColumn().getColumnName() + " = "
 					+ parameterMarkerStrategy.createMarker( 1, null );
 		}
 		else {
-			return getTruncateTableCommand() + " " + idTable.getQualifiedTableName();
+			return getTruncateTableCommand( temporaryTableStrategy ) + " " + temporaryTable.getQualifiedTableName();
 		}
 	}
 }

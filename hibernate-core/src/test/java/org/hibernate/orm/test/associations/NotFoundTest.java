@@ -57,11 +57,7 @@ public class NotFoundTest {
 
 	@AfterEach
 	public void dropTestData(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete Person" ).executeUpdate();
-					entityManager.createQuery( "delete City" ).executeUpdate();
-				} );
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

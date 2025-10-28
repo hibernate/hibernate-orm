@@ -87,9 +87,7 @@ public class BasicNaturalIdCachingTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.createQuery( "delete CachedEntity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 
 		// make sure the data is not in the L2 cache
 		scope.getSessionFactory().getCache().evictAllRegions();

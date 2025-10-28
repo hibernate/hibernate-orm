@@ -23,8 +23,7 @@ public abstract class AbstractScriptSourceInput implements ScriptSourceInput {
 
 	@Override
 	public List<String> extract(Function<Reader, List<String>> extractor) {
-		final Reader inputReader = prepareReader();
-
+		final var inputReader = prepareReader();
 		try {
 			return extractor.apply( inputReader );
 		}

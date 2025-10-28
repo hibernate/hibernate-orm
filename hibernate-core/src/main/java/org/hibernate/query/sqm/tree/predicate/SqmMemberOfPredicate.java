@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
+
 import static org.hibernate.query.sqm.internal.TypecheckUtil.areTypesComparable;
 
 /**
@@ -93,6 +94,38 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 		}
 		hql.append( " member of " );
 		pluralPath.appendHqlString( hql, context );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmMemberOfPredicate that
+			&& this.isNegated() == that.isNegated()
+			&& leftHandExpression.equals( that.leftHandExpression )
+			&& pluralPath.equals( that.pluralPath );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + leftHandExpression.hashCode();
+		result = 31 * result + pluralPath.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmMemberOfPredicate that
+			&& this.isNegated() == that.isNegated()
+			&& leftHandExpression.isCompatible( that.leftHandExpression )
+			&& pluralPath.isCompatible( that.pluralPath );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + leftHandExpression.cacheHashCode();
+		result = 31 * result + pluralPath.cacheHashCode();
+		return result;
 	}
 
 	@Override

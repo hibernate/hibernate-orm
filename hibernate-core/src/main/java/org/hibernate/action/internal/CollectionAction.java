@@ -7,7 +7,6 @@ package org.hibernate.action.internal;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.ComparableExecutable;
@@ -69,18 +68,18 @@ public abstract class CollectionAction implements ComparableExecutable {
 
 	@Override
 	public final void beforeExecutions() throws CacheException {
-		// we need to obtain the lock before any actions are executed, since this may be an inverse="true"
+		// We need to obtain the lock before any actions are executed, since this may be an inverse="true"
 		// bidirectional association, and it is one of the earlier entity actions which actually updates
-		// the database (this action is responsible for second-level cache invalidation only)
+		// the database. This action is responsible for second-level cache invalidation only.
 		if ( persister.hasCache() ) {
-			final CollectionDataAccess cache = persister.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey(
+			final var cache = persister.getCacheAccessStrategy();
+			final Object cacheKey = cache.generateCacheKey(
 					key,
 					persister,
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
-			final SoftLock lock = cache.lockItem( session, ck, null );
+			final SoftLock lock = cache.lockItem( session, cacheKey, null );
 			// the old behavior used key as opposed to getKey()
 			afterTransactionProcess = new CacheCleanupProcess( key, persister, lock );
 		}
@@ -108,16 +107,9 @@ public abstract class CollectionAction implements ComparableExecutable {
 	}
 
 	protected final Object getKey() {
-		Object finalKey = key;
-		if ( key instanceof DelayedPostInsertIdentifier ) {
-			// need to look it up from the persistence-context
-			finalKey = session.getPersistenceContextInternal().getEntry( collection.getOwner() ).getId();
-//			if ( finalKey == key ) {
-				// we may be screwed here since the collection action is about to execute
-				// and we do not know the final owner key value
-//			}
-		}
-		return finalKey;
+		return key instanceof DelayedPostInsertIdentifier
+				? session.getPersistenceContextInternal().getEntry( collection.getOwner() ).getId()
+				: key;
 	}
 
 	@Override
@@ -136,36 +128,32 @@ public abstract class CollectionAction implements ComparableExecutable {
 
 	protected final void evict() throws CacheException {
 		if ( persister.hasCache() ) {
-			final CollectionDataAccess cache = persister.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey(
+			final var cache = persister.getCacheAccessStrategy();
+			final Object cacheKey = cache.generateCacheKey(
 					key,
 					persister,
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
-			cache.remove( session, ck);
+			cache.remove( session, cacheKey);
 		}
 	}
 
 	@Override
 	public String toString() {
-		return unqualify( getClass().getName() ) + infoString( collectionRole, key );
+		return unqualify( getClass().getName() )
+				+ infoString( collectionRole, key );
 	}
 
 	@Override
-	public int compareTo(ComparableExecutable o) {
+	public int compareTo(ComparableExecutable executable) {
 		// sort first by role name
-		final int roleComparison = collectionRole.compareTo( o.getPrimarySortClassifier() );
-		if ( roleComparison != 0 ) {
-			return roleComparison;
-		}
-		else {
-			//then by fk
-			return persister.getAttributeMapping().getKeyDescriptor().compare( key, o.getSecondarySortIndex() );
-//			//noinspection unchecked
-//			final JavaType<Object> javaType = (JavaType<Object>) persister.getAttributeMapping().getKeyDescriptor().getJavaType();
-//			return javaType.getComparator().compare( key, action.key );
-		}
+		final int roleComparison = collectionRole.compareTo( executable.getPrimarySortClassifier() );
+		return roleComparison != 0
+				? roleComparison
+				//then by fk
+				: persister.getAttributeMapping().getKeyDescriptor()
+						.compare( key, executable.getSecondarySortIndex() );
 	}
 
 	private static class CacheCleanupProcess implements AfterTransactionCompletionProcess {
@@ -181,14 +169,14 @@ public abstract class CollectionAction implements ComparableExecutable {
 
 		@Override
 		public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-			final CollectionDataAccess cache = persister.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey(
+			final var cache = persister.getCacheAccessStrategy();
+			final Object cacheKey = cache.generateCacheKey(
 					key,
 					persister,
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
-			cache.unlockItem( session, ck, lock );
+			cache.unlockItem( session, cacheKey, lock );
 		}
 	}
 

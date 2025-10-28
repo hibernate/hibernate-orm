@@ -6,6 +6,7 @@ package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
 import static net.bytebuddy.matcher.ElementMatchers.hasDescriptor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static org.hibernate.bytecode.enhance.internal.BytecodeEnhancementLogging.ENHANCEMENT_LOGGER;
 
 import jakarta.persistence.Id;
 
@@ -16,8 +17,6 @@ import net.bytebuddy.utility.OpenedClassReader;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 
 import net.bytebuddy.asm.AsmVisitorWrapper;
 import net.bytebuddy.description.field.FieldList;
@@ -32,8 +31,6 @@ import net.bytebuddy.pool.TypePool;
 import java.util.Objects;
 
 final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.MethodVisitorWrapper {
-
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( FieldAccessEnhancer.class );
 
 	private final TypeDescription managedCtClass;
 
@@ -76,8 +73,7 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 						&& !field.hasAnnotation( Id.class )
 						&& !field.getName().equals( "this$0" ) ) {
 
-					log.debugf(
-							"Extended enhancement: Transforming access to field [%s#%s] from method [%s#%s()]",
+					ENHANCEMENT_LOGGER.extendedTransformingFieldAccess(
 							declaredOwnerType.getName(),
 							field.getName(),
 							instrumentedType.getName(),

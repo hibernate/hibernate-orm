@@ -4,23 +4,20 @@
  */
 package org.hibernate.orm.test.idgen.biginteger.increment;
 
-import java.math.BigInteger;
-
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import java.math.BigInteger;
 
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/idgen/biginteger/increment/Mapping.hbm.xml"
-)
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/idgen/biginteger/increment/Mapping.hbm.xml")
 @SessionFactory
 public class BigIntegerIncrementGeneratorTest {
-
 	@Test
 	public void testBasics(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -40,10 +37,6 @@ public class BigIntegerIncrementGeneratorTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(s) -> {
-					s.createQuery( "delete Entity" ).executeUpdate();
-				}
-		);
+		scope.dropData();
 	}
 }

@@ -15,7 +15,7 @@ import org.jboss.logging.Logger;
  */
 @SubSystemLogging(
 		name = BootQueryLogging.NAME,
-		description = "Logging related to processing of named-queries"
+		description = "Logging related to processing of named queries"
 )
 @Internal
 public interface BootQueryLogging {

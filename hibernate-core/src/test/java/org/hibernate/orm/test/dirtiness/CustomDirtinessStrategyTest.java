@@ -8,88 +8,89 @@ import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
-import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SettingProvider;
 import org.hibernate.type.Type;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = {Thing.class})
+@SessionFactory
+@ServiceRegistry(
+		settingProviders =
+				@SettingProvider(
+						settingName = AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY,
+						provider = CustomDirtinessStrategyTest.StrategySettingProvider.class
+				)
+)
+public class CustomDirtinessStrategyTest {
 	private static final String INITIAL_NAME = "thing 1";
 	private static final String SUBSEQUENT_NAME = "thing 2";
 
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.getProperties().put( AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY, Strategy.INSTANCE );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Thing.class };
+	public static class StrategySettingProvider implements SettingProvider.Provider<Strategy> {
+		@Override
+		public Strategy getSetting() {
+			return Strategy.INSTANCE;
+		}
 	}
 
 	@Test
-	public void testOnlyCustomStrategy() {
-		Session session = openSession();
-		session.beginTransaction();
-		Thing t = new Thing( INITIAL_NAME );
-		session.persist( t );
-		Long id = t.getId();
-		session.getTransaction().commit();
-		session.close();
+	public void testOnlyCustomStrategy(SessionFactoryScope scope) {
+		Long id = scope.fromTransaction( session -> {
+			Thing t = new Thing( INITIAL_NAME );
+			session.persist( t );
+			return t.getId();
+		} );
 
 		Strategy.INSTANCE.resetState();
 
-		session = openSession();
-		session.beginTransaction();
-		Thing thing = session.get( Thing.class, id );
-		thing.setName( SUBSEQUENT_NAME );
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction(  session -> {
+			Thing thing = session.find( Thing.class, id );
+			thing.setName( SUBSEQUENT_NAME );
+		} );
 
 		assertEquals( 1, Strategy.INSTANCE.canDirtyCheckCount );
 		assertEquals( 1, Strategy.INSTANCE.isDirtyCount );
 		assertEquals( 2, Strategy.INSTANCE.resetDirtyCount );
 		assertEquals( 1, Strategy.INSTANCE.findDirtyCount );
 
-		session = openSession();
-		session.beginTransaction();
-		thing = session.get( Thing.class, id );
-		assertEquals( SUBSEQUENT_NAME, thing.getName() );
-		session.remove( thing );
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction(  session -> {
+			Thing thing = session.find( Thing.class, id );
+			assertEquals( SUBSEQUENT_NAME, thing.getName() );
+			session.remove( thing );
+		} );
 	}
 
 	@Test
-	public void testCustomStrategyWithFlushInterceptor() {
-		Session session = openSession();
-		session.beginTransaction();
-		Thing t = new Thing( INITIAL_NAME );
-		session.persist( t );
-		Long id = t.getId();
-		session.getTransaction().commit();
-		session.close();
+	public void testCustomStrategyWithFlushInterceptor(SessionFactoryScope scope) {
+		Long id = scope.fromTransaction( session -> {
+			Thing t = new Thing( INITIAL_NAME );
+			session.persist( t );
+			return t.getId();
+		} );
 
 		Strategy.INSTANCE.resetState();
 
-		session = sessionWithInterceptor().openSession();
-		session.beginTransaction();
-		Thing thing = session.get( Thing.class, id );
-		thing.setName( SUBSEQUENT_NAME );
-		session.getTransaction().commit();
-		session.close();
+		{
+			Session session = sessionWithInterceptor(scope).openSession();
+			session.beginTransaction();
+			Thing thing = session.find( Thing.class, id );
+			thing.setName( SUBSEQUENT_NAME );
+			session.getTransaction().commit();
+			session.close();
+		}
 
 		// As we used an interceptor, the custom strategy should have been called twice to find dirty properties
 		assertEquals( 1, Strategy.INSTANCE.canDirtyCheckCount );
@@ -97,48 +98,40 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 2, Strategy.INSTANCE.resetDirtyCount );
 		assertEquals( 2, Strategy.INSTANCE.findDirtyCount );
 
-		session = openSession();
-		session.beginTransaction();
-		thing = session.get( Thing.class, id );
-		assertEquals( SUBSEQUENT_NAME, thing.getName() );
-		session.remove( thing );
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction(  session -> {
+			Thing thing = session.find( Thing.class, id );
+			assertEquals( SUBSEQUENT_NAME, thing.getName() );
+			session.remove( thing );
+		} );
 	}
 
 	@Test
-	public void testOnlyCustomStrategyConsultedOnNonDirty() {
-		Session session = openSession();
-		session.beginTransaction();
-		Thing t = new Thing( INITIAL_NAME );
-		session.persist( t );
-		Long id = t.getId();
-		session.getTransaction().commit();
-		session.close();
+	public void testOnlyCustomStrategyConsultedOnNonDirty(SessionFactoryScope scope) {
+		Long id = scope.fromTransaction( session -> {
+			Thing t = new Thing( INITIAL_NAME );
+			session.persist( t );
+			return t.getId();
+		} );
 
-		session = openSession();
-		session.beginTransaction();
-		Thing thing = session.get( Thing.class, id );
-		// lets change the name
-		thing.setName( SUBSEQUENT_NAME );
-		assertTrue( Strategy.INSTANCE.isDirty( thing, null, null ) );
-		// but fool the dirty map
-		thing.changedValues.clear();
-		assertFalse( Strategy.INSTANCE.isDirty( thing, null, null ) );
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction(  session -> {
+			Thing thing = session.find( Thing.class, id );
+			// let's change the name
+			thing.setName( SUBSEQUENT_NAME );
+			assertTrue( Strategy.INSTANCE.isDirty( thing, null, null ) );
+			// but fool the dirty map
+			thing.changedValues.clear();
+			assertFalse( Strategy.INSTANCE.isDirty( thing, null, null ) );
+		} );
 
-		session = openSession();
-		session.beginTransaction();
-		thing = session.get( Thing.class, id );
-		assertEquals( INITIAL_NAME, thing.getName() );
-		session.createQuery( "delete Thing" ).executeUpdate();
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction(  session -> {
+			Thing thing = session.find( Thing.class, id );
+			assertEquals( INITIAL_NAME, thing.getName() );
+			session.createMutationQuery( "delete Thing" ).executeUpdate();
+		} );
 	}
 
-	private SessionBuilder sessionWithInterceptor() {
-		return sessionFactory().unwrap( SessionFactory.class )
+	private SessionBuilder sessionWithInterceptor(SessionFactoryScope scope) {
+		return scope.getSessionFactory()
 				.withOptions()
 				.interceptor( OnFlushDirtyInterceptor.INSTANCE );
 	}
@@ -191,7 +184,6 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 			findDirtyCount = 0;
 		}
 	}
-
 
 	public static class OnFlushDirtyInterceptor implements Interceptor {
 		private static final OnFlushDirtyInterceptor INSTANCE = new OnFlushDirtyInterceptor();

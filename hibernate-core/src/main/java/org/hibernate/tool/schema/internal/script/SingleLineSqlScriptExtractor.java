@@ -15,11 +15,14 @@ import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 import org.hibernate.tool.schema.spi.SqlScriptException;
 
 /**
- * Class responsible for extracting SQL statements from import script. Treats each line as a complete SQL statement.
- * Comment lines shall start with {@code --}, {@code //} or {@code /*} character sequence.
+ * Class responsible for extracting SQL statements from an import script.
+ * Treats each line as a complete SQL statement.
+ * Comment lines must start with {@code --}, {@code //}, or {@code /*}.
  *
  * @author Lukasz Antoniak
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.cfg.SchemaToolingSettings#HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR
  */
 public class SingleLineSqlScriptExtractor implements SqlScriptCommandExtractor {
 	public static final String SHORT_NAME = "single-line";
@@ -29,27 +32,19 @@ public class SingleLineSqlScriptExtractor implements SqlScriptCommandExtractor {
 	@Override
 	public List<String> extractCommands(Reader reader, Dialect dialect) {
 		final List<String> statementList = new LinkedList<>();
-
-		final BufferedReader bufferedReader = new BufferedReader( reader );
+		final var bufferedReader = new BufferedReader( reader );
 		try {
 			for ( String line = bufferedReader.readLine(); line != null; line = bufferedReader.readLine() ) {
 				final String trimmedLine = line.trim();
-
-				if ( trimmedLine.isEmpty() || isComment( trimmedLine ) ) {
-					continue;
+				if ( !trimmedLine.isEmpty() && !isComment( trimmedLine ) ) {
+					final String command =
+							trimmedLine.endsWith( ";" )
+									? trimmedLine.substring( 0, trimmedLine.length() - 1 )
+									: trimmedLine;
+					statementList.add( command );
 				}
 
-				final String command;
-				if ( trimmedLine.endsWith( ";" ) ) {
-					command = trimmedLine.substring( 0, trimmedLine.length() - 1 );
-				}
-				else {
-					command = trimmedLine;
-				}
-
-				statementList.add( command );
 			}
-
 			return statementList;
 		}
 		catch (IOException e) {

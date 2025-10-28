@@ -4,35 +4,25 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.LockOptions;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.util.NullnessUtil;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
  * A one-time use {@link CollectionLoader} for applying a subselect fetch.
@@ -58,13 +48,13 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 				subselect,
 				cachedDomainResult,
 				session.getLoadQueryInfluencers(),
-				LockOptions.NONE,
+				new LockOptions(),
 				jdbcParameter -> {},
 				session.getFactory()
 		);
 
-		final QuerySpec querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
-		final TableGroup tableGroup = querySpec.getFromClause().getRoots().get( 0 );
+		final var querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
+		final var tableGroup = querySpec.getFromClause().getRoots().get( 0 );
 		attributeMapping.applySoftDeleteRestrictions( tableGroup, querySpec::applyPredicate );
 	}
 
@@ -79,62 +69,52 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 
 	@Override
 	public PersistentCollection<?> load(Object triggerKey, SharedSessionContractImplementor session) {
-		final CollectionKey collectionKey = new CollectionKey( attributeMapping.getCollectionDescriptor(), triggerKey );
+		final var collectionKey = new CollectionKey( attributeMapping.getCollectionDescriptor(), triggerKey );
 
-		final SessionFactoryImplementor sessionFactory = session.getFactory();
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final var sessionFactory = session.getFactory();
+		final var jdbcServices = sessionFactory.getJdbcServices();
+		final var persistenceContext = session.getPersistenceContext();
 
 		// try to find a registered SubselectFetch
-		final PersistentCollection<?> collection = persistenceContext.getCollection( collectionKey );
+		final var collection = persistenceContext.getCollection( collectionKey );
 		attributeMapping.getCollectionDescriptor().getCollectionType().getKeyOfOwner( collection.getOwner(), session );
 
-		final BatchFetchQueue batchFetchQueue = persistenceContext.getBatchFetchQueue();
-		final EntityEntry ownerEntry = persistenceContext.getEntry( collection.getOwner() );
+		final var batchFetchQueue = persistenceContext.getBatchFetchQueue();
+		final var ownerEntry = persistenceContext.getEntry( collection.getOwner() );
 		List<PersistentCollection<?>> subSelectFetchedCollections = null;
 		if ( ownerEntry != null ) {
-			final EntityKey triggerKeyOwnerKey = ownerEntry.getEntityKey();
-			final SubselectFetch registeredFetch = batchFetchQueue.getSubselect( triggerKeyOwnerKey );
+			final var triggerKeyOwnerKey = ownerEntry.getEntityKey();
+			final var registeredFetch = batchFetchQueue.getSubselect( triggerKeyOwnerKey );
 			if ( registeredFetch != null ) {
-				subSelectFetchedCollections = CollectionHelper.arrayList(
-						registeredFetch.getResultingEntityKeys().size() );
-
+				subSelectFetchedCollections = arrayList( registeredFetch.getResultingEntityKeys().size() );
 				// there was one, so we want to make sure to prepare the corresponding collection
 				// reference for reading
-				final Iterator<EntityKey> itr = registeredFetch.getResultingEntityKeys().iterator();
-				while ( itr.hasNext() ) {
-					final EntityKey key = itr.next();
-
-					final PersistentCollection<?> containedCollection = persistenceContext.getCollection(
-							new CollectionKey( attributeMapping.getCollectionDescriptor(), key.getIdentifier() )
-					);
-
+				for ( var key : registeredFetch.getResultingEntityKeys() ) {
+					final var containedCollection = persistenceContext.getCollection( collectionKey( key ) );
 					if ( containedCollection != null && containedCollection != collection ) {
 						containedCollection.beginRead();
 						containedCollection.beforeInitialize( getLoadable().getCollectionDescriptor(), -1 );
-
 						subSelectFetchedCollections.add( containedCollection );
 					}
 				}
 			}
 		}
 
-		final JdbcOperationQuerySelect jdbcSelect = sqlAstTranslatorFactory
-				.buildSelectTranslator( sessionFactory, sqlAst )
-				.translate( this.subselect.getLoadingJdbcParameterBindings(), QueryOptions.NONE );
+		final var jdbcSelect =
+				jdbcServices.getJdbcEnvironment()
+						.getSqlAstTranslatorFactory().buildSelectTranslator( sessionFactory, sqlAst )
+						.translate( subselect.getLoadingJdbcParameterBindings(), QueryOptions.NONE );
 
-		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
+		final var subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
 				batchFetchQueue,
 				sqlAst,
-				this.subselect.getLoadingJdbcParameters(),
-				this.subselect.getLoadingJdbcParameterBindings()
+				subselect.getLoadingJdbcParameters(),
+				subselect.getLoadingJdbcParameterBindings()
 		);
 
 		jdbcServices.getJdbcSelectExecutor().list(
 				jdbcSelect,
-				this.subselect.getLoadingJdbcParameterBindings(),
+				subselect.getLoadingJdbcParameterBindings(),
 				new ExecutionContextWithSubselectFetchHandler( session, subSelectFetchableKeysHandler ),
 				RowTransformerStandardImpl.instance(),
 				ListResultsConsumer.UniqueSemantic.NONE
@@ -143,25 +123,27 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 		if ( subSelectFetchedCollections != null && ! subSelectFetchedCollections.isEmpty() ) {
 			subSelectFetchedCollections.forEach(
 					c -> {
-						if ( c.wasInitialized() ) {
-							return;
+						if ( !c.wasInitialized() ) {
+							final var persister = getLoadable().getCollectionDescriptor();
+							c.initializeEmptyCollection( persister );
+							ResultsHelper.finalizeCollectionLoading(
+									persistenceContext,
+									persister,
+									c,
+									NullnessUtil.castNonNull( c.getKey() ),
+									true
+							);
 						}
-
-						c.initializeEmptyCollection( getLoadable().getCollectionDescriptor() );
-						ResultsHelper.finalizeCollectionLoading(
-								persistenceContext,
-								getLoadable().getCollectionDescriptor(),
-								c,
-								NullnessUtil.castNonNull( c.getKey() ),
-								true
-						);
 					}
 			);
-
 			subSelectFetchedCollections.clear();
 		}
 
 		return collection;
+	}
+
+	private CollectionKey collectionKey(EntityKey key) {
+		return new CollectionKey( attributeMapping.getCollectionDescriptor(), key.getIdentifier() );
 	}
 
 }

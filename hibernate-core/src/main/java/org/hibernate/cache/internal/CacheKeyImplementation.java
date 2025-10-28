@@ -79,8 +79,7 @@ public final class CacheKeyImplementation implements Serializable {
 	}
 
 	private static int calculateHashCode(Object id, Type type, String tenantId) {
-		return 31 * type.getHashCode( id )
-				+ ( tenantId != null ? tenantId.hashCode() : 0 );
+		return 31 * type.getHashCode( id ) + Objects.hashCode( tenantId );
 	}
 
 	public Object getId() {

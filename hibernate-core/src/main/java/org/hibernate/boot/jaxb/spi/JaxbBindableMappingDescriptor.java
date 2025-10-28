@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.jaxb.spi;
 
+import java.io.Serializable;
+
 /**
  * Common type for things that can get be bound to a {@link Binding} for
  * mapping documents.
@@ -13,5 +15,5 @@ package org.hibernate.boot.jaxb.spi;
  *
  * @author Steve Ebersole
  */
-public interface JaxbBindableMappingDescriptor {
+public interface JaxbBindableMappingDescriptor extends Serializable {
 }

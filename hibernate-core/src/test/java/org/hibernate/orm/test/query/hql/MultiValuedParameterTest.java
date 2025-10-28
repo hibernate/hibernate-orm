@@ -12,21 +12,22 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.query.Query;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.testing.orm.domain.contacts.Contact;
 import org.hibernate.testing.orm.domain.contacts.ContactsDomainModel;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.Jira;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -41,7 +42,7 @@ public class MultiValuedParameterTest extends BaseSessionFactoryFunctionalTest {
 		metadataSources.addAnnotatedClass( EntityWithNumericId.class );
 	}
 
-	@BeforeAll
+	@BeforeEach
 	public void prepareData() {
 		inTransaction(
 				session -> {
@@ -66,8 +67,8 @@ public class MultiValuedParameterTest extends BaseSessionFactoryFunctionalTest {
 	public void testParameterListIn() {
 		inTransaction(
 				session -> {
+					var q = session.createQuery( "select id from Contact where id in (:ids) order by id" );
 					Collection<Integer> ids = new ArrayList<>();
-					Query q = session.createQuery( "select id from Contact where id in (:ids) order by id" );
 					for ( int i = 0; i < 10; i++ ) {
 						ids.add( i );
 					}
@@ -104,6 +105,8 @@ public class MultiValuedParameterTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-18575" )
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Informix does not like '? in (?,?)'")
 	void testMultiValuedBigDecimals() {
 		inTransaction( session -> {
 			assertEquals(
@@ -116,12 +119,9 @@ public class MultiValuedParameterTest extends BaseSessionFactoryFunctionalTest {
 		});
 	}
 
-	@AfterAll
+	@AfterEach
 	public void cleanupData() {
-		inTransaction( session -> {
-			session.createMutationQuery( "delete Contact" ).executeUpdate();
-			session.createMutationQuery( "delete EntityWithNumericId" ).executeUpdate();
-		} );
+		sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "EntityWithNumericId" )

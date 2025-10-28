@@ -13,7 +13,6 @@ import org.hibernate.type.OutputableType;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import jakarta.persistence.ParameterMode;
 
@@ -108,15 +107,13 @@ public class JdbcCallParameterRegistrationImpl implements JdbcCallParameterRegis
 	private void registerOutputParameter(
 			CallableStatement callableStatement,
 			SharedSessionContractImplementor session) {
-		final JdbcType sqlTypeDescriptor = ormType.getJdbcType();
+		final var sqlTypeDescriptor = ormType.getJdbcType();
 		try {
 			sqlTypeDescriptor.registerOutParameter( callableStatement, jdbcParameterPositionStart );
 		}
 		catch (SQLException e) {
-			throw session.getJdbcServices().getSqlExceptionHelper().convert(
-					e,
-					"Unable to register CallableStatement out parameter"
-			);
+			throw session.getJdbcServices().getSqlExceptionHelper()
+					.convert( e, "Unable to register CallableStatement OUT parameter" );
 		}
 	}
 }

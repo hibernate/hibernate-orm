@@ -36,14 +36,14 @@ public class SimpleValueGenerationBaselineTests {
 
 		// lastly, make sure we can load it..
 		scope.inTransaction( (session) -> {
-			assertThat( session.get( NonAuditedEntity.class, 1 ) ).isNotNull();
+			assertThat( session.find( NonAuditedEntity.class, 1 ) ).isNotNull();
 		} );
 	}
 
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.createQuery( "delete NonAuditedEntity" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "NonAuditedEntity" )

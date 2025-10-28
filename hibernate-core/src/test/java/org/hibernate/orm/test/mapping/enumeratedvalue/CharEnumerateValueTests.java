@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.SqlTypes;
 
@@ -39,7 +40,6 @@ import static org.assertj.core.api.Assertions.fail;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("JUnitMalformedDeclaration")
 public class CharEnumerateValueTests {
 	@Test
 	@DomainModel(annotatedClasses = Person.class)
@@ -103,7 +103,10 @@ public class CharEnumerateValueTests {
 
 	@DomainModel(annotatedClasses = Person.class)
 	@SessionFactory
-	@SkipForDialect( dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase (at least jTDS driver) truncates the value so the constraint is not violated" )
+	@SkipForDialect( dialectClass = SybaseDialect.class, matchSubTypes = true,
+			reason = "Sybase (at least jTDS driver) truncates the value so the constraint is not violated" )
+	@SkipForDialect( dialectClass = InformixDialect.class,
+			reason = "Informix truncates the value so the constraint is not violated" )
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsColumnCheck.class )
 	@Test
 	void verifyCheckConstraints2(SessionFactoryScope scope) {
@@ -122,7 +125,7 @@ public class CharEnumerateValueTests {
 
 	@AfterEach
 	void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.createMutationQuery( "delete Person" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	public enum Gender {
@@ -142,7 +145,6 @@ public class CharEnumerateValueTests {
 		}
 	}
 
-	@SuppressWarnings({ "FieldCanBeLocal", "unused" })
 	@Entity(name="Person")
 	@Table(name="persons")
 	public static class Person {

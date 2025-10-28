@@ -14,13 +14,11 @@ import java.util.function.Function;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.AliasCollisionException;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -56,7 +54,6 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 	@Override
 	public void register(SqmPath<?> sqmPath) {
-		SqmTreeCreationLogger.LOGGER.tracef( "SqmProcessingIndex#register(SqmPath) : %s", sqmPath.getNavigablePath() );
 
 		// Generally we:
 		//		1) add the path to the path-by-path map
@@ -261,7 +258,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 		//  	(configurable?) option would be to simply pick the first one as a perf optimization
 
 		SqmFrom<?, ?> found = null;
-		for ( Map.Entry<NavigablePath, SqmFrom<?, ?>> entry : sqmFromByPath.entrySet() ) {
+		for ( var entry : sqmFromByPath.entrySet() ) {
 			final SqmFrom<?, ?> fromElement = entry.getValue();
 			if ( definesAttribute( fromElement.getReferencedPathSource(), navigableName ) ) {
 				if ( found != null ) {
@@ -274,18 +271,18 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 		if ( found == null ) {
 			if ( associatedProcessingState.getParentProcessingState() != null ) {
-				HqlLogging.QUERY_LOGGER.debugf(
-						"Unable to resolve unqualified attribute [%s] in local from-clause; checking parent ",
-						navigableName
-				);
+//				QUERY_LOGGER.tracef(
+//						"Unable to resolve unqualified attribute [%s] in local from-clause; checking parent ",
+//						navigableName
+//				);
 				found = associatedProcessingState.getParentProcessingState().getPathRegistry().findFromExposing( navigableName );
 			}
 		}
 
-		HqlLogging.QUERY_LOGGER.debugf(
-				"Unable to resolve unqualified attribute [%s] in local from-clause",
-				navigableName
-		);
+//		QUERY_LOGGER.tracef(
+//				"Unable to resolve unqualified attribute [%s] in local from-clause",
+//				navigableName
+//		);
 
 		//noinspection unchecked
 		return (X) found;
@@ -293,8 +290,6 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 	@Override
 	public <X extends SqmFrom<?, ?>> X resolveFrom(NavigablePath navigablePath, Function<NavigablePath, SqmFrom<?, ?>> creator) {
-		SqmTreeCreationLogger.LOGGER.tracef( "SqmProcessingIndex#resolvePath(NavigablePath) : %s", navigablePath );
-
 		final SqmFrom<?, ?> existing = sqmFromByPath.get( navigablePath );
 		if ( existing != null ) {
 			//noinspection unchecked
@@ -309,8 +304,6 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 	@Override
 	public <X extends SqmFrom<?, ?>> X resolveFrom(SqmPath<?> path) {
-		SqmTreeCreationLogger.LOGGER.tracef( "SqmProcessingIndex#resolvePath(SqmPath) : %s", path );
-
 		final SqmFrom<?, ?> existing = sqmFromByPath.get( path.getNavigablePath() );
 		if ( existing != null ) {
 			//noinspection unchecked

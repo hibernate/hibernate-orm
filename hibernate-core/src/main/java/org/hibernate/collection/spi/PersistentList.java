@@ -130,13 +130,12 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 		assert isInitializing();
 		assert list == null;
 
-		final CollectionPersister collectionDescriptor = attributeMapping.getCollectionDescriptor();
+		final var collectionDescriptor = attributeMapping.getCollectionDescriptor();
+		final var collectionSemantics = collectionDescriptor.getCollectionSemantics();
 
-		this.list = (List<E>) collectionDescriptor.getCollectionSemantics().instantiateRaw(
-				loadingStateList.size(),
-				collectionDescriptor
-		);
-
+		//noinspection unchecked
+		list = (List<E>) collectionSemantics.instantiateRaw( loadingStateList.size(), collectionDescriptor );
+		//noinspection unchecked
 		list.addAll( (List<E>) loadingStateList );
 	}
 
@@ -410,14 +409,15 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 		final List<Object> deletes = new ArrayList<>();
 		final List<?> sn = (List<?>) getSnapshot();
 		int end;
-		if ( sn.size() > list.size() ) {
-			for ( int i=list.size(); i<sn.size(); i++ ) {
+		final int snSize = sn.size();
+		if ( snSize > list.size() ) {
+			for ( int i = list.size(); i < snSize; i++ ) {
 				deletes.add( indexIsFormula ? sn.get( i ) : i );
 			}
 			end = list.size();
 		}
 		else {
-			end = sn.size();
+			end = snSize;
 		}
 		for ( int i=0; i<end; i++ ) {
 			final Object item = list.get( i );
@@ -427,6 +427,21 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 			}
 		}
 		return deletes.iterator();
+	}
+
+	@Override
+	public boolean hasDeletes(CollectionPersister persister) {
+		final List<?> sn = (List<?>) getSnapshot();
+		int snSize = sn.size();
+		if ( snSize > list.size() ) {
+			return true;
+		}
+		for ( int i=0; i<snSize; i++ ) {
+			if ( list.get( i ) == null && sn.get( i ) != null ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

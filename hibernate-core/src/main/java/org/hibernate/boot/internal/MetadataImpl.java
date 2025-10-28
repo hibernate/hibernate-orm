@@ -23,8 +23,6 @@ import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategyLegacy;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
@@ -39,18 +37,13 @@ import org.hibernate.boot.spi.SessionFactoryBuilderService;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.FetchProfile;
-import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.PrimaryKey;
-import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.mapping.UserDefinedType;
@@ -59,7 +52,6 @@ import org.hibernate.query.internal.NamedObjectRepositoryImpl;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -331,28 +323,23 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public Set<String> getContributors() {
 		final HashSet<String> contributors = new HashSet<>();
-
-		entityBindingMap.forEach(
-				(s, persistentClass) -> contributors.add( persistentClass.getContributor() )
-		);
-
-		for ( Namespace namespace : database.getNamespaces() ) {
-			for ( Table table : namespace.getTables() ) {
+		entityBindingMap.forEach( (s, persistentClass)
+				-> contributors.add( persistentClass.getContributor() ) );
+		for ( var namespace : database.getNamespaces() ) {
+			for ( var table : namespace.getTables() ) {
 				contributors.add( table.getContributor() );
 			}
-
-			for ( Sequence sequence : namespace.getSequences() ) {
+			for ( var sequence : namespace.getSequences() ) {
 				contributors.add( sequence.getContributor() );
 			}
 		}
-
 		return contributors;
 	}
 
 	@Override
 	public java.util.Collection<Table> collectTableMappings() {
-		ArrayList<Table> tables = new ArrayList<>();
-		for ( Namespace namespace : database.getNamespaces() ) {
+		final ArrayList<Table> tables = new ArrayList<>();
+		for ( var namespace : database.getNamespaces() ) {
 			tables.addAll( namespace.getTables() );
 		}
 		return tables;
@@ -370,19 +357,19 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public void orderColumns(boolean forceOrdering) {
-		final ColumnOrderingStrategy columnOrderingStrategy = metadataBuildingOptions.getColumnOrderingStrategy();
+		final var columnOrderingStrategy = metadataBuildingOptions.getColumnOrderingStrategy();
 		// No need to order columns when using the no-op strategy
 		if ( columnOrderingStrategy != ColumnOrderingStrategyLegacy.INSTANCE ) {
 			final boolean shouldOrderTableColumns = forceOrdering || shouldOrderTableColumns();
-			for ( Namespace namespace : database.getNamespaces() ) {
+			for ( var namespace : database.getNamespaces() ) {
 				if ( shouldOrderTableColumns ) {
-					for ( Table table : namespace.getTables() ) {
+					for ( var table : namespace.getTables() ) {
 						handleTable( table, columnOrderingStrategy );
 						handlePrimaryKey( table, columnOrderingStrategy );
 						handleForeignKeys( table, columnOrderingStrategy );
 					}
 				}
-				for ( UserDefinedType userDefinedType : namespace.getUserDefinedTypes() ) {
+				for ( var userDefinedType : namespace.getUserDefinedTypes() ) {
 					handleUDT( userDefinedType, columnOrderingStrategy );
 				}
 			}
@@ -390,7 +377,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	private void handleTable(Table table, ColumnOrderingStrategy columnOrderingStrategy) {
-		final List<Column> tableColumns = columnOrderingStrategy.orderTableColumns( table, this );
+		final var tableColumns = columnOrderingStrategy.orderTableColumns( table, this );
 		if ( tableColumns != null ) {
 			table.reorderColumns( tableColumns );
 		}
@@ -399,7 +386,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private void handleUDT(UserDefinedType userDefinedType, ColumnOrderingStrategy columnOrderingStrategy) {
 		if ( userDefinedType instanceof UserDefinedObjectType objectType
 				&& objectType.getColumns().size() > 1 ) {
-			final List<Column> objectTypeColumns =
+			final var objectTypeColumns =
 					columnOrderingStrategy.orderUserDefinedTypeColumns( objectType, this );
 			if ( objectTypeColumns != null ) {
 				objectType.reorderColumns( objectTypeColumns );
@@ -408,16 +395,16 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	private void handleForeignKeys(Table table, ColumnOrderingStrategy columnOrderingStrategy) {
-		for ( ForeignKey foreignKey : table.getForeignKeyCollection() ) {
-			final List<Column> columns = foreignKey.getColumns();
+		for ( var foreignKey : table.getForeignKeyCollection() ) {
+			final var columns = foreignKey.getColumns();
 			if ( columns.size() > 1 ) {
 				if ( foreignKey.getReferencedColumns().isEmpty() ) {
-					final PrimaryKey targetPrimaryKey =
+					final var targetPrimaryKey =
 							foreignKey.getReferencedTable().getPrimaryKey();
 					// Make sure we order the columns of the primary key first,
 					// so that foreign key ordering can rely on this
 					if ( targetPrimaryKey.getOriginalOrder() == null ) {
-						final List<Column> primaryKeyColumns =
+						final var primaryKeyColumns =
 								columnOrderingStrategy.orderConstraintColumns( targetPrimaryKey, this );
 						if ( primaryKeyColumns != null ) {
 							targetPrimaryKey.reorderColumns( primaryKeyColumns );
@@ -427,7 +414,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 					// Patch up the order of foreign keys based on new order of the target primary key
 					final int[] originalPrimaryKeyOrder = targetPrimaryKey.getOriginalOrder();
 					if ( originalPrimaryKeyOrder != null ) {
-						final ArrayList<Column> foreignKeyColumnsCopy = new ArrayList<>( columns );
+						final var foreignKeyColumnsCopy = new ArrayList<>( columns );
 						for ( int i = 0; i < foreignKeyColumnsCopy.size(); i++ ) {
 							columns.set( i, foreignKeyColumnsCopy.get( originalPrimaryKeyOrder[i] ) );
 						}
@@ -438,10 +425,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	private void handlePrimaryKey(Table table, ColumnOrderingStrategy columnOrderingStrategy) {
-		final PrimaryKey primaryKey = table.getPrimaryKey();
-		if ( primaryKey != null && primaryKey.getColumns()
-				.size() > 1 && primaryKey.getOriginalOrder() == null ) {
-			final List<Column> primaryKeyColumns =
+		final var primaryKey = table.getPrimaryKey();
+		if ( primaryKey != null
+				&& primaryKey.getColumns().size() > 1
+				&& primaryKey.getOriginalOrder() == null ) {
+			final var primaryKeyColumns =
 					columnOrderingStrategy.orderConstraintColumns( primaryKey, this );
 			if ( primaryKeyColumns != null ) {
 				primaryKey.reorderColumns( primaryKeyColumns );
@@ -454,9 +442,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 				metadataBuildingOptions.getServiceRegistry()
 						.requireService( ConfigurationService.class )
 						.getSettings();
-		for ( ActionGrouping grouping : ActionGrouping.interpret( this, settings ) ) {
-			if ( isColumnOrderingRelevant( grouping.getScriptAction() )
-				|| isColumnOrderingRelevant( grouping.getDatabaseAction() ) ) {
+		for ( var grouping : ActionGrouping.interpret( this, settings ) ) {
+			if ( isColumnOrderingRelevant( grouping.scriptAction() )
+				|| isColumnOrderingRelevant( grouping.databaseAction() ) ) {
 				return true;
 			}
 		}
@@ -472,11 +460,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public void validate() throws MappingException {
-		for ( PersistentClass entityBinding : this.getEntityBindings() ) {
+		for ( var entityBinding : this.getEntityBindings() ) {
 			entityBinding.validate( this );
 		}
 
-		for ( Collection collectionBinding : this.getCollectionBindings() ) {
+		for ( var collectionBinding : this.getCollectionBindings() ) {
 			collectionBinding.validate( this );
 		}
 	}
@@ -491,18 +479,15 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public void initSessionFactory(SessionFactoryImplementor sessionFactory) {
 		// must not use BootstrapContext services here
-		final ServiceRegistryImplementor registry = sessionFactory.getServiceRegistry();
+		final var registry = sessionFactory.getServiceRegistry();
 		assert registry != null;
-		final ConfigurationService configurationService =
-				registry.requireService( ConfigurationService.class );
-		final ClassLoaderService classLoaderService =
-				registry.requireService( ClassLoaderService.class );
-		final EventListenerRegistry eventListenerRegistry =
-				registry.requireService( EventListenerRegistry.class );
+		final var configurationService = registry.requireService( ConfigurationService.class );
+		final var classLoaderService = registry.requireService( ClassLoaderService.class );
+		final var eventListenerRegistry = sessionFactory.getEventListenerRegistry();
 		configurationService.getSettings().forEach( (propertyName, value) -> {
 			if ( propertyName.startsWith( EVENT_LISTENER_PREFIX ) ) {
 				final String eventTypeName = propertyName.substring( EVENT_LISTENER_PREFIX.length() + 1 );
-				final EventType<?> eventType = EventType.resolveEventTypeByName( eventTypeName );
+				final var eventType = EventType.resolveEventTypeByName( eventTypeName );
 				final String listeners = (String) value;
 				appendListeners( eventListenerRegistry, classLoaderService, listeners, eventType );
 			}
@@ -514,7 +499,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			ClassLoaderService classLoaderService,
 			String listeners,
 			EventType<T> eventType) {
-		final EventListenerGroup<T> eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
+		final var eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
 		for ( String listenerImpl : splitAtCommas( listeners ) ) {
 			@SuppressWarnings("unchecked")
 			T listener = (T) instantiate( listenerImpl, classLoaderService );
@@ -554,36 +539,36 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public org.hibernate.type.Type getIdentifierType(String entityName) throws MappingException {
-		final PersistentClass pc = entityBindingMap.get( entityName );
-		if ( pc == null ) {
+		final var persistentClass = entityBindingMap.get( entityName );
+		if ( persistentClass == null ) {
 			throw new MappingException( "Persistent class not known: " + entityName );
 		}
-		return pc.getIdentifier().getType();
+		return persistentClass.getIdentifier().getType();
 	}
 
 	@Override
 	public String getIdentifierPropertyName(String entityName) throws MappingException {
-		final PersistentClass pc = entityBindingMap.get( entityName );
-		if ( pc == null ) {
+		final var persistentClass = entityBindingMap.get( entityName );
+		if ( persistentClass == null ) {
 			throw new MappingException( "Persistent class not known: " + entityName );
 		}
-		if ( !pc.hasIdentifierProperty() ) {
+		if ( !persistentClass.hasIdentifierProperty() ) {
 			return null;
 		}
-		return pc.getIdentifierProperty().getName();
+		return persistentClass.getIdentifierProperty().getName();
 	}
 
 	@Override
 	public org.hibernate.type.Type getReferencedPropertyType(String entityName, String propertyName) throws MappingException {
-		final PersistentClass pc = entityBindingMap.get( entityName );
-		if ( pc == null ) {
+		final var persistentClass = entityBindingMap.get( entityName );
+		if ( persistentClass == null ) {
 			throw new MappingException( "Persistent class not known: " + entityName );
 		}
-		final Property prop = pc.getReferencedProperty( propertyName );
-		if ( prop == null ) {
+		final var referencedProperty = persistentClass.getReferencedProperty( propertyName );
+		if ( referencedProperty == null ) {
 			throw new MappingException( "Property not known: " + entityName + '.' + propertyName );
 		}
-		return prop.getType();
+		return referencedProperty.getType();
 	}
 
 	//Specific for copies only:

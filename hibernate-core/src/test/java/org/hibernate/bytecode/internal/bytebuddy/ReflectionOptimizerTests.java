@@ -6,10 +6,10 @@ package org.hibernate.bytecode.internal.bytebuddy;
 
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Steve Ebersole

@@ -7,13 +7,10 @@ package org.hibernate.resource.transaction.backend.jta.internal;
 import java.util.ArrayList;
 import java.util.List;
 import jakarta.transaction.Status;
-import jakarta.transaction.TransactionManager;
-import jakarta.transaction.UserTransaction;
 
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.resource.transaction.spi.IsolationDelegate;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.RegisteredSynchronization;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.SynchronizationCallbackCoordinator;
@@ -28,11 +25,10 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 import org.hibernate.resource.transaction.spi.TransactionObserver;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
-import org.jboss.logging.Logger;
 
 import static java.util.Collections.addAll;
 import static java.util.Collections.emptyList;
-import static org.hibernate.internal.CoreLogging.logger;
+import static org.hibernate.resource.transaction.backend.jta.internal.JtaLogging.JTA_LOGGER;
 import static org.hibernate.resource.transaction.spi.TransactionStatus.ACTIVE;
 import static org.hibernate.resource.transaction.spi.TransactionStatus.NOT_ACTIVE;
 
@@ -42,7 +38,6 @@ import static org.hibernate.resource.transaction.spi.TransactionStatus.NOT_ACTIV
  * @author Steve Ebersole
  */
 public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, SynchronizationCallbackTarget {
-	private static final Logger log = logger( JtaTransactionCoordinatorImpl.class );
 
 	private final TransactionCoordinatorBuilder transactionCoordinatorBuilder;
 	private final TransactionCoordinatorOwner transactionCoordinatorOwner;
@@ -76,13 +71,11 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		this.transactionCoordinatorBuilder = transactionCoordinatorBuilder;
 		this.transactionCoordinatorOwner = owner;
 		this.autoJoinTransactions = autoJoinTransactions;
-
-		final JdbcSessionContext jdbcSessionContext = owner.getJdbcSessionOwner().getJdbcSessionContext();
-
 		this.jtaPlatform = jtaPlatform;
 
-		this.preferUserTransactions = jdbcSessionContext.isPreferUserTransaction();
-		this.performJtaThreadTracking = jdbcSessionContext.isJtaTrackByThread();
+		final var jdbcSessionContext = owner.getJdbcSessionOwner().getJdbcSessionContext();
+		preferUserTransactions = jdbcSessionContext.isPreferUserTransaction();
+		performJtaThreadTracking = jdbcSessionContext.isJtaTrackByThread();
 
 		synchronizationRegistered = false;
 
@@ -139,7 +132,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		if ( autoJoinTransactions && !synchronizationRegistered ) {
 			// Can we register a synchronization according to the JtaPlatform?
 			if ( !jtaPlatform.canRegisterSynchronization() ) {
-				log.trace( "JTA platform says we cannot currently register synchronization; skipping" );
+				JTA_LOGGER.cannotRegisterSynchronization();
 			}
 			else {
 				joinJtaTransaction();
@@ -157,7 +150,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 					new RegisteredSynchronization( getSynchronizationCallbackCoordinator() ) );
 			getSynchronizationCallbackCoordinator().synchronizationRegistered();
 			synchronizationRegistered = true;
-			log.debug( "Hibernate RegisteredSynchronization successfully registered with JTA platform" );
+			JTA_LOGGER.registeredSynchronization();
 			// report entering into a "transactional context"
 			getTransactionCoordinatorOwner().startTransactionBoundary();
 		}
@@ -166,7 +159,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	@Override
 	public void explicitJoin() {
 		if ( synchronizationRegistered ) {
-			log.debug( "JTA transaction was already joined (RegisteredSynchronization already registered)" );
+			JTA_LOGGER.alreadyJoinedJtaTransaction();
 		}
 		else {
 			if ( getTransactionDriverControl().getStatus() != ACTIVE ) {
@@ -212,7 +205,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	}
 
 	private TransactionDriverControlImpl makePhysicalTransactionDelegate() {
-		final JtaTransactionAdapter adapter =
+		final var adapter =
 				preferUserTransactions
 						? getTransactionAdapterPreferringUserTransaction()
 						: getTransactionAdapterPreferringTransactionManager();
@@ -227,18 +220,18 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	}
 
 	private JtaTransactionAdapter getTransactionAdapterPreferringTransactionManager() {
-		final JtaTransactionAdapter adapter = makeTransactionManagerAdapter();
+		final var adapter = makeTransactionManagerAdapter();
 		if ( adapter == null ) {
-			log.debug( "Unable to access TransactionManager, attempting to use UserTransaction instead" );
+			JTA_LOGGER.unableToAccessTransactionManagerTryingUserTransaction();
 			return makeUserTransactionAdapter();
 		}
 		return adapter;
 	}
 
 	private JtaTransactionAdapter getTransactionAdapterPreferringUserTransaction() {
-		final JtaTransactionAdapter adapter = makeUserTransactionAdapter();
+		final var adapter = makeUserTransactionAdapter();
 		if ( adapter == null ) {
-			log.debug( "Unable to access UserTransaction, attempting to use TransactionManager instead" );
+			JTA_LOGGER.unableToAccessUserTransactionTryingTransactionManager();
 			return makeTransactionManagerAdapter();
 		}
 		return adapter;
@@ -246,9 +239,9 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 	private JtaTransactionAdapter makeUserTransactionAdapter() {
 		try {
-			final UserTransaction userTransaction = jtaPlatform.retrieveUserTransaction();
+			final var userTransaction = jtaPlatform.retrieveUserTransaction();
 			if ( userTransaction == null ) {
-				log.debug( "JtaPlatform#retrieveUserTransaction returned null" );
+				JTA_LOGGER.userTransactionReturnedNull();
 				return null;
 			}
 			else {
@@ -256,16 +249,16 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 			}
 		}
 		catch ( Exception exception ) {
-			log.debugf( "JtaPlatform#retrieveUserTransaction threw an exception [%s]", exception.getMessage() );
+			JTA_LOGGER.exceptionRetrievingUserTransaction( exception.getMessage(), exception );
 			return null;
 		}
 	}
 
 	private JtaTransactionAdapter makeTransactionManagerAdapter() {
 		try {
-			final TransactionManager transactionManager = jtaPlatform.retrieveTransactionManager();
+			final var transactionManager = jtaPlatform.retrieveTransactionManager();
 			if ( transactionManager == null ) {
-				log.debug( "JtaPlatform#retrieveTransactionManager returned null" );
+				JTA_LOGGER.transactionManagerReturnedNull();
 				return null;
 			}
 			else {
@@ -273,7 +266,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 			}
 		}
 		catch ( Exception exception ) {
-			log.debugf( "JtaPlatform#retrieveTransactionManager threw an exception [%s]", exception.getMessage() );
+			JTA_LOGGER.exceptionRetrievingTransactionManager( exception.getMessage(), exception );
 			return null;
 		}
 	}
@@ -325,6 +318,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 	@Override
 	public void beforeCompletion() {
+		JTA_LOGGER.notifyingJtaObserversBeforeCompletion();
 		try {
 			transactionCoordinatorOwner.beforeTransactionCompletion();
 		}
@@ -334,30 +328,30 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		}
 		finally {
 			synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();
-			for ( TransactionObserver observer : observers() ) {
-				observer.beforeCompletion();
+			for ( var transactionObserver : observers() ) {
+				transactionObserver.beforeCompletion();
 			}
 		}
 	}
 
 	@Override
 	public void afterCompletion(boolean successful, boolean delayed) {
-		if ( !transactionCoordinatorOwner.isActive() ) {
-			return;
+		if ( transactionCoordinatorOwner.isActive() ) {
+			JTA_LOGGER.notifyingJtaObserversAfterCompletion();
+
+			final int statusToSend = successful ? Status.STATUS_COMMITTED : Status.STATUS_UNKNOWN;
+			synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( statusToSend );
+
+//			afterCompletionAction.doAction( this, statusToSend );
+
+			transactionCoordinatorOwner.afterTransactionCompletion( successful, delayed );
+
+			for ( var transactionObserver : observers() ) {
+				transactionObserver.afterCompletion( successful, delayed );
+			}
+
+			synchronizationRegistered = false;
 		}
-
-		final int statusToSend =  successful ? Status.STATUS_COMMITTED : Status.STATUS_UNKNOWN;
-		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( statusToSend );
-
-//		afterCompletionAction.doAction( this, statusToSend );
-
-		transactionCoordinatorOwner.afterTransactionCompletion( successful, delayed );
-
-		for ( TransactionObserver observer : observers() ) {
-			observer.afterCompletion( successful, delayed );
-		}
-
-		synchronizationRegistered = false;
 	}
 
 	public void addObserver(TransactionObserver observer) {

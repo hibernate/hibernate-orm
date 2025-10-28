@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.exception;
+
 import java.sql.SQLException;
 
 import org.hibernate.JDBCException;

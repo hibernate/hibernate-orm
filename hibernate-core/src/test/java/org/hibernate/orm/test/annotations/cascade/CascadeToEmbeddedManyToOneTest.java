@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.annotations.cascade;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -28,19 +27,7 @@ public class CascadeToEmbeddedManyToOneTest {
 
 	@AfterEach
 	public void teaDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					List<CodedPairHolder> pairHolders = session.createQuery( "select p from CodedPairHolder p" ).list();
-					pairHolders.forEach(
-							pairHolder -> {
-								PersonPair pair = pairHolder.getPair();
-								session.remove( pairHolder );
-								session.remove(pair.getLeft());
-								session.remove(pair.getRight());
-							}
-					);
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

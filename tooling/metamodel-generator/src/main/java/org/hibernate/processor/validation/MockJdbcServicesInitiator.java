@@ -58,7 +58,7 @@ class MockJdbcServicesInitiator extends JdbcServicesInitiator {
 
 		@Override
 		public QualifiedObjectNameFormatter getQualifiedObjectNameFormatter() {
-			return new QualifiedObjectNameFormatterStandardImpl(getNameQualifierSupport());
+			return new QualifiedObjectNameFormatterStandardImpl(getNameQualifierSupport(), ".");
 		}
 
 		@Override

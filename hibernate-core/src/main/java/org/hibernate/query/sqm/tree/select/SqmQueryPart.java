@@ -5,12 +5,14 @@
 package org.hibernate.query.sqm.tree.select;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaQueryPart;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
@@ -175,39 +177,68 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 	public abstract void validateQueryStructureAndFetchOwners();
 
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
-		if ( orderByClause == null || orderByClause.getSortSpecifications().isEmpty() ) {
-			return;
-		}
-		hql.append( " order by " );
-		final List<SqmSortSpecification> sortSpecifications = orderByClause.getSortSpecifications();
-		sortSpecifications.get( 0 ).appendHqlString( hql, context );
-		for ( int i = 1; i < sortSpecifications.size(); i++ ) {
-			hql.append( ", " );
-			sortSpecifications.get( i ).appendHqlString( hql, context );
-		}
+		if ( orderByClause != null && !orderByClause.getSortSpecifications().isEmpty() ) {
+			hql.append( " order by " );
+			final List<SqmSortSpecification> sortSpecifications = orderByClause.getSortSpecifications();
+			sortSpecifications.get( 0 ).appendHqlString( hql, context );
+			for ( int i = 1; i < sortSpecifications.size(); i++ ) {
+				hql.append( ", " );
+				sortSpecifications.get( i ).appendHqlString( hql, context );
+			}
 
-		if ( offsetExpression != null ) {
-			hql.append( " offset " );
-			offsetExpression.appendHqlString( hql, context );
-			hql.append( " rows " );
-		}
-		if ( fetchExpression != null ) {
-			hql.append( " fetch first " );
-			fetchExpression.appendHqlString( hql, context );
-			switch ( fetchClauseType ) {
-				case ROWS_ONLY:
-					hql.append( " rows only" );
-					break;
-				case ROWS_WITH_TIES:
-					hql.append( " rows with ties" );
-					break;
-				case PERCENT_ONLY:
-					hql.append( " percent rows only" );
-					break;
-				case PERCENT_WITH_TIES:
-					hql.append( " percent rows with ties" );
-					break;
+			if ( offsetExpression != null ) {
+				hql.append( " offset " );
+				offsetExpression.appendHqlString( hql, context );
+				hql.append( " rows " );
+			}
+			if ( fetchExpression != null ) {
+				hql.append( " fetch first " );
+				fetchExpression.appendHqlString( hql, context );
+				hql.append( switch ( fetchClauseType ) {
+					case ROWS_ONLY -> " rows only";
+					case ROWS_WITH_TIES -> " rows with ties";
+					case PERCENT_ONLY -> " percent rows only";
+					case PERCENT_WITH_TIES -> " percent rows with ties";
+				} );
 			}
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmQueryPart<?> that
+			&& getClass() == that.getClass()
+			&& Objects.equals( orderByClause, that.orderByClause )
+			&& Objects.equals( offsetExpression, that.offsetExpression )
+			&& Objects.equals( fetchExpression, that.fetchExpression )
+			&& fetchClauseType == that.fetchClauseType;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = Objects.hashCode( orderByClause );
+		result = 31 * result + Objects.hashCode( offsetExpression );
+		result = 31 * result + Objects.hashCode( fetchExpression );
+		result = 31 * result + fetchClauseType.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmQueryPart<?> that
+			&& getClass() == that.getClass()
+			&& SqmCacheable.areCompatible( orderByClause, that.orderByClause )
+			&& SqmCacheable.areCompatible( offsetExpression, that.offsetExpression )
+			&& SqmCacheable.areCompatible( fetchExpression, that.fetchExpression )
+			&& fetchClauseType == that.fetchClauseType;
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = SqmCacheable.cacheHashCode( orderByClause );
+		result = 31 * result + SqmCacheable.cacheHashCode( offsetExpression );
+		result = 31 * result + SqmCacheable.cacheHashCode( fetchExpression );
+		result = 31 * result + fetchClauseType.hashCode();
+		return result;
 	}
 }

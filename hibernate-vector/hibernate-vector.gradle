@@ -13,6 +13,8 @@ description = 'Hibernate\'s extensions for vector support'
 dependencies {
     api project( ':hibernate-core' )
 
+    compileOnly jdbcLibs.mssql
+
     testImplementation project( ':hibernate-testing' )
     testImplementation project( path: ':hibernate-core', configuration: 'tests' )
 }

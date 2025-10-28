@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
 
+
 /**
  * Reference to the key-side (as opposed to the target-side) of the
  * foreign-key of a to-one association.
@@ -70,7 +71,7 @@ public class SqmFkExpression<T> extends AbstractSqmPath<T> {
 		final SqmEntityValuedSimplePath<?> lhsCopy = (SqmEntityValuedSimplePath<?>) getLhs().copy( context );
 		return context.registerCopy(
 				this,
-				new SqmFkExpression<T>( getNavigablePathCopy( lhsCopy ), lhsCopy )
+				new SqmFkExpression<>( getNavigablePathCopy( lhsCopy ), lhsCopy )
 		);
 	}
 

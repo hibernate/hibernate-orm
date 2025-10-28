@@ -1,6 +1,5 @@
 [[multitenacy]]
 == Multitenancy
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-multitenancy: {core-project-dir}/src/test/java/org/hibernate/orm/test/multitenancy
 :extrasdir: extras
@@ -28,7 +27,7 @@ Such topics are beyond the scope of this documentation.
 [[multitenacy-separate-database]]
 ==== Separate database
 
-image:images/multitenancy/multitenacy_database.png[]
+image::images/multitenancy/multitenacy_database.png[align="center"]
 
 Each tenant's data is kept in a physically separate database instance.
 JDBC Connections would point specifically to each database so any pooling would be per-tenant.
@@ -37,7 +36,7 @@ A general application approach, here, would be to define a JDBC Connection pool 
 [[multitenacy-separate-schema]]
 ==== Separate schema
 
-image:images/multitenancy/multitenacy_schema.png[]
+image::images/multitenancy/multitenacy_schema.png[align="center"]
 
 Each tenant's data is kept in a distinct database schema on a single database instance.
 There are two different ways to define JDBC Connections here:
@@ -51,7 +50,7 @@ Using this approach, we would have a single JDBC Connection pool for use to serv
 [[multitenacy-discriminator]]
 ==== Partitioned (discriminator) data
 
-image:images/multitenancy/multitenacy_discriminator.png[]
+image::images/multitenancy/multitenacy_discriminator.png[align="center"]
 
 All data is kept in a single database schema.
 The data for each tenant is partitioned by the use of partition value or discriminator.
@@ -258,7 +257,7 @@ test output.
 include::{example-dir-multitenancy}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-not-applying-timezone-configuration-example]
 ----
 
-[source, SQL,indent=0]
+[source, sql,indent=0]
 ----
 include::{extrasdir}/multitenacy-hibernate-not-applying-timezone-configuration-example.sql[]
 ----

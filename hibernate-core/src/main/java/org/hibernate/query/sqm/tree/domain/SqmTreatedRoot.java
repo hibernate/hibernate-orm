@@ -37,7 +37,7 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 		this.treatTarget = treatTarget;
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings("unchecked")
 	private SqmTreatedRoot(
 			NavigablePath navigablePath,
 			SqmRoot wrappedPath,

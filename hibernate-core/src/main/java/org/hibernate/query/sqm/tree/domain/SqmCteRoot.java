@@ -11,8 +11,11 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.NavigablePath;
+
+import java.util.Objects;
 
 /**
  * @author Christian Beikov
@@ -97,6 +100,18 @@ public class SqmCteRoot<T> extends SqmRoot<T> implements JpaRoot<T> {
 
 	@Override
 	public SqmCorrelatedRoot<T> createCorrelation() {
-		throw new UnsupportedOperationException();
+		return new SqmCorrelatedDerivedRoot<>( this );
+	}
+
+	@Override
+	public boolean deepEquals(SqmFrom<?, ?> object) {
+		return super.deepEquals( object )
+			&& Objects.equals( cte.getCteTable().getCteName(), ((SqmCteRoot<?>) object).cte.getCteTable().getCteName() );
+	}
+
+	@Override
+	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
+		return super.isDeepCompatible( object )
+			&& Objects.equals( cte.getCteTable().getCteName(), ((SqmCteRoot<?>) object).cte.getCteTable().getCteName() );
 	}
 }

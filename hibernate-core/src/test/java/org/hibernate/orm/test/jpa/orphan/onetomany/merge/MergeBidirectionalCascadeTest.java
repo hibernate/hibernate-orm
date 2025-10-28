@@ -55,13 +55,8 @@ public class MergeBidirectionalCascadeTest {
 	}
 
 	@AfterEach
-	private void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Child" ).executeUpdate();
-					session.createMutationQuery( "delete from Parent" ).executeUpdate();
-				}
-		);
+	public void tearDown(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

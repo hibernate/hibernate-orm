@@ -40,9 +40,7 @@ public class SecondaryTableTest extends AbstractStatefulStatelessFilterTest {
 
 	@AfterEach
 	void tearDown() {
-		scope.inTransaction( s -> {
-			s.createQuery( "delete from User" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@ParameterizedTest
@@ -54,6 +52,7 @@ public class SecondaryTableTest extends AbstractStatefulStatelessFilterTest {
 					session.createQuery( "select count(u) from User u" ).uniqueResult()
 			);*/
 			session.enableFilter( "ageFilter" ).setParameter( "age", 24 );
+			//noinspection deprecation
 			assertThat(
 					session.createQuery( "select count(u) from User u" ).uniqueResult()
 			).isEqualTo( 2L );
@@ -66,7 +65,7 @@ public class SecondaryTableTest extends AbstractStatefulStatelessFilterTest {
 			int age,
 			boolean lockedOut,
 			String username,
-			String password) {
+			@SuppressWarnings("SameParameterValue") String password) {
 		User user = new User();
 		user.setEmailAddress( emailAddress );
 		user.setAge( age );

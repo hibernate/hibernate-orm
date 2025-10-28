@@ -18,7 +18,7 @@ import org.hibernate.tool.schema.internal.script.SingleLineSqlScriptExtractor;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectContext;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class SingleLineImportExtractorTest {
 	public static final String IMPORT_FILE_COMMENTS_ONLY = "org/hibernate/orm/test/tool/schema/scripts/comments-only.sql";

@@ -12,6 +12,8 @@ import org.hibernate.type.descriptor.java.spi.BasicCollectionJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
+import static org.hibernate.type.BasicArrayType.determineElementTypeName;
+
 /**
  * A type that maps between {@link java.sql.Types#ARRAY ARRAY} and {@code Collection<T>}
  *
@@ -33,21 +35,26 @@ public class BasicCollectionType<C extends Collection<E>, E>
 		this.name = determineName( collectionTypeDescriptor, baseDescriptor );
 	}
 
+	public BasicCollectionType(
+			BasicType<E> baseDescriptor,
+			JdbcType arrayJdbcType,
+			JavaType<C> collectionTypeDescriptor,
+			String typeName) {
+		super( arrayJdbcType, collectionTypeDescriptor );
+		this.baseDescriptor = baseDescriptor;
+		this.name = typeName;
+	}
+
 	private static String determineName(BasicCollectionJavaType<?, ?> collectionTypeDescriptor, BasicType<?> baseDescriptor) {
-		switch ( collectionTypeDescriptor.getSemantics().getCollectionClassification() ) {
-			case BAG:
-			case ID_BAG:
-				return "Collection<" + baseDescriptor.getName() + ">";
-			case LIST:
-				return "List<" + baseDescriptor.getName() + ">";
-			case SET:
-				return "Set<" + baseDescriptor.getName() + ">";
-			case SORTED_SET:
-				return "SortedSet<" + baseDescriptor.getName() + ">";
-			case ORDERED_SET:
-				return "OrderedSet<" + baseDescriptor.getName() + ">";
-		}
-		return null;
+		final String elementTypeName = determineElementTypeName( baseDescriptor );
+		return switch ( collectionTypeDescriptor.getSemantics().getCollectionClassification() ) {
+			case BAG, ID_BAG -> "Collection<" + elementTypeName + ">";
+			case LIST -> "List<" + elementTypeName + ">";
+			case SET -> "Set<" + elementTypeName + ">";
+			case SORTED_SET -> "SortedSet<" + elementTypeName + ">";
+			case ORDERED_SET -> "OrderedSet<" + elementTypeName + ">";
+			default -> null;
+		};
 	}
 
 	@Override
@@ -74,9 +81,9 @@ public class BasicCollectionType<C extends Collection<E>, E>
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		return o == this || o.getClass() == BasicCollectionType.class
-				&& Objects.equals( baseDescriptor, ( (BasicCollectionType<?, ?>) o ).baseDescriptor );
+	public boolean equals(Object object) {
+		return object == this || object.getClass() == BasicCollectionType.class
+			&& Objects.equals( baseDescriptor, ( (BasicCollectionType<?, ?>) object ).baseDescriptor );
 	}
 
 	@Override

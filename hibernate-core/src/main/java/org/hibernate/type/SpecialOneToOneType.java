@@ -9,10 +9,11 @@ import java.io.Serializable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNotUnsaved;
 
 /**
  * A one-to-one association that maps to specific formula(s)
@@ -74,14 +75,14 @@ public class SpecialOneToOneType extends OneToOneType {
 		else {
 			// cache the actual id of the object, not the value of the
 			// property-ref, which might not be initialized
-			Object id = ForeignKeys.getEntityIdentifierIfNotUnsaved( getAssociatedEntityName(), value, session );
-			if (id==null) {
+			final Object id = getEntityIdentifierIfNotUnsaved( getAssociatedEntityName(), value, session );
+			if ( id==null ) {
 				throw new AssertionFailure(
 						"cannot cache a reference to an object with a null id: " +
 						getAssociatedEntityName()
 				);
 			}
-			return getIdentifierType(session).disassemble(id, session, owner);
+			return getIdentifierType( session ).disassemble( id, session, owner );
 		}
 	}
 
@@ -93,7 +94,7 @@ public class SpecialOneToOneType extends OneToOneType {
 		else {
 			// cache the actual id of the object, not the value of the
 			// property-ref, which might not be initialized
-			Object id = getIdentifier( value, sessionFactory );
+			final Object id = getIdentifier( value, sessionFactory );
 			if ( id == null ) {
 				throw new AssertionFailure(
 						"cannot cache a reference to an object with a null id: " +
@@ -109,14 +110,8 @@ public class SpecialOneToOneType extends OneToOneType {
 	throws HibernateException {
 		//TODO: currently broken for unique-key references (does not detect
 		//      change to unique key property of the associated object)
-		Object id = getIdentifierType(session).assemble(oid, session, null); //the owner of the association is not the owner of the id
-
-		if (id==null) {
-			return null;
-		}
-		else {
-			return resolveIdentifier(id, session);
-		}
+		final Object id = getIdentifierType(session).assemble(oid, session, null); //the owner of the association is not the owner of the id
+		return id == null ? null : resolveIdentifier( id, session );
 	}
 
 

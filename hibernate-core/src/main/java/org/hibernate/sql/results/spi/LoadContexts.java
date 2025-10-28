@@ -6,11 +6,11 @@ package org.hibernate.sql.results.spi;
 
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * Maintains a Stack of processing state related to performing load operations.
@@ -21,7 +21,6 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
  * @author Steve Ebersole
  */
 public class LoadContexts {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( LoadContexts.class );
 
 	private final PersistenceContext persistenceContext;
 	private final StandardStack<JdbcValuesSourceProcessingState> jdbcValuesSourceProcessingStateStack = new StandardStack<>();
@@ -66,7 +65,7 @@ public class LoadContexts {
 	 */
 	public void cleanup() {
 		if ( ! jdbcValuesSourceProcessingStateStack.isEmpty() ) {
-			log.debug( "LoadContexts still contained JdbcValuesSourceProcessingState registrations on cleanup" );
+			CORE_LOGGER.debug( "LoadContexts still contained JdbcValuesSourceProcessingState registrations on cleanup" );
 		}
 		jdbcValuesSourceProcessingStateStack.clear();
 	}

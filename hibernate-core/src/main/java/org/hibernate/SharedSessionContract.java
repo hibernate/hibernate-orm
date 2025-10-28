@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.PersistenceException;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
@@ -25,6 +26,26 @@ import static org.hibernate.internal.TransactionManagement.manageTransaction;
  * @author Steve Ebersole
  */
 public interface SharedSessionContract extends QueryProducer, AutoCloseable, Serializable {
+
+	/**
+	 * Obtain a {@link StatelessSession} builder with the ability to copy certain
+	 * information from this session.
+	 *
+	 * @return the session builder
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	SharedStatelessSessionBuilder statelessWithOptions();
+
+	/**
+	 * Obtain a {@link Session} builder with the ability to copy certain
+	 * information from this session.
+	 *
+	 * @return the session builder
+	 */
+	SharedSessionBuilder sessionWithOptions();
+
 	/**
 	 * Obtain the tenant identifier associated with this session, as a string.
 	 *
@@ -374,23 +395,26 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 	 * @throws IllegalArgumentException if the graph with the given
 	 *         name does not have the given entity type as its root
 	 *
+	 * @see jakarta.persistence.EntityManager#createEntityGraph(String)
+	 *
 	 * @since 6.3
 	 */
 	<T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName);
 
 	/**
 	 * Obtain an immutable reference to a predefined
-	 * {@linkplain jakarta.persistence.NamedEntityGraph named entity graph}
-	 * or return {@code null} if there is no predefined graph with the given
-	 * name.
+	 * {@linkplain jakarta.persistence.NamedEntityGraph named entity graph}.
 	 *
 	 * @param graphName the name of the predefined named entity graph
+	 * @throws IllegalArgumentException if there is no predefined graph
+	 *         with the given name
 	 *
 	 * @apiNote This method returns {@code RootGraph<?>}, requiring an
 	 * unchecked typecast before use. It's cleaner to obtain a graph using
 	 * the static metamodel for the class which defines the graph, or by
 	 * calling {@link SessionFactory#getNamedEntityGraphs(Class)} instead.
 	 *
+	 * @see jakarta.persistence.EntityManager#getEntityGraph(String)
 	 * @see SessionFactory#getNamedEntityGraphs(Class)
 	 * @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
 	 *
@@ -471,5 +495,29 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 	default <R> R fromTransaction(Function<? super Transaction,R> action) {
 		final Transaction transaction = beginTransaction();
 		return manageTransaction( transaction, transaction, action );
+	}
+
+	/**
+	 * Return an object of the specified type to allow access to
+	 * a provider-specific API.
+	 *
+	 * @param type the class of the object to be returned.
+	 * This is usually either the underlying class
+	 * implementing {@code SharedSessionContract} or an
+	 * interface it implements.
+	 * @return an instance of the specified class
+	 * @throws PersistenceException if the provider does not
+	 * support the given type
+	 */
+	default <T> T unwrap(Class<T> type) {
+		// Not checking type.isInstance(...) because some implementations
+		// might want to hide that they implement some types.
+		// Implementations wanting a more liberal behavior need to override this method.
+		if ( type.isAssignableFrom( SharedSessionContract.class ) ) {
+			return type.cast( this );
+		}
+
+		throw new PersistenceException(
+				"Hibernate cannot unwrap '" + getClass().getName() + "' as '" + type.getName() + "'" );
 	}
 }

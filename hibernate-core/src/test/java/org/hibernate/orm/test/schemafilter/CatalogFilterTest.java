@@ -5,67 +5,50 @@
 package org.hibernate.orm.test.schemafilter;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.mapping.Table;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.spi.SchemaFilter;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
+import org.junit.jupiter.api.Test;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
-@RequiresDialectFeature( value = {DialectChecks.SupportCatalogCreation.class})
-public class CatalogFilterTest extends BaseUnitTestCase {
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.cfg.JdbcSettings.FORMAT_SQL;
 
-	private final ServiceRegistry serviceRegistry;
-	private final Metadata metadata;
-
-	public CatalogFilterTest() {
-		Map settings = new HashMap();
-		settings.putAll( Environment.getProperties() );
-		settings.put( AvailableSettings.DIALECT, SQLServerDialect.class.getName() );
-		settings.put( AvailableSettings.FORMAT_SQL, false );
-
-		this.serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( settings );
-
-		MetadataSources ms = new MetadataSources( serviceRegistry );
-		ms.addAnnotatedClass( CatalogNoneEntity0.class );
-		ms.addAnnotatedClass( Catalog1Entity1.class );
-		ms.addAnnotatedClass( Catalog1Entity2.class );
-		ms.addAnnotatedClass( Catalog2Entity3.class );
-		ms.addAnnotatedClass( Catalog2Entity4.class );
-		this.metadata = ms.buildMetadata();
-	}
-
+@SuppressWarnings({"rawtypes", "unchecked", "JUnitMalformedDeclaration"})
+@ServiceRegistry(settings = @Setting(name = FORMAT_SQL, value = "false"))
+@RequiresDialect(value = SQLServerDialect.class, comment = "Unit test - limit to minimize complexity of checks")
+@DomainModel(annotatedClasses = {
+		CatalogFilterTest.CatalogNoneEntity0.class,
+		CatalogFilterTest.Catalog1Entity1.class,
+		CatalogFilterTest.Catalog1Entity2.class,
+		CatalogFilterTest.Catalog2Entity3.class,
+		CatalogFilterTest.Catalog2Entity4.class
+})
+public class CatalogFilterTest {
 	@Test
-	public void createCatalog_unfiltered() {
-		RecordingTarget target = doCreation( new DefaultSchemaFilter() );
+	public void createCatalog_unfiltered(ServiceRegistryScope registryScope, DomainModelScope modelScope) {
+		RecordingTarget target = doCreation( new DefaultSchemaFilter(), registryScope, modelScope );
 
-		Assert.assertThat( target.getActions( RecordingTarget.Category.TABLE_CREATE ), containsExactly(
+		assertThat( target.getActions( RecordingTarget.Category.TABLE_CREATE ), containsExactly(
 				"the_entity_0",
 				"the_catalog_1.the_entity_1",
 				"the_catalog_1.the_entity_2",
@@ -75,20 +58,20 @@ public class CatalogFilterTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void createCatalog_filtered() {
-		RecordingTarget target = doCreation( new TestSchemaFilter() );
+	public void createCatalog_filtered(ServiceRegistryScope registryScope, DomainModelScope modelScope) {
+		RecordingTarget target = doCreation( new TestSchemaFilter(), registryScope, modelScope );
 
-		Assert.assertThat(
+		assertThat(
 				target.getActions( RecordingTarget.Category.TABLE_CREATE ),
 				containsExactly( "the_entity_0", "the_catalog_1.the_entity_1" )
 		);
 	}
 
 	@Test
-	public void dropCatalog_unfiltered() {
-		RecordingTarget target = doDrop( new DefaultSchemaFilter() );
+	public void dropCatalog_unfiltered(ServiceRegistryScope registryScope, DomainModelScope modelScope) {
+		RecordingTarget target = doDrop( new DefaultSchemaFilter(), registryScope, modelScope );
 
-		Assert.assertThat( target.getActions( RecordingTarget.Category.TABLE_DROP ), containsExactly(
+		assertThat( target.getActions( RecordingTarget.Category.TABLE_DROP ), containsExactly(
 				"the_entity_0",
 				"the_catalog_1.the_entity_1",
 				"the_catalog_1.the_entity_2",
@@ -98,24 +81,26 @@ public class CatalogFilterTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void dropCatalog_filtered() {
-		RecordingTarget target = doDrop( new TestSchemaFilter() );
+	public void dropCatalog_filtered(ServiceRegistryScope registryScope, DomainModelScope modelScope) {
+		RecordingTarget target = doDrop( new TestSchemaFilter(),  registryScope, modelScope );
 
-		Assert.assertThat(
+		assertThat(
 				target.getActions( RecordingTarget.Category.TABLE_DROP ),
 				containsExactly( "the_entity_0", "the_catalog_1.the_entity_1" )
 		);
 	}
 
-	private RecordingTarget doCreation(SchemaFilter filter) {
+	private RecordingTarget doCreation(SchemaFilter filter, ServiceRegistryScope registryScope, DomainModelScope modelScope) {
 		RecordingTarget target = new RecordingTarget();
-		new SchemaCreatorImpl( serviceRegistry, filter ).doCreation( metadata, true, target );
+		new SchemaCreatorImpl( registryScope.getRegistry(), filter )
+				.doCreation( modelScope.getDomainModel(), true, target );
 		return target;
 	}
 
-	private RecordingTarget doDrop(SchemaFilter filter) {
+	private RecordingTarget doDrop(SchemaFilter filter, ServiceRegistryScope registryScope, DomainModelScope modelScope) {
 		RecordingTarget target = new RecordingTarget();
-		new SchemaDropperImpl( serviceRegistry, filter ).doDrop( metadata, true, target );
+		new SchemaDropperImpl( registryScope.getRegistry(), filter )
+				.doDrop( modelScope.getDomainModel(), true, target );
 		return target;
 	}
 
@@ -124,12 +109,12 @@ public class CatalogFilterTest extends BaseUnitTestCase {
 	}
 
 	private BaseMatcher<Set<String>> containsExactly(final Set expected) {
-		return new BaseMatcher<Set<String>>() {
+		return new BaseMatcher<>() {
 			@Override
 			public boolean matches(Object item) {
 				Set set = (Set) item;
 				return set.size() == expected.size()
-						&& set.containsAll( expected );
+					&& set.containsAll( expected );
 			}
 
 			@Override

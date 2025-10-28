@@ -14,19 +14,17 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import org.hibernate.collection.internal.CollectionLogger;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Logger;
 import org.hibernate.testing.orm.junit.LoggingInspections;
 import org.hibernate.testing.orm.junit.LoggingInspectionsScope;
-import org.hibernate.testing.orm.junit.MessageKeyWatcher;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -50,17 +48,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @LoggingInspections(
 		messages = {
 				@LoggingInspections.Message(
-						messageKey = "HHH000470",
-						loggers = @Logger( loggerNameClass = AbstractPersistentCollection.class )
-				),
-				@LoggingInspections.Message(
-						messageKey = "HHH000471",
-						loggers = @Logger( loggerNameClass = AbstractPersistentCollection.class )
+						messageKey = "HHH90030007",
+						loggers = @Logger(loggerName = CollectionLogger.NAME)
 				)
 		}
 )
 public class MultipleSessionCollectionWarningTest {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractPersistentCollection.class );
 
 	@Test
 	@JiraKey(value = "HHH-9518")
@@ -93,7 +86,7 @@ public class MultipleSessionCollectionWarningTest {
 								s2 -> {
 									s2.getTransaction().begin();
 									try {
-										final MessageKeyWatcher watcher = loggingScope.getWatcher( "HHH000471", AbstractPersistentCollection.class );
+										final var watcher = loggingScope.getWatcher( "HHH90030007", CollectionLogger.NAME );
 										assertFalse( watcher.wasTriggered() );
 
 										// The following should trigger warning because we're unsetting a different session.
@@ -148,7 +141,7 @@ public class MultipleSessionCollectionWarningTest {
 								s2 -> {
 									s2.getTransaction().begin();
 									try {
-										final MessageKeyWatcher watcher = loggingScope.getWatcher( "HHH000471", AbstractPersistentCollection.class );
+										final var watcher = loggingScope.getWatcher( "HHH90030007", CollectionLogger.NAME );
 										assertFalse( watcher.wasTriggered() );
 
 										// The following should trigger warning because we're unsetting a different session
@@ -203,7 +196,7 @@ public class MultipleSessionCollectionWarningTest {
 								s2 -> {
 									s2.getTransaction().begin();
 									try {
-										final MessageKeyWatcher watcher = loggingScope.getWatcher( "HHH000471", AbstractPersistentCollection.class );
+										final var watcher = loggingScope.getWatcher( "HHH90030007", CollectionLogger.NAME );
 										assertFalse( watcher.wasTriggered() );
 
 										// The following should trigger warning because we're unsetting a different session

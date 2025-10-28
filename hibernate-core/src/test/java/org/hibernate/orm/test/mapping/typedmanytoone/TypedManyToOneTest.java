@@ -70,7 +70,7 @@ public class TypedManyToOneTest {
 			merged.setShippingAddress(null);
 			s.remove( shipAddress );
 			s.flush();
-			assertNull( s.get( "ShippingAddress", shipAddress.getAddressId() ) );
+			assertNull( s.find( "ShippingAddress", shipAddress.getAddressId() ) );
 			s.remove( merged );
 		} );
 	}

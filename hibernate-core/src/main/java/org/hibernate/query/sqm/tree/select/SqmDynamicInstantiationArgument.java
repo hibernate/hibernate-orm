@@ -9,6 +9,8 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
+import java.util.Objects;
+
 /**
  * Represents an individual argument to a dynamic instantiation.
  *
@@ -62,5 +64,33 @@ public class SqmDynamicInstantiationArgument<T> implements SqmAliasedNode<T> {
 		if ( alias != null ) {
 			hql.append( " as " ).append( alias );
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmDynamicInstantiationArgument<?> that
+			&& selectableNode.equals( that.selectableNode )
+			&& Objects.equals( alias, that.alias );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = selectableNode.hashCode();
+		result = 31 * result + Objects.hashCode( alias );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmDynamicInstantiationArgument<?> that
+			&& selectableNode.isCompatible( that.selectableNode )
+			&& Objects.equals( alias, that.alias );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = selectableNode.cacheHashCode();
+		result = 31 * result + Objects.hashCode( alias );
+		return result;
 	}
 }

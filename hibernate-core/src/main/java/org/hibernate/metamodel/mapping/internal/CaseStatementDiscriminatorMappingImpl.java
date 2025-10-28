@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
@@ -19,7 +20,6 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -98,19 +98,19 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup(
-				fetchParent.getNavigablePath()
-		);
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
+		final var tableGroup =
+				sqlAstCreationState.getFromClauseAccess()
+						.getTableGroup( fetchParent.getNavigablePath() );
 		resolveSubTypeTableReferences( tableGroup, fetchablePath );
 		return super.generateFetch( fetchParent, fetchablePath, fetchTiming, selected, resultVariable, creationState );
 	}
 
 	private void resolveSubTypeTableReferences(TableGroup tableGroup, NavigablePath navigablePath) {
-		final EntityMappingType entityDescriptor = (EntityMappingType) tableGroup.getModelPart().getPartMappingType();
+		final var entityDescriptor = (EntityMappingType) tableGroup.getModelPart().getPartMappingType();
 		// Since the expression is lazy, based on the available table reference joins,
 		// we need to force the initialization in case this is selected
-		for ( EntityMappingType subMappingType : entityDescriptor.getSubMappingTypes() ) {
+		for ( var subMappingType : entityDescriptor.getSubMappingTypes() ) {
 			tableGroup.getTableReference(
 					navigablePath,
 					subMappingType.getMappedTableDetails().getTableName(),
@@ -125,7 +125,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 			JdbcMapping jdbcMappingToUse,
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
-		final SqlExpressionResolver expressionResolver = creationState.getSqlExpressionResolver();
+		final var expressionResolver = creationState.getSqlExpressionResolver();
 		return expressionResolver.resolveSqlExpression(
 				createColumnReferenceKey(
 						tableGroup.getPrimaryTableReference(),
@@ -141,37 +141,42 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 	}
 
 	@Override
-	public String getCustomReadExpression() {
+	public @Nullable String getCustomReadExpression() {
 		return null;
 	}
 
 	@Override
-	public String getCustomWriteExpression() {
+	public @Nullable String getCustomWriteExpression() {
 		return null;
 	}
 
 	@Override
-	public String getColumnDefinition() {
+	public @Nullable String getColumnDefinition() {
 		return null;
 	}
 
 	@Override
-	public Long getLength() {
+	public @Nullable Long getLength() {
 		return null;
 	}
 
 	@Override
-	public Integer getPrecision() {
+	public @Nullable Integer getArrayLength() {
 		return null;
 	}
 
 	@Override
-	public Integer getTemporalPrecision() {
+	public @Nullable Integer getPrecision() {
 		return null;
 	}
 
 	@Override
-	public Integer getScale() {
+	public @Nullable Integer getTemporalPrecision() {
+		return null;
+	}
+
+	@Override
+	public @Nullable Integer getScale() {
 		return null;
 	}
 
@@ -261,7 +266,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 			final ArrayList<TableReference> usedTableReferences = new ArrayList<>( tableDiscriminatorDetailsMap.size() );
 			tableDiscriminatorDetailsMap.forEach(
 					(tableName, tableDiscriminatorDetails) -> {
-						final TableReference tableReference = entityTableGroup.getTableReference(
+						final var tableReference = entityTableGroup.getTableReference(
 								entityTableGroup.getNavigablePath(),
 								tableName,
 								false
@@ -285,7 +290,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 				caseSearchedExpression = new CaseSearchedExpression( CaseStatementDiscriminatorMappingImpl.this );
 				tableDiscriminatorDetailsMap.forEach(
 						(tableName, tableDiscriminatorDetails) -> {
-							final TableReference tableReference = entityTableGroup.getTableReference(
+							final var tableReference = entityTableGroup.getTableReference(
 									entityTableGroup.getNavigablePath(),
 									tableName,
 									false

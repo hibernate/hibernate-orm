@@ -6,7 +6,7 @@ package org.hibernate.orm.test.batch;
 
 import java.lang.reflect.Field;
 
-import org.hibernate.Session;
+import org.hibernate.SessionEventListener;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
@@ -30,7 +30,7 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 @JiraKey( value = "HHH-7689" )
-public class BatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
+public class BatchingBatchFailureTest extends BaseCoreFunctionalTestCase implements SessionEventListener {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { User.class };
@@ -45,9 +45,24 @@ public class BatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
 		configuration.setProperty( AvailableSettings.CHECK_NULLABILITY, false );
 	}
 
+	SessionImplementor session;
+	Batch batch;
+
+	@Override
+	public void jdbcExecuteBatchStart() {
+		try {
+			Field field = session.getJdbcCoordinator().getClass().getDeclaredField( "currentBatch" );
+			field.setAccessible( true );
+			batch = (Batch) field.get( session.getJdbcCoordinator() );
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	@Test
 	public void testBasicInsertion() {
-		Session session = openSession();
+		session = sessionFactory().withOptions().eventListeners( this ).openSession();
 		session.getTransaction().begin();
 
 		try {
@@ -67,10 +82,6 @@ public class BatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
 
 			try {
 				//at this point the transaction is still active but the batch should have been aborted (have to use reflection to get at the field)
-				SessionImplementor sessionImplementor = (SessionImplementor) session;
-				Field field = sessionImplementor.getJdbcCoordinator().getClass().getDeclaredField( "currentBatch" );
-				field.setAccessible( true );
-				Batch batch = (Batch) field.get( sessionImplementor.getJdbcCoordinator() );
 				if ( batch == null ) {
 					throw new Exception( "Current batch was null" );
 				}

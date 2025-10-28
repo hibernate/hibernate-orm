@@ -120,7 +120,8 @@ public class SetReturningFunctionTypeResolverBuilder implements SetReturningFunc
 				boolean lateral,
 				boolean withOrdinality,
 				SqmToSqlAstConverter converter) {
-			final SelectableMapping[] selectableMappings = new SelectableMapping[typeResolvers.length + (withOrdinality ? 1 : 0)];
+			final SelectableMapping[] selectableMappings =
+					new SelectableMapping[typeResolvers.length + (withOrdinality ? 1 : 0)];
 			int i = 0;
 			for ( TypeResolver typeResolver : typeResolvers ) {
 				final JdbcMapping jdbcMapping = typeResolver.resolveFunctionReturnType( arguments, converter );
@@ -128,6 +129,7 @@ public class SetReturningFunctionTypeResolverBuilder implements SetReturningFunc
 						"",
 						typeResolver.selectionExpression(),
 						new SelectablePath( typeResolver.componentName() ),
+						null,
 						null,
 						null,
 						null,
@@ -148,7 +150,7 @@ public class SetReturningFunctionTypeResolverBuilder implements SetReturningFunc
 			if ( withOrdinality ) {
 				selectableMappings[i] = new SelectableMappingImpl(
 						"",
-						determineIndexSelectionExpression( selectableMappings, tableIdentifierVariable, converter ),
+						determineIndexSelectionExpression( selectableMappings, converter ),
 						new SelectablePath( CollectionPart.Nature.INDEX.getName() ),
 						null,
 						null,
@@ -157,19 +159,21 @@ public class SetReturningFunctionTypeResolverBuilder implements SetReturningFunc
 						null,
 						null,
 						null,
+						null,
 						false,
 						false,
 						false,
 						false,
 						false,
 						false,
-						converter.getCreationContext().getTypeConfiguration().getBasicTypeForJavaType( Long.class )
+						converter.getCreationContext().getTypeConfiguration()
+								.getBasicTypeForJavaType( Long.class )
 				);
 			}
 			return selectableMappings;
 		}
 
-		private String determineIndexSelectionExpression(SelectableMapping[] selectableMappings, String tableIdentifierVariable, SqmToSqlAstConverter walker) {
+		private String determineIndexSelectionExpression(SelectableMapping[] selectableMappings, SqmToSqlAstConverter walker) {
 			final String defaultOrdinalityColumnName =
 					walker.getCreationContext().getDialect()
 							.getDefaultOrdinalityColumnName();

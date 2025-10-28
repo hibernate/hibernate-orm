@@ -52,10 +52,9 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		if ( context.isPreferJavaTimeJdbcTypesEnabled() ) {
-			return context.getJdbcType( SqlTypes.LOCAL_DATE_TIME );
-		}
-		return context.getJdbcType( Types.TIMESTAMP );
+		return context.isPreferJavaTimeJdbcTypesEnabled()
+				? context.getJdbcType( SqlTypes.LOCAL_DATE_TIME )
+				: context.getJdbcType( Types.TIMESTAMP );
 	}
 
 	@Override @SuppressWarnings("unchecked")
@@ -101,17 +100,17 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 		}
 
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			Instant instant = value.atZone( ZoneId.systemDefault() ).toInstant();
+			final var instant = value.atZone( ZoneId.systemDefault() ).toInstant();
 			return (X) java.sql.Date.from( instant );
 		}
 
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			Instant instant = value.atZone( ZoneId.systemDefault() ).toInstant();
+			final var instant = value.atZone( ZoneId.systemDefault() ).toInstant();
 			return (X) java.sql.Time.from( instant );
 		}
 
 		if ( Date.class.isAssignableFrom( type ) ) {
-			Instant instant = value.atZone( ZoneId.systemDefault() ).toInstant();
+			final var instant = value.atZone( ZoneId.systemDefault() ).toInstant();
 			return (X) Date.from( instant );
 		}
 
@@ -120,7 +119,7 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 		}
 
 		if ( Long.class.isAssignableFrom( type ) ) {
-			Instant instant = value.atZone( ZoneId.systemDefault() ).toInstant();
+			final var instant = value.atZone( ZoneId.systemDefault() ).toInstant();
 			return (X) Long.valueOf( instant.toEpochMilli() );
 		}
 
@@ -149,7 +148,7 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 		}
 
 		if (value instanceof Long longValue) {
-			final Instant instant = Instant.ofEpochMilli( longValue );
+			final var instant = Instant.ofEpochMilli( longValue );
 			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() );
 		}
 
@@ -158,7 +157,7 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 		}
 
 		if (value instanceof Date timestamp) {
-			final Instant instant = timestamp.toInstant();
+			final var instant = timestamp.toInstant();
 			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() );
 		}
 

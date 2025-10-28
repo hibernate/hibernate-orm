@@ -4,7 +4,6 @@
  */
 package org.hibernate.dialect.lock;
 
-import java.lang.invoke.MethodHandles;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -15,13 +14,13 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+
 
 /**
  * A pessimistic locking strategy where a lock is obtained via
@@ -36,11 +35,6 @@ import org.jboss.logging.Logger;
  * @since 3.5
  */
 public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			PessimisticReadUpdateLockingStrategy.class.getName()
-	);
 
 	private final EntityPersister lockable;
 	private final LockMode lockMode;
@@ -60,7 +54,7 @@ public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 			throw new HibernateException( "[" + lockMode + "] not valid for update statement" );
 		}
 		if ( !lockable.isVersioned() ) {
-			LOG.writeLocksNotSupported( lockable.getEntityName() );
+			CORE_LOGGER.writeLocksNotSupported( lockable.getEntityName() );
 			this.sql = null;
 		}
 		else {

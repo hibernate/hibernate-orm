@@ -41,7 +41,7 @@ import static org.hibernate.processor.util.TypeUtils.getCollectionElementType;
 import static org.hibernate.processor.util.TypeUtils.getKeyType;
 import static org.hibernate.processor.util.TypeUtils.getTargetEntity;
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
-import static org.hibernate.processor.util.TypeUtils.isBasicAttribute;
+import static org.hibernate.processor.util.TypeUtils.isPluralAttribute;
 import static org.hibernate.processor.util.TypeUtils.isPropertyGetter;
 import static org.hibernate.processor.util.TypeUtils.toArrayTypeString;
 import static org.hibernate.processor.util.TypeUtils.toTypeString;
@@ -70,7 +70,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 
 	@Override
 	public @Nullable AnnotationMetaAttribute visitArray(ArrayType arrayType, Element element) {
-		if ( hasAnnotation( element, MANY_TO_MANY, ONE_TO_MANY, ELEMENT_COLLECTION ) ) {
+		if ( isPluralAttribute( element ) ) {
 			return new AnnotationMetaCollection( entity, element, LIST_ATTRIBUTE,
 					toTypeString(arrayType.getComponentType()) );
 		}
@@ -89,20 +89,24 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 	@Override
 	public @Nullable AnnotationMetaAttribute visitDeclared(DeclaredType declaredType, Element element) {
 		final TypeElement returnedElement = (TypeElement) typeUtils().asElement( declaredType );
-		assert returnedElement != null;
-		// WARNING: .toString() is necessary here since Name equals does not compare to String
-		final String returnTypeName = castNonNull( returnedElement ).getQualifiedName().toString();
-		final String collection = Constants.COLLECTIONS.get( returnTypeName );
-		final String targetEntity = getTargetEntity( element.getAnnotationMirrors() );
-		if ( collection != null ) {
-			return createMetaCollectionAttribute( declaredType, element, returnTypeName, collection, targetEntity );
+		if ( returnedElement == null ) {
+			return null;
 		}
-		else if ( isBasicAttribute( element, returnedElement, context ) ) {
-			final String type = targetEntity != null ? targetEntity : returnedElement.getQualifiedName().toString();
-			return new AnnotationMetaSingleAttribute( entity, element, type );
+		// WARNING: .toString() is necessary here since Name equals does not compare to String
+		final String targetEntity = getTargetEntity( element.getAnnotationMirrors() );
+		if ( isPluralAttribute( element ) ) {
+			final String returnTypeName = returnedElement.getQualifiedName().toString();
+			final String collection = Constants.COLLECTIONS.get( returnTypeName );
+			if ( collection != null ) {
+				return createMetaCollectionAttribute( declaredType, element, returnTypeName, collection, targetEntity );
+			}
+			else {
+				return null;
+			}
 		}
 		else {
-			return null;
+			final String type = targetEntity != null ? targetEntity : returnedElement.getQualifiedName().toString();
+			return new AnnotationMetaSingleAttribute( entity, element, type );
 		}
 	}
 

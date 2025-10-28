@@ -6,28 +6,23 @@ package org.hibernate.orm.test.mapping.identifier.composite;
 
 import java.sql.Timestamp;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class EmbeddedIdInMemoryGeneratedValueTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Event.class };
-	}
+@Jpa(annotatedClasses = {Event.class})
+public class EmbeddedIdInMemoryGeneratedValueTest {
 
 	@Test
 	@JiraKey(value = "HHH-13096")
-	public void test() {
-		final EventId eventId = doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		final EventId eventId = scope.fromTransaction( entityManager -> {
 			//tag::identifiers-composite-generated-in-memory-example[]
 			EventId id = new EventId();
 			id.setCategory(1);
@@ -43,14 +38,11 @@ public class EmbeddedIdInMemoryGeneratedValueTest extends BaseEntityManagerFunct
 			return event.getId();
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
-
+		scope.inTransaction( entityManager -> {
 			Event event = entityManager.find(Event.class, eventId);
 
 			assertEquals("Temperature", event.getKey());
 			assertEquals("9", event.getValue());
-
-			return event.getId();
 		});
 	}
 }

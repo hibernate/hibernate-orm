@@ -5,369 +5,304 @@
 package org.hibernate.type.descriptor.jdbc;
 
 
-import java.io.OutputStream;
-import java.lang.reflect.Array;
 import java.sql.SQLException;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.AbstractCollection;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.internal.build.AllowReflection;
-import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.metamodel.mapping.ValuedModelPart;
-import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.BasicPluralType;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
-import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.JdbcDateJavaType;
-import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
-import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
-import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.format.JsonDocumentItemType;
+import org.hibernate.type.format.JsonDocumentReader;
 
-import static org.hibernate.type.descriptor.jdbc.StructHelper.getEmbeddedPart;
 import static org.hibernate.type.descriptor.jdbc.StructHelper.instantiate;
+import org.hibernate.type.format.JsonValueJDBCTypeAdapter;
+import org.hibernate.type.format.JsonValueJDBCTypeAdapterFactory;
+import org.hibernate.type.format.StringJsonDocumentReader;
 
 /**
  * A Helper for serializing and deserializing JSON, based on an {@link org.hibernate.metamodel.mapping.EmbeddableMappingType}.
+ *
+ * @author Christian Beikov
+ * @author Emmanuel Jannetti
  */
 @Internal
 public class JsonHelper {
 
-	public static String toString(EmbeddableMappingType embeddableMappingType, Object value, WrapperOptions options) {
-		if ( value == null ) {
-			return null;
-		}
-		final StringBuilder sb = new StringBuilder();
-		toString( embeddableMappingType, value, options, new JsonAppender( sb ) );
-		return sb.toString();
-	}
-
-	public static String arrayToString(MappingType elementMappingType, Object[] values, WrapperOptions options) {
-		if ( values.length == 0 ) {
-			return "[]";
-		}
-		final StringBuilder sb = new StringBuilder();
-		final JsonAppender jsonAppender = new JsonAppender( sb );
-		char separator = '[';
-		for ( Object value : values ) {
-			sb.append( separator );
-			toString( elementMappingType, value, options, jsonAppender );
-			separator = ',';
-		}
-		sb.append( ']' );
-		return sb.toString();
-	}
-
-	public static String arrayToString(
-			JavaType<?> elementJavaType,
-			JdbcType elementJdbcType,
-			Object[] values,
-			WrapperOptions options) {
-		if ( values.length == 0 ) {
-			return "[]";
-		}
-		final StringBuilder sb = new StringBuilder();
-		final JsonAppender jsonAppender = new JsonAppender( sb );
-		char separator = '[';
-		for ( Object value : values ) {
-			sb.append( separator );
-			//noinspection unchecked
-			convertedValueToString( (JavaType<Object>) elementJavaType, elementJdbcType, value, options, jsonAppender );
-			separator = ',';
-		}
-		sb.append( ']' );
-		return sb.toString();
-	}
-
-	private static void toString(EmbeddableMappingType embeddableMappingType, Object value, WrapperOptions options, JsonAppender appender) {
-		toString( embeddableMappingType, options, appender, value, '{' );
-		appender.append( '}' );
-	}
-
-	private static void toString(
-			EmbeddableMappingType embeddableMappingType,
-			WrapperOptions options,
-			JsonAppender appender,
-			Object domainValue,
-			char separator) {
-		final Object[] values = embeddableMappingType.getValues( domainValue );
-		for ( int i = 0; i < values.length; i++ ) {
-			final ValuedModelPart attributeMapping = getEmbeddedPart( embeddableMappingType, i );
-			if ( attributeMapping instanceof SelectableMapping selectableMapping ) {
-				final String name = selectableMapping.getSelectableName();
-				appender.append( separator );
-				appender.append( '"' );
-				appender.append( name );
-				appender.append( "\":" );
-				toString( attributeMapping.getMappedType(), values[i], options, appender );
+	/**
+	 * Consumes Json document items from a document reader and return the serialized Objects
+	 * @param reader the document reader
+	 * @param embeddableMappingType the type definitions
+	 * @param returnEmbeddable do we return an Embeddable object or array of Objects ?
+	 * @param options wrapping options
+	 * @return serialized values
+	 * @param <X> the type of the returned value
+	 * @throws SQLException if error occured during mapping of types
+	 */
+	private static <X> X consumeJsonDocumentItems(JsonDocumentReader reader, EmbeddableMappingType embeddableMappingType, boolean returnEmbeddable, WrapperOptions options)
+			throws SQLException {
+		record SelectableData(String selectableName, int selectableIndex, SelectableMapping selectableMapping){}
+		record ParseLevel(
+				@Nullable SelectableData selectableData,
+				@Nullable EmbeddableMappingType embeddableMappingType,
+				@Nullable BasicPluralType<?, ?> arrayType,
+				@Nullable List<Object> subArrayObjectList,
+				@Nullable Object [] objectArray
+		) {
+			ParseLevel(EmbeddableMappingType embeddableMappingType) {
+				this(null, embeddableMappingType);
 			}
-			else if ( attributeMapping instanceof EmbeddedAttributeMapping embeddedAttributeMapping ) {
-				if ( values[i] == null ) {
-					// Skipping the update of the separator on purpose
-					continue;
+			ParseLevel(@Nullable SelectableData selectableData, EmbeddableMappingType embeddableMappingType) {
+				this(
+						selectableData,
+						embeddableMappingType,
+						null,
+						null,
+						new Object[embeddableMappingType.getJdbcValueCount()+ ( embeddableMappingType.isPolymorphic() ? 1 : 0 )]
+				);
+			}
+			ParseLevel(@Nullable SelectableData selectableData, BasicPluralType<?, ?> arrayType) {
+				this( selectableData, null, arrayType, new ArrayList<>(), null );
+			}
+
+			public void addValue(@Nullable SelectableData selectableData, @Nullable Object value) {
+				if ( embeddableMappingType != null ) {
+					assert selectableData != null;
+					objectArray[selectableData.selectableIndex] = value;
 				}
 				else {
-					final EmbeddableMappingType mappingType = embeddedAttributeMapping.getMappedType();
-					final SelectableMapping aggregateMapping = mappingType.getAggregateMapping();
-					if ( aggregateMapping == null ) {
-						toString(
-								mappingType,
-								options,
-								appender,
-								values[i],
-								separator
+					assert subArrayObjectList != null;
+					subArrayObjectList.add(value);
+				}
+			}
+
+			public JdbcMapping determineJdbcMapping(@Nullable SelectableData currentSelectableData) {
+				if ( currentSelectableData != null ) {
+					return currentSelectableData.selectableMapping.getJdbcMapping();
+				}
+				else if ( arrayType != null ) {
+					return arrayType.getElementType();
+				}
+				else {
+					assert selectableData != null;
+					return selectableData.selectableMapping.getJdbcMapping();
+				}
+			}
+
+			public static String determineSelectablePath(StandardStack<ParseLevel> parseLevel, @Nullable SelectableData currentSelectableData) {
+				if ( currentSelectableData != null ) {
+					return currentSelectableData.selectableName;
+				}
+				else {
+					return determineSelectablePath( parseLevel, 0 );
+				}
+			}
+
+			private static String determineSelectablePath(StandardStack<ParseLevel> stack, int level) {
+				final ParseLevel parseLevel = stack.peek( level );
+				assert parseLevel != null;
+				if ( parseLevel.selectableData != null ) {
+					return parseLevel.selectableData.selectableName;
+				}
+				else {
+					assert parseLevel.arrayType != null;
+					return determineSelectablePath( stack, level + 1 ) + ".{element}";
+				}
+			}
+		}
+		final StandardStack<ParseLevel> parseLevel = new StandardStack<>();
+		final JsonValueJDBCTypeAdapter adapter = JsonValueJDBCTypeAdapterFactory.getAdapter(reader,returnEmbeddable);
+
+		parseLevel.push(new ParseLevel( embeddableMappingType ));
+		SelectableData currentSelectableData = null;
+
+		// We loop on two conditions:
+		//   - the parser still has tokens left
+		//   - the type stack is not empty
+		// Even if the reader has some tokens left, if the type stack is empty,
+		// that means that we have to stop parsing. That may be the case while parsing an object of object array,
+		// the array is not empty, but we ae done parsing that specific object.
+		// When we encounter OBJECT_END the current type is popped out of the stack. When parsing one object of an array we may end up
+		// having an empty stack. Next Objects are parsed in the next round.
+		while(reader.hasNext() && !parseLevel.isEmpty()) {
+			final ParseLevel currentLevel = parseLevel.getCurrent();
+			assert currentLevel != null;
+			switch (reader.next()) {
+				case VALUE_KEY -> {
+					final EmbeddableMappingType currentEmbeddableMappingType = currentLevel.embeddableMappingType;
+					assert currentEmbeddableMappingType != null
+							: "Value keys are only valid for objects";
+
+					assert currentSelectableData == null;
+
+					final String selectableName = reader.getObjectKeyName();
+					final int selectableIndex = currentEmbeddableMappingType.getSelectableIndex( selectableName );
+					if ( selectableIndex < 0 ) {
+						throw new IllegalArgumentException(
+								String.format(
+										"Could not find selectable [%s] in embeddable type [%s] for JSON processing.",
+										selectableName,
+										currentEmbeddableMappingType.getMappedJavaType().getJavaTypeClass().getName()
+								)
 						);
 					}
+					final SelectableMapping selectableMapping =
+							currentEmbeddableMappingType.getJdbcValueSelectable( selectableIndex );
+					currentSelectableData = new SelectableData( selectableName, selectableIndex, selectableMapping );
+				}
+				case ARRAY_START -> {
+					assert currentSelectableData != null;
+
+					if ( !(currentSelectableData.selectableMapping.getJdbcMapping() instanceof BasicPluralType<?, ?> pluralType) ) {
+						throw new IllegalArgumentException(
+								String.format(
+										"Can't parse JSON array for selectable [%s] which is not of type BasicPluralType.",
+										ParseLevel.determineSelectablePath( parseLevel, currentSelectableData )
+								)
+						);
+					}
+					parseLevel.push( new ParseLevel( currentSelectableData, pluralType ) );
+					currentSelectableData = null;
+				}
+				case ARRAY_END -> {
+					assert currentLevel.arrayType != null;
+					assert currentLevel.selectableData != null;
+
+					parseLevel.pop();
+					final ParseLevel parentLevel = parseLevel.getCurrent();
+
+					assert parentLevel.embeddableMappingType != null;
+					// flush array values
+					parentLevel.addValue(
+							currentLevel.selectableData,
+							currentLevel.arrayType.getJdbcJavaType().wrap( currentLevel.subArrayObjectList, options )
+					);
+				}
+				case OBJECT_START -> {
+					final JdbcMapping jdbcMapping = currentLevel.determineJdbcMapping( currentSelectableData );
+
+					if ( !(jdbcMapping.getJdbcType() instanceof AggregateJdbcType aggregateJdbcType) ) {
+						throw new IllegalArgumentException(
+								String.format(
+										"Can't parse JSON object for selectable [%s] which is not of type AggregateJdbcType.",
+										ParseLevel.determineSelectablePath( parseLevel, currentSelectableData )
+								)
+						);
+					}
+					parseLevel.push(
+							new ParseLevel( currentSelectableData, aggregateJdbcType.getEmbeddableMappingType() ) );
+					currentSelectableData = null;
+				}
+				case OBJECT_END -> {
+					final EmbeddableMappingType currentEmbeddableMappingType = currentLevel.embeddableMappingType;
+					assert currentEmbeddableMappingType != null;
+
+					// go back in the mapping definition tree
+					parseLevel.pop();
+					final Object objectValue;
+					if ( returnEmbeddable ) {
+						final StructAttributeValues attributeValues = StructHelper.getAttributeValues(
+								embeddableMappingType,
+								currentLevel.objectArray,
+								options
+						);
+						objectValue = instantiate( embeddableMappingType, attributeValues );
+					}
 					else {
-						final String name = aggregateMapping.getSelectableName();
-						appender.append( separator );
-						appender.append( '"' );
-						appender.append( name );
-						appender.append( "\":" );
-						toString( mappingType, values[i], options, appender );
+						objectValue = currentLevel.objectArray;
+					}
+					if ( parseLevel.isEmpty() ) {
+						//noinspection unchecked
+						return (X) objectValue;
+					}
+					else {
+						parseLevel.getCurrent().addValue( currentLevel.selectableData, objectValue );
 					}
 				}
+				case NULL_VALUE -> {
+					currentLevel.addValue( currentSelectableData, null );
+					currentSelectableData = null;
+				}
+				case NUMERIC_VALUE -> {
+					final JdbcMapping jdbcMapping = currentLevel.determineJdbcMapping( currentSelectableData );
+					currentLevel.addValue(
+							currentSelectableData,
+							adapter.fromNumericValue(
+									jdbcMapping.getJdbcJavaType(),
+									jdbcMapping.getJdbcType(),
+									reader,
+									options
+							)
+					);
+					currentSelectableData = null;
+				}
+				case BOOLEAN_VALUE -> {
+					currentLevel.addValue(
+							currentSelectableData,
+							reader.getBooleanValue() ? Boolean.TRUE : Boolean.FALSE
+					);
+					currentSelectableData = null;
+				}
+				case VALUE -> {
+					final JdbcMapping jdbcMapping = currentLevel.determineJdbcMapping( currentSelectableData );
+					currentLevel.addValue(
+							currentSelectableData,
+							adapter.fromValue(
+									jdbcMapping.getJdbcJavaType(),
+									jdbcMapping.getJdbcType(),
+									reader,
+									options
+							)
+					);
+					currentSelectableData = null;
+				}
 			}
-			else {
-				throw new UnsupportedOperationException( "Support for attribute mapping type not yet implemented: " + attributeMapping.getClass().getName() );
-			}
-			separator = ',';
 		}
+		throw new IllegalArgumentException( "Expected JSON object end, but none found." );
 	}
 
-	private static void toString(MappingType mappedType, Object value, WrapperOptions options, JsonAppender appender) {
-		if ( value == null ) {
-			appender.append( "null" );
-		}
-		else if ( mappedType instanceof EmbeddableMappingType embeddableMappingType ) {
-			toString( embeddableMappingType, value, options, appender );
-		}
-		else if ( mappedType instanceof BasicType<?> basicType ) {
-			convertedBasicValueToString( basicType.convertToRelationalValue( value ), options, appender, basicType );
-		}
-		else {
-			throw new UnsupportedOperationException( "Support for mapping type not yet implemented: " + mappedType.getClass().getName() );
-		}
-	}
-
-	private static <T> void convertedValueToString(
-			JavaType<T> javaType,
-			JdbcType jdbcType,
-			Object value,
-			WrapperOptions options,
-			JsonAppender appender) {
-		if ( value == null ) {
-			appender.append( "null" );
-		}
-		else if ( jdbcType instanceof AggregateJdbcType aggregateJdbcType ) {
-			toString( aggregateJdbcType.getEmbeddableMappingType(), value, options, appender );
-		}
-		else {
-			convertedCastBasicValueToString( value, options, appender, javaType, jdbcType );
-		}
-	}
-
-
-	private static <T> void convertedBasicValueToString(
-			Object value,
-			WrapperOptions options,
-			JsonAppender appender,
-			BasicType<T> basicType) {
-		convertedCastBasicValueToString(
-				value,
-				options,
-				appender,
-				basicType.getJdbcJavaType(),
-				basicType.getJdbcType()
-		);
-	}
-
-	private static <T> void convertedCastBasicValueToString(
-			Object value,
-			WrapperOptions options,
-			JsonAppender appender,
-			JavaType<T> javaType,
-			JdbcType jdbcType) {
-		assert javaType.isInstance( value );
-		//noinspection unchecked
-		convertedBasicValueToString( (T) value, options, appender, javaType, jdbcType );
-	}
-
-	private static <T> void convertedBasicValueToString(
-			T value,
-			WrapperOptions options,
-			JsonAppender appender,
-			JavaType<T> javaType,
-			JdbcType jdbcType) {
-		switch ( jdbcType.getDefaultSqlTypeCode() ) {
-			case SqlTypes.TINYINT:
-			case SqlTypes.SMALLINT:
-			case SqlTypes.INTEGER:
-				if ( value instanceof Boolean booleanValue ) {
-					// BooleanJavaType has this as an implicit conversion
-					appender.append( booleanValue ? '1' : '0' );
-					break;
-				}
-				if ( value instanceof Enum<?> enumValue ) {
-					appender.appendSql( enumValue.ordinal() );
-					break;
-				}
-			case SqlTypes.BOOLEAN:
-			case SqlTypes.BIT:
-			case SqlTypes.BIGINT:
-			case SqlTypes.FLOAT:
-			case SqlTypes.REAL:
-			case SqlTypes.DOUBLE:
-				// These types fit into the native representation of JSON, so let's use that
-				javaType.appendEncodedString( appender, value );
-				break;
-			case SqlTypes.CHAR:
-			case SqlTypes.NCHAR:
-			case SqlTypes.VARCHAR:
-			case SqlTypes.NVARCHAR:
-				if ( value instanceof Boolean booleanValue ) {
-					// BooleanJavaType has this as an implicit conversion
-					appender.append( '"' );
-					appender.append( booleanValue ? 'Y' : 'N' );
-					appender.append( '"' );
-					break;
-				}
-			case SqlTypes.LONGVARCHAR:
-			case SqlTypes.LONGNVARCHAR:
-			case SqlTypes.LONG32VARCHAR:
-			case SqlTypes.LONG32NVARCHAR:
-			case SqlTypes.CLOB:
-			case SqlTypes.MATERIALIZED_CLOB:
-			case SqlTypes.NCLOB:
-			case SqlTypes.MATERIALIZED_NCLOB:
-			case SqlTypes.ENUM:
-			case SqlTypes.NAMED_ENUM:
-				// These literals can contain the '"' character, so we need to escape it
-				appender.append( '"' );
-				appender.startEscaping();
-				javaType.appendEncodedString( appender, value );
-				appender.endEscaping();
-				appender.append( '"' );
-				break;
-			case SqlTypes.DATE:
-				appender.append( '"' );
-				JdbcDateJavaType.INSTANCE.appendEncodedString(
-						appender,
-						javaType.unwrap( value, java.sql.Date.class, options )
-				);
-				appender.append( '"' );
-				break;
-			case SqlTypes.TIME:
-			case SqlTypes.TIME_WITH_TIMEZONE:
-			case SqlTypes.TIME_UTC:
-				appender.append( '"' );
-				JdbcTimeJavaType.INSTANCE.appendEncodedString(
-						appender,
-						javaType.unwrap( value, java.sql.Time.class, options )
-				);
-				appender.append( '"' );
-				break;
-			case SqlTypes.TIMESTAMP:
-				appender.append( '"' );
-				JdbcTimestampJavaType.INSTANCE.appendEncodedString(
-						appender,
-						javaType.unwrap( value, java.sql.Timestamp.class, options )
-				);
-				appender.append( '"' );
-				break;
-			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
-			case SqlTypes.TIMESTAMP_UTC:
-				appender.append( '"' );
-				DateTimeFormatter.ISO_OFFSET_DATE_TIME.formatTo(
-						javaType.unwrap( value, OffsetDateTime.class, options ),
-						appender
-				);
-				appender.append( '"' );
-				break;
-			case SqlTypes.DECIMAL:
-			case SqlTypes.NUMERIC:
-			case SqlTypes.DURATION:
-			case SqlTypes.UUID:
-				// These types need to be serialized as JSON string, but don't have a need for escaping
-				appender.append( '"' );
-				javaType.appendEncodedString( appender, value );
-				appender.append( '"' );
-				break;
-			case SqlTypes.BINARY:
-			case SqlTypes.VARBINARY:
-			case SqlTypes.LONGVARBINARY:
-			case SqlTypes.LONG32VARBINARY:
-			case SqlTypes.BLOB:
-			case SqlTypes.MATERIALIZED_BLOB:
-				// These types need to be serialized as JSON string, and for efficiency uses appendString directly
-				appender.append( '"' );
-				appender.write( javaType.unwrap( value, byte[].class, options ) );
-				appender.append( '"' );
-				break;
-			case SqlTypes.ARRAY:
-			case SqlTypes.JSON_ARRAY:
-				final int length = Array.getLength( value );
-				appender.append( '[' );
-				if ( length != 0 ) {
-					final JavaType<?> elementJavaType = ( (BasicPluralJavaType<?>) javaType ).getElementJavaType();
-					final JdbcType elementJdbcType = ( (ArrayJdbcType) jdbcType ).getElementJdbcType();
-					final Object firstArrayElement = Array.get( value, 0 );
-					convertedValueToString( elementJavaType, elementJdbcType, firstArrayElement, options, appender );
-					for ( int i = 1; i < length; i++ ) {
-						final Object arrayElement = Array.get( value, i );
-						appender.append( ',' );
-						convertedValueToString( elementJavaType, elementJdbcType, arrayElement, options, appender );
-					}
-				}
-				appender.append( ']' );
-				break;
-			default:
-				throw new UnsupportedOperationException( "Unsupported JdbcType nested in JSON: " + jdbcType );
-		}
-	}
-
-	public static <X> X fromString(
+	/**
+	 * Deserialize a JSON value to Java Object
+	 * @param embeddableMappingType the mapping type
+	 * @param reader the JSON reader
+	 * @param returnEmbeddable do we return an Embeddable object or array of Objects
+	 * @param options wrappping options
+	 * @return the deserialized value
+	 * @param <X>
+	 * @throws SQLException
+	 */
+	public static <X> X deserialize(
 			EmbeddableMappingType embeddableMappingType,
-			String string,
+			JsonDocumentReader reader,
 			boolean returnEmbeddable,
 			WrapperOptions options) throws SQLException {
-		if ( string == null ) {
+		final JsonDocumentItemType event;
+		if ( !reader.hasNext() || ( event = reader.next() ) == JsonDocumentItemType.NULL_VALUE ) {
 			return null;
 		}
-
-		final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
-		final Object[] values = new Object[jdbcValueCount + ( embeddableMappingType.isPolymorphic() ? 1 : 0 )];
-		final int end = fromString( embeddableMappingType, string, 0, string.length(), values, returnEmbeddable, options );
-		assert string.substring( end ).isBlank();
-		if ( returnEmbeddable ) {
-			final StructAttributeValues attributeValues = StructHelper.getAttributeValues(
-					embeddableMappingType,
-					values,
-					options
-			);
-			//noinspection unchecked
-			return (X) instantiate( embeddableMappingType, attributeValues );
+		if ( event != JsonDocumentItemType.OBJECT_START ) {
+			throw new IllegalArgumentException("Malformed JSON. Expected object but got: " + event);
 		}
-		//noinspection unchecked
-		return (X) values;
+		final X result = consumeJsonDocumentItems( reader, embeddableMappingType, returnEmbeddable, options );
+		assert !reader.hasNext();
+		return result;
 	}
+
 
 	// This is also used by Hibernate Reactive
 	public static <X> X arrayFromString(
@@ -378,6 +313,23 @@ public class JsonHelper {
 		if ( string == null ) {
 			return null;
 		}
+		return deserializeArray( javaType, elementJdbcType, new StringJsonDocumentReader( string ), options );
+	}
+
+	public static <X> X deserializeArray(
+			JavaType<X> javaType,
+			JdbcType elementJdbcType,
+			JsonDocumentReader reader,
+			WrapperOptions options) throws SQLException {
+		final JsonDocumentItemType event;
+		if ( !reader.hasNext() || ( event = reader.next() ) == JsonDocumentItemType.NULL_VALUE ) {
+			return null;
+		}
+		if ( event != JsonDocumentItemType.ARRAY_START ) {
+			throw new IllegalArgumentException("Malformed JSON. Expected array but got: " + event);
+		}
+
+		final CustomArrayList arrayList = new CustomArrayList();
 		final JavaType<?> elementJavaType = ((BasicPluralJavaType<?>) javaType).getElementJavaType();
 		final Class<?> preferredJavaTypeClass = elementJdbcType.getPreferredJavaTypeClass( options );
 		final JavaType<?> jdbcJavaType;
@@ -387,1166 +339,39 @@ public class JsonHelper {
 		else {
 			jdbcJavaType = options.getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( preferredJavaTypeClass );
 		}
-		final CustomArrayList arrayList = new CustomArrayList();
-		final int i = fromArrayString(
-				string,
-				false,
-				options,
-				0,
-				arrayList,
-				elementJavaType,
-				jdbcJavaType,
-				elementJdbcType
-		);
-		assert string.charAt( i - 1 ) == ']';
-		return javaType.wrap( arrayList, options );
-	}
 
-	private static int fromString(
-			EmbeddableMappingType embeddableMappingType,
-			String string,
-			int begin,
-			int end,
-			Object[] values,
-			boolean returnEmbeddable,
-			WrapperOptions options) throws SQLException {
-		boolean hasEscape = false;
-		assert string.charAt( begin ) == '{';
-		int start = begin + 1;
-		State s = State.KEY_START;
-		int selectableIndex = -1;
-		// The following parsing logic assumes JSON is well-formed,
-		// but for the sake of the Java compiler's flow analysis
-		// and hopefully also for a better understanding, contains throws for some syntax errors
-		for ( int i = start; i < string.length(); i++ ) {
-			final char c = string.charAt( i );
-			switch ( c ) {
-				case '\\':
-					assert s == State.KEY_QUOTE || s == State.VALUE_QUOTE;
-					hasEscape = true;
-					i++;
+		final JsonValueJDBCTypeAdapter adapter = JsonValueJDBCTypeAdapterFactory.getAdapter(reader,false);
+		while(reader.hasNext()) {
+			JsonDocumentItemType type = reader.next();
+			switch ( type ) {
+				case ARRAY_END:
+					assert !reader.hasNext();
+					return javaType.wrap( arrayList, options );
+				case NULL_VALUE:
+					arrayList.add( null );
 					break;
-				case '"':
-					switch ( s ) {
-						case KEY_START:
-							s = State.KEY_QUOTE;
-							selectableIndex = -1;
-							start = i + 1;
-							hasEscape = false;
-							break;
-						case KEY_QUOTE:
-							s = State.KEY_END;
-							selectableIndex = getSelectableMapping(
-									embeddableMappingType,
-									string,
-									start,
-									i,
-									hasEscape
-							);
-							start = -1;
-							hasEscape = false;
-							break;
-						case VALUE_START:
-							s = State.VALUE_QUOTE;
-							start = i + 1;
-							hasEscape = false;
-							break;
-						case VALUE_QUOTE:
-							s = State.VALUE_END;
-							values[selectableIndex] = fromString(
-									embeddableMappingType.getJdbcValueSelectable( selectableIndex ).getJdbcMapping(),
-									string,
-									start,
-									i,
-									hasEscape,
-									returnEmbeddable,
-									options
-							);
-							selectableIndex = -1;
-							start = -1;
-							hasEscape = false;
-							break;
-						default:
-							throw syntaxError( string, s, i );
-					}
+				case NUMERIC_VALUE:
+					arrayList.add( adapter.fromNumericValue(jdbcJavaType, elementJdbcType ,reader, options)  );
 					break;
-				case ':':
-					switch ( s ) {
-						case KEY_QUOTE:
-							// I guess it's ok to have a ':' in the key..
-						case VALUE_QUOTE:
-							// In the value it's fine
-							break;
-						case KEY_END:
-							s = State.VALUE_START;
-							break;
-						default:
-							throw syntaxError( string, s, i );
-					}
+				case BOOLEAN_VALUE:
+					arrayList.add( reader.getBooleanValue() ? Boolean.TRUE : Boolean.FALSE );
 					break;
-				case ',':
-					switch ( s ) {
-						case KEY_QUOTE:
-							// I guess it's ok to have a ',' in the key..
-						case VALUE_QUOTE:
-							// In the value it's fine
-							break;
-						case VALUE_END:
-							s = State.KEY_START;
-							break;
-						default:
-							throw syntaxError( string, s, i );
-					}
+				case VALUE:
+					arrayList.add( adapter.fromValue(jdbcJavaType, elementJdbcType ,reader, options) );
 					break;
-				case '{':
-					switch ( s ) {
-						case KEY_QUOTE:
-							// I guess it's ok to have a '{' in the key..
-						case VALUE_QUOTE:
-							// In the value it's fine
-							break;
-						case VALUE_START:
-							final SelectableMapping selectable = embeddableMappingType.getJdbcValueSelectable(
-									selectableIndex
-							);
-							if ( !( selectable.getJdbcMapping().getJdbcType()
-									instanceof AggregateJdbcType aggregateJdbcType) ) {
-								throw new IllegalArgumentException(
-										String.format(
-												"JSON starts sub-object for a non-aggregate type at index %d. Selectable [%s] is of type [%s]",
-												i,
-												selectable.getSelectableName(),
-												selectable.getJdbcMapping().getJdbcType().getClass().getName()
-										)
-								);
-							}
-							final EmbeddableMappingType subMappingType = aggregateJdbcType.getEmbeddableMappingType();
-							// This encoding is only possible if the JDBC type is JSON again
-							assert aggregateJdbcType.getJdbcTypeCode() == SqlTypes.JSON
-									|| aggregateJdbcType.getDefaultSqlTypeCode() == SqlTypes.JSON;
-							final Object[] subValues = new Object[subMappingType.getJdbcValueCount()];
-							i = fromString( subMappingType, string, i, end, subValues, returnEmbeddable, options ) - 1;
-							assert string.charAt( i ) == '}';
-							if ( returnEmbeddable ) {
-								final StructAttributeValues attributeValues = StructHelper.getAttributeValues(
-										subMappingType,
-										subValues,
-										options
-								);
-								values[selectableIndex] = instantiate( embeddableMappingType, attributeValues );
-							}
-							else {
-								values[selectableIndex] = subValues;
-							}
-							s = State.VALUE_END;
-							selectableIndex = -1;
-							break;
-						default:
-							throw syntaxError( string, s, i );
-					}
-					break;
-				case '[':
-					switch ( s ) {
-						case KEY_QUOTE:
-							// I guess it's ok to have a '[' in the key..
-						case VALUE_QUOTE:
-							// In the value it's fine
-							break;
-						case VALUE_START:
-							final SelectableMapping selectable = embeddableMappingType.getJdbcValueSelectable(
-									selectableIndex
-							);
-							final JdbcMapping jdbcMapping = selectable.getJdbcMapping();
-							if ( !(jdbcMapping instanceof BasicPluralType<?, ?> pluralType) ) {
-								throw new IllegalArgumentException(
-										String.format(
-												"JSON starts array for a non-plural type at index %d. Selectable [%s] is of type [%s]",
-												i,
-												selectable.getSelectableName(),
-												jdbcMapping.getJdbcType().getClass().getName()
-										)
-								);
-							}
-							final BasicType<?> elementType = pluralType.getElementType();
-							final CustomArrayList arrayList = new CustomArrayList();
-							i = fromArrayString( string, returnEmbeddable, options, i, arrayList, elementType ) - 1;
-							assert string.charAt( i ) == ']';
-							values[selectableIndex] = pluralType.getJdbcJavaType().wrap( arrayList, options );
-							s = State.VALUE_END;
-							selectableIndex = -1;
-							break;
-						default:
-							throw syntaxError( string, s, i );
-					}
-					break;
-				case '}':
-					switch ( s ) {
-						case KEY_QUOTE:
-							// I guess it's ok to have a '}' in the key..
-						case VALUE_QUOTE:
-							// In the value it's fine
-							break;
-						case VALUE_END:
-							// At this point, we are done
-							return i + 1;
-						default:
-							throw syntaxError( string, s, i );
-					}
+				case OBJECT_START:
+					assert elementJdbcType instanceof JsonJdbcType;
+					final EmbeddableMappingType embeddableMappingType = ((JsonJdbcType) elementJdbcType).getEmbeddableMappingType();
+					arrayList.add( consumeJsonDocumentItems(reader, embeddableMappingType, true, options) );
 					break;
 				default:
-					switch ( s ) {
-						case KEY_QUOTE:
-						case VALUE_QUOTE:
-							// In keys and values, all chars are fine
-							break;
-						case VALUE_START:
-							// Skip whitespace
-							if ( Character.isWhitespace( c ) ) {
-								break;
-							}
-							// Here we also allow certain literals
-							final int endIdx = consumeLiteral(
-									string,
-									i,
-									values,
-									embeddableMappingType.getJdbcValueSelectable( selectableIndex ).getJdbcMapping(),
-									selectableIndex,
-									returnEmbeddable,
-									options
-							);
-							if ( endIdx != -1 ) {
-								i = endIdx;
-								s = State.VALUE_END;
-								selectableIndex = -1;
-								start = -1;
-								break;
-							}
-							throw syntaxError( string, s, i );
-						case KEY_START:
-						case KEY_END:
-						case VALUE_END:
-							// Only whitespace is allowed here
-							if ( Character.isWhitespace( c ) ) {
-								break;
-							}
-						default:
-							throw syntaxError( string, s, i );
-					}
-					break;
+					throw new UnsupportedOperationException( "Unexpected JSON type " + type );
 			}
 		}
 
-		throw new IllegalArgumentException( "JSON not properly formed: " + string.subSequence( start, end ) );
+		throw new IllegalArgumentException( "Expected JSON array end, but none found." );
 	}
 
-	private static int fromArrayString(
-			String string,
-			boolean returnEmbeddable,
-			WrapperOptions options,
-			int begin,
-			CustomArrayList arrayList,
-			BasicType<?> elementType) throws SQLException {
-		return fromArrayString(
-				string,
-				returnEmbeddable,
-				options,
-				begin,
-				arrayList,
-				elementType.getMappedJavaType(),
-				elementType.getJdbcJavaType(),
-				elementType.getJdbcType()
-		);
-	}
-
-	private static int fromArrayString(
-			String string,
-			boolean returnEmbeddable,
-			WrapperOptions options,
-			int begin,
-			CustomArrayList arrayList,
-			JavaType<?> javaType,
-			JavaType<?> jdbcJavaType,
-			JdbcType jdbcType) throws SQLException {
-		if ( string.length() == begin + 2 ) {
-			return begin + 2;
-		}
-		boolean hasEscape = false;
-		assert string.charAt( begin ) == '[';
-		int start = begin + 1;
-		State s = State.VALUE_START;
-		// The following parsing logic assumes JSON is well-formed,
-		// but for the sake of the Java compiler's flow analysis
-		// and hopefully also for a better understanding, contains throws for some syntax errors
-		for ( int i = start; i < string.length(); i++ ) {
-			final char c = string.charAt( i );
-			switch ( c ) {
-				case '\\':
-					assert s == State.VALUE_QUOTE;
-					hasEscape = true;
-					i++;
-					break;
-				case '"':
-					switch ( s ) {
-						case VALUE_START:
-							s = State.VALUE_QUOTE;
-							start = i + 1;
-							hasEscape = false;
-							break;
-						case VALUE_QUOTE:
-							s = State.VALUE_END;
-							arrayList.add(
-									fromString(
-											javaType,
-											jdbcJavaType,
-											jdbcType,
-											string,
-											start,
-											i,
-											hasEscape,
-											returnEmbeddable,
-											options
-									)
-							);
-							start = -1;
-							hasEscape = false;
-							break;
-						default:
-							throw syntaxError( string, s, i );
-					}
-					break;
-				case ',':
-					switch ( s ) {
-						case VALUE_QUOTE:
-							// In the value it's fine
-							break;
-						case VALUE_END:
-							s = State.VALUE_START;
-							break;
-						default:
-							throw syntaxError( string, s, i );
-					}
-					break;
-				case '{':
-					switch ( s ) {
-						case VALUE_QUOTE:
-							// In the value it's fine
-							break;
-//						case VALUE_START:
-//							final SelectableMapping selectable = embeddableMappingType.getJdbcValueSelectable(
-//									selectableIndex
-//							);
-//							if ( !( selectable.getJdbcMapping().getJdbcType() instanceof AggregateJdbcType ) ) {
-//								throw new IllegalArgumentException(
-//										String.format(
-//												"JSON starts sub-object for a non-aggregate type at index %d. Selectable [%s] is of type [%s]",
-//												i,
-//												selectable.getSelectableName(),
-//												selectable.getJdbcMapping().getJdbcType().getClass().getName()
-//										)
-//								);
-//							}
-//							final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) selectable.getJdbcMapping().getJdbcType();
-//							final EmbeddableMappingType subMappingType = aggregateJdbcType.getEmbeddableMappingType();
-//							// This encoding is only possible if the JDBC type is JSON again
-//							assert aggregateJdbcType.getJdbcTypeCode() == SqlTypes.JSON
-//									|| aggregateJdbcType.getDefaultSqlTypeCode() == SqlTypes.JSON;
-//							final Object[] subValues = new Object[subMappingType.getJdbcValueCount()];
-//							i = fromString( subMappingType, string, i, end, subValues, returnEmbeddable, options ) - 1;
-//							assert string.charAt( i ) == '}';
-//							if ( returnEmbeddable ) {
-//								final Object[] attributeValues = StructHelper.getAttributeValues(
-//										subMappingType,
-//										subValues,
-//										options
-//								);
-//								values[selectableIndex] = embeddableMappingType.getRepresentationStrategy()
-//										.getInstantiator()
-//										.instantiate(
-//												() -> attributeValues,
-//												options.getSessionFactory()
-//										);
-//							}
-//							else {
-//								values[selectableIndex] = subValues;
-//							}
-//							s = State.VALUE_END;
-//							selectableIndex = -1;
-//							break;
-						default:
-							throw syntaxError( string, s, i );
-					}
-					break;
-				case ']':
-					switch ( s ) {
-						case VALUE_QUOTE:
-							// In the value it's fine
-							break;
-						case VALUE_END:
-							// At this point, we are done
-							return i + 1;
-						default:
-							throw syntaxError( string, s, i );
-					}
-					break;
-				default:
-					switch ( s ) {
-						case VALUE_QUOTE:
-							// In keys and values, all chars are fine
-							break;
-						case VALUE_START:
-							// Skip whitespace
-							if ( Character.isWhitespace( c ) ) {
-								break;
-							}
-							final int elementIndex = arrayList.size();
-							arrayList.add( null );
-							// Here we also allow certain literals
-							final int endIdx = consumeLiteral(
-									string,
-									i,
-									arrayList.getUnderlyingArray(),
-									javaType,
-									jdbcJavaType,
-									jdbcType,
-									elementIndex,
-									returnEmbeddable,
-									options
-							);
-							if ( endIdx != -1 ) {
-								i = endIdx;
-								s = State.VALUE_END;
-								start = -1;
-								break;
-							}
-							throw syntaxError( string, s, i );
-						case VALUE_END:
-							// Only whitespace is allowed here
-							if ( Character.isWhitespace( c ) ) {
-								break;
-							}
-						default:
-							throw syntaxError( string, s, i );
-					}
-					break;
-			}
-		}
-
-		throw new IllegalArgumentException( "JSON not properly formed: " + string.subSequence( start, string.length() ) );
-	}
-
-	private static int consumeLiteral(
-			String string,
-			int start,
-			Object[] values,
-			JdbcMapping jdbcMapping,
-			int selectableIndex,
-			boolean returnEmbeddable,
-			WrapperOptions options) throws SQLException {
-		return consumeLiteral(
-				string,
-				start,
-				values,
-				jdbcMapping.getMappedJavaType(),
-				jdbcMapping.getJdbcJavaType(),
-				jdbcMapping.getJdbcType(),
-				selectableIndex,
-				returnEmbeddable,
-				options
-		);
-	}
-
-	private static int consumeLiteral(
-			String string,
-			int start,
-			Object[] values,
-			JavaType<?> javaType,
-			JavaType<?> jdbcJavaType,
-			JdbcType jdbcType,
-			int selectableIndex,
-			boolean returnEmbeddable,
-			WrapperOptions options) throws SQLException {
-		final char c = string.charAt( start );
-		switch ( c ) {
-			case 'n':
-				// only null is possible
-				values[selectableIndex] = null;
-				return consume(string, start, "null");
-			case 'f':
-				// only false is possible
-				values[selectableIndex] = false;
-				return consume(string, start, "false");
-			case 't':
-				// only false is possible
-				values[selectableIndex] = true;
-				return consume(string, start, "true");
-			case '0':
-				switch ( string.charAt( start + 1 ) ) {
-					case '.':
-						return consumeFractional(
-								string,
-								start,
-								start + 1,
-								values,
-								javaType,
-								jdbcJavaType,
-								jdbcType,
-								selectableIndex,
-								returnEmbeddable,
-								options
-						);
-					case 'E':
-					case 'e':
-						return consumeExponential(
-								string,
-								start,
-								start + 1,
-								values,
-								javaType,
-								jdbcJavaType,
-								jdbcType,
-								selectableIndex,
-								returnEmbeddable,
-								options
-						);
-				}
-				values[selectableIndex] = fromString(
-						javaType,
-						jdbcJavaType,
-						jdbcType,
-						string,
-						start,
-						start + 1,
-						returnEmbeddable,
-						options
-				);
-				return start;
-			case '-':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9':
-				// number = [ minus ] int [ frac ] [ exp ]
-				// decimal-point = %x2E       ; .
-				// digit1-9 = %x31-39         ; 1-9
-				// e = %x65 / %x45            ; e E
-				// exp = e [ minus / plus ] 1*DIGIT
-				// frac = decimal-point 1*DIGIT
-				// int = zero / ( digit1-9 *DIGIT )
-				// minus = %x2D               ; -
-				// plus = %x2B                ; +
-				// zero = %x30                ; 0
-				for (int i = start + 1; i < string.length(); i++) {
-					final char digit = string.charAt( i );
-					switch ( digit ) {
-						case '.':
-							return consumeFractional(
-									string,
-									start,
-									i,
-									values,
-									javaType,
-									jdbcJavaType,
-									jdbcType,
-									selectableIndex,
-									returnEmbeddable,
-									options
-							);
-						case 'E':
-						case 'e':
-							return consumeExponential(
-									string,
-									start,
-									i,
-									values,
-									javaType,
-									jdbcJavaType,
-									jdbcType,
-									selectableIndex,
-									returnEmbeddable,
-									options
-							);
-						case '0':
-						case '1':
-						case '2':
-						case '3':
-						case '4':
-						case '5':
-						case '6':
-						case '7':
-						case '8':
-						case '9':
-							break;
-						default:
-							values[selectableIndex] = fromString(
-									javaType,
-									jdbcJavaType,
-									jdbcType,
-									string,
-									start,
-									i,
-									returnEmbeddable,
-									options
-							);
-							return i - 1;
-					}
-				}
-		}
-
-		return -1;
-	}
-
-	private static int consumeFractional(
-			String string,
-			int start,
-			int dotIndex,
-			Object[] values,
-			JavaType<?> javaType,
-			JavaType<?> jdbcJavaType,
-			JdbcType jdbcType,
-			int selectableIndex,
-			boolean returnEmbeddable,
-			WrapperOptions options) throws SQLException {
-		for (int i = dotIndex + 1; i < string.length(); i++) {
-			final char digit = string.charAt( i );
-			switch ( digit ) {
-				case 'E':
-				case 'e':
-					return consumeExponential(
-							string,
-							start,
-							i,
-							values,
-							javaType,
-							jdbcJavaType,
-							jdbcType,
-							selectableIndex,
-							returnEmbeddable,
-							options
-					);
-				case '0':
-				case '1':
-				case '2':
-				case '3':
-				case '4':
-				case '5':
-				case '6':
-				case '7':
-				case '8':
-				case '9':
-					break;
-				default:
-					values[selectableIndex] = fromString(
-							javaType,
-							jdbcJavaType,
-							jdbcType,
-							string,
-							start,
-							i,
-							returnEmbeddable,
-							options
-					);
-					return i - 1;
-			}
-		}
-		return start;
-	}
-
-	private static int consumeExponential(
-			String string,
-			int start,
-			int eIndex,
-			Object[] values,
-			JavaType<?> javaType,
-			JavaType<?> jdbcJavaType,
-			JdbcType jdbcType,
-			int selectableIndex,
-			boolean returnEmbeddable,
-			WrapperOptions options) throws SQLException {
-		int i = eIndex + 1;
-		switch ( string.charAt( i ) ) {
-			case '-':
-			case '+':
-				i++;
-				break;
-		}
-		for (; i < string.length(); i++) {
-			final char digit = string.charAt( i );
-			switch ( digit ) {
-				case '0':
-				case '1':
-				case '2':
-				case '3':
-				case '4':
-				case '5':
-				case '6':
-				case '7':
-				case '8':
-				case '9':
-					break;
-				default:
-					values[selectableIndex] = fromString(
-							javaType,
-							jdbcJavaType,
-							jdbcType,
-							string,
-							start,
-							i,
-							returnEmbeddable,
-							options
-					);
-					return i - 1;
-			}
-		}
-		return start;
-	}
-
-	private static int consume(String string, int start, String text) {
-		if ( !string.regionMatches( start + 1, text, 1, text.length() - 1 ) ) {
-			throw new IllegalArgumentException(
-					String.format(
-							"Syntax error at position %d. Unexpected char [%s]. Expecting [%s]",
-							start + 1,
-							string.charAt( start + 1 ),
-							text
-					)
-			);
-		}
-		return start + text.length() - 1;
-	}
-
-	private static IllegalArgumentException syntaxError(String string, State s, int charIndex) {
-		return new IllegalArgumentException(
-				String.format(
-						"Syntax error at position %d. Unexpected char [%s]. Expecting one of [%s]",
-						charIndex,
-						string.charAt( charIndex ),
-						s.expectedChars()
-				)
-		);
-	}
-
-	private static int getSelectableMapping(
-			EmbeddableMappingType embeddableMappingType,
-			String string,
-			int start,
-			int end,
-			boolean hasEscape) {
-		final String name = hasEscape
-				? unescape( string, start, end )
-				: string.substring( start, end );
-		final int selectableIndex = embeddableMappingType.getSelectableIndex( name );
-		if ( selectableIndex == -1 ) {
-			throw new IllegalArgumentException(
-					String.format(
-							"Could not find selectable [%s] in embeddable type [%s] for JSON processing.",
-							name,
-							embeddableMappingType.getMappedJavaType().getJavaTypeClass().getName()
-					)
-			);
-		}
-		return selectableIndex;
-	}
-
-	private static Object fromString(
-			JdbcMapping jdbcMapping,
-			String string,
-			int start,
-			int end,
-			boolean hasEscape,
-			boolean returnEmbeddable,
-			WrapperOptions options) throws SQLException {
-		return fromString(
-				jdbcMapping.getMappedJavaType(),
-				jdbcMapping.getJdbcJavaType(),
-				jdbcMapping.getJdbcType(),
-				string,
-				start,
-				end,
-				hasEscape,
-				returnEmbeddable,
-				options
-		);
-	}
-
-	private static Object fromString(
-			JavaType<?> javaType,
-			JavaType<?> jdbcJavaType,
-			JdbcType jdbcType,
-			String string,
-			int start,
-			int end,
-			boolean hasEscape,
-			boolean returnEmbeddable,
-			WrapperOptions options) throws SQLException {
-		if ( hasEscape ) {
-			final String unescaped = unescape( string, start, end );
-			return fromString(
-					javaType,
-					jdbcJavaType,
-					jdbcType,
-					unescaped,
-					0,
-					unescaped.length(),
-					returnEmbeddable,
-					options
-			);
-		}
-		return fromString(
-				javaType,
-				jdbcJavaType,
-				jdbcType,
-				string,
-				start,
-				end,
-				returnEmbeddable,
-				options
-		);
-	}
-
-	private static Object fromString(
-			JavaType<?> javaType,
-			JavaType<?> jdbcJavaType,
-			JdbcType jdbcType,
-			String string,
-			int start,
-			int end,
-			boolean returnEmbeddable,
-			WrapperOptions options) throws SQLException {
-		switch ( jdbcType.getDefaultSqlTypeCode() ) {
-			case SqlTypes.BINARY:
-			case SqlTypes.VARBINARY:
-			case SqlTypes.LONGVARBINARY:
-			case SqlTypes.LONG32VARBINARY:
-				return jdbcJavaType.wrap(
-						PrimitiveByteArrayJavaType.INSTANCE.fromEncodedString(
-							string,
-							start,
-							end
-						),
-						options
-				);
-			case SqlTypes.UUID:
-				return jdbcJavaType.wrap(
-						PrimitiveByteArrayJavaType.INSTANCE.fromString(
-								string.substring( start, end ).replace( "-", "" )
-						),
-						options
-				);
-			case SqlTypes.DATE:
-				return jdbcJavaType.wrap(
-						JdbcDateJavaType.INSTANCE.fromEncodedString(
-								string,
-								start,
-								end
-						),
-						options
-				);
-			case SqlTypes.TIME:
-			case SqlTypes.TIME_WITH_TIMEZONE:
-			case SqlTypes.TIME_UTC:
-				return jdbcJavaType.wrap(
-						JdbcTimeJavaType.INSTANCE.fromEncodedString(
-								string,
-								start,
-								end
-						),
-						options
-				);
-			case SqlTypes.TIMESTAMP:
-				return jdbcJavaType.wrap(
-						JdbcTimestampJavaType.INSTANCE.fromEncodedString(
-								string,
-								start,
-								end
-						),
-						options
-				);
-			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
-			case SqlTypes.TIMESTAMP_UTC:
-				return jdbcJavaType.wrap(
-						OffsetDateTimeJavaType.INSTANCE.fromEncodedString(
-								string,
-								start,
-								end
-						),
-						options
-				);
-			case SqlTypes.TINYINT:
-			case SqlTypes.SMALLINT:
-			case SqlTypes.INTEGER:
-				if ( jdbcJavaType.getJavaTypeClass() == Boolean.class ) {
-					return jdbcJavaType.wrap( Integer.parseInt( string, start, end, 10 ), options );
-				}
-				else if ( jdbcJavaType instanceof EnumJavaType<?> ) {
-					return jdbcJavaType.wrap( Integer.parseInt( string, start, end, 10 ), options );
-				}
-			case SqlTypes.CHAR:
-			case SqlTypes.NCHAR:
-			case SqlTypes.VARCHAR:
-			case SqlTypes.NVARCHAR:
-				if ( jdbcJavaType.getJavaTypeClass() == Boolean.class && end == start + 1 ) {
-					return jdbcJavaType.wrap( string.charAt( start ), options );
-				}
-			default:
-				if ( jdbcType instanceof AggregateJdbcType aggregateJdbcType ) {
-					final Object[] subValues = aggregateJdbcType.extractJdbcValues(
-							CharSequenceHelper.subSequence(
-									string,
-									start,
-									end
-							),
-							options
-					);
-					if ( returnEmbeddable ) {
-						final StructAttributeValues subAttributeValues = StructHelper.getAttributeValues(
-								aggregateJdbcType.getEmbeddableMappingType(),
-								subValues,
-								options
-						);
-						return instantiate( aggregateJdbcType.getEmbeddableMappingType(), subAttributeValues ) ;
-					}
-					return subValues;
-				}
-
-				return jdbcJavaType.fromEncodedString( string, start, end );
-		}
-	}
-
-	private static String unescape(String string, int start, int end) {
-		final StringBuilder sb = new StringBuilder( end - start );
-		for ( int i = start; i < end; i++ ) {
-			final char c = string.charAt( i );
-			if ( c == '\\' ) {
-				i++;
-				final char cNext = string.charAt( i );
-				switch ( cNext ) {
-					case '\\':
-					case '"':
-					case '/':
-						sb.append( cNext );
-						break;
-					case 'b':
-						sb.append( '\b' );
-						break;
-					case 'f':
-						sb.append( '\f' );
-						break;
-					case 'n':
-						sb.append( '\n' );
-						break;
-					case 'r':
-						sb.append( '\r' );
-						break;
-					case 't':
-						sb.append( '\t' );
-						break;
-					case 'u':
-						sb.append( (char) Integer.parseInt( string, i + 1, i + 5, 16 ) );
-						i += 4;
-						break;
-				}
-				continue;
-			}
-			sb.append( c );
-		}
-		return sb.toString();
-	}
-
-	enum State {
-		KEY_START( "\"\\s" ),
-		KEY_QUOTE( "" ),
-		KEY_END( ":\\s" ),
-		VALUE_START( "\"\\s" ),
-		VALUE_QUOTE( "" ),
-		VALUE_END( ",}\\s" );
-
-		final String expectedChars;
-
-		State(String expectedChars) {
-			this.expectedChars = expectedChars;
-		}
-
-		String expectedChars() {
-			return expectedChars;
-		}
-	}
-
-	private static class JsonAppender extends OutputStream implements SqlAppender {
-
-		private final static char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
-
-		private final StringBuilder sb;
-		private boolean escape;
-
-		public JsonAppender(StringBuilder sb) {
-			this.sb = sb;
-		}
-
-		@Override
-		public void appendSql(String fragment) {
-			append( fragment );
-		}
-
-		@Override
-		public void appendSql(char fragment) {
-			append( fragment );
-		}
-
-		@Override
-		public void appendSql(int value) {
-			sb.append( value );
-		}
-
-		@Override
-		public void appendSql(long value) {
-			sb.append( value );
-		}
-
-		@Override
-		public void appendSql(boolean value) {
-			sb.append( value );
-		}
-
-		@Override
-		public String toString() {
-			return sb.toString();
-		}
-
-		public void startEscaping() {
-			assert !escape;
-			escape = true;
-		}
-
-		public void endEscaping() {
-			assert escape;
-			escape = false;
-		}
-
-		@Override
-		public JsonAppender append(char fragment) {
-			if ( escape ) {
-				appendEscaped( fragment );
-			}
-			else {
-				sb.append( fragment );
-			}
-			return this;
-		}
-
-		@Override
-		public JsonAppender append(CharSequence csq) {
-			return append( csq, 0, csq.length() );
-		}
-
-		@Override
-		public JsonAppender append(CharSequence csq, int start, int end) {
-			if ( escape ) {
-				int len = end - start;
-				sb.ensureCapacity( sb.length() + len );
-				for ( int i = start; i < end; i++ ) {
-					appendEscaped( csq.charAt( i ) );
-				}
-			}
-			else {
-				sb.append( csq, start, end );
-			}
-			return this;
-		}
-
-		@Override
-		public void write(int v) {
-			final String hex = Integer.toHexString( v );
-			sb.ensureCapacity( sb.length() + hex.length() + 1 );
-			if ( ( hex.length() & 1 ) == 1 ) {
-				sb.append( '0' );
-			}
-			sb.append( hex );
-		}
-
-		@Override
-		public void write(byte[] bytes) {
-			write(bytes, 0, bytes.length);
-		}
-
-		@Override
-		public void write(byte[] bytes, int off, int len) {
-			sb.ensureCapacity( sb.length() + ( len << 1 ) );
-			for ( int i = 0; i < len; i++ ) {
-				final int v = bytes[off + i] & 0xFF;
-				sb.append( HEX_ARRAY[v >>> 4] );
-				sb.append( HEX_ARRAY[v & 0x0F] );
-			}
-		}
-
-		private void appendEscaped(char fragment) {
-			switch ( fragment ) {
-				case 0:
-				case 1:
-				case 2:
-				case 3:
-				case 4:
-				case 5:
-				case 6:
-				case 7:
-				//   8 is '\b'
-				//   9 is '\t'
-				//   10 is '\n'
-				case 11:
-				//   12 is '\f'
-				//   13 is '\r'
-				case 14:
-				case 15:
-				case 16:
-				case 17:
-				case 18:
-				case 19:
-				case 20:
-				case 21:
-				case 22:
-				case 23:
-				case 24:
-				case 25:
-				case 26:
-				case 27:
-				case 28:
-				case 29:
-				case 30:
-				case 31:
-					sb.append( "\\u" ).append( Integer.toHexString( fragment ) );
-					break;
-				case '\b':
-					sb.append("\\b");
-					break;
-				case '\t':
-					sb.append("\\t");
-					break;
-				case '\n':
-					sb.append("\\n");
-					break;
-				case '\f':
-					sb.append("\\f");
-					break;
-				case '\r':
-					sb.append("\\r");
-					break;
-				case '"':
-					sb.append( "\\\"" );
-					break;
-				case '\\':
-					sb.append( "\\\\" );
-					break;
-				default:
-					sb.append( fragment );
-					break;
-			}
-		}
-
-	}
 
 	private static class CustomArrayList extends AbstractCollection<Object> implements Collection<Object> {
 		Object[] array = ArrayHelper.EMPTY_OBJECT_ARRAY;

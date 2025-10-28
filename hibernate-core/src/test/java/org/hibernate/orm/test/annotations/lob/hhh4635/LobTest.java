@@ -12,6 +12,8 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
+import static org.hibernate.Hibernate.getLobHelper;
+
 /**
  * To reproduce this issue, Oracle MUST use a multi-byte character set (UTF-8)!
  *
@@ -29,7 +31,7 @@ public class LobTest extends BaseCoreFunctionalTestCase {
 		session.beginTransaction();
 		LobTestEntity entity = new LobTestEntity();
 		entity.setId(1L);
-		entity.setLobValue(session.getLobHelper().createBlob(new byte[9999]));
+		entity.setLobValue(getLobHelper().createBlob(new byte[9999]));
 		entity.setQwerty(randomString(4000));
 		session.persist(entity);
 		session.getTransaction().commit();

@@ -41,12 +41,7 @@ public class AutoFlushOnUpdateQueryTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Fruit" ).executeUpdate();
-					session.createMutationQuery( "delete from FruitLogEntry" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

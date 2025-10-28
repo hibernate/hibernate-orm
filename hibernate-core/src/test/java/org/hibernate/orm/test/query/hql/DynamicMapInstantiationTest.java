@@ -4,30 +4,24 @@
  */
 package org.hibernate.orm.test.query.hql;
 
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.logger.Triggerable;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-
-import org.jboss.logging.Logger;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Query;
 import jakarta.persistence.Table;
-
-import java.lang.invoke.MethodHandles;
+import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
+import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
+import org.jboss.logging.Logger;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 @DomainModel(
 		annotatedClasses = {
@@ -41,10 +35,8 @@ public class DynamicMapInstantiationTest {
 	private Triggerable triggerable;
 
 	@RegisterExtension
-	public LoggerInspectionExtension logger = LoggerInspectionExtension
-			.builder().setLogger(
-					Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, SqmDynamicInstantiation.class.getName() )
-			).build();
+	public LoggerInspectionExtension logger =
+			LoggerInspectionExtension.builder().setLogger( Logger.getLogger( SqmDynamicInstantiation.class ) ).build();
 
 	@BeforeEach
 	public void setUp() {

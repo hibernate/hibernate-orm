@@ -7,13 +7,11 @@ package org.hibernate.boot.model.internal;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 
@@ -70,9 +68,9 @@ class ToOneFkSecondPass implements FkSecondPass {
 		if ( entityClassName == null ) {
 			return false;
 		}
-		final PersistentClass persistentClass =
+		final var persistentClass =
 				buildingContext.getMetadataCollector().getEntityBinding( entityClassName );
-		final Property property = persistentClass.getIdentifierProperty();
+		final var property = persistentClass.getIdentifierProperty();
 		if ( path == null ) {
 			return false;
 		}
@@ -90,8 +88,9 @@ class ToOneFkSecondPass implements FkSecondPass {
 					localPath = path.substring( 3 );
 				}
 
-				for ( Property idProperty : component.getProperties() ) {
-					if ( localPath.equals( idProperty.getName() ) || localPath.startsWith( idProperty.getName() + "." ) ) {
+				for ( var idProperty : component.getProperties() ) {
+					if ( localPath.equals( idProperty.getName() )
+							|| localPath.startsWith( idProperty.getName() + "." ) ) {
 						return true;
 					}
 				}
@@ -106,7 +105,7 @@ class ToOneFkSecondPass implements FkSecondPass {
 			//TODO: move this validation logic to a separate ManyToOneSecondPass
 			//      for consistency with how this is handled for OneToOnes
 			final String targetEntityName = manyToOne.getReferencedEntityName();
-			final PersistentClass targetEntity = persistentClasses.get( targetEntityName );
+			final var targetEntity = persistentClasses.get( targetEntityName );
 			if ( targetEntity == null ) {
 				final String problem = annotatedEntity
 						? " which does not belong to the same persistence unit"
@@ -159,7 +158,7 @@ class ToOneFkSecondPass implements FkSecondPass {
 		manyToOne.setReferenceToPrimaryKey( false );
 
 		final String entityName = targetEntity.getEntityName();
-		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
+		final var metadataCollector = buildingContext.getMetadataCollector();
 		metadataCollector.addUniquePropertyReference( entityName, referencedPropertyName );
 		metadataCollector.addPropertyReferencedAssociation( entityName, path, referencedPropertyName );
 	}

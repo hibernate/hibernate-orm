@@ -53,12 +53,7 @@ public class IdClassWithLazyManyToOneTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from SystemUser" ).executeUpdate();
-					session.createQuery( "delete from Subsystem" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

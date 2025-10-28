@@ -54,8 +54,8 @@ import java.util.List;
  * Certain rules applying to stateful sessions are relaxed in a stateless
  * session:
  * <ul>
- * <li>it is not necessary to discard a session and its entities after an
- *     exception is thrown by a stateless sessions, and
+ * <li>it's not necessary to discard a stateless session and its entities
+ *     after an exception is thrown by the stateless session, and
  * <li>when an exception is thrown by a stateless session, the current
  *     transaction is not automatically marked for rollback.
  * </ul>
@@ -79,10 +79,6 @@ import java.util.List;
  * @author Gavin King
  */
 public interface StatelessSession extends SharedSessionContract {
-	/**
-	 * Close the stateless session and release the JDBC connection.
-	 */
-	void close();
 
 	/**
 	 * Insert a record.

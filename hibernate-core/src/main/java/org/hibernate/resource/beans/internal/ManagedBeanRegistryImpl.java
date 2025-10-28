@@ -7,6 +7,7 @@ package org.hibernate.resource.beans.internal;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.FallbackContainedBean;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
@@ -50,36 +51,43 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 
 	@Override
 	public <T> ManagedBean<T> getBean(Class<T> beanClass, BeanInstanceProducer fallbackBeanInstanceProducer) {
-		final ManagedBean<?> existing = registrations.get( beanClass.getName() );
+		final String beanClassName = beanClass.getName();
+		final var existing = registrations.get( beanClassName );
 		if ( existing != null ) {
-			//noinspection unchecked
+			if ( !beanClass.equals( existing.getBeanClass() ) ) {
+				throw new AssertionFailure( "Wrong type of bean: " + beanClassName );
+			}
+			//noinspection unchecked (safe since we just checked)
 			return (ManagedBean<T>) existing;
 		}
 		else {
-			final ManagedBean<T> bean = createBean( beanClass, fallbackBeanInstanceProducer );
-			registrations.put( beanClass.getName(), bean );
+			final var bean = createBean( beanClass, fallbackBeanInstanceProducer );
+			registrations.put( beanClassName, bean );
 			return bean;
 		}
 	}
 
 	@Override
-	public <T> ManagedBean<T> getBean(String beanName, Class<T> beanContract) {
+	public <T> ManagedBean<? extends T> getBean(String beanName, Class<T> beanContract) {
 		return getBean( beanName, beanContract, FallbackBeanInstanceProducer.INSTANCE );
 	}
 
 	@Override
-	public <T> ManagedBean<T> getBean(
+	public <T> ManagedBean<? extends T> getBean(
 			String beanName,
 			Class<T> beanContract,
 			BeanInstanceProducer fallbackBeanInstanceProducer) {
 		final String key = beanContract.getName() + ':' + beanName;
-		final ManagedBean<?> existing = registrations.get( key );
+		final var existing = registrations.get( key );
 		if ( existing != null ) {
-			//noinspection unchecked
-			return (ManagedBean<T>) existing;
+			if ( !beanContract.isAssignableFrom( existing.getBeanClass() ) ) {
+				throw new AssertionFailure( "Wrong type of bean: " + key );
+			}
+			//noinspection unchecked (safe since we just checked)
+			return (ManagedBean<? extends T>) existing;
 		}
 		else {
-			final ManagedBean<T> bean = createBean( beanName, beanContract, fallbackBeanInstanceProducer );
+			final var bean = createBean( beanName, beanContract, fallbackBeanInstanceProducer );
 			registrations.put( key, bean );
 			return bean;
 		}
@@ -91,7 +99,7 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 				: beanContainer.getBean( beanClass, this, fallbackBeanInstanceProducer );
 	}
 
-	private <T> ManagedBean<T> createBean(
+	private <T> ManagedBean<? extends T> createBean(
 			String beanName, Class<T> beanContract, BeanInstanceProducer fallbackBeanInstanceProducer) {
 		return beanContainer == null
 				? new FallbackContainedBean<>( beanName, beanContract, fallbackBeanInstanceProducer )

@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -21,6 +22,7 @@ import org.hibernate.query.criteria.JpaSetReturningFunction;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
@@ -102,6 +104,10 @@ public abstract class AbstractSqmSelectQuery<T>
 		return new LinkedHashMap<>( cteStatements );
 	}
 
+	void addCteStatements(Map<String, SqmCteStatement<?>> cteStatements) {
+		this.cteStatements.putAll( cteStatements );
+	}
+
 	@Override
 	public SqmCteStatement<?> getCteStatement(String cteLabel) {
 		return cteStatements.get( cteLabel );
@@ -117,23 +123,24 @@ public abstract class AbstractSqmSelectQuery<T>
 		return (JpaCteCriteria<X>) cteStatements.get( cteName );
 	}
 
-	@Override
+	@Override @Deprecated
 	public <X> JpaCteCriteria<X> with(AbstractQuery<X> criteria) {
-		return withInternal( SqmCreationHelper.acquireUniqueAlias(), criteria );
+		// Use of acquireUniqueAlias() results in interpretation cache miss
+		return withInternal( "_" + SqmCreationHelper.acquireUniqueAlias(), criteria );
 	}
 
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionAll(
 			AbstractQuery<X> baseCriteria,
 			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
-		return withInternal( SqmCreationHelper.acquireUniqueAlias(), baseCriteria, false, recursiveCriteriaProducer );
+		return withInternal( generateAlias(), baseCriteria, false, recursiveCriteriaProducer );
 	}
 
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionDistinct(
 			AbstractQuery<X> baseCriteria,
 			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
-		return withInternal( SqmCreationHelper.acquireUniqueAlias(), baseCriteria, true, recursiveCriteriaProducer );
+		return withInternal( generateAlias(), baseCriteria, true, recursiveCriteriaProducer );
 	}
 
 	@Override
@@ -250,8 +257,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	 * @see org.hibernate.query.criteria.JpaCriteriaQuery#getRoot(String, Class)
 	 */
 	public <E> JpaRoot<? extends E> getRoot(String alias, Class<E> type) {
-		final List<SqmRoot<?>> rootList = getQuerySpec().getRootList();
-		for ( SqmRoot<?> root : rootList ) {
+		for ( SqmRoot<?> root : getQuerySpec().getRootList() ) {
 			final String rootAlias = root.getAlias();
 			if ( rootAlias != null && rootAlias.equals( alias ) ) {
 				return castRoot( root, type );
@@ -279,12 +285,11 @@ public abstract class AbstractSqmSelectQuery<T>
 		return addRoot(
 				new SqmRoot<>(
 						nodeBuilder().getDomainModel().entity( entityClass ),
-						null,
+						generateAlias(),
 						true,
 						nodeBuilder()
 				)
 		);
-
 	}
 
 	@Override
@@ -315,14 +320,21 @@ public abstract class AbstractSqmSelectQuery<T>
 
 	@Override
 	public <X> SqmRoot<X> from(EntityType<X> entityType) {
-		return addRoot( new SqmRoot<>( (EntityDomainType<X>) entityType, null, true, nodeBuilder() ) );
+		return addRoot(
+				new SqmRoot<>(
+						(EntityDomainType<X>) entityType,
+						generateAlias(),
+						true,
+						nodeBuilder()
+				)
+		);
 	}
 
 	private void validateComplianceFromSubQuery() {
 		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			throw new IllegalStateException(
-					"The JPA specification does not support subqueries in the from clause. " +
-							"Please disable the JPA query compliance if you want to use this feature." );
+					"The JPA specification does not support subqueries in the from clause. "
+					+ "Please disable the JPA query compliance if you want to use this feature." );
 		}
 	}
 
@@ -366,6 +378,12 @@ public abstract class AbstractSqmSelectQuery<T>
 		return this;
 	}
 
+	@Override
+	public SqmSelectQuery<T> where(List<Predicate> restrictions) {
+		getQuerySpec().setRestriction( restrictions );
+		return this;
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Grouping
@@ -377,7 +395,7 @@ public abstract class AbstractSqmSelectQuery<T>
 
 	@Override
 	public SqmSelectQuery<T> groupBy(Expression<?>... expressions) {
-		getQuerySpec().setGroupingExpressions( List.of( expressions ) );
+		getQuerySpec().setGroupingExpressions( expressions );
 		return this;
 	}
 
@@ -394,13 +412,19 @@ public abstract class AbstractSqmSelectQuery<T>
 
 	@Override
 	public SqmSelectQuery<T> having(Expression<Boolean> booleanExpression) {
-		getQuerySpec().setGroupRestriction( nodeBuilder().wrap( booleanExpression ) );
+		getQuerySpec().setGroupRestriction( booleanExpression );
 		return this;
 	}
 
 	@Override
 	public SqmSelectQuery<T> having(Predicate... predicates) {
-		getQuerySpec().setGroupRestriction( nodeBuilder().wrap( predicates ) );
+		getQuerySpec().setGroupRestriction( predicates );
+		return this;
+	}
+
+	@Override
+	public AbstractQuery<T> having(List<Predicate> restrictions) {
+		getQuerySpec().setGroupRestriction( restrictions );
 		return this;
 	}
 
@@ -416,18 +440,45 @@ public abstract class AbstractSqmSelectQuery<T>
 		sqmQueryPart.appendHqlString( hql, context );
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof AbstractSqmSelectQuery<?> that
+			&& Objects.equals( this.resultType, that.resultType ) // for performance!
+			&& this.sqmQueryPart.equals( that.sqmQueryPart )
+			&& Objects.equals( this.cteStatements, that.cteStatements );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = Objects.hashCode( cteStatements );
+		result = 31 * result + sqmQueryPart.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof AbstractSqmSelectQuery<?> that
+			&& Objects.equals( this.resultType, that.resultType ) // for performance!
+			&& this.sqmQueryPart.isCompatible( that.sqmQueryPart )
+			&& SqmCacheable.areCompatible( this.cteStatements, that.cteStatements );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = SqmCacheable.cacheHashCode( cteStatements );
+		result = 31 * result + sqmQueryPart.cacheHashCode();
+		return result;
+	}
+
 	@SuppressWarnings("unchecked")
 	protected Selection<? extends T> getResultSelection(Selection<?>[] selections) {
 		final Class<T> resultType = getResultType();
 		if ( resultType == null || resultType == Object.class ) {
-			switch ( selections.length ) {
-				case 0:
-					throw new IllegalArgumentException( "Empty selections passed to criteria query typed as Object" );
-				case 1:
-					return (Selection<? extends T>) selections[0];
-				default:
-					return (Selection<? extends T>) nodeBuilder().array( selections );
-			}
+			return switch ( selections.length ) {
+				case 0 -> throw new IllegalArgumentException( "Empty selections passed to criteria query typed as Object" );
+				case 1 -> (Selection<? extends T>) selections[0];
+				default -> (Selection<? extends T>) nodeBuilder().array( selections );
+			};
 		}
 		else if ( Tuple.class.isAssignableFrom( resultType ) ) {
 			return (Selection<? extends T>) nodeBuilder().tuple( selections );

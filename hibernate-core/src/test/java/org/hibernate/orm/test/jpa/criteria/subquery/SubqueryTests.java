@@ -94,7 +94,8 @@ public class SubqueryTests {
 					assertEquals("Jack", entities.get(0).getName());
 					assertEquals("Black", entities.get(0).getSurName());
 					assertEquals("John", entities.get(1).getName());
-					assertEquals("Doe", entities.get(1).getSurName());
+					// Trim because in some dialects, the type is CHAR(5), leading to trailing spaces
+					assertEquals("Doe", entities.get(1).getSurName().trim());
 				}
 		);
 	}

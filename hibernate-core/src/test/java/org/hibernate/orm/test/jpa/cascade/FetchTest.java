@@ -35,18 +35,7 @@ public class FetchTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Soldier" ).executeUpdate();
-					entityManager.createQuery( "delete from Troop" ).executeUpdate();
-					entityManager.createQuery( "delete from Grandson" ).executeUpdate();
-					entityManager.createQuery( "delete from Son" ).executeUpdate();
-					entityManager.createQuery( "delete from Parent" ).executeUpdate();
-					entityManager.createQuery( "delete from ExtractionDocument" ).executeUpdate();
-					entityManager.createQuery( "delete from ExtractionDocumentInfo" ).executeUpdate();
-					entityManager.createQuery( "delete from Conference" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

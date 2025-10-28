@@ -5,17 +5,16 @@
 package org.hibernate.orm.test.jpa.compliance.tck2_2.joincolumn;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 
@@ -24,41 +23,37 @@ import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
  */
 @RequiresDialect(H2Dialect.class )
 @FailureExpected( jiraKey = "tck-challenge" )
-public class JoinColumnTest extends BaseUnitTestCase {
+@ServiceRegistry( settings = {@Setting(name = AvailableSettings.HBM2DDL_AUTO, value = "create-drop")} )
+public class JoinColumnTest {
 
 	@Test
-	public void testIt() {
-		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
-				.build();
+	public void testIt(ServiceRegistryScope scope) {
 
-		try {
+		try (SessionFactoryImplementor sf = (SessionFactoryImplementor) new MetadataSources( scope.getRegistry() )
+				.addAnnotatedClass( Company.class )
+				.addAnnotatedClass( Location.class )
+				.buildMetadata()
+				.buildSessionFactory()) {
+			try {
+				inTransaction(
+						sf,
+						session -> {
+							final Company acme = new Company( 1, "Acme Corp" );
+							new Location( 1, "86-215", acme );
+							new Location( 2, "20-759", acme );
 
-			try (SessionFactoryImplementor sf = (SessionFactoryImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( Company.class )
-					.addAnnotatedClass( Location.class )
-					.buildMetadata()
-					.buildSessionFactory()) {
-				try {
-					inTransaction(
-							sf,
-							session -> {
-								final Company acme = new Company( 1, "Acme Corp" );
-								new Location( 1, "86-215", acme );
-								new Location( 2, "20-759", acme );
+							session.persist( acme );
+						}
+				);
 
-								session.persist( acme );
-							}
-					);
+				inTransaction(
+						sf,
+						session -> {
+							final Company acme = session.find( Company.class, 1 );
+							assert acme.getLocations().size() == 2;
 
-					inTransaction(
-							sf,
-							session -> {
-								final Company acme = session.get( Company.class, 1 );
-								assert acme.getLocations().size() == 2;
-
-								// this fails.  however it is due to a number of bad assumptions
-								// in the TCK:
+							// this fails.  however it is due to a number of bad assumptions
+							// in the TCK:
 
 //								First the spec says:
 //
@@ -89,26 +84,23 @@ public class JoinColumnTest extends BaseUnitTestCase {
 //										so that deleting Company wont cause FK violations.  But again this is made impossible
 //										by the TCK because it defines the column as non-nullable (and not even in the @JoinColumn
 // 										btw which would be another basis for challenge).
-								session.remove( acme );
-								for ( Location location : acme.getLocations() ) {
-									session.remove( location );
-								}
+							session.remove( acme );
+							for ( Location location : acme.getLocations() ) {
+								session.remove( location );
 							}
-					);
-				}
-				finally {
-					inTransaction(
-							sf,
-							session -> {
-								session.createQuery( "delete Location" ).executeUpdate();
-								session.createQuery( "delete Company" ).executeUpdate();
-							}
-					);
-				}
+						}
+				);
+			}
+			finally {
+				inTransaction(
+						sf,
+						session -> {
+							session.createQuery( "delete Location" ).executeUpdate();
+							session.createQuery( "delete Company" ).executeUpdate();
+						}
+				);
 			}
 		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
 	}
+
 }

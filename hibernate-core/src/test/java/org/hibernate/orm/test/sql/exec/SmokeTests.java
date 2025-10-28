@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.sql.exec;
 
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -81,17 +80,7 @@ public class SmokeTests {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.doWork(
-								work -> {
-									Statement statement = work.createStatement();
-									statement.execute( "delete from mapping_simple_entity" );
-									statement.execute( "delete from mapping_other_entity" );
-									statement.close();
-								}
-						)
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

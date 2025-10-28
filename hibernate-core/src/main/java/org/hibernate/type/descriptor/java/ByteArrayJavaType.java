@@ -56,7 +56,7 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
 		// match legacy behavior
-		final JdbcType descriptor = indicators.getJdbcType( indicators.resolveJdbcTypeCode( SqlTypes.VARBINARY ) );
+		final var descriptor = indicators.getJdbcType( indicators.resolveJdbcTypeCode( SqlTypes.VARBINARY ) );
 		return descriptor instanceof AdjustableJdbcType
 				? ( (AdjustableJdbcType) descriptor ).resolveIndicatedType( indicators, this )
 				: descriptor;

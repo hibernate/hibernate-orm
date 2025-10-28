@@ -1,6 +1,5 @@
 [[basic]]
 === Basic values
-:root-project-dir: ../../../../../../..
 :testing-project-dir: {root-project-dir}/hibernate-testing
 :example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
 :core-project-dir: {root-project-dir}/hibernate-core
@@ -151,7 +150,7 @@ When loading the `Account` entity, Hibernate is going to calculate the `interest
 include::{example-dir-basic-mapping}/basic/FormulaTest.java[tags=mapping-column-formula-persistence-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/basic/mapping-column-formula-persistence-example.sql[]
 ----
@@ -285,7 +284,7 @@ When persisting this entity, Hibernate generates the following SQL statement:
 include::{example-dir-basic-mapping}/basic/PhoneTypeEnumeratedOrdinalTest.java[tags=basic-enums-Enumerated-ordinal-persistence-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/basic/basic-enums-Enumerated-ordinal-persistence-example.sql[]
 ----
@@ -311,7 +310,7 @@ Persisting the same entity as in the `@Enumerated(ORDINAL)` example, Hibernate g
 [[basic-enums-Enumerated-string-persistence-example]]
 .Persisting an entity with an `@Enumerated(STRING)` mapping
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/basic/basic-enums-Enumerated-string-persistence-example.sql[]
 ----
@@ -805,7 +804,7 @@ Just like with `CLOB`, Hibernate can also deal with `NCLOB` SQL data types:
 [[basic-nclob-sql-example]]
 .`NCLOB` - SQL
 ====
-[source, java, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/basic/basic-nclob-sql-example.sql[]
 ----
@@ -1356,7 +1355,7 @@ include::{example-dir-basic-mapping}/basic/InetAddressMappingTests.java[tags=bas
 Hibernate will only use the `JSON` type if explicitly configured through `@JdbcTypeCode( SqlTypes.JSON )`.
 The JSON library used for serialization/deserialization is detected automatically,
 but can be overridden by setting `hibernate.type.json_format_mapper`
-as can be read in the <<appendices/Configurations.adoc#misc-options,Configurations>> section.
+as can be read in the <<appendices/SettingsReference.adoc#settings-hibernate.type.json_format_mapper,Configurations>> section.
 
 [[basic-json-example]]
 .Mapping JSON
@@ -1373,7 +1372,7 @@ include::{example-dir-basic-mapping}/basic/JsonMappingTests.java[tags=basic-json
 Hibernate will only use the `XML` type if explicitly configured through `@JdbcTypeCode( SqlTypes.SQLXML )`.
 The XML library used for serialization/deserialization is detected automatically,
 but can be overridden by setting `hibernate.type.xml_format_mapper`
-as can be read in the <<appendices/Configurations.adoc#misc-options,Configurations>> section.
+as can be read in the <<appendices/SettingsReference.adoc#settings-hibernate.type.xml_format_mapper,Configurations>> section.
 
 [[basic-xml-example]]
 .Mapping XML
@@ -2382,7 +2381,7 @@ When saving the following `Product entity`, Hibernate generates the following SQ
 include::{example-dir-basic-mapping}/basic/QuotingTest.java[tags=basic-quoting-persistence-example, indent=0]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/basic/basic-quoting-persistence-example.sql[indent=0]
 ----
@@ -2417,7 +2416,7 @@ include::{example-dir-basic-mapping}/basic/AutoQuotingTest.java[tags=basic-auto-
 When persisting a `Product` entity, Hibernate is going to quote all identifiers as in the following example:
 
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/basic/basic-auto-quoting-persistence-example.sql[indent=0]
 ----
@@ -2425,7 +2424,7 @@ include::{extrasdir}/basic/basic-auto-quoting-persistence-example.sql[indent=0]
 
 As you can see, both the table name and all the column have been quoted.
 
-For more about quoting-related configuration properties, check out the <<appendices/Configurations.adoc#configurations-mapping,Mapping configurations>> section as well.
+For more about quoting-related configuration properties, check out the <<appendices/SettingsReference.adoc#settings-mapping,Mapping configurations>> section as well.
 
 
 
@@ -2651,7 +2650,7 @@ The `write` expression, if specified, must contain exactly one '?' placeholder f
 include::{example-dir-basic-mapping}/basic/ColumnTransformerTest.java[tags=mapping-column-read-and-write-composite-type-persistence-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/basic/mapping-column-read-and-write-composite-type-persistence-example.sql[]
 ----

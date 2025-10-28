@@ -299,20 +299,17 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 	public void injectLoadedState(
 			PluralAttributeMapping attributeMapping,
 			List<?> loadingStateList) {
-		final CollectionPersister collectionDescriptor = attributeMapping.getCollectionDescriptor();
+		final var collectionDescriptor = attributeMapping.getCollectionDescriptor();
+		final var collectionSemantics = collectionDescriptor.getCollectionSemantics();
 		if ( loadingStateList != null ) {
-			this.set = (Set<E>) attributeMapping.getCollectionDescriptor().getCollectionSemantics().instantiateRaw(
-					loadingStateList.size(),
-					collectionDescriptor
-			);
-
-			this.set.addAll( (List<E>) loadingStateList );
+			//noinspection unchecked
+			set = (Set<E>) collectionSemantics.instantiateRaw( loadingStateList.size(), collectionDescriptor );
+			//noinspection unchecked
+			set.addAll( (List<E>) loadingStateList );
 		}
 		else {
-			this.set = (Set<E>) attributeMapping.getCollectionDescriptor().getCollectionSemantics().instantiateRaw(
-					0,
-					collectionDescriptor
-			);
+			//noinspection unchecked
+			set = (Set<E>) collectionSemantics.instantiateRaw( 0, collectionDescriptor );
 		}
 	}
 
@@ -358,6 +355,32 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 		}
 
 		return deletes.iterator();
+	}
+
+	@Override
+	public boolean hasDeletes(CollectionPersister persister) {
+		final Type elementType = persister.getElementType();
+		final java.util.Map<?,?> sn = (java.util.Map<?,?>) getSnapshot();
+
+		Iterator<?> itr = sn.keySet().iterator();
+		while ( itr.hasNext() ) {
+			if ( !set.contains( itr.next() ) ) {
+				// the element has been removed from the set
+				return true;
+			}
+		}
+
+		itr = set.iterator();
+		while ( itr.hasNext() ) {
+			final Object test = itr.next();
+			final Object oldValue = sn.get( test );
+			if ( oldValue!=null && elementType.isDirty( test, oldValue, getSession() ) ) {
+				// the element has changed
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	@Override

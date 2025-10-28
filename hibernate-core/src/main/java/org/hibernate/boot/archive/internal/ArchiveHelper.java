@@ -14,7 +14,6 @@ import java.util.List;
 
 import org.hibernate.boot.archive.spi.ArchiveException;
 
-import org.jboss.logging.Logger;
 
 /**
  * Helper for dealing with archives
@@ -23,11 +22,10 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ArchiveHelper {
-	private static final Logger log = Logger.getLogger( ArchiveHelper.class );
 
 	/**
-	 * Get the JAR URL of the JAR containing the given entry
-	 * Method used in a non managed environment
+	 * Get the JAR URL of the JAR containing the given entry.
+	 * Method used in a non-managed environment.
 	 *
 	 * @param url URL pointing to the known file in the JAR
 	 * @param entry file known to be in the JAR
@@ -91,7 +89,7 @@ public class ArchiveHelper {
 					"Unable to determine JAR Url from " + url + ". Cause: " + e.getMessage()
 			);
 		}
-		log.tracef( "JAR URL from URL Entry: %s >> %s", url, jarUrl );
+		org.hibernate.boot.BootLogging.BOOT_LOGGER.jarUrlFromUrlEntry( String.valueOf(url), String.valueOf(jarUrl) );
 		return jarUrl;
 	}
 

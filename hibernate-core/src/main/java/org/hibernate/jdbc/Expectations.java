@@ -12,11 +12,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.StaleStateException;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 
 import static java.sql.Statement.EXECUTE_FAILED;
 import static java.sql.Statement.SUCCESS_NO_INFO;
+import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_MESSAGE_LOGGER;
 
 /**
  * Useful operations for dealing with {@link Expectation}s.
@@ -24,7 +23,6 @@ import static java.sql.Statement.SUCCESS_NO_INFO;
  * @author Steve Ebersole
  */
 public class Expectations {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Expectations.class );
 
 	static final SqlExceptionHelper sqlExceptionHelper = new SqlExceptionHelper( false );
 
@@ -69,7 +67,7 @@ public class Expectations {
 			case EXECUTE_FAILED:
 				throw new BatchFailedException( "Batch update failed: " + batchPosition );
 			case SUCCESS_NO_INFO:
-				LOG.debugf( "Success of batch update unknown: %s", batchPosition );
+				BATCH_MESSAGE_LOGGER.batchSuccessUnknown( batchPosition );
 				break;
 			default:
 				if ( expectedRowCount > rowCount ) {

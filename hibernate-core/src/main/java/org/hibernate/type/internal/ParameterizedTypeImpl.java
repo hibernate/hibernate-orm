@@ -34,7 +34,13 @@ public class ParameterizedTypeImpl implements ParameterizedType {
 		final int argumentsSize = arguments.size();
 		final java.lang.reflect.Type[] argumentTypes = new java.lang.reflect.Type[argumentsSize];
 		for ( int i = 0; i < argumentsSize; i++ ) {
-			argumentTypes[i] = arguments.get( i ).determineRawClass().toJavaClass();
+			TypeDetails argument = arguments.get( i );
+			if ( argument.getTypeKind() == TypeDetails.Kind.PARAMETERIZED_TYPE ) {
+				argumentTypes[i] = from( argument.asParameterizedType() );
+			}
+			else {
+				argumentTypes[i] = argument.determineRawClass().toJavaClass();
+			}
 		}
 		final TypeVariableScope owner = typeDetails.asParameterizedType().getOwner();
 		final java.lang.reflect.Type ownerType;

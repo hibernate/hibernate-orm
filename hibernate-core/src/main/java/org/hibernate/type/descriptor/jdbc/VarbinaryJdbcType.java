@@ -17,7 +17,6 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterBinary;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -73,7 +72,7 @@ public class VarbinaryJdbcType implements AdjustableJdbcType {
 
 	@Override
 	public JdbcType resolveIndicatedType(JdbcTypeIndicators indicators, JavaType<?> domainJtd) {
-		final JdbcTypeRegistry jdbcTypeRegistry = indicators.getTypeConfiguration().getJdbcTypeRegistry();
+		final var jdbcTypeRegistry = indicators.getTypeConfiguration().getJdbcTypeRegistry();
 		if ( indicators.isLob() ) {
 			return jdbcTypeRegistry.getDescriptor( indicators.resolveJdbcTypeCode( SqlTypes.BLOB ) );
 		}

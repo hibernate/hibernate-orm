@@ -33,14 +33,19 @@ public enum ValidationMode {
 		};
 	}
 
+	@Deprecated(since = "7.2", forRemoval = true)
 	public static Set<ValidationMode> getModes(Object modeProperty) {
-		final Set<ValidationMode> modes = setOfSize( 3);
+		return parseValidationModes( modeProperty );
+	}
+
+	public static Set<ValidationMode> parseValidationModes(Object modeProperty) {
+		final Set<ValidationMode> modes = setOfSize( 3 );
 		if ( modeProperty == null ) {
 			modes.add( ValidationMode.AUTO );
 		}
 		else {
 			for ( String modeInString : split( ",", modeProperty.toString() ) ) {
-				modes.add( getMode(modeInString) );
+				modes.add( parseValidationMode( modeInString ) );
 			}
 		}
 		if ( modes.size() > 1
@@ -50,8 +55,8 @@ public enum ValidationMode {
 		return modes;
 	}
 
-	private static ValidationMode getMode(String modeProperty) {
-		if ( modeProperty == null || modeProperty.isEmpty() ) {
+	private static ValidationMode parseValidationMode(String modeProperty) {
+		if ( modeProperty == null || modeProperty.isBlank() ) {
 			return AUTO;
 		}
 		else {
@@ -70,12 +75,14 @@ public enum ValidationMode {
 		if ( modes == null || modes.isEmpty() ) {
 			return "[<empty>]";
 		}
-		final StringBuilder result = new StringBuilder( "[" );
-		String sep = "";
-		for ( ValidationMode mode : modes ) {
-			result.append( sep ).append( mode.externalForm() );
-			sep = ", ";
+		else {
+			final var result = new StringBuilder( "[" );
+			String sep = "";
+			for ( var mode : modes ) {
+				result.append( sep ).append( mode.externalForm() );
+				sep = ", ";
+			}
+			return result.append( "]" ).toString();
 		}
-		return result.append( "]" ).toString();
 	}
 }

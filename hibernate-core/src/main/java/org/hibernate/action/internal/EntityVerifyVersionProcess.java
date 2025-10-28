@@ -6,8 +6,7 @@ package org.hibernate.action.internal;
 
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.dialect.lock.OptimisticEntityLockException;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.pretty.MessageHelper;
 
 /**
@@ -30,9 +29,9 @@ public class EntityVerifyVersionProcess implements BeforeTransactionCompletionPr
 	}
 
 	@Override
-	public void doBeforeTransactionCompletion(SessionImplementor session) {
-		final EntityEntry entry = session.getPersistenceContext().getEntry( object );
-		// Don't check version for an entity that is not in the PersistenceContext
+	public void doBeforeTransactionCompletion(SharedSessionContractImplementor session) {
+		final var entry = session.getPersistenceContext().getEntry( object );
+		// Don't check the version for an entity that is not in the PersistenceContext
 		if ( entry != null ) {
 			final Object latestVersion = entry.getPersister().getCurrentVersion( entry.getId(), session );
 			if ( !entry.getVersion().equals( latestVersion ) ) {

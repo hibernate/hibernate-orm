@@ -12,7 +12,6 @@ import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.results.FetchBuilderBasicValued;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.QueryLogging;
 import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.named.ResultMementoEntity;
@@ -20,6 +19,8 @@ import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultBuilderEntityValued;
 import org.hibernate.query.results.internal.complete.CompleteResultBuilderEntityStandard;
 import org.hibernate.sql.results.graph.Fetchable;
+
+import static org.hibernate.query.QueryLogging.QUERY_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -45,10 +46,7 @@ public class ResultMementoEntityStandard implements ResultMementoEntity, FetchMe
 		this.discriminatorMemento = discriminatorMemento;
 		this.fetchMementoMap = fetchMementoMap;
 
-		QueryLogging.QUERY_LOGGER.debugf(
-				"Created ResultMementoEntityStandard - %s",
-				navigablePath
-		);
+		QUERY_LOGGER.debugf( "Created ResultMementoEntityStandard - %s", navigablePath );
 	}
 
 	@Override
@@ -61,12 +59,7 @@ public class ResultMementoEntityStandard implements ResultMementoEntity, FetchMe
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
 
-		final FetchBuilderBasicValued discriminatorResultBuilder = discriminatorMemento != null
-				? (FetchBuilderBasicValued) discriminatorMemento.resolve( this, querySpaceConsumer, context )
-				: null;
-
 		final HashMap<Fetchable, FetchBuilder> fetchBuilderMap = new HashMap<>();
-
 		fetchMementoMap.forEach(
 				(attrName, fetchMemento) -> fetchBuilderMap.put(
 						(Fetchable) entityDescriptor.findByPath( attrName ),
@@ -79,7 +72,10 @@ public class ResultMementoEntityStandard implements ResultMementoEntity, FetchMe
 				navigablePath,
 				entityDescriptor,
 				lockMode,
-				discriminatorResultBuilder,
+				discriminatorMemento == null
+						? null
+						: (FetchBuilderBasicValued)
+								discriminatorMemento.resolve( this, querySpaceConsumer, context ),
 				fetchBuilderMap
 		);
 	}

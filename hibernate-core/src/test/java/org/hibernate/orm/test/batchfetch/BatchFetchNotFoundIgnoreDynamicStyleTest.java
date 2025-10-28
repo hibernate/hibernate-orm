@@ -76,12 +76,7 @@ public class BatchFetchNotFoundIgnoreDynamicStyleTest {
 
 	@AfterEach
 	public void deleteData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Task" ).executeUpdate();
-					session.createQuery( "delete from Employee" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

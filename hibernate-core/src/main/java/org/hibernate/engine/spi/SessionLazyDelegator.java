@@ -40,6 +40,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactory;
 import org.hibernate.SharedSessionBuilder;
+import org.hibernate.SharedStatelessSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.Transaction;
 import org.hibernate.UnknownProfileException;
@@ -545,6 +546,11 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public SharedStatelessSessionBuilder statelessWithOptions() {
+		return this.lazySession.get().statelessWithOptions();
+	}
+
+	@Override
 	public String getTenantIdentifier() {
 		return this.lazySession.get().getTenantIdentifier();
 	}
@@ -802,6 +808,16 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
 		return this.lazySession.get().find( entityGraph, primaryKey, options );
+	}
+
+	@Override
+	public Object find(String entityName, Object primaryKey) {
+		return this.lazySession.get().find( entityName, primaryKey );
+	}
+
+	@Override
+	public Object find(String entityName, Object primaryKey, FindOption... options) {
+		return this.lazySession.get().find( entityName, primaryKey, options );
 	}
 
 	@Override

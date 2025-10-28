@@ -11,51 +11,54 @@ import jakarta.persistence.Version;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.MariaDBDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.VersionMatchMode;
+import org.jboss.logging.Logger;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class OptimisticLockTest extends BaseEntityManagerFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@Jpa(annotatedClasses = OptimisticLockTest.Phone.class)
+public class OptimisticLockTest {
+	private static final Logger log = Logger.getLogger( OptimisticLockTest.class );
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Phone.class
-		};
+	@AfterEach
+	void tearDown(EntityManagerFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Fails at SERIALIZABLE isolation")
-	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 11, minorVersion = 6, microVersion = 2, reason = "MariaDB will throw an error DB_RECORD_CHANGED when acquiring a lock on a record that have changed")
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Phone phone = new Phone();
+	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 11, minorVersion = 6, microVersion = 2,
+			versionMatchMode = VersionMatchMode.SAME_OR_NEWER,
+			reason = "MariaDB will throw an error DB_RECORD_CHANGED when acquiring a lock on a record that have changed")
+	public void test(EntityManagerFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
+			var phone = new Phone();
 			phone.setId(1L);
 			phone.setNumber("123-456-7890");
 			entityManager.persist(phone);
-
-			return phone;
 		});
 
 		//tag::locking-optimistic-exclude-attribute-example[]
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Phone phone = entityManager.find(Phone.class, 1L);
+		factoryScope.inTransaction( entityManager -> {
+			var phone = entityManager.find(Phone.class, 1L);
 			phone.setNumber("+123-456-7890");
 
-			doInJPA(this::entityManagerFactory, _entityManager -> {
-				Phone _phone = _entityManager.find(Phone.class, 1L);
+			factoryScope.inTransaction( _entityManager -> {
+				var _phone = _entityManager.find(Phone.class, 1L);
 				_phone.incrementCallCount();
 
 				log.info("Bob changes the Phone call count");
 			});
 
 			log.info("Alice changes the Phone number");
-		});
+		} );
 		//end::locking-optimistic-exclude-attribute-example[]
 	}
 

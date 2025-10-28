@@ -13,7 +13,6 @@ import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.tuple.entity.EntityMetamodel;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -27,11 +26,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test case for NaturalId annotation on an {@link Immutable} entity
@@ -70,16 +69,14 @@ public class ImmutableEntityNaturalIdTest {
 				}
 		);
 
-		assertEquals( "Cache hits should be empty", 0, stats.getNaturalIdCacheHitCount() );
-		assertEquals( "Cache misses should be empty", 0, stats.getNaturalIdCacheMissCount() );
-		assertEquals( "Cache put should be one after insert", 1, stats.getNaturalIdCachePutCount() );
+		assertEquals( 0, stats.getNaturalIdCacheHitCount(), "Cache hits should be empty" );
+		assertEquals( 0, stats.getNaturalIdCacheMissCount(), "Cache misses should be empty" );
+		assertEquals( 1, stats.getNaturalIdCachePutCount(), "Cache put should be one after insert" );
 	}
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.createQuery( "delete Building" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -102,17 +99,16 @@ public class ImmutableEntityNaturalIdTest {
 				entityPersister.hasNaturalIdentifier(),
 				is( true )
 		);
-		final EntityMetamodel entityMetamodel = entityPersister.getEntityMetamodel();
 		assertThat(
 				"Wrong number of attributes",
-				entityMetamodel.getNaturalIdentifierProperties().length,
+				entityPersister.getNaturalIdentifierProperties().length,
 				is( 3 )
 		);
 
 		// nullability is not specified, so they should be nullable by annotations-specific default
-		assertTrue( entityPersister.getPropertyNullability()[ entityMetamodel.getPropertyIndex( "address" )] );
-		assertTrue( entityPersister.getPropertyNullability()[ entityMetamodel.getPropertyIndex( "city" )] );
-		assertTrue( entityPersister.getPropertyNullability()[ entityMetamodel.getPropertyIndex( "state" )] );
+		assertTrue( entityPersister.getPropertyNullability()[ entityPersister.getPropertyIndex( "address" )] );
+		assertTrue( entityPersister.getPropertyNullability()[ entityPersister.getPropertyIndex( "city" )] );
+		assertTrue( entityPersister.getPropertyNullability()[ entityPersister.getPropertyIndex( "state" )] );
 
 	}
 
@@ -139,9 +135,9 @@ public class ImmutableEntityNaturalIdTest {
 							.using( "state", "WI" )
 							.load();
 					assertThat( building, notNullValue() );
-					assertEquals( "Cache hits should be empty", 0, stats.getNaturalIdCacheHitCount() );
-					assertEquals( "Cache misses should be one", 1, stats.getNaturalIdCacheMissCount() );
-					assertEquals( "Cache put should be one after load", 1, stats.getNaturalIdCachePutCount() );
+					assertEquals( 0, stats.getNaturalIdCacheHitCount(),  "Cache hits should be empty" );
+					assertEquals( 1, stats.getNaturalIdCacheMissCount(), "Cache misses should be one" );
+					assertEquals( 1, stats.getNaturalIdCachePutCount(), "Cache put should be one after load" );
 					assertThat( stats.getPrepareStatementCount(), is( 1L ) );
 				}
 		);
@@ -158,18 +154,18 @@ public class ImmutableEntityNaturalIdTest {
 							.using( "state", "WI" )
 							.load();
 					assertThat( building, notNullValue() );
-					assertEquals( "Cache hits should be one after second query", 1, stats.getNaturalIdCacheHitCount() );
-					assertEquals( "Cache misses should be one after second query", 1, stats.getNaturalIdCacheMissCount() );
-					assertEquals( "Cache put should be one after second query", 1, stats.getNaturalIdCachePutCount() );
+					assertEquals( 1, stats.getNaturalIdCacheHitCount(), "Cache hits should be one after second query" );
+					assertEquals( 1, stats.getNaturalIdCacheMissCount(), "Cache misses should be one after second query" );
+					assertEquals( 1, stats.getNaturalIdCachePutCount(), "Cache put should be one after second query" );
 
 					// Try Deleting
 					session.remove( building );
 
 					// third query
 					naturalIdLoader.load();
-					assertEquals( "Cache hits should be one after second query", 1, stats.getNaturalIdCacheHitCount() );
-					assertEquals( "Cache misses should be two after second query", 1, stats.getNaturalIdCacheMissCount() );
-					assertEquals( "Cache put should be one after second query", 1, stats.getNaturalIdCachePutCount() );
+					assertEquals( 1, stats.getNaturalIdCacheHitCount(), "Cache hits should be one after second query" );
+					assertEquals( 1, stats.getNaturalIdCacheMissCount(), "Cache misses should be two after second query" );
+					assertEquals( 1, stats.getNaturalIdCachePutCount(), "Cache put should be one after second query" );
 				}
 		);
 
@@ -185,9 +181,9 @@ public class ImmutableEntityNaturalIdTest {
 
 					// second query
 					assertNull( building );
-					assertEquals( "Cache hits should be one after third query", 1, stats.getNaturalIdCacheHitCount() );
-					assertEquals( "Cache misses should be one after third query", 2, stats.getNaturalIdCacheMissCount() );
-					assertEquals( "Cache put should be one after third query", 1, stats.getNaturalIdCachePutCount() );
+					assertEquals( 1, stats.getNaturalIdCacheHitCount(), "Cache hits should be one after third query" );
+					assertEquals( 2, stats.getNaturalIdCacheMissCount(), "Cache misses should be one after third query" );
+					assertEquals( 1, stats.getNaturalIdCachePutCount(), "Cache put should be one after third query" );
 
 					// here, we should know that that natural-id does not exist as part of the Session...
 					session.byNaturalId( Building.class )
@@ -196,9 +192,9 @@ public class ImmutableEntityNaturalIdTest {
 							.using( "state", "WI" )
 							.load();
 
-					assertEquals( "Cache hits should still be one", 1, stats.getNaturalIdCacheHitCount() );
-					assertEquals( "Cache misses should now be four", 3, stats.getNaturalIdCacheMissCount() );
-					assertEquals( "Cache put should still be one", 1, stats.getNaturalIdCachePutCount() );
+					assertEquals( 1, stats.getNaturalIdCacheHitCount(), "Cache hits should still be one" );
+					assertEquals( 3, stats.getNaturalIdCacheMissCount(), "Cache misses should now be four" );
+					assertEquals( 1, stats.getNaturalIdCachePutCount(), "Cache put should still be one" );
 				}
 		);
 	}

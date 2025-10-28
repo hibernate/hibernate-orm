@@ -74,7 +74,7 @@ public class InVmGenerationsWithAnnotationsWithMixedSqlTypesTests {
 			assertThat( merged.lastUpdatedOn ).isNotEqualTo( merged.createdOn );
 
 			// lastly, make sure we can load it..
-			final AuditedEntity loaded = scope.fromTransaction( session, s -> s.get( AuditedEntity.class, 1 ) );
+			final AuditedEntity loaded = scope.fromTransaction( session, s -> s.find( AuditedEntity.class, 1 ) );
 
 			assertThat( loaded ).isNotNull();
 			assertThat( loaded.createdOn ).isEqualTo( merged.createdOn );
@@ -84,7 +84,7 @@ public class InVmGenerationsWithAnnotationsWithMixedSqlTypesTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.createQuery( "delete AuditedEntity" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "AuditedEntity" )

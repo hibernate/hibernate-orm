@@ -36,8 +36,15 @@ public interface BatchSettings {
 	String STATEMENT_BATCH_SIZE = "hibernate.jdbc.batch_size";
 
 	/**
-	 * Enable ordering of update statements by primary key value, for the purpose of more
-	 * efficient JDBC batching
+	 * Enable ordering of entity update statements by entity type and primary
+	 * key value, and of statements relating to collection modification by
+	 * collection role and foreign key value, for the purpose of more efficient
+	 * JDBC batching.
+	 * <p>
+	 * The sort order also reduces the chance of a unique key violation when
+	 * a collection element is moved from one parent to a different parent,
+	 * by executing collection updates involving removals before collection
+	 * updates which don't involve removals.
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyOrderingOfUpdates
 	 *
@@ -46,8 +53,11 @@ public interface BatchSettings {
 	String ORDER_UPDATES = "hibernate.order_updates";
 
 	/**
-	 * Enable ordering of insert statements by primary key value, for the purpose of more
-	 * efficient JDBC batching.
+	 * Enable ordering of entity insert statements by entity type and primary
+	 * key value, for the purpose of more efficient JDBC batching.
+	 * <p>
+	 * The sort order respects foreign key dependencies between entities, and
+	 * therefore does not increase the chance of a foreign key violation.
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyOrderingOfInserts
 	 *
@@ -59,5 +69,6 @@ public interface BatchSettings {
 	 * @deprecated Use {@link #BUILDER} instead
 	 */
 	@Deprecated(since="6.4")
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String BATCH_STRATEGY = "hibernate.jdbc.factory_class";
 }

@@ -58,6 +58,8 @@ public interface SqmFrom<L, R> extends SqmVisitableNode, SqmPath<R>, JpaFrom<L, 
 
 	boolean hasJoins();
 
+	int getNumberOfJoins();
+
 	/**
 	 * The joins associated with this SqmFrom
 	 */
@@ -93,6 +95,42 @@ public interface SqmFrom<L, R> extends SqmVisitableNode, SqmPath<R>, JpaFrom<L, 
 
 	@Override
 	<S extends R> SqmTreatedFrom<L,R,S> treatAs(EntityDomainType<S> treatTarget, String alias);
+
+	// Since equals only does "syntactic" equality to understand if a node in an expression and predicate is equal,
+	// also define a method to do deep equality checking for the SqmFromClause
+	default boolean deepEquals(SqmFrom<?, ?> object) {
+		return equals( object );
+	}
+
+	// Since isCompatible only does "syntactic" equality to understand if a node in an expression and predicate is compatible,
+	// also define a method to do deep compatibility checking for the SqmFromClause
+	default boolean isDeepCompatible(SqmFrom<?, ?> object) {
+		return isCompatible( object );
+	}
+
+	static boolean areDeepEqual(List<? extends SqmFrom<?, ?>> theseFroms, List<? extends SqmFrom<?, ?>> thoseFroms) {
+		if ( theseFroms.size() != thoseFroms.size() ) {
+			return false;
+		}
+		for ( int i = 0; i < theseFroms.size(); i++ ) {
+			if ( !theseFroms.get( i ).deepEquals( thoseFroms.get( i ) ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	static boolean areDeepCompatible(List<? extends SqmFrom<?, ?>> theseFroms, List<? extends SqmFrom<?, ?>> thoseFroms) {
+		if ( theseFroms.size() != thoseFroms.size() ) {
+			return false;
+		}
+		for ( int i = 0; i < theseFroms.size(); i++ ) {
+			if ( !theseFroms.get( i ).isDeepCompatible( thoseFroms.get( i ) ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

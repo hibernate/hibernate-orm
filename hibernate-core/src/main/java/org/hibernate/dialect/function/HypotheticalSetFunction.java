@@ -64,7 +64,7 @@ public class HypotheticalSetFunction extends AbstractSqmSelfRenderingFunctionDes
 			List<SortSpecification> withinGroup,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		if ( filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause() ) {
+		if ( filter != null && !filterClauseSupported( translator ) ) {
 			throw new IllegalArgumentException( "Can't emulate filter clause for inverse distribution function [" + getName() + "]" );
 		}
 		sqlAppender.appendSql( getName() );

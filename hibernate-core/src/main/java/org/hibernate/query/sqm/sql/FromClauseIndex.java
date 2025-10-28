@@ -22,7 +22,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class FromClauseIndex extends SimpleFromClauseAccessImpl {
-	private static final Logger log = Logger.getLogger( FromClauseIndex.class );
+	private static final Logger LOG = Logger.getLogger( FromClauseIndex.class );
 
 	private final Map<String, TableGroup> tableGroupByAliasXref = new HashMap<>();
 
@@ -51,9 +51,9 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 
 		if ( sqmPath.getExplicitAlias() != null ) {
 			final TableGroup previousAliasReg = tableGroupByAliasXref.put( sqmPath.getExplicitAlias(), tableGroup );
-			if ( previousAliasReg != null && log.isDebugEnabled() ) {
-				log.debugf(
-						"Encountered previous TableGroup registration [%s] for alias : %s",
+			if ( previousAliasReg != null && LOG.isDebugEnabled() ) {
+				LOG.debugf(
+						"Encountered previous TableGroup registration [%s] for alias: %s",
 						previousAliasReg,
 						sqmPath.getExplicitAlias()
 				);

@@ -60,7 +60,7 @@ annotationProcessor 'org.hibernate.orm:hibernate-processor:7.0.0.Final'
 
 === Excluding classes from processing
 
-There's three ways to limit the annotation processor to certain classes:
+There are three ways to limit the annotation processor to certain classes:
 
 1. A given repository may be excluded from processing simply by specifying `@Repository(provider="acme")` where `"acme"` is any string other than the empty string or a string equal, ignoring case, to `"Hibernate"`. This is the preferred solution when there are multiple Jakarta Data Providers available.
 2. A package or type may be excluded by annotating it with the link:{doc-javadoc-url}org/hibernate/annotations/processing/Exclude.html[`@Exclude`] annotation from `org.hibernate.annotations.processing`.
@@ -103,10 +103,13 @@ This usually happens via dependency injection, so you'll need to make sure that 
 - in a Jakarta EE environment, `HibernateProcessor` generates special code which takes care of creating and destroying the `StatelessSession`, but
 - in other environments, this is something we need to take care of ourselves.
 
+Note that a `StatelessSession` should never be shared across transactions.
+
 [CAUTION]
 ====
 Depending on the libraries in your build path, `HibernateProcessor` generates different code.
 For example, if Quarkus is on the build path, the repository implementation is generated to obtain the `StatelessSession` directly from CDI in a way which works in Quarkus but not in WildFly.
+Similarly, if Spring is in the build path, the repository implementation is generated to use `ObjectProvider<StatelessSession>`, since Spring is not capable of transparently proxying contextual objects like CDI does.
 ====
 
 If you have multiple persistence units, you'll need to disambiguate the persistence unit for a repository interface using `@Repository(dataStore="my-persistence-unit-name")`.
@@ -120,7 +123,16 @@ In principle, any implementation of `jakarta.inject` may be used to inject a rep
 @Inject Library library;
 ----
 
-However, this code will fail if the repository implementation is not able to obtain a `StatelessSession` from the bean container.
+Of course, this code will fail if the repository implementation is not able to obtain a `StatelessSession` from the bean container.
+
+[NOTE]
+====
+Unfortunately, `jakarta.inject` on its own is rather incomplete, and does not specify how injectable beans should be discovered.
+Therefore, `HibernateProcessor` adds an appropriate bean-defining annotation to the repository implementation class, either:
+
+- `@Dependent` if CDI is available, or
+- `@Component` if Spring is available.
+====
 
 It's always possible to instantiate a repository implementation directly.
 

@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.stat.internal;
 
-import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -13,67 +12,59 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
-
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.AvailableHints;
 import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.stat.QueryStatistics;
-import org.hibernate.stat.Statistics;
-
-import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 /**
  * @author Gail Badner
  */
-@DomainModel(annotatedClasses = {
-		QueryPlanCacheStatisticsTest.Employee.class
-})
-@ServiceRegistry(settings = {
-		@Setting( name = Environment.GENERATE_STATISTICS, value = "true")
-})
-@SessionFactory
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = QueryPlanCacheStatisticsTest.Employee.class)
+@SessionFactory(generateStatistics = true)
 @JiraKey("HHH-12855")
 public class QueryPlanCacheStatisticsTest {
-
-	private Statistics statistics;
-
-	@BeforeAll
-	protected void afterEntityManagerFactoryBuilt(SessionFactoryScope scope) {
-		scope.inTransaction( entityManager -> {
+	@BeforeEach
+	public void setUp(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			for ( long i = 1; i <= 5; i++ ) {
 				Employee employee = new Employee();
 				employee.setName( String.format( "Employee: %d", i ) );
 				entityManager.persist( employee );
 			}
 		} );
+
+		factoryScope.getSessionFactory().getStatistics().clear();
+		factoryScope.getSessionFactory().getQueryEngine().getInterpretationCache().close();
 	}
 
-	@BeforeEach
-	protected void cleanup(SessionFactoryScope scope) {
-		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		statistics = sessionFactory.getStatistics();
-		statistics.clear();
-		sessionFactory.getQueryEngine().getInterpretationCache().close();
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
 	public void test(SessionFactoryScope scope) {
+		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+
 		assertEquals( 0, statistics.getQueryPlanCacheHitCount() );
 		assertEquals( 0, statistics.getQueryPlanCacheMissCount() );
 
@@ -84,22 +75,19 @@ public class QueryPlanCacheStatisticsTest {
 
 			assertEquals( 0, statistics.getQueryPlanCacheHitCount() );
 			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
-
-			assertQueryStatistics( FIRST_QUERY, 0 );
+			assertQueryStatistics( FIRST_QUERY, 0, statistics );
 
 			entityManager.createQuery( FIRST_QUERY );
 
 			assertEquals( 1, statistics.getQueryPlanCacheHitCount() );
 			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
-
-			assertQueryStatistics( FIRST_QUERY, 1 );
+			assertQueryStatistics( FIRST_QUERY, 1, statistics );
 
 			entityManager.createQuery( FIRST_QUERY );
 
 			assertEquals( 2, statistics.getQueryPlanCacheHitCount() );
 			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
-
-			assertQueryStatistics( FIRST_QUERY, 2 );
+			assertQueryStatistics( FIRST_QUERY, 2, statistics );
 
 			final String SECOND_QUERY = "select count(e) from Employee e";
 
@@ -107,30 +95,28 @@ public class QueryPlanCacheStatisticsTest {
 
 			assertEquals( 2, statistics.getQueryPlanCacheHitCount() );
 			assertEquals( 2, statistics.getQueryPlanCacheMissCount() );
-
-			assertQueryStatistics( SECOND_QUERY, 0 );
+			assertQueryStatistics( SECOND_QUERY, 0, statistics );
 
 			entityManager.createQuery( SECOND_QUERY );
 
 			assertEquals( 3, statistics.getQueryPlanCacheHitCount() );
 			assertEquals( 2, statistics.getQueryPlanCacheMissCount() );
-
-			assertQueryStatistics( SECOND_QUERY, 1 );
+			assertQueryStatistics( SECOND_QUERY, 1, statistics );
 
 			entityManager.createQuery( SECOND_QUERY );
 
 			assertEquals( 4, statistics.getQueryPlanCacheHitCount() );
 			assertEquals( 2, statistics.getQueryPlanCacheMissCount() );
-
-			assertQueryStatistics( SECOND_QUERY, 2 );
+			assertQueryStatistics( SECOND_QUERY, 2, statistics );
 		} );
 	}
 
 	@Test
 	@JiraKey("HHH-13077")
 	public void testCreateQueryHitCount(SessionFactoryScope scope) {
-		scope.inTransaction( entityManager -> {
+		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 
+		scope.inTransaction( entityManager -> {
 			Query<Employee> query = entityManager.createQuery(
 					"select e from Employee e", Employee.class );
 
@@ -179,10 +165,9 @@ public class QueryPlanCacheStatisticsTest {
 	@Test
 	@JiraKey("HHH-14632")
 	public void testCreateNativeQueryHitCount(SessionFactoryScope scope) {
-		statistics.clear();
+		var statistics = scope.getSessionFactory().getStatistics();
 
 		scope.inTransaction( entityManager -> {
-
 			List<Employee> employees = entityManager.createNativeQuery(
 				"select * from employee e", Employee.class )
 			.getResultList();
@@ -196,7 +181,6 @@ public class QueryPlanCacheStatisticsTest {
 		} );
 
 		scope.inTransaction( entityManager -> {
-
 			List<Employee> employees = entityManager.createNativeQuery(
 				"select * from employee e", Employee.class )
 			.getResultList();
@@ -210,7 +194,6 @@ public class QueryPlanCacheStatisticsTest {
 		} );
 
 		scope.inTransaction( entityManager -> {
-
 			List<Employee> employees = entityManager.createNativeQuery(
 				"select * from employee e", Employee.class )
 			.getResultList();
@@ -229,9 +212,11 @@ public class QueryPlanCacheStatisticsTest {
 	public void testCreateNamedQueryHitCount(SessionFactoryScope scope) {
 		// Compile the named queries
 		scope.getSessionFactory().getQueryEngine().getNamedObjectRepository().checkNamedQueries( scope.getSessionFactory().getQueryEngine() );
-		statistics.clear();
-		scope.inTransaction( entityManager -> {
 
+		var statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+
+		scope.inTransaction( entityManager -> {
 			Query<Employee> query = entityManager.createNamedQuery(
 							"find_employee_by_name", Employee.class )
 					.setParameter( "name", "Employee: 1" );
@@ -249,7 +234,6 @@ public class QueryPlanCacheStatisticsTest {
 		} );
 
 		scope.inTransaction( entityManager -> {
-
 			Employee employees = entityManager.createNamedQuery(
 				"find_employee_by_name", Employee.class )
 			.setParameter( "name", "Employee: 1" )
@@ -266,8 +250,9 @@ public class QueryPlanCacheStatisticsTest {
 	@Test
 	@JiraKey("HHH-13077")
 	public void testCreateQueryTupleHitCount(SessionFactoryScope scope) {
-		scope.inTransaction( entityManager -> {
+		var statistics = scope.getSessionFactory().getStatistics();
 
+		scope.inTransaction( entityManager -> {
 			Query<Tuple> query = entityManager.createQuery(
 					"select e.id, e.name from Employee e", Tuple.class );
 
@@ -286,7 +271,6 @@ public class QueryPlanCacheStatisticsTest {
 		} );
 
 		scope.inTransaction( entityManager -> {
-
 			List<Tuple> employees = entityManager.createQuery(
 				"select e.id, e.name from Employee e", Tuple.class )
 			.getResultList();
@@ -300,7 +284,6 @@ public class QueryPlanCacheStatisticsTest {
 		} );
 
 		scope.inTransaction( entityManager -> {
-
 			List<Tuple> employees = entityManager.createQuery(
 				"select e.id, e.name from Employee e", Tuple.class )
 			.getResultList();
@@ -317,6 +300,8 @@ public class QueryPlanCacheStatisticsTest {
 	@Test
 	@JiraKey("HHH-13077")
 	public void testLockModeHitCount(SessionFactoryScope scope) {
+		var statistics = scope.getSessionFactory().getStatistics();
+
 		scope.inTransaction( entityManager -> {
 			TypedQuery<Employee> typedQuery = entityManager.createQuery( "select e from Employee e", Employee.class );
 
@@ -338,7 +323,7 @@ public class QueryPlanCacheStatisticsTest {
 			//The hit count should still be 0 as setLockMode() shouldn't trigger a cache hit
 			assertEquals( 0, statistics.getQueryPlanCacheHitCount() );
 
-			assertNotNull( typedQuery.getLockMode() );
+			Assertions.assertNotNull( typedQuery.getLockMode() );
 
 			//The hit count should still be 0 as getLockMode() shouldn't trigger a cache hit
 			assertEquals( 0, statistics.getQueryPlanCacheHitCount() );
@@ -348,6 +333,8 @@ public class QueryPlanCacheStatisticsTest {
 	@Test
 	@JiraKey("HHH-16782")
 	public void testCriteriaQuery(SessionFactoryScope scope) {
+		var statistics = scope.getSessionFactory().getStatistics();
+
 		scope.inTransaction( entityManager -> {
 			HibernateCriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			JpaCriteriaQuery<Employee> cq = cb.createQuery( Employee.class );
@@ -380,6 +367,8 @@ public class QueryPlanCacheStatisticsTest {
 	@Test
 	@JiraKey("HHH-16782")
 	public void testCriteriaQueryCache(SessionFactoryScope scope) {
+		var statistics = scope.getSessionFactory().getStatistics();
+
 		scope.inTransaction( entityManager -> {
 			HibernateCriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			JpaCriteriaQuery<Employee> cq = cb.createQuery( Employee.class );
@@ -412,6 +401,8 @@ public class QueryPlanCacheStatisticsTest {
 	@Test
 	@JiraKey("HHH-16782")
 	public void testCriteriaQueryNoCopyTree(SessionFactoryScope scope) {
+		var statistics = scope.getSessionFactory().getStatistics();
+
 		scope.inTransaction( entityManager -> {
 			HibernateCriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			JpaCriteriaQuery<Employee> cq = cb.createQuery( Employee.class );
@@ -444,6 +435,8 @@ public class QueryPlanCacheStatisticsTest {
 	@Test
 	@JiraKey("HHH-16782")
 	public void testDisableQueryPlanCache(SessionFactoryScope scope) {
+		var statistics = scope.getSessionFactory().getStatistics();
+
 		scope.inTransaction( entityManager -> {
 			TypedQuery<Employee> typedQuery = entityManager.createQuery( "select e from Employee e", Employee.class );
 			typedQuery.setHint( AvailableHints.HINT_QUERY_PLAN_CACHEABLE, false );
@@ -471,7 +464,7 @@ public class QueryPlanCacheStatisticsTest {
 		} );
 	}
 
-	private void assertQueryStatistics(String hql, int hitCount) {
+	private void assertQueryStatistics(String hql, int hitCount, StatisticsImplementor statistics) {
 		QueryStatistics queryStatistics = statistics.getQueryStatistics( hql );
 
 		assertEquals( hitCount, queryStatistics.getPlanCacheHitCount() );

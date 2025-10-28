@@ -31,6 +31,7 @@ import jakarta.persistence.Table;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-16358")
 @DomainModel(
 		annotatedClasses = {
@@ -94,11 +95,7 @@ public class ManyToManyAbstractTablePerClassTest {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery( "from TablePerClassBase", TablePerClassBase.class )
-					.getResultList()
-					.forEach( session::remove );
-		} );
+		scope.dropData();
 	}
 
 	@Entity(name = "TablePerClassBase")

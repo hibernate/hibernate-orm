@@ -11,7 +11,7 @@ import jakarta.persistence.PersistenceException;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 
 /**
  * Implementation of JdbcConnectionAccess for use in cases where we
@@ -20,7 +20,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class JdbcConnectionAccessConnectionProviderImpl implements JdbcConnectionAccess {
-	private static final Logger log = Logger.getLogger( JdbcConnectionAccessConnectionProviderImpl.class );
 
 	private final ConnectionProvider connectionProvider;
 	private final Connection jdbcConnection;
@@ -28,9 +27,8 @@ public class JdbcConnectionAccessConnectionProviderImpl implements JdbcConnectio
 
 	public JdbcConnectionAccessConnectionProviderImpl(ConnectionProvider connectionProvider) {
 		this.connectionProvider = connectionProvider;
-
 		try {
-			this.jdbcConnection = connectionProvider.getConnection();
+			jdbcConnection = connectionProvider.getConnection();
 		}
 		catch (SQLException e) {
 			throw new PersistenceException( "Unable to obtain JDBC Connection", e );
@@ -43,14 +41,14 @@ public class JdbcConnectionAccessConnectionProviderImpl implements JdbcConnectio
 				try {
 					jdbcConnection.setAutoCommit( true );
 				}
-				catch (SQLException e) {
+				catch (SQLException exception) {
 					throw new PersistenceException(
 							String.format(
 									"Could not set provided connection [%s] to auto-commit mode" +
 											" (needed for schema generation)",
 									jdbcConnection
 							),
-							e
+							exception
 					);
 				}
 			}
@@ -59,7 +57,7 @@ public class JdbcConnectionAccessConnectionProviderImpl implements JdbcConnectio
 			wasInitiallyAutoCommit = false;
 		}
 
-		log.debugf( "wasInitiallyAutoCommit=%s", wasInitiallyAutoCommit );
+		JDBC_LOGGER.initialAutoCommit( wasInitiallyAutoCommit );
 		this.wasInitiallyAutoCommit = wasInitiallyAutoCommit;
 	}
 
@@ -88,8 +86,8 @@ public class JdbcConnectionAccessConnectionProviderImpl implements JdbcConnectio
 					jdbcConnection.setAutoCommit( false );
 				}
 			}
-			catch (SQLException e) {
-				log.info( "Was unable to reset JDBC connection to no longer be in auto-commit mode" );
+			catch (SQLException exception) {
+				JDBC_LOGGER.unableToResetAutoCommitDisabled( exception );
 			}
 		}
 

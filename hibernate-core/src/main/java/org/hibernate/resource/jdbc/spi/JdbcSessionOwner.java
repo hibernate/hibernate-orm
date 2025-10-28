@@ -4,11 +4,15 @@
  */
 package org.hibernate.resource.jdbc.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.event.spi.EventManager;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+
+import java.sql.Connection;
+import java.sql.SQLException;
 
 import static java.lang.reflect.InvocationHandler.invokeDefault;
 import static java.lang.reflect.Proxy.newProxyInstance;
@@ -77,6 +81,35 @@ public interface JdbcSessionOwner {
 	default SqlExceptionHelper getSqlExceptionHelper() {
 		return getJdbcSessionContext().getJdbcServices().getSqlExceptionHelper();
 	}
+
+	/**
+	 * Called after a managed JDBC connection is obtained.
+	 * <p>
+	 * Sets the schema to the schema belonging to the current tenant if:
+	 * <ol>
+	 * <li>{@value org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_SCHEMA_MAPPER} is enabled, and
+	 * <li>this session has an active tenant id.
+	 * </ol>
+	 *
+	 * @param connection A JDBC connection which was just acquired
+	 *
+	 * @since 7.1
+	 */
+	@Incubating
+	void afterObtainConnection(Connection connection) throws SQLException;
+
+	/**
+	 * Called right before a managed JDBC connection is released.
+	 * <p>
+	 * Unset the schema which was set by {@link #afterObtainConnection},
+	 * if any.
+	 * .
+	 * @param connection The JDBC connection which is about to be released
+	 *
+	 * @since 7.1
+	 */
+	@Incubating
+	void beforeReleaseConnection(Connection connection) throws SQLException;
 
 	/**
 	 * Obtain a reference to the {@link EventMonitor}.

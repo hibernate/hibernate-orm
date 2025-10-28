@@ -65,12 +65,8 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 			operationGroup = createOperationGroup();
 		}
 
-		if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
-			MODEL_MUTATION_LOGGER.debugf(
-					"Inserting collection rows - %s : %s",
-					mutationTarget.getRolePath(),
-					id
-			);
+		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+			MODEL_MUTATION_LOGGER.insertingNewCollectionRows( mutationTarget.getRolePath(), id );
 		}
 
 		final PluralAttributeMapping pluralAttribute = mutationTarget.getTargetPart();
@@ -87,11 +83,7 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 			final Iterator<?> entries = collection.entries( collectionDescriptor );
 			collection.preInsert( collectionDescriptor );
 			if ( !entries.hasNext() ) {
-				MODEL_MUTATION_LOGGER.debugf(
-						"No collection rows to insert - %s : %s",
-						mutationTarget.getRolePath(),
-						id
-				);
+				MODEL_MUTATION_LOGGER.noCollectionRowsToInsert( mutationTarget.getRolePath(), id );
 				return;
 			}
 
@@ -118,7 +110,7 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 				entryCount++;
 			}
 
-			MODEL_MUTATION_LOGGER.debugf( "Done inserting `%s` collection rows : %s", entryCount, mutationTarget.getRolePath() );
+			MODEL_MUTATION_LOGGER.doneInsertingCollectionRows( entryCount, mutationTarget.getRolePath() );
 
 		}
 		finally {

@@ -27,7 +27,7 @@ import org.jboss.logging.Logger;
  * {@link SessionFactoryOptions#areJPACallbacksEnabled()}.
  */
 public final class CallbacksFactory {
-	private static final Logger log = Logger.getLogger( CallbacksFactory.class );
+	private static final Logger LOG = Logger.getLogger( CallbacksFactory.class );
 
 	public static CallbackRegistry buildCallbackRegistry(
 			SessionFactoryOptions options, ServiceRegistry serviceRegistry, Collection<PersistentClass> entityBindings) {
@@ -44,8 +44,8 @@ public final class CallbacksFactory {
 				if ( !entityClasses.add( entityClass ) ) {
 					// this most likely means we have a class mapped multiple
 					// times using the hbm.xml "entity name" feature
-					if ( log.isDebugEnabled() ) {
-						log.debugf(
+					if ( LOG.isDebugEnabled() ) {
+						LOG.debugf(
 								"Class [%s] already has callbacks registered; " +
 								"assuming this means the class was mapped twice " +
 								"(using hbm.xml entity-name support) - skipping subsequent registrations" +

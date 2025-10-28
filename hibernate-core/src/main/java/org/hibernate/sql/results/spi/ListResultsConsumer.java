@@ -15,9 +15,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
-import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.EntityJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
@@ -144,7 +144,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			JdbcValues jdbcValues,
 			SharedSessionContractImplementor session,
 			JdbcValuesSourceProcessingOptions processingOptions,
-			JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState,
+			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
 			RowProcessingStateStandardImpl rowProcessingState,
 			RowReader<R> rowReader) {
 		rowReader.startLoading( rowProcessingState );
@@ -303,17 +303,21 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 		if ( resultJavaTypes.size() == 1 ) {
 			final JavaType<?> firstJavaType = resultJavaTypes.get( 0 );
 			if ( firstJavaType == null ) {
-				return javaTypeRegistry.resolveDescriptor( Object.class );
+				return javaTypeRegistry.getDescriptor( Object.class );
 			}
-			//noinspection unchecked
-			return (JavaType<R>) firstJavaType;
+			else {
+				//noinspection unchecked
+				return (JavaType<R>) firstJavaType;
+			}
 		}
-
-		return javaTypeRegistry.resolveDescriptor( Object[].class );
+		else {
+			return javaTypeRegistry.getDescriptor( Object[].class );
+		}
 	}
 
 	private static boolean isMoreConcrete(JavaType<?> resultJavaType, @Nullable JavaType<?> javaType) {
-		return javaType != null && resultJavaType.getJavaTypeClass().isAssignableFrom( javaType.getJavaTypeClass() );
+		return javaType != null
+			&& resultJavaType.getJavaTypeClass().isAssignableFrom( javaType.getJavaTypeClass() );
 	}
 
 	@Override

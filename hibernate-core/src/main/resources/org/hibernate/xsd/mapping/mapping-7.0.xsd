@@ -601,7 +601,7 @@
         <xsd:attribute name="access" type="orm:access-type"/>
         <!-- hbm: Hibernate's pluggable accessor spi -->
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
-        <xsd:attribute name="optimistic-lock" type="xsd:boolean" default="true" />
+        <xsd:attribute name="optimistic-lock" type="xsd:boolean" />
     </xsd:complexType>
 
     <xsd:group name="basic-type-group">
@@ -1027,7 +1027,7 @@
         <xsd:attribute name="fetch-mode" type="orm:plural-fetch-mode"/>
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
-        <xsd:attribute name="optimistic-lock" type="xsd:boolean" default="true" />
+        <xsd:attribute name="optimistic-lock" type="xsd:boolean" />
         <xsd:attribute name="classification" type="orm:limited-collection-classification-enum" />
     </xsd:complexType>
 
@@ -1109,7 +1109,7 @@
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
-        <xsd:attribute name="optimistic-lock" type="xsd:boolean" default="true" />
+        <xsd:attribute name="optimistic-lock" type="xsd:boolean" />
     </xsd:complexType>
 
     <!-- **************************************************** -->
@@ -1614,7 +1614,7 @@
         <xsd:attribute name="orphan-removal" type="xsd:boolean"/>
         <xsd:attribute name="classification" type="orm:limited-collection-classification-enum" />
         <xsd:attribute name="not-found" type="orm:not-found-enum"/>
-        <xsd:attribute name="optimistic-lock" type="xsd:boolean" default="true" />
+        <xsd:attribute name="optimistic-lock" type="xsd:boolean" />
     </xsd:complexType>
 
     <!-- **************************************************** -->
@@ -1661,7 +1661,7 @@
         <xsd:attribute name="optional" type="xsd:boolean"/>
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
-        <xsd:attribute name="optimistic-lock" type="xsd:boolean" default="true" />
+        <xsd:attribute name="optimistic-lock" type="xsd:boolean" />
         <xsd:attribute name="maps-id" type="xsd:string"/>
         <xsd:attribute name="id" type="xsd:boolean"/>
         <xsd:attribute name="not-found" type="orm:not-found-enum"/>
@@ -2057,7 +2057,7 @@
         <xsd:attribute name="orphan-removal" type="xsd:boolean"/>
         <xsd:attribute name="classification" type="orm:limited-collection-classification-enum" />
         <xsd:attribute name="not-found" type="orm:not-found-enum"/>
-        <xsd:attribute name="optimistic-lock" type="xsd:boolean" default="true" />
+        <xsd:attribute name="optimistic-lock" type="xsd:boolean" />
     </xsd:complexType>
 
     <!-- **************************************************** -->
@@ -2113,7 +2113,7 @@
         <xsd:attribute name="optional" type="xsd:boolean"/>
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
-        <xsd:attribute name="optimistic-lock" type="xsd:boolean" default="true" />
+        <xsd:attribute name="optimistic-lock" type="xsd:boolean" />
         <xsd:attribute name="mapped-by" type="xsd:string"/>
         <xsd:attribute name="orphan-removal" type="xsd:boolean"/>
         <xsd:attribute name="maps-id" type="xsd:string"/>
@@ -3139,7 +3139,7 @@
         <xsd:attribute name="fetch" type="orm:fetch-type"/>
         <xsd:attribute name="fetch-mode" type="orm:singular-fetch-mode"/>
         <xsd:attribute name="optional" type="xsd:boolean"/>
-        <xsd:attribute name="optimistic-lock" type="xsd:boolean" default="true" />
+        <xsd:attribute name="optimistic-lock" type="xsd:boolean" />
     </xsd:complexType>
 
     <xsd:complexType name="any-discriminator">
@@ -3208,7 +3208,7 @@
         <xsd:attribute name="fetch-mode" type="orm:plural-fetch-mode"/>
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
-        <xsd:attribute name="optimistic-lock" type="xsd:boolean" default="true" />
+        <xsd:attribute name="optimistic-lock" type="xsd:boolean" />
         <xsd:attribute name="classification" type="orm:limited-collection-classification-enum" />
     </xsd:complexType>
 

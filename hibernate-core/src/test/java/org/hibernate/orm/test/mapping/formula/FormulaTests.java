@@ -14,6 +14,7 @@ import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.Formula;
 
 import org.hibernate.community.dialect.FirebirdDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -29,7 +30,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Nathan Xu
@@ -86,9 +87,7 @@ public class FormulaTests {
 
 	@AfterEach
 	void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery( "delete from Account" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Account")
@@ -121,6 +120,8 @@ public class FormulaTests {
 				override = @Formula("ltrim(str(rate * 100, 10, 2)) + '%'"))
 		@DialectOverride.Formula(dialect = FirebirdDialect.class,
 				override = @Formula("cast(rate * 100 as decimal(10,2)) || '%'"))
+		@DialectOverride.Formula(dialect = InformixDialect.class,
+				override = @Formula("trim(concat(to_char(rate * 100,'#&.&&'), '%'))"))
 		private String ratePercent;
 
 		public Long getId() {

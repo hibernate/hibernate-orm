@@ -132,14 +132,6 @@ public class DelegatingJdbcTypeIndicators implements JdbcTypeIndicators {
 		return delegate.getTypeConfiguration();
 	}
 
-	public static int getZonedTimeSqlType(TimeZoneStorageStrategy storageStrategy) {
-		return JdbcTypeIndicators.getZonedTimeSqlType( storageStrategy );
-	}
-
-	public static int getZonedTimestampSqlType(TimeZoneStorageStrategy storageStrategy) {
-		return JdbcTypeIndicators.getZonedTimestampSqlType( storageStrategy );
-	}
-
 	@Override
 	public int getDefaultZonedTimeSqlType() {
 		return delegate.getDefaultZonedTimeSqlType();

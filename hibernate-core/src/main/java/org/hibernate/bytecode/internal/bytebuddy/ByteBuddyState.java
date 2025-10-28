@@ -4,10 +4,7 @@
  */
 package org.hibernate.bytecode.internal.bytebuddy;
 
-import java.io.File;
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -17,10 +14,8 @@ import net.bytebuddy.NamingStrategy;
 import net.bytebuddy.description.type.TypeDescription;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImplConstants;
-import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.proxy.ProxyConfiguration;
 import org.hibernate.proxy.ProxyFactory;
 
@@ -47,7 +42,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX;
+import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX;
 
 /**
  * A utility to hold all ByteBuddy related state, as in the current version of
@@ -56,17 +52,11 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  */
 public final class ByteBuddyState {
 
-	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyState.class );
-
 	private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
-
-	private static final boolean DEBUG = false;
 
 	private final ByteBuddy byteBuddy;
 
 	private final ProxyDefinitionHelpers proxyDefinitionHelpers = new ProxyDefinitionHelpers();
-
-	private final ClassRewriter classRewriter;
 
 	private final EnhancerImplConstants enhancerConstants = new EnhancerImplConstants();
 
@@ -84,10 +74,9 @@ public final class ByteBuddyState {
 	}
 
 	ByteBuddyState(ClassFileVersion classFileVersion) {
-		this.byteBuddy = new ByteBuddy( classFileVersion ).with( TypeValidation.DISABLED );
-		this.proxyCache = new TypeCache( TypeCache.Sort.WEAK );
-		this.basicProxyCache = new TypeCache( TypeCache.Sort.WEAK );
-		this.classRewriter = new StandardClassRewriter();
+		byteBuddy = new ByteBuddy( classFileVersion ).with( TypeValidation.DISABLED );
+		proxyCache = new TypeCache<>( TypeCache.Sort.WEAK );
+		basicProxyCache = new TypeCache<>( TypeCache.Sort.WEAK );
 	}
 
 	/**
@@ -172,12 +161,9 @@ public final class ByteBuddyState {
 	 */
 	public byte[] rewrite(TypePool typePool, String className,
 			Function<ByteBuddy, DynamicType.Builder<?>> rewriteClassFunction) {
-		DynamicType.Builder<?> builder = rewriteClassFunction.apply( byteBuddy );
-		if ( builder == null ) {
-			return null;
-		}
+		var builder = rewriteClassFunction.apply( byteBuddy );
+		return builder == null ? null : make( typePool, builder ).getBytes();
 
-		return make( typePool, builder ).getBytes();
 	}
 
 	/**
@@ -214,17 +200,18 @@ public final class ByteBuddyState {
 	 */
 	public Class<?> load(Class<?> referenceClass, String className, BiFunction<ByteBuddy, NamingStrategy, DynamicType.Builder<?>> makeClassFunction) {
 		try {
-			return referenceClass.getClassLoader().loadClass( className );
+			final var result = referenceClass.getClassLoader().loadClass( className );
+			if ( result.getClassLoader() == referenceClass.getClassLoader() ) {
+				return result;
+			}
 		}
 		catch (ClassNotFoundException e) {
 			// Ignore
 		}
 		try {
 			return make( makeClassFunction.apply( byteBuddy, new FixedNamingStrategy( className ) ) )
-					.load(
-							referenceClass.getClassLoader(),
-							resolveClassLoadingStrategy( referenceClass )
-					)
+					.load( referenceClass.getClassLoader(),
+							resolveClassLoadingStrategy( referenceClass ) )
 					.getLoaded();
 		}
 		catch (LinkageError e) {
@@ -243,10 +230,8 @@ public final class ByteBuddyState {
 				referenceClass.getClassLoader(),
 				cacheKey,
 				() -> make( makeProxyFunction.apply( byteBuddy ) )
-						.load(
-								referenceClass.getClassLoader(),
-								resolveClassLoadingStrategy( referenceClass )
-						)
+						.load( referenceClass.getClassLoader(),
+								resolveClassLoadingStrategy( referenceClass ) )
 						.getLoaded(),
 				cache
 		);
@@ -265,23 +250,7 @@ public final class ByteBuddyState {
 	}
 
 	private Unloaded<?> make(TypePool typePool, DynamicType.Builder<?> builder) {
-		Unloaded<?> unloadedClass;
-		if ( typePool != null ) {
-			unloadedClass = builder.make( typePool );
-		}
-		else {
-			unloadedClass = builder.make();
-		}
-
-		if ( DEBUG ) {
-			try {
-				unloadedClass.saveIn( new File( System.getProperty( "java.io.tmpdir" ) + "/bytebuddy/" ) );
-			}
-			catch (IOException e) {
-				LOG.warn( "Unable to save generated class %1$s", unloadedClass.getTypeDescription().getName(), e );
-			}
-		}
-		return unloadedClass;
+		return typePool == null ? builder.make() : builder.make( typePool );
 	}
 
 	public EnhancerImplConstants getEnhancerConstants() {
@@ -301,27 +270,38 @@ public final class ByteBuddyState {
 		private final FieldAccessor.PropertyConfigurable interceptorFieldAccessor;
 
 		private ProxyDefinitionHelpers() {
-			this.groovyGetMetaClassFilter = isSynthetic().and( named( "getMetaClass" )
-					.and( returns( td -> "groovy.lang.MetaClass".equals( td.getName() ) ) ) );
-			this.virtualNotFinalizerFilter = isVirtual().and( not( isFinalizer() ) );
-			this.proxyNonInterceptedMethodFilter = nameStartsWith( "$$_hibernate_" ).and( isVirtual() )
-					// HHH-15090: Don't apply extended enhancement reader/writer methods to the proxy;
-					// those need to be executed on the actual entity.
-					.and( not( nameStartsWith( EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX ) ) )
-					.and( not( nameStartsWith( EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX ) ) );
+			groovyGetMetaClassFilter =
+					isSynthetic().and( named( "getMetaClass" )
+							.and( returns( td -> "groovy.lang.MetaClass".equals( td.getName() ) ) ) );
+			virtualNotFinalizerFilter =
+					isVirtual().and( not( isFinalizer() ) );
+			proxyNonInterceptedMethodFilter =
+					nameStartsWith( "$$_hibernate_" ).and( isVirtual() )
+							// HHH-15090: Don't apply extended enhancement reader/writer methods to the proxy;
+							// those need to be executed on the actual entity.
+							.and( not( nameStartsWith( PERSISTENT_FIELD_READER_PREFIX ) ) )
+							.and( not( nameStartsWith( PERSISTENT_FIELD_WRITER_PREFIX ) ) );
 
 			// Populate the toFullyIgnore list
-			for ( Method m : PrimeAmongSecondarySupertypes.class.getMethods() ) {
+			for ( var method : PrimeAmongSecondarySupertypes.class.getMethods() ) {
 				//We need to ignore both the match of each default method on PrimeAmongSecondarySupertypes
-				toFullyIgnore.add( isDeclaredBy( PrimeAmongSecondarySupertypes.class ).and( named( m.getName() ) ).and( takesNoArguments() ) );
+				toFullyIgnore.add(
+						isDeclaredBy( PrimeAmongSecondarySupertypes.class )
+								.and( named( method.getName() ) )
+								.and( takesNoArguments() ) );
 				//And the override in the interface it belongs to - which we happen to have in the return type
-				toFullyIgnore.add( isDeclaredBy( m.getReturnType() ).and( named( m.getName() ) ).and( takesNoArguments() ) );
+				toFullyIgnore.add(
+						isDeclaredBy( method.getReturnType() )
+								.and( named( method.getName() ) )
+								.and( takesNoArguments() ) );
 			}
 
-			this.delegateToInterceptorDispatcherMethodDelegation = MethodDelegation.to( ProxyConfiguration.InterceptorDispatcher.class );
+			delegateToInterceptorDispatcherMethodDelegation =
+					MethodDelegation.to( ProxyConfiguration.InterceptorDispatcher.class );
 
-			this.interceptorFieldAccessor = FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME )
-					.withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC );
+			interceptorFieldAccessor =
+					FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME )
+							.withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC );
 		}
 
 		public ElementMatcher<? super MethodDescription> getGroovyGetMetaClassFilter() {
@@ -345,29 +325,10 @@ public final class ByteBuddyState {
 		}
 
 		public DynamicType.Builder<?> appendIgnoreAlsoAtEnd(DynamicType.Builder<?> builder) {
-			for ( ElementMatcher<? super MethodDescription> m : toFullyIgnore ) {
-				builder = builder.ignoreAlso( m );
+			for ( var elementMatcher : toFullyIgnore ) {
+				builder = builder.ignoreAlso( elementMatcher );
 			}
 			return builder;
-		}
-	}
-
-	private interface ClassRewriter {
-		DynamicType.Builder<?> installReflectionMethodVisitors(DynamicType.Builder<?> builder);
-
-		void registerAuthorizedClass(Unloaded<?> unloadedClass);
-	}
-
-	private static class StandardClassRewriter implements ClassRewriter {
-		@Override
-		public DynamicType.Builder<?> installReflectionMethodVisitors(DynamicType.Builder<?> builder) {
-			// do nothing
-			return builder;
-		}
-
-		@Override
-		public void registerAuthorizedClass(Unloaded<?> unloadedClass) {
-			// do nothing
 		}
 	}
 

@@ -15,16 +15,13 @@ import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.Set;
 
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+import static org.hibernate.service.internal.ServiceLogger.SERVICE_LOGGER;
 
 /**
  * A service loader bound to an {@link AggregatedClassLoader}.
  * @param <S> The type of the service contract.
  */
 abstract class AggregatedServiceLoader<S> {
-
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( AggregatedServiceLoader.class );
 
 	static <S> AggregatedServiceLoader<S> create(AggregatedClassLoader aggregatedClassLoader,
 			Class<S> serviceContract) {
@@ -116,7 +113,7 @@ abstract class AggregatedServiceLoader<S> {
 			Set<S> result = new LinkedHashSet<>();
 
 			// Always try the aggregated class loader first
-			Iterator<ServiceLoader.Provider<S>> providerIterator = aggregatedClassLoaderServiceLoader.stream().iterator();
+			var providerIterator = aggregatedClassLoaderServiceLoader.stream().iterator();
 			while ( providerIterator.hasNext() ) {
 				ServiceLoader.Provider<S> provider = providerIterator.next();
 				collectServiceIfNotDuplicate( result, alreadyEncountered, provider );
@@ -130,15 +127,14 @@ abstract class AggregatedServiceLoader<S> {
 				providerIterator = delegate.stream().iterator();
 				/*
 				 * Note that advancing the stream itself can lead to (arguably) "legitimate" errors,
-				 * where we fail to load the service,
-				 * but only because individual classloader has its own definition of the service contract class,
-				 * which is different from ours.
+				 * where we fail to load the service, but only because each individual classloader
+				 * has its own definition of the service contract class, which is different from ours.
 				 * In that case (still arguably), the error should be ignored.
-				 * That's why we wrap the call to hasNext in a method that catches an logs errors.
+				 * That's why we wrap the call to hasNext in a method that catches and logs errors.
 				 * See https://hibernate.atlassian.net/browse/HHH-13551.
 				 */
 				while ( hasNextIgnoringServiceConfigurationError( providerIterator ) ) {
-					ServiceLoader.Provider<S> provider = providerIterator.next();
+					final ServiceLoader.Provider<S> provider = providerIterator.next();
 					collectServiceIfNotDuplicate( result, alreadyEncountered, provider );
 				}
 			}
@@ -152,7 +148,7 @@ abstract class AggregatedServiceLoader<S> {
 					return iterator.hasNext();
 				}
 				catch (ServiceConfigurationError e) {
-					log.ignoringServiceConfigurationError( serviceContract, e );
+					SERVICE_LOGGER.ignoringServiceConfigurationError( serviceContract.getName(), e );
 				}
 			}
 		}

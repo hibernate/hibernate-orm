@@ -29,12 +29,7 @@ public class MapIndexFormulaTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Group" ).executeUpdate();
-					session.createMutationQuery( "delete from User" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

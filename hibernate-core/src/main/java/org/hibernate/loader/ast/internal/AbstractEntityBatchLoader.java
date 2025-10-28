@@ -7,7 +7,6 @@ package org.hibernate.loader.ast.internal;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.EntityBatchLoader;
@@ -15,6 +14,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.hasSingleId;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 public abstract class AbstractEntityBatchLoader<T>
 		extends SingleIdEntityLoaderSupport<T>
@@ -24,7 +24,7 @@ public abstract class AbstractEntityBatchLoader<T>
 
 	public AbstractEntityBatchLoader(EntityMappingType entityDescriptor, LoadQueryInfluencers influencers) {
 		super( entityDescriptor, influencers.getSessionFactory() );
-		this.singleIdLoader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, influencers );
+		singleIdLoader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, influencers );
 	}
 
 	protected abstract void initializeEntities(
@@ -37,29 +37,29 @@ public abstract class AbstractEntityBatchLoader<T>
 
 	protected abstract Object[] resolveIdsToInitialize(Object id, SharedSessionContractImplementor session);
 
-	@Override
+@Override
 	public final T load(
 			Object id,
 			Object entityInstance,
 			LockOptions lockOptions,
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.debugf( "Batch fetching entity `%s#%s`", getLoadable().getEntityName(), id );
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.batchFetchingEntity( infoString( getLoadable(), id ) );
 		}
 
-		final Object[] ids = resolveIdsToInitialize( id, session );
+		final var ids = resolveIdsToInitialize( id, session );
 		return load( id, ids, hasSingleId( ids ), entityInstance, lockOptions, readOnly, session );
 	}
 
-	@Override
+@Override
 	public T load(
 			Object id,
 			Object entityInstance,
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.debugf( "Batch fetching entity `%s#%s`", getLoadable().getEntityName(), id );
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.batchFetchingEntity( infoString( getLoadable(), id ) );
 		}
 
 		final Object[] ids = resolveIdsToInitialize( id, session );
@@ -88,11 +88,11 @@ public abstract class AbstractEntityBatchLoader<T>
 		if ( hasSingleId || lockOptions.getLockMode() != LockMode.NONE ) {
 			return singleIdLoader.load( id, entityInstance, lockOptions, readOnly, session );
 		}
-
-		initializeEntities( ids, id, entityInstance, lockOptions, readOnly, session );
-
-		final EntityKey entityKey = session.generateEntityKey( id, getLoadable().getEntityPersister() );
-		//noinspection unchecked
-		return (T) session.getPersistenceContext().getEntity( entityKey );
+		else {
+			initializeEntities( ids, id, entityInstance, lockOptions, readOnly, session );
+			final var entityKey = session.generateEntityKey( id, getLoadable().getEntityPersister() );
+			//noinspection unchecked
+			return (T) session.getPersistenceContext().getEntity( entityKey );
+		}
 	}
 }

@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.cte;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 import org.hibernate.query.criteria.JpaCteCriteria;
@@ -14,6 +15,7 @@ import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
 import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.SortDirection;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
@@ -41,9 +43,9 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 	private SqmSelectQuery<?> cteDefinition;
 	private CteMaterialization materialization;
 	private CteSearchClauseKind searchClauseKind;
-	private List<JpaSearchOrder> searchBySpecifications;
+	private List<SqmSearchClauseSpecification> searchBySpecifications;
 	private String searchAttributeName;
-	private List<JpaCteCriteriaAttribute> cycleAttributes;
+	private List<SqmCteTableColumn> cycleAttributes;
 	private String cycleMarkAttributeName;
 	private String cyclePathAttributeName;
 	private SqmLiteral<Object> cycleValue;
@@ -114,9 +116,9 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 			SqmSelectQuery<?> cteDefinition,
 			CteMaterialization materialization,
 			CteSearchClauseKind searchClauseKind,
-			List<JpaSearchOrder> searchBySpecifications,
+			List<SqmSearchClauseSpecification> searchBySpecifications,
 			String searchAttributeName,
-			List<JpaCteCriteriaAttribute> cycleAttributes,
+			List<SqmCteTableColumn> cycleAttributes,
 			String cycleMarkAttributeName,
 			String cyclePathAttributeName,
 			SqmLiteral<Object> cycleValue,
@@ -202,7 +204,8 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 
 	@Override
 	public List<JpaSearchOrder> getSearchBySpecifications() {
-		return searchBySpecifications;
+		//noinspection unchecked
+		return (List<JpaSearchOrder>) (List<?>) searchBySpecifications;
 	}
 
 	@Override
@@ -212,7 +215,8 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 
 	@Override
 	public List<JpaCteCriteriaAttribute> getCycleAttributes() {
-		return cycleAttributes;
+		//noinspection unchecked
+		return (List<JpaCteCriteriaAttribute>) (List<?>) cycleAttributes;
 	}
 
 	@Override
@@ -269,7 +273,8 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 			}
 			this.searchClauseKind = kind;
 			this.searchAttributeName = searchAttributeName;
-			this.searchBySpecifications = orders;
+			//noinspection unchecked
+			this.searchBySpecifications = (List<SqmSearchClauseSpecification>) (List<?>) orders;
 		}
 	}
 
@@ -296,7 +301,7 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 			if ( cycleValueLiteral.getNodeType() != noCycleValueLiteral.getNodeType() ) {
 				throw new IllegalArgumentException( "Inconsistent types for cycle mark values: [" + cycleValueLiteral.getNodeType() + ", " + noCycleValueLiteral.getNodeType() + "]" );
 			}
-			final List<JpaCteCriteriaAttribute> attributes = new ArrayList<>( cycleAttributes.size() );
+			final List<SqmCteTableColumn> attributes = new ArrayList<>( cycleAttributes.size() );
 			for ( JpaCteCriteriaAttribute cycleAttribute : cycleAttributes ) {
 				if ( !cteTable.getAttributes().contains( cycleAttribute ) ) {
 					throw new IllegalArgumentException(
@@ -305,7 +310,7 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 									"' passed, which is not part of the JpaCteCriteria!"
 					);
 				}
-				attributes.add( cycleAttribute );
+				attributes.add( (SqmCteTableColumn) cycleAttribute );
 			}
 			this.cycleMarkAttributeName = cycleMarkAttributeName;
 			this.cyclePathAttributeName = cyclePathAttributeName;
@@ -339,12 +344,12 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 		if ( getMaterialization() != CteMaterialization.UNDEFINED ) {
 			hql.append( getMaterialization() ).append( ' ' );
 		}
-		if ( getCteDefinition() instanceof SqmSubQuery<?> ) {
-			( (SqmSubQuery<?>) getCteDefinition() ).appendHqlString( hql, context );
+		if ( getCteDefinition() instanceof SqmSubQuery<?> subQuery ) {
+			subQuery.appendHqlString( hql, context );
 		}
-		else {
+		else if ( getCteDefinition() instanceof SqmSelectStatement<?> selectStatement ) {
 			hql.append( '(' );
-			( (SqmSelectStatement<?>) getCteDefinition() ).appendHqlString( hql, context );
+			selectStatement.appendHqlString( hql, context );
 			hql.append( ')' );
 		}
 		String separator;
@@ -404,4 +409,69 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 			}
 		}
 	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmCteStatement<?> that
+			&& cteTable.equals( that.cteTable )
+			&& cteDefinition.equals( that.cteDefinition )
+			&& materialization == that.materialization
+			&& searchClauseKind == that.searchClauseKind
+			&& Objects.equals( searchBySpecifications, that.searchBySpecifications )
+			&& Objects.equals( searchAttributeName, that.searchAttributeName )
+			&& Objects.equals( cycleAttributes, that.cycleAttributes )
+			&& Objects.equals( cycleMarkAttributeName, that.cycleMarkAttributeName )
+			&& Objects.equals( cyclePathAttributeName, that.cyclePathAttributeName )
+			&& Objects.equals( cycleValue, that.cycleValue )
+			&& Objects.equals( noCycleValue, that.noCycleValue );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = cteTable.hashCode();
+		result = 31 * result + cteDefinition.hashCode();
+		result = 31 * result + materialization.hashCode();
+		result = 31 * result + Objects.hashCode( searchClauseKind );
+		result = 31 * result + Objects.hashCode( searchBySpecifications );
+		result = 31 * result + Objects.hashCode( searchAttributeName );
+		result = 31 * result + Objects.hashCode( cycleAttributes );
+		result = 31 * result + Objects.hashCode( cycleMarkAttributeName );
+		result = 31 * result + Objects.hashCode( cyclePathAttributeName );
+		result = 31 * result + Objects.hashCode( cycleValue );
+		result = 31 * result + Objects.hashCode( noCycleValue );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmCteStatement<?> that
+			&& cteTable.isCompatible( that.cteTable )
+			&& cteDefinition.isCompatible( that.cteDefinition )
+			&& materialization == that.materialization
+			&& searchClauseKind == that.searchClauseKind
+			&& SqmCacheable.areCompatible( searchBySpecifications, that.searchBySpecifications )
+			&& Objects.equals( searchAttributeName, that.searchAttributeName )
+			&& SqmCacheable.areCompatible( cycleAttributes, that.cycleAttributes )
+			&& Objects.equals( cycleMarkAttributeName, that.cycleMarkAttributeName )
+			&& Objects.equals( cyclePathAttributeName, that.cyclePathAttributeName )
+			&& SqmCacheable.areCompatible( cycleValue, that.cycleValue )
+			&& SqmCacheable.areCompatible( noCycleValue, that.noCycleValue );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = cteTable.cacheHashCode();
+		result = 31 * result + cteDefinition.cacheHashCode();
+		result = 31 * result + materialization.hashCode();
+		result = 31 * result + Objects.hashCode( searchClauseKind );
+		result = 31 * result + SqmCacheable.cacheHashCode( searchBySpecifications );
+		result = 31 * result + Objects.hashCode( searchAttributeName );
+		result = 31 * result + SqmCacheable.cacheHashCode( cycleAttributes );
+		result = 31 * result + Objects.hashCode( cycleMarkAttributeName );
+		result = 31 * result + Objects.hashCode( cyclePathAttributeName );
+		result = 31 * result + SqmCacheable.cacheHashCode( cycleValue );
+		result = 31 * result + SqmCacheable.cacheHashCode( noCycleValue );
+		return result;
+	}
+
 }

@@ -21,20 +21,22 @@ import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.HANAServerConfiguration;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.HANAAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.HANALockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.sequence.HANASequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.HANASqlAstTranslator;
-import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.HANAGlobalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.BinaryStream;
@@ -178,6 +180,8 @@ public class HANALegacyDialect extends Dialect {
 
 	static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 1, 0, 120 );
 
+	private final LockingSupport lockingSupport;
+
 	public HANALegacyDialect(DialectResolutionInfo info) {
 		this( HANAServerConfiguration.fromDialectResolutionInfo( info ), true );
 		registerKeywords( info );
@@ -200,11 +204,19 @@ public class HANALegacyDialect extends Dialect {
 		this.defaultTableTypeColumn = defaultTableTypeColumn;
 		this.maxLobPrefetchSize = configuration.getMaxLobPrefetchSize();
 		this.useUnicodeStringTypes = useUnicodeStringTypesDefault();
+
+		this.lockingSupport = HANALockingSupport.forDialectVersion( configuration.getFullVersion() );
+	}
+
+	private LockingSupport buildLockingSupport() {
+		// HANA supports IGNORE LOCKED since HANA 2.0 SPS3 (2.0.030)
+		final boolean supportsSkipLocked = getVersion().isSameOrAfter(2, 0, 30);
+		return new HANALockingSupport( supportsSkipLocked );
 	}
 
 	@Override
 	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
-		return HANALegacyServerConfiguration.staticDetermineDatabaseVersion( info );
+		return HANALegacyServerConfiguration.determineDatabaseVersion( info );
 	}
 
 	// Use column or row tables by default
@@ -310,38 +322,24 @@ public class HANALegacyDialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-				return useLegacyBooleanType ? "tinyint" : super.columnType( sqlTypeCode );
-			case NUMERIC:
-				//there is no 'numeric' type in HANA
-				return columnType( DECIMAL );
+		return switch ( sqlTypeCode ) {
+			case BOOLEAN -> useLegacyBooleanType ? "tinyint" : super.columnType( sqlTypeCode );
+			//there is no 'numeric' type in HANA
+			case NUMERIC -> columnType( DECIMAL );
 			//'double precision' syntax not supported
-			case DOUBLE:
-				return "double";
+			case DOUBLE -> "double";
 			//no explicit precision
-			case TIME:
-			case TIME_WITH_TIMEZONE:
-				return "time";
-			case TIMESTAMP:
-			case TIMESTAMP_WITH_TIMEZONE:
-				return "timestamp";
+			case TIME, TIME_WITH_TIMEZONE -> "time";
+			case TIMESTAMP, TIMESTAMP_WITH_TIMEZONE -> "timestamp";
 			//there is no 'char' or 'nchar' type in HANA
-			case CHAR:
-			case VARCHAR:
-				return isUseUnicodeStringTypes() ? columnType( NVARCHAR ) : super.columnType( VARCHAR );
-			case NCHAR:
-				return columnType( NVARCHAR );
-			case LONG32VARCHAR:
-				return isUseUnicodeStringTypes() ? columnType( LONG32NVARCHAR ) : super.columnType( LONG32VARCHAR );
-			case CLOB:
-				return isUseUnicodeStringTypes() ? columnType( NCLOB ) : super.columnType( CLOB );
+			case CHAR, VARCHAR -> isUseUnicodeStringTypes() ? columnType( NVARCHAR ) : super.columnType( VARCHAR );
+			case NCHAR -> columnType( NVARCHAR );
+			case LONG32VARCHAR -> isUseUnicodeStringTypes() ? columnType( LONG32NVARCHAR ) : super.columnType( LONG32VARCHAR );
+			case CLOB -> isUseUnicodeStringTypes() ? columnType( NCLOB ) : super.columnType( CLOB );
 			// map tinyint to smallint since tinyint is unsigned on HANA
-			case TINYINT:
-				return "smallint";
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+			case TINYINT -> "smallint";
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -517,6 +515,8 @@ public class HANALegacyDialect extends Dialect {
 
 //			functionFactory.xmlextract();
 		}
+
+		functionFactory.regexpLike_like_regexp();
 	}
 
 	/**
@@ -562,22 +562,15 @@ public class HANALegacyDialect extends Dialect {
 	 */
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		switch (unit) {
-			case DAY_OF_WEEK:
-				return "(mod(weekday(?2)+1,7)+1)";
-			case DAY:
-			case DAY_OF_MONTH:
-				return "dayofmonth(?2)";
-			case DAY_OF_YEAR:
-				return "dayofyear(?2)";
-			case QUARTER:
-				return "((month(?2)+2)/3)";
-			case EPOCH:
-				return "seconds_between('1970-01-01', ?2)";
-			default:
-				//I think week() returns the ISO week number
-				return "?1(?2)";
-		}
+		return switch (unit) {
+			case DAY_OF_WEEK -> "(mod(weekday(?2)+1,7)+1)";
+			case DAY, DAY_OF_MONTH -> "dayofmonth(?2)";
+			case DAY_OF_YEAR -> "dayofyear(?2)";
+			case QUARTER -> "((month(?2)+2)/3)";
+			case EPOCH -> "seconds_between('1970-01-01', ?2)";
+			//I think week() returns the ISO week number
+			default -> "?1(?2)";
+		};
 	}
 
 	@Override
@@ -638,8 +631,8 @@ public class HANALegacyDialect extends Dialect {
 	}
 
 	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.COLUMN;
+	public LockingSupport getLockingSupport() {
+		return lockingSupport;
 	}
 
 	@Override
@@ -674,18 +667,15 @@ public class HANALegacyDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString(final String aliases, final LockOptions lockOptions) {
-		LockMode lockMode = lockOptions.findGreatestLockMode();
-		lockOptions.setLockMode( lockMode );
-
 		// not sure why this is sometimes empty
 		if ( aliases == null || aliases.isEmpty() ) {
 			return getForUpdateString( lockOptions );
 		}
 
-		return getForUpdateString( aliases, lockMode, lockOptions.getTimeOut() );
+		return getForUpdateString( aliases, lockOptions.getLockMode(), lockOptions.getTimeout() );
 	}
 
-	private String getForUpdateString(String aliases, LockMode lockMode, int timeout) {
+	private String getForUpdateString(String aliases, LockMode lockMode, Timeout timeout) {
 		return switch ( lockMode ) {
 			case PESSIMISTIC_READ -> getReadLockString( aliases, timeout );
 			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, timeout );
@@ -876,16 +866,6 @@ public class HANALegacyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTableCheck() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsTupleDistinctCounts() {
-		return true;
-	}
-
-	@Override
 	public boolean dropConstraints() {
 		return false;
 	}
@@ -916,7 +896,7 @@ public class HANALegacyDialect extends Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 		/*
 		 * HANA-specific extensions
@@ -924,7 +904,7 @@ public class HANALegacyDialect extends Dialect {
 		builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.UPPER );
 
-		final IdentifierHelper identifierHelper = super.buildIdentifierHelper( builder, dbMetaData );
+		final IdentifierHelper identifierHelper = super.buildIdentifierHelper( builder, metadata );
 
 		return new IdentifierHelper() {
 
@@ -965,7 +945,7 @@ public class HANALegacyDialect extends Dialect {
 
 				// need to quote names containing special characters like ':'
 				if ( !normalizedIdentifier.isQuoted() && !normalizedIdentifier.getText().matches( "\\w+" ) ) {
-					normalizedIdentifier = Identifier.quote( normalizedIdentifier );
+					normalizedIdentifier = normalizedIdentifier.quoted();
 				}
 
 				return normalizedIdentifier;
@@ -999,34 +979,18 @@ public class HANALegacyDialect extends Dialect {
 	}
 
 	@Override
+	public String getForUpdateString(Timeout timeout) {
+		return withTimeout( getForUpdateString(), timeout.milliseconds() );
+	}
+
+	@Override
 	public String getReadLockString(String aliases, Timeout timeout) {
 		return getWriteLockString( aliases, timeout );
 	}
 
 	@Override
-	public String getWriteLockString(Timeout timeout) {
-		if ( Timeouts.isRealTimeout( timeout ) ) {
-			return getForUpdateString() + " wait " + getTimeoutInSeconds( timeout.milliseconds() );
-		}
-		else if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI ) {
-			return getForUpdateNowaitString();
-		}
-		else {
-			return getForUpdateString();
-		}
-	}
-
-	@Override
 	public String getWriteLockString(String aliases, Timeout timeout) {
-		if ( Timeouts.isRealTimeout( timeout ) ) {
-			return getForUpdateString( aliases ) + " wait " + getTimeoutInSeconds( timeout.milliseconds() );
-		}
-		else if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI ) {
-			return getForUpdateNowaitString( aliases );
-		}
-		else {
-			return getForUpdateString( aliases );
-		}
+		return withTimeout( getForUpdateString( aliases ), timeout.milliseconds() );
 	}
 
 	@Override
@@ -1040,29 +1004,17 @@ public class HANALegacyDialect extends Dialect {
 	}
 
 	@Override
-	public String getWriteLockString(int timeout) {
-		if ( Timeouts.isRealTimeout( timeout ) ) {
-			return getForUpdateString() + " wait " + Timeouts.getTimeoutInSeconds( timeout );
-		}
-		else if ( timeout == Timeouts.NO_WAIT_MILLI ) {
-			return getForUpdateNowaitString();
-		}
-		else {
-			return getForUpdateString();
-		}
+	public String getWriteLockString(String aliases, int timeout) {
+		return withTimeout( getForUpdateString( aliases ), timeout );
 	}
 
-	@Override
-	public String getWriteLockString(String aliases, int timeout) {
-		if ( timeout > 0 ) {
-			return getForUpdateString( aliases ) + " wait " + getTimeoutInSeconds( timeout );
-		}
-		else if ( timeout == 0 ) {
-			return getForUpdateNowaitString( aliases );
-		}
-		else {
-			return getForUpdateString( aliases );
-		}
+	private String withTimeout(String lockString, int timeout) {
+		return switch (timeout) {
+			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case Timeouts.SKIP_LOCKED_MILLI -> supportsSkipLocked() ? lockString + SQL_IGNORE_LOCKED : lockString;
+			case Timeouts.WAIT_FOREVER_MILLI -> lockString;
+			default -> supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
+		};
 	}
 
 	@Override
@@ -1183,11 +1135,6 @@ public class HANALegacyDialect extends Dialect {
 	@Override
 	public boolean supportsLateral() {
 		return getVersion().isSameOrAfter( 2, 0, 40 );
-	}
-
-	@Override
-	public boolean supportsNoWait() {
-		return true;
 	}
 
 	@Override
@@ -1961,30 +1908,14 @@ public class HANALegacyDialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						entityDescriptor,
-						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new GlobalTemporaryTableMutationStrategy( entityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						entityDescriptor,
-						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new GlobalTemporaryTableInsertStrategy( entityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
@@ -1993,29 +1924,28 @@ public class HANALegacyDialect extends Dialect {
 	}
 
 	@Override
+	public TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
+		return HANAGlobalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
 	public String getTemporaryTableCreateOptions() {
-		return "on commit delete rows";
+		return HANAGlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
 	}
 
 	@Override
 	public String getTemporaryTableCreateCommand() {
-		return "create global temporary row table";
+		return HANAGlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateCommand();
 	}
 
 	@Override
 	public String getTemporaryTableTruncateCommand() {
-		return "truncate table";
+		return HANAGlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableTruncateCommand();
 	}
 
 	@Override
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		// HANA supports IGNORE LOCKED since HANA 2.0 SPS3 (2.0.030)
-		return getVersion().isSameOrAfter(2, 0, 30);
 	}
 
 	@Override
@@ -2027,11 +1957,6 @@ public class HANALegacyDialect extends Dialect {
 	public String getForUpdateSkipLockedString(String aliases) {
 		return supportsSkipLocked() ?
 				getForUpdateString(aliases) + SQL_IGNORE_LOCKED : getForUpdateString(aliases);
-	}
-
-	@Override
-	public String getForUpdateString(LockMode lockMode) {
-		return super.getForUpdateString(lockMode);
 	}
 
 	@Override

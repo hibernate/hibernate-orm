@@ -46,14 +46,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class GetLoadTest {
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Employer" ).executeUpdate();
-					entityManager.createQuery( "delete from Workload" ).executeUpdate();
-					entityManager.createQuery( "update Node set parent = null" ).executeUpdate();
-					entityManager.createQuery( "delete from Node" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -128,7 +121,7 @@ public class GetLoadTest {
 					emp.getId();
 					assertFalse( Hibernate.isInitialized( emp ) );
 					Node node = s.getReference( Node.class, nodeName );
-					assertEquals( node.getName(), nodeName );
+					assertEquals( nodeName, node.getName() );
 					assertFalse( Hibernate.isInitialized( node ) );
 				}
 		);
@@ -140,7 +133,7 @@ public class GetLoadTest {
 					emp.getId();
 					assertFalse( Hibernate.isInitialized( emp ) );
 					Node node = ( Node ) s.getReference( Node.class.getName(), nodeName );
-					assertEquals( node.getName(), nodeName );
+					assertEquals( nodeName, node.getName() );
 					assertFalse( Hibernate.isInitialized( node ) );
 				}
 		);

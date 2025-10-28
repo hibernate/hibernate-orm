@@ -10,6 +10,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
+
 /**
  * @author Gavin King
  */
@@ -69,5 +70,33 @@ public class SqmToDuration<T> extends AbstractSqmExpression<T> {
 		magnitude.appendHqlString( hql, context );
 		hql.append( ' ' );
 		hql.append( unit.getUnit() );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmToDuration<?> that
+			&& magnitude.equals( that.magnitude )
+			&& unit.equals( that.unit );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = magnitude.hashCode();
+		result = 31 * result + unit.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmToDuration<?> that
+			&& magnitude.isCompatible( that.magnitude )
+			&& unit.isCompatible( that.unit );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = magnitude.cacheHashCode();
+		result = 31 * result + unit.cacheHashCode();
+		return result;
 	}
 }

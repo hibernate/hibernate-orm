@@ -1,1 +1,1 @@
-expression "NOT"? ("LIKE" | "ILIKE") expression ("ESCAPE" character)?
+expression "NOT"? ("LIKE" | "ILIKE") REGEXP? expression ("ESCAPE" character)?

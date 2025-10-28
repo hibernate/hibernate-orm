@@ -7,23 +7,19 @@ package org.hibernate.proxy.pojo.bytebuddy;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Locale;
-import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImplConstants;
 import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
 import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyConfiguration;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.NamingStrategy;
-import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.description.type.TypeList;
@@ -32,30 +28,28 @@ import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
 import net.bytebuddy.implementation.SuperMethodCall;
 import net.bytebuddy.pool.TypePool;
 
+import static org.hibernate.internal.util.ReflectHelper.overridesEquals;
+
 public class ByteBuddyProxyHelper implements Serializable {
 
 	private static final String PROXY_NAMING_SUFFIX = "HibernateProxy";
 	private static final TypeDescription OBJECT = TypeDescription.ForLoadedType.of(Object.class);
 
 	private final ByteBuddyState byteBuddyState;
+	private final EnhancerImplConstants constants;
 
 	public ByteBuddyProxyHelper(ByteBuddyState byteBuddyState) {
 		this.byteBuddyState = byteBuddyState;
+		this.constants = byteBuddyState.getEnhancerConstants();
 	}
 
-	@SuppressWarnings("rawtypes")
-	public Class buildProxy(
+	public Class<?> buildProxy(
 			final Class<?> persistentClass,
 			final Class<?>[] interfaces) {
-		Set<Class<?>> key = new HashSet<>();
-		if ( interfaces.length == 1 ) {
-			key.add( persistentClass );
-		}
-		Collections.addAll( key, interfaces );
-
 		final String proxyClassName = persistentClass.getTypeName() + "$" + PROXY_NAMING_SUFFIX;
 		return byteBuddyState.loadProxy( persistentClass, proxyClassName,
-				proxyBuilder( TypeDescription.ForLoadedType.of( persistentClass ), new TypeList.Generic.ForLoadedTypes( interfaces ) ) );
+				proxyBuilder( TypeDescription.ForLoadedType.of( persistentClass ),
+						new TypeList.Generic.ForLoadedTypes( interfaces ) ) );
 	}
 
 	/**
@@ -70,6 +64,7 @@ public class ByteBuddyProxyHelper implements Serializable {
 	/**
 	 * Do not remove: used by Quarkus
 	 */
+	@SuppressWarnings("unused")
 	public DynamicType.Unloaded<?> buildUnloadedProxy(TypePool typePool, TypeDefinition persistentClass,
 			Collection<? extends TypeDefinition> interfaces) {
 		return byteBuddyState.make( typePool, proxyBuilderLegacy( persistentClass, interfaces ) );
@@ -77,16 +72,16 @@ public class ByteBuddyProxyHelper implements Serializable {
 
 	private Function<ByteBuddy, DynamicType.Builder<?>> proxyBuilderLegacy(TypeDefinition persistentClass,
 			Collection<? extends TypeDefinition> interfaces) {
-		final BiFunction<ByteBuddy, NamingStrategy, DynamicType.Builder<?>> proxyBuilder =
-				proxyBuilder( persistentClass, interfaces );
-		final NamingStrategy.Suffixing namingStrategy =
-				new NamingStrategy.Suffixing( PROXY_NAMING_SUFFIX, new NamingStrategy.Suffixing.BaseNameResolver.ForFixedValue( persistentClass.getTypeName() ) );
+		final var proxyBuilder = proxyBuilder( persistentClass, interfaces );
+		final var namingStrategy =
+				new NamingStrategy.Suffixing( PROXY_NAMING_SUFFIX,
+						new NamingStrategy.Suffixing.BaseNameResolver.ForFixedValue( persistentClass.getTypeName() ) );
 		return byteBuddy -> proxyBuilder.apply( byteBuddy, namingStrategy );
 	}
 
 	private BiFunction<ByteBuddy, NamingStrategy, DynamicType.Builder<?>> proxyBuilder(TypeDefinition persistentClass,
 			Collection<? extends TypeDefinition> interfaces) {
-		ByteBuddyState.ProxyDefinitionHelpers helpers = byteBuddyState.getProxyDefinitionHelpers();
+		var helpers = byteBuddyState.getProxyDefinitionHelpers();
 		return (byteBuddy, namingStrategy) -> helpers.appendIgnoreAlsoAtEnd( byteBuddy
 				.ignore( helpers.getGroovyGetMetaClassFilter() )
 				.with( namingStrategy )
@@ -96,38 +91,35 @@ public class ByteBuddyProxyHelper implements Serializable {
 						.intercept( helpers.getDelegateToInterceptorDispatcherMethodDelegation() )
 				.method( helpers.getProxyNonInterceptedMethodFilter() )
 						.intercept( SuperMethodCall.INSTANCE )
-				.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
-				.implement( ProxyConfiguration.class )
+				.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, constants.modifierPRIVATE )
+				.implement( constants.INTERFACES_for_ProxyConfiguration )
 						.intercept( helpers.getInterceptorFieldAccessor() )
 		);
 	}
 
-	public HibernateProxy deserializeProxy(SerializableProxy serializableProxy) {
-		final ByteBuddyInterceptor interceptor = new ByteBuddyInterceptor(
-				serializableProxy.getEntityName(),
-				serializableProxy.getPersistentClass(),
-				serializableProxy.getInterfaces(),
-				serializableProxy.getId(),
-				resolveIdGetterMethod( serializableProxy ),
-				resolveIdSetterMethod( serializableProxy ),
-				serializableProxy.getComponentIdType(),
+	public HibernateProxy deserializeProxy(SerializableProxy proxy) {
+		final var interceptor = new ByteBuddyInterceptor(
+				proxy.getEntityName(),
+				proxy.getPersistentClass(),
+				proxy.getInterfaces(),
+				proxy.getId(),
+				resolveIdGetterMethod( proxy ),
+				resolveIdSetterMethod( proxy ),
+				proxy.getComponentIdType(),
 				null,
-				ReflectHelper.overridesEquals( serializableProxy.getPersistentClass() )
+				overridesEquals( proxy.getPersistentClass() )
 		);
 
 		// note: interface is assumed to already contain HibernateProxy.class
 		try {
-			final Class<?> proxyClass = buildProxy(
-					serializableProxy.getPersistentClass(),
-					serializableProxy.getInterfaces()
-			);
-			PrimeAmongSecondarySupertypes instance = (PrimeAmongSecondarySupertypes) proxyClass.getDeclaredConstructor().newInstance();
-			final ProxyConfiguration proxyConfiguration = instance.asProxyConfiguration();
+			final var proxyClass = buildProxy( proxy.getPersistentClass(), proxy.getInterfaces() );
+			final var instance = (PrimeAmongSecondarySupertypes) proxyClass.getDeclaredConstructor().newInstance();
+			final var proxyConfiguration = instance.asProxyConfiguration();
 			if ( proxyConfiguration == null ) {
 				throw new HibernateException( "Produced proxy does not correctly implement ProxyConfiguration" );
 			}
 			proxyConfiguration.$$_hibernate_set_interceptor( interceptor );
-			final HibernateProxy hibernateProxy = instance.asHibernateProxy();
+			final var hibernateProxy = instance.asHibernateProxy();
 			if ( hibernateProxy == null ) {
 				throw new HibernateException( "Produced proxy does not correctly implement HibernateProxy" );
 			}
@@ -135,7 +127,7 @@ public class ByteBuddyProxyHelper implements Serializable {
 		}
 		catch (Throwable t) {
 			throw new HibernateException( "Bytecode enhancement failed for entity '"
-					+ serializableProxy.getEntityName() + "'", t );
+					+ proxy.getEntityName() + "'", t );
 		}
 	}
 
@@ -145,7 +137,8 @@ public class ByteBuddyProxyHelper implements Serializable {
 		}
 
 		try {
-			return serializableProxy.getIdentifierGetterMethodClass().getDeclaredMethod( serializableProxy.getIdentifierGetterMethodName() );
+			return serializableProxy.getIdentifierGetterMethodClass()
+					.getDeclaredMethod( serializableProxy.getIdentifierGetterMethodName() );
 		}
 		catch (NoSuchMethodException e) {
 			throw new HibernateException(
@@ -167,10 +160,9 @@ public class ByteBuddyProxyHelper implements Serializable {
 		}
 
 		try {
-			return serializableProxy.getIdentifierSetterMethodClass().getDeclaredMethod(
-					serializableProxy.getIdentifierSetterMethodName(),
-					serializableProxy.getIdentifierSetterMethodParams()
-			);
+			return serializableProxy.getIdentifierSetterMethodClass()
+					.getDeclaredMethod( serializableProxy.getIdentifierSetterMethodName(),
+							serializableProxy.getIdentifierSetterMethodParams() );
 		}
 		catch (NoSuchMethodException e) {
 			throw new HibernateException(

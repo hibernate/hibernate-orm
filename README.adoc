@@ -4,6 +4,7 @@ image:https://img.shields.io/maven-central/v/org.hibernate.orm/hibernate-core.sv
 image:https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fci.hibernate.org%2Fjob%2Fhibernate-orm-pipeline%2Fjob%2Fmain%2F&style=for-the-badge[Build Status,link=https://ci.hibernate.org/job/hibernate-orm-pipeline/job/main/]
 image:https://img.shields.io/badge/Revved%20up%20by-Develocity-06A0CE?style=for-the-badge&logo=gradle[Develocity,link=https://develocity.commonhaus.dev/scans?search.rootProjectNames=Hibernate%20ORM]
 image:https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/jvm-repo-rebuild/reproducible-central/master/content/org/hibernate/orm/hibernate-core/badge.json&style=for-the-badge[Reproducible Builds,link=https://github.com/jvm-repo-rebuild/reproducible-central/blob/master/content/org/hibernate/orm/hibernate-core/README.md]
+image:https://testpilot.oracle.com/ords/testpilot/badges/github/hibernate/hibernate-orm[Oracle Test Pilot,link=https://testpilot.oracle.com/]
 
 Hibernate ORM is a powerful object/relational mapping solution for Java, and makes it easy to develop persistence logic for applications, libraries, and frameworks.
 
@@ -13,15 +14,11 @@ See https://hibernate.org/orm/[Hibernate.org] for more information.
 
 == Continuous Integration
 
-Hibernate uses both https://jenkins-ci.org[Jenkins] and https://github.com/features/actions[GitHub Actions]
-for its CI needs. See
-
-* https://ci.hibernate.org/view/ORM/[Jenkins Jobs]
-* https://github.com/hibernate/hibernate-orm/actions[GitHub Actions Jobs]
+See link:MAINTAINERS.md#ci[MAINTAINERS.md] for information about CI.
 
 == Building from sources
 
-The build requires at least Java 11 and at most Java 17.
+The build requires at least JDK 21, and produces Java 17 bytecode.
 
 Hibernate uses https://gradle.org[Gradle] as its build tool. See the _Gradle Primer_ section below if you are new to
 Gradle.

@@ -10,11 +10,10 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * ScriptTargetOutput implementation for writing to supplied File references
@@ -22,7 +21,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput implements ScriptTargetOutput {
-	private static final Logger log = CoreLogging.logger( ScriptTargetOutputToFile.class );
 
 	private final File file;
 	private final String charsetName;
@@ -87,28 +85,24 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 	@SuppressWarnings("ResultOfMethodCallIgnored")
 	static Writer toFileWriter(File file, String charsetName, boolean append) {
 		try {
-			if ( ! file.exists() ) {
+			if ( !file.exists() ) {
 				// best effort, since this is very likely not allowed in EE environments
-				log.debug( "Attempting to create non-existent script target file : " + file.getAbsolutePath() );
-				if ( file.getParentFile() != null ) {
-					file.getParentFile().mkdirs();
+				CORE_LOGGER.attemptingToCreateScriptTarget( file.getAbsolutePath() );
+				final var parentFile = file.getParentFile();
+				if ( parentFile != null ) {
+					parentFile.mkdirs();
 				}
 				file.createNewFile();
 			}
 		}
 		catch (Exception e) {
-			log.debug( "Exception calling File#createNewFile : " + e );
+			CORE_LOGGER.couldNotCreateScriptTarget( e );
 		}
 		try {
-			return charsetName != null ?
-					new OutputStreamWriter(
-							new FileOutputStream( file, append ),
-							charsetName
-					) :
-					new OutputStreamWriter( new FileOutputStream(
-							file,
-							append
-					) );
+			final var outputStream = new FileOutputStream( file, append );
+			return charsetName != null
+					? new OutputStreamWriter( outputStream, charsetName )
+					: new OutputStreamWriter( outputStream );
 		}
 		catch (IOException e) {
 			throw new SchemaManagementException( "Unable to open specified script target file for writing : " + file, e );

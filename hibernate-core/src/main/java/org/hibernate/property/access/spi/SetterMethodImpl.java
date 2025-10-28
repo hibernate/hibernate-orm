@@ -4,6 +4,7 @@
  */
 package org.hibernate.property.access.spi;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -11,19 +12,17 @@ import java.lang.reflect.Method;
 import org.hibernate.Internal;
 import org.hibernate.PropertyAccessException;
 import org.hibernate.PropertySetterAccessException;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.property.access.internal.AbstractSetterMethodSerialForm;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * @author Steve Ebersole
  */
 @Internal
 public class SetterMethodImpl implements Setter {
-	private static final CoreMessageLogger LOG = messageLogger( SetterMethodImpl.class );
 
 	private final Class<?> containerClass;
 	private final String propertyName;
@@ -35,7 +34,6 @@ public class SetterMethodImpl implements Setter {
 		this.containerClass = containerClass;
 		this.propertyName = propertyName;
 		this.setterMethod = setterMethod;
-
 		this.isPrimitive = setterMethod.getParameterTypes()[0].isPrimitive();
 	}
 
@@ -65,7 +63,7 @@ public class SetterMethodImpl implements Setter {
 			}
 		}
 		catch (InvocationTargetException ite) {
-			final Throwable cause = ite.getCause();
+			final var cause = ite.getCause();
 			if ( cause instanceof Error error ) {
 				// HHH-16403 Don't wrap Error
 				throw error;
@@ -99,9 +97,9 @@ public class SetterMethodImpl implements Setter {
 				);
 			}
 			else {
-				final Class<?> expectedType = setterMethod.getParameterTypes()[0];
-				LOG.illegalPropertySetterArgument( containerClass.getName(), propertyName );
-				LOG.expectedType( expectedType.getName(), value == null ? null : value.getClass().getName() );
+				final var expectedType = setterMethod.getParameterTypes()[0];
+				CORE_LOGGER.illegalPropertySetterArgument( containerClass.getName(), propertyName );
+				CORE_LOGGER.expectedType( expectedType.getName(), value == null ? null : value.getClass().getName() );
 				throw new PropertySetterAccessException(
 						iae,
 						containerClass,
@@ -128,6 +126,7 @@ public class SetterMethodImpl implements Setter {
 		return setterMethod;
 	}
 
+	@Serial
 	private Object writeReplace() {
 		return new SerialForm( containerClass, propertyName, setterMethod );
 	}
@@ -137,6 +136,7 @@ public class SetterMethodImpl implements Setter {
 			super( containerClass, propertyName, method );
 		}
 
+		@Serial
 		private Object readResolve() {
 			return new SetterMethodImpl( getContainerClass(), getPropertyName(), resolveMethod() );
 		}

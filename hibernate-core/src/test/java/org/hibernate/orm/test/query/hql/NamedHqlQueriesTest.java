@@ -66,11 +66,7 @@ public class NamedHqlQueriesTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> session.createQuery( "from VideoGame vg", VideoGame.class )
-						.list()
-						.forEach(session::remove)
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "VideoGame")

@@ -49,10 +49,7 @@ public class AttributeOverridingTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope){
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete from Book" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -780,10 +780,7 @@ public class JfrEventMonitor implements EventMonitor {
 	}
 
 	private String getSessionIdentifier(SharedSessionContractImplementor session) {
-		if ( session == null ) {
-			return null;
-		}
-		return session.getSessionIdentifier().toString();
+		return session == null ? null : session.getSessionIdentifier().toString();
 	}
 
 	private String getEntityName(EntityPersister persister) {

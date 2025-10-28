@@ -5,7 +5,6 @@
 package org.hibernate.bytecode.enhance.spi.interceptor;
 
 import org.hibernate.Internal;
-import org.hibernate.bytecode.BytecodeLogging;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.BasicLogger;
@@ -17,6 +16,7 @@ import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
 
+import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
@@ -30,18 +30,21 @@ import static org.jboss.logging.Logger.Level.WARN;
 )
 @Internal
 public interface BytecodeInterceptorLogging extends BasicLogger {
-	String SUB_NAME = "interceptor";
-	String LOGGER_NAME = BytecodeLogging.LOGGER_NAME + "." + SUB_NAME;
+	String LOGGER_NAME = SubSystemLogging.BASE + ".bytecode.interceptor";
 
 	Logger LOGGER = Logger.getLogger( LOGGER_NAME );
-	BytecodeInterceptorLogging MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), BytecodeInterceptorLogging.class, LOGGER_NAME );
+	BytecodeInterceptorLogging BYTECODE_INTERCEPTOR_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), BytecodeInterceptorLogging.class, LOGGER_NAME );
 
 	@LogMessage(level = WARN)
 	@Message(
 			id = 90005901,
-			value = "`%s#%s` was mapped with explicit lazy-group (`%s`).  Hibernate will ignore the lazy-group - this is generally " +
-					"not a good idea for to-one associations as it would lead to 2 separate SQL selects to initialize the association.  " +
+			value = "'%s.%s' was mapped with explicit lazy group '%s'. Hibernate will ignore the lazy group - this is generally " +
+					"not a good idea for to-one associations as it leads to two separate SQL selects to initialize the association. " +
 					"This is expected to be improved in future versions of Hibernate"
 	)
 	void lazyGroupIgnoredForToOne(String ownerName, String attributeName, String requestedLazyGroup);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 90005902, value = "Forcing initialization: %s.%s -> %s")
+	void enhancementAsProxyLazinessForceInitialize(String entityName, Object identifier, String attributeName);
 }

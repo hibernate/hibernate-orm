@@ -15,7 +15,8 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
@@ -32,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				SubselectAndSingleAttributeIdClassTest.MyEntity.class,
@@ -43,40 +45,40 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @JiraKey( "HHH-17221" )
 public class SubselectAndSingleAttributeIdClassTest {
 
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					MyEntity entity = new MyEntity( 1, List.of(
-							new MyChild( 11, List.of( new MyGrandchild( 111 ), new MyGrandchild( 112 ) ) ),
-							new MyChild( 12, List.of( new MyGrandchild( 121 ), new MyGrandchild( 122 ) ) )
-					) );
-					session.persist( entity );
-					entity.getChildren().forEach( c -> {
-						session.persist( c );
-						c.getGrandchildren().forEach( session::persist );
-					} );
+		scope.inTransaction(session -> {
+			MyEntity entity = new MyEntity( 1, List.of(
+					new MyChild( 11, List.of( new MyGrandchild( 111 ), new MyGrandchild( 112 ) ) ),
+					new MyChild( 12, List.of( new MyGrandchild( 121 ), new MyGrandchild( 122 ) ) )
+			) );
+			session.persist( entity );
+			entity.getChildren().forEach( c -> {
+				session.persist( c );
+				c.getGrandchildren().forEach( session::persist );
+			} );
+		} );
+	}
 
-				}
-		);
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
 	public void testSelect(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					TypedQuery<MyEntity> query = session.createQuery(
-							"select e from MyEntity e where id = 1",
-							MyEntity.class
-					);
-					for ( MyEntity entity : query.getResultList() ) {
-						assertNotNull( entity.getChildren(), "Children are null" );
-						for ( MyChild child : entity.getChildren() ) {
-							assertFalse( child.getGrandchildren().isEmpty(), "GRANDCHILDRENDS are empty" );
-						}
-					}
+		scope.inTransaction(session -> {
+			TypedQuery<MyEntity> query = session.createQuery(
+					"select e from MyEntity e where id = 1",
+					MyEntity.class
+			);
+			for ( MyEntity entity : query.getResultList() ) {
+				assertNotNull( entity.getChildren(), "Children are null" );
+				for ( MyChild child : entity.getChildren() ) {
+					assertFalse( child.getGrandchildren().isEmpty(), "GRANDCHILDRENDS are empty" );
 				}
-		);
+			}
+		} );
 	}
 
 

@@ -1,6 +1,5 @@
 [[pc]]
 == Persistence Context
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-pc: {core-project-dir}/src/test/java/org/hibernate/orm/test/pc
 :jcache-project-dir: {root-project-dir}/hibernate-jcache
@@ -187,102 +186,31 @@ If you want to load multiple entities by providing their identifiers, calling th
 but also inefficient.
 
 While the Jakarta Persistence standard does not support retrieving multiple entities at once, other than running a JPQL or Criteria API query,
-Hibernate offers this functionality via the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#byMultipleIds-java.lang.Class-[`byMultipleIds` method] of the Hibernate `Session`.
+Hibernate offers this functionality via the `Session#findMultiple` methods which accepts a list of identifiers to load and a group of options which control certain behaviors of the loading -
 
-The `byMultipleIds` method returns a
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/MultiIdentifierLoadAccess.html[`MultiIdentifierLoadAccess`]
-which you can use to customize the multi-load request.
-
-The `MultiIdentifierLoadAccess` interface provides several methods which you can use to
-change the behavior of the multi-load call:
-
-`enableOrderedReturn(boolean enabled)`::
-This setting controls whether the returned `List` is ordered and positional in relation to the
-incoming ids.  If enabled (the default), the return `List` is ordered and
-positional relative to the incoming ids.  In other words, a request to
-`multiLoad([2,1,3])` will return `[Entity#2, Entity#1, Entity#3]`.
-+
-An important distinction is made here in regards to the handling of
-unknown entities depending on this "ordered return" setting.
-If enabled, a null is inserted into the `List` at the proper position(s).
-If disabled, the nulls are not put into the return List.
-+
-In other words, consumers of the returned ordered List would need to be able to handle null elements.
-`enableSessionCheck(boolean enabled)`::
-This setting, which is disabled by default, tells Hibernate to check the first-level cache (a.k.a `Session` or Persistence Context) first and, if the entity is found and already managed by the Hibernate `Session`, the cached entity will be added to the returned `List`, therefore skipping it from being fetched via the multi-load query.
-`enableReturnOfDeletedEntities(boolean enabled)`::
-This setting instructs Hibernate if the multi-load operation is allowed to return entities that were deleted by the current Persistence Context. A deleted entity is one which has been passed to this
-`Session.delete` or `Session.remove` method, but the `Session` was not flushed yet, meaning that the
-associated row was not deleted in the database table.
-+
-The default behavior is to handle them as null in the return (see `enableOrderedReturn`).
-When enabled, the result set will contain deleted entities.
-When disabled (which is the default behavior), deleted entities are not included in the returning `List`.
-`with(LockOptions lockOptions)`::
-This setting allows you to pass a given
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/LockOptions.html[`LockOptions`] mode to the multi-load query.
-`with(CacheMode cacheMode)`::
-This setting allows you to pass a given
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/CacheMode.html[`CacheMode`]
-strategy so that we can load entities from the second-level cache, therefore skipping the cached entities from being fetched via the multi-load query.
-`withBatchSize(int batchSize)`::
-This setting allows you to specify a batch size for loading the entities (e.g. how many at a time).
-+
-The default is to use a batch sizing strategy defined by the `Dialect.getDefaultBatchLoadSizingStrategy()` method.
-+
-Any greater-than-one value here will override that default behavior.
-`with(RootGraph<T> graph)`::
-The `RootGraph` is a Hibernate extension to the Jakarta Persistence `EntityGraph` contract,
-and this method allows you to pass a specific `RootGraph` to the multi-load query
-so that it can fetch additional relationships of the current loading entity.
+* `ReadOnlyMode` - whether the entities loaded should be marked as read-only.
+* `LockMode` (`LockModeType`) - a lock mode to be applied
+* `Timeout` - if a pessimistic lock mode is used, a timeout to allow
+* `Locking.Scope` (PessimisticLockScope`) - if a pessimistic lock mode is used, what scope should it be applied to
+* `Locking.FollowOn` - allow (or not) Hibernate to acquire locks through additional queries if needed
+* `CacheMode` (`CacheStoreMode` / `CacheRetrieveMode`) - how second level caching should be used, if at all
+* `BatchSize` - how many identifiers should be loaded from the database at once
+* `SessionCheckMode` - whether to look into the persistence context to check entity state
+* `RemovalsMode` - if `SessionCheckMode` is enabled, how removed entities should be handled
+* `OrderingMode` - whether the results should be ordered according to the order of the passed identifiers
 
 Now, assuming we have 3 `Person` entities in the database, we can load all of them with a single call
 as illustrated by the following example:
 
 [[tag::pc-by-multiple-ids-example]]
-.Loading multiple entities using the `byMultipleIds()` Hibernate API
+.Loading multiple entities using the `findMultiple()` Hibernate API
 ====
 
 [source, java, indent=0]
 ----
-include::{example-dir-pc}/MultiLoadIdTest.java[tags=pc-by-multiple-ids-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/pc-by-multiple-ids-example.sql[]
+include::{example-dir-pc}/FindMultipleDocTests.java[tags=pc-find-multiple-example]
 ----
 ====
-
-Notice that only one SQL SELECT statement was executed since the second call uses the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/MultiIdentifierLoadAccess.html#enableSessionCheck-boolean-[`enableSessionCheck`] method of the `MultiIdentifierLoadAccess`
-to instruct Hibernate to skip entities that are already loaded in the current Persistence Context.
-
-If the entities are not available in the current Persistence Context but they could be loaded from the second-level cache, you can use the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/MultiIdentifierLoadAccess.html#with-org.hibernate.CacheMode-[`with(CacheMode)`] method of the `MultiIdentifierLoadAccess` object.
-
-[[tag::pc-by-multiple-ids-second-level-cache-example]]
-.Loading multiple entities from the second-level cache
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/MultiLoadIdTest.java[tags=pc-by-multiple-ids-second-level-cache-example]
-----
-====
-
-In the example above, we first make sure that we clear the second-level cache to demonstrate that
-the multi-load query will put the returning entities into the second-level cache.
-
-After executing the first `byMultipleIds` call, Hibernate is going to fetch the requested entities,
-and as illustrated by the `getSecondLevelCachePutCount` method call, 3 entities were indeed added to the
-shared cache.
-
-Afterward, when executing the second `byMultipleIds` call for the same entities in a new Hibernate `Session`,
-we set the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/CacheMode.html#NORMAL[`CacheMode.NORMAL`] second-level cache mode so that entities are going to be returned from the second-level cache.
-
-The `getSecondLevelCacheHitCount` statistics method returns 3 this time, since the 3 entities were loaded from the second-level cache, and, as illustrated by `sqlStatementInterceptor.getSqlQueries()`, no multi-load SELECT statement was executed this time.
 
 [[pc-find-natural-id]]
 === Obtain an entity by natural-id
@@ -376,7 +304,7 @@ If the database contains the following entities:
 include::{example-dir-pc}/WhereTest.java[tags=pc-where-persistence-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-where-persistence-example.sql[]
 ----
@@ -392,7 +320,7 @@ When executing an `Account` entity query, Hibernate is going to filter out all r
 include::{example-dir-pc}/WhereTest.java[tags=pc-where-entity-query-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-where-entity-query-example.sql[]
 ----
@@ -408,7 +336,7 @@ When fetching the `debitAccounts` or the `creditAccounts` collections, Hibernate
 include::{example-dir-pc}/WhereTest.java[tags=pc-where-collection-query-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-where-collection-query-example.sql[]
 ----
@@ -427,7 +355,7 @@ Just like `@SQLRestriction` annotation, `@SQLJoinTableRestriction` is used to fi
 include::{example-dir-pc}/WhereJoinTableTest.java[tags=pc-where-join-table-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-where-join-table-example.sql[]
 ----
@@ -504,7 +432,7 @@ Hibernate will execute the following SQL statements:
 include::{example-dir-pc}/FilterTest.java[tags=pc-filter-persistence-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-filter-persistence-example.sql[]
 ----
@@ -520,7 +448,7 @@ By default, without enabling the filter, Hibernate is going to fetch all `Accoun
 include::{example-dir-pc}/FilterTest.java[tags=pc-no-filter-entity-query-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-no-filter-entity-query-example.sql[]
 ----
@@ -543,7 +471,7 @@ include::{example-dir-pc}/FilterTest.java[tags=pc-filter-entity-query-example]
 include::{example-dir-pc}/FilterTest.java[tags=pc-filter-auto-enabled-Account-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-filter-entity-query-example.sql[]
 ----
@@ -574,12 +502,12 @@ On the other hand, the `minimumAmount` filter is taken into consideration, becau
 include::{example-dir-pc}/FilterTest.java[tags=pc-filter-entity-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-filter-entity-example.sql[]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-filter-entity-find-example.sql[]
 ----
@@ -605,7 +533,7 @@ either if the filter is enabled explicitly or by setting `autoEnabled` to `true`
 include::{example-dir-pc}/FilterTest.java[tags=pc-no-filter-collection-query-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-no-filter-collection-query-example.sql[]
 ----
@@ -621,7 +549,7 @@ When activating the `@Filter` and fetching the `accounts` collections, Hibernate
 include::{example-dir-pc}/FilterTest.java[tags=pc-filter-collection-query-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-filter-collection-query-example.sql[]
 ----
@@ -671,7 +599,7 @@ Hibernate is going to apply the right table aliases to the filter predicates:
 include::{example-dir-pc}/FilterSqlFragementAliasTest.java[tags=pc-filter-sql-fragment-alias-query-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-filter-sql-fragment-alias-query-example.sql[]
 ----
@@ -708,7 +636,7 @@ Let's assume our database contains the following entities:
 include::{example-dir-pc}/FilterJoinTableTest.java[tags=pc-filter-join-table-persistence-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-filter-join-table-persistence-example.sql[]
 ----
@@ -724,7 +652,7 @@ The collections can be filtered only if the associated filter is enabled on the 
 include::{example-dir-pc}/FilterJoinTableTest.java[tags=pc-no-filter-join-table-collection-query-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-no-filter-join-table-collection-query-example.sql[]
 ----
@@ -741,7 +669,7 @@ If we enable the filter and set the `maxOrderId` to `1` when fetching the `accou
 include::{example-dir-pc}/FilterJoinTableTest.java[tags=pc-filter-join-table-collection-query-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-filter-join-table-collection-query-example.sql[]
 ----
@@ -805,7 +733,7 @@ When you modify the `Product` entity, Hibernate generates the following SQL UPDA
 include::{example-dir-pc}/NoDynamicUpdateTest.java[tags=pc-managed-state-update-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-managed-state-update-example.sql[]
 ----
@@ -840,7 +768,7 @@ This time, when rerunning the previous test case, Hibernate generates the follow
 [[pc-managed-state-dynamic-update-example]]
 .Modifying the `Product` entity with a dynamic update
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-managed-state-dynamic-update-example.sql[]
 ----
@@ -1156,7 +1084,7 @@ The `CascadeType.PERSIST` allows us to persist a child entity along with the par
 include::{example-dir-pc}/CascadePersistTest.java[tags=pc-cascade-persist-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-cascade-persist-example.sql[]
 ----
@@ -1177,7 +1105,7 @@ The `CascadeType.MERGE` allows us to merge a child entity along with the parent 
 include::{example-dir-pc}/CascadeMergeTest.java[tags=pc-cascade-merge-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-cascade-merge-example.sql[]
 ----
@@ -1201,7 +1129,7 @@ However, `CascadeType.REMOVE` and `org.hibernate.annotations.CascadeType.DELETE`
 include::{example-dir-pc}/CascadeRemoveTest.java[tags=pc-cascade-remove-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-cascade-remove-example.sql[]
 ----
@@ -1241,7 +1169,7 @@ The refresh operation will discard the current entity state, and it will overrid
 include::{example-dir-pc}/CascadeRefreshTest.java[tags=pc-cascade-refresh-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-cascade-refresh-example.sql[]
 ----
@@ -1263,7 +1191,7 @@ The replicate operation allows you to synchronize entities coming from different
 include::{example-dir-pc}/CascadeReplicateTest.java[tags=pc-cascade-replicate-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-cascade-replicate-example.sql[]
 ----
@@ -1294,7 +1222,7 @@ include::{example-dir-pc}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-map
 include::{example-dir-pc}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-mapping-Phone-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-cascade-on-delete-mapping-example.sql[]
 ----
@@ -1310,7 +1238,7 @@ Now, you can just remove the `Person` entity, and the associated `Phone` entitie
 include::{example-dir-pc}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-cascade-on-delete-example.sql[]
 ----
@@ -1343,7 +1271,7 @@ Now, when removing the `Person` entity, all the associated `Phone` child entitie
 include::{example-dir-pc}/CascadeOnDeleteCollectionTest.java[tags=pc-cascade-on-delete-collection-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-cascade-on-delete-example.sql[]
 ----
@@ -1409,8 +1337,4 @@ Starting with Hibernate 5.2, the Hibernate `Session` extends the Jakarta Persist
 the `HibernateException` or `SQLException` can be wrapped in a Jakarta Persistence {jpaJavadocUrlPrefix}PersistenceException.html[`PersistenceException`] when thrown
 by `Session` methods that implement `EntityManager` methods (e.g., https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#merge-java.lang.Object-[Session.merge(Object object)],
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#flush--[Session.flush()]).
-
-If your `SessionFactory` is built via Hibernate's native bootstrapping, and you don't want the Hibernate exceptions to be wrapped in the Jakarta Persistence `PersistenceException`, you need to set the
-`hibernate.native_exception_handling_51_compliance` configuration property to `true`. See the
-<<appendices/Configurations.adoc#configurations-exception-handling,`hibernate.native_exception_handling_51_compliance`>> configuration property for more details.
 ====

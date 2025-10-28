@@ -59,11 +59,11 @@ public class LobSchemaUpdateTest {
 		assertThat( fileContent ).isEmpty();
 	}
 
-	private void createSchema(Class... annotatedClasses) {
+	private void createSchema(Class<?>... annotatedClasses) {
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 
-		for ( Class c : annotatedClasses ) {
-			metadataSources.addAnnotatedClass( c );
+		for ( Class<?> annotatedClass : annotatedClasses ) {
+			metadataSources.addAnnotatedClass( annotatedClass );
 		}
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
 		metadata.orderColumns( false );
@@ -74,11 +74,11 @@ public class LobSchemaUpdateTest {
 				.create( EnumSet.of( TargetType.DATABASE ), metadata );
 	}
 
-	private void updateSchema(Class... annotatedClasses) {
+	private void updateSchema(Class<?>... annotatedClasses) {
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 
-		for ( Class c : annotatedClasses ) {
-			metadataSources.addAnnotatedClass( c );
+		for ( Class<?> annotatedClass : annotatedClasses ) {
+			metadataSources.addAnnotatedClass( annotatedClass );
 		}
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
 		metadata.orderColumns( false );
@@ -90,11 +90,11 @@ public class LobSchemaUpdateTest {
 				.execute( EnumSet.of( TargetType.SCRIPT, TargetType.DATABASE ), metadata );
 	}
 
-	private void dropDatabase(Class... annotatedClasses){
+	private void dropDatabase(Class<?>... annotatedClasses){
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 
-		for ( Class c : annotatedClasses ) {
-			metadataSources.addAnnotatedClass( c );
+		for ( Class<?> annotatedClass : annotatedClasses ) {
+			metadataSources.addAnnotatedClass( annotatedClass );
 		}
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
 		metadata.orderColumns( false );

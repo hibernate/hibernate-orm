@@ -7,8 +7,6 @@ package org.hibernate.engine.spi;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 
 import java.io.IOException;
@@ -19,6 +17,7 @@ import java.util.Collection;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
@@ -29,7 +28,6 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
  * @author Gavin King
  */
 public final class CollectionEntry implements Serializable {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( CollectionEntry.class );
 
 	//ATTRIBUTES MAINTAINED BETWEEN FLUSH CYCLES
 
@@ -152,9 +150,9 @@ public final class CollectionEntry implements Serializable {
 	 * Determine if the collection is "really" dirty, by checking dirtiness
 	 * of the collection elements, if necessary
 	 */
-	private void dirty(PersistentCollection<?> collection) throws HibernateException {
+	private void dirty(PersistentCollection<?> collection) {
 
-		final CollectionPersister loadedPersister = getLoadedPersister();
+		final var loadedPersister = getLoadedPersister();
 		final boolean forceDirty =
 				collection.wasInitialized()
 						&& !collection.isDirty() //optimization
@@ -168,25 +166,26 @@ public final class CollectionEntry implements Serializable {
 
 	}
 
-	public void preFlush(PersistentCollection<?> collection) throws HibernateException {
+	public void preFlush(PersistentCollection<?> collection) {
 		if ( loadedKey == null && collection.getKey() != null ) {
 			loadedKey = collection.getKey();
 		}
 
-		final CollectionPersister loadedPersister = getLoadedPersister();
+		final var loadedPersister = getLoadedPersister();
 		final boolean nonMutableChange =
 				collection.isDirty()
 						&& loadedPersister != null
 						&& !loadedPersister.isMutable();
 		if ( nonMutableChange ) {
-			throw new HibernateException( "changed an immutable collection instance: " +
+			throw new HibernateException( "Immutable collection was modified: " +
 					collectionInfoString( castNonNull( loadedPersister ).getRole(), getLoadedKey() ) );
 		}
 
 		dirty( collection );
 
-		if ( LOG.isDebugEnabled() && collection.isDirty() && loadedPersister != null ) {
-			LOG.debug( "Collection dirty: " + collectionInfoString( loadedPersister.getRole(), getLoadedKey() ) );
+		if ( CORE_LOGGER.isTraceEnabled() && collection.isDirty() && loadedPersister != null ) {
+			CORE_LOGGER.collectionDirty(
+					collectionInfoString( loadedPersister.getRole(), getLoadedKey() ) );
 		}
 
 		setReached( false );
@@ -197,12 +196,12 @@ public final class CollectionEntry implements Serializable {
 		setDorecreate( false );
 	}
 
-	public void postInitialize(PersistentCollection<?> collection, SharedSessionContractImplementor session)
-			throws HibernateException {
-		final CollectionPersister loadedPersister = getLoadedPersister();
-		snapshot = loadedPersister != null && loadedPersister.isMutable()
-				? collection.getSnapshot( loadedPersister )
-				: null;
+	public void postInitialize(PersistentCollection<?> collection, SharedSessionContractImplementor session) {
+		final var loadedPersister = getLoadedPersister();
+		snapshot =
+				loadedPersister != null && loadedPersister.isMutable()
+						? collection.getSnapshot( loadedPersister )
+						: null;
 		collection.setSnapshot( loadedKey, role, snapshot );
 		if ( loadedPersister != null
 				&& session.getLoadQueryInfluencers().effectivelyBatchLoadable( loadedPersister ) ) {
@@ -214,7 +213,7 @@ public final class CollectionEntry implements Serializable {
 	/**
 	 * Called after a successful flush
 	 */
-	public void postFlush(PersistentCollection<?> collection) throws HibernateException {
+	public void postFlush(PersistentCollection<?> collection) {
 		if ( isIgnore() ) {
 			ignore = false;
 		}
@@ -232,12 +231,13 @@ public final class CollectionEntry implements Serializable {
 		loadedKey = getCurrentKey();
 		setLoadedPersister( getCurrentPersister() );
 
-		final boolean resnapshot = collection.wasInitialized()
-				&&  ( isDoremove() || isDorecreate() || isDoupdate() );
-		if ( resnapshot ) {
-			snapshot = loadedPersister != null && loadedPersister.isMutable()
-					? collection.getSnapshot( castNonNull( loadedPersister ) )
-					: null; //re-snapshot
+		if ( collection.wasInitialized()
+				&& ( isDoremove() || isDorecreate() || isDoupdate() ) ) {
+			// update the snapshot
+			snapshot =
+					loadedPersister != null && loadedPersister.isMutable()
+							? collection.getSnapshot( castNonNull( loadedPersister ) )
+							: null;
 		}
 
 		collection.postAction();
@@ -261,11 +261,11 @@ public final class CollectionEntry implements Serializable {
 	 * Reset the stored snapshot for both the persistent collection and this collection entry.
 	 * Used during the merge of detached collections.
 	 *
-	 * @param collection the persistentcollection to be updated
+	 * @param collection the persistent collection to be updated
 	 * @param storedSnapshot the new stored snapshot
 	 */
 	public void resetStoredSnapshot(PersistentCollection<?> collection, Serializable storedSnapshot) {
-		LOG.debugf("Reset storedSnapshot to %s for %s", storedSnapshot, this);
+		CORE_LOGGER.resetStoredSnapshot( storedSnapshot, this );
 
 		if ( !fromMerge ) {
 			snapshot = storedSnapshot;
@@ -384,7 +384,7 @@ public final class CollectionEntry implements Serializable {
 	/**
 	 * Get the collection orphans (entities which were removed from the collection)
 	 */
-	public Collection<?> getOrphans(String entityName, PersistentCollection<?> collection) throws HibernateException {
+	public Collection<?> getOrphans(String entityName, PersistentCollection<?> collection) {
 		if ( snapshot == null ) {
 			throw new AssertionFailure( "no collection snapshot for orphan delete" );
 		}
@@ -395,7 +395,7 @@ public final class CollectionEntry implements Serializable {
 		//TODO: does this really need to be here?
 		//      does the collection already have
 		//      it's own up-to-date snapshot?
-		final CollectionPersister loadedPersister = getLoadedPersister();
+		final var loadedPersister = getLoadedPersister();
 		final Serializable snapshot = getSnapshot();
 		return collection.wasInitialized()
 			&& ( loadedPersister == null || loadedPersister.isMutable() )

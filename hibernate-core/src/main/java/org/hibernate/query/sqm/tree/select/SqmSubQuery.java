@@ -8,9 +8,10 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -76,7 +77,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
 
-import static org.hibernate.query.sqm.spi.SqmCreationHelper.combinePredicates;
+import static java.util.Collections.emptySet;
 
 /**
  * @author Steve Ebersole
@@ -238,9 +239,8 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 
 	@Override
 	public SqmSelectQuery<?> getParent() {
-		final SqmQuery<?> containingQuery = getContainingQuery();
-		// JPA only allows sub-queries on select queries
-		if ( containingQuery instanceof SqmSelectQuery<?> sqmSelectQuery ) {
+		// JPA only allows subqueries on select queries
+		if ( getContainingQuery() instanceof SqmSelectQuery<?> sqmSelectQuery ) {
 			return sqmSelectQuery;
 		}
 		else {
@@ -345,37 +345,56 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 
 	@Override
 	public SqmSubQuery<T> distinct(boolean distinct) {
-		return (SqmSubQuery<T>) super.distinct( distinct );
+		super.distinct( distinct );
+		return this;
 	}
 
 	@Override
 	public SqmSubQuery<T> where(Expression<Boolean> restriction) {
-		return (SqmSubQuery<T>) super.where( restriction );
+		super.where( restriction );
+		return this;
 	}
 
 	@Override
 	public SqmSubQuery<T> where(Predicate... restrictions) {
-		return (SqmSubQuery<T>) super.where( restrictions );
+		super.where( restrictions );
+		return this;
+	}
+
+	@Override
+	public SqmSubQuery<T> where(List<Predicate> restrictions) {
+		super.where( restrictions );
+		return this;
 	}
 
 	@Override
 	public SqmSubQuery<T> groupBy(Expression<?>... expressions) {
-		return (SqmSubQuery<T>) super.groupBy( expressions );
+		super.groupBy( expressions );
+		return this;
 	}
 
 	@Override
 	public SqmSubQuery<T> groupBy(List<Expression<?>> grouping) {
-		return (SqmSubQuery<T>) super.groupBy( grouping );
+		super.groupBy( grouping );
+		return this;
 	}
 
 	@Override
 	public SqmSubQuery<T> having(Expression<Boolean> booleanExpression) {
-		return (SqmSubQuery<T>) super.having( booleanExpression );
+		super.having( booleanExpression );
+		return this;
 	}
 
 	@Override
 	public SqmSubQuery<T> having(Predicate... predicates) {
-		return (SqmSubQuery<T>) super.having( predicates );
+		super.having( predicates );
+		return this;
+	}
+
+	@Override
+	public SqmSubQuery<T> having(List<Predicate> restrictions) {
+		super.having( restrictions );
+		return this;
 	}
 
 	@Override
@@ -562,7 +581,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 
 	@Override
 	public Set<Join<?, ?>> getCorrelatedJoins() {
-		final Set<Join<?, ?>> correlatedJoins = new HashSet<>();
+		final Set<Join<?, ?>> correlatedJoins = Collections.newSetFromMap( new IdentityHashMap<>() );
 		final SqmFromClause fromClause = getQuerySpec().getFromClause();
 		if ( fromClause != null ) {
 			for ( SqmRoot<?> root : fromClause.getRoots() ) {
@@ -656,39 +675,43 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		}
 	}
 
+	private <B> SqmExpression<B> castToBasicType(Class<B> type) {
+		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( type ) );
+	}
+
 	@Override
 	public SqmExpression<Long> asLong() {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Long.class ) );
+		return castToBasicType( Long.class );
 	}
 
 	@Override
 	public SqmExpression<Integer> asInteger() {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Integer.class ) );
+		return castToBasicType( Integer.class );
 	}
 
 	@Override
 	public SqmExpression<Float> asFloat() {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Float.class ) );
+		return castToBasicType( Float.class );
 	}
 
 	@Override
 	public SqmExpression<Double> asDouble() {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Double.class ) );
+		return castToBasicType( Double.class );
 	}
 
 	@Override
 	public SqmExpression<BigDecimal> asBigDecimal() {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( BigDecimal.class ) );
+		return castToBasicType( BigDecimal.class );
 	}
 
 	@Override
 	public SqmExpression<BigInteger> asBigInteger() {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( BigInteger.class ) );
+		return castToBasicType( BigInteger.class );
 	}
 
 	@Override
 	public SqmExpression<String> asString() {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( String.class ) );
+		return castToBasicType( String.class );
 	}
 
 	@Override
@@ -698,10 +721,8 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 
 	@Override
 	public JavaType<T> getJavaTypeDescriptor() {
-		if ( getNodeType() == null ) {
-			return null;
-		}
-		return getNodeType().getExpressibleJavaType();
+		final SqmBindableType<T> nodeType = getNodeType();
+		return nodeType == null ? null : nodeType.getExpressibleJavaType();
 	}
 
 	@Override
@@ -720,23 +741,8 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public Subquery<T> where(List<Predicate> restrictions) {
-		//noinspection rawtypes,unchecked
-		getQuerySpec().getWhereClause().applyPredicates( (List) restrictions );
-		return this;
-	}
-
-	@Override
-	public Subquery<T> having(List<Predicate> restrictions) {
-		//noinspection unchecked,rawtypes
-		final SqmPredicate combined = combinePredicates( getQuerySpec().getHavingClausePredicate(), (List) restrictions );
-		getQuerySpec().setHavingClausePredicate( combined );
-		return this;
-	}
-
-	@Override
 	public Set<ParameterExpression<?>> getParameters() {
-		return Collections.emptySet();
+		return emptySet();
 	}
 
 	@Override
@@ -771,4 +777,36 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		hql.append( ')' );
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmSubQuery<?> that
+			&& Objects.equals( this.alias, that.alias )
+			&& super.equals( object );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + Objects.hashCode( alias );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmSubQuery<?> that
+			&& Objects.equals( this.alias, that.alias )
+			&& super.isCompatible( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + Objects.hashCode( alias );
+		return result;
+	}
+
+	@Override
+	public String generateAlias() {
+		return parent.generateAlias();
+	}
 }

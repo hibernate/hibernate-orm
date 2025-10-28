@@ -65,11 +65,7 @@ public class EntityWithBidirectionalOneToOneTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery( "delete from AdoptedChild" ).executeUpdate();
-			session.createQuery( "delete from Mother" ).executeUpdate();
-			session.createQuery( "delete from Child" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

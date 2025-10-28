@@ -6,11 +6,10 @@ package org.hibernate.engine.spi;
 
 import org.hibernate.MappingException;
 import org.hibernate.id.IdentifierGeneratorHelper;
-import org.hibernate.internal.CoreLogging;
-
-import org.jboss.logging.Logger;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * A strategy for determining if a version value is a version of
@@ -21,7 +20,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Gavin King
  */
 public class VersionValue implements UnsavedValueStrategy {
-	private static final Logger LOG = CoreLogging.logger( VersionValue.class );
 
 	private final @Nullable Object value;
 	/**
@@ -31,7 +29,7 @@ public class VersionValue implements UnsavedValueStrategy {
 	public static final VersionValue NULL = new VersionValue() {
 		@Override
 		public Boolean isUnsaved(@Nullable Object version) {
-			LOG.trace( "Version unsaved-value strategy NULL" );
+			CORE_LOGGER.versionUnsavedValueStrategy( "NULL" );
 			return version == null;
 		}
 
@@ -53,7 +51,7 @@ public class VersionValue implements UnsavedValueStrategy {
 	public static final VersionValue UNDEFINED = new VersionValue() {
 		@Override
 		public @Nullable Boolean isUnsaved(@Nullable Object version) {
-			LOG.trace( "Version unsaved-value strategy UNDEFINED" );
+			CORE_LOGGER.versionUnsavedValueStrategy( "UNDEFINED" );
 			return version == null ? Boolean.TRUE : null;
 		}
 
@@ -76,7 +74,7 @@ public class VersionValue implements UnsavedValueStrategy {
 
 		@Override
 		public Boolean isUnsaved(@Nullable Object version) throws MappingException {
-			LOG.trace( "Version unsaved-value strategy NEGATIVE" );
+			CORE_LOGGER.versionUnsavedValueStrategy( "NEGATIVE" );
 			if ( version == null ) {
 				return Boolean.TRUE;
 			}
@@ -115,7 +113,7 @@ public class VersionValue implements UnsavedValueStrategy {
 
 	@Override
 	public @Nullable Boolean isUnsaved(@Nullable Object version) throws MappingException {
-		LOG.tracev( "Version unsaved-value: {0}", value );
+		CORE_LOGGER.versionUnsavedValue( value );
 		return version == null || version.equals( value );
 	}
 

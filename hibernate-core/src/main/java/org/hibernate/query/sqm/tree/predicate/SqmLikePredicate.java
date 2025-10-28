@@ -4,13 +4,18 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+
+
+import java.util.Objects;
 
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertString;
 
@@ -20,13 +25,13 @@ import static org.hibernate.query.sqm.internal.TypecheckUtil.assertString;
 public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 	private final SqmExpression<?> matchExpression;
 	private final SqmExpression<?> pattern;
-	private final SqmExpression<?> escapeCharacter;
+	private final @Nullable SqmExpression<?> escapeCharacter;
 	private final boolean isCaseSensitive;
 
 	public SqmLikePredicate(
 			SqmExpression<?> matchExpression,
 			SqmExpression<?> pattern,
-			SqmExpression<?> escapeCharacter,
+			@Nullable SqmExpression<?> escapeCharacter,
 			NodeBuilder nodeBuilder) {
 		this( matchExpression, pattern, escapeCharacter, false, nodeBuilder );
 	}
@@ -34,7 +39,7 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 	public SqmLikePredicate(
 			SqmExpression<?> matchExpression,
 			SqmExpression<?> pattern,
-			SqmExpression<?> escapeCharacter,
+			@Nullable SqmExpression<?> escapeCharacter,
 			boolean negated,
 			NodeBuilder nodeBuilder) {
 		this( matchExpression, pattern, escapeCharacter, negated, true, nodeBuilder );
@@ -43,7 +48,7 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 	public SqmLikePredicate(
 			SqmExpression<?> matchExpression,
 			SqmExpression<?> pattern,
-			SqmExpression<?> escapeCharacter,
+			@Nullable SqmExpression<?> escapeCharacter,
 			boolean negated,
 			boolean isCaseSensitive,
 			NodeBuilder nodeBuilder) {
@@ -113,7 +118,7 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 		return pattern;
 	}
 
-	public SqmExpression<?> getEscapeCharacter() {
+	public @Nullable SqmExpression<?> getEscapeCharacter() {
 		return escapeCharacter;
 	}
 
@@ -138,6 +143,46 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 			hql.append( " escape " );
 			escapeCharacter.appendHqlString( hql, context );
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmLikePredicate that
+			&& this.isNegated() == that.isNegated()
+			&& isCaseSensitive == that.isCaseSensitive
+			&& matchExpression.equals( that.matchExpression )
+			&& pattern.equals( that.pattern )
+			&& Objects.equals( escapeCharacter, that.escapeCharacter );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + matchExpression.hashCode();
+		result = 31 * result + pattern.hashCode();
+		result = 31 * result + Objects.hashCode( escapeCharacter );
+		result = 31 * result + Boolean.hashCode( isCaseSensitive );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmLikePredicate that
+			&& this.isNegated() == that.isNegated()
+			&& isCaseSensitive == that.isCaseSensitive
+			&& matchExpression.isCompatible( that.matchExpression )
+			&& pattern.isCompatible( that.pattern )
+			&& SqmCacheable.areCompatible( escapeCharacter, that.escapeCharacter );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + matchExpression.cacheHashCode();
+		result = 31 * result + pattern.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( escapeCharacter );
+		result = 31 * result + Boolean.hashCode( isCaseSensitive );
+		return result;
 	}
 
 	@Override

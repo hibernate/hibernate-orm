@@ -229,10 +229,6 @@ public class LegacyParameterTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(s) -> {
-					s.createQuery( "delete Human" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

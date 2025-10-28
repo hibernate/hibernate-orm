@@ -40,7 +40,7 @@ public class FetchSecondPass implements SecondPass {
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
 		final String profileName = fetch.profile();
-		final FetchProfile profile = buildingContext.getMetadataCollector().getFetchProfile( profileName );
+		final var profile = buildingContext.getMetadataCollector().getFetchProfile( profileName );
 		if ( profile == null ) {
 			throw new AnnotationException(
 					"Property '" + qualify( propertyHolder.getPath(), propertyName )

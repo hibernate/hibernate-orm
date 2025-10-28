@@ -6,6 +6,7 @@ package org.hibernate.internal.log;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
+import java.util.List;
 
 import org.hibernate.Internal;
 import org.hibernate.boot.jaxb.SourceType;
@@ -212,4 +213,39 @@ public interface DeprecationLogger extends BasicLogger {
 					+ " (lifecycle callback methods should be declared by entity classes)"
 	)
 	void embeddableLifecycleCallback(String annotationType, String embeddable);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000036,
+			value = "Encountered deprecated hint [%s]"
+	)
+	void deprecatedHint(String deprecatedHint);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000037,
+			value = "Encountered deprecated hint [%s], use [%s] instead"
+	)
+	void deprecatedHint(String deprecatedHint, String replacementHint);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000038,
+			value = "Encountered deprecated value for JtaPlatform setting [%s]: [%s]; use a non-deprecated value among %s instead"
+	)
+	void deprecatedJtaPlatformSetting(String settingName, String deprecatedValue, List<String> replacements);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000039,
+			value = "Using %s which does not generate IETF RFC 4122 compliant UUID values; consider using %s instead"
+	)
+	void deprecatedUuidHexGenerator(String name, String name2);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000040,
+			value = "DEPRECATED: use [%s] instead with custom [%s] implementation"
+	)
+	void deprecatedUuidGenerator(String name, String name2);
 }

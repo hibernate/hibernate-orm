@@ -5,321 +5,262 @@
 package org.hibernate.orm.test.annotations.naturalid;
 
 import jakarta.persistence.FlushModeType;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.query.Query;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import static org.hibernate.cfg.CacheSettings.USE_QUERY_CACHE;
+import static org.hibernate.cfg.StatisticsSettings.GENERATE_STATISTICS;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Guenther Demetz
  */
-public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
-
-	@JiraKey(value = "HHH-4838")
-	@Test
-	public void testSimpleImmutableNaturalKeyLookup() {
-		Session s = openSession();
-		Transaction newTx = s.getTransaction();
-
-		newTx.begin();
-		A a1 = new A();
-		a1.setName( "name1" );
-		s.persist( a1 );
-		newTx.commit();
-
-		newTx = s.beginTransaction();
-		fetchA( s ); // put query-result into cache
-		A a2 = new A();
-		a2.setName( "xxxxxx" );
-		s.persist( a2 );
-		newTx.commit();	  // Invalidates space A in UpdateTimeStamps region
-
-		//Create new session to avoid the session cache which can't be tracked
-		s.close();
-		s = openSession();
-
-		newTx = s.beginTransaction();
-
-		Assert.assertTrue( s.getSessionFactory().getStatistics().isStatisticsEnabled() );
-		s.getSessionFactory().getStatistics().clear();
-
-		fetchA( s ); // should produce a hit in StandardQuery cache region
-
-		Assert.assertEquals(
-				"query is not considered as isImmutableNaturalKeyLookup, despite fullfilling all conditions",
-				1, s.getSessionFactory().getStatistics().getNaturalIdCacheHitCount()
-		);
-
-		s.createQuery( "delete from A" ).executeUpdate();
-		newTx.commit();
-		// Shutting down the application
-		s.close();
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ServiceRegistry(settings = {
+		@Setting(name=GENERATE_STATISTICS, value="true"),
+		@Setting(name=USE_QUERY_CACHE, value="true")
+})
+@DomainModel(annotatedClasses = {A.class, D.class})
+@SessionFactory
+public class ImmutableNaturalKeyLookupTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@JiraKey(value = "HHH-4838")
 	@Test
-	public void testNaturalKeyLookupWithConstraint() {
-		Session s = openSession();
-		Transaction newTx = s.getTransaction();
+	public void testSimpleImmutableNaturalKeyLookup(SessionFactoryScope factoryScope) {
+		assertTrue( factoryScope.getSessionFactory().getStatistics().isStatisticsEnabled() );
 
-		newTx.begin();
-		A a1 = new A();
-		a1.setName( "name1" );
-		s.persist( a1 );
-		newTx.commit();
+		factoryScope.inTransaction( (s) -> {
+			A a1 = new A();
+			a1.setName( "name1" );
+			s.persist( a1 );
+		} );
 
-		newTx = s.beginTransaction();
+		factoryScope.inTransaction( (s) -> {
+			// put query-result into cache
+			fetchA( s );
 
-		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
-		CriteriaQuery<A> criteria = criteriaBuilder.createQuery( A.class );
-		Root<A> root = criteria.from( A.class );
-		criteria.where( criteriaBuilder.and(  criteriaBuilder.equal( root.get( "name" ), "name1" ), criteriaBuilder.isNull( root.get( "singleD" ) )) );
+			A a2 = new A();
+			a2.setName( "xxxxxx" );
+			s.persist( a2 );
+		} );
 
-		Query<A> query = session.createQuery( criteria );
-		query.setFlushMode( FlushModeType.COMMIT );
-		query.setCacheable( true );
-		query.uniqueResult(); // put query-result into cache
+		factoryScope.getSessionFactory().getStatistics().clear();
 
-		A a2 = new A();
-		a2.setName( "xxxxxx" );
-		s.persist( a2 );
-		newTx.commit();	  // Invalidates space A in UpdateTimeStamps region
+		factoryScope.inTransaction( (s) -> {
+			// should produce a hit in StandardQuery cache region
+			fetchA( s );
 
-		newTx = s.beginTransaction();
-
-		Assert.assertTrue( s.getSessionFactory().getStatistics().isStatisticsEnabled() );
-		s.getSessionFactory().getStatistics().clear();
-
-		// should not produce a hit in StandardQuery cache region because there is a constraint
-		criteria = criteriaBuilder.createQuery( A.class );
-		root = criteria.from( A.class );
-		criteria.where( criteriaBuilder.and(  criteriaBuilder.equal( root.get( "name" ), "name1" ), criteriaBuilder.isNull( root.get( "singleD" ) )) );
-
-		query = session.createQuery( criteria );
-		query.setFlushMode( FlushModeType.COMMIT );
-		query.setCacheable( true );
-		query.uniqueResult();
-
-		Assert.assertEquals( 0, s.getSessionFactory().getStatistics().getQueryCacheHitCount() );
-
-		s.createQuery( "delete from A" ).executeUpdate();
-		newTx.commit();
-		// Shutting down the application
-		s.close();
+			assertEquals( 1, s.getSessionFactory().getStatistics().getNaturalIdCacheHitCount(),
+					"query is not considered as isImmutableNaturalKeyLookup, despite fullfilling all conditions" );
+		} );
 	}
 
 	@JiraKey(value = "HHH-4838")
 	@Test
-	public void testCriteriaWithFetchModeJoinCollection() {
-		Session s = openSession();
-		Transaction newTx = s.getTransaction();
+	public void testNaturalKeyLookupWithConstraint(SessionFactoryScope factoryScope) {
+		assertTrue( factoryScope.getSessionFactory().getStatistics().isStatisticsEnabled() );
 
-		newTx.begin();
-		A a1 = new A();
-		a1.setName( "name1" );
-		D d1 = new D();
-		a1.getDs().add( d1 );
-		d1.setA( a1 );
-		s.persist( d1 );
-		s.persist( a1 );
-		newTx.commit();
+		factoryScope.inTransaction( (s) -> {
+			A a1 = new A();
+			a1.setName( "name1" );
+			s.persist( a1 );
+		} );
 
-		newTx = s.beginTransaction();
+		final var criteriaBuilder = factoryScope.getSessionFactory().getCriteriaBuilder();
 
-		fetchA( s, "ds" ); // put query-result into cache
+		factoryScope.inTransaction( (s) -> {
+			var criteria = criteriaBuilder.createQuery( A.class );
+			var root = criteria.from( A.class );
+			criteria.where( criteriaBuilder.and(  criteriaBuilder.equal( root.get( "name" ), "name1" ), criteriaBuilder.isNull( root.get( "singleD" ) )) );
 
-		A a2 = new A();
-		a2.setName( "xxxxxx" );
-		s.persist( a2 );
-		newTx.commit();	  // Invalidates space A in UpdateTimeStamps region
+			// put query-result into cache
+			s.createQuery( criteria )
+					.setFlushMode( FlushModeType.COMMIT )
+					.setCacheable( true )
+					.uniqueResult();
+		} );
 
-		//Create new session to avoid the session cache which can't be tracked
-		s.close();
-		s = openSession();
+		factoryScope.inTransaction( (s) -> {
+			// Invalidates space A in UpdateTimeStamps region
+			A a2 = new A();
+			a2.setName( "xxxxxx" );
+			s.persist( a2 );
+		} );
 
-		newTx = s.beginTransaction();
+		factoryScope.getSessionFactory().getStatistics().clear();
 
-		// please enable
-		// logger.standard-query-cache.name=org.hibernate.cache.StandardQueryCache
-		// logger.standard-query-cache.level=debug
-		// logger.update-timestamps-cache.name=org.hibernate.cache.UpdateTimestampsCache
-		// logger.update-timestamps-cache.level=debug
-		// to see that isUpToDate is called where not appropriated
+		factoryScope.inTransaction( (s) -> {
+			// should not produce a hit in StandardQuery cache region because there is a constraint
 
-		Assert.assertTrue( s.getSessionFactory().getStatistics().isStatisticsEnabled() );
-		s.getSessionFactory().getStatistics().clear();
+			var criteria = criteriaBuilder.createQuery( A.class );
+			var root = criteria.from( A.class );
+			criteria.where( criteriaBuilder.and(  criteriaBuilder.equal( root.get( "name" ), "name1" ), criteriaBuilder.isNull( root.get( "singleD" ) )) );
 
-		// should produce a hit in StandardQuery cache region
-		fetchA( s, "ds" );
+			s.createQuery( criteria )
+					.setFlushMode( FlushModeType.COMMIT )
+					.setCacheable( true )
+					.uniqueResult();
 
-		Assert.assertEquals(
-				"query is not considered as isImmutableNaturalKeyLookup, despite fullfilling all conditions",
-				1, s.getSessionFactory().getStatistics().getNaturalIdCacheHitCount()
-		);
-		s.createQuery( "delete from D" ).executeUpdate();
-		s.createQuery( "delete from A" ).executeUpdate();
-
-		newTx.commit();
-		// Shutting down the application
-		s.close();
+			assertEquals( 0, s.getSessionFactory().getStatistics().getQueryCacheHitCount() );
+		} );
 	}
 
 	@JiraKey(value = "HHH-4838")
 	@Test
-	public void testCriteriaWithFetchModeJoinOnetoOne() {
-		Session s = openSession();
-		Transaction newTx = s.getTransaction();
+	public void testCriteriaWithFetchModeJoinCollection(SessionFactoryScope factoryScope) {
+		assertTrue( factoryScope.getSessionFactory().getStatistics().isStatisticsEnabled() );
 
-		newTx.begin();
-		A a1 = new A();
-		a1.setName( "name1" );
-		D d1 = new D();
-		a1.setSingleD( d1 );
-		d1.setSingleA( a1 );
-		s.persist( d1 );
-		s.persist( a1 );
-		newTx.commit();
+		factoryScope.inTransaction( (s) -> {
+			A a1 = new A();
+			a1.setName( "name1" );
+			D d1 = new D();
+			a1.getDs().add( d1 );
+			d1.setA( a1 );
+			s.persist( d1 );
+			s.persist( a1 );
+		} );
 
-		newTx = s.beginTransaction();
-		fetchA( s, "singleD" ); // put query-result into cache
+		factoryScope.inTransaction( (s) -> {
+			// put query-result into cache
+			fetchA( s, "ds" );
 
-		A a2 = new A();
-		a2.setName( "xxxxxx" );
-		s.persist( a2 );
-		newTx.commit();	  // Invalidates space A in UpdateTimeStamps region
+			A a2 = new A();
+			a2.setName( "xxxxxx" );
+			// Invalidates space A in UpdateTimeStamps region
+			s.persist( a2 );
+		} );
 
-		//Create new session to avoid the session cache which can't be tracked
-		s.close();
-		s = openSession();
+		factoryScope.inTransaction( (s) -> {
+			s.getSessionFactory().getStatistics().clear();
 
-		newTx = s.beginTransaction();
+			// should produce a hit in StandardQuery cache region
+			fetchA( s, "ds" );
 
-		Assert.assertTrue( s.getSessionFactory().getStatistics().isStatisticsEnabled() );
-		s.getSessionFactory().getStatistics().clear();
-
-		// should produce a hit in StandardQuery cache region
-		fetchA( s, "singleD" );
-
-		Assert.assertEquals(
-				"query is not considered as isImmutableNaturalKeyLookup, despite fullfilling all conditions",
-				1, s.getSessionFactory().getStatistics().getNaturalIdCacheHitCount()
-		);
-		s.createQuery( "delete from A" ).executeUpdate();
-		s.createQuery( "delete from D" ).executeUpdate();
-
-		newTx.commit();
-		// Shutting down the application
-		s.close();
+			assertEquals( 1, s.getSessionFactory().getStatistics().getNaturalIdCacheHitCount(),
+					"query is not considered as isImmutableNaturalKeyLookup, despite fullfilling all conditions" );
+		} );
 	}
 
 	@JiraKey(value = "HHH-4838")
 	@Test
-	public void testCriteriaWithAliasOneToOneJoin() {
-		Session s = openSession();
-		Transaction newTx = s.getTransaction();
+	public void testCriteriaWithFetchModeJoinOneToOne(SessionFactoryScope factoryScope) {
+		assertTrue( factoryScope.getSessionFactory().getStatistics().isStatisticsEnabled() );
 
-		newTx.begin();
-		A a1 = new A();
-		a1.setName( "name1" );
-		D d1 = new D();
-		a1.setSingleD( d1 );
-		d1.setSingleA( a1 );
-		s.persist( d1 );
-		s.persist( a1 );
-		newTx.commit();
+		factoryScope.inTransaction( (s) -> {
+			A a1 = new A();
+			a1.setName( "name1" );
+			D d1 = new D();
+			a1.setSingleD( d1 );
+			d1.setSingleA( a1 );
+			s.persist( d1 );
+			s.persist( a1 );
+		} );
 
-		newTx = s.beginTransaction();
-		fetchA( s, "singleD" ); // put query-result into cache
+		factoryScope.inTransaction( (s) -> {
+			// put query-result into cache
+			fetchA( s, "singleD" );
 
-		A a2 = new A();
-		a2.setName( "xxxxxx" );
-		s.persist( a2 );
-		newTx.commit();	  // Invalidates space A in UpdateTimeStamps region
+			// Invalidates space A in UpdateTimeStamps region
+			A a2 = new A();
+			a2.setName( "xxxxxx" );
+			s.persist( a2 );
+		} );
 
-		newTx = s.beginTransaction();
+		factoryScope.inTransaction( (s) -> {
+			s.getSessionFactory().getStatistics().clear();
 
-		// please enable
-		// logger.standard-query-cache.name=org.hibernate.cache.StandardQueryCache
-		// logger.standard-query-cache.level=debug
-		// logger.update-timestamps-cache.name=org.hibernate.cache.UpdateTimestampsCache
-		// logger.update-timestamps-cache.level=debug
-		// to see that isUpToDate is called where not appropriated
+			// should produce a hit in StandardQuery cache region
+			fetchA( s, "singleD" );
 
-		Assert.assertTrue( s.getSessionFactory().getStatistics().isStatisticsEnabled() );
-		s.getSessionFactory().getStatistics().clear();
-
-		// should not produce a hit in StandardQuery cache region because createAlias() creates a subcriteria
-		fetchA( s, "singleD" );
-
-		Assert.assertEquals( 0, s.getSessionFactory().getStatistics().getQueryCacheHitCount() );
-		s.createQuery( "delete from A" ).executeUpdate();
-		s.createQuery( "delete from D" ).executeUpdate();
-
-		newTx.commit();
-		// Shutting down the application
-		s.close();
+			assertEquals( 1, s.getSessionFactory().getStatistics().getNaturalIdCacheHitCount(),
+					"query is not considered as isImmutableNaturalKeyLookup, despite fullfilling all conditions" );
+		} );
 	}
 
 	@JiraKey(value = "HHH-4838")
 	@Test
-	public void testSubCriteriaOneToOneJoin() {
-		Session s = openSession();
-		Transaction newTx = s.getTransaction();
+	public void testCriteriaWithAliasOneToOneJoin(SessionFactoryScope factoryScope) {
+		assertTrue( factoryScope.getSessionFactory().getStatistics().isStatisticsEnabled() );
 
-		newTx.begin();
-		A a1 = new A();
-		a1.setName( "name1" );
-		D d1 = new D();
-		a1.setSingleD( d1 );
-		d1.setSingleA( a1 );
-		s.persist( d1 );
-		s.persist( a1 );
-		newTx.commit();
+		factoryScope.inTransaction( (s) -> {
+			A a1 = new A();
+			a1.setName( "name1" );
+			D d1 = new D();
+			a1.setSingleD( d1 );
+			d1.setSingleA( a1 );
+			s.persist( d1 );
+			s.persist( a1 );
+		} );
 
-		newTx = s.beginTransaction();
-		fetchA( s, "singleD" ); // put query-result into cache
+		factoryScope.inTransaction( (s) -> {
+			// put query-result into cache
+			fetchA( s, "singleD" );
 
-		A a2 = new A();
-		a2.setName( "xxxxxx" );
-		s.persist( a2 );
-		newTx.commit();	  // Invalidates space A in UpdateTimeStamps region
+			// Invalidates space A in UpdateTimeStamps region
+			A a2 = new A();
+			a2.setName( "xxxxxx" );
+			s.persist( a2 );
+		} );
 
-		newTx = s.beginTransaction();
+		factoryScope.inTransaction( (s) -> {
+			s.getSessionFactory().getStatistics().clear();
 
-		// please enable
-		// logger.standard-query-cache.name=org.hibernate.cache.StandardQueryCache
-		// logger.standard-query-cache.level=debug
-		// logger.update-timestamps-cache.name=org.hibernate.cache.UpdateTimestampsCache
-		// logger.update-timestamps-cache.level=debug
-		// to see that isUpToDate is called where not appropriated
+			// should not produce a hit in StandardQuery cache region because createAlias() creates a subcriteria
+			fetchA( s, "singleD" );
 
-		Assert.assertTrue( s.getSessionFactory().getStatistics().isStatisticsEnabled() );
-		s.getSessionFactory().getStatistics().clear();
+			assertEquals( 0, s.getSessionFactory().getStatistics().getQueryCacheHitCount() );
+		} );
+	}
 
-		// should not produce a hit in StandardQuery cache region because createCriteria() creates a subcriteria
-		fetchA( s, "singleD" );
+	@JiraKey(value = "HHH-4838")
+	@Test
+	public void testSubCriteriaOneToOneJoin(SessionFactoryScope factoryScope) {
+		assertTrue( factoryScope.getSessionFactory().getStatistics().isStatisticsEnabled() );
 
-		Assert.assertEquals( 0, s.getSessionFactory().getStatistics().getQueryCacheHitCount() );
-		s.createQuery( "delete from A" ).executeUpdate();
-		s.createQuery( "delete from D" ).executeUpdate();
+		factoryScope.inTransaction( (s) -> {
+			A a1 = new A();
+			a1.setName( "name1" );
+			D d1 = new D();
+			a1.setSingleD( d1 );
+			d1.setSingleA( a1 );
+			s.persist( d1 );
+			s.persist( a1 );
+		} );
 
-		newTx.commit();
-		// Shutting down the application
-		s.close();
+		factoryScope.inTransaction( (s) -> {
+			// put query-result into cache
+			fetchA( s, "singleD" );
+
+			// Invalidates space A in UpdateTimeStamps region
+			A a2 = new A();
+			a2.setName( "xxxxxx" );
+			s.persist( a2 );
+		} );
+
+		factoryScope.inTransaction( (s) -> {
+			s.getSessionFactory().getStatistics().clear();
+
+			// should not produce a hit in StandardQuery cache region because createCriteria() creates a subcriteria
+			fetchA( s, "singleD" );
+
+			assertEquals( 0, s.getSessionFactory().getStatistics().getQueryCacheHitCount() );
+		} );
 	}
 
 	private A fetchA(Session s) {
@@ -339,20 +280,6 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 				.load();
 		((SharedSessionContractImplementor) s).getLoadQueryInfluencers().getEffectiveEntityGraph().clear();
 		return a;
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				A.class,
-				D.class
-		};
-	}
-
-	@Override
-	protected void configure(Configuration cfg) {
-		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, true );
 	}
 
 

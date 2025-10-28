@@ -4,15 +4,19 @@
  */
 package org.hibernate.community.dialect;
 
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
 import java.util.Date;
 import java.util.TimeZone;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.community.dialect.function.InformixRegexpLikeFunction;
 import org.hibernate.community.dialect.identity.InformixIdentityColumnSupport;
 import org.hibernate.community.dialect.pagination.FirstLimitHandler;
 import org.hibernate.community.dialect.pagination.SkipFirstLimitHandler;
@@ -21,16 +25,34 @@ import org.hibernate.community.dialect.sequence.SequenceInformationExtractorInfo
 import org.hibernate.community.dialect.unique.InformixUniqueDelegate;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
+import org.hibernate.dialect.function.TrimFunction;
+import org.hibernate.community.dialect.temptable.InformixLocalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
+import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.mapping.CheckConstraint;
+import org.hibernate.query.sqm.CastType;
+import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
+import org.hibernate.type.BasicType;
+import org.hibernate.dialect.lock.internal.LockingSupportSimple;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.type.descriptor.jdbc.VarcharUUIDJdbcType;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.Size;
@@ -58,7 +80,6 @@ import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableIn
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
@@ -91,8 +112,11 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
+import static org.hibernate.internal.util.StringHelper.isBlank;
+import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
-import static org.hibernate.type.SqlTypes.BIGINT;
+import static org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers.impliedOrInvariant;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
@@ -106,14 +130,10 @@ import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
-import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
-import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
-import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
-import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIMESTAMP;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
  * Dialect for Informix 7.31.UD3 with Informix
@@ -134,14 +154,14 @@ public class InformixDialect extends Dialect {
 				ForeignKey foreignKey,
 				Metadata metadata,
 				SqlStringGenerationContext context) {
-			String[] results = super.getSqlCreateStrings( foreignKey, metadata, context );
+			final String[] results = super.getSqlCreateStrings( foreignKey, metadata, context );
 			for ( int i = 0; i < results.length; i++ ) {
-				String result = results[i];
+				final String result = results[i];
 				if ( result.contains( " on delete " ) ) {
-					String constraintName = "constraint " + foreignKey.getName();
-					result = result.replace( constraintName + " ", "" );
-					result = result + " " + constraintName;
-					results[i] = result;
+					final String constraintName = "constraint " + foreignKey.getName();
+					results[i] =
+							result.replace( constraintName + " ", "" )
+									+ " " + constraintName;
 				}
 			}
 			return results;
@@ -162,11 +182,12 @@ public class InformixDialect extends Dialect {
 				}
 				constraint.append( column.getQuotedName( dialect ) );
 			}
-			constraint.append(')');
+			constraint.append( ')' );
 			final UniqueKey orderingUniqueKey = key.getOrderingUniqueKey();
 			if ( orderingUniqueKey != null && orderingUniqueKey.isNameExplicit() ) {
 				constraint.append( " constraint " )
-						.append( orderingUniqueKey.getName() ).append( ' ' );
+						.append( orderingUniqueKey.getName() )
+						.append( ' ' );
 			}
 			return constraint.toString();
 		}
@@ -204,8 +225,8 @@ public class InformixDialect extends Dialect {
 		switch ( sqlTypeCode ) {
 			case TINYINT:
 				return "smallint";
-			case BIGINT:
-				return "int8";
+//			case BIGINT:
+//				return "int8";
 			case TIME:
 				return "datetime hour to second";
 			case TIMESTAMP:
@@ -242,7 +263,7 @@ public class InformixDialect extends Dialect {
 		);
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( VARCHAR, columnType( LONG32VARCHAR ), "varchar(255)",this )
+				CapacityDependentDdlType.builder( VARCHAR, columnType( LONG32VARCHAR ), "lvarchar",this )
 						.withTypeCapacity( 255, "varchar($l)" )
 						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
 						.build()
@@ -281,8 +302,9 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public int getDefaultTimestampPrecision() {
-		//the maximum
-		return 5;
+		//the maximum is 5, but default to 3
+		//because Informix defaults to milliseconds
+		return 3;
 	}
 
 	@Override
@@ -298,6 +320,11 @@ public class InformixDialect extends Dialect {
 	@Override
 	public int getDoublePrecision() {
 		return 16;
+	}
+
+	@Override
+	public boolean doesReadCommittedCauseWritersToBlockReaders() {
+		return true;
 	}
 
 	@Override
@@ -337,6 +364,16 @@ public class InformixDialect extends Dialect {
 		functionFactory.stddev();
 		functionFactory.variance();
 		functionFactory.bitLength_pattern( "length(?1)*8" );
+		functionFactory.varPop_sumCount();
+
+		final SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
+		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
+		final BasicType<String> stringBasicType =
+				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING );
+		final BasicType<Boolean> booleanBasicType =
+				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.BOOLEAN );
+
+		functionRegistry.registerAlternateKey( "var_samp", "variance" );
 
 		if ( getVersion().isSameOrAfter( 12 ) ) {
 			functionFactory.locate_charindex();
@@ -344,25 +381,40 @@ public class InformixDialect extends Dialect {
 
 		//coalesce() and nullif() both supported since Informix 12
 
-		functionContributions.getFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
-		functionContributions.getFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
-		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "matches" )
-				.setInvariantType( functionContributions.getTypeConfiguration()
-						.getBasicTypeRegistry()
-						.resolve( StandardBasicTypes.STRING )
-				)
+		// least() and greatest() supported since 12.10
+		if ( getVersion().isBefore( 12, 10 ) ) {
+			functionRegistry.register( "least", new CaseLeastGreatestEmulation( true ) );
+			functionRegistry.register( "greatest", new CaseLeastGreatestEmulation( false ) );
+		}
+
+		functionRegistry.namedDescriptorBuilder( "matches" )
+				.setInvariantType( stringBasicType )
 				.setExactArgumentCount( 2 )
-				.setArgumentTypeResolver(
-						StandardFunctionArgumentTypeResolvers.impliedOrInvariant(
-								functionContributions.getTypeConfiguration(),
-								STRING
-						)
-				)
+				.setArgumentTypeResolver( impliedOrInvariant( typeConfiguration, STRING ) )
 				.setArgumentListSignature( "(STRING string, STRING pattern)" )
 				.register();
+
 		if ( supportsWindowFunctions() ) {
 			functionFactory.windowFunctions();
+			functionFactory.hypotheticalOrderedSetAggregates();
 		}
+
+		functionRegistry.register( "overlay",
+				new InsertSubstringOverlayEmulation( typeConfiguration, true ) );
+
+		// coalesce() has a bug where it does not accept parameters
+		// as arguments, even with a cast (on Informix 14)
+		functionRegistry.namedDescriptorBuilder( "coalesce" )
+				.setMinArgumentCount( 1 )
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.INLINE_PARAMETERS )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
+
+		// parameter arguments to trim() require a cast
+		functionContributions.getFunctionRegistry().register( "trim",
+				new TrimFunction( this, typeConfiguration, SqlAstNodeRenderingMode.NO_UNTYPED ) );
+
+		functionRegistry.register( "regexp_like", new InformixRegexpLikeFunction( typeConfiguration ) );
 	}
 
 	@Override
@@ -420,21 +472,15 @@ public class InformixDialect extends Dialect {
 	 */
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		switch (unit) {
-			case SECOND:
-				return "to_number(to_char(?2,'%S'))";
-			case MINUTE:
-				return "to_number(to_char(?2,'%M'))";
-			case HOUR:
-				return "to_number(to_char(?2,'%H'))";
-			case DAY_OF_WEEK:
-				return "(weekday(?2)+1)";
-			case DAY_OF_MONTH:
-				return "day(?2)";
-			default:
-				//I think week() returns the ISO week number
-				return "?1(?2)";
-		}
+		return switch ( unit ) {
+			case SECOND -> getVersion().isBefore( 11, 70 ) ?	"to_number(to_char(?2,'%S%F3'))" : "to_number(to_char(?2,'%S.%F3'))";
+			case MINUTE -> "to_number(to_char(?2,'%M'))";
+			case HOUR -> "to_number(to_char(?2,'%H'))";
+			case DAY_OF_WEEK -> "(weekday(?2)+1)";
+			case DAY_OF_MONTH -> "day(?2)";
+			case EPOCH -> "(to_number(cast(cast((?2-datetime(1970-1-1) year to day) as interval day(9) to day) as varchar(12)))*86400+to_number(cast(cast((cast(?2 as datetime hour to second)-datetime(00:00:00) hour to second) as interval second(6) to second) as varchar(9))))";
+			default -> "?1(?2)";
+		};
 	}
 
 	@Override
@@ -455,8 +501,7 @@ public class InformixDialect extends Dialect {
 			String[] primaryKey,
 			boolean referencesPrimaryKey) {
 		final StringBuilder result = new StringBuilder( 30 )
-				.append( " add constraint " )
-				.append( " foreign key (" )
+				.append( " add constraint foreign key (" )
 				.append( String.join( ", ", foreignKey ) )
 				.append( ") references " )
 				.append( referencedTable );
@@ -497,6 +542,12 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public String getTruncateTableStatement(String tableName) {
+		return super.getTruncateTableStatement( tableName ) + " reuse storage"
+				+ ( getVersion().isSameOrAfter( 12, 10 ) ? " keep statistics" : "" );
+	}
+
+	@Override
 	public SequenceSupport getSequenceSupport() {
 		return sequenceSupport;
 	}
@@ -527,6 +578,20 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public LockingSupport getLockingSupport() {
+		// TODO: need a custom impl, because:
+		//       1. Informix does not support 'skip locked'
+		//       2. Informix does not allow 'for update' with joins
+		return LockingSupportSimple.STANDARD_SUPPORT;
+	}
+
+	// TODO: remove once we have a custom LockingSupport impl
+	@Override @Deprecated(forRemoval = true)
+	public boolean supportsSkipLocked() {
+		return false;
+	}
+
+	@Override
 	public boolean supportsIfExistsBeforeTableName() {
 		return getVersion().isSameOrAfter( 11, 70 );
 	}
@@ -539,6 +604,50 @@ public class InformixDialect extends Dialect {
 	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
 		return getVersion().isSameOrAfter( 11, 70 );
+	}
+
+	@Override
+	public boolean supportsNamedColumnCheck() {
+		// It seems the constraint name is ignored on column level
+		return false;
+	}
+
+	@Override
+	public String getCheckConstraintString(CheckConstraint checkConstraint) {
+		final String constraintName = checkConstraint.getName();
+		final String constraint = " check (" + checkConstraint.getConstraint() + ")";
+		final String constraintWithName =
+				isBlank( constraintName )
+						? constraint
+						: constraint + " constraint " + constraintName;
+		return appendCheckConstraintOptions( checkConstraint, constraintWithName );
+	}
+
+	@Override
+	public String getCascadeConstraintsString() {
+		return getVersion().isSameOrAfter( 12, 10 )
+				? " cascade"
+				: "";
+	}
+
+	@Override
+	public boolean dropConstraints() {
+		return !getVersion().isSameOrAfter( 12, 10 );
+	}
+
+	@Override
+	public boolean canDisableConstraints() {
+		return true;
+	}
+
+	@Override
+	public String getDisableConstraintStatement(String tableName, String name) {
+		return "set constraints " + name + " disabled";
+	}
+
+	@Override
+	public String getEnableConstraintStatement(String tableName, String name) {
+		return "set constraints " + name + " enabled";
 	}
 
 	@Override
@@ -563,45 +672,88 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		return (exception, message, sql) -> switch ( extractErrorCode( exception ) ) {
+			case -239, -268 ->
+					new ConstraintViolationException( message, exception, sql, ConstraintViolationException.ConstraintKind.UNIQUE,
+							getViolatedConstraintNameExtractor().extractConstraintName( exception ) );
+			case -691, -692 ->
+					new ConstraintViolationException( message, exception, sql, ConstraintViolationException.ConstraintKind.FOREIGN_KEY,
+							getViolatedConstraintNameExtractor().extractConstraintName( exception ) );
+			case -703, -391 ->
+					new ConstraintViolationException( message, exception, sql, ConstraintViolationException.ConstraintKind.NOT_NULL,
+							getViolatedConstraintNameExtractor().extractConstraintName( exception ) );
+			case -530 ->
+					new ConstraintViolationException( message, exception, sql, ConstraintViolationException.ConstraintKind.CHECK,
+							getViolatedConstraintNameExtractor().extractConstraintName( exception ) );
+			default -> {
+				// unwrap the ISAM error, if any
+				if ( exception.getCause() instanceof SQLException cause && cause != exception ) {
+					yield switch ( extractErrorCode( cause ) ) {
+						case -107, -113, -134, -143, -144, -154 ->
+							//TODO: which of these are these are really LockTimeoutExceptions
+							//      rather than the more generic LockAcquisitionException?
+								new LockAcquisitionException( message, exception, sql );
+						default -> null;
+					};
+				}
+				else {
+					yield null;
+				}
+			}
+		};
+	}
+
+	@Override
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR;
 	}
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				String constraintName;
-				switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
-					case -268:
-						constraintName = extractUsingTemplate(
-								"Unique constraint (",
-								") violated.",
-								sqle.getMessage()
-						);
-						break;
-					case -691:
-						constraintName = extractUsingTemplate(
-								"Missing key in referenced table for referential constraint (",
-								").",
-								sqle.getMessage()
-						);
-						break;
-					case -692:
-						constraintName = extractUsingTemplate(
-								"Key value for constraint (",
-								") is still being referenced.",
-								sqle.getMessage()
-						);
-						break;
-					default:
-						return null;
-				}
+				final String constraintName =
+						switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
+							case -239, -268 ->
+									extractUsingTemplate(
+											"Unique constraint (",
+											") violated.",
+											sqle.getMessage()
+									);
+							case -691 ->
+									extractUsingTemplate(
+											"Missing key in referenced table for referential constraint (",
+											").",
+											sqle.getMessage()
+									);
+							case -692 ->
+									extractUsingTemplate(
+											"Key value for constraint (",
+											") is still being referenced.",
+											sqle.getMessage()
+									);
+							case -530 ->
+									extractUsingTemplate(
+											"Check constraint (",
+											") failed",
+											sqle.getMessage()
+									);
+							case -391 ->
+									extractUsingTemplate(
+											"null into column (",
+											")",
+											sqle.getMessage()
+									);
+							default -> null;
+						};
 
-				// strip table-owner because Informix always returns constraint names as "<table-owner>.<constraint-name>"
-				final int i = constraintName.indexOf( '.' );
-				if ( i != -1 ) {
-					constraintName = constraintName.substring( i + 1 );
+				if ( constraintName == null ) {
+					return null;
 				}
-				return constraintName;
+				else {
+					// strip table-owner because Informix always returns constraint names as "<table-owner>.<constraint-name>"
+					final int index = constraintName.indexOf( '.' );
+					return index > 0 ? constraintName.substring( index + 1 ) : constraintName;
+				}
 			} );
 
 	@Override
@@ -626,37 +778,110 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String getCurrentTimestampSelectString() {
-		return "select distinct current timestamp from informix.systables";
+		return "select sysdate" + (getVersion().isBefore( 12, 10 ) ? " from informix.systables where tabid=1" : "");
+	}
+
+	@Override @SuppressWarnings("deprecation")
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
+		return intervalType != null ? "(?2 + ?3)" : "(?3 + " + intervalPattern( unit, temporalType ) + ")";
+	}
+
+	@SuppressWarnings("deprecation")
+	private static String intervalPattern(TemporalUnit unit, TemporalType temporalType) {
+		return switch (unit) {
+			case NANOSECOND -> "?2/1e9 * interval (1) second(9) to fraction";
+			case SECOND, NATIVE ->
+					temporalType == TemporalType.TIME
+							? "?2 * 1 units second" // times don't usually come equipped with fractional seconds
+							: "?2 * interval (1) second(9) to fraction"; // datetimes do have fractional seconds
+			case QUARTER -> "?2 * 3 units month";
+			case WEEK -> "?2 * 7 units day";
+			default -> "?2 * 1 units " + unit;
+		};
+	}
+
+	@Override
+	public long getFractionalSecondPrecisionInNanos() {
+		// since we do computations with intervals,
+		// may as well just use seconds as the NATIVE
+		// precision, do minimize conversion factors
+		return 1_000_000_000;
+//		// Informix actually supports up to 10 microseconds
+//		// but defaults to milliseconds (so use that)
+//		return 1_000_000;
+	}
+
+	@Override @SuppressWarnings("deprecation")
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
+		if ( unit == null ) {
+			return "(?3-?2)";
+		}
+		else {
+			if ( fromTemporalType == TemporalType.DATE && toTemporalType == TemporalType.DATE ) {
+				// special case: subtraction of two dates results in an integer number of days
+				return switch ( unit ) {
+					case NATIVE -> "to_number(cast(?3-?2 as lvarchar))*86400";
+					case YEAR, MONTH -> "to_number(cast(cast(extend(?3,year to month)-extend(?2,year to month) as interval ?1(9) to ?1) as varchar(12)))";
+					case DAY -> "to_number(cast(?3-?2 as lvarchar))";
+					case WEEK -> "floor(to_number(cast(?3-?2 as lvarchar))/7)";
+					default -> "to_number(cast(?3-?2 as lvarchar))" + DAY.conversionFactor( unit, this );
+				};
+			}
+			return switch ( unit ) {
+				case NATIVE ->
+					fromTemporalType == TemporalType.TIME
+							// arguably, we don't really need to retain the milliseconds for a time, since times don't usually come with millis
+							? "(mod(to_number(cast(cast(?3-?2 as interval second(6) to second) as varchar(9))),86400)+to_number(cast(cast(?3-?2 as interval fraction to fraction) as varchar(6))))"
+							: "(to_number(cast(cast(?3-?2 as interval day(9) to day) as varchar(12)))*86400+mod(to_number(cast(cast(?3-?2 as interval second(6) to second) as varchar(9))),86400)+to_number(cast(cast(?3-?2 as interval fraction to fraction) as varchar(6))))";
+				case SECOND -> "to_number(cast(cast(?3-?2 as interval second(9) to fraction) as varchar(15)))";
+				case NANOSECOND -> "(to_number(cast(cast(?3-?2 as interval second(9) to fraction) as varchar(15)))*1e9)";
+				default -> "to_number(cast(cast(?3-?2 as interval ?1(9) to ?1) as varchar(12)))";
+			};
+		}
+	}
+
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( from == CastType.BOOLEAN ) {
+			switch ( to ) {
+				case STRING:
+					return "trim(case ?1 when 't' then 'true' when 'f' then 'false' else null end)";
+				case TF_BOOLEAN:
+					return "upper(cast(?1 as varchar))";
+				case YN_BOOLEAN:
+					return "case ?1 when 't' then 'Y' when 'f' then 'N' else null end";
+				case INTEGER_BOOLEAN:
+					return "case ?1 when 't' then 1 when 'f' then 0 else null end";
+			}
+		}
+		if ( from == CastType.STRING && to == CastType.BOOLEAN ) {
+			return buildStringToBooleanCast( "'t'", "'f'" );
+		}
+		return super.castPattern( from, to );
+	}
+
+	@Override
+	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
+		throw new UnsupportedOperationException( "Informix does not support binary literals" );
+	}
+
+	@Override
+	public String getCatalogSeparator() {
+		return ":";
 	}
 
 	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						rootEntityDescriptor,
-						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new LocalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						rootEntityDescriptor,
-						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new LocalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
@@ -665,23 +890,28 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return InformixLocalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
 	public String getTemporaryTableCreateOptions() {
-		return "with no log";
+		return InformixLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
 	}
 
 	@Override
 	public String getTemporaryTableCreateCommand() {
-		return "create temp table";
+		return InformixLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateCommand();
 	}
 
 	@Override
 	public AfterUseAction getTemporaryTableAfterUseAction() {
-		return AfterUseAction.NONE;
+		return InformixLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableAfterUseAction();
 	}
 
 	@Override
 	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return BeforeUseAction.CREATE;
+		return InformixLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableBeforeUseAction();
 	}
 
 	@Override
@@ -726,7 +956,9 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
+		appender.appendSql( "cast(" );
 		appender.appendSql( bool ? "'t'" : "'f'" );
+		appender.appendSql( " as boolean)" );
 	}
 
 	@Override
@@ -736,7 +968,7 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String currentTime() {
-		return currentTimestamp();
+		return "current hour to fraction";
 	}
 
 	@Override
@@ -813,21 +1045,19 @@ public class InformixDialect extends Dialect {
 			TemporalAccessor temporalAccessor,
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
+		appender.append( "datetime (" );
 		switch ( precision ) {
 			case DATE:
-				appender.appendSql( JDBC_ESCAPE_START_DATE );
 				appendAsDate( appender, temporalAccessor );
-				appender.appendSql( JDBC_ESCAPE_END );
+				appender.appendSql( ") year to day" );
 				break;
 			case TIME:
-				appender.appendSql( JDBC_ESCAPE_START_TIME );
 				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
-				appender.appendSql( JDBC_ESCAPE_END );
+				appender.appendSql( ") hour to second" ); // we ignore the milliseconds
 				break;
 			case TIMESTAMP:
-				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
-				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
-				appender.appendSql( JDBC_ESCAPE_END );
+				appendAsTimestampWithMillis( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( ") year to fraction" );
 				break;
 			default:
 				throw new IllegalArgumentException();
@@ -836,21 +1066,19 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+		appender.append( "datetime (" );
 		switch ( precision ) {
 			case DATE:
-				appender.appendSql( JDBC_ESCAPE_START_DATE );
 				appendAsDate( appender, date );
-				appender.appendSql( JDBC_ESCAPE_END );
+				appender.appendSql( ") year to day" );
 				break;
 			case TIME:
-				appender.appendSql( JDBC_ESCAPE_START_TIME );
 				appendAsLocalTime( appender, date );
-				appender.appendSql( JDBC_ESCAPE_END );
+				appender.appendSql( ") hour to fraction" );
 				break;
 			case TIMESTAMP:
-				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
-				appendAsTimestampWithMicros( appender, date, jdbcTimeZone );
-				appender.appendSql( JDBC_ESCAPE_END );
+				appendAsTimestampWithMillis( appender, date, jdbcTimeZone );
+				appender.appendSql( ") year to fraction" );
 				break;
 			default:
 				throw new IllegalArgumentException();
@@ -859,17 +1087,21 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
-		DdlType descriptor = typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType );
-		if ( descriptor == null ) {
-			return "null";
-		}
-		String typeName = descriptor.getTypeName( Size.length( Size.DEFAULT_LENGTH ) );
+		final DdlType descriptor = typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType );
+		final String castType =
+				descriptor != null
+						? castType( descriptor )
+						// just cast it to an arbitrary SQL type,
+						// which we expect to be ignored by higher layers
+						: "integer";
+		return "cast(null as " + castType + ")";
+	}
+
+	private static String castType(DdlType descriptor) {
+		final String typeName = descriptor.getTypeName( Size.length( Size.DEFAULT_LENGTH ) );
 		//trim off the length/precision/scale
 		final int loc = typeName.indexOf( '(' );
-		if ( loc > -1 ) {
-			typeName = typeName.substring( 0, loc );
-		}
-		return "null::" + typeName;
+		return loc < 0 ? typeName : typeName.substring( 0, loc );
 	}
 
 	@Override
@@ -908,7 +1140,22 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String getFromDualForSelectOnly() {
-		return " from " + getDual() + " dual";
+		return getVersion().isBefore( 12,10 ) ?	" from " + getDual() + " dual" : "";
+	}
+
+	@Override
+	public boolean supportsCrossJoin() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsIntersect(){
+		return getVersion().isSameOrAfter( 12,10 );
+	}
+
+	public boolean supportsSubqueryOnMutatingTable() {
+		//tested on version 11.50, 14.10
+		return getVersion().isAfter( 11, 50);
 	}
 
 	@Override
@@ -926,4 +1173,27 @@ public class InformixDialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsWithClause() {
+		return getVersion().isSameOrAfter( 14,10 );
+	}
+
+	@Override
+	public boolean requiresColumnListInCreateView() {
+		return true;
+	}
+
+	@Override
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, @Nullable DatabaseMetaData metadata)
+			throws SQLException {
+		if ( metadata == null ) {
+			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.LOWER );
+		}
+		return super.buildIdentifierHelper( builder, metadata );
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return getVersion().isSameOrAfter( 12,10 ) ? DmlTargetColumnQualifierSupport.TABLE_ALIAS : DmlTargetColumnQualifierSupport.NONE;
+	}
 }

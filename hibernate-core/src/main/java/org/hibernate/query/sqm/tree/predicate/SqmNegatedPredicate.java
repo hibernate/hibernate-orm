@@ -17,19 +17,11 @@ import org.hibernate.query.sqm.tree.SqmRenderContext;
 /**
  * @author Steve Ebersole
  */
-public class SqmNegatedPredicate extends AbstractNegatableSqmPredicate {
+public class SqmNegatedPredicate extends AbstractSqmPredicate {
 	private final SqmPredicate wrappedPredicate;
 
 	public SqmNegatedPredicate(SqmPredicate wrappedPredicate, NodeBuilder nodeBuilder) {
-		super( nodeBuilder );
-		this.wrappedPredicate = wrappedPredicate;
-	}
-
-	public SqmNegatedPredicate(
-			SqmPredicate wrappedPredicate,
-			boolean negated,
-			NodeBuilder nodeBuilder) {
-		super( negated, nodeBuilder );
+		super( nodeBuilder.getBooleanType(), nodeBuilder );
 		this.wrappedPredicate = wrappedPredicate;
 	}
 
@@ -43,7 +35,6 @@ public class SqmNegatedPredicate extends AbstractNegatableSqmPredicate {
 				this,
 				new SqmNegatedPredicate(
 						wrappedPredicate.copy( context ),
-						isNegated(),
 						nodeBuilder()
 				)
 		);
@@ -75,8 +66,34 @@ public class SqmNegatedPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	protected SqmNegatablePredicate createNegatedNode() {
-		return new SqmNegatedPredicate( this, nodeBuilder() );
+	public boolean equals(Object object) {
+		return object instanceof SqmNegatedPredicate that
+			&& wrappedPredicate.equals( that.wrappedPredicate );
 	}
 
+	@Override
+	public int hashCode() {
+		return wrappedPredicate.hashCode();
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmNegatedPredicate that
+			&& wrappedPredicate.isCompatible( that.wrappedPredicate );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return wrappedPredicate.cacheHashCode();
+	}
+
+	@Override
+	public boolean isNegated() {
+		return true;
+	}
+
+	@Override
+	public SqmPredicate not() {
+		return new SqmNegatedPredicate( this, nodeBuilder() );
+	}
 }

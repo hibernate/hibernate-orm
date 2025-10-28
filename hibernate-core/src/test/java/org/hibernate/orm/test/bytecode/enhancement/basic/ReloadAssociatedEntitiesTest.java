@@ -80,14 +80,7 @@ public class ReloadAssociatedEntitiesTest {
 
 	@AfterEach
 	void after(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( session.getCriteriaBuilder().createCriteriaDelete( ConcreteOne.class ) )
-					.executeUpdate();
-			session.createMutationQuery( session.getCriteriaBuilder().createCriteriaDelete( ConcreteTwo.class ) )
-					.executeUpdate();
-			session.createMutationQuery( session.getCriteriaBuilder().createCriteriaDelete( ConcreteThree.class ) )
-					.executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

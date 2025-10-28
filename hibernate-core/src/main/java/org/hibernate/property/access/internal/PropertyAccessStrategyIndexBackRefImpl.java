@@ -74,9 +74,8 @@ public class PropertyAccessStrategyIndexBackRefImpl implements PropertyAccessStr
 			return PropertyAccessStrategyBackRefImpl.UNKNOWN;
 		}
 
-		@SuppressWarnings("rawtypes")
 		@Override
-		public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
+		public Object getForInsert(Object owner, Map<Object, Object> mergeMap, SharedSessionContractImplementor session) {
 			return session.getPersistenceContextInternal().getIndexInOwner( entityName, propertyName, owner, mergeMap );
 		}
 
@@ -110,7 +109,7 @@ public class PropertyAccessStrategyIndexBackRefImpl implements PropertyAccessStr
 		/**
 		 * Singleton access
 		 */
-		public static final SetterImpl INSTANCE = new SetterImpl();
+		public static final Setter INSTANCE = new SetterImpl();
 
 		@Override
 		public void set(Object target, @Nullable Object value) {

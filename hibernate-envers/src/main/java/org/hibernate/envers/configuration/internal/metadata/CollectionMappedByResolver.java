@@ -168,7 +168,7 @@ public class CollectionMappedByResolver {
 			referencedClass = oneToManyValue.getAssociatedClass();
 		}
 		else if ( collectionValue.getElement() instanceof ManyToOne ) {
-			// Case for bi-directional relation with @JoinTable on the owning @ManyToOne side.
+			// Case for bidirectional relation with @JoinTable on the owning @ManyToOne side.
 			final ManyToOne manyToOneValue = (ManyToOne) collectionValue.getElement();
 			referencedClass = manyToOneValue.getMetadata().getEntityBinding( manyToOneValue.getReferencedEntityName() );
 		}

@@ -35,12 +35,9 @@ public abstract class TestsBase {
 		Copier.copyProject( buildFilePath, projectDir );
 
 		System.out.println( "Starting execution ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-		final GradleRunner gradleRunner = GradleRunner.create()
+		final GradleRunner gradleRunner = TestHelper.usingGradleRunner()
 				.withProjectDir( projectDir.toFile() )
-				.withPluginClasspath()
-				.withDebug( true )
-				.withArguments( "clean", compileTaskName, "--stacktrace", "--no-build-cache" )
-				.forwardOutput();
+				.withArguments( compileTaskName, "--stacktrace", "--no-build-cache", "--configuration-cache" );
 
 		final BuildResult result = gradleRunner.build();
 		final BuildTask task = result.task( ":" + compileTaskName );
@@ -65,12 +62,9 @@ public abstract class TestsBase {
 
 		{
 			System.out.println( "Starting first execution ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-			final GradleRunner gradleRunner = GradleRunner.create()
+			final GradleRunner gradleRunner = TestHelper.usingGradleRunner()
 					.withProjectDir( projectDir.toFile() )
-					.withPluginClasspath()
-					.withDebug( true )
-					.withArguments( "clean", compileTaskName, "--stacktrace", "--no-build-cache" )
-					.forwardOutput();
+					.withArguments( compileTaskName, "--stacktrace", "--no-build-cache", "--configuration-cache" );
 
 			final BuildResult result = gradleRunner.build();
 			final BuildTask task = result.task( ":" + compileTaskName );
@@ -84,12 +78,9 @@ public abstract class TestsBase {
 
 		{
 			System.out.println( "Starting second execution ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-			final GradleRunner gradleRunner = GradleRunner.create()
+			final GradleRunner gradleRunner = TestHelper.usingGradleRunner()
 					.withProjectDir( projectDir.toFile() )
-					.withPluginClasspath()
-					.withDebug( true )
-					.withArguments( compileTaskName, "--stacktrace", "--no-build-cache" )
-					.forwardOutput();
+					.withArguments( compileTaskName, "--stacktrace", "--no-build-cache", "--configuration-cache" );
 			final BuildResult result = gradleRunner.build();
 			final BuildTask task = result.task( ":" + compileTaskName );
 			assertThat( task ).isNotNull();

@@ -30,7 +30,7 @@ public abstract class SubClassTest extends AbstractStatefulStatelessFilterTest {
 
 	@AfterEach
 	protected void cleanupTest() throws Exception {
-		scope.inTransaction( session -> session.createQuery( "delete from Human" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@ParameterizedTest

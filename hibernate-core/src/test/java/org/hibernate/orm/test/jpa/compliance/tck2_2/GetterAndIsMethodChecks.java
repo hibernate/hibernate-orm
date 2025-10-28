@@ -11,15 +11,14 @@ import jakarta.persistence.OneToOne;
 import org.hibernate.boot.MetadataSources;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Steve Ebersole
  */
 @JiraKey( value = "12096")
-public class GetterAndIsMethodChecks extends BaseUnitTestCase {
+public class GetterAndIsMethodChecks {
 
 	@Test
 	public void testIt() {

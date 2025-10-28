@@ -14,7 +14,7 @@ import org.jboss.logging.Logger;
  */
 @SubSystemLogging(
 		name = GraphParserLogging.LOGGER_NAME,
-		description = "Logging related to Hibernate's `GraphParser` for parsing entity-graphs from String representations"
+		description = "Logging related to GraphParser for parsing entity graphs from String representations"
 )
 @Internal
 public interface GraphParserLogging {

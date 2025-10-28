@@ -118,12 +118,20 @@ public interface MappingSettings {
 	String KEYWORD_AUTO_QUOTING_ENABLED = "hibernate.auto_quote_keyword";
 
 	/**
-	 * When a generator specifies an increment-size and an optimizer was not explicitly
-	 * specified, which of the "pooled" optimizers should be preferred? Can specify an
-	 * optimizer short name or the name of a class which implements
-	 * {@link org.hibernate.id.enhanced.Optimizer}.
+	 * Specifies an {@linkplain org.hibernate.id.enhanced.Optimizer optimizer}
+	 * which should be used when a generator specifies an {@code allocationSize}
+	 * and no optimizer is not explicitly specified, either:
+	 * <ul>
+	 * <li>a class implementing {@link org.hibernate.id.enhanced.Optimizer},
+	 * <li>the name of a class implementing {@code Optimizer}, or</li>
+	 * <li>an {@linkplain StandardOptimizerDescriptor optimizer short name}.
+	 * </ul>
 	 *
 	 * @settingDefault {@link StandardOptimizerDescriptor#POOLED}
+	 *
+	 * @see org.hibernate.id.enhanced.PooledOptimizer
+	 * @see org.hibernate.id.enhanced.PooledLoOptimizer
+	 * @see org.hibernate.id.enhanced.HiLoOptimizer
 	 */
 	String PREFERRED_POOLED_OPTIMIZER = "hibernate.id.optimizer.pooled.preferred";
 
@@ -326,8 +334,8 @@ public interface MappingSettings {
 	String XML_FORMAT_MAPPER = "hibernate.type.xml_format_mapper";
 
 	/**
-	 * Specifies whether to use the legacy provider specific and non-portable XML format for collections and byte arrays
-	 * for XML serialization/deserialization.
+	 * Specifies whether to use the legacy provider-specific and non-portable XML format for
+	 * collections and byte arrays for XML serialization/deserialization.
 	 * <p>
 	 * {@code false} by default. This property only exists for backwards compatibility.
 	 *
@@ -355,8 +363,8 @@ public interface MappingSettings {
 	 * The possible options for this setting are enumerated by
 	 * {@link org.hibernate.annotations.TimeZoneStorageType}.
 	 *
-	 * @apiNote For backward compatibility with older versions of Hibernate, set this property to
-	 * {@link org.hibernate.annotations.TimeZoneStorageType#NORMALIZE NORMALIZE}.
+	 * @apiNote For backward compatibility with older versions of Hibernate, set this property
+	 * to {@link org.hibernate.annotations.TimeZoneStorageType#NORMALIZE NORMALIZE}.
 	 *
 	 * @settingDefault {@link org.hibernate.annotations.TimeZoneStorageType#DEFAULT DEFAULT},
 	 * which guarantees that the {@linkplain java.time.OffsetDateTime#toInstant() instant}
@@ -374,7 +382,7 @@ public interface MappingSettings {
 	 * Used to specify the {@link org.hibernate.boot.model.naming.ImplicitNamingStrategy}
 	 * class to use. The following shortcut names are defined for this setting:
 	 * <ul>
-	 *     <li>{@code "default"} and {@code "jpa"} are an abbreviations for
+	 *     <li>{@code "default"} and {@code "jpa"} are abbreviations for
 	 *     {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl}
 	 *     <li>{@code "legacy-jpa"} is an abbreviation for
 	 *     {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl}
@@ -465,7 +473,7 @@ public interface MappingSettings {
 	 * Accepts any of:
 	 * <ul>
 	 *     <li>an instance of {@code CollectionClassification}
-	 *     <li>the (case insensitive) name of a {@code CollectionClassification} (list e.g.)
+	 *     <li>the (case-insensitive) name of a {@code CollectionClassification} (list e.g.)
 	 *     <li>a {@link Class} representing either {@link java.util.List} or {@link java.util.Collection}
 	 * </ul>
 	 *

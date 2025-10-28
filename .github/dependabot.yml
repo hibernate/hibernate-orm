@@ -6,14 +6,6 @@ registries:
     username: dummy # Required by dependabot
     password: dummy # Required by dependabot
 updates:
-  - package-ecosystem: "gradle"
-    directory: "/"
-    allow:
-      - dependency-name: "com.gradle*"
-    registries:
-      - gradle-plugin-portal
-    schedule:
-      interval: "weekly"
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
@@ -25,3 +17,129 @@ updates:
     allow:
       - dependency-name: "actions/*"
       - dependency-name: "redhat-actions/*"
+  - package-ecosystem: "gradle"
+    directory: "/"
+    registries:
+      - gradle-plugin-portal
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+    open-pull-requests-limit: 20
+    groups:
+      # These are used in tooling we publish (Gradle, Ant, Maven plugins)
+      # and thus must be treated as runtime dependencies,
+      # which cannot be included in the build-dependencies group below.
+      tooling-dependencies:
+        patterns:
+          # Note: Gradle tooling dependencies seem to be tied to the version of Gradle we use for building.
+          - "org.apache.ant*"
+          - "org.apache.maven:maven-plugin-api"
+          - "org.apache.maven:maven-project"
+          - "org.apache.maven.shared:file-management"
+          - "org.apache.maven.plugin-tools:maven-plugin-annotations"
+      # This group combines all build-only dependencies. Published artifacts do not depend on them.
+      # Grouping such dependencies will make Dependabot create PRs with a branch name
+      # following the pattern (`dependabot/maven/build-dependencies-.*`)
+      # and with a title like `Bump the build-dependencies group with 8 updates` that we can easily
+      # use for Hibernate Bot rules.
+      build-dependencies:
+        patterns:
+          # Gradle plugins:
+          - "com.gradle*"
+          - "org.moditect*"
+          - "de.thetaphi*"
+          - "org.gradlex*"
+          - "org.hibernate.build*"
+          - "org.hibernate.orm.build*"
+          - "org.hibernate.orm.database-service*"
+          - "org.hibernate.orm.antlr*"
+          - "io.github.gradle-nexus*"
+          - "biz.aQute.bnd*"
+          - "org.checkerframework*"
+          - "org.jetbrains.gradle*"
+          - "com.dorongold*"
+          - "org.asciidoctor*"
+          - "com.diffplug.spotless*"
+          # Local build plugin dependencies:
+          - "org.apache.maven*"
+          - "org.apache.httpcomponents*"
+          # DB drivers:
+          - "com.h2database:h2"
+          - "org.orbisgis:h2gis"
+          - "org.hsqldb:hsqldb"
+          - "org.apache.derby*"
+          - "org.postgresql:*"
+          - "com.enterprisedb:*"
+          - "com.mysql:mysql-connector-j"
+          - "org.mariadb.jdbc:mariadb-java-client"
+          - "com.oracle.database.*"
+          - "com.microsoft.sqlserver:mssql-jdbc"
+          - "com.ibm.db2:jcc"
+          - "com.sap.cloud.db.jdbc:ngdbc"
+          - "net.sourceforge.jtds:jtds"
+          - "com.ibm.informix:jdbc"
+          - "org.firebirdsql.jdbc:jaybird"
+          - "com.altibase:altibase-jdbc"
+          # Other test dependencies
+          - "org.apache.groovy:groovy-jsr223" # used for scripting maven plugin
+          - "org.apache.commons:commons-lang3" # used in hibernate-search-util-common tests
+          - "org.apache.commons:commons-math3" # used to solve dependency convergence for Wiremock
+          - "org.openjdk.jmh:*" # performance testing dependency
+          - "com.google.guava:guava" # Guava is used in our test utils
+          - "org.asciidoctor:*" # Asciidoctor is used for rendering the documentation
+          - "org.jboss.marshalling:jboss-marshalling" # JBeret IT dependency
+          - "org.wildfly.security:wildfly-security-manager" # JBeret IT dependency
+          - "org.springframework.boot:*" # Spring is only for ITs
+          - "io.agroal:agroal-spring-boot-starter" # part of Spring dependencies, is only for ITs
+          - "dev.snowdrop:narayana-spring-boot-starter" # part of Spring dependencies, is only for ITs
+          - "org.mockito:*"
+          - "org.hamcrest:*"
+          - "org.apache.logging.log4j:*"
+          - "org.assertj:*"
+          - "org.jsoup:*"
+          - "org.junit*"
+          - "org.jboss.weld.se:*"
+          - "org.jboss.narayana.*:*"
+          - "org.wildfly.transaction:*"
+          - "org.jboss:jboss-transaction-spi"
+          - "org.jboss.shrinkwrap*"
+          - "org.jboss.byteman*"
+      hibernate:
+        patterns:
+          - "org.hibernate*"
+      jakarta:
+        patterns:
+          - "jakarta.*"
+          - "org.glassfish*"
+          - "org.eclipse:yasson"
+    ignore:
+      # Avoid non-patch updates for complex dependencies and their implementation, even if we only use them for tests.
+      - dependency-name: "org.hibernate*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "jakarta.*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "org.jboss.narayana*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "org.jboss.weld*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "org.wildfly*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "org.glassfish*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "org.eclipse:yasson"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "org.apache.maven*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "org.apache.ant*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      # Avoid non-patch updates for JUnit, because it is exposed in hibernate-testing,
+      # which contains @BytecodeEnhanced, which is very sensitive to internal changes in JUnit.
+      - dependency-name: "org.junit*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      # Sticking to SLF4J 1.x for now since later versions require upgrading providers
+      # (Log4j, ... see https://www.slf4j.org/faq.html#changesInVersion200),
+      # and also because we only need this dependency for Maven,
+      # which is currently still on SLF4J 1.x
+      # (see https://central.sonatype.com/artifact/org.apache.maven/maven-embedder/3.9.9/dependencies)
+      - dependency-name: "org.slf4j:*"
+        update-types: ["version-update:semver-major"]

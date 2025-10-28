@@ -19,6 +19,8 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 
+import static org.hibernate.bytecode.enhance.spi.interceptor.BytecodeInterceptorLogging.BYTECODE_INTERCEPTOR_LOGGER;
+
 /**
  * @author Steve Ebersole
  */
@@ -42,7 +44,7 @@ public class EnhancementHelper {
 		if ( ! isEnhanced ) {
 			if ( value instanceof ToOne toOne ) {
 				if ( toOne.isUnwrapProxy() ) {
-					BytecodeInterceptorLogging.MESSAGE_LOGGER.debugf(
+					BYTECODE_INTERCEPTOR_LOGGER.debugf(
 							"To-one property `%s#%s` was mapped with LAZY + NO_PROXY but the class was not enhanced",
 							bootMapping.getPersistentClass().getEntityName(),
 							bootMapping.getName()
@@ -73,7 +75,7 @@ public class EnhancementHelper {
 				// however, at the time being that leads to inefficient SQL - so for now
 				// we simply log a message that we are ignoring the `@LazyGroup` for to-ones
 
-				BytecodeInterceptorLogging.MESSAGE_LOGGER.lazyGroupIgnoredForToOne(
+				BYTECODE_INTERCEPTOR_LOGGER.lazyGroupIgnoredForToOne(
 						bootMapping.getPersistentClass().getEntityName(),
 						bootMapping.getName(),
 						bootMapping.getLazyGroup()
@@ -150,8 +152,8 @@ public class EnhancementHelper {
 			String attributeName) {
 		SharedSessionContractImplementor session = interceptor.getLinkedSession();
 
-		boolean isTempSession = false;
-		boolean isJta = false;
+		final boolean isTempSession;
+		final boolean isJta;
 
 		// first figure out which Session to use
 		if ( session == null ) {
@@ -160,7 +162,7 @@ public class EnhancementHelper {
 				isTempSession = true;
 			}
 			else {
-				throwLazyInitializationException( Cause.NO_SESSION, entityName, attributeName );
+				throw createLazyInitializationException( Cause.NO_SESSION, entityName, attributeName );
 			}
 		}
 		else if ( !session.isOpen() ) {
@@ -169,7 +171,7 @@ public class EnhancementHelper {
 				isTempSession = true;
 			}
 			else {
-				throwLazyInitializationException( Cause.CLOSED_SESSION, entityName, attributeName );
+				throw createLazyInitializationException( Cause.CLOSED_SESSION, entityName, attributeName );
 			}
 		}
 		else if ( !session.isConnected() ) {
@@ -178,8 +180,11 @@ public class EnhancementHelper {
 				isTempSession = true;
 			}
 			else {
-				throwLazyInitializationException( Cause.DISCONNECTED_SESSION, entityName, attributeName);
+				throw createLazyInitializationException( Cause.DISCONNECTED_SESSION, entityName, attributeName);
 			}
+		}
+		else {
+			isTempSession = false;
 		}
 
 		// If we are using a temporary Session, begin a transaction if necessary
@@ -197,6 +202,9 @@ public class EnhancementHelper {
 				BytecodeInterceptorLogging.LOGGER.debug( "Enhancement interception Helper#performWork starting transaction on temporary Session" );
 				session.beginTransaction();
 			}
+		}
+		else {
+			isJta = false;
 		}
 
 		try {
@@ -238,29 +246,13 @@ public class EnhancementHelper {
 		NO_SF_UUID
 	}
 
-	private static void throwLazyInitializationException(Cause cause, String entityName, String attributeName) {
-		final String reason;
-		switch ( cause ) {
-			case NO_SESSION: {
-				reason = "no session and settings disallow loading outside the Session";
-				break;
-			}
-			case CLOSED_SESSION: {
-				reason = "session is closed and settings disallow loading outside the Session";
-				break;
-			}
-			case DISCONNECTED_SESSION: {
-				reason = "session is disconnected and settings disallow loading outside the Session";
-				break;
-			}
-			case NO_SF_UUID: {
-				reason = "could not determine SessionFactory UUId to create temporary Session for loading";
-				break;
-			}
-			default: {
-				reason = "<should never get here>";
-			}
-		}
+	private static LazyInitializationException createLazyInitializationException(final Cause cause, final String entityName, final String attributeName) {
+		final String reason = switch ( cause ) {
+			case NO_SESSION -> "no session and settings disallow loading outside the Session";
+			case CLOSED_SESSION -> "session is closed and settings disallow loading outside the Session";
+			case DISCONNECTED_SESSION -> "session is disconnected and settings disallow loading outside the Session";
+			case NO_SF_UUID -> "could not determine SessionFactory UUId to create temporary Session for loading";
+		};
 
 		final String message = String.format(
 				Locale.ROOT,
@@ -270,7 +262,7 @@ public class EnhancementHelper {
 				reason
 		);
 
-		throw new LazyInitializationException( message );
+		return new LazyInitializationException( message );
 	}
 
 	private static SharedSessionContractImplementor openTemporarySessionForLoading(
@@ -278,7 +270,7 @@ public class EnhancementHelper {
 			String entityName,
 			String attributeName) {
 		if ( interceptor.getSessionFactoryUuid() == null ) {
-			throwLazyInitializationException( Cause.NO_SF_UUID, entityName, attributeName );
+			throw createLazyInitializationException( Cause.NO_SF_UUID, entityName, attributeName );
 		}
 
 		final SessionFactoryImplementor sf = SessionFactoryRegistry.INSTANCE.getSessionFactory( interceptor.getSessionFactoryUuid() );

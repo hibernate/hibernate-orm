@@ -4,7 +4,6 @@
  */
 package org.hibernate.result.internal;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,14 +13,8 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.hibernate.JDBCException;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.monitor.spi.EventMonitor;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
-import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.result.Output;
 import org.hibernate.result.Outputs;
 import org.hibernate.result.spi.ResultContext;
@@ -34,17 +27,18 @@ import org.hibernate.sql.results.jdbc.internal.DirectResultSetAccess;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.RowReader;
-
 import org.jboss.logging.Logger;
+
+import static org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions.NO_OPTIONS;
 
 
 /**
  * @author Steve Ebersole
  */
 public class OutputsImpl implements Outputs {
-	private static final Logger log = CoreLogging.logger( OutputsImpl.class );
+
+	private static final Logger LOG = Logger.getLogger( OutputsImpl.class );
 
 	private final ResultContext context;
 	private final PreparedStatement jdbcStatement;
@@ -69,8 +63,9 @@ public class OutputsImpl implements Outputs {
 		if ( sqlStatementLogger.getLogSlowQuery() > 0 ) {
 			executeStartNanos = System.nanoTime();
 		}
-		final EventMonitor eventMonitor = context.getSession().getEventMonitor();
-		final DiagnosticEvent jdbcPreparedStatementExecutionEvent =
+		final var session = context.getSession();
+		final var eventMonitor = session.getEventMonitor();
+		final var jdbcPreparedStatementExecutionEvent =
 				eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			final boolean isResultSet = jdbcStatement.execute();
@@ -81,7 +76,7 @@ public class OutputsImpl implements Outputs {
 		}
 		finally {
 			eventMonitor.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
-			sqlStatementLogger.logSlowQuery( sql, executeStartNanos, this.context.getSession().getJdbcSessionContext() );
+			sqlStatementLogger.logSlowQuery( sql, executeStartNanos, session.getJdbcSessionContext() );
 		}
 	}
 
@@ -136,7 +131,7 @@ public class OutputsImpl implements Outputs {
 
 	@Override
 	public void release() {
-		final JdbcCoordinator jdbcCoordinator = context.getSession().getJdbcCoordinator();
+		final var jdbcCoordinator = context.getSession().getJdbcCoordinator();
 		jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( jdbcStatement );
 		jdbcCoordinator.afterStatementExecution();
 	}
@@ -151,22 +146,24 @@ public class OutputsImpl implements Outputs {
 	}
 
 	protected List<Object> extractResults(ResultSet resultSet) {
+		final var session = context.getSession();
+		final var factory = session.getFactory();
+		final var influencers = session.getLoadQueryInfluencers();
 
-		final DirectResultSetAccess resultSetAccess =
-				new DirectResultSetAccess( context.getSession(), jdbcStatement, resultSet );
+		final var resultSetAccess = new DirectResultSetAccess( session, jdbcStatement, resultSet );
 
-		final ProcedureCallImpl<?> procedureCall = (ProcedureCallImpl<?>) context;
-		final ResultSetMapping resultSetMapping = procedureCall.getResultSetMapping();
+		final var procedureCall = (ProcedureCallImpl<?>) context;
+		final var resultSetMapping = procedureCall.getResultSetMapping();
 
-		final ExecutionContext executionContext = new OutputsExecutionContext( context.getSession() );
+		final ExecutionContext executionContext = new OutputsExecutionContext( session );
 
 		final JdbcValues jdbcValues = new JdbcValuesResultSetImpl(
 				resultSetAccess,
 				null,
 				null,
-				this.context.getQueryOptions(),
+				context.getQueryOptions(),
 				true,
-				resultSetMapping.resolve( resultSetAccess, context.getSession().getLoadQueryInfluencers(), getSessionFactory() ),
+				resultSetMapping.resolve( resultSetAccess, influencers, factory ),
 				null,
 				executionContext
 		);
@@ -174,44 +171,17 @@ public class OutputsImpl implements Outputs {
 		try {
 
 			final RowReader<?> rowReader = ResultsHelper.createRowReader(
-					getSessionFactory(),
+					factory,
 					RowTransformerStandardImpl.instance(),
 					null,
 					jdbcValues
 			);
 
-			/*
-			 * Processing options effectively are only used for entity loading.  Here we don't need these values.
-			 */
-			final JdbcValuesSourceProcessingOptions processingOptions = new JdbcValuesSourceProcessingOptions() {
-				@Override
-				public Object getEffectiveOptionalObject() {
-					return null;
-				}
 
-				@Override
-				public String getEffectiveOptionalEntityName() {
-					return null;
-				}
-
-				@Override
-				public Serializable getEffectiveOptionalId() {
-					return null;
-				}
-
-				@Override
-				public boolean shouldReturnProxies() {
-					return true;
-				}
-			};
-
-			final JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState =
-					new JdbcValuesSourceProcessingStateStandardImpl(
-							executionContext,
-							processingOptions
-					);
+			final var jdbcValuesSourceProcessingState =
+					new JdbcValuesSourceProcessingStateStandardImpl( executionContext, NO_OPTIONS );
 			final ArrayList<Object> results = new ArrayList<>();
-			final RowProcessingStateStandardImpl rowProcessingState = new RowProcessingStateStandardImpl(
+			final var rowProcessingState = new RowProcessingStateStandardImpl(
 					jdbcValuesSourceProcessingState,
 					executionContext,
 					rowReader,
@@ -229,10 +199,10 @@ public class OutputsImpl implements Outputs {
 						&& procedureCall.isFunctionCall()
 						&& procedureCall.getFunctionReturn().getJdbcTypeCode() == Types.REF_CURSOR
 						&& results.size() == 1
-						&& results.get( 0 ) instanceof ResultSet ) {
+						&& results.get( 0 ) instanceof ResultSet onlyResult ) {
 					// When calling a function that returns a ref_cursor with as table function,
 					// we have to unnest the ResultSet manually here
-					return extractResults( (ResultSet) results.get( 0 ) );
+					return extractResults( onlyResult );
 				}
 				return results;
 			}
@@ -242,12 +212,8 @@ public class OutputsImpl implements Outputs {
 			}
 		}
 		finally {
-			jdbcValues.finishUp( this.context.getSession() );
+			jdbcValues.finishUp( session );
 		}
-	}
-
-	private SessionFactoryImplementor getSessionFactory() {
-		return context.getSession().getFactory();
 	}
 
 	/**
@@ -284,13 +250,9 @@ public class OutputsImpl implements Outputs {
 		}
 
 		protected Output buildOutput() {
-			if ( log.isDebugEnabled() ) {
-				log.debugf(
-						"Building Return [isResultSet=%s, updateCount=%s, extendedReturn=%s]",
-						isResultSet(),
-						getUpdateCount(),
-						hasExtendedReturns()
-				);
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracef( "Building Return [isResultSet=%s, updateCount=%s, extendedReturn=%s]",
+						isResultSet(), getUpdateCount(), hasExtendedReturns() );
 			}
 
 			if ( isResultSet() ) {
@@ -312,11 +274,11 @@ public class OutputsImpl implements Outputs {
 		// hooks for stored procedure (out param) processing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		protected Output buildResultSetOutput(List<?> list) {
-			return new ResultSetOutputImpl( list );
+			return new ResultSetOutputImpl<>( list );
 		}
 
-		protected Output buildResultSetOutput(Supplier<List<?>> listSupplier) {
-			return new ResultSetOutputImpl( listSupplier );
+		protected <T> Output buildResultSetOutput(Supplier<List<T>> listSupplier) {
+			return new ResultSetOutputImpl<>( listSupplier );
 		}
 
 		protected Output buildUpdateCountOutput(int updateCount) {

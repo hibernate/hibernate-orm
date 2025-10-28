@@ -4,20 +4,31 @@
  */
 package org.hibernate.id.enhanced;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.id.IntegralDataTypeHolder;
+import org.hibernate.sql.ast.tree.expression.Expression;
+
 import java.io.Serializable;
 
-import org.hibernate.id.IntegralDataTypeHolder;
-
 /**
- * Performs optimization on an optimizable identifier generator.  Typically
+ * Performs optimization on an optimizable identifier generator. Typically.
  * this optimization takes the form of trying to ensure we do not have to
  * hit the database on each and every request to get an identifier value.
  * <p>
- * Optimizers work on constructor injection.  They should provide
- * a constructor with the following arguments <ol>
- * <li>java.lang.Class - The return type for the generated values</li>
- * <li>int - The increment size</li>
+ * Optimizers are used with
+ * {@linkplain jakarta.persistence.SequenceGenerator sequence generators}
+ * and {@linkplain jakarta.persistence.TableGenerator table generators}.
+ * An optimizer may be selected by setting the configuration property
+ * {@value org.hibernate.cfg.MappingSettings#PREFERRED_POOLED_OPTIMIZER}.
+ * <p>
+ * Optimizers work on constructor injection. They should provide a
+ * constructor accepting the following arguments:
+ * <ol>
+ * <li>{@code java.lang.Class} - The return type for the generated values</li>
+ * <li>{@code int} - The increment size</li>
  * </ol>
+ *
+ * @see org.hibernate.cfg.MappingSettings#PREFERRED_POOLED_OPTIMIZER
  *
  * @author Steve Ebersole
  */
@@ -32,6 +43,13 @@ public interface Optimizer {
 	 * @return The generated identifier value.
 	 */
 	Serializable generate(AccessCallback callback);
+
+	/**
+	 * Reset the optimizer before restarting the underlying database sequence.
+	 *
+	 * @since 7.2
+	 */
+	void reset();
 
 	/**
 	 * A common means to access the last value obtained from the underlying
@@ -56,7 +74,28 @@ public interface Optimizer {
 	 *
 	 * @return True if the values in the source are to be incremented
 	 * according to the defined increment size; false otherwise, in which
-	 * case the increment is totally an in memory construct.
+	 * case the increment size is a completely in-memory construct.
 	 */
 	boolean applyIncrementSizeToSourceValues();
+
+	/**
+	 * Creates an expression representing the low/base value for ID allocation in batch insert operations.
+	 * <p>
+	 * Each optimizer implementation should define its own
+	 * strategy for calculating the starting value of a sequence range.
+	 *
+	 * @param databaseValue The expression representing the next value from database sequence
+	 * @param sessionFactory The session factory
+	 * @return An expression that calculates the low/base value according to the optimizer strategy
+	 *
+	 * @since 7.1
+	 */
+	Expression createLowValueExpression(Expression databaseValue, SessionFactoryImplementor sessionFactory);
+
+	/**
+	 * @since 7.2
+	 */
+	default int getAdjustment() {
+		return 1;
+	}
 }

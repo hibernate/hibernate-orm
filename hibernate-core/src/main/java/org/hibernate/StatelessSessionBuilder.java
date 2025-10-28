@@ -5,18 +5,22 @@
 package org.hibernate;
 
 import java.sql.Connection;
+import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
+import org.hibernate.engine.creation.CommonBuilder;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 /**
- * Allows creation of a new {@link StatelessSession} with specific options.
+ * Allows creation of a new {@link StatelessSession} with specific options
+ * overriding the defaults from the {@link SessionFactory}.
  *
  * @author Steve Ebersole
  *
  * @see SessionFactory#withStatelessOptions()
+ * @see SharedStatelessSessionBuilder
  */
-public interface StatelessSessionBuilder {
+public interface StatelessSessionBuilder extends CommonBuilder {
 	/**
 	 * Opens a session with the specified options.
 	 *
@@ -24,14 +28,26 @@ public interface StatelessSessionBuilder {
 	 */
 	StatelessSession openStatelessSession();
 
-	/**
-	 * Adds a specific connection to the session options.
-	 *
-	 * @param connection The connection to use.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
+	@Override
 	StatelessSessionBuilder connection(Connection connection);
+
+	@Override
+	StatelessSessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode);
+
+	@Override
+	StatelessSessionBuilder tenantIdentifier(Object tenantIdentifier);
+
+	@Incubating	@Override
+	StatelessSessionBuilder readOnly(boolean readOnly);
+
+	@Incubating	@Override
+	StatelessSessionBuilder initialCacheMode(CacheMode cacheMode);
+
+	@Override
+	StatelessSessionBuilder statementInspector(UnaryOperator<String> operator);
+
+	@Override
+	StatelessSessionBuilder jdbcTimeZone(TimeZone timeZone);
 
 	/**
 	 * Define the tenant identifier to be associated with the opened session.
@@ -41,35 +57,8 @@ public interface StatelessSessionBuilder {
 	 * @return {@code this}, for method chaining
 	 * @deprecated Use {@link #tenantIdentifier(Object)} instead
 	 */
-	@Deprecated(forRemoval = true)
+	@Deprecated(since = "6.4", forRemoval = true)
 	StatelessSessionBuilder tenantIdentifier(String tenantIdentifier);
-
-	/**
-	 * Define the tenant identifier to be associated with the opened session.
-	 *
-	 * @param tenantIdentifier The tenant identifier.
-	 *
-	 * @return {@code this}, for method chaining
-	 * @since 6.4
-	 */
-	StatelessSessionBuilder tenantIdentifier(Object tenantIdentifier);
-
-	/**
-	 * Applies the given statement inspection function to the session.
-	 *
-	 * @param operator An operator which accepts a SQL string, returning
-	 *                 a processed SQL string to be used by Hibernate
-	 *                 instead of the given original SQL. Alternatively.
-	 *                 the operator may work by side effect, and simply
-	 *                 return the original SQL.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @apiNote This operation exposes the SPI type
-	 *          {@link StatementInspector}
-	 *          and is therefore a layer-breaker.
-	 */
-	StatelessSessionBuilder statementInspector(UnaryOperator<String> operator);
 
 	/**
 	 * Applies the given {@link StatementInspector} to the session.

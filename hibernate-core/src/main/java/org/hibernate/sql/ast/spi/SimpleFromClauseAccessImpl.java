@@ -11,12 +11,10 @@ import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.SqlTreeCreationLogger;
 import org.hibernate.sql.ast.tree.from.CorrelatedTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 
-import org.jboss.logging.Logger;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -115,24 +113,25 @@ public class SimpleFromClauseAccessImpl implements FromClauseAccess {
 
 	@Override
 	public void registerTableGroup(NavigablePath navigablePath, TableGroup tableGroup) {
-		final Logger logger = SqlTreeCreationLogger.LOGGER;
-		final boolean debugEnabled = logger.isDebugEnabled();
-		if ( debugEnabled ) {
-			logger.debugf(
-					"Registration of TableGroup [%s] with identifierForTableGroup [%s] for NavigablePath [%s] ",
-					tableGroup,
-					tableGroup.getNavigablePath().getIdentifierForTableGroup(),
-					navigablePath.getIdentifierForTableGroup()
-			);
-		}
+		// Logging disabled here because too verbose
+//		final Logger logger = SqlTreeCreationLogger.LOGGER;
+//		final boolean traceEnabled = logger.isTraceEnabled();
+//		if ( traceEnabled ) {
+//			logger.tracef(
+//					"Registration of TableGroup [%s] with identifier [%s] for NavigablePath [%s] ",
+//					tableGroup,
+//					tableGroup.getNavigablePath().getIdentifierForTableGroup(),
+//					navigablePath.getIdentifierForTableGroup()
+//			);
+//		}
 		final TableGroup previous = tableGroupMap.put( navigablePath, tableGroup );
-		if ( debugEnabled && previous != null ) {
-			logger.debugf(
-					"Registration of TableGroup [%s] for NavigablePath [%s] overrode previous registration : %s",
-					tableGroup,
-					navigablePath,
-					previous
-			);
-		}
+//		if ( traceEnabled && previous != null ) {
+//			logger.tracef(
+//					"Registration of TableGroup [%s] for NavigablePath [%s] overrode previous registration: %s",
+//					tableGroup,
+//					navigablePath,
+//					previous
+//			);
+//		}
 	}
 }

@@ -4,10 +4,6 @@
  */
 package org.hibernate.community.dialect;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.hibernate.LockOptions;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.sql.ast.MySQLSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -40,6 +36,9 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A SQL AST translator for TiDB.
@@ -315,14 +314,6 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 			appendSql( " escape " );
 			likePredicate.getEscapeCharacter().accept( this );
 		}
-	}
-
-	@Override
-	protected String getForShare(int timeoutMillis) {
-		if ( timeoutMillis == LockOptions.NO_WAIT ) {
-			return getForUpdate();
-		}
-		return " lock in share mode";
 	}
 
 	@Override

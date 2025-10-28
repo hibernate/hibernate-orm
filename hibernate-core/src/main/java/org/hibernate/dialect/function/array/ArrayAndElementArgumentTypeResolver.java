@@ -21,7 +21,7 @@ import java.util.List;
  * A {@link FunctionArgumentTypeResolver} that resolves the array argument type based on the element argument type
  * or the element argument type based on the array argument type.
  */
-public class ArrayAndElementArgumentTypeResolver extends AbstractFunctionArgumentTypeResolver {
+public class ArrayAndElementArgumentTypeResolver implements AbstractFunctionArgumentTypeResolver {
 
 	public static final FunctionArgumentTypeResolver DEFAULT_INSTANCE = new ArrayAndElementArgumentTypeResolver( 0, 1 );
 
@@ -37,6 +37,9 @@ public class ArrayAndElementArgumentTypeResolver extends AbstractFunctionArgumen
 	public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
 		if ( argumentIndex == arrayIndex ) {
 			for ( int elementIndex : elementIndexes ) {
+				if ( elementIndex >= arguments.size() ) {
+					continue;
+				}
 				final SqmTypedNode<?> node = arguments.get( elementIndex );
 				if ( node instanceof SqmExpression<?> sqmExpression ) {
 					final MappingModelExpressible<?> expressible = converter.determineValueMapping( sqmExpression );

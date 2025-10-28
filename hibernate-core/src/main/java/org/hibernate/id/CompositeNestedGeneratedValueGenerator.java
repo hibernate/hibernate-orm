@@ -8,7 +8,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
@@ -116,37 +115,24 @@ public class CompositeNestedGeneratedValueGenerator
 		this.compositeType = compositeType;
 	}
 
+	// Used by Hibernate Reactive
+	public CompositeNestedGeneratedValueGenerator(
+			GenerationContextLocator generationContextLocator,
+			CompositeType compositeType,
+			List<GenerationPlan> generationPlans) {
+		this.generationContextLocator = generationContextLocator;
+		this.compositeType = compositeType;
+		this.generationPlans.addAll( generationPlans );
+	}
+
 	public void addGeneratedValuePlan(GenerationPlan plan) {
 		generationPlans.add( plan );
 	}
 
 	@Override
-	public Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
+	public Object generate(SharedSessionContractImplementor session, Object object) {
 		final Object context = generationContextLocator.locateGenerationContext( session, object );
-
-		final List<Object> generatedValues = compositeType.isMutable() ?
-				null :
-				new ArrayList<>( generationPlans.size() );
-		for ( GenerationPlan generationPlan : generationPlans ) {
-			final BeforeExecutionGenerator generator = generationPlan.getGenerator();
-			final Object generated;
-			if ( generator.generatedBeforeExecution( object, session ) ) {
-				final Object currentValue = generator.allowAssignedIdentifiers()
-						? compositeType.getPropertyValue( context, generationPlan.getPropertyIndex(), session )
-						: null;
-				generated = generator.generate( session, object, currentValue, INSERT );
-			}
-			else {
-				throw new IdentifierGenerationException( "Identity generation isn't supported for composite ids" );
-			}
-			if ( generatedValues != null ) {
-				generatedValues.add( generated );
-			}
-			else {
-				generationPlan.getInjector().set( context, generated );
-			}
-		}
-
+		final List<Object> generatedValues = generatedValues( session, object, context );
 		if ( generatedValues != null) {
 			final Object[] values = compositeType.getPropertyValues( context );
 			for ( int i = 0; i < generatedValues.size(); i++ ) {
@@ -159,17 +145,57 @@ public class CompositeNestedGeneratedValueGenerator
 		}
 	}
 
+	private List<Object> generatedValues(SharedSessionContractImplementor session, Object object, Object context) {
+		final List<Object> generatedValues =
+				compositeType.isMutable()
+						? null
+						: new ArrayList<>( generationPlans.size() );
+		for ( var generationPlan : generationPlans ) {
+			final var generator = generationPlan.getGenerator();
+			if ( !generator.generatedBeforeExecution( object, session ) ) {
+				throw new IdentifierGenerationException( "Identity generation isn't supported for composite ids" );
+			}
+			final Object currentValue =
+					generator.allowAssignedIdentifiers()
+							? compositeType.getPropertyValue( context, generationPlan.getPropertyIndex(), session )
+							: null;
+			final Object generated = generator.generate( session, object, currentValue, INSERT );
+			if ( generatedValues != null ) {
+				generatedValues.add( generated );
+			}
+			else {
+				generationPlan.getInjector().set( context, generated );
+			}
+		}
+		return generatedValues;
+	}
+
 	@Override
 	public void registerExportables(Database database) {
-		for ( GenerationPlan plan : generationPlans ) {
+		for ( var plan : generationPlans ) {
 			plan.registerExportables( database );
 		}
 	}
 
 	@Override
 	public void initialize(SqlStringGenerationContext context) {
-		for ( GenerationPlan plan : generationPlans ) {
+		for ( var plan : generationPlans ) {
 			plan.initialize( context );
 		}
+	}
+
+	// Used by Hibernate Reactive
+	public List<GenerationPlan> getGenerationPlans() {
+		return generationPlans;
+	}
+
+	// Used by Hibernate Reactive
+	public GenerationContextLocator getGenerationContextLocator() {
+		return generationContextLocator;
+	}
+
+	// Used by Hibernate Reactive
+	public CompositeType getCompositeType() {
+		return compositeType;
 	}
 }

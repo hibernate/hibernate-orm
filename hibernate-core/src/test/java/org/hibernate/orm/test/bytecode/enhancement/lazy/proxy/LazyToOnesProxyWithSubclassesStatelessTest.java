@@ -204,14 +204,7 @@ public class LazyToOnesProxyWithSubclassesStatelessTest {
 
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from OtherEntity" ).executeUpdate();
-					session.createQuery( "delete from Human" ).executeUpdate();
-					session.createQuery( "delete from Primate" ).executeUpdate();
-					session.createQuery( "delete from Animal" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Animal")

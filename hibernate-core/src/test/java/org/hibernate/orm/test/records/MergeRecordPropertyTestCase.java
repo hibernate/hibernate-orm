@@ -29,12 +29,7 @@ public class MergeRecordPropertyTestCase {
 
 	@AfterEach
 	protected void cleanupTest(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "update MyEntity e set e.record.assoc = null" ).executeUpdate();
-					session.createQuery( "delete from MyEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -4,6 +4,11 @@
  */
 package org.hibernate;
 
+import java.io.InputStream;
+import java.io.Reader;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.NClob;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -27,11 +32,11 @@ import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.collection.spi.PersistentSortedMap;
 import org.hibernate.collection.spi.PersistentSortedSet;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.engine.jdbc.env.internal.NonContextualLobCreator;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.collection.spi.LazyInitializable;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
@@ -111,6 +116,8 @@ public final class Hibernate {
 		throw new UnsupportedOperationException();
 	}
 
+	private static final LobHelper lobHelper = new LobHelperImpl();
+
 	/**
 	 * Force initialization of a proxy or persistent collection. In the case of a
 	 * many-valued association, only the collection itself is initialized. It is not
@@ -123,7 +130,7 @@ public final class Hibernate {
 	 */
 	public static void initialize(Object proxy) throws HibernateException {
 		if ( proxy != null ) {
-			final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
+			final var lazyInitializer = extractLazyInitializer( proxy );
 			if ( lazyInitializer != null ) {
 				lazyInitializer.initialize();
 			}
@@ -148,7 +155,7 @@ public final class Hibernate {
 	 * @return true if the argument is already initialized, or is not a proxy or collection
 	 */
 	public static boolean isInitialized(Object proxy) {
-		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
+		final var lazyInitializer = extractLazyInitializer( proxy );
 		if ( lazyInitializer != null ) {
 			return !lazyInitializer.isUninitialized();
 		}
@@ -255,7 +262,7 @@ public final class Hibernate {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T> Class<? extends T> getClass(T proxy) {
-		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
+		final var lazyInitializer = extractLazyInitializer( proxy );
 		final Class<?> result =
 				lazyInitializer != null
 						? lazyInitializer.getImplementation().getClass()
@@ -278,7 +285,7 @@ public final class Hibernate {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T> Class<? extends T> getClassLazy(T proxy) {
-		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
+		final var lazyInitializer = extractLazyInitializer( proxy );
 		final Class<?> result =
 				lazyInitializer != null
 						? lazyInitializer.getImplementationClass()
@@ -330,7 +337,7 @@ public final class Hibernate {
 	 */
 	public static boolean isPropertyInitialized(Object proxy, String attributeName) {
 		final Object entity;
-		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
+		final var lazyInitializer = extractLazyInitializer( proxy );
 		if ( lazyInitializer != null ) {
 			if ( lazyInitializer.isUninitialized() ) {
 				return false;
@@ -373,7 +380,7 @@ public final class Hibernate {
 	 * @see jakarta.persistence.PersistenceUnitUtil#load(Object, String)
 	 */
 	public static void initializeProperty(Object proxy, String attributeName) {
-		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
+		final var lazyInitializer = extractLazyInitializer( proxy );
 		final Object entity = lazyInitializer != null ? lazyInitializer.getImplementation() : proxy;
 		if ( isPersistentAttributeInterceptable( entity ) ) {
 			getAttributeInterceptor( entity ).readObject( entity, attributeName, null );
@@ -392,7 +399,7 @@ public final class Hibernate {
 	 * uninitialized proxy that is not associated with an open session.
 	 */
 	public static Object unproxy(Object proxy) {
-		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
+		final var lazyInitializer = extractLazyInitializer( proxy );
 		return lazyInitializer != null ? lazyInitializer.getImplementation() : proxy;
 	}
 
@@ -430,7 +437,7 @@ public final class Hibernate {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <E> E createDetachedProxy(SessionFactory sessionFactory, Class<E> entityClass, Object id) {
-		final EntityPersister persister =
+		final var persister =
 				sessionFactory.unwrap( SessionFactoryImplementor.class )
 						.getMappingMetamodel()
 						.findEntityDescriptor( entityClass );
@@ -587,7 +594,58 @@ public final class Hibernate {
 		}
 	}
 
+	/**
+	 * Obtain a {@linkplain LobHelper} for instances of {@link java.sql.Blob}
+	 * and {@link java.sql.Clob}.
+	 *
+	 * @return an instance of {@link LobHelper}
+	 *
+	 * @since 7.1
+	 */
+	public static LobHelper getLobHelper() {
+		return lobHelper;
+	}
+
 	private static PersistentAttributeInterceptor getAttributeInterceptor(Object entity) {
 		return asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 	}
+
+	private static class LobHelperImpl implements LobHelper {
+		@Override
+		public Blob createBlob(byte[] bytes) {
+			return lobCreator().createBlob( bytes );
+		}
+
+		private LobCreator lobCreator() {
+			// Always use NonContextualLobCreator.  If ContextualLobCreator is
+			// used both here and in WrapperOptions,
+			return NonContextualLobCreator.INSTANCE;
+		}
+
+		@Override
+		public Blob createBlob(InputStream stream, long length) {
+			return lobCreator().createBlob( stream, length );
+		}
+
+		@Override
+		public Clob createClob(String string) {
+			return lobCreator().createClob( string );
+		}
+
+		@Override
+		public Clob createClob(Reader reader, long length) {
+			return lobCreator().createClob( reader, length );
+		}
+
+		@Override
+		public NClob createNClob(String string) {
+			return lobCreator().createNClob( string );
+		}
+
+		@Override
+		public NClob createNClob(Reader reader, long length) {
+			return lobCreator().createNClob( reader, length );
+		}
+	}
+
 }

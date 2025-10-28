@@ -7,7 +7,6 @@ package org.hibernate.boot.model.internal;
 import java.util.Map;
 
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.boot.spi.SecondPass;
@@ -58,16 +57,15 @@ public class ImplicitToOneJoinTableSecondPass implements SecondPass {
 	}
 
 	// Note: Instead of deferring creation of the whole Table object, perhaps
-	//	   we could create it in the first pass, and reset its name here in
-	//	   the second pass. The problem is that there is some quite involved
-	//	   logic in TableBinder that isn't set up for that.
+	//	     we could create it in the first pass and reset its name here in
+	//	     the second pass. The problem is that there is some quite involved
+	//	     logic in TableBinder that isn't set up for that.
 
 	private void inferJoinTableName(TableBinder tableBinder, Map<String, PersistentClass> persistentClasses) {
 		if ( isEmpty( tableBinder.getName() ) ) {
-			final PersistentClass owner = propertyHolder.getPersistentClass();
-			final InFlightMetadataCollector collector = context.getMetadataCollector();
-			final PersistentClass targetEntity =
-					persistentClasses.get( getReferenceEntityName( inferredData, context ) );
+			final var owner = propertyHolder.getPersistentClass();
+			final var collector = context.getMetadataCollector();
+			final var targetEntity = persistentClasses.get( getReferenceEntityName( inferredData, context ) );
 			//default value
 			tableBinder.setDefaultName(
 					owner.getClassName(),
@@ -84,7 +82,7 @@ public class ImplicitToOneJoinTableSecondPass implements SecondPass {
 	}
 
 	private TableBinder createTableBinder() {
-		final TableBinder tableBinder = new TableBinder();
+		final var tableBinder = new TableBinder();
 		tableBinder.setBuildingContext( context );
 
 		final String schema = joinTable.schema();
@@ -111,15 +109,21 @@ public class ImplicitToOneJoinTableSecondPass implements SecondPass {
 
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) {
-		final TableBinder tableBinder = createTableBinder();
+		final var tableBinder = createTableBinder();
 		inferJoinTableName( tableBinder, persistentClasses );
-		final Table table = tableBinder.bind();
+		final var table = tableBinder.bind();
 		value.setTable( table );
 		final Join join = propertyHolder.addJoin( joinTable, table, true );
+		final var owner = propertyHolder.getPersistentClass();
+		final var property = owner.getProperty( inferredData.getPropertyName() );
+		assert property != null;
+		// move the property from the main table to the new join table
+		owner.removeProperty( property );
+		join.addProperty( property );
 		if ( notFoundAction != null ) {
 			join.disableForeignKeyCreation();
 		}
-		for ( AnnotatedJoinColumn joinColumn : joinColumns.getJoinColumns() ) {
+		for ( var joinColumn : joinColumns.getJoinColumns() ) {
 			joinColumn.setExplicitTableName( join.getTable().getName() );
 		}
 	}

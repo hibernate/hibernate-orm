@@ -13,14 +13,13 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.monitor.spi.EventMonitor;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
 
 /**
  * @author Steve Ebersole
  */
 public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {
 	private final Object tenantIdentifier;
+	private final boolean readOnly;
 	private final SessionEventListener listener;
 	private final MultiTenantConnectionProvider<Object> connectionProvider;
 	private final SharedSessionContractImplementor session;
@@ -28,10 +27,12 @@ public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Ser
 
 	public ContextualJdbcConnectionAccess(
 			Object tenantIdentifier,
+			boolean readOnly,
 			SessionEventListener listener,
 			MultiTenantConnectionProvider<Object> connectionProvider,
 			SharedSessionContractImplementor session) {
 		this.tenantIdentifier = tenantIdentifier;
+		this.readOnly = readOnly;
 		this.listener = listener;
 		this.connectionProvider = connectionProvider;
 		this.session = session;
@@ -43,18 +44,16 @@ public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Ser
 			throw new HibernateException( "Tenant identifier required" );
 		}
 
-		final EventMonitor eventMonitor = session.getEventMonitor();
-		final DiagnosticEvent jdbcConnectionAcquisitionEvent = eventMonitor.beginJdbcConnectionAcquisitionEvent();
+		final var eventMonitor = session.getEventMonitor();
+		final var connectionAcquisitionEvent = eventMonitor.beginJdbcConnectionAcquisitionEvent();
 		try {
 			listener.jdbcConnectionAcquisitionStart();
-			return connectionProvider.getConnection( tenantIdentifier );
+			return readOnly
+					? connectionProvider.getReadOnlyConnection( tenantIdentifier )
+					: connectionProvider.getConnection( tenantIdentifier );
 		}
 		finally {
-			eventMonitor.completeJdbcConnectionAcquisitionEvent(
-					jdbcConnectionAcquisitionEvent,
-					session,
-					tenantIdentifier
-			);
+			eventMonitor.completeJdbcConnectionAcquisitionEvent( connectionAcquisitionEvent, session, tenantIdentifier );
 			listener.jdbcConnectionAcquisitionEnd();
 		}
 	}
@@ -65,14 +64,19 @@ public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Ser
 			throw new HibernateException( "Tenant identifier required" );
 		}
 
-		final EventMonitor eventMonitor = session.getEventMonitor();
-		final DiagnosticEvent jdbcConnectionReleaseEvent = eventMonitor.beginJdbcConnectionReleaseEvent();
+		final var eventMonitor = session.getEventMonitor();
+		final var connectionReleaseEvent = eventMonitor.beginJdbcConnectionReleaseEvent();
 		try {
 			listener.jdbcConnectionReleaseStart();
-			connectionProvider.releaseConnection( tenantIdentifier, connection );
+			if ( readOnly ) {
+				connectionProvider.releaseReadOnlyConnection( tenantIdentifier, connection );
+			}
+			else {
+				connectionProvider.releaseConnection( tenantIdentifier, connection );
+			}
 		}
 		finally {
-			eventMonitor.completeJdbcConnectionReleaseEvent( jdbcConnectionReleaseEvent, session, tenantIdentifier );
+			eventMonitor.completeJdbcConnectionReleaseEvent( connectionReleaseEvent, session, tenantIdentifier );
 			listener.jdbcConnectionReleaseEnd();
 		}
 	}

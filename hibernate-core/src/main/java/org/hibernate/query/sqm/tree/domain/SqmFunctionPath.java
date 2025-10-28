@@ -29,6 +29,7 @@ import jakarta.persistence.metamodel.Bindable;
 import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.Type;
 
+
 import static java.util.Arrays.asList;
 
 public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
@@ -38,7 +39,7 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 		this( new NavigablePath( function.toHqlString() ), function );
 	}
 
-	public SqmFunctionPath(NavigablePath navigablePath, SqmFunction<?> function) {
+	private SqmFunctionPath(NavigablePath navigablePath, SqmFunction<?> function) {
 		super(
 				navigablePath,
 				determinePathSource( navigablePath, function ),
@@ -159,5 +160,31 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 	@Override
 	public <S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget) {
 		throw new TreatException( "Embeddable paths cannot be TREAT-ed" );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return super.equals( object )
+			&& function.equals( ((SqmFunctionPath<?>) object).function );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + function.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return super.isCompatible( object )
+			&& function.isCompatible( ((SqmFunctionPath<?>) object).function );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + function.cacheHashCode();
+		return result;
 	}
 }

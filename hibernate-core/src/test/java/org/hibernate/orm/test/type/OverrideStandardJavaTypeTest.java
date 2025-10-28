@@ -7,8 +7,8 @@ package org.hibernate.orm.test.type;
 import java.util.Comparator;
 import java.util.Locale;
 
+import jakarta.persistence.Column;
 import org.hibernate.annotations.JavaType;
-import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -21,7 +21,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -32,10 +32,15 @@ import jakarta.persistence.Table;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = { OverrideStandardJavaTypeTest.SampleEntity.class })
 @SessionFactory
 @JiraKey("HHH-16781")
 public class OverrideStandardJavaTypeTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
@@ -68,7 +73,6 @@ public class OverrideStandardJavaTypeTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'LANGUAGE' is not escaped even though autoQuoteKeywords is enabled")
 	public void validateNative(SessionFactoryScope scope) {
 		final var id = scope.fromTransaction(
 				session -> {
@@ -78,18 +82,17 @@ public class OverrideStandardJavaTypeTest {
 					return entity.id;
 				}
 		);
-		scope.inSession(
-				session ->
-						assertEquals(
-								"en-Latn",
-								session.createNativeQuery(
-												"select language from locale_as_language_tag where id=:id", String.class )
-										.setParameter( "id", id )
-										.getSingleResult()
-						)
-		);
+		scope.inSession( session -> {
+			String quotedLanguage = session.getDialect().toQuotedIdentifier( "language" );
+			assertEquals(
+					"en-Latn",
+					session.createNativeQuery(
+									"select " + quotedLanguage + " from locale_as_language_tag where id=:id", String.class )
+							.setParameter( "id", id )
+							.getSingleResult()
+			);
+		} );
 	}
-
 
 	@Entity
 	@Table(name = "locale_as_language_tag")
@@ -100,6 +103,9 @@ public class OverrideStandardJavaTypeTest {
 		private Integer id;
 
 		@JavaType(LocaleAsLanguageTagType.class)
+		// LANGUAGE is a SQL:2003 reserved words, so dialects with autoQuoteKeywords require it quoted,
+		// so quote it always to simplify the test
+		@Column(name = "`language`")
 		private Locale language;
 	}
 

@@ -62,14 +62,12 @@ public class MutatingTableReferenceGroupWrapper implements TableGroup {
 			NavigablePath navigablePath,
 			String tableExpression,
 			boolean resolve) {
-		return mutatingTableReference.getTableExpression().equals( tableExpression )
-				? mutatingTableReference
-				: null;
+		return mutatingTableReference.getTableReference( tableExpression );
 	}
 
 	@Override
 	public void applyAffectedTableNames(Consumer<String> nameCollector) {
-		nameCollector.accept( mutatingTableReference.getTableExpression() );
+		mutatingTableReference.applyAffectedTableNames( nameCollector);
 	}
 
 	@Override

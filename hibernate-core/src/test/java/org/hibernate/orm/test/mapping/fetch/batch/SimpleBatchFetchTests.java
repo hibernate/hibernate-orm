@@ -95,10 +95,7 @@ public class SimpleBatchFetchTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createQuery( "delete EmployeeGroup" ).executeUpdate();
-			session.createQuery( "delete Employee" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name="EmployeeGroup")

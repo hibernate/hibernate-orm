@@ -136,11 +136,7 @@ public class LoadANonExistingNotFoundEntityTest {
 
 	@AfterEach
 	public void cleanupDate(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-					session.createQuery( "delete from Employee" ).executeUpdate();
-					session.createQuery( "delete from Employer" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Employee")

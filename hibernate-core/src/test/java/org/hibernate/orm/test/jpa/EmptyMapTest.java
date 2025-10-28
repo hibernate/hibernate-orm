@@ -40,7 +40,7 @@ public class EmptyMapTest {
 
 	@AfterEach
 	public void cleanupData(EntityManagerFactoryScope scope) {
-		scope.inTransaction(em -> em.createQuery( "delete from User u" ).executeUpdate() );
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

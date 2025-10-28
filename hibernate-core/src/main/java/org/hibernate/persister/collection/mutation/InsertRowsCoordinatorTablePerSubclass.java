@@ -41,10 +41,11 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 			ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
 		this.rowMutationOperations = rowMutationOperations;
-		this.subclassEntries = new SubclassEntry[mutationTarget.getElementPersister()
-				.getRootEntityDescriptor()
-				.getSubclassEntityNames()
-				.size()];
+		this.subclassEntries =
+				new SubclassEntry[mutationTarget.getElementPersister()
+						.getRootEntityDescriptor()
+						.getSubclassEntityNames()
+						.size()];
 		this.mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
@@ -64,13 +65,8 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 			Object id,
 			EntryFilter entryChecker,
 			SharedSessionContractImplementor session) {
-		final boolean loggerDebugEnabled = MODEL_MUTATION_LOGGER.isDebugEnabled();
-		if ( loggerDebugEnabled ) {
-			MODEL_MUTATION_LOGGER.debugf(
-					"Inserting collection rows - %s : %s",
-					mutationTarget.getRolePath(),
-					id
-			);
+		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+			MODEL_MUTATION_LOGGER.insertingNewCollectionRows( mutationTarget.getRolePath(), id );
 		}
 
 		final PluralAttributeMapping pluralAttribute = mutationTarget.getTargetPart();
@@ -79,13 +75,7 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 		final Iterator<?> entries = collection.entries( collectionDescriptor );
 		collection.preInsert( collectionDescriptor );
 		if ( !entries.hasNext() ) {
-			if ( loggerDebugEnabled ) {
-				MODEL_MUTATION_LOGGER.debugf(
-						"No collection rows to insert - %s : %s",
-						mutationTarget.getRolePath(),
-						id
-				);
-			}
+			MODEL_MUTATION_LOGGER.noCollectionRowsToInsert( mutationTarget.getRolePath(), id );
 			return;
 		}
 		final MutationExecutor[] executors = new MutationExecutor[subclassEntries.length];
@@ -124,13 +114,7 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 				entryCount++;
 			}
 
-			if ( loggerDebugEnabled ) {
-				MODEL_MUTATION_LOGGER.debugf(
-						"Done inserting `%s` collection rows : %s",
-						entryCount,
-						mutationTarget.getRolePath()
-				);
-			}
+			MODEL_MUTATION_LOGGER.doneInsertingCollectionRows( entryCount, mutationTarget.getRolePath() );
 
 		}
 		finally {
@@ -148,7 +132,8 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 		if ( subclassEntry != null ) {
 			return subclassEntry;
 		}
-		final BasicBatchKey basicBatchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#INSERT#" + subclassId );
+		final BasicBatchKey basicBatchKey =
+				new BasicBatchKey( mutationTarget.getRolePath() + "#INSERT#" + subclassId );
 		return subclassEntries[subclassId] = new SubclassEntry(
 				() -> basicBatchKey,
 				createOperationGroup( elementPersister )

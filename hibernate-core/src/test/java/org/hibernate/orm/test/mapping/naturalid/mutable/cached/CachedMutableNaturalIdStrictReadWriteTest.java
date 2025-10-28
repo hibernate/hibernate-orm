@@ -19,9 +19,9 @@ import org.junit.jupiter.api.Test;
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
 import static org.hibernate.testing.cache.CachingRegionFactory.DEFAULT_ACCESSTYPE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @ServiceRegistry(
 		settings = {
@@ -186,7 +186,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 				}
 		);
 
-		assertEquals( "In a strict access strategy we would expect a hit here", 1, statistics.getNaturalIdCacheHitCount() );
+		assertEquals( 1, statistics.getNaturalIdCacheHitCount(), "In a strict access strategy we would expect a hit here" );
 	}
 
 	@Test

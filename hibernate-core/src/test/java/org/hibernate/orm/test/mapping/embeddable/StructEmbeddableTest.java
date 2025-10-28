@@ -76,6 +76,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @SessionFactory
 @RequiresDialect( PostgreSQLDialect.class )
 @RequiresDialect( OracleDialect.class )
+@SkipForDialect(dialectClass = OracleDialect.class, reason = "Waiting for the fix of a bug that prevent creation of INTERVALDS from Duration")
 @RequiresDialect( DB2Dialect.class )
 public class StructEmbeddableTest implements AdditionalMappingContributor {
 
@@ -254,11 +255,7 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 
 	@AfterEach
 	protected void cleanupTest(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from StructHolder h" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

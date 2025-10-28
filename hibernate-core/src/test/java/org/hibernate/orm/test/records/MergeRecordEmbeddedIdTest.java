@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class MergeRecordEmbeddedIdTest {
 	@AfterEach
 	protected void cleanupTest(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createMutationQuery( "delete from MyEntity" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

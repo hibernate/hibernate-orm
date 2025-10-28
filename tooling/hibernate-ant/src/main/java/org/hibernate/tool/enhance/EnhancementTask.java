@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static org.hibernate.bytecode.internal.BytecodeProviderInitiator.buildDefaultBytecodeProvider;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
  * Ant task for performing build-time enhancement of entity objects.
@@ -200,7 +201,11 @@ public class EnhancementTask extends Task {
 		};
 
 		if ( enableExtendedEnhancement ) {
-			log( "Extended enhancement is enabled. Classes other than entities may be modified. You should consider access the entities using getter/setter methods and disable this property. Use at your own risk.", Project.MSG_WARN );
+			DEPRECATION_LOGGER.deprecatedSettingForRemoval("extended enhancement", "false");
+		}
+
+		if ( enableAssociationManagement ) {
+			DEPRECATION_LOGGER.deprecatedSettingForRemoval( "management of bidirectional association persistent attributes", "false" );
 		}
 
 		final BytecodeProvider bytecodeProvider = buildDefaultBytecodeProvider();

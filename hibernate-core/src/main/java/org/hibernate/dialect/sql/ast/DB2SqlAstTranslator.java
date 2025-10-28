@@ -29,7 +29,6 @@ import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.DerivedTableReference;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
@@ -41,7 +40,6 @@ import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -75,7 +73,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 	}
 
 	@Override
-	protected void renderTableReferenceJoins(TableGroup tableGroup, int swappedJoinIndex, boolean forceLeftJoin) {
+	protected void renderTableReferenceJoins(TableGroup tableGroup, LockMode lockMode, int swappedJoinIndex, boolean forceLeftJoin) {
 		// When we are in a recursive CTE, we can't render joins on DB2...
 		// See https://modern-sql.com/feature/with-recursive/db2/error-345-state-42836
 		if ( isInRecursiveQueryPart() ) {
@@ -94,7 +92,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 				}
 				appendSql( COMMA_SEPARATOR_CHAR );
 
-				renderNamedTableReference( tableJoin.getJoinedTableReference(), LockMode.NONE );
+				renderNamedTableReference( tableJoin.getJoinedTableReference(), lockMode );
 
 				if ( tableJoin.getPredicate() != null && !tableJoin.getPredicate().isEmpty() ) {
 					addAdditionalWherePredicate( tableJoin.getPredicate() );
@@ -102,7 +100,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 			}
 		}
 		else {
-			super.renderTableReferenceJoins( tableGroup, swappedJoinIndex, forceLeftJoin );
+			super.renderTableReferenceJoins( tableGroup, lockMode, swappedJoinIndex, forceLeftJoin );
 		}
 	}
 
@@ -118,7 +116,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 			}
 			appendSql( COMMA_SEPARATOR_CHAR );
 
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+			renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 			if ( tableGroupJoin.getPredicate() != null && !tableGroupJoin.getPredicate().isEmpty() ) {
 				addAdditionalWherePredicate( tableGroupJoin.getPredicate() );
 			}
@@ -130,12 +128,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 
 	@Override
 	protected void renderExpressionAsClauseItem(Expression expression) {
-		if ( expression instanceof Predicate && getDB2Version().isBefore( 11 ) ) {
-			super.renderExpressionAsClauseItem( expression );
-		}
-		else {
-			expression.accept( this );
-		}
+		expression.accept( this );
 	}
 
 	@Override
@@ -145,18 +138,13 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 
 	@Override
 	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		if ( getDB2Version().isSameOrAfter( 11 ) ) {
-			final boolean isNegated = booleanExpressionPredicate.isNegated();
-			if ( isNegated ) {
-				appendSql( "not(" );
-			}
-			booleanExpressionPredicate.getExpression().accept( this );
-			if ( isNegated ) {
-				appendSql( CLOSE_PARENTHESIS );
-			}
+		final boolean isNegated = booleanExpressionPredicate.isNegated();
+		if ( isNegated ) {
+			appendSql( "not(" );
 		}
-		else {
-			super.visitBooleanExpressionPredicate( booleanExpressionPredicate );
+		booleanExpressionPredicate.getExpression().accept( this );
+		if ( isNegated ) {
+			appendSql( CLOSE_PARENTHESIS );
 		}
 	}
 
@@ -212,38 +200,17 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 		}
 	}
 
-	@Override
-	protected String getForUpdate() {
-		return " for read only with rs use and keep update locks";
-	}
-
-	@Override
-	protected String getForShare(int timeoutMillis) {
-		return " for read only with rs use and keep share locks";
-	}
-
-	@Override
-	protected String getSkipLocked() {
-		return " skip locked data";
-	}
-
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		if ( getQueryPartForRowNumbering() == queryPart ) {
 			return false;
 		}
 		// Percent fetches or ties fetches aren't supported in DB2
-		if ( useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart ) ) {
-			return true;
-		}
-		// According to LegacyDB2LimitHandler, variable limit also isn't supported before 11.1
-		return getDB2Version().isBefore( 11, 1 )
-				&& queryPart.getFetchClauseExpression() != null
-				&& !( queryPart.getFetchClauseExpression() instanceof Literal );
+		return useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart );
 	}
 
 	protected boolean supportsOffsetClause() {
-		return getDB2Version().isSameOrAfter( 11, 1 );
+		return true;
 	}
 
 	@Override
@@ -304,11 +271,14 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 		}
 	}
 
+	private boolean shouldEmulateFetch(QueryPart queryPart) {
+		return shouldEmulateFetchClause( queryPart )
+			|| getQueryPartForRowNumbering() != queryPart && !supportsOffsetClause() && hasOffset( queryPart );
+	}
+
 	@Override
 	public void visitQueryGroup(QueryGroup queryGroup) {
-		final boolean emulateFetchClause = shouldEmulateFetchClause( queryGroup );
-		if ( emulateFetchClause ||
-				getQueryPartForRowNumbering() != queryGroup && !supportsOffsetClause() && hasOffset( queryGroup ) ) {
+		if ( shouldEmulateFetch( queryGroup ) ) {
 			emulateFetchOffsetWithWindowFunctions( queryGroup, true );
 		}
 		else {
@@ -318,9 +288,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 
 	@Override
 	public void visitQuerySpec(QuerySpec querySpec) {
-		final boolean emulateFetchClause = shouldEmulateFetchClause( querySpec );
-		if ( emulateFetchClause ||
-				getQueryPartForRowNumbering() != querySpec && !supportsOffsetClause() && hasOffset( querySpec ) ) {
+		if ( shouldEmulateFetch( querySpec ) ) {
 			emulateFetchOffsetWithWindowFunctions( querySpec, true );
 		}
 		else {
@@ -517,7 +485,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 			final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
 			if ( lhsExpressionType != null && lhsExpressionType.getJdbcTypeCount() == 1
 					&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
-				// In SQL Server, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
+				// In DB2, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
 				switch ( operator ) {
 					case DISTINCT_FROM:
 						appendSql( "decode(" );
@@ -565,7 +533,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
 		if ( lhsExpressionType != null && lhsExpressionType.getJdbcTypeCount() == 1
 				&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
-			// In SQL Server, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
+			// In DB2, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
 			switch ( operator ) {
 				case EQUAL:
 				case NOT_DISTINCT_FROM:

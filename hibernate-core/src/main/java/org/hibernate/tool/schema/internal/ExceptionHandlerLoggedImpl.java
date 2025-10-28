@@ -13,7 +13,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ExceptionHandlerLoggedImpl implements ExceptionHandler {
-	private static final Logger log = Logger.getLogger( ExceptionHandlerLoggedImpl.class );
+	private static final Logger LOG = Logger.getLogger( ExceptionHandlerLoggedImpl.class );
 
 	/**
 	 * Singleton access
@@ -22,7 +22,7 @@ public class ExceptionHandlerLoggedImpl implements ExceptionHandler {
 
 	@Override
 	public void handleException(CommandAcceptanceException exception) {
-		log.warnf(
+		LOG.warnf(
 				exception,
 				"GenerationTarget encountered exception accepting command : %s",
 				exception.getMessage()

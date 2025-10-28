@@ -39,10 +39,8 @@ public class CacheReadOnlyStrategyTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager ->
-						entityManager.createQuery( "delete TestEntity" ).executeUpdate()
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
+		scope.getEntityManagerFactory().getCache().evict( TestEntity.class );
 	}
 
 	@Test

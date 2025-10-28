@@ -9,6 +9,7 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
@@ -20,6 +21,9 @@ import org.hibernate.spi.NavigablePath;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
+
+import java.util.Objects;
+
 
 /**
  * @author Steve Ebersole
@@ -51,8 +55,8 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 
 	@Override
 	public void setJoinPredicate(SqmPredicate predicate) {
-		if ( log.isTraceEnabled() ) {
-			log.tracef(
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef(
 					"Setting join predicate [%s] (was [%s])",
 					predicate.toString(),
 					this.onClausePredicate == null ? "<null>" : this.onClausePredicate.toString()
@@ -150,5 +154,24 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 	@Override
 	public <X> SqmEntityJoin<R, X> join(Class<X> targetEntityClass, SqmJoinType joinType) {
 		return super.join( targetEntityClass, joinType );
+	}
+
+	// No need for equals/hashCode or isCompatible/cacheHashCode, because the base implementation using NavigablePath
+	// is fine for the purpose of matching nodes "syntactically".
+
+	@Override
+	public boolean deepEquals(SqmFrom<?, ?> object) {
+		return super.deepEquals( object )
+			&& object instanceof AbstractSqmJoin<?,?> thatJoin
+			&& joinType == thatJoin.getSqmJoinType()
+			&& Objects.equals( onClausePredicate, thatJoin.getOn() );
+	}
+
+	@Override
+	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
+		return super.isDeepCompatible( object )
+			&& object instanceof AbstractSqmJoin<?,?> thatJoin
+			&& joinType == thatJoin.getSqmJoinType()
+			&& SqmCacheable.areCompatible( onClausePredicate, thatJoin.getOn() );
 	}
 }

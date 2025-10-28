@@ -4,13 +4,14 @@
  */
 package org.hibernate.engine.internal;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Tracks non-nullable transient entities that would cause a particular entity insert to fail.
@@ -23,24 +24,25 @@ public final class NonNullableTransientDependencies {
 	private Map<Object,Set<String>> propertyPathsByTransientEntity; // lazily initialized
 
 	public void add(String propertyName, Object transientEntity) {
+		getPropertyPaths( transientEntity ).add( propertyName );
+	}
+
+	private Set<String> getPropertyPaths(Object transientEntity) {
 		if ( propertyPathsByTransientEntity == null ) {
 			propertyPathsByTransientEntity = new IdentityHashMap<>();
 		}
-		Set<String> propertyPaths = propertyPathsByTransientEntity.get( transientEntity );
+		var propertyPaths = propertyPathsByTransientEntity.get( transientEntity );
 		if ( propertyPaths == null ) {
 			propertyPaths = new HashSet<>();
 			propertyPathsByTransientEntity.put( transientEntity, propertyPaths );
 		}
-		propertyPaths.add( propertyName );
+		return propertyPaths;
 	}
 
 	public Iterable<Object> getNonNullableTransientEntities() {
-		if ( propertyPathsByTransientEntity == null ) {
-			return Collections.emptyList();
-		}
-		else {
-			return propertyPathsByTransientEntity.keySet();
-		}
+		return propertyPathsByTransientEntity == null
+				? emptyList()
+				: propertyPathsByTransientEntity.keySet();
 	}
 
 	/**
@@ -51,12 +53,9 @@ public final class NonNullableTransientDependencies {
 	 * @return The property paths
 	 */
 	public Iterable<String> getNonNullableTransientPropertyPaths(final Object entity) {
-		if ( propertyPathsByTransientEntity == null ) {
-			return Collections.emptyList();
-		}
-		else {
-			return propertyPathsByTransientEntity.get( entity );
-		}
+		return propertyPathsByTransientEntity == null
+				? emptyList()
+				: propertyPathsByTransientEntity.get( entity );
 	}
 
 	/**
@@ -77,8 +76,9 @@ public final class NonNullableTransientDependencies {
 	 * @throws IllegalStateException If the entity had tracked paths
 	 */
 	public void resolveNonNullableTransientEntity(Object entity) {
-		if ( propertyPathsByTransientEntity != null && propertyPathsByTransientEntity.remove( entity ) == null ) {
-			throw new IllegalStateException( "Attempt to resolve a non-nullable, transient entity that is not a dependency." );
+		if ( propertyPathsByTransientEntity != null
+				&& propertyPathsByTransientEntity.remove( entity ) == null ) {
+			throw new IllegalStateException( "Attempt to resolve a non-nullable, transient entity that is not a dependency" );
 		}
 	}
 
@@ -90,14 +90,16 @@ public final class NonNullableTransientDependencies {
 	 * @return The loggable representation
 	 */
 	public String toLoggableString(SharedSessionContractImplementor session) {
-		final StringBuilder sb = new StringBuilder( getClass().getSimpleName() ).append( '[' );
+		final var result = new StringBuilder( getClass().getSimpleName() ).append( '[' );
 		if ( propertyPathsByTransientEntity != null ) {
-			for ( Map.Entry<Object,Set<String>> entry : propertyPathsByTransientEntity.entrySet() ) {
-				sb.append( "transientEntityName=" ).append( session.bestGuessEntityName( entry.getKey() ) );
-				sb.append( " requiredBy=" ).append( entry.getValue() );
+			for ( var entry : propertyPathsByTransientEntity.entrySet() ) {
+				result.append( "transientEntityName=" )
+						.append( session.bestGuessEntityName( entry.getKey() ) );
+				result.append( " requiredBy=" )
+						.append( entry.getValue() );
 			}
 		}
-		sb.append( ']' );
-		return sb.toString();
+		result.append( ']' );
+		return result.toString();
 	}
 }

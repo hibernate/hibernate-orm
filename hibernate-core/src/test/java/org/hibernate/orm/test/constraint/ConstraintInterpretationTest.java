@@ -13,20 +13,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.MariaDBDialect;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 
@@ -36,15 +29,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 
 @Jpa(annotatedClasses = {ConstraintInterpretationTest.Enttity1.class, ConstraintInterpretationTest.Entity2.class})
-@RequiresDialect( PostgreSQLDialect.class )
-@RequiresDialect( MySQLDialect.class )
-@RequiresDialect( H2Dialect.class )
-@RequiresDialect( HSQLDialect.class )
-@RequiresDialect( SQLServerDialect.class )
-@RequiresDialect( SybaseASEDialect.class )
-@RequiresDialect( OracleDialect.class )
-@RequiresDialect( DB2Dialect.class )
-@SkipForDialect(dialectClass = MariaDBDialect.class) // Maria doesn't allow named column-level check constraints
 public class ConstraintInterpretationTest {
 	@Test void testNotNullPrimaryKey(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
@@ -54,7 +38,8 @@ public class ConstraintInterpretationTest {
 			}
 			catch (ConstraintViolationException cve) {
 				assertEquals( ConstraintViolationException.ConstraintKind.NOT_NULL, cve.getKind() );
-				if ( !(scope.getDialect() instanceof DB2Dialect) ) {
+				// DB2 and Informix error messages don't contain the primary key constraint name
+				if ( !(scope.getDialect() instanceof DB2Dialect) && !(scope.getDialect() instanceof InformixDialect) ) {
 					assertTrue( cve.getConstraintName().toLowerCase().endsWith( "id" ) );
 				}
 			}
@@ -80,6 +65,7 @@ public class ConstraintInterpretationTest {
 			}
 			catch (ConstraintViolationException cve) {
 				assertEquals( ConstraintViolationException.ConstraintKind.NOT_NULL, cve.getKind() );
+				// DB2 error message doesn't contain constraint or column name
 				if ( !(scope.getDialect() instanceof DB2Dialect) ) {
 					assertTrue( cve.getConstraintName().toLowerCase().endsWith( "name" ) );
 				}
@@ -95,6 +81,7 @@ public class ConstraintInterpretationTest {
 			}
 			catch (ConstraintViolationException cve) {
 				assertEquals( ConstraintViolationException.ConstraintKind.UNIQUE, cve.getKind() );
+				// DB2 error message doesn't contain unique constraint name
 				if ( !(scope.getDialect() instanceof DB2Dialect) ) {
 					assertTrue( cve.getConstraintName().toLowerCase().contains( "ssnuk" ) );
 				}
@@ -109,7 +96,10 @@ public class ConstraintInterpretationTest {
 			}
 			catch (ConstraintViolationException cve) {
 				assertEquals( ConstraintViolationException.ConstraintKind.CHECK, cve.getKind() );
-				assertTrue( cve.getConstraintName().toLowerCase().endsWith( "namecheck" ) );
+				// CockroachDB error messages don't contain the check constraint name
+				if ( !(scope.getDialect() instanceof CockroachDialect) ) {
+					assertTrue( cve.getConstraintName().toLowerCase().endsWith( "namecheck" ) );
+				}
 			}
 		} );
 	}
@@ -121,7 +111,10 @@ public class ConstraintInterpretationTest {
 			}
 			catch (ConstraintViolationException cve) {
 				assertEquals( ConstraintViolationException.ConstraintKind.FOREIGN_KEY, cve.getKind() );
-				assertTrue(  cve.getConstraintName().toLowerCase().endsWith( "id2to1fk" ) );
+				// HANA error messages don't contain the foreign key constraint name
+				if ( !(scope.getDialect() instanceof HANADialect) ) {
+					assertTrue( cve.getConstraintName().toLowerCase().endsWith( "id2to1fk" ) );
+				}
 			}
 		} );
 	}

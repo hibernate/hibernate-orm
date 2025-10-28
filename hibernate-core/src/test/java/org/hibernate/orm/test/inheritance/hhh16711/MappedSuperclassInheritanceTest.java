@@ -26,9 +26,7 @@ public class MappedSuperclassInheritanceTest {
 
 	@AfterEach
 	public void cleanup(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> entityManager.createQuery( "delete from Inheriting" ).executeUpdate()
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -220,37 +220,6 @@ public class JoinedSubclassTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "from Customer" ).list().forEach(
-							customer -> session.remove( customer )
-					);
-
-					session.createQuery( "from Client" ).list().forEach(
-							client -> session.remove( client )
-					);
-
-					session.createQuery( "from Account" ).list().forEach(
-							account -> session.remove( account )
-					);
-
-					session.createQuery( "from ProgramExecution" ).list().forEach(
-							programExecution -> session.remove( programExecution )
-					);
-
-					session.createQuery( "from Alarm" ).list().forEach(
-							alarm -> session.remove( alarm )
-					);
-
-					session.createQuery( "from EventInformation" ).list().forEach(
-							eventInformation -> session.remove( eventInformation )
-					);
-
-
-					session.createQuery( "from File" ).list().forEach(
-							file -> session.remove( file )
-					);
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

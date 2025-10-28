@@ -11,7 +11,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.service.ServiceRegistry;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 
 /**
  * Standard implementation of ClassLoaderAccess
@@ -19,7 +19,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ClassLoaderAccessImpl implements ClassLoaderAccess {
-	private static final Logger log = Logger.getLogger( ClassLoaderAccessImpl.class );
 
 	private final ClassLoaderService classLoaderService;
 	private ClassLoader jpaTempClassLoader;
@@ -40,7 +39,6 @@ public class ClassLoaderAccessImpl implements ClassLoaderAccess {
 	}
 
 	public void injectTempClassLoader(ClassLoader jpaTempClassLoader) {
-		log.debugf( "ClassLoaderAccessImpl#injectTempClassLoader(%s) [was %s]", jpaTempClassLoader, this.jpaTempClassLoader );
 		this.jpaTempClassLoader = jpaTempClassLoader;
 	}
 
@@ -55,20 +53,12 @@ public class ClassLoaderAccessImpl implements ClassLoaderAccess {
 			return classLoaderService.classForName( name );
 		}
 		else {
-			log.debugf( "Not known whether passed class name [%s] is safe", name );
+			// Could not determine that the given class is safe to load with live ClassLoader
 			if ( jpaTempClassLoader == null ) {
-				log.debugf(
-						"No temp ClassLoader provided; using live ClassLoader " +
-								"for loading potentially unsafe class : %s",
-						name
-				);
+				BOOT_LOGGER.noTempClassLoaderProvidedUsingLiveClassLoader( name );
 				return classLoaderService.classForName( name );
 			}
 			else {
-				log.debugf(
-						"Temp ClassLoader was provided, so we will use that : %s",
-						name
-				);
 				try {
 					return jpaTempClassLoader.loadClass( name );
 				}

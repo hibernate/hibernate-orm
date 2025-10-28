@@ -18,7 +18,6 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SessionFactory
@@ -29,17 +28,13 @@ public class StatelessCallbacksTest {
 			WithCallbacks instance = new WithCallbacks();
 			instance.name = "gavin";
 			s.insert(instance);
-			// because the semantics of @PrePersist and @PreRemove
-			// are inappropriate for a StatelessSession, the @Pre
-			// don't get called. However, the @Post events do make
-			// sense, since they correspond to database operations
-			assertFalse(instance.prePersist);
+			assertTrue(instance.prePersist);
 			assertTrue(instance.postPersist);
 			s.update(instance);
-			assertFalse(instance.preUpdate);
+			assertTrue(instance.preUpdate);
 			assertTrue(instance.postUpdate);
 			s.delete(instance);
-			assertFalse(instance.preRemove);
+			assertTrue(instance.preRemove);
 			assertTrue(instance.postRemove);
 		});
 	}

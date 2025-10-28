@@ -8,27 +8,19 @@ import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class ExplicitBasicTypeTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Product.class
-		};
-	}
+@Jpa( annotatedClasses = {ExplicitBasicTypeTest.Product.class} )
+public class ExplicitBasicTypeTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Product product = new Product();
 			product.id = 1;
 			entityManager.persist(product);
@@ -37,7 +29,7 @@ public class ExplicitBasicTypeTest extends BaseEntityManagerFunctionalTestCase {
 
 	//tag::basic-annotation-explicit-example[]
 	@Entity(name = "Product")
-	public class Product {
+	public static class Product {
 
 		@Id
 		@Basic

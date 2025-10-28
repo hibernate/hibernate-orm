@@ -103,4 +103,32 @@ public class SqmOver<T> extends AbstractSqmExpression<T> {
 		window.appendHqlString( hql, context );
 		hql.append( ')' );
 	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmOver<?> sqmOver
+			&& expression.equals( sqmOver.expression )
+			&& window.equals( sqmOver.window );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = expression.hashCode();
+		result = 31 * result + window.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmOver<?> sqmOver
+			&& expression.isCompatible( sqmOver.expression )
+			&& window.isCompatible( sqmOver.window );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = expression.cacheHashCode();
+		result = 31 * result + window.cacheHashCode();
+		return result;
+	}
 }

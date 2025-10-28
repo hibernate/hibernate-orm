@@ -37,16 +37,13 @@ public class NumericBooleanConverter implements StandardBooleanConverter<Integer
 		if ( relationalForm == null ) {
 			return null;
 		}
-
-		if ( 1 == relationalForm ) {
-			return true;
+		else {
+			return switch ( relationalForm ) {
+				case 0 -> false;
+				case 1 -> true;
+				default -> null;
+			};
 		}
-
-		if ( 0 == relationalForm ) {
-			return false;
-		}
-
-		return null;
 	}
 
 	@Override
@@ -54,8 +51,9 @@ public class NumericBooleanConverter implements StandardBooleanConverter<Integer
 		if ( domainForm == null ) {
 			return null;
 		}
-
-		return domainForm ? 1 : 0;
+		else {
+			return domainForm ? 1 : 0;
+		}
 	}
 
 	@Override

@@ -26,9 +26,6 @@ public class JoinedSubClassTest extends SubClassTest {
 	@AfterEach
 	protected void cleanupTest() throws Exception {
 		super.cleanupTest();
-		scope.inTransaction( session -> {
-			session.createQuery( "delete from Club" ).executeUpdate();
-		} );
 	}
 
 	@Override
@@ -44,16 +41,19 @@ public class JoinedSubClassTest extends SubClassTest {
 	@Test
 	public void testClub() {
 		scope.inTransaction( session -> {
+			//noinspection removal
 			Club club = session.createQuery( "from Club", Club.class ).uniqueResult();
 			assertThat( club.getMembers() ).hasSize( 3 );
 			session.clear();
 
 			session.enableFilter( "pregnantMembers" );
+			//noinspection removal
 			club = session.createQuery( "from Club", Club.class ).uniqueResult();
 			assertThat( club.getMembers() ).hasSize( 1 );
 			session.clear();
 
 			session.enableFilter( "iqMin" ).setParameter( "min", 148 );
+			//noinspection removal
 			club = session.createQuery( "from Club", Club.class ).uniqueResult();
 			assertThat( club.getMembers() ).isEmpty();
 		} );

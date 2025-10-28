@@ -6,6 +6,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.BiConsumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -15,14 +16,11 @@ import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -43,13 +41,15 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	private final NavigableRole navigableRole;
 	private final String table;
 	private final String column;
+	private final SelectablePath selectablePath;
 	private final DiscriminatedAssociationModelPart anyPart;
-	private final String customReadExpression;
-	private final String customWriteExpression;
-	private final String columnDefinition;
-	private final Long length;
-	private final Integer precision;
-	private final Integer scale;
+	private final @Nullable String customReadExpression;
+	private final @Nullable String customWriteExpression;
+	private final @Nullable String columnDefinition;
+	private final @Nullable Long length;
+	private final @Nullable Integer arrayLength;
+	private final @Nullable Integer precision;
+	private final @Nullable Integer scale;
 	private final boolean nullable;
 	private final boolean insertable;
 	private final boolean updateable;
@@ -61,6 +61,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			DiscriminatedAssociationModelPart anyPart,
 			String table,
 			String column,
+			SelectablePath selectablePath,
 			String customReadExpression,
 			String customWriteExpression,
 			String columnDefinition,
@@ -72,14 +73,55 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			boolean updateable,
 			boolean partitioned,
 			JdbcMapping jdbcMapping) {
+		this(
+				navigableRole,
+				anyPart,
+				table,
+				column,
+				selectablePath,
+				customReadExpression,
+				customWriteExpression,
+				columnDefinition,
+				length,
+				null,
+				precision,
+				scale,
+				nullable,
+				insertable,
+				updateable,
+				partitioned,
+				jdbcMapping
+		);
+	}
+
+	public AnyKeyPart(
+			NavigableRole navigableRole,
+			DiscriminatedAssociationModelPart anyPart,
+			String table,
+			String column,
+			SelectablePath selectablePath,
+			@Nullable String customReadExpression,
+			@Nullable String customWriteExpression,
+			@Nullable String columnDefinition,
+			@Nullable Long length,
+			@Nullable Integer arrayLength,
+			@Nullable Integer precision,
+			@Nullable Integer scale,
+			boolean nullable,
+			boolean insertable,
+			boolean updateable,
+			boolean partitioned,
+			JdbcMapping jdbcMapping) {
 		this.navigableRole = navigableRole;
 		this.table = table;
 		this.column = column;
+		this.selectablePath = selectablePath;
 		this.anyPart = anyPart;
 		this.customReadExpression = customReadExpression;
 		this.customWriteExpression = customWriteExpression;
 		this.columnDefinition = columnDefinition;
 		this.length = length;
+		this.arrayLength = arrayLength;
 		this.precision = precision;
 		this.scale = scale;
 		this.nullable = nullable;
@@ -97,6 +139,16 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	@Override
 	public String getSelectionExpression() {
 		return column;
+	}
+
+	@Override
+	public String getSelectableName() {
+		return selectablePath.getSelectableName();
+	}
+
+	@Override
+	public SelectablePath getSelectablePath() {
+		return selectablePath;
 	}
 
 	@Override
@@ -125,37 +177,42 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	}
 
 	@Override
-	public String getCustomReadExpression() {
+	public @Nullable String getCustomReadExpression() {
 		return customReadExpression;
 	}
 
 	@Override
-	public String getCustomWriteExpression() {
+	public @Nullable String getCustomWriteExpression() {
 		return customWriteExpression;
 	}
 
 	@Override
-	public String getColumnDefinition() {
+	public @Nullable String getColumnDefinition() {
 		return columnDefinition;
 	}
 
 	@Override
-	public Long getLength() {
+	public @Nullable Long getLength() {
 		return length;
 	}
 
 	@Override
-	public Integer getPrecision() {
+	public @Nullable Integer getArrayLength() {
+		return arrayLength;
+	}
+
+	@Override
+	public @Nullable Integer getPrecision() {
 		return precision;
 	}
 
 	@Override
-	public Integer getScale() {
+	public @Nullable Integer getScale() {
 		return scale;
 	}
 
 	@Override
-	public Integer getTemporalPrecision() {
+	public @Nullable Integer getTemporalPrecision() {
 		return null;
 	}
 
@@ -212,26 +269,23 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final FromClauseAccess fromClauseAccess = creationState
-				.getSqlAstCreationState()
-				.getFromClauseAccess();
-		final SqlExpressionResolver sqlExpressionResolver = creationState
-				.getSqlAstCreationState()
-				.getSqlExpressionResolver();
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
+		final var fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
+		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
-		final TableGroup tableGroup = fromClauseAccess.getTableGroup( fetchParent.getNavigablePath().getParent() );
-		final TableReference tableReference = tableGroup.resolveTableReference( fetchablePath, table );
+		final var tableGroup = fromClauseAccess.getTableGroup( fetchParent.getNavigablePath().getParent() );
+		final var tableReference = tableGroup.resolveTableReference( fetchablePath, table );
 
-		final Expression columnReference = sqlExpressionResolver.resolveSqlExpression(
+		final var columnReference = sqlExpressionResolver.resolveSqlExpression(
 				tableReference,
 				this
 		);
 
-		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
+		final var sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				columnReference,
 				jdbcMapping.getJdbcJavaType(),
 				fetchParent,
-				creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 
 		return new BasicFetch<>(
@@ -321,7 +375,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
+		final var sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
@@ -353,12 +407,13 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		final TableReference tableReference = tableGroup.resolveTableReference(
+		final var tableReference = tableGroup.resolveTableReference(
 				navigablePath,
 				this,
 				getContainingTableExpression()
 		);
-		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
+		final var expressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		return expressionResolver.resolveSqlSelection(
 				expressionResolver.resolveSqlExpression(
 						tableReference,
@@ -366,7 +421,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 				),
 				jdbcMapping.getJdbcJavaType(),
 				null,
-				creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 	}
 }

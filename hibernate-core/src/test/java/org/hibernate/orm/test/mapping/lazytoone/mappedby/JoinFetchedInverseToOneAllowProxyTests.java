@@ -136,12 +136,7 @@ public class JoinFetchedInverseToOneAllowProxyTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					session.createQuery( "delete Customer" ).executeUpdate();
-					session.createQuery( "delete SupplementalInfo" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "Customer" )

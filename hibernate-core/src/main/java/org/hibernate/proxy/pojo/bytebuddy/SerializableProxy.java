@@ -4,6 +4,7 @@
  */
 package org.hibernate.proxy.pojo.bytebuddy;
 
+import java.io.Serial;
 import java.lang.reflect.Method;
 import java.util.Objects;
 
@@ -12,7 +13,6 @@ import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.proxy.AbstractSerializableProxy;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.CompositeType;
 
 import static org.hibernate.bytecode.internal.BytecodeProviderInitiator.buildDefaultBytecodeProvider;
@@ -112,10 +112,11 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 		return componentIdType;
 	}
 
+	@Serial
 	private Object readResolve() {
-		final SessionFactoryImplementor sessionFactory = retrieveMatchingSessionFactory( this.sessionFactoryUuid, this.sessionFactoryName );
-		BytecodeProviderImpl byteBuddyBytecodeProvider = retrieveByteBuddyBytecodeProvider( sessionFactory );
-		HibernateProxy proxy = byteBuddyBytecodeProvider.getByteBuddyProxyHelper().deserializeProxy( this );
+		final var sessionFactory = retrieveMatchingSessionFactory( this.sessionFactoryUuid, this.sessionFactoryName );
+		final var byteBuddyBytecodeProvider = retrieveByteBuddyBytecodeProvider( sessionFactory );
+		final var proxy = byteBuddyBytecodeProvider.getByteBuddyProxyHelper().deserializeProxy( this );
 		afterDeserialization( (ByteBuddyInterceptor) proxy.getHibernateLazyInitializer() );
 		return proxy;
 	}
@@ -126,16 +127,14 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 	}
 
 	private static BytecodeProviderImpl retrieveByteBuddyBytecodeProvider(final SessionFactoryImplementor sessionFactory) {
-		if ( sessionFactory == null ) {
-			// When the session factory is not available fallback to local bytecode provider
-			return getFallbackBytecodeProvider();
-		}
+		return sessionFactory == null
+				? getFallbackBytecodeProvider()	// When the session factory is not available fallback to local bytecode provider
+				: castBytecodeProvider( sessionFactory.getServiceRegistry().getService( BytecodeProvider.class ) );
 
-		return castBytecodeProvider( sessionFactory.getServiceRegistry().getService( BytecodeProvider.class ) );
 	}
 
 	private static BytecodeProviderImpl getFallbackBytecodeProvider() {
-		BytecodeProviderImpl provider = fallbackBytecodeProvider;
+		var provider = fallbackBytecodeProvider;
 		if ( provider == null ) {
 			provider = fallbackBytecodeProvider = castBytecodeProvider( buildDefaultBytecodeProvider() );
 		}

@@ -4,13 +4,16 @@
  */
 package org.hibernate.query.sqm.mutation.internal.inline;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MutableInteger;
-import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.internal.util.MutableObject;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
@@ -19,19 +22,20 @@ import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
+import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
-import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.StatementCreatorHelper;
 
-import java.sql.PreparedStatement;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -43,129 +47,85 @@ import java.util.function.Supplier;
  * @author Vlad Mihalcea
  * @author Steve Ebersole
  */
-public class InlineDeleteHandler implements DeleteHandler {
-	private final MatchingIdRestrictionProducer matchingIdsPredicateProducer;
-	private final SqmDeleteStatement<?> sqmDeleteStatement;
-	private final DomainParameterXref domainParameterXref;
+public class InlineDeleteHandler extends AbstractInlineHandler implements DeleteHandler {
 
-	private final DomainQueryExecutionContext executionContext;
-
-	private final SessionFactoryImplementor sessionFactory;
-	private final SqlAstTranslatorFactory sqlAstTranslatorFactory;
-	private final JdbcMutationExecutor jdbcMutationExecutor;
+	private final List<TableDeleter> tableDeleters;
 
 	protected InlineDeleteHandler(
 			MatchingIdRestrictionProducer matchingIdsPredicateProducer,
-			SqmDeleteStatement<?> sqmDeleteStatement,
+			SqmDeleteStatement<?> sqmStatement,
 			DomainParameterXref domainParameterXref,
-			DomainQueryExecutionContext context) {
-		this.sqmDeleteStatement = sqmDeleteStatement;
+			DomainQueryExecutionContext context,
+			MutableObject<JdbcParameterBindings> firstJdbcParameterBindingsConsumer) {
+		super( matchingIdsPredicateProducer, sqmStatement, domainParameterXref, context, firstJdbcParameterBindingsConsumer );
+		final List<TableDeleter> tableDeleters = new ArrayList<>();
 
-		this.domainParameterXref = domainParameterXref;
-		this.matchingIdsPredicateProducer = matchingIdsPredicateProducer;
-
-		this.executionContext = context;
-
-		this.sessionFactory = executionContext.getSession().getFactory();
-		this.sqlAstTranslatorFactory = sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory();
-		this.jdbcMutationExecutor = sessionFactory.getJdbcServices().getJdbcMutationExecutor();
-	}
-
-	@Override
-	public int execute(DomainQueryExecutionContext executionContext) {
-		final List<Object> idsAndFks = MatchingIdSelectionHelper.selectMatchingIds(
-				sqmDeleteStatement,
-				domainParameterXref,
-				executionContext
-		);
-
-		if ( idsAndFks == null || idsAndFks.isEmpty() ) {
-			return 0;
-		}
-
-		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
-
-		final String mutatingEntityName = sqmDeleteStatement.getTarget().getModel().getHibernateEntityName();
-		final EntityMappingType entityDescriptor = factory.getMappingMetamodel().getEntityDescriptor( mutatingEntityName );
-
-		final List<Expression> inListExpressions = matchingIdsPredicateProducer.produceIdExpressionList( idsAndFks, entityDescriptor );
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( domainParameterXref.getQueryParameterCount() );
-
-		// delete from the tables
-		final MutableInteger valueIndexCounter = new MutableInteger();
-		SqmMutationStrategyHelper.visitCollectionTables(
-				entityDescriptor,
-				pluralAttribute -> {
-					if ( pluralAttribute.getSeparateCollectionTable() != null ) {
-						// this collection has a separate collection table, meaning it is one of:
-						//		1) element-collection
-						//		2) many-to-many
-						//		3) one-to many using a dedicated join-table
-						//
-						// in all of these cases, we should clean up the matching rows in the
-						// collection table
-						final ModelPart fkTargetPart = pluralAttribute.getKeyDescriptor().getTargetPart();
-						final int valueIndex;
-						if ( fkTargetPart.isEntityIdentifierMapping() ) {
-							valueIndex = 0;
-						}
-						else {
-							if ( valueIndexCounter.get() == 0 ) {
-								valueIndexCounter.set( entityDescriptor.getIdentifierMapping().getJdbcTypeCount() );
-							}
-							valueIndex = valueIndexCounter.get();
-							valueIndexCounter.plus( fkTargetPart.getJdbcTypeCount() );
-						}
-
-						executeDelete(
-								pluralAttribute.getSeparateCollectionTable(),
-								entityDescriptor,
-								() -> fkTargetPart::forEachSelectable,
-								inListExpressions,
-								valueIndex,
-								fkTargetPart,
-								jdbcParameterBindings,
-								executionContext
-						);
-					}
-				}
-		);
-
-		final SoftDeleteMapping softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
+		final SoftDeleteMapping softDeleteMapping = getEntityDescriptor().getSoftDeleteMapping();
 		if ( softDeleteMapping != null ) {
-			performSoftDelete(
-					entityDescriptor,
-					inListExpressions,
-					jdbcParameterBindings,
-					executionContext
-			);
+			tableDeleters.add( createSoftDeleter() );
 		}
 		else {
-			entityDescriptor.visitConstraintOrderedTables(
-					(tableExpression, tableKeyColumnsVisitationSupplier) -> executeDelete(
-							tableExpression,
-							entityDescriptor,
+			// delete from the tables
+			final MutableInteger valueIndexCounter = new MutableInteger();
+			SqmMutationStrategyHelper.visitCollectionTables(
+					getEntityDescriptor(),
+					pluralAttribute -> {
+						// Skip deleting rows in collection tables if cascade delete is enabled
+						if ( pluralAttribute.getSeparateCollectionTable() != null
+							&& !pluralAttribute.getCollectionDescriptor().isCascadeDeleteEnabled() ) {
+							// this collection has a separate collection table, meaning it is one of:
+							//		1) element-collection
+							//		2) many-to-many
+							//		3) one-to many using a dedicated join-table
+							//
+							// in all of these cases, we should clean up the matching rows in the
+							// collection table
+							final ModelPart fkTargetPart = pluralAttribute.getKeyDescriptor().getTargetPart();
+							final int valueIndex;
+							if ( fkTargetPart.isEntityIdentifierMapping() ) {
+								valueIndex = 0;
+							}
+							else {
+								if ( valueIndexCounter.get() == 0 ) {
+									valueIndexCounter.set(
+											getEntityDescriptor().getIdentifierMapping().getJdbcTypeCount() );
+								}
+								valueIndex = valueIndexCounter.get();
+								valueIndexCounter.plus( fkTargetPart.getJdbcTypeCount() );
+							}
+							final NamedTableReference targetTableReference = new NamedTableReference(
+									pluralAttribute.getSeparateCollectionTable(),
+									DeleteStatement.DEFAULT_ALIAS
+							);
+
+							tableDeleters.add( new TableDeleter(
+									new DeleteStatement( targetTableReference, null ),
+									() -> fkTargetPart::forEachSelectable,
+									valueIndex,
+									fkTargetPart
+							) );
+						}
+					}
+			);
+
+			getEntityDescriptor().visitConstraintOrderedTables(
+					(tableExpression, tableKeyColumnsVisitationSupplier) -> tableDeleters.add( new TableDeleter(
+							new DeleteStatement(
+									new NamedTableReference( tableExpression, DeleteStatement.DEFAULT_ALIAS ),
+									null
+							),
 							tableKeyColumnsVisitationSupplier,
-							inListExpressions,
 							0,
-							null,
-							jdbcParameterBindings,
-							executionContext
-					)
+							null
+					) )
 			);
 		}
 
-		return idsAndFks.size();
+		this.tableDeleters = tableDeleters;
 	}
 
-	/**
-	 * Perform a soft-delete, which just needs to update the root table
-	 */
-	private void performSoftDelete(
-			EntityMappingType entityDescriptor,
-			List<Expression> idExpressions,
-			JdbcParameterBindings jdbcParameterBindings,
-			DomainQueryExecutionContext executionContext) {
+	private TableDeleter createSoftDeleter() {
+		final EntityPersister entityDescriptor = getEntityDescriptor();
 		final TableDetails softDeleteTable = entityDescriptor.getSoftDeleteTableDetails();
 		final SoftDeleteMapping softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
 		assert softDeleteMapping != null;
@@ -175,83 +135,111 @@ public class InlineDeleteHandler implements DeleteHandler {
 				DeleteStatement.DEFAULT_ALIAS
 		);
 
-		final SqmJdbcExecutionContextAdapter executionContextAdapter = SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext );
-
-		final Predicate matchingIdsPredicate = matchingIdsPredicateProducer.produceRestriction(
-				idExpressions,
-				entityDescriptor,
-				0,
-				entityDescriptor.getIdentifierMapping(),
-				targetTableReference,
-				null,
-				executionContextAdapter
-		);
-
-		final Predicate predicate = Predicate.combinePredicates(
-				matchingIdsPredicate,
-				softDeleteMapping.createNonDeletedRestriction( targetTableReference )
-		);
 		final Assignment softDeleteAssignment = softDeleteMapping.createSoftDeleteAssignment( targetTableReference );
 		final UpdateStatement updateStatement = new UpdateStatement(
 				targetTableReference,
 				Collections.singletonList( softDeleteAssignment ),
-				predicate
+				softDeleteMapping.createNonDeletedRestriction( targetTableReference )
 		);
 
-		final JdbcOperationQueryMutation jdbcOperation = sqlAstTranslatorFactory
-				.buildMutationTranslator( sessionFactory, updateStatement )
-				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
-
-		jdbcMutationExecutor.execute(
-				jdbcOperation,
-				jdbcParameterBindings,
-				this::prepareQueryStatement,
-				(integer, preparedStatement) -> {},
-				executionContextAdapter
-		);
+		return new TableDeleter( updateStatement, null, 0, entityDescriptor.getIdentifierMapping() );
 	}
 
-	private void executeDelete(
-			String targetTableExpression,
-			EntityMappingType entityDescriptor,
-			Supplier<Consumer<SelectableConsumer>> tableKeyColumnsVisitationSupplier,
-			List<Expression> idExpressions,
-			int valueIndex,
-			ModelPart valueModelPart,
-			JdbcParameterBindings jdbcParameterBindings,
-			DomainQueryExecutionContext executionContext) {
-		final NamedTableReference targetTableReference = new NamedTableReference(
-				targetTableExpression,
-				DeleteStatement.DEFAULT_ALIAS
+	@Override
+	public int execute(JdbcParameterBindings jdbcParameterBindings, DomainQueryExecutionContext executionContext) {
+		final List<Object> idsAndFks = MatchingIdSelectionHelper.selectMatchingIds(
+				getMatchingIdsInterpretation(),
+				jdbcParameterBindings,
+				executionContext
 		);
 
+		if ( idsAndFks == null || idsAndFks.isEmpty() ) {
+			return 0;
+		}
+
+		final List<Expression> inListExpressions = getMatchingIdsPredicateProducer().produceIdExpressionList( idsAndFks, getEntityDescriptor() );
+		final SharedSessionContractImplementor session = executionContext.getSession();
+		final SessionFactoryImplementor sessionFactory = session.getFactory();
+		final JdbcMutationExecutor jdbcMutationExecutor = sessionFactory.getJdbcServices().getJdbcMutationExecutor();
 		final SqmJdbcExecutionContextAdapter executionContextAdapter = SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext );
 
-		final Predicate matchingIdsPredicate = matchingIdsPredicateProducer.produceRestriction(
-				idExpressions,
-				entityDescriptor,
-				valueIndex,
-				valueModelPart,
-				targetTableReference,
-				tableKeyColumnsVisitationSupplier,
-				executionContextAdapter
-		);
+		for ( TableDeleter tableDeleter : tableDeleters ) {
+			jdbcMutationExecutor.execute(
+					createMutation(
+							tableDeleter,
+							inListExpressions,
+							executionContextAdapter
+					),
+					JdbcParameterBindings.NO_BINDINGS,
+					sql -> session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql ),
+					(integer, preparedStatement) -> {},
+					executionContextAdapter
+			);
+		}
 
-		final DeleteStatement deleteStatement = new DeleteStatement( targetTableReference, matchingIdsPredicate );
-
-		final JdbcOperationQueryMutation jdbcOperation = sqlAstTranslatorFactory.buildMutationTranslator( sessionFactory, deleteStatement )
-				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
-
-		jdbcMutationExecutor.execute(
-				jdbcOperation,
-				jdbcParameterBindings,
-				this::prepareQueryStatement,
-				(integer, preparedStatement) -> {},
-				executionContextAdapter
-		);
+		return idsAndFks.size();
 	}
 
-	private PreparedStatement prepareQueryStatement(String sql) {
-		return StatementCreatorHelper.prepareQueryStatement( sql, executionContext.getSession() );
+	protected record TableDeleter(
+			AbstractUpdateOrDeleteStatement statement,
+			@Nullable Supplier<Consumer<SelectableConsumer>> tableKeyColumnsVisitationSupplier,
+			int valueIndex,
+			@Nullable ModelPart valueModelPart
+	) {}
+
+	// For Hibernate Reactive
+	protected JdbcOperationQueryMutation createMutation(TableDeleter tableDeleter, List<Expression> inListExpressions, ExecutionContext executionContext) {
+		final MutationStatement statement;
+		if ( tableDeleter.statement instanceof UpdateStatement updateStatement ) {
+			statement = new UpdateStatement(
+					updateStatement,
+					updateStatement.getTargetTable(),
+					updateStatement.getFromClause(),
+					updateStatement.getAssignments(),
+					Predicate.combinePredicates(
+							updateStatement.getRestriction(),
+							getMatchingIdsPredicateProducer().produceRestriction(
+									inListExpressions,
+									getEntityDescriptor(),
+									tableDeleter.valueIndex,
+									tableDeleter.valueModelPart,
+									updateStatement.getTargetTable(),
+									tableDeleter.tableKeyColumnsVisitationSupplier,
+									executionContext
+							)
+					),
+					updateStatement.getReturningColumns()
+			);
+		}
+		else {
+			final DeleteStatement deleteStatement = (DeleteStatement) tableDeleter.statement;
+			statement = new DeleteStatement(
+					deleteStatement,
+					deleteStatement.getTargetTable(),
+					deleteStatement.getFromClause(),
+					Predicate.combinePredicates(
+							deleteStatement.getRestriction(),
+							getMatchingIdsPredicateProducer().produceRestriction(
+									inListExpressions,
+									getEntityDescriptor(),
+									tableDeleter.valueIndex,
+									tableDeleter.valueModelPart,
+									deleteStatement.getTargetTable(),
+									tableDeleter.tableKeyColumnsVisitationSupplier,
+									executionContext
+							)
+					),
+					deleteStatement.getReturningColumns()
+			);
+		}
+		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
+		final SqlAstTranslatorFactory sqlAstTranslatorFactory = sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory();
+		return sqlAstTranslatorFactory.buildMutationTranslator( sessionFactory, statement )
+				.translate( JdbcParameterBindings.NO_BINDINGS, executionContext.getQueryOptions() );
+	}
+
+	// For Hibernate Reactive
+	protected List<TableDeleter> getTableDeleters() {
+		return tableDeleters;
 	}
 }

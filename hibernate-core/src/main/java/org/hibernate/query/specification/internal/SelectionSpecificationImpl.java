@@ -20,19 +20,14 @@ import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.specification.SelectionSpecification;
 import org.hibernate.query.restriction.Path;
 import org.hibernate.query.restriction.Restriction;
-import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
-import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelection;
-import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import java.util.ArrayList;
@@ -40,15 +35,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.BiConsumer;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.query.sqm.internal.SqmUtil.validateCriteriaQuery;
 import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
+import static org.hibernate.query.sqm.tree.SqmCopyContext.simpleContext;
 
 /**
- * Standard implementation of SelectionSpecification
+ * Standard implementation of {@link SelectionSpecification}.
  *
  * @author Steve Ebersole
  */
@@ -96,10 +91,14 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		return this;
 	}
 
+	public List<BiConsumer<SqmSelectStatement<T>, SqmRoot<T>>> getSpecifications() {
+		return specifications;
+	}
+
 	@Override
 	public SelectionSpecification<T> restrict(Restriction<? super T> restriction) {
 		specifications.add( (sqmStatement, root) -> {
-			final SqmPredicate sqmPredicate = SqmUtil.restriction( sqmStatement, resultType, restriction );
+			final var sqmPredicate = SqmUtil.restriction( sqmStatement, resultType, restriction );
 			sqmStatement.getQuerySpec().applyPredicate( sqmPredicate );
 		} );
 		return this;
@@ -145,7 +144,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 	}
 
 	private static <T> void addOrder(Order<? super T> order, SqmSelectStatement<T> sqmStatement) {
-		final SqmSortSpecification sortSpecification = SqmUtil.sortSpecification( sqmStatement, order );
+		final var sortSpecification = SqmUtil.sortSpecification( sqmStatement, order );
 		final var querySpec = sqmStatement.getQuerySpec();
 		if ( querySpec.getOrderByClause() == null ) {
 			querySpec.setOrderByClause( new SqmOrderByClause() );
@@ -164,9 +163,9 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 	}
 
 	public SelectionQuery<T> createQuery(SharedSessionContract session) {
-		final var sessionImpl = (SharedSessionContractImplementor) session;
-		final SqmSelectStatement<T> sqmStatement = build( sessionImpl.getFactory().getQueryEngine() );
-		return new SqmSelectionQueryImpl<>( sqmStatement, true, resultType, sessionImpl );
+		final var sessionImpl = session.unwrap(SharedSessionContractImplementor.class);
+		final var sqmStatement = build( sessionImpl.getFactory().getQueryEngine() );
+		return new SqmSelectionQueryImpl<>( sqmStatement, false, resultType, sessionImpl );
 	}
 
 	private SqmSelectStatement<T> build(QueryEngine queryEngine) {
@@ -177,7 +176,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 			sqmRoot = extractRoot( sqmStatement, resultType, hql );
 		}
 		else if ( criteriaQuery != null ) {
-			sqmStatement = (SqmSelectStatement<T>) criteriaQuery;
+			sqmStatement = ((SqmSelectStatement<T>) criteriaQuery).copy( simpleContext() );
 			sqmRoot = extractRoot( sqmStatement, resultType, "criteria query" );
 		}
 		else {
@@ -199,13 +198,13 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 
 	@Override
 	public CriteriaQuery<T> buildCriteria(CriteriaBuilder builder) {
-		final NodeBuilder nodeBuilder = (NodeBuilder) builder;
+		final var nodeBuilder = (NodeBuilder) builder;
 		return build( nodeBuilder.getQueryEngine() );
 	}
 
 	@Override
 	public SelectionSpecification<T> validate(CriteriaBuilder builder) {
-		final NodeBuilder nodeBuilder = (NodeBuilder) builder;
+		final var nodeBuilder = (NodeBuilder) builder;
 		final var statement = build( nodeBuilder.getQueryEngine() );
 		final var queryPart = statement.getQueryPart();
 		// For criteria queries, we have to validate the fetch structure here
@@ -220,7 +219,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 	 * and produce the corresponding SQM tree.
 	 */
 	private static <T> SqmSelectStatement<T> resolveSqmTree(String hql, Class<T> resultType, QueryEngine queryEngine) {
-		final HqlInterpretation<T> hqlInterpretation =
+		final var hqlInterpretation =
 				queryEngine.getInterpretationCache()
 						.resolveHqlInterpretation( hql, resultType, queryEngine.getHqlTranslator() );
 
@@ -231,17 +230,17 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 
 		// NOTE: this copy is to isolate the actual AST tree from the
 		// one stored in the interpretation cache
-		return (SqmSelectStatement<T>) hqlInterpretation
-				.getSqmStatement()
-				.copy( noParamCopyContext( SqmQuerySource.CRITERIA ) );
+		return (SqmSelectStatement<T>)
+				hqlInterpretation.getSqmStatement()
+						.copy( noParamCopyContext( SqmQuerySource.CRITERIA ) );
 	}
 
 	/**
-	 * Used during construction.  Mainly used to group extracting and
+	 * Used during construction. Mainly used to group extracting and
 	 * validating the root.
 	 */
 	private SqmRoot<T> extractRoot(SqmSelectStatement<T> sqmStatement, Class<T> resultType, String hql) {
-		final Set<SqmRoot<?>> sqmRoots = sqmStatement.getQuerySpec().getRoots();
+		final var sqmRoots = sqmStatement.getQuerySpec().getRoots();
 		if ( sqmRoots.isEmpty() ) {
 			throw new QueryException( "Query did not define any roots", hql );
 		}
@@ -249,7 +248,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 			throw new QueryException( "Query defined multiple roots", hql );
 		}
 
-		final SqmRoot<?> sqmRoot = sqmRoots.iterator().next();
+		final var sqmRoot = sqmRoots.iterator().next();
 		validateRoot( sqmRoot, resultType, hql );
 		// for later, to support select lists
 		//validateResultType( sqmStatement, sqmRoot, resultType, hql );
@@ -259,14 +258,15 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 	}
 
 	private void validateRoot(SqmRoot<?> sqmRoot, Class<T> resultType, String hql) {
-		if ( sqmRoot.getJavaType() != null
-			&& !Map.class.isAssignableFrom( sqmRoot.getJavaType() )
-			&& !resultType.isAssignableFrom( sqmRoot.getJavaType() ) ) {
+		final var javaType = sqmRoot.getJavaType();
+		if ( javaType != null
+				&& !Map.class.isAssignableFrom( javaType )
+				&& !resultType.isAssignableFrom( javaType ) ) {
 			throw new QueryException(
 					String.format(
 							Locale.ROOT,
 							"Query root [%s] and result type [%s] are not compatible",
-							sqmRoot.getJavaType().getName(),
+							javaType.getName(),
 							resultType.getName()
 					),
 					hql
@@ -297,8 +297,8 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 			}
 		}
 
-		final SqmSelectClause sqmSelectClause = sqmStatement.getQuerySpec().getSelectClause();
-		final List<SqmSelection<?>> sqmSelections = sqmSelectClause.getSelections();
+		final var sqmSelectClause = sqmStatement.getQuerySpec().getSelectClause();
+		final var sqmSelections = sqmSelectClause.getSelections();
 		if ( isEmpty( sqmSelections ) ) {
 			// implicit select clause, verify that resultType matches the root type
 			if ( resultType.isAssignableFrom( rootJavaType ) ) {

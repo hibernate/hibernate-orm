@@ -7,19 +7,14 @@ package org.hibernate.loader.ast.internal;
 import java.util.List;
 
 import org.hibernate.LockOptions;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
 import org.hibernate.query.spi.QueryOptionsAdapter;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
-import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 import static org.hibernate.loader.ast.internal.LoaderHelper.loadByArrayParameter;
@@ -51,14 +46,14 @@ public class MultiNaturalIdLoaderArrayParam<E> extends AbstractMultiNaturalIdLoa
 			MultiNaturalIdLoadOptions loadOptions,
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session) {
-		final SessionFactoryImplementor factory = session.getFactory();
-		final JdbcMapping arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
+		final var factory = session.getFactory();
+		final var arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
 				getNaturalIdMapping().getSingleJdbcMapping(),
 				keyClass,
 				factory
 		);
-		final JdbcParameter jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );
-		final SelectStatement sqlAst = LoaderSelectBuilder.createSelectBySingleArrayParameter(
+		final var jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );
+		final var sqlAst = LoaderSelectBuilder.createSelectBySingleArrayParameter(
 				getLoadable(),
 				getNaturalIdAttribute(),
 				session.getLoadQueryInfluencers(),
@@ -66,7 +61,7 @@ public class MultiNaturalIdLoaderArrayParam<E> extends AbstractMultiNaturalIdLoa
 				jdbcParameter,
 				factory
 		);
-		final JdbcOperationQuerySelect jdbcSelectOperation =
+		final var jdbcSelectOperation =
 				factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
 						.buildSelectTranslator( factory, sqlAst )
 						.translate( JdbcParameterBindings.NO_BINDINGS, new QueryOptionsAdapter() {

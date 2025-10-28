@@ -24,26 +24,20 @@ public class InformixIdentityColumnSupport extends IdentityColumnSupportImpl {
 	@Override
 	public String getIdentitySelectString(String table, String column, int type)
 			throws MappingException {
-		switch (type) {
-			case Types.BIGINT:
-				return "select dbinfo('serial8') from informix.systables where tabid=1";
-			case Types.INTEGER:
-				return "select dbinfo('sqlca.sqlerrd1') from informix.systables where tabid=1";
-			default:
-				throw new MappingException("illegal identity column type");
-		}
+		return "select dbinfo('" + switch ( type ) {
+			case Types.BIGINT -> "bigserial";
+			case Types.INTEGER -> "sqlca.sqlerrd1";
+			default -> throw new MappingException( "illegal identity column type" );
+		} + "') from informix.systables where tabid=1";
 	}
 
 	@Override
 	public String getIdentityColumnString(int type) throws MappingException {
-		switch (type) {
-			case Types.BIGINT:
-				return "serial8 not null";
-			case Types.INTEGER:
-				return "serial not null";
-			default:
-				throw new MappingException("illegal identity column type");
-		}
+		return switch ( type ) {
+			case Types.BIGINT -> "bigserial";
+			case Types.INTEGER -> "serial";
+			default -> throw new MappingException( "illegal identity column type" );
+		} + " not null";
 	}
 
 	@Override

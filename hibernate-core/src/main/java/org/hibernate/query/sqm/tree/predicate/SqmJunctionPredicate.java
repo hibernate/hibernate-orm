@@ -6,10 +6,12 @@ package org.hibernate.query.sqm.tree.predicate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 import jakarta.persistence.criteria.Expression;
@@ -105,9 +107,11 @@ public class SqmJunctionPredicate extends AbstractSqmPredicate {
 
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
-		final String separator = booleanOperator == BooleanOperator.AND
-				? " and "
-				: " or ";
+		final String separator =
+				switch ( booleanOperator ) {
+					case AND -> " and ";
+					case OR -> " or ";
+				};
 		appendJunctionHqlString( predicates.get( 0 ), hql, context );
 		for ( int i = 1; i < predicates.size(); i++ ) {
 			hql.append( separator );
@@ -131,5 +135,33 @@ public class SqmJunctionPredicate extends AbstractSqmPredicate {
 		else {
 			p.appendHqlString( sb, context );
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmJunctionPredicate that
+			&& booleanOperator == that.booleanOperator
+			&& Objects.equals( predicates, that.predicates );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = booleanOperator.hashCode();
+		result = 31 * result + Objects.hashCode( predicates );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmJunctionPredicate that
+			&& booleanOperator == that.booleanOperator
+			&& SqmCacheable.areCompatible( predicates, that.predicates );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = booleanOperator.hashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( predicates );
+		return result;
 	}
 }

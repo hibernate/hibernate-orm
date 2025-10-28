@@ -8,8 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.Internal;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.BagType;
 import org.hibernate.type.CollectionType;
@@ -19,6 +17,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.engine.FetchStyle.JOIN;
 import static org.hibernate.engine.FetchStyle.SUBSELECT;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * The runtime representation of a Hibernate
@@ -41,7 +40,6 @@ import static org.hibernate.engine.FetchStyle.SUBSELECT;
  * @author Steve Ebersole
  */
 public class FetchProfile {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( FetchProfile.class );
 
 	private final String name;
 	private final Map<String,Fetch> fetches = new HashMap<>();
@@ -72,7 +70,7 @@ public class FetchProfile {
 		final Type associationType =
 				association.getOwner().getPropertyType( association.getAssociationPath() );
 		if ( associationType instanceof CollectionType ) {
-			LOG.tracev( "Handling request to add collection fetch [{0}]", role );
+			CORE_LOGGER.tracev( "Handling request to add collection fetch [{0}]", role );
 
 			// couple of things for which to account in the case of collection
 			// join fetches
@@ -81,7 +79,7 @@ public class FetchProfile {
 				// processed collection join fetches
 				if ( associationType instanceof BagType ) {
 					if ( containsJoinFetchedCollection ) {
-						LOG.containsJoinFetchedCollection( role );
+						CORE_LOGGER.containsJoinFetchedCollection( role );
 						// EARLY EXIT!!!
 						return;
 					}
@@ -93,7 +91,7 @@ public class FetchProfile {
 				if ( containsJoinFetchedBag ) {
 					// just for safety...
 					if ( bagJoinFetch != null && fetches.remove( bagJoinFetch.getAssociation().getRole() ) != bagJoinFetch ) {
-						LOG.unableToRemoveBagJoinFetch();
+						CORE_LOGGER.unableToRemoveBagJoinFetch();
 					}
 					bagJoinFetch = null;
 					containsJoinFetchedBag = false;

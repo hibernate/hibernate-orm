@@ -7,7 +7,6 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -27,11 +26,11 @@ public final class ImmutableAttributeMappingsMap implements AttributeMappingsMap
 
 	public ImmutableAttributeMappingsMap(final LinkedHashMap<String,AttributeMapping> sortedSource) {
 		final int size = sortedSource.size();
-		this.orderedValues = new AttributeMapping[size];
-		this.mapStore = new HashMap<>( size );
+		orderedValues = new AttributeMapping[size];
+		mapStore = new HashMap<>( size );
 		int idx = 0;
 		//populate both parallel representations
-		for ( Map.Entry<String,AttributeMapping> entry : sortedSource.entrySet() ) {
+		for ( var entry : sortedSource.entrySet() ) {
 			orderedValues[idx] = entry.getValue();
 			mapStore.put( entry.getKey(), Integer.valueOf( idx ) );
 			idx++;
@@ -40,8 +39,8 @@ public final class ImmutableAttributeMappingsMap implements AttributeMappingsMap
 
 	@Override
 	public void forEachValue(final Consumer<? super AttributeMapping> action) {
-		for ( AttributeMapping o : orderedValues ) {
-			action.accept( o );
+		for ( var attributeMapping : orderedValues ) {
+			action.accept( attributeMapping );
 		}
 	}
 
@@ -51,14 +50,8 @@ public final class ImmutableAttributeMappingsMap implements AttributeMappingsMap
 
 	@Override
 	public AttributeMapping get(final String name) {
-		final Object o = this.mapStore.get( name );
-		if ( o == null ) {
-			return null;
-		}
-		else {
-			Integer integer = (Integer) o;
-			return orderedValues[integer.intValue()];
-		}
+		final Integer integer = mapStore.get( name );
+		return integer == null ? null : orderedValues[integer];
 	}
 
 	@Override

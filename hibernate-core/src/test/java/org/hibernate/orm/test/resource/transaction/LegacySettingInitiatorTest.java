@@ -4,35 +4,35 @@
  */
 package org.hibernate.orm.test.resource.transaction;
 
-import java.util.Collections;
-
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.internal.TransactionCoordinatorBuilderInitiator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Steve Ebersole
  */
-public class LegacySettingInitiatorTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class LegacySettingInitiatorTest {
 	private BootstrapServiceRegistryImpl bsr;
 
-	@Before
+	@BeforeEach
 	public void before() {
 		bsr = (BootstrapServiceRegistryImpl) new BootstrapServiceRegistryBuilder().build();
 	}
 
-	@After
+	@AfterEach
 	public void after() {
 		if ( bsr != null ) {
 			bsr.destroy();

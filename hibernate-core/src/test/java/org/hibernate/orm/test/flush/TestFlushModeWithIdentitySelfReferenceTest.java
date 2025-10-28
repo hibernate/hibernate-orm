@@ -12,68 +12,60 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
-
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
-import org.junit.Test;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Chris Cranford
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-13042")
-@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-public class TestFlushModeWithIdentitySelfReferenceTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { SelfRefEntity.class, SelfRefEntityWithEmbeddable.class };
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
+@DomainModel(annotatedClasses = {
+		TestFlushModeWithIdentitySelfReferenceTest.SelfRefEntity.class,
+		TestFlushModeWithIdentitySelfReferenceTest.SelfRefEntityWithEmbeddable.class
+})
+@SessionFactory
+public class TestFlushModeWithIdentitySelfReferenceTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testFlushModeCommit() throws Exception {
-		Session session = openSession();
-		try {
+	public void testFlushModeCommit(SessionFactoryScope factoryScope) {
+		factoryScope.inSession( (session) -> {
 			session.setHibernateFlushMode( FlushMode.COMMIT );
 			loadAndAssert( session, createAndInsertEntity( session ) );
 			loadAndInsert( session, createAndInsertEntityEmbeddable( session ) );
-		}
-		finally {
-			session.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testFlushModeManual() throws Exception {
-		Session session = openSession();
-		try {
+	public void testFlushModeManual(SessionFactoryScope  factoryScope) {
+		factoryScope.inSession( (session) -> {
 			session.setHibernateFlushMode( FlushMode.MANUAL );
 			loadAndAssert( session, createAndInsertEntity( session ) );
 			loadAndInsert( session, createAndInsertEntityEmbeddable( session ) );
-		}
-		finally {
-			session.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testFlushModeAuto() throws Exception {
-		Session session = openSession();
-		try {
+	public void testFlushModeAuto(SessionFactoryScope factoryScope) {
+		factoryScope.inSession( (session) -> {
 			session.setHibernateFlushMode( FlushMode.AUTO );
 			loadAndAssert( session, createAndInsertEntity( session ) );
 			loadAndInsert( session, createAndInsertEntityEmbeddable( session ) );
-		}
-		finally {
-			session.close();
-		}
+		} );
 	}
 
 	private SelfRefEntity createAndInsertEntity(Session session) {
@@ -135,17 +127,18 @@ public class TestFlushModeWithIdentitySelfReferenceTest extends BaseCoreFunction
 	}
 
 	private void loadAndAssert(Session session, SelfRefEntity mergedEntity) {
-		final SelfRefEntity loadedEntity = session.get( SelfRefEntity.class, mergedEntity.getId() );
-		assertNotNull( "Expected to find the merged entity but did not.", loadedEntity );
-		assertEquals( "test", loadedEntity.getData() );
-		assertNotNull( "Expected a non-null self reference", loadedEntity.getSelfRefEntity() );
+		final SelfRefEntity loadedEntity = session.find( SelfRefEntity.class, mergedEntity.getId() );
+		Assertions.assertNotNull( loadedEntity, "Expected to find the merged entity but did not." );
+		Assertions.assertEquals( "test", loadedEntity.getData() );
+		Assertions.assertNotNull( loadedEntity.getSelfRefEntity(), "Expected a non-null self reference" );
 	}
 
 	private void loadAndInsert(Session session, SelfRefEntityWithEmbeddable mergedEntity) {
-		final SelfRefEntityWithEmbeddable loadedEntity = session.get( SelfRefEntityWithEmbeddable.class, mergedEntity.getId() );
-		assertNotNull( "Expected to find the merged entity but did not.", loadedEntity );
-		assertEquals( "test", loadedEntity.getData() );
-		assertNotNull( "Expected a non-null self reference in embeddable", loadedEntity.getInfo().getSeflRefEntityEmbedded() );
+		final SelfRefEntityWithEmbeddable loadedEntity = session.find( SelfRefEntityWithEmbeddable.class, mergedEntity.getId() );
+		Assertions.assertNotNull( loadedEntity, "Expected to find the merged entity but did not." );
+		Assertions.assertEquals( "test", loadedEntity.getData() );
+		Assertions.assertNotNull( loadedEntity.getInfo().getSeflRefEntityEmbedded(),
+				"Expected a non-null self reference in embeddable" );
 	}
 
 	@Entity(name = "SelfRefEntity")

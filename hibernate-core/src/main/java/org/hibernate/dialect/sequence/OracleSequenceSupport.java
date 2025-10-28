@@ -51,4 +51,9 @@ public final class OracleSequenceSupport extends NextvalSequenceSupport {
 	public String getDropSequenceString(String sequenceName) throws MappingException {
 		return "drop sequence " + (supportsIfExists ? "if exists " : "") + sequenceName;
 	}
+
+	@Override
+	public String getRestartSequenceString(String sequenceName, long startWith) {
+		return "alter sequence " + sequenceName + " restart start with " + startWith;
+	}
 }

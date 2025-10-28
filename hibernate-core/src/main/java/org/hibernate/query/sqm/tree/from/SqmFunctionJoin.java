@@ -27,6 +27,7 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 
+
 /**
  * @author Christian Beikov
  */
@@ -225,5 +226,21 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 	@Override
 	public JoinType getJoinType() {
 		return getSqmJoinType().getCorrespondingJpaJoinType();
+	}
+
+	@Override
+	public boolean deepEquals(SqmFrom<?, ?> object) {
+		return super.deepEquals( object )
+			&& object instanceof SqmFunctionJoin<?> that
+			&& lateral == that.isLateral()
+			&& function.equals( that.function );
+	}
+
+	@Override
+	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
+		return super.isDeepCompatible( object )
+			&& object instanceof SqmFunctionJoin<?> that
+			&& lateral == that.isLateral()
+			&& function.isCompatible( that.function );
 	}
 }

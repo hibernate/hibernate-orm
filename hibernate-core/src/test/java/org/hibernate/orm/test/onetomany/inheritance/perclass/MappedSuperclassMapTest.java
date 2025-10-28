@@ -122,9 +122,6 @@ public class MappedSuperclassMapTest {
 
 	@AfterEach
 	protected void cleanupTestData(SessionFactoryScope scope) throws Exception {
-		scope.inTransaction( sess -> {
-			sess.createQuery( "delete from Book" ).executeUpdate();
-			sess.createQuery( "delete from Library" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

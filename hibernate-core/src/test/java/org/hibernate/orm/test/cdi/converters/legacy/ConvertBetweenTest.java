@@ -58,10 +58,7 @@ public class ConvertBetweenTest extends AbstractJPATest {
 
 	@AfterEach
 	public void cleanUpData() {
-		inTransaction(
-				session ->
-						session.createQuery( "delete from Item" ).executeUpdate()
-		);
+		sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

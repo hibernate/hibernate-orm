@@ -207,10 +207,7 @@ public class LazyGroupTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( s -> {
-			s.createQuery( "delete Child" ).executeUpdate();
-			s.createQuery( "delete Parent" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	// --- //

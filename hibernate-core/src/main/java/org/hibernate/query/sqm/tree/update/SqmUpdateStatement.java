@@ -7,12 +7,11 @@ package org.hibernate.query.sqm.tree.update;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaCriteriaUpdate;
@@ -22,6 +21,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmRestrictedDmlStatement;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -41,6 +41,7 @@ import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertAssignable;
 
 /**
@@ -49,8 +50,6 @@ import static org.hibernate.query.sqm.internal.TypecheckUtil.assertAssignable;
 public class SqmUpdateStatement<T>
 		extends AbstractSqmRestrictedDmlStatement<T>
 		implements SqmDeleteOrUpdateStatement<T>, JpaCriteriaUpdate<T> {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SqmUpdateStatement.class );
 
 	private boolean versioned;
 	private SqmSetClause setClause;
@@ -79,7 +78,7 @@ public class SqmUpdateStatement<T>
 		super(
 				new SqmRoot<>(
 						nodeBuilder.getDomainModel().entity( targetEntity ),
-						null,
+						"_0",
 						!nodeBuilder.isJpaQueryComplianceEnabled(),
 						nodeBuilder
 				),
@@ -137,10 +136,10 @@ public class SqmUpdateStatement<T>
 			final String querySpaces = Arrays.toString( persister.getQuerySpaces() );
 			switch ( nodeBuilder().getImmutableEntityUpdateQueryHandlingMode() ) {
 				case ALLOW :
-					LOG.immutableEntityUpdateQueryAllowed( hql, querySpaces );
+					CORE_LOGGER.immutableEntityUpdateQueryAllowed( hql, querySpaces );
 					break;
 				case WARNING:
-					LOG.immutableEntityUpdateQuery( hql, querySpaces );
+					CORE_LOGGER.immutableEntityUpdateQuery( hql, querySpaces );
 					break;
 				case EXCEPTION:
 					throw new HibernateException( "The query attempts to update an immutable entity: "
@@ -172,7 +171,9 @@ public class SqmUpdateStatement<T>
 
 	@Override
 	public <Y, X extends Y> SqmUpdateStatement<T> set(SingularAttribute<? super T, Y> attribute, X value) {
-		applyAssignment( getTarget().get( attribute ), (SqmExpression<? extends Y>) nodeBuilder().value( value ) );
+		final SqmCriteriaNodeBuilder nodeBuilder = (SqmCriteriaNodeBuilder) nodeBuilder();
+		SqmPath<Y> sqmAttribute = getTarget().get( attribute );
+		applyAssignment( sqmAttribute, nodeBuilder.value( value, sqmAttribute) );
 		return this;
 	}
 
@@ -287,7 +288,38 @@ public class SqmUpdateStatement<T>
 		SqmFromClause.appendJoins( root, hql, context );
 		SqmFromClause.appendTreatJoins( root, hql, context );
 		setClause.appendHqlString( hql, context );
-
 		super.appendHqlString( hql, context );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmUpdateStatement<?> that
+			&& super.equals( that )
+			&& this.versioned == that.versioned
+			&& Objects.equals( setClause, that.setClause );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = getTarget().hashCode();
+		result = 31 * result + Boolean.hashCode( versioned );
+		result = 31 * result + Objects.hashCode( setClause );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmUpdateStatement<?> that
+			&& super.isCompatible( that )
+			&& this.versioned == that.versioned
+			&& SqmCacheable.areCompatible( setClause, that.setClause );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = getTarget().cacheHashCode();
+		result = 31 * result + Boolean.hashCode( versioned );
+		result = 31 * result + SqmCacheable.cacheHashCode( setClause );
+		return result;
 	}
 }

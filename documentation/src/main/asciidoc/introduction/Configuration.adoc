@@ -72,6 +72,8 @@ driver for your database.
 | Oracle                    | `com.oracle.database.jdbc:ojdbc17:{version}`
 | H2                        | `com.h2database:h2:{version}`
 | HSQLDB                    | `org.hsqldb:hsqldb:{version}`
+| MongoDB                   | The JDBC driver is bundled with the dialect mentioned in <<optional-dependencies>>
+| Google Spanner            | `com.google.cloud:google-cloud-spanner-jdbc:{version}`
 |===
 
 Where `{version}` is the latest version of the JDBC driver for your database.
@@ -102,9 +104,7 @@ Optionally, you might also add any of the following additional features:
 | An {slf4j}[SLF4J] logging implementation |
 `org.apache.logging.log4j:log4j-core` +
 or `org.slf4j:slf4j-jdk14`
-| A JDBC connection pool, for example, {agroal}[Agroal] |
-`org.hibernate.orm:hibernate-agroal` +
-and `io.agroal:agroal-pool`
+| A JDBC connection pool, for example, {agroal}[Agroal] | `org.hibernate.orm:hibernate-agroal`
 | The {generator}[Hibernate Processor], especially if you're using Jakarta Data or the JPA criteria query API | `org.hibernate.orm:hibernate-processor`
 | The {query-validator}[Query Validator], for compile-time checking of HQL | `org.hibernate:query-validator`
 | {validator}[Hibernate Validator], an implementation of {bean-validation}[Bean Validation] |
@@ -122,6 +122,15 @@ or `org.eclipse:yasson`
 | <<spatial,Hibernate Spatial>> | `org.hibernate.orm:hibernate-spatial`
 | <<envers,Envers>>, for auditing historical data | `org.hibernate.orm:hibernate-envers`
 | <<jfr,Hibernate JFR>>, for monitoring via Java Flight Recorder | `org.hibernate.orm:hibernate-jfr`
+| Hibernate Jandex integration, for <<entity-discovery,entity discovery>> | `org.hibernate.orm:hibernate-scan-jandex`
+| link:{doc-dialect-url}#community-dialects[Community dialects] | `org.hibernate.orm:hibernate-community-dialects`
+| link:{doc-dialect-url}#third-party-dialects[Third-party dialects]
+|
+https://github.com/mongodb/mongo-hibernate/[MongoDB]: `org.mongodb:mongodb-hibernate:{version}`
+
+https://github.com/GoogleCloudPlatform/google-cloud-spanner-hibernate[Google Spanner]: `com.google.cloud:google-cloud-spanner-hibernate-dialect:{version}`
+
+Where `{version}` is the version of the third-party dialect compatible with the version of Hibernate ORM you are using. See the dialect's own documentation for more information. The https://hibernate.org/orm/releases/#compatibility-matrix[compatibility matrix on the Hibernate website] may also be of help.
 |===
 
 You might also add the Hibernate {enhancer}[bytecode enhancer] to your
@@ -264,6 +273,35 @@ This API is useful if you have very advanced requirements, for example, if you'r
 You'll find more information in the {native-bootstrap}[User Guide], and in the {boot}[package-level documentation] of `org.hibernate.boot`.
 ****
 
+[[entity-discovery]]
+=== Entity discovery
+
+In a Jakarta EE container environment, we don't usually need to list entity and embeddable classes explicitly in `persistence.xml`.
+Instead, the container scans the persistence unit `jar` file and automatically discovers classes annotated `@Entity`, `@Embeddable`, or `@MappedSuperclass`.
+
+`HibernatePersistenceConfiguration` offers the same functionality if the <<optional-dependencies,optional dependency>> `hibernate-scan-jandex` is available at runtime.
+
+In the following code, entity classes available on the class loader which loaded `Main.class` are automatically discovered.
+
+[source,java]
+----
+SessionFactory sessionFactory =
+        // entities discovered on ClassLoader of Main.class
+        new HibernatePersistenceConfiguration("Bookshop", Main.class)
+            // PostgreSQL
+            .jdbcUrl("jdbc:postgresql://localhost/example")
+            // Credentials
+            .jdbcCredentials(user, password)
+            // Automatic schema export
+            .schemaToolingAction(Action.SPEC_ACTION_DROP_AND_CREATE)
+            // SQL statement logging
+            .showSql(true, true, true)
+            // Create a new SessionFactory
+            .createEntityManagerFactory();
+----
+
+Notice that we were able to remove the calls to `managedClass()`.
+
 [[configuration-properties]]
 === Configuration using Hibernate properties file
 
@@ -316,7 +354,7 @@ The properties you really do need to get started are these three:
 ====
 Since Hibernate 6, you don't need to specify `hibernate.dialect`.
 The correct Hibernate SQL `Dialect` will be determined for you automatically.
-The only reason to specify this property is if you're using a custom user-written `Dialect` class.
+The only reason to specify this property is if you're using a custom user-written or link:{doc-dialect-url}#third-party-dialects[third-party] `Dialect` class.
 
 Similarly, neither `hibernate.connection.driver_class` nor `jakarta.persistence.jdbc.driver` is needed when working with one of the supported databases.
 ====
@@ -417,6 +455,9 @@ additionally, drop the schema on `SessionFactory` shutdown
 
 | `jakarta.persistence.sql-load-script-source`
 | (Optional) The name of a SQL DML script to be executed
+
+| `hibernate.hbm2ddl.import_files_sql_extractor`
+| (Optional) If `multi-line`, SQL statements may be split across multiple lines in scripts, and must be ``;``-terminated.
 |===
 
 This feature is extremely useful for testing.
@@ -460,7 +501,7 @@ These settings really help when troubleshooting the generated SQL statements.
 | `hibernate.highlight_sql`   | If `true`, log SQL with syntax highlighting via ANSI escape codes
 |===
 
-Alternatively, you can enable debug-level logging for the category `org.hibernate.SQL` using your preferred SLF4J logging implementation.
+Alternatively, you can enable ``DEBUG``-level logging for the category `org.hibernate.SQL` using your preferred SLF4J logging implementation.
 
 For example, if you're using Log4J 2 (as above in <<optional-dependencies>>), add these lines to your `log4j2.properties` file:
 
@@ -477,6 +518,9 @@ logger.jdbc-bind.level=trace
 logger.jdbc-extract.name=org.hibernate.orm.jdbc.extract
 logger.jdbc-extract.level=trace
 
+# JDBC batching
+logger.jdbc-batch.name=org.hibernate.orm.jdbc.batch
+logger.jdbc-batch.level=trace
 ----
 
 SQL logging respects the settings `hibernate.format_sql` and `hibernate.highlight_sql`, so we don't miss out on the pretty formatting and highlighting.

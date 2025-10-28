@@ -8,11 +8,13 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = SomeEntity.class,
 		typeContributors = TypesContributor.class
@@ -20,6 +22,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @SessionFactory
 @JiraKey( "HHH-18787" )
 class UserTypeNotRecognisedTestCase {
+	@AfterEach
+	void dropTestData(SessionFactoryScope sessionFactoryScope) {
+		sessionFactoryScope.dropData();
+	}
 
 	@Test
 	void customUserTypeWithTypeContributorRegistrationTest(SessionFactoryScope scope) {

@@ -5,7 +5,6 @@
 package org.hibernate.internal.util.config;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -14,8 +13,7 @@ import java.util.function.Supplier;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.Incubating;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -186,10 +184,10 @@ public final class ConfigurationHelper {
 		if ( value == null ) {
 			return defaultValue;
 		}
-		if (value instanceof Integer integer) {
+		else if (value instanceof Integer integer) {
 			return integer;
 		}
-		if (value instanceof String string) {
+		else if (value instanceof String string) {
 			return Integer.parseInt(string);
 		}
 		throw new ConfigurationException(
@@ -270,7 +268,7 @@ public final class ConfigurationHelper {
 	}
 
 	/**
-	 * replace a property by a starred version
+	 * Replace a property by a starred version
 	 *
 	 * @param props properties to check
 	 * @param key property to mask
@@ -278,11 +276,53 @@ public final class ConfigurationHelper {
 	 * @return cloned and masked properties
 	 */
 	public static Properties maskOut(Properties props, String key) {
-		final Properties clone = (Properties) props.clone();
+		final var clone = (Properties) props.clone();
 		if ( clone.get( key ) != null ) {
 			clone.setProperty( key, "****" );
 		}
 		return clone;
+	}
+
+	/**
+	 * Replace properties by starred version
+	 *
+	 * @param props properties to check
+	 * @param keys properties to mask
+	 *
+	 * @return cloned and masked properties
+	 */
+	public static Properties maskOut(Properties props, String... keys) {
+		Properties result = props;
+		for ( String key : keys ) {
+			if ( props.get( key ) != null ) {
+				if ( result == props ) {
+					result = (Properties) props.clone();
+				}
+				result.setProperty( key, "****" );
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Replace properties by starred version
+	 *
+	 * @param props properties to check
+	 * @param keys properties to mask
+	 *
+	 * @return cloned and masked properties
+	 */
+	public static Map<String, Object> maskOut(Map<String, Object> props, String... keys) {
+		Map<String,Object> result = props;
+		for ( String key : keys ) {
+			if ( props.containsKey( key ) ) {
+				if ( result == props ) {
+					result = new HashMap<>( props );
+				}
+				result.put( key, "****" );
+			}
+		}
+		return result;
 	}
 
 	/**
@@ -326,6 +366,10 @@ public final class ConfigurationHelper {
 		return value;
 	}
 
+	/**
+	 * @deprecated No longer used
+	 */
+	@Deprecated(since = "7.2", forRemoval = true)
 	public static String extractValue(
 			String name,
 			Map<?,?> values,
@@ -356,10 +400,10 @@ public final class ConfigurationHelper {
 	@SuppressWarnings("rawtypes")
 	@Deprecated(since = "7", forRemoval = true)
 	public static Map toMap(String propertyName, String delim, Properties properties) {
-		Map<String,String> map = new HashMap<>();
-		String value = extractPropertyValue( propertyName, properties );
+		final Map<String,String> map = new HashMap<>();
+		final String value = extractPropertyValue( propertyName, properties );
 		if ( value != null ) {
-			StringTokenizer tokens = new StringTokenizer( value, delim );
+			final var tokens = new StringTokenizer( value, delim );
 			while ( tokens.hasMoreTokens() ) {
 				map.put( tokens.nextToken(), tokens.hasMoreElements() ? tokens.nextToken() : "" );
 			}
@@ -385,10 +429,10 @@ public final class ConfigurationHelper {
 	@SuppressWarnings("rawtypes")
 	@Deprecated(since = "7", forRemoval = true)
 	public static Map toMap(String propertyName, String delim, Map<?,?> properties) {
-		Map<String,String> map = new HashMap<>();
-		String value = extractPropertyValue( propertyName, properties );
+		final Map<String,String> map = new HashMap<>();
+		final String value = extractPropertyValue( propertyName, properties );
 		if ( value != null ) {
-			StringTokenizer tokens = new StringTokenizer( value, delim );
+			final var tokens = new StringTokenizer( value, delim );
 			while ( tokens.hasMoreTokens() ) {
 				map.put( tokens.nextToken(), tokens.hasMoreElements() ? tokens.nextToken() : "" );
 			}
@@ -422,12 +466,9 @@ public final class ConfigurationHelper {
 	 */
 	public static String[] toStringArray(String stringForm, String delim) {
 		// todo : move to StringHelper?
-		if ( stringForm != null ) {
-			return StringHelper.split( delim, stringForm );
-		}
-		else {
-			return ArrayHelper.EMPTY_STRING_ARRAY;
-		}
+		return stringForm != null
+				? StringHelper.split( delim, stringForm )
+				: ArrayHelper.EMPTY_STRING_ARRAY;
 	}
 
 	/**
@@ -436,13 +477,12 @@ public final class ConfigurationHelper {
 	 * @param configurationValues The configuration map.
 	 */
 	public static void resolvePlaceHolders(Map<?,Object> configurationValues) {
-		final Iterator<? extends Map.Entry<?,Object>> itr = configurationValues.entrySet().iterator();
+		final var itr = configurationValues.entrySet().iterator();
 		while ( itr.hasNext() ) {
-			final Map.Entry<?,Object> entry = itr.next();
-			final Object value = entry.getValue();
-			if ( value instanceof String string ) {
+			final var entry = itr.next();
+			if ( entry.getValue() instanceof String string ) {
 				final String resolved = resolvePlaceHolder( string );
-				if ( !value.equals( resolved ) ) {
+				if ( !string.equals( resolved ) ) {
 					if ( resolved == null ) {
 						itr.remove();
 					}
@@ -464,8 +504,8 @@ public final class ConfigurationHelper {
 		if ( !property.contains( PLACEHOLDER_START ) ) {
 			return property;
 		}
-		StringBuilder buff = new StringBuilder();
-		char[] chars = property.toCharArray();
+		final var result = new StringBuilder();
+		final char[] chars = property.toCharArray();
 		for ( int pos = 0; pos < chars.length; pos++ ) {
 			if ( chars[pos] == '$' ) {
 				// peek ahead
@@ -482,7 +522,7 @@ public final class ConfigurationHelper {
 						}
 					}
 					final String systemProperty = extractFromSystem( systemPropertyName );
-					buff.append( systemProperty == null ? "" : systemProperty );
+					result.append( systemProperty == null ? "" : systemProperty );
 					pos = x + 1;
 					// make sure spinning forward did not put us past the end of the buffer...
 					if ( pos >= chars.length ) {
@@ -490,10 +530,9 @@ public final class ConfigurationHelper {
 					}
 				}
 			}
-			buff.append( chars[pos] );
+			result.append( chars[pos] );
 		}
-		final String result = buff.toString();
-		return result.isEmpty() ? null : result;
+		return result.isEmpty() ? null : result.toString();
 	}
 
 	private static String extractFromSystem(String systemPropertyName) {
@@ -505,96 +544,65 @@ public final class ConfigurationHelper {
 		}
 	}
 
-	@Incubating
-	public static synchronized int getPreferredSqlTypeCodeForBoolean(StandardServiceRegistry serviceRegistry) {
-		final Integer typeCode = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
-				AvailableSettings.PREFERRED_BOOLEAN_JDBC_TYPE,
-				TypeCodeConverter.INSTANCE
-		);
+	private static Integer getConfiguredTypeCode(ServiceRegistry serviceRegistry, String setting) {
+		final Integer typeCode =
+				serviceRegistry.requireService( ConfigurationService.class )
+						.getSetting( setting, TypeCodeConverter.INSTANCE );
 		if ( typeCode != null ) {
-			INCUBATION_LOGGER.incubatingSetting( AvailableSettings.PREFERRED_BOOLEAN_JDBC_TYPE );
-			return typeCode;
+			INCUBATION_LOGGER.incubatingSetting( setting );
 		}
+		return typeCode;
+	}
 
-		// default to the Dialect answer
-		return serviceRegistry.requireService( JdbcServices.class )
-				.getJdbcEnvironment()
-				.getDialect()
-				.getPreferredSqlTypeCodeForBoolean();
+	@Incubating
+	public static synchronized int getPreferredSqlTypeCodeForBoolean(ServiceRegistry serviceRegistry) {
+		final Integer typeCode =
+				getConfiguredTypeCode( serviceRegistry, MappingSettings.PREFERRED_BOOLEAN_JDBC_TYPE );
+		return typeCode != null
+				? typeCode
+				: serviceRegistry.requireService( JdbcServices.class )
+						.getDialect().getPreferredSqlTypeCodeForBoolean();
 	}
 
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForBoolean(ServiceRegistry serviceRegistry, Dialect dialect) {
-		final Integer typeCode = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
-				AvailableSettings.PREFERRED_BOOLEAN_JDBC_TYPE,
-				TypeCodeConverter.INSTANCE
-		);
-		if ( typeCode != null ) {
-			INCUBATION_LOGGER.incubatingSetting( AvailableSettings.PREFERRED_BOOLEAN_JDBC_TYPE );
-			return typeCode;
-		}
-
-		// default to the Dialect answer
-		return dialect.getPreferredSqlTypeCodeForBoolean();
+		final Integer typeCode =
+				getConfiguredTypeCode( serviceRegistry, MappingSettings.PREFERRED_BOOLEAN_JDBC_TYPE );
+		return typeCode != null ? typeCode : dialect.getPreferredSqlTypeCodeForBoolean();
 	}
 
 	@Incubating
-	public static synchronized int getPreferredSqlTypeCodeForDuration(StandardServiceRegistry serviceRegistry) {
-		final Integer explicitSetting = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
-				AvailableSettings.PREFERRED_DURATION_JDBC_TYPE,
-				TypeCodeConverter.INSTANCE
-		);
-		if ( explicitSetting != null ) {
-			INCUBATION_LOGGER.incubatingSetting( AvailableSettings.PREFERRED_DURATION_JDBC_TYPE );
-			return explicitSetting;
-		}
+	public static synchronized int getPreferredSqlTypeCodeForDuration(ServiceRegistry serviceRegistry) {
+		final Integer explicitSetting =
+				getConfiguredTypeCode( serviceRegistry, MappingSettings.PREFERRED_DURATION_JDBC_TYPE );
+		return explicitSetting != null ? explicitSetting : SqlTypes.DURATION;
 
-		return SqlTypes.DURATION;
 	}
 
 	@Incubating
-	public static synchronized int getPreferredSqlTypeCodeForUuid(StandardServiceRegistry serviceRegistry) {
-		final Integer explicitSetting = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
-				AvailableSettings.PREFERRED_UUID_JDBC_TYPE,
-				TypeCodeConverter.INSTANCE
-		);
-		if ( explicitSetting != null ) {
-			INCUBATION_LOGGER.incubatingSetting( AvailableSettings.PREFERRED_UUID_JDBC_TYPE );
-			return explicitSetting;
-		}
+	public static synchronized int getPreferredSqlTypeCodeForUuid(ServiceRegistry serviceRegistry) {
+		final Integer explicitSetting =
+				getConfiguredTypeCode( serviceRegistry, MappingSettings.PREFERRED_UUID_JDBC_TYPE );
+		return explicitSetting != null ? explicitSetting : SqlTypes.UUID;
 
-		return SqlTypes.UUID;
 	}
 
 	@Incubating
-	public static synchronized int getPreferredSqlTypeCodeForInstant(StandardServiceRegistry serviceRegistry) {
-		final Integer explicitSetting = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
-				AvailableSettings.PREFERRED_INSTANT_JDBC_TYPE,
-				TypeCodeConverter.INSTANCE
-		);
-		if ( explicitSetting != null ) {
-			INCUBATION_LOGGER.incubatingSetting( AvailableSettings.PREFERRED_INSTANT_JDBC_TYPE );
-			return explicitSetting;
-		}
+	public static synchronized int getPreferredSqlTypeCodeForInstant(ServiceRegistry serviceRegistry) {
+		final Integer explicitSetting =
+				getConfiguredTypeCode( serviceRegistry, MappingSettings.PREFERRED_INSTANT_JDBC_TYPE );
+		return explicitSetting != null ? explicitSetting : SqlTypes.TIMESTAMP_UTC;
 
-		return SqlTypes.TIMESTAMP_UTC;
 	}
 
 	@Incubating
-	public static synchronized int getPreferredSqlTypeCodeForArray(StandardServiceRegistry serviceRegistry) {
-		final Integer explicitSetting = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
-				AvailableSettings.PREFERRED_ARRAY_JDBC_TYPE,
-				TypeCodeConverter.INSTANCE
-		);
-		if ( explicitSetting != null ) {
-			INCUBATION_LOGGER.incubatingSetting( AvailableSettings.PREFERRED_ARRAY_JDBC_TYPE );
-			return explicitSetting;
-		}
-		// default to the Dialect answer
-		return serviceRegistry.requireService( JdbcServices.class )
-				.getJdbcEnvironment()
-				.getDialect()
-				.getPreferredSqlTypeCodeForArray();
+	public static synchronized int getPreferredSqlTypeCodeForArray(ServiceRegistry serviceRegistry) {
+		final Integer explicitSetting =
+				getConfiguredTypeCode( serviceRegistry, MappingSettings.PREFERRED_ARRAY_JDBC_TYPE );
+		return explicitSetting != null
+				? explicitSetting
+				: serviceRegistry.requireService( JdbcServices.class )
+						.getDialect().getPreferredSqlTypeCodeForArray();
 	}
 
 	public static void setIfNotEmpty(String value, String settingName, Map<String, String> configuration) {

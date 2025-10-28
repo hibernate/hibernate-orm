@@ -16,13 +16,13 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( xmlMappings = "org/hibernate/orm/test/idgen/enhanced/sequence/HiLo.hbm.xml" )
 @SessionFactory
 public class HiLoSequenceTest {
@@ -32,44 +32,37 @@ public class HiLoSequenceTest {
 		final EntityPersister persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(Entity.class.getName());
-		assertThat( persister.getIdentifierGenerator(), instanceOf( SequenceStyleGenerator.class ) );
-
-		final SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getIdentifierGenerator();
-		assertThat( generator.getOptimizer(), instanceOf( HiLoOptimizer.class ) );
-
+		assertThat( persister.getGenerator() ).isInstanceOf( SequenceStyleGenerator.class );
+		final SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getGenerator();
+		assertThat( generator.getOptimizer() ).isInstanceOf( HiLoOptimizer.class );
 		final HiLoOptimizer optimizer = (HiLoOptimizer) generator.getOptimizer();
-
 		final int increment = optimizer.getIncrementSize();
 
-		scope.inTransaction(
-				(s) -> {
-					for ( int i = 0; i < increment; i++ ) {
-						final Entity entity = new Entity( "" + ( i + 1 ) );
-						s.persist( entity );
+		scope.inTransaction( (s) -> {
+			for ( int i = 0; i < increment; i++ ) {
+				final Entity entity = new Entity( "" + ( i + 1 ) );
+				s.persist( entity );
 
-						// initialization
-						assertEquals( 1, generator.getDatabaseStructure().getTimesAccessed() );
-						// initialization
-						assertEquals( 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
-						assertEquals( i + 1, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
-						assertEquals( increment + 1, ( (BasicHolder) optimizer.getHiValue() ).getActualLongValue() );
-					}
+				// initialization
+				assertEquals( 1, generator.getDatabaseStructure().getTimesAccessed() );
+				// initialization
+				assertEquals( 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
+				assertEquals( i + 1, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
+				assertEquals( increment + 1, ( (BasicHolder) optimizer.getHiValue() ).getActualLongValue() );
+			}
 
-					// now force a "clock over"
-					final Entity entity = new Entity( "" + increment );
-					s.persist( entity );
-					assertEquals( 2, generator.getDatabaseStructure().getTimesAccessed() ); // initialization
-					assertEquals( 2, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() ); // initialization
-					assertEquals( increment + 1, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
-					assertEquals( ( increment * 2 ) + 1, ( (BasicHolder) optimizer.getHiValue() ).getActualLongValue() );
-				}
-		);
+			// now force a "clock over"
+			final Entity entity = new Entity( "" + increment );
+			s.persist( entity );
+			assertEquals( 2, generator.getDatabaseStructure().getTimesAccessed() ); // initialization
+			assertEquals( 2, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() ); // initialization
+			assertEquals( increment + 1, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
+			assertEquals( ( increment * 2L ) + 1, ( (BasicHolder) optimizer.getHiValue() ).getActualLongValue() );
+		} );
 	}
 
 	@AfterEach
 	public void cleanTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.createQuery( "delete Entity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

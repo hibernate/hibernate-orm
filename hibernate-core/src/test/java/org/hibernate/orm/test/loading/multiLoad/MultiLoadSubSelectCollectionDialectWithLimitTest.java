@@ -45,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = {
 		MultiLoadSubSelectCollectionDialectWithLimitTest.Parent.class,
 		MultiLoadSubSelectCollectionDialectWithLimitTest.Child.class
@@ -55,10 +56,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SessionFactory(generateStatistics = true, useCollectingStatementInspector = true)
 @RequiresDialect( value = H2Dialect.class )
 public class MultiLoadSubSelectCollectionDialectWithLimitTest {
-
-
 	public static class TestSettingProvider implements SettingProvider.Provider<String> {
-
 		@Override
 		public String getSetting() {
 			return TestDialect.class.getName();
@@ -102,10 +100,7 @@ public class MultiLoadSubSelectCollectionDialectWithLimitTest {
 
 	@AfterEach
 	public void after(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery( "delete Child" ).executeUpdate();
-			session.createQuery( "delete Parent" ).executeUpdate();
-		} );
+		scope.dropData();
 	}
 
 	@Test
@@ -115,62 +110,60 @@ public class MultiLoadSubSelectCollectionDialectWithLimitTest {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		statementInspector.clear();
 
-		scope.inTransaction(
-				session -> {
-					List<Parent> list = session.byMultipleIds( Parent.class ).multiLoad( ids( 56 ) );
-					assertEquals( 56, list.size() );
+		scope.inTransaction(session -> {
+			List<Parent> list = session.findMultiple( Parent.class, ids(56) );
+			assertEquals( 56, list.size() );
 
-					// None of the collections should be loaded yet
-					if ( dialect.useArrayForMultiValuedParameters() ) {
-						assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-					}
-					else {
-						assertThat( statementInspector.getSqlQueries() ).hasSize( 2 );
-					}
-					for ( Parent p : list ) {
-						assertFalse( Hibernate.isInitialized( p.children ) );
-					}
+			// None of the collections should be loaded yet
+			if ( dialect.useArrayForMultiValuedParameters() ) {
+				assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			}
+			else {
+				assertThat( statementInspector.getSqlQueries() ).hasSize( 2 );
+			}
+			for ( Parent p : list ) {
+				assertFalse( Hibernate.isInitialized( p.children ) );
+			}
 
-					statementInspector.clear();
+			statementInspector.clear();
 
-					// When the first collection is loaded multiple will be initialized
-					Hibernate.initialize( list.get( 0 ).children );
+			// When the first collection is loaded multiple will be initialized
+			Hibernate.initialize( list.get( 0 ).children );
 
-					// exactly how depends on whether the Dialect supports use of SQL ARRAY
-					if ( dialect.useArrayForMultiValuedParameters() ) {
-						assertThat( Hibernate.isInitialized( list.get( 0 ).children ) ).isTrue();
-						assertThat( Hibernate.isInitialized( list.get( 50 ).children ) ).isTrue();
-						assertThat( Hibernate.isInitialized( list.get( 52 ).children ) ).isTrue();
-						assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-					}
-					else {
-						for ( int i = 0; i < 50; i++ ) {
-							assertTrue( Hibernate.isInitialized( list.get( i ).children ) );
-							assertEquals( i + 1, list.get( i ).children.size() );
-						}
-
-						// The collections for the 51st through 56th entities should still be uninitialized
-						for ( int i = 50; i < 56; i++ ) {
-							assertFalse( Hibernate.isInitialized( list.get( i ).children ) );
-						}
-
-						// When the 51st collection gets initialized, the remaining collections should
-						// also be initialized.
-						Hibernate.initialize( list.get( 50 ).children );
-
-						for ( int i = 50; i < 56; i++ ) {
-							assertTrue( Hibernate.isInitialized( list.get( i ).children ) );
-							assertEquals( i + 1, list.get( i ).children.size() );
-						}
-					}
+			// exactly how depends on whether the Dialect supports use of SQL ARRAY
+			if ( dialect.useArrayForMultiValuedParameters() ) {
+				assertThat( Hibernate.isInitialized( list.get( 0 ).children ) ).isTrue();
+				assertThat( Hibernate.isInitialized( list.get( 50 ).children ) ).isTrue();
+				assertThat( Hibernate.isInitialized( list.get( 52 ).children ) ).isTrue();
+				assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			}
+			else {
+				for ( int i = 0; i < 50; i++ ) {
+					assertTrue( Hibernate.isInitialized( list.get( i ).children ) );
+					assertEquals( i + 1, list.get( i ).children.size() );
 				}
-		);
+
+				// The collections for the 51st through 56th entities should still be uninitialized
+				for ( int i = 50; i < 56; i++ ) {
+					assertFalse( Hibernate.isInitialized( list.get( i ).children ) );
+				}
+
+				// When the 51st collection gets initialized, the remaining collections should
+				// also be initialized.
+				Hibernate.initialize( list.get( 50 ).children );
+
+				for ( int i = 50; i < 56; i++ ) {
+					assertTrue( Hibernate.isInitialized( list.get( i ).children ) );
+					assertEquals( i + 1, list.get( i ).children.size() );
+				}
+			}
+		} );
 	}
 
-	private Integer[] ids(int count) {
-		Integer[] ids = new Integer[count];
+	private List<Integer> ids(int count) {
+		var ids = new ArrayList<Integer>(count);
 		for ( int i = 1; i <= count; i++ ) {
-			ids[i - 1] = i;
+			ids.add(i);
 		}
 		return ids;
 	}

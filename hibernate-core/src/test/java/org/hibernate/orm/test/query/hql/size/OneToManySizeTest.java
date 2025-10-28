@@ -248,13 +248,7 @@ public class OneToManySizeTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					for ( Company company : session.createQuery( "from Company", Company.class ).list() ) {
-						session.remove( company );
-					}
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name ="Company")

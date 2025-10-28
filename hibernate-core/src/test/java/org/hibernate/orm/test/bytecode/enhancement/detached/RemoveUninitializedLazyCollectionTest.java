@@ -50,13 +50,7 @@ public class RemoveUninitializedLazyCollectionTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Child1" ).executeUpdate();
-					session.createQuery( "delete from Child2" ).executeUpdate();
-					session.createQuery( "delete from Parent" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@BeforeEach

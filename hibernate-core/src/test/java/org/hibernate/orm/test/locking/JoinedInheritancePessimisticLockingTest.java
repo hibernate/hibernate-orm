@@ -12,15 +12,18 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Version;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @Jpa(
 		annotatedClasses =  {
 				JoinedInheritancePessimisticLockingTest.BaseThing.class,
@@ -33,31 +36,29 @@ public class JoinedInheritancePessimisticLockingTest {
 
 	@BeforeEach
 	public void setup(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					ConcreteThing t1 = new ConcreteThing();
-					t1.id = 1L;
-					t1.name = "t1";
-					t1.aProp = "abc";
-					AnotherConcreteThing t2 = new AnotherConcreteThing();
-					t2.id = 2L;
-					t2.name = "t2";
-					t2.anotherProp = "def";
-					entityManager.persist( t1 );
-					entityManager.persist( t2 );
-				}
-		);
+		scope.inTransaction(entityManager -> {
+			var t1 = new ConcreteThing();
+			t1.id = 1L;
+			t1.name = "t1";
+			t1.aProp = "abc";
+			entityManager.persist( t1 );
+
+			var t2 = new AnotherConcreteThing();
+			t2.id = 2L;
+			t2.name = "t2";
+			t2.anotherProp = "def";
+			entityManager.persist( t2 );
+		} );
 	}
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager ->
-						entityManager.createQuery( "delete from BaseThing" ).executeUpdate()
-		);
+		scope.dropData();
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Informix disallows FOR UPDATE with multi-table queries")
 	public void findWithLock(EntityManagerFactoryScope scope) {
 		scope.inTransaction(entityManager -> {
 			BaseThing t = entityManager.find( BaseThing.class, 1L, LockModeType.PESSIMISTIC_WRITE );

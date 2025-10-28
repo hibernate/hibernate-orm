@@ -5,7 +5,6 @@
 package org.hibernate.boot.models.xml.internal;
 
 import java.util.List;
-import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -36,7 +35,6 @@ import org.hibernate.boot.models.xml.internal.attr.EmbeddedIdAttributeProcessing
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.boot.models.xml.spi.XmlProcessingResult;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.internal.ModelsClassLogging;
@@ -62,6 +60,7 @@ import static org.hibernate.boot.models.xml.XmlProcessLogging.XML_PROCESS_LOGGER
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * Helper for handling managed types defined in mapping XML, in either
@@ -313,14 +312,19 @@ public class ManagedTypeProcessor {
 		final RenderingTargetCollectingImpl collectingTarget = new RenderingTargetCollectingImpl();
 		final SimpleRenderer renderer = new SimpleRenderer( collectingTarget );
 		renderer.renderClass( classDetails, xmlDocumentContext.getModelBuildingContext() );
-		XML_PROCESS_LOGGER.debugf( "Class annotations from XML for %s:\n%s", classDetails.getName(), collectingTarget.toString() );
+		XML_PROCESS_LOGGER.tracef( "Class annotations from XML for %s:\n%s",
+				classDetails.getName(),
+				collectingTarget.toString() );
 	}
 
 	private static void applyAccessAnnotation(
 			AccessType accessType,
 			MutableClassDetails target,
 			XmlDocumentContext xmlDocumentContext) {
-		final AccessJpaAnnotation annotationUsage = (AccessJpaAnnotation) target.applyAnnotationUsage( JpaAnnotations.ACCESS, xmlDocumentContext.getModelBuildingContext() );
+		final AccessJpaAnnotation annotationUsage =
+				(AccessJpaAnnotation)
+						target.applyAnnotationUsage( JpaAnnotations.ACCESS,
+								xmlDocumentContext.getModelBuildingContext() );
 		annotationUsage.value( accessType );
 		target.addAnnotationUsage( annotationUsage );
 	}
@@ -330,10 +334,10 @@ public class ManagedTypeProcessor {
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( jaxbEntity.isCacheable() != null ) {
-			final CacheableJpaAnnotation cacheableUsage = (CacheableJpaAnnotation) classDetails.applyAnnotationUsage(
-					JpaAnnotations.CACHEABLE,
-					xmlDocumentContext.getModelBuildingContext()
-			);
+			final CacheableJpaAnnotation cacheableUsage =
+					(CacheableJpaAnnotation)
+							classDetails.applyAnnotationUsage( JpaAnnotations.CACHEABLE,
+									xmlDocumentContext.getModelBuildingContext() );
 
 			cacheableUsage.value( jaxbEntity.isCacheable() );
 			classDetails.addAnnotationUsage( cacheableUsage );
@@ -341,10 +345,10 @@ public class ManagedTypeProcessor {
 
 		final JaxbCachingImpl jaxbCaching = jaxbEntity.getCaching();
 		if ( jaxbCaching != null ) {
-			final CacheAnnotation cacheUsage = (CacheAnnotation) classDetails.replaceAnnotationUsage(
-					HibernateAnnotations.CACHE,
-					xmlDocumentContext.getModelBuildingContext()
-			);
+			final CacheAnnotation cacheUsage =
+					(CacheAnnotation)
+							classDetails.replaceAnnotationUsage( HibernateAnnotations.CACHE,
+									xmlDocumentContext.getModelBuildingContext() );
 			if ( StringHelper.isNotEmpty( jaxbCaching.getRegion() ) ) {
 				cacheUsage.region( jaxbCaching.getRegion() );
 			}
@@ -358,10 +362,7 @@ public class ManagedTypeProcessor {
 	}
 
 	private static CacheConcurrencyStrategy convertCacheAccessType(org.hibernate.cache.spi.access.AccessType accessType) {
-		if ( accessType == null ) {
-			return null;
-		}
-		return CacheConcurrencyStrategy.fromAccessType( accessType );
+		return accessType == null ? null : CacheConcurrencyStrategy.fromAccessType( accessType );
 	}
 
 	private static void applyTenantId(
@@ -376,7 +377,8 @@ public class ManagedTypeProcessor {
 					coalesce( jaxbTenantId.getAccess(), classAccessType ),
 					classDetails
 			);
-			memberDetails.applyAnnotationUsage( HibernateAnnotations.TENANT_ID, xmlDocumentContext.getModelBuildingContext() );
+			memberDetails.applyAnnotationUsage( HibernateAnnotations.TENANT_ID,
+					xmlDocumentContext.getModelBuildingContext() );
 			BasicAttributeProcessing.processBasicAttribute(
 					jaxbTenantId,
 					classDetails,
@@ -416,10 +418,11 @@ public class ManagedTypeProcessor {
 			final JaxbEntityMappingsImpl jaxbRoot = overrideTuple.getJaxbRoot();
 			final JaxbEntityImpl jaxbEntity = overrideTuple.getManagedType();
 			final String className = XmlProcessingHelper.determineClassName( jaxbRoot, jaxbEntity );
-			final MutableClassDetails classDetails = (MutableClassDetails) xmlDocumentContext
-					.getModelBuildingContext()
-					.getClassDetailsRegistry()
-					.resolveClassDetails( className );
+			final MutableClassDetails classDetails =
+					(MutableClassDetails)
+							xmlDocumentContext.getModelBuildingContext()
+									.getClassDetailsRegistry()
+									.resolveClassDetails( className );
 
 			final AccessType classAccessType = coalesceSuppliedValues(
 					// look on this <entity/>
@@ -451,11 +454,8 @@ public class ManagedTypeProcessor {
 
 	private static AccessType determineAccessTypeFromClassAnnotations(ClassDetails classDetails) {
 		final Access accessUsage = classDetails.getDirectAnnotationUsage( Access.class );
-		if ( accessUsage != null ) {
-			return accessUsage.value();
-		}
+		return accessUsage != null ? accessUsage.value() : null;
 
-		return null;
 	}
 
 	private static AccessType determineAccessTypeFromClassMembers(ClassDetails classDetails) {
@@ -477,17 +477,6 @@ public class ManagedTypeProcessor {
 		return null;
 	}
 
-	/**
-	 * Used in cases where neither the class nor the XML defined an explicit AccessType.
-	 * </p>
-	 * According to the specification, strictly speaking, this should (could) be an exception
-	 */
-	private static Supplier<AccessType> determineAccessTypeFromClassAndXml(
-			JaxbEntityImpl jaxbEntity,
-			MutableClassDetails classDetails) {
-		return null;
-	}
-
 	private static void processIdMappings(
 			JaxbAttributesContainerImpl attributes,
 			AccessType classAccessType,
@@ -497,7 +486,7 @@ public class ManagedTypeProcessor {
 		final List<JaxbIdImpl> jaxbIds = attributes.getIdAttributes();
 		final JaxbEmbeddedIdImpl jaxbEmbeddedId = attributes.getEmbeddedIdAttribute();
 
-		if ( CollectionHelper.isNotEmpty( jaxbIds ) ) {
+		if ( isNotEmpty( jaxbIds ) ) {
 			for ( int i = 0; i < jaxbIds.size(); i++ ) {
 				final JaxbIdImpl jaxbId = jaxbIds.get( i );
 				final MutableMemberDetails memberDetails = BasicIdAttributeProcessing.processBasicIdAttribute(

@@ -9,37 +9,17 @@ import org.hibernate.jpa.spi.JpaCompliance;
 /**
  * @author Andrea Boriero
  */
-public class JpaComplianceImpl implements JpaCompliance {
-	private final boolean orderByMappingCompliance;
-	private final boolean proxyCompliance;
-	private final boolean globalGeneratorNameScopeCompliance;
-	private final boolean queryCompliance;
-	private final boolean transactionCompliance;
-	private final boolean closedCompliance;
-	private final boolean cachingCompliance;
-	private final boolean loadByIdCompliance;
-	private final boolean cascadeCompliance;
-
-	public JpaComplianceImpl(
-			boolean orderByMappingCompliance,
-			boolean proxyCompliance,
-			boolean globalGeneratorNameScopeCompliance,
-			boolean queryCompliance,
-			boolean transactionCompliance,
-			boolean closedCompliance,
-			boolean cachingCompliance,
-			boolean loadByIdCompliance,
-			boolean cascadeCompliance) {
-		this.queryCompliance = queryCompliance;
-		this.transactionCompliance = transactionCompliance;
-		this.closedCompliance = closedCompliance;
-		this.proxyCompliance = proxyCompliance;
-		this.cachingCompliance = cachingCompliance;
-		this.globalGeneratorNameScopeCompliance = globalGeneratorNameScopeCompliance;
-		this.orderByMappingCompliance = orderByMappingCompliance;
-		this.loadByIdCompliance = loadByIdCompliance;
-		this.cascadeCompliance = cascadeCompliance;
-	}
+public record JpaComplianceImpl(
+		boolean orderByMappingCompliance,
+		boolean proxyCompliance,
+		boolean globalGeneratorNameScopeCompliance,
+		boolean queryCompliance,
+		boolean transactionCompliance,
+		boolean closedCompliance,
+		boolean cachingCompliance,
+		boolean loadByIdCompliance,
+		boolean cascadeCompliance)
+				implements JpaCompliance {
 
 	@Override
 	public boolean isJpaQueryComplianceEnabled() {

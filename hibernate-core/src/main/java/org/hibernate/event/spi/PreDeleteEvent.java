@@ -4,6 +4,7 @@
  */
 package org.hibernate.event.spi;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 
@@ -31,7 +32,7 @@ public class PreDeleteEvent extends AbstractPreDatabaseOperationEvent {
 			Object id,
 			Object[] deletedState,
 			EntityPersister persister,
-			EventSource source) {
+			SharedSessionContractImplementor source) {
 		super( source, entity, id, persister );
 		this.deletedState = deletedState;
 	}

@@ -16,26 +16,20 @@ import org.hibernate.IdentifierLoadAccess;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.UnknownProfileException;
-import org.hibernate.engine.spi.EffectiveEntityGraph;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.loader.LoaderLogging;
 import org.hibernate.loader.ast.spi.NaturalIdLoadOptions;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.LazyInitializer;
 
 import static org.hibernate.engine.spi.NaturalIdResolutions.INVALID_NATURAL_ID_REFERENCE;
 import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossReferenceSynchronizations;
 
 /**
- * Base support for load-by-natural-id
+ * Base support for loading by {@linkplain org.hibernate.annotations.NaturalId natural id}.
  *
  * @author Steve Ebersole
  */
@@ -141,70 +135,56 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 //				: resolvedId;
 //	}
 
-	@SuppressWarnings( "unchecked" )
-	protected final T doGetReference(Object normalizedNaturalIdValue) {
-		performAnyNeededCrossReferenceSynchronizations( synchronizationEnabled, entityDescriptor, context.getSession() );
+	private Object getCachedResolution(Object normalizedNaturalIdValue) {
+		final SessionImplementor session = context.getSession();
+
+		performAnyNeededCrossReferenceSynchronizations( synchronizationEnabled, entityDescriptor, session );
 
 		context.checkOpenOrWaitingForAutoClose();
 		context.pulseTransactionCoordinator();
 
-		final SessionImplementor session = context.getSession();
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		return session.getPersistenceContextInternal()
+				.getNaturalIdResolutions()
+				.findCachedIdByNaturalId( normalizedNaturalIdValue, entityPersister() );
+	}
 
-		final Object cachedResolution =
-				persistenceContext.getNaturalIdResolutions()
-						.findCachedIdByNaturalId( normalizedNaturalIdValue, entityPersister() );
+	protected final T doGetReference(Object normalizedNaturalIdValue) {
+		final Object cachedResolution = getCachedResolution( normalizedNaturalIdValue );
 		if ( cachedResolution == INVALID_NATURAL_ID_REFERENCE ) {
 			// the entity is deleted, although not yet flushed - return null
 			return null;
 		}
+		else if ( cachedResolution != null ) {
+			return identifierLoadAccess().getReference( cachedResolution );
+		}
 		else {
-			if ( cachedResolution != null ) {
-				return (T) getIdentifierLoadAccess().getReference( cachedResolution );
-			}
-			else {
-				LoaderLogging.LOADER_LOGGER.debugf(
-						"Selecting entity identifier by natural-id for `#getReference` handling - %s : %s",
-						entityPersister().getEntityName(),
-						normalizedNaturalIdValue
-				);
-				final Object idFromDatabase =
-						entityPersister().getNaturalIdLoader()
-								.resolveNaturalIdToId( normalizedNaturalIdValue, session );
-				return idFromDatabase == null ? null : (T) getIdentifierLoadAccess().getReference( idFromDatabase );
-			}
+			final Object idFromDatabase =
+					entityPersister().getNaturalIdLoader()
+							.resolveNaturalIdToId( normalizedNaturalIdValue, context.getSession() );
+			return idFromDatabase == null ? null : identifierLoadAccess().getReference( idFromDatabase );
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	protected final T doLoad(Object normalizedNaturalIdValue) {
-		performAnyNeededCrossReferenceSynchronizations( synchronizationEnabled, entityDescriptor, context.getSession() );
-
-		context.checkOpenOrWaitingForAutoClose();
-		context.pulseTransactionCoordinator();
-
-		final SessionImplementor session = context.getSession();
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-
-		final Object cachedResolution =
-				persistenceContext.getNaturalIdResolutions()
-						.findCachedIdByNaturalId( normalizedNaturalIdValue, entityPersister() );
+		final Object cachedResolution = getCachedResolution( normalizedNaturalIdValue );
 		if ( cachedResolution == INVALID_NATURAL_ID_REFERENCE ) {
 			return null;
 		}
 		else {
-			final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
-			final HashSet<String> fetchProfiles =
-					influencers.adjustFetchProfiles( disabledFetchProfiles, enabledFetchProfiles );
-			final EffectiveEntityGraph effectiveEntityGraph =
-					session.getLoadQueryInfluencers().applyEntityGraph( rootGraph, graphSemantic);
+			final var session = context.getSession();
+			final var influencers = session.getLoadQueryInfluencers();
+			final var fetchProfiles = influencers.adjustFetchProfiles( disabledFetchProfiles, enabledFetchProfiles );
+			final var effectiveEntityGraph = influencers.applyEntityGraph( rootGraph, graphSemantic );
 			try {
+				@SuppressWarnings("unchecked")
 				final T loaded = cachedResolution != null
-						? (T) getIdentifierLoadAccess().load(cachedResolution)
-						: (T) entityPersister().getNaturalIdLoader().load( normalizedNaturalIdValue, this, session );
+						? identifierLoadAccess().load(cachedResolution)
+						: (T) entityPersister().getNaturalIdLoader()
+								.load( normalizedNaturalIdValue, this, session );
 				if ( loaded != null ) {
-					final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( loaded );
-					final EntityEntry entry = lazyInitializer != null
+					final var persistenceContext = session.getPersistenceContextInternal();
+					final var lazyInitializer = HibernateProxy.extractLazyInitializer( loaded );
+					final var entry = lazyInitializer != null
 							? persistenceContext.getEntry( lazyInitializer.getImplementation() )
 							: persistenceContext.getEntry( loaded );
 					assert entry != null;
@@ -222,8 +202,9 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 		}
 	}
 
-	protected final IdentifierLoadAccess<?> getIdentifierLoadAccess() {
-		final IdentifierLoadAccessImpl<?> loadAccess = new IdentifierLoadAccessImpl<>( context, entityPersister() );
+	protected final IdentifierLoadAccess<T> identifierLoadAccess() {
+		final IdentifierLoadAccessImpl<T> loadAccess =
+				new IdentifierLoadAccessImpl<>( context, entityPersister() );
 		if ( lockOptions != null ) {
 			loadAccess.with( lockOptions );
 		}

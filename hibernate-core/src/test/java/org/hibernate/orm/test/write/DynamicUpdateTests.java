@@ -167,12 +167,7 @@ public class DynamicUpdateTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete AttachableJob" ).executeUpdate();
-			session.createMutationQuery( "delete VersionedJob" ).executeUpdate();
-			session.createMutationQuery( "delete DirtyJob" ).executeUpdate();
-			session.createMutationQuery( "delete AllJob" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "DirtyJob" )

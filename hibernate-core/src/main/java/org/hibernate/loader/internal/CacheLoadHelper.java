@@ -8,8 +8,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
-import org.hibernate.cache.spi.access.CollectionDataAccess;
-import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
@@ -17,19 +15,12 @@ import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.LoadEventListener;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
@@ -78,31 +69,45 @@ public class CacheLoadHelper {
 	 * @throws HibernateException Generally indicates problems applying a lock mode.
 	 */
 	public static PersistenceContextEntry loadFromSessionCache(
-			EntityKey keyToLoad, LockOptions lockOptions,
+			EntityKey keyToLoad,
+			LockOptions lockOptions,
 			LoadEventListener.LoadType options,
 			SharedSessionContractImplementor session) {
 		final Object old = session.getEntityUsingInterceptor( keyToLoad );
+		final PersistenceContextEntry.EntityStatus entityStatus;
 		if ( old != null ) {
 			// this object was already loaded
-			final EntityEntry oldEntry = session.getPersistenceContext().getEntry( old );
-			if ( options.isCheckDeleted() ) {
-				if ( oldEntry.getStatus().isDeletedOrGone() ) {
-					LOADING_LOGGER.foundEntityScheduledForRemoval();
-					return new PersistenceContextEntry( old, REMOVED_ENTITY_MARKER );
-				}
+			final var oldEntry = session.getPersistenceContext().getEntry( old );
+			entityStatus = entityStatus( keyToLoad, options, session, oldEntry, old );
+			if ( entityStatus == MANAGED ) {
+				upgradeLock( old, oldEntry, lockOptions, session );
 			}
-			if ( options.isAllowNulls() ) {
-				final EntityPersister persister =
-						session.getFactory().getMappingMetamodel()
-								.getEntityDescriptor( keyToLoad.getEntityName() );
-				if ( !persister.isInstance( old ) ) {
-					LOADING_LOGGER.foundEntityWrongType();
-					return new PersistenceContextEntry( old, INCONSISTENT_RTN_CLASS_MARKER );
-				}
-			}
-			upgradeLock( old, oldEntry, lockOptions, session );
 		}
-		return new PersistenceContextEntry( old, MANAGED );
+		else {
+			entityStatus = MANAGED;
+		}
+		return new PersistenceContextEntry( old, entityStatus );
+	}
+
+	// Used by Hibernate Reactive
+	public static PersistenceContextEntry.EntityStatus entityStatus(
+			EntityKey keyToLoad,
+			LoadEventListener.LoadType options,
+			SharedSessionContractImplementor session,
+			EntityEntry oldEntry,
+			Object old) {
+		if ( options.isCheckDeleted() && oldEntry.getStatus().isDeletedOrGone() ) {
+			LOADING_LOGGER.foundEntityScheduledForRemoval();
+			return REMOVED_ENTITY_MARKER;
+		}
+		else if ( options.isAllowNulls() && !session.getFactory().getMappingMetamodel()
+				.getEntityDescriptor( keyToLoad.getEntityName() ).isInstance( old ) ) {
+			LOADING_LOGGER.foundEntityWrongType();
+			return INCONSISTENT_RTN_CLASS_MARKER;
+		}
+		else {
+			return MANAGED;
+		}
 	}
 
 	/**
@@ -127,9 +132,8 @@ public class CacheLoadHelper {
 						&& source.getCacheMode().isGetEnabled()
 						&& lockMode.lessThan( LockMode.READ );
 		if ( useCache ) {
-			final Object ce = getFromSharedCache( entityKey.getIdentifier(), persister, source );
-			// nothing was found in cache
-			return ce == null ? null : processCachedEntry( entity, persister, ce, source, entityKey );
+			final Object cacheEntry = getFromSharedCache( entityKey.getIdentifier(), persister, source );
+			return cacheEntry == null ? null : processCachedEntry( entity, persister, cacheEntry, source, entityKey );
 		}
 		else {
 			// we can't use cache here
@@ -140,38 +144,33 @@ public class CacheLoadHelper {
 	private static Object getFromSharedCache(
 			final Object entityId,
 			final EntityPersister persister,
-			SharedSessionContractImplementor source) {
-		final EntityDataAccess cache = persister.getCacheAccessStrategy();
-		final SessionFactoryImplementor factory = source.getFactory();
-		final Object cacheKey = cache.generateCacheKey(
-				entityId,
-				persister,
-				factory,
-				source.getTenantIdentifier()
-		);
-		final Object ce = fromSharedCache( source, cacheKey, persister, persister.getCacheAccessStrategy() );
-		final StatisticsImplementor statistics = factory.getStatistics();
+			final SharedSessionContractImplementor source) {
+		final var cache = persister.getCacheAccessStrategy();
+		final var factory = source.getFactory();
+		final Object cacheKey = cache.generateCacheKey( entityId, persister, factory, source.getTenantIdentifier() );
+		final Object cacheEntry = fromSharedCache( source, cacheKey, persister, persister.getCacheAccessStrategy() );
+		final var statistics = factory.getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
-			final NavigableRole rootEntityRole = getRootEntityRole( persister );
+			final var rootEntityRole = getRootEntityRole( persister );
 			final String regionName = cache.getRegion().getName();
-			if ( ce == null ) {
+			if ( cacheEntry == null ) {
 				statistics.entityCacheMiss( rootEntityRole, regionName );
 			}
 			else {
 				statistics.entityCacheHit( rootEntityRole, regionName );
 			}
 		}
-		return ce;
+		return cacheEntry;
 	}
 
 	private static Object processCachedEntry(
 			final Object instanceToLoad,
 			final EntityPersister persister,
-			final Object ce,
+			final Object cacheEntry,
 			final SharedSessionContractImplementor source,
 			final EntityKey entityKey) {
-		final CacheEntry entry = (CacheEntry)
-				persister.getCacheEntryStructure().destructure( ce, source.getFactory() );
+		final var entry = (CacheEntry)
+				persister.getCacheEntryStructure().destructure( cacheEntry, source.getFactory() );
 		if ( entry.isReferenceEntry() ) {
 			if ( instanceToLoad != null ) {
 				throw new HibernateException( "Attempt to load entity from cache using provided object instance, "
@@ -192,8 +191,8 @@ public class CacheLoadHelper {
 							entityKey
 					);
 			if ( !persister.isInstance( entity ) ) {
-				// Cleanup the inconsistent return class entity from the persistence context
-				final PersistenceContext persistenceContext = source.getPersistenceContext();
+				// Clean up the inconsistent return class entity from the persistence context
+				final var persistenceContext = source.getPersistenceContext();
 				persistenceContext.removeEntry( entity );
 				persistenceContext.removeEntity( entityKey );
 				return null;
@@ -222,12 +221,10 @@ public class CacheLoadHelper {
 			Object entity,
 			EntityKey entityKey) {
 		// make it circular-reference safe
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final var persistenceContext = session.getPersistenceContext();
 		if ( isManagedEntity( entity ) ) {
-			final EntityHolder entityHolder =
-					persistenceContext.addEntityHolder( entityKey, entity );
-			final EntityEntry entityEntry =
-					persistenceContext.addReferenceEntry( entity, Status.READ_ONLY );
+			final var entityHolder = persistenceContext.addEntityHolder( entityKey, entity );
+			final var entityEntry = persistenceContext.addReferenceEntry( entity, Status.READ_ONLY );
 			entityHolder.setEntityEntry( entityEntry );
 		}
 		else {
@@ -251,30 +248,26 @@ public class CacheLoadHelper {
 			Object instanceToLoad,
 			EntityKey entityKey) {
 
-		final EntityPersister subclassPersister =
+		final var subclassPersister =
 				source.getFactory().getMappingMetamodel()
 						.getEntityDescriptor( entry.getSubclass() );
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
-		final EntityHolder oldHolder = persistenceContext.getEntityHolder( entityKey );
+		final var persistenceContext = source.getPersistenceContextInternal();
+		final var oldHolder = persistenceContext.getEntityHolder( entityKey );
 
 		final Object entity;
 		if ( instanceToLoad != null ) {
 			entity = instanceToLoad;
 		}
 		else {
-			if ( oldHolder != null && oldHolder.getEntity() != null ) {
-				// Use the entity which might already be
-				entity = oldHolder.getEntity();
-			}
-			else {
-				entity = source.instantiate( subclassPersister, entityId );
-			}
+			entity = oldHolder != null && oldHolder.getEntity() != null
+					? oldHolder.getEntity()
+					: source.instantiate( subclassPersister, entityId );
 		}
 
 		if ( isPersistentAttributeInterceptable( entity ) ) {
-			PersistentAttributeInterceptor persistentAttributeInterceptor =
+			final var persistentAttributeInterceptor =
 					asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
-			// if we do this after the entity has been initialized the
+			// if we do this after the entity has been initialized, the
 			// BytecodeLazyAttributeInterceptor#isAttributeLoaded(String fieldName)
 			// would return false
 			if ( persistentAttributeInterceptor == null
@@ -285,13 +278,13 @@ public class CacheLoadHelper {
 		}
 
 		// make it circular-reference safe
-		final EntityHolder holder = persistenceContext.addEntityHolder( entityKey, entity );
+		final var holder = persistenceContext.addEntityHolder( entityKey, entity );
 		final Object proxy = holder.getProxy();
 		final boolean isReadOnly;
 		if ( proxy != null ) {
 			// there is already a proxy for this impl
 			// only set the status to read-only if the proxy is read-only
-			final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
+			final var lazyInitializer = extractLazyInitializer( proxy );
 			assert lazyInitializer != null;
 			lazyInitializer.setImplementation( entity );
 			isReadOnly = lazyInitializer.isReadOnly();
@@ -316,7 +309,7 @@ public class CacheLoadHelper {
 
 		final Type[] types = subclassPersister.getPropertyTypes();
 		// initializes the entity by (desired) side effect
-		final StandardCacheEntryImpl standardCacheEntry = (StandardCacheEntryImpl) entry;
+		final var standardCacheEntry = (StandardCacheEntryImpl) entry;
 		final Object[] values = standardCacheEntry.assemble(
 				entity,
 				entityId,
@@ -334,7 +327,7 @@ public class CacheLoadHelper {
 			);
 		}
 		final Object version = getVersion( values, subclassPersister );
-		final EntityEntry entityEntry = persistenceContext.addEntry(
+		final var entityEntry = persistenceContext.addEntry(
 				entity,
 				isReadOnly ? Status.READ_ONLY : Status.MANAGED,
 				values,
@@ -346,9 +339,7 @@ public class CacheLoadHelper {
 				subclassPersister,
 				false
 		);
-		holder.setEntityEntry(
-				entityEntry
-		);
+		holder.setEntityEntry( entityEntry );
 		subclassPersister.afterInitialize( entity, source );
 		entityEntry.postLoad( entity );
 		persistenceContext.initializeNonLazyCollections();
@@ -372,45 +363,60 @@ public class CacheLoadHelper {
 			CollectionPersister persister,
 			PersistentCollection<?> collection,
 			SharedSessionContractImplementor source) {
-
 		if ( persister.hasCache() && source.getCacheMode().isGetEnabled() ) {
-			final SessionFactoryImplementor factory = source.getFactory();
-			final CollectionDataAccess cacheAccessStrategy = persister.getCacheAccessStrategy();
-			final Object ck = cacheAccessStrategy.generateCacheKey( key, persister, factory, source.getTenantIdentifier() );
-			final Object ce = fromSharedCache( source, ck, persister, cacheAccessStrategy );
-
-			final StatisticsImplementor statistics = factory.getStatistics();
-			if ( statistics.isStatisticsEnabled() ) {
-				final NavigableRole navigableRole = persister.getNavigableRole();
-				final String regionName = cacheAccessStrategy.getRegion().getName();
-				if ( ce == null ) {
-					statistics.collectionCacheMiss( navigableRole, regionName );
-				}
-				else {
-					statistics.collectionCacheHit( navigableRole, regionName );
-				}
-			}
-
-			if ( ce == null ) {
+			final Object cachedEntry = getFromSharedCache( key, persister, source );
+			if ( cachedEntry == null ) {
 				return false;
 			}
 			else {
-				final CollectionCacheEntry cacheEntry = (CollectionCacheEntry)
-						persister.getCacheEntryStructure().destructure( ce, factory );
-				final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
-				cacheEntry.assemble( collection, persister, persistenceContext.getCollectionOwner( key, persister ) );
-				persistenceContext.getCollectionEntry( collection ).postInitialize( collection, source );
-				// addInitializedCollection(collection, persister, key);
+				processCachedEntry( key, persister, cachedEntry, collection, source );
 				return true;
 			}
 		}
 		else {
+			// we can't use cache here
 			return false;
 		}
 	}
 
+	private static void processCachedEntry(
+			Object key,
+			CollectionPersister persister,
+			Object cachedEntry,
+			PersistentCollection<?> collection,
+			SharedSessionContractImplementor source) {
+		final var cacheEntry = (CollectionCacheEntry)
+				persister.getCacheEntryStructure().destructure( cachedEntry, source.getFactory() );
+		final var persistenceContext = source.getPersistenceContextInternal();
+		cacheEntry.assemble( collection, persister, persistenceContext.getCollectionOwner( key, persister ) );
+		persistenceContext.getCollectionEntry( collection ).postInitialize( collection, source );
+		// addInitializedCollection(collection, persister, key);
+	}
+
+	private static Object getFromSharedCache(
+			Object key,
+			CollectionPersister persister,
+			SharedSessionContractImplementor source) {
+		final var factory = source.getFactory();
+		final var cache = persister.getCacheAccessStrategy();
+		final Object cacheKey = cache.generateCacheKey( key, persister, factory, source.getTenantIdentifier() );
+		final Object cachedEntry = fromSharedCache( source, cacheKey, persister, cache );
+		final var statistics = factory.getStatistics();
+		if ( statistics.isStatisticsEnabled() ) {
+			final var navigableRole = persister.getNavigableRole();
+			final String regionName = cache.getRegion().getName();
+			if ( cachedEntry == null ) {
+				statistics.collectionCacheMiss( navigableRole, regionName );
+			}
+			else {
+				statistics.collectionCacheHit( navigableRole, regionName );
+			}
+		}
+		return cachedEntry;
+	}
+
 	public record PersistenceContextEntry(Object entity, EntityStatus status) {
-		enum EntityStatus {
+		public enum EntityStatus {
 			MANAGED,
 			REMOVED_ENTITY_MARKER,
 			INCONSISTENT_RTN_CLASS_MARKER

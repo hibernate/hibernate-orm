@@ -41,4 +41,6 @@ public @interface SkipForDialect {
 	int minorVersion() default -1;
 
 	int microVersion() default -1;
+
+	VersionMatchMode versionMatchMode() default VersionMatchMode.SAME;
 }

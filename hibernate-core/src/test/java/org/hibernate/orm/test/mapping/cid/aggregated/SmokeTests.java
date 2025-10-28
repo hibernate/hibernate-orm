@@ -62,12 +62,7 @@ public class SmokeTests {
 
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete LineItem" ).executeUpdate();
-					session.createQuery( "delete Order" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "Order" )

@@ -7,11 +7,9 @@ package org.hibernate.query.results.internal.dynamic;
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -105,9 +103,9 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
-		final DomainResultCreationStateImpl creationStateImpl = ResultsHelper.impl( domainResultCreationState );
+		final var creationStateImpl = ResultsHelper.impl( domainResultCreationState );
 
-		final TableGroup tableGroup = entityMapping.createRootTableGroup(
+		final var tableGroup = entityMapping.createRootTableGroup(
 				true,
 				navigablePath,
 				tableAlias,
@@ -138,7 +136,7 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 			return false;
 		}
 
-		final DynamicResultBuilderEntityCalculated that = (DynamicResultBuilderEntityCalculated) o;
+		final var that = (DynamicResultBuilderEntityCalculated) o;
 		return navigablePath.equals( that.navigablePath )
 			&& entityMapping.equals( that.entityMapping )
 			&& tableAlias.equals( that.tableAlias )

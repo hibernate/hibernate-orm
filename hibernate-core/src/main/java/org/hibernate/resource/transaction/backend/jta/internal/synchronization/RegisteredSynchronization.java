@@ -6,9 +6,8 @@ package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
 import jakarta.transaction.Synchronization;
 
-import org.jboss.logging.Logger;
 
-import static org.hibernate.internal.CoreLogging.logger;
+import static org.hibernate.resource.transaction.backend.jta.internal.JtaLogging.JTA_LOGGER;
 
 /**
  * The JTA {@link jakarta.transaction.Synchronization} Hibernate registers when needed for JTA callbacks.
@@ -20,7 +19,6 @@ import static org.hibernate.internal.CoreLogging.logger;
  * @author Steve Ebersole
  */
 public class RegisteredSynchronization implements Synchronization {
-	private static final Logger log = logger( RegisteredSynchronization.class );
 
 	private final SynchronizationCallbackCoordinator synchronizationCallbackCoordinator;
 
@@ -30,15 +28,13 @@ public class RegisteredSynchronization implements Synchronization {
 
 	@Override
 	public void beforeCompletion() {
-		log.trace( "Registered JTA Synchronization : beforeCompletion()" );
-
+		JTA_LOGGER.registeredSynchronizationBeforeCompletion();
 		synchronizationCallbackCoordinator.beforeCompletion();
 	}
 
 	@Override
 	public void afterCompletion(int status) {
-		log.tracef( "Registered JTA Synchronization : afterCompletion(%s)", status );
-
+		JTA_LOGGER.registeredSynchronizationAfterCompletion( status );
 		synchronizationCallbackCoordinator.afterCompletion( status );
 	}
 }

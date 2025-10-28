@@ -21,7 +21,9 @@ import org.hibernate.type.spi.TypeConfigurationAware;
  *
  * @see Type
  */
-public class UserTypeLegacyBridge extends BaseUserTypeSupport<Object> implements ParameterizedType, TypeConfigurationAware {
+public class UserTypeLegacyBridge
+		extends BaseUserTypeSupport<Object>
+		implements ParameterizedType, TypeConfigurationAware {
 	public static final String TYPE_NAME_PARAM_KEY = "hbm-type-name";
 
 	private TypeConfiguration typeConfiguration;
@@ -59,13 +61,13 @@ public class UserTypeLegacyBridge extends BaseUserTypeSupport<Object> implements
 	protected void resolve(BiConsumer<BasicJavaType<Object>, JdbcType> resolutionConsumer) {
 		assert typeConfiguration != null;
 
-		final BasicType<Object> registeredType =
+		final var registeredType =
+				(BasicType<Object>)
 						typeConfiguration.getBasicTypeRegistry()
 								.getRegisteredType( hbmStyleTypeName );
 
 		resolutionConsumer.accept(
-				(BasicJavaType<Object>)
-						registeredType.getJavaTypeDescriptor(),
+				(BasicJavaType<Object>) registeredType.getJavaTypeDescriptor(),
 				registeredType.getJdbcType()
 		);
 	}

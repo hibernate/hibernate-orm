@@ -4,17 +4,6 @@
  */
 package org.hibernate.orm.test.inheritance;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.Jira;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -24,12 +13,23 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Marco Belladelli
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
 @DomainModel( annotatedClasses = {
 		OneToManyJoinedInheritanceAndDiscriminatorTest.Company.class,
@@ -41,7 +41,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 } )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17483" )
 public class OneToManyJoinedInheritanceAndDiscriminatorTest {
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final CustomerComputerSystem customerComputer = new CustomerComputerSystem();
@@ -59,17 +59,15 @@ public class OneToManyJoinedInheritanceAndDiscriminatorTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from ComputerSystem" ).executeUpdate();
-			session.createMutationQuery( "delete from Company" ).executeUpdate();
-		} );
+		scope.dropData();
 	}
 
 	@Test
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final CustomerCompany result = session.createQuery(
 					"from CustomerCompany",
 					CustomerCompany.class
@@ -89,6 +87,7 @@ public class OneToManyJoinedInheritanceAndDiscriminatorTest {
 	@Test
 	public void testJoinSelectId(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final Long result = session.createQuery(
 					"select s.id from CustomerCompany c join c.computerSystems s",
 					Long.class
@@ -100,6 +99,7 @@ public class OneToManyJoinedInheritanceAndDiscriminatorTest {
 	@Test
 	public void testJoinSelectEntity(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final DistributorComputerSystem result = session.createQuery(
 					"select s from DistributorCompany c join c.computerSystems s",
 					DistributorComputerSystem.class
@@ -108,6 +108,7 @@ public class OneToManyJoinedInheritanceAndDiscriminatorTest {
 		} );
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity( name = "Company" )
 	@Inheritance( strategy = InheritanceType.JOINED )
 	public static abstract class Company {
@@ -122,6 +123,7 @@ public class OneToManyJoinedInheritanceAndDiscriminatorTest {
 		}
 	}
 
+	@SuppressWarnings({"FieldMayBeFinal", "unused"})
 	@Entity( name = "CustomerCompany" )
 	public static class CustomerCompany extends Company {
 		@OneToMany( mappedBy = "owner" )
@@ -144,6 +146,7 @@ public class OneToManyJoinedInheritanceAndDiscriminatorTest {
 		}
 	}
 
+	@SuppressWarnings({"FieldMayBeFinal", "unused"})
 	@Entity( name = "DistributorCompany" )
 	public static class DistributorCompany extends Company {
 		@OneToMany( mappedBy = "owner" )
@@ -166,6 +169,7 @@ public class OneToManyJoinedInheritanceAndDiscriminatorTest {
 		}
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity( name = "ComputerSystem" )
 	@Table( name = "computer_system" )
 	@Inheritance( strategy = InheritanceType.JOINED )

@@ -16,7 +16,6 @@ plugins {
     id "org.hibernate.orm.database-service"
     id "org.hibernate.orm.build.java-module"
 
-    id "jacoco"
     id "build-dashboard"
     id "project-report"
 }
@@ -48,17 +47,18 @@ dependencies {
     compileOnly libs.loggingAnnotations
     // Used for compiling some Oracle specific JdbcTypes
     compileOnly jdbcLibs.oracle
+    compileOnly (jdbcLibs.oracleJdbcJacksonOsonExtension) {
+        exclude group: 'com.oracle.database.jdbc', module: 'ojdbc8'
+    }
 
     // JUnit dependencies made up of:
-    // 		* JUnit 5
-    // 		* the Jupiter engine which runs JUnit 5 based tests
+    // 		* JUnit (version 5 or later)
+    // 		* the Jupiter engine which runs JUnit 6 based tests
     //		* the "vintage" engine - which runs JUnit 3 and 4 based tests
-    testImplementation testLibs.junit5Api
-    testImplementation testLibs.junit5Engine
-    testImplementation testLibs.junit5Params
-    testImplementation testLibs.junit5Launcher
-    testImplementation testLibs.junit4
-    testImplementation testLibs.junit4Engine
+    testImplementation testLibs.junitJupiterApi
+    testImplementation testLibs.junitJupiterEngine
+    testImplementation testLibs.junitJupiterParams
+    testImplementation testLibs.junitJupiterLauncher
     testImplementation testLibs.assertjCore
 
     testRuntimeOnly testLibs.log4j2
@@ -70,10 +70,13 @@ dependencies {
     testRuntimeOnly jdbcLibs.derbyTools
     testRuntimeOnly jdbcLibs.hsqldb
     testRuntimeOnly jdbcLibs.postgresql
+    testRuntimeOnly jdbcLibs.edb
     testRuntimeOnly jdbcLibs.mssql
     testRuntimeOnly jdbcLibs.informix
     testRuntimeOnly jdbcLibs.cockroachdb
+    testRuntimeOnly jdbcLibs.gaussdb
     testRuntimeOnly jdbcLibs.sybase
+    testRuntimeOnly jdbcLibs.teradata
     testRuntimeOnly rootProject.fileTree(dir: 'drivers', include: '*.jar')
 
     // Since both the DB2 driver and HANA have a package "net.jpountz" we have to add dependencies conditionally
@@ -98,6 +101,9 @@ dependencies {
         testRuntimeOnly jdbcLibs.oracle
         testRuntimeOnly jdbcLibs.oracleXml
         testRuntimeOnly jdbcLibs.oracleXmlParser
+        testRuntimeOnly (jdbcLibs.oracleJdbcJacksonOsonExtension) {
+            exclude group: 'com.oracle.database.jdbc', module: 'ojdbc8'
+        }
     }
     else if ( db.startsWith( 'altibase' ) ) {
         testRuntimeOnly jdbcLibs.altibase
@@ -135,7 +141,7 @@ tasks.register('compile') {
 
 tasks.withType( JavaCompile ).configureEach {
     options.encoding = 'UTF-8'
-    options.warnings false
+    options.warnings = false
     options.fork = true
     options.forkOptions.memoryMaximumSize = '896m'
 
@@ -156,7 +162,7 @@ tasks.withType( JavaCompile ).configureEach {
 }
 
 processTestResources {
-    duplicatesStrategy DuplicatesStrategy.INCLUDE
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 
     inputs.property( "db", db )
     inputs.property( "dbHost", dbHost )
@@ -190,8 +196,6 @@ processTestResources {
 tasks.withType( Test.class ).each { test ->
     test.useJUnitPlatform()
 
-    test.usesService( project.gradle.sharedServices.registrations.getByName( 'databaseService' ).service )
-
     // Byteman needs this property to be set, https://developer.jboss.org/thread/274997
     test.jvmArgs += ["-Djdk.attach.allowAttachSelf=true"]
 
@@ -206,6 +210,8 @@ tasks.withType( Test.class ).each { test ->
 
     test.maxHeapSize = '3G'
 
+    // Enable bytecode enhanced engine:
+    test.systemProperties['hibernate.testing.bytecode.enhancement.extension.engine.enabled'] = true
     test.systemProperties['hibernate.test.validatefailureexpected'] = true
     test.systemProperties['hibernate.highlight_sql'] = false
     test.systemProperties += System.properties.findAll { it.key.startsWith( "hibernate." ) }
@@ -237,6 +243,7 @@ test {
         // Log a statement for each test.
         // Used in the Travis build so that Travis doesn't end up panicking because there's no output for a long time.
         testLogging {
+            displayGranularity 1
             events "passed", "skipped", "failed"
             exceptionFormat = 'full'
         }
@@ -306,6 +313,11 @@ tasks.named("jar") {
                 ].join( ',' ),
                 '-exportcontents': "*;version=${project.version}"
         )
+    }
+    metaInf {
+        from(rootProject.projectDir, {
+            include "LICENSE.txt"
+        })
     }
 }
 

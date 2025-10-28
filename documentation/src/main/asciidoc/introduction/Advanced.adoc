@@ -268,16 +268,34 @@ var entityManager =
 
 However, since we often don't have this level of control over creation of the session, it's more common to supply an implementation of link:{doc-javadoc-url}org/hibernate/context/spi/CurrentTenantIdentifierResolver.html[`CurrentTenantIdentifierResolver`] to Hibernate.
 
-There are three common ways to implement multi-tenancy:
+To make use of multi-tenancy, we'll usually need to set at least one of these configuration properties:
+
+.Multi-tenancy configuration
+[%breakable,cols="36,~"]
+|===
+| Configuration property name           | Purpose
+
+| link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_IDENTIFIER_RESOLVER[`hibernate.tenant_identifier_resolver`]  | Specifies the `CurrentTenantIdentifierResolver`
+| link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_SCHEMA_MAPPER[`hibernate.multi_tenant.schema_mapper`]  | Specifies the `TenantSchemaMapper` for schema-based multi-tenancy
+| link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_CONNECTION_PROVIDER[`hibernate.multi_tenant_connection_provider`]  | Specifies the `MultiTenantConnectionProvider` for database-based multi-tenancy
+|===
+
+// Do not configure those properties if you would like the configured `BeanContainer` provide the implementation.
+
+There are three common approaches to multi-tenancy:
 
 1. each tenant has its own database,
 2. each tenant has its own schema, or
 3. tenants share tables in a single schema, and rows are tagged with the tenant id.
 
-From the point of view of Hibernate, there's little difference between the first two options.
-Hibernate will need to obtain a JDBC connection with permissions on the database and schema owned by the current tenant.
+[discrete]
+==== Database-based multi-tenancy
 
-Therefore, we must implement a link:{doc-javadoc-url}org/hibernate/engine/jdbc/connections/spi/MultiTenantConnectionProvider.html[`MultiTenantConnectionProvider`] which takes on this responsibility:
+The first option is to give each tenant its own database.
+That is, we'll use a separate source of JDBC connections for each tenant.
+
+The interface link:{doc-javadoc-url}org/hibernate/engine/jdbc/connections/spi/MultiTenantConnectionProvider.html[`MultiTenantConnectionProvider`] is responsible for obtaining an appropriate `Connection` for a given tenant.
+Typically, we'll provide a custom implementation of this interface:
 
 - from time to time, Hibernate will ask for a connection, passing the id of the current tenant, and then we must create an appropriate connection or obtain one from a pool, and return it to Hibernate, and
 - later, Hibernate will release the connection and ask us to destroy it or return it to the appropriate pool.
@@ -285,10 +303,21 @@ Therefore, we must implement a link:{doc-javadoc-url}org/hibernate/engine/jdbc/c
 [TIP]
 ====
 Check out link:{doc-javadoc-url}org/hibernate/engine/jdbc/connections/spi/DataSourceBasedMultiTenantConnectionProviderImpl.html[`DataSourceBasedMultiTenantConnectionProviderImpl`] for inspiration.
+If your source of JDBC connections is a set of JNDI-bound ``DataSource``s, you might even be able to use this implementation directly.
 ====
 
+[discrete]
+==== Schema-based multi-tenancy
+
+The second option is to keep all the data for different tenants in the same database, giving each tenant a different named database schema with its own set of tables.
+
+In this case we must supply a link:{doc-javadoc-url}org/hibernate/context/spi/TenantSchemaMapper.html[`TenantSchemaMapper`] which is responsible for mapping from tenant ids to schema names.
+
+[discrete]
+==== Discriminator-based multi-tenancy
+
 The third option is quite different.
-In this case we don't need a `MultiTenantConnectionProvider`, but we will need a dedicated column holding the tenant id mapped by each of our entities.
+In this case we store data from all tenants in the same tables, but each table has a dedicated column holding the tenant id mapped by each of our entities.
 
 [source,java]
 ----
@@ -309,19 +338,58 @@ Within a given session, our data is automatically filtered so that only rows tag
 Native SQL queries are _not_ automatically filtered by tenant id; you'll have to do that part yourself.
 ====
 
-To make use of multi-tenancy, we'll usually need to set at least one of these configuration properties:
+[[read-only-replicas]]
+=== Read-only replicas
 
-.Multi-tenancy configuration
-[%breakable,cols="36,~"]
-|===
-| Configuration property name           | Purpose
+A similar but distinct problem is accessing data held in a read-only replica of the main production database.
+One way to handle this problem is to simply instantiate two instances of `SessionFactory`:
 
-| link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_IDENTIFIER_RESOLVER[`hibernate.tenant_identifier_resolver`]  | Specifies the `CurrentTenantIdentifierResolver`
-| link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_CONNECTION_PROVIDER[`hibernate.multi_tenant_connection_provider`]  | Specifies the `MultiTenantConnectionProvider`
-|===
+- read-only transactions use a `SessionFactory` configured to access the read-only replica, while
+- other transactions use the `SessionFactory` configured to read from and write to the main database.
 
-Do not configure those properties if you would like the configured `BeanContainer` provide the implementation.
-A longer discussion of multi-tenancy may be found in the {multitenacy-doc}[User Guide].
+[CAUTION]
+====
+The second-level cache doesn't play well with replication, and so a `SessionFactory` with access to a read-only replica should be configured with the second-level cache disabled.
+====
+
+Alternatively, Hibernate 7.2 introduces experimental support for accessing replicas via a single instance of `SessionFactory`.
+A `Session` which accesses a read-only replica must be created in a special read-only mode:
+
+[source,java]
+----
+Session readOnlySession =
+        factory.withOptions()
+                .readOnly(true)
+                .initialCacheMode(CacheMode.IGNORE)
+                .openSession();
+----
+
+There are now two possibilities.
+
+- Some JDBC drivers (MySQL) are able to automatically direct read-only sessions to the read-only replica.
+  In this case, there's no more work to do, since Hibernate will automatically call `Connection.setReadOnly(true)` to signal to the JDBC driver that the read-only replica may be used.
+
+- Other drivers (Postgres, Oracle) don't feature any special support for read-only replicas, and in this case we need to supply our own custom link:{doc-javadoc-url}/org/hibernate/engine/jdbc/connections/spi/ConnectionProvider.html[`ConnectionProvider`] or link:{doc-javadoc-url}/org/hibernate/engine/jdbc/connections/spi/MultiTenantConnectionProvider.html[`MultiTenantConnectionProvider`] and implement link:{doc-javadoc-url}/org/hibernate/engine/jdbc/connections/spi/ConnectionProvider.html#getReadOnlyConnection()[`getReadOnlyConnection()`] to return a connection to the read-only replica.
+
+Notice that we created the read-only session with link:{doc-javadoc-url}/org/hibernate/CacheMode.html#IGNORE[`CacheMode.IGNORE`], indicating that access to the read-only replica should <<second-level-cache-management,bypass the second-level cache>>.
+There's two different phenomena we need to consider here:
+
+1. A read-only replica might contain stale data which has already been updated or deleted from the main database and invalidated in the second-level cache.
+A read-only session might read this stale data and recache it, exposing the stale data to subsequent sessions.
+Use of `CacheMode.GET` in a read-only session prevents this phenomenon.
+
+2. A session might read data which has not yet been replicated from the main database and add it to the second-level cache.
+If a read-only session reads this data from the cache, it might fail to resolve references to other data which has not yet been replicated.
+Use of `CacheMode.PUT` in a read-only session prevents this phenomenon.
+
+Use of `CacheMode.IGNORE` in a read-only session prevents both phenomena.
+
+[CAUTION]
+====
+The first issue is objectively more serious than the second, and the second issue can often be avoided by careful programming by someone _who really understands what they're doing_.
+We do not, therefore, require the use of `CacheMode.IGNORE`, but we strongly encourage the use of _at least_ `CacheMode.GET` in every read-only session.
+====
+
 
 [[custom-sql]]
 === Using custom-written SQL
@@ -979,8 +1047,17 @@ plugins {
     id "org.hibernate.orm" version "{fullVersion}"
 }
 
-hibernate { enhancement }
+hibernate {
+  enhancement {}
+}
 ----
+
+[CAUTION]
+====
+Some online documentation (including previous versions of the present one) suggest to use `hibernate { enhancement }`, which will _not_ work as it is interpreted by Gradle as a (pointless) getter call instead of actual configuration.
+That form will result in bytecode enhancement NOT happening (unfortunately silently).
+To enable bytecode enhancement, make sure to always use the block form (with `{}`).
+====
 
 // [discrete]
 // ==== Attribute-level lazy fetching
@@ -1039,6 +1116,10 @@ byte[] image;
 Interception is able to detect writes to the `image` field, that is, replacement of the whole array.
 It's not able to detect modifications made directly to the _elements_ of the array, and so such modifications may be lost.
 ====
+
+[IMPORTANT]
+Hibernate's extended bytecode enhancement feature has been deprecated, primarily because it relies on assumptions and behaviors that often require a broader runtime scope than what Hibernate alone can reliably provide, similar to container-based environments such as Quarkus or WildFly.
+Applications which make use of this feature should instead use proper object-oriented encapsulation, exposing managed state via getters and setters.
 
 [[fetch-profiles]]
 === Named fetch profiles

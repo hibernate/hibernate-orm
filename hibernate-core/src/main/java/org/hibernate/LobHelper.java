@@ -15,7 +15,7 @@ import java.sql.NClob;
  *
  * @author Steve Ebersole
  *
- * @see Session#getLobHelper()
+ * @see Hibernate#getLobHelper()
  */
 public interface LobHelper {
 

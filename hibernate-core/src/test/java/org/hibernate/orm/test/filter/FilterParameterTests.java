@@ -4,11 +4,14 @@
  */
 package org.hibernate.orm.test.filter;
 
-import java.sql.Types;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
+import jakarta.enterprise.inject.se.SeContainer;
+import jakarta.enterprise.inject.se.SeContainerInitializer;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
@@ -18,45 +21,33 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.community.dialect.AltibaseDialect;
-import org.hibernate.community.dialect.FirebirdDialect;
-import org.hibernate.dialect.HANADialect;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.community.dialect.DerbyDialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.community.dialect.TiDBDialect;
-import org.hibernate.type.NumericBooleanConverter;
-import org.hibernate.type.YesNoConverter;
-
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.hibernate.type.NumericBooleanConverter;
+import org.hibernate.type.YesNoConverter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import jakarta.enterprise.inject.se.SeContainer;
-import jakarta.enterprise.inject.se.SeContainerInitializer;
-import jakarta.persistence.Basic;
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import java.sql.Types;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hibernate.cfg.ManagedBeanSettings.JAKARTA_CDI_BEAN_MANAGER;
 
 /**
  * @author Steve Ebersole
@@ -74,7 +65,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	public void testYesNo(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			session.disableFilter( "subDepartmentFilter" );
-			final EntityOne loaded = session.byId( EntityOne.class ).load( 1 );
+			final EntityOne loaded = session.find( EntityOne.class, 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
@@ -91,24 +82,13 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 
 	@ParameterizedTest
 	@MethodSource("transactionKind")
-	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = MySQLDialect.class, reason = "MySQL silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true, reason = "Cockroach silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "PostgresPlus silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird silently converts a boolean to string")
-	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase silently converts a boolean to string")
-	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 23, reason = "Oracle 23 interprets Y and T as true and N and F as false, so this works")
+	// most dialects silently convert boolean to string types
+	@RequiresDialect(SQLServerDialect.class)
+	@RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 	public void testYesNoMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			session.disableFilter( "subDepartmentFilter" );
-			final EntityOne loaded = session.byId( EntityOne.class ).load( 1 );
+			final EntityOne loaded = session.find( EntityOne.class, 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
@@ -128,7 +108,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	public void testNumeric(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			session.disableFilter( "subDepartmentFilter" );
-			final EntityTwo loaded = session.byId( EntityTwo.class ).load( 1 );
+			final EntityTwo loaded = session.find( EntityTwo.class, 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
@@ -145,23 +125,13 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 
 	@ParameterizedTest
 	@MethodSource("transactionKind")
-	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = MySQLDialect.class, reason = "MySQL silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = FirebirdDialect.class, matchSubTypes = true, reason = "Firebird silently converts a boolean to integral types")
+	// most dialects silently convert boolean to integral types
+	@RequiresDialect(PostgreSQLDialect.class)
+	@RequiresDialect(CockroachDialect.class)
 	public void testNumericMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			session.disableFilter( "subDepartmentFilter" );
-			final EntityTwo loaded = session.byId( EntityTwo.class ).load( 1 );
+			final EntityTwo loaded = session.find( EntityTwo.class, 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
@@ -185,7 +155,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	public void testMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			session.disableFilter( "subDepartmentFilter" );
-			final EntityThree loaded = session.byId( EntityThree.class ).load( 1 );
+			final EntityThree loaded = session.find( EntityThree.class, 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
@@ -210,18 +180,20 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
 
 			final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
-					.applySetting( AvailableSettings.CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
+					.applySetting( JAKARTA_CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
 					.build();
 
 			try {
 				scope.inTransaction( (session) -> {
 					session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "FIRST_A"  );
+					//noinspection removal
 					final EntityFour first_a = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
 							.setParameter( "id", 1 )
 							.getSingleResultOrNull();
 					assertThat( first_a ).isNotNull();
 					assertThat( first_a.getDepartment() ).isEqualTo( "FIRST" );
 					session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "SECOND_A"  );
+					//noinspection removal
 					final EntityFour second = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
 							.setParameter( "id", 3 )
 							.getSingleResultOrNull();
@@ -244,17 +216,19 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
 
 			final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
-					.applySetting( AvailableSettings.CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
+					.applySetting( JAKARTA_CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
 					.build();
 
 			try {
 				scope.inTransaction( (session) -> {
 					session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "FIRST_A"  );
+					//noinspection removal
 					final EntityFour first_a = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
 							.setParameter( "id", 1 )
 							.getSingleResultOrNull();
 					assertThat( first_a ).isNotNull();
 					assertThat( first_a.getDepartment() ).isEqualTo( "FIRST" );
+					//noinspection removal
 					final EntityFour first_b = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
 							.setParameter( "id", 2 )
 							.getSingleResultOrNull();
@@ -282,16 +256,10 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 
 	@AfterEach
 	public void dropTestData() {
-		scope.inTransaction( (session) -> {
-			session.disableFilter( "subDepartmentFilter" );
-			session.disableFilter( "departmentFilter" );
-			session.createMutationQuery( "delete EntityOne" ).executeUpdate();
-			session.createMutationQuery( "delete EntityTwo" ).executeUpdate();
-			session.createMutationQuery( "delete EntityThree" ).executeUpdate();
-			session.createMutationQuery( "delete EntityFour" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
+	@SuppressWarnings("unused")
 	@FilterDef(
 			name = "filterYesNoConverter",
 			defaultCondition = "yes_no = :yesNo",
@@ -347,6 +315,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	}
 
 
+	@SuppressWarnings("unused")
 	@FilterDef(
 			name = "filterNumberConverter",
 			defaultCondition = "zero_one = :zeroOne",
@@ -401,6 +370,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@FilterDef(
 			name = "filterMismatchConverter",
 			defaultCondition = "mismatch = :mismatch",
@@ -449,6 +419,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@FilterDef(
 			name = "departmentFilter",
 			defaultCondition = "department = :department",

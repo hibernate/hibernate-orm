@@ -84,7 +84,8 @@ public class DisabledScanner implements Scanner {
 		};
 	}
 
-	public static class MappingFileDescriptorImpl implements MappingFileDescriptor {
+	public static final class MappingFileDescriptorImpl
+				implements MappingFileDescriptor {
 		private final String name;
 		private final InputStreamAccess streamAccess;
 
@@ -101,6 +102,12 @@ public class DisabledScanner implements Scanner {
 		@Override
 		public InputStreamAccess getStreamAccess() {
 			return streamAccess;
+		}
+		@Override
+		public String toString() {
+			return "MappingFileDescriptorImpl["
+					+ "name=" + name + ", "
+					+ "streamAccess=" + streamAccess + ']';
 		}
 	}
 }

@@ -8,8 +8,8 @@ import java.util.Map;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedName;
-import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
+import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.ServiceRegistry;
 
@@ -49,7 +49,7 @@ public class SingleNamingStrategy implements ImplicitDatabaseObjectNamingStrateg
 			Identifier schemaName,
 			Map<?, ?> configValues,
 			ServiceRegistry serviceRegistry) {
-		return new QualifiedNameParser.NameParts(
+		return new QualifiedTableName(
 				catalogName,
 				schemaName,
 				serviceRegistry.requireService( JdbcEnvironment.class )

@@ -5,9 +5,11 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaSetReturningFunction;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -27,8 +29,8 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
  * @since 7.0
  */
 @Incubating
-public abstract class SqmSetReturningFunction<T> extends AbstractSqmNode implements SqmVisitableNode,
-		JpaSetReturningFunction<T> {
+public abstract class SqmSetReturningFunction<T> extends AbstractSqmNode
+		implements SqmVisitableNode, JpaSetReturningFunction<T> {
 	// this function-name is the one used to resolve the descriptor from
 	// the function registry (which may or may not be a db function name)
 	private final String functionName;
@@ -83,15 +85,45 @@ public abstract class SqmSetReturningFunction<T> extends AbstractSqmNode impleme
 		hql.append( functionName );
 		if ( arguments.isEmpty() ) {
 			hql.append( "()" );
-			return;
 		}
-		hql.append( '(' );
-		arguments.get( 0 ).appendHqlString( hql, context );
-		for ( int i = 1; i < arguments.size(); i++ ) {
-			hql.append( ", " );
-			arguments.get( i ).appendHqlString( hql, context );
+		else {
+			hql.append( '(' );
+			arguments.get( 0 ).appendHqlString( hql, context );
+			for ( int i = 1; i < arguments.size(); i++ ) {
+				hql.append( ", " );
+				arguments.get( i ).appendHqlString( hql, context );
+			}
+			hql.append( ')' );
 		}
+	}
 
-		hql.append( ')' );
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmSetReturningFunction<?> that
+			&& this.getClass() == that.getClass()
+			&& this.functionName.equals( that.functionName )
+			&& Objects.equals( this.arguments, that.arguments );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = functionName.hashCode();
+		result = 31 * result + Objects.hashCode( arguments );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmSetReturningFunction<?> that
+			&& this.getClass() == that.getClass()
+			&& this.functionName.equals( that.functionName )
+			&& SqmCacheable.areCompatible( this.arguments, that.arguments );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = functionName.hashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( arguments );
+		return result;
 	}
 }

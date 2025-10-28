@@ -14,7 +14,7 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.archive.spi.JarFileEntryUrlAdjuster;
 import org.hibernate.internal.util.StringHelper;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 
 /**
  * Standard implementation of ArchiveDescriptorFactory
@@ -23,7 +23,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class StandardArchiveDescriptorFactory implements ArchiveDescriptorFactory, JarFileEntryUrlAdjuster {
-	private static final Logger log = Logger.getLogger( StandardArchiveDescriptorFactory.class );
 
 	/**
 	 * Singleton access
@@ -129,14 +128,11 @@ public class StandardArchiveDescriptorFactory implements ArchiveDescriptorFactor
 			}
 			catch (MalformedURLException e) {
 				// allow to pass through to return the original URL
-				if ( log.isDebugEnabled() ) {
-					log.debugf(
-							e,
-							"Unable to adjust relative <jar-file/> URL [%s] relative to root URL [%s]",
-							filePart,
-							rootUrlFile.getAbsolutePath()
-					);
-				}
+				BOOT_LOGGER.unableToAdjustRelativeJarFileUrl(
+						filePart,
+						rootUrlFile.getAbsolutePath(),
+						e
+				);
 			}
 
 			return url;

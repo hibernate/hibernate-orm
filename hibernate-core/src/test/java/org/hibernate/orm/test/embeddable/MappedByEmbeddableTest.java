@@ -4,51 +4,52 @@
  */
 package org.hibernate.orm.test.embeddable;
 
-import java.util.List;
-
-import org.hibernate.Session;
-import org.hibernate.query.Query;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
 import jakarta.persistence.Basic;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
+import org.hibernate.Session;
+import org.hibernate.query.Query;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class MappedByEmbeddableTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Containing.class, Embed.class, Contained.class };
-	}
+@DomainModel(annotatedClasses = {
+		MappedByEmbeddableTest.Containing.class,
+		MappedByEmbeddableTest.Embed.class,
+		MappedByEmbeddableTest.Contained.class
+})
+@SessionFactory
+public class MappedByEmbeddableTest {
 
 	@Test
-	public void smoke() {
-		inTransaction( session -> {
+	public void smoke(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
 			saveComposition( session, 1, "data - 1" );
 			saveComposition( session, 2, "data - 2" );
 			saveComposition( session, 3, "data - 3" );
 		} );
 
-		inTransaction( session -> {
+		factoryScope.inTransaction( session -> {
 			queryContaining( session, 1, "data - 1" );
 			queryContaining( session, 2, "data - 2" );
 			queryContaining( session, 3, "data - 3" );
 		} );
 
-		inTransaction( session -> {
+		factoryScope.inTransaction( session -> {
 			loadContaining( session, 1, 1 );
 			loadContaining( session, 2, 2 );
 			loadContaining( session, 3, 3 );
 		} );
 
-		inTransaction( session -> {
+		factoryScope.inTransaction( session -> {
 			Containing containing1 = session.getReference( Containing.class, 1 );
 			Containing containing2 = session.getReference( Containing.class, 2 );
 
@@ -68,19 +69,19 @@ public class MappedByEmbeddableTest extends BaseCoreFunctionalTestCase {
 			contained1.setContaining( containing2 );
 		} );
 
-		inTransaction( session -> {
+		factoryScope.inTransaction( session -> {
 			queryContaining( session, 2, "data - 1" );
 			queryContaining( session, 1, "data - 2" );
 			queryContaining( session, 3, "data - 3" );
 		} );
 
-		inTransaction( session -> {
+		factoryScope.inTransaction( session -> {
 			loadContaining( session, 2, 1 );
 			loadContaining( session, 1, 2 );
 			loadContaining( session, 3, 3 );
 		} );
 
-		inTransaction( session -> {
+		factoryScope.inTransaction( session -> {
 			Query<Contained> query = session.createQuery( "select c from contained c", Contained.class );
 
 			List<Contained> containeds = query.list();

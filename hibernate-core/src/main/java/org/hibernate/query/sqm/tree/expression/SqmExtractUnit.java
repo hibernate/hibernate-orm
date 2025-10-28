@@ -14,6 +14,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 
+import java.util.Objects;
+
 /**
  * @author Gavin King
  */
@@ -53,5 +55,29 @@ public class SqmExtractUnit<T> extends AbstractSqmNode implements SqmTypedNode<T
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( unit );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmExtractUnit<?> that
+			&& unit == that.unit
+			&& Objects.equals( type, that.type );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = Objects.hashCode( unit );
+		result = 31 * result + Objects.hashCode( type );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
 	}
 }

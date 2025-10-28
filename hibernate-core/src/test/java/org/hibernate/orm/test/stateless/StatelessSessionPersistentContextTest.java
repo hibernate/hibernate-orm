@@ -41,12 +41,7 @@ public class StatelessSessionPersistentContextTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from TestEntity" ).executeUpdate();
-					session.createQuery( "delete from OtherEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

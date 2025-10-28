@@ -22,13 +22,7 @@ public class ElementCollectionOrphanTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Student" ).executeUpdate();
-					session.createQuery( "delete from EnrollableClass" ).executeUpdate();
-					session.createQuery( "delete from EnrolledClassSeat" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

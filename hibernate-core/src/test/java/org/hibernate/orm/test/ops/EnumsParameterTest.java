@@ -57,12 +57,7 @@ public class EnumsParameterTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Event" ).executeUpdate();
-					session.createMutationQuery( "delete from Organizer" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

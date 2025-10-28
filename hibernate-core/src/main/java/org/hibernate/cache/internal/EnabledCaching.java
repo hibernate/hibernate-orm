@@ -15,12 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import jakarta.persistence.PersistenceException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
 import org.hibernate.cache.cfg.spi.DomainDataRegionBuildingContext;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
-import org.hibernate.cache.cfg.spi.EntityDataCachingConfig;
-import org.hibernate.cache.cfg.spi.NaturalIdDataCachingConfig;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
@@ -29,18 +25,18 @@ import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsCache;
-import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.cache.spi.SecondLevelCacheLogger;
 
+import static org.hibernate.cache.spi.RegionFactory.DEFAULT_QUERY_RESULTS_REGION_UNQUALIFIED_NAME;
+import static org.hibernate.cache.spi.RegionFactory.DEFAULT_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAME;
 import static org.hibernate.internal.util.StringHelper.qualifyConditionally;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 import static org.hibernate.pretty.MessageHelper.infoString;
@@ -53,7 +49,8 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  * @author Gail Badner
  */
 public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildingContext {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EnabledCaching.class );
+
+	private static final SecondLevelCacheLogger LOG = SecondLevelCacheLogger.L2CACHE_LOGGER;
 
 	private final SessionFactoryImplementor sessionFactory;
 	private final RegionFactory regionFactory;
@@ -79,26 +76,12 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	public EnabledCaching(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
-		final SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
-
-		regionFactory = sessionFactoryOptions.getServiceRegistry().requireService( RegionFactory.class );
-		regionFactory.start( sessionFactoryOptions, sessionFactory.getProperties() );
-
-		if ( sessionFactoryOptions.isQueryCacheEnabled() ) {
-			final TimestampsRegion timestampsRegion = regionFactory.buildTimestampsRegion(
-					RegionFactory.DEFAULT_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAME,
-					sessionFactory
-			);
-			timestampsCache = sessionFactoryOptions.getTimestampsCacheFactory()
-					.buildTimestampsCache( this, timestampsRegion );
-			legacySecondLevelCacheNames.add( timestampsRegion.getName() );
-
-			final QueryResultsRegion queryResultsRegion = regionFactory.buildQueryResultsRegion(
-					RegionFactory.DEFAULT_QUERY_RESULTS_REGION_UNQUALIFIED_NAME,
-					sessionFactory
-			);
-			regionsByName.put( queryResultsRegion.getName(), queryResultsRegion );
-			defaultQueryResultsCache = new QueryResultsCacheImpl( queryResultsRegion, timestampsCache );
+		final var options = sessionFactory.getSessionFactoryOptions();
+		regionFactory = options.getServiceRegistry().requireService( RegionFactory.class );
+		regionFactory.start( options, sessionFactory.getProperties() );
+		if ( options.isQueryCacheEnabled() ) {
+			timestampsCache = buildTimestampsCache( sessionFactory );
+			defaultQueryResultsCache = buildQueryResultsCache( sessionFactory );
 		}
 		else {
 			timestampsCache = new TimestampsCacheDisabledImpl();
@@ -106,13 +89,33 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 		}
 	}
 
+	private QueryResultsCache buildQueryResultsCache(SessionFactoryImplementor sessionFactory) {
+		final var queryResultsRegion =
+				regionFactory.buildQueryResultsRegion(
+						DEFAULT_QUERY_RESULTS_REGION_UNQUALIFIED_NAME,
+						sessionFactory
+				);
+		regionsByName.put( queryResultsRegion.getName(), queryResultsRegion );
+		return new QueryResultsCacheImpl( queryResultsRegion, timestampsCache );
+	}
+
+	private TimestampsCache buildTimestampsCache(SessionFactoryImplementor sessionFactory) {
+		final var timestampsRegion =
+				regionFactory.buildTimestampsRegion(
+						DEFAULT_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAME,
+						sessionFactory
+				);
+		legacySecondLevelCacheNames.add( timestampsRegion.getName() );
+		return sessionFactory.getSessionFactoryOptions().getTimestampsCacheFactory()
+				.buildTimestampsCache( this, timestampsRegion );
+	}
+
 	@Override
 	public void prime(Set<DomainDataRegionConfig> cacheRegionConfigs) {
-		for ( DomainDataRegionConfig regionConfig : cacheRegionConfigs ) {
-			final DomainDataRegion region = buildRegion( regionConfig );
+		for ( var regionConfig : cacheRegionConfigs ) {
+			final var region = buildRegion( regionConfig );
 			regionsByName.put( region.getName(), region );
-
-			if ( ! Objects.equals( region.getName(), regionConfig.getRegionName() ) ) {
+			if ( !Objects.equals( region.getName(), regionConfig.getRegionName() ) ) {
 				throw new HibernateException(
 						String.format(
 								Locale.ROOT,
@@ -128,34 +131,27 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// Entity caching
 
-			for ( EntityDataCachingConfig entityAccessConfig : regionConfig.getEntityCaching() ) {
-				entityAccessMap.put(
-						entityAccessConfig.getNavigableRole(),
-						region.getEntityDataAccess( entityAccessConfig.getNavigableRole() )
-				);
-
-				legacySecondLevelCacheNames.add(
-						qualifyConditionally(
-								getSessionFactoryOptions().getCacheRegionPrefix(),
-								region.getName()
-						)
-				);
+			for ( var entityAccessConfig : regionConfig.getEntityCaching() ) {
+				final var navigableRole = entityAccessConfig.getNavigableRole();
+				entityAccessMap.put( navigableRole, region.getEntityDataAccess( navigableRole ) );
+				legacySecondLevelCacheNames.add( qualifiedRegionName( region ) );
 			}
 
 
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// Natural-id caching
 
-			if ( regionConfig.getNaturalIdCaching().isEmpty() ) {
+			final var naturalIdCaching = regionConfig.getNaturalIdCaching();
+			if ( naturalIdCaching.isEmpty() ) {
 				legacyNaturalIdAccessesForRegion.put( region.getName(), Collections.emptySet() );
 			}
 			else {
 				final Set<NaturalIdDataAccess> accesses = new HashSet<>();
-				for ( NaturalIdDataCachingConfig naturalIdAccessConfig : regionConfig.getNaturalIdCaching() ) {
-					final NaturalIdDataAccess naturalIdDataAccess = naturalIdAccessMap.put(
-							naturalIdAccessConfig.getNavigableRole(),
-							region.getNaturalIdDataAccess( naturalIdAccessConfig.getNavigableRole() )
-					);
+				for ( var naturalIdAccessConfig : naturalIdCaching ) {
+					final var navigableRole = naturalIdAccessConfig.getNavigableRole();
+					final var naturalIdDataAccess =
+							naturalIdAccessMap.put( navigableRole,
+									region.getNaturalIdDataAccess( navigableRole ) );
 					accesses.add( naturalIdDataAccess );
 				}
 				legacyNaturalIdAccessesForRegion.put( region.getName(), accesses );
@@ -165,24 +161,22 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// Collection caching
 
-			for ( CollectionDataCachingConfig collectionAccessConfig : regionConfig.getCollectionCaching() ) {
-				collectionAccessMap.put(
-						collectionAccessConfig.getNavigableRole(),
-						region.getCollectionDataAccess( collectionAccessConfig.getNavigableRole() )
-				);
-				legacySecondLevelCacheNames.add(
-						qualifyConditionally(
-								getSessionFactoryOptions().getCacheRegionPrefix(),
-								region.getName()
-						)
-				);
+			for ( var collectionAccessConfig : regionConfig.getCollectionCaching() ) {
+				final var navigableRole = collectionAccessConfig.getNavigableRole();
+				collectionAccessMap.put( navigableRole,
+						region.getCollectionDataAccess( navigableRole ) );
+				legacySecondLevelCacheNames.add( qualifiedRegionName( region ) );
 			}
 		}
 
 	}
 
-	private SessionFactoryOptions getSessionFactoryOptions() {
-		return sessionFactory.getSessionFactoryOptions();
+	private String qualifiedRegionName(DomainDataRegion region) {
+		return qualifyConditionally( getRegionPrefix(), region.getName() );
+	}
+
+	private String getRegionPrefix() {
+		return sessionFactory.getSessionFactoryOptions().getCacheRegionPrefix();
 	}
 
 	private DomainDataRegion buildRegion(DomainDataRegionConfig regionConfig) {
@@ -230,8 +224,8 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	public boolean containsEntity(String entityName, Object identifier) {
-		final EntityPersister persister = getEntityDescriptor( entityName );
-		final EntityDataAccess cacheAccess = persister.getCacheAccessStrategy();
+		final var persister = getEntityDescriptor( entityName );
+		final var cacheAccess = persister.getCacheAccessStrategy();
 		if ( cacheAccess != null ) {
 			final Object idValue =
 					persister.getIdentifierMapping().getJavaType()
@@ -256,14 +250,10 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	public void evictEntityData(String entityName, Object identifier) {
-		final EntityPersister persister = getEntityDescriptor( entityName );
-		final EntityDataAccess cacheAccess = persister.getCacheAccessStrategy();
+		final var persister = getEntityDescriptor( entityName );
+		final var cacheAccess = persister.getCacheAccessStrategy();
 		if ( cacheAccess != null ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( "Evicting entity second-level cache: "
-							+ infoString( persister, identifier, sessionFactory ) );
-			}
-
+			LOG.evictingEntityCache( infoString( persister, identifier, sessionFactory ) );
 			final Object cacheKey =
 					cacheAccess.generateCacheKey( identifier, persister, sessionFactory, null );
 			cacheAccess.evict( cacheKey );
@@ -293,21 +283,24 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	protected void evictEntityData(EntityPersister entityDescriptor) {
-		EntityPersister rootEntityDescriptor = entityDescriptor;
-		if ( entityDescriptor.isInherited()
-				&& ! entityDescriptor.getEntityName().equals( entityDescriptor.getRootEntityName() ) ) {
-			rootEntityDescriptor = entityDescriptor.getRootEntityDescriptor().getEntityPersister();
-		}
-
+		final var rootEntityDescriptor = rootEntityPersister( entityDescriptor );
 		evictEntityData( rootEntityDescriptor.getNavigableRole(),
 				rootEntityDescriptor.getCacheAccessStrategy() );
 	}
 
+	private static EntityPersister rootEntityPersister(EntityPersister entityDescriptor) {
+		if ( entityDescriptor.isInherited()
+				&& !entityDescriptor.getEntityName().equals( entityDescriptor.getRootEntityName() ) ) {
+			return entityDescriptor.getRootEntityDescriptor().getEntityPersister();
+		}
+		else {
+			return entityDescriptor;
+		}
+	}
+
 	private void evictEntityData(NavigableRole navigableRole, EntityDataAccess cacheAccess) {
 		if ( cacheAccess != null ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( "Evicting entity second-level cache: " + navigableRole.getFullPath() );
-			}
+			LOG.evictingEntityCacheByRole( navigableRole.getFullPath() );
 			cacheAccess.evictAll();
 		}
 	}
@@ -344,9 +337,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	private void evictNaturalIdData(NavigableRole rootEntityRole, NaturalIdDataAccess cacheAccess) {
 		if ( cacheAccess != null ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( "Evicting natural-id cache: " + rootEntityRole.getFullPath() );
-			}
+			LOG.evictingNaturalIdCache( rootEntityRole.getFullPath() );
 			cacheAccess.evictAll();
 		}
 	}
@@ -358,8 +349,8 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	public boolean containsCollection(String role, Object ownerIdentifier) {
-		final CollectionPersister persister = getCollectionDescriptor( role );
-		final CollectionDataAccess cacheAccess = persister.getCacheAccessStrategy();
+		final var persister = getCollectionDescriptor( role );
+		final var cacheAccess = persister.getCacheAccessStrategy();
 		if ( cacheAccess != null ) {
 			final Object cacheKey =
 					cacheAccess.generateCacheKey( ownerIdentifier, persister, sessionFactory, null );
@@ -372,14 +363,10 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	public void evictCollectionData(String role, Object ownerIdentifier) {
-		final CollectionPersister persister = getCollectionDescriptor( role );
-		final CollectionDataAccess cacheAccess = persister.getCacheAccessStrategy();
+		final var persister = getCollectionDescriptor( role );
+		final var cacheAccess = persister.getCacheAccessStrategy();
 		if ( cacheAccess != null ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( "Evicting collection second-level cache: "
-							+ collectionInfoString( persister, ownerIdentifier, sessionFactory ) );
-			}
-
+			LOG.evictingCollectionCache( collectionInfoString( persister, ownerIdentifier, sessionFactory ) );
 			final Object cacheKey =
 					cacheAccess.generateCacheKey( ownerIdentifier, persister, sessionFactory, null );
 			cacheAccess.evict( cacheKey );
@@ -398,9 +385,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	private void evictCollectionData(NavigableRole navigableRole, CollectionDataAccess cacheAccess) {
 		if ( cacheAccess != null ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( "Evicting collection second-level cache: " + navigableRole.getFullPath() );
-			}
+			LOG.evictingCollectionCacheByRole( navigableRole.getFullPath() );
 			cacheAccess.evictAll();
 		}
 	}
@@ -427,7 +412,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	public void evictQueryRegion(String regionName) {
-		final QueryResultsCache cache = getQueryResultsCache( regionName );
+		final var cache = getQueryResultsCache( regionName );
 		if ( cache != null ) {
 			evictQueryResultRegion( cache );
 		}
@@ -435,23 +420,33 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	private void evictQueryResultRegion(QueryResultsCache cache) {
 		if ( cache != null ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( "Evicting query cache region: " + cache.getRegion().getName() );
-			}
+			LOG.evictingQueryCacheRegion( cache.getRegion().getName() );
 			cache.clear();
 		}
 	}
 
 	@Override
 	public void evictQueryRegions() {
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debug( "Evicting cache of all query regions" );
-		}
-
+		LOG.evictingAllQueryRegions();
 		evictQueryResultRegion( defaultQueryResultsCache );
 		for ( QueryResultsCache cache : namedQueryResultsCacheMap.values() ) {
 			evictQueryResultRegion( cache );
 		}
+	}
+
+	@Override
+	public void evictAll() {
+		// Evict only the "JPA cache", which is purely defined as the entity regions.
+		evictEntityData();
+	}
+
+	@Override
+	public void evictAllRegions() {
+		evictEntityData();
+		evictNaturalIdData();
+		evictCollectionData();
+		evictDefaultQueryRegion();
+		evictQueryRegions();
 	}
 
 	@Override
@@ -476,7 +471,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			return getDefaultQueryResultsCache();
 		}
 		else {
-			final QueryResultsCache existing = namedQueryResultsCacheMap.get( regionName );
+			final var existing = namedQueryResultsCacheMap.get( regionName );
 			return existing != null ? existing : makeQueryResultsRegionAccess( regionName );
 		}
 	}
@@ -495,8 +490,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	protected QueryResultsCache makeQueryResultsRegionAccess(String regionName) {
-		final QueryResultsCacheImpl regionAccess =
-				new QueryResultsCacheImpl( getQueryResultsRegion( regionName ), timestampsCache );
+		final var regionAccess = new QueryResultsCacheImpl( getQueryResultsRegion( regionName ), timestampsCache );
 		namedQueryResultsCacheMap.put( regionName, regionAccess );
 		legacySecondLevelCacheNames.add( regionName );
 		return regionAccess;
@@ -521,7 +515,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	@Override
 	public void evictRegion(String regionName) {
 		getRegion( regionName ).clear();
-		final QueryResultsRegion queryResultsRegionWithDuplicateName =
+		final var queryResultsRegionWithDuplicateName =
 				queryResultsRegionsByDuplicateName.get( regionName );
 		if ( queryResultsRegionWithDuplicateName != null ) {
 			queryResultsRegionWithDuplicateName.clear();
@@ -531,26 +525,23 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> type) {
-		if ( org.hibernate.Cache.class.isAssignableFrom( type ) ) {
+		if ( type.isAssignableFrom( EnabledCaching.class ) ) {
 			return (T) this;
 		}
-		if ( org.hibernate.cache.spi.CacheImplementor.class.isAssignableFrom( type ) ) {
-			return (T) this;
-		}
-
-		if ( RegionFactory.class.isAssignableFrom( type ) ) {
+		else if ( type.isAssignableFrom( RegionFactory.class ) ) {
 			return (T) regionFactory;
 		}
-
-		throw new PersistenceException( "Hibernate cannot unwrap Cache as '" + type.getName() + "'" );
+		else {
+			throw new PersistenceException( "Hibernate cannot unwrap Cache as '" + type.getName() + "'" );
+		}
 	}
 
 	@Override
 	public void close() {
-		for ( Region region : regionsByName.values() ) {
+		for ( var region : regionsByName.values() ) {
 			region.destroy();
 		}
-		for ( Region region : queryResultsRegionsByDuplicateName.values() ) {
+		for ( var region : queryResultsRegionsByDuplicateName.values() ) {
 			region.destroy();
 		}
 	}

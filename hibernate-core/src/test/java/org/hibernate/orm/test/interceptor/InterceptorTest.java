@@ -41,11 +41,6 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		return new String[] { "interceptor/User.hbm.xml", "interceptor/Image.hbm.xml" };
 	}
 
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
-	}
-
 	@Test
 	public void testCollectionIntercept() {
 		Session s = openSession( new CollectionInterceptor() );

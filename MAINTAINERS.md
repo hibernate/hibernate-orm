@@ -8,7 +8,7 @@ i.e. anybody with direct push access to the git repository.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Continuous integration
+## <a id="ci"></a> Continuous integration
 
 Continuous integration is split across two platforms:
 
@@ -46,12 +46,20 @@ See [Releasing](#releasing) for more information.
 
 ## <a id="releasing"></a> Releasing
 
+### Where is the information
+
+If you're looking for information about how releases are implemented technically, see [release/README.adoc](release/README.adoc).
+
+If you're looking for information about how to release Hibernate ORM, read on.
+
 ### Automated releases
 
-On select maintenance branches (`6.2`, `6.4`, ...),
-micro releases (`x.y.1`, `x.y.2`, ...) are performed as soon as you push to that branch.
+On select maintenance branches (`6.2`, `6.4`, `7.0`, ...),
+micro releases (`x.y.1`, `x.y.2`, ...) are performed on weekends
+if, since the last release, commits were pushed with a message starting with `[HHH-` or `HHH-` --
+which is taken as "someone fixed something worthy of a Jira issue".
 
-Make sure to assign fix versions properly before merging pull requests.
+Make sure to assign fix versions properly in Jira when merging pull requests.
 
 No announcements are expected for such releases:
 neither through X, blog posts, or email.
@@ -71,12 +79,14 @@ In any case, before the release:
 * Check that the [CI jobs](#continuous-integration) for the branch you want to release are green.
 * Check Jira [Releases](https://hibernate.atlassian.net/projects/HHH?selectedItem=com.atlassian.jira.jira-projects-plugin%3Arelease-page):
   * Check that the release you are about to publish exists in Jira.
-  * Check there are no outstanding issues assigned to that release.
+  * Remove the fix version for anything rejected, etc.
+  * Move unresolved issues to another version
   * Check there are no resolved/closed issues in the corresponding "work-in-progress version"
     (e.g. `6.6`, `6.6-next`, ... naming convention may vary);
     if there are, you might want to assign them to your release.
+* Pull all upstream changes and perform `./gradlew preVerifyRelease` locally.
 
-**If it is a new major or minor release**, before the release:
+**If it's the first `Alpha`/`Beta` of a new major or minor release**, before the release:
 
 * Reset the migration guide to include only information relevant to the new major or minor.
 
@@ -88,12 +98,10 @@ In any case, before the release:
 
 #### Performing the release
 
-Once you trigger the CI job, it automatically pushes artifacts to the
-[OSSRH Maven Repository](https://repo1.maven.org/maven2/org/hibernate/orm/),
-and the documentation to [docs.jboss.org](https://docs.jboss.org/hibernate/orm/).
+Trigger the CI release job to automatically publish artifacts and documentation...
 
 * Do *not* mark the Jira Release as "released" or close issues,
-  the release job does it for you.
+  the release job triggers Jira automation that does it for you.
 * Do *not* update the repository (in particular changelog.txt and README.md), 
   the release job does it for you.
 * Trigger the release on CI:
@@ -106,35 +114,33 @@ and the documentation to [docs.jboss.org](https://docs.jboss.org/hibernate/orm/)
 
 After the job succeeds:
 
-* Release the artifacts on the [OSSRH repository manager](https://oss.sonatype.org/#stagingRepositories).
-  * Log into Nexus. The credentials can be found on Bitwarden; ask a teammate if you don't have access.
-  * Click "staging repositories" to the left.
-  * Examine your staging repository: check that all expected artifacts are there.
-  * If necessary (that's very rare), test the release in the staging repository.
-    You can drop the staging repo if there is a problem,
-    but you'll need to revert the commits pushed during the release.
-  * If everything is ok, select the staging repository and click the "Release" button.
-    * For branches with automated releases (e.g. 6.6) the "release repository" will happen automatically.
-      to enable/disable the automatic release of the staging repository update the [jreleaser.yml](jreleaser.yml) file,
-      in particular change the `deploy.maven.nexus2.maven-central.releaseRepository` to `true`/`false`.
-
-* Update [hibernate.org](https://github.com/hibernate/hibernate.org) if necessary:
-  * If it is a new major or minor release, add a `_data/projects/orm/releases/series.yml` file
-    and a `orm/releases/<version>/index.adoc` file.
-  * Adjust the release file in `_data/projects/orm/releases`: use a meaningful summary and set `announcement_url` to the blog post, if any.
+* Update [hibernate.org](https://github.com/hibernate/hibernate.org) as necessary:
+  * If it is a new major or minor release (new "series"):
+    * Add a `_data/projects/orm/releases/<series>/series.yml` file,
+      a `orm/releases/<series>/index.adoc` file, and a `orm/documentation/<series>/index.adoc` file.
+      Generally these files can be copied from previous series.
+    * If this new series is to support a new JPA release, also be sure to update `orm/releases/index.adoc`
+    * Adjust the release file in `_data/projects/orm/releases` that was created automatically by the release job:
+      use a meaningful summary, if relevant, and set `announcement_url` to the blog post, if any.
+    * None of the above is necessary for maintenance (micro) releases.
   * Depending on which series you want to have displayed,
     make sure to adjust the `status`/`displayed` attributes of the `series.yml` file of the old series.
   * Push to the production branch.
 * Check that the artifacts are available on Maven Central:
-  https://repo1.maven.org/maven2/org/hibernate/orm/hibernate-core/.
+  https://central.sonatype.com/artifact/org.hibernate.orm/hibernate-core.
   They should appear after a few minutes, sometimes a few hours.
 * Make sure a GitHub release got created and that everything looks ok.
 
 
 #### Announcing the release
 
+If it is an `Alpha`, `Beta`, `CR` or first `Final` (`x.y.0.Final`) release, announce it:
+
+* Blog about release on [in.relation.to](https://github.com/hibernate/in.relation.to).
+  Make sure to use the tags "Hibernate ORM" and "Releases" for the blog entry.
 * Send an email to `hibernate-announce@lists.jboss.org` and CC `hibernate-dev@lists.jboss.org`.
 * Tweet about the release via the `@Hibernate` account.
+* Announce it anywhere else you wish (BlueSky, etc).
 
 #### Updating depending projects
 

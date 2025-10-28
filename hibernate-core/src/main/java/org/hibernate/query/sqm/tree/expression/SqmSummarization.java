@@ -6,9 +6,11 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
@@ -65,6 +67,7 @@ public class SqmSummarization<T> extends AbstractSqmExpression<T> {
 		ROLLUP,
 		CUBE
 	}
+
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( kind );
@@ -77,4 +80,31 @@ public class SqmSummarization<T> extends AbstractSqmExpression<T> {
 		hql.append( ')' );
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmSummarization<?> that
+			&& kind == that.kind
+			&& Objects.equals( groupings, that.groupings );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = kind.hashCode();
+		result = 31 * result + Objects.hashCode( groupings );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmSummarization<?> that
+			&& kind == that.kind
+			&& SqmCacheable.areCompatible( groupings, that.groupings );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = kind.hashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( groupings );
+		return result;
+	}
 }

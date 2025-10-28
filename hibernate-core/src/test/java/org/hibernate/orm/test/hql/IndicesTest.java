@@ -4,9 +4,6 @@
  */
 package org.hibernate.orm.test.hql;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -14,29 +11,32 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import static org.hamcrest.core.Is.is;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.assertThat;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Burkhard Graves
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-14475")
-public class IndicesTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = {IndicesTest.Project.class, IndicesTest.Role.class, IndicesTest.Person.class})
+@SessionFactory
+public class IndicesTest {
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {Project.class, Role.class, Person.class};
-	}
-
-	@Before
-	public void setUp() {
-		doInHibernate( this::sessionFactory, session -> {
-
+	@BeforeEach
+	public void createTestData(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
 			Project project = new Project(1);
 			Role role = new Role(1);
 
@@ -46,19 +46,20 @@ public class IndicesTest extends BaseNonConfigCoreFunctionalTestCase {
 			Person person = new Person(1, project, role);
 
 			session.persist( person );
-		});
+		} );
+	}
+
+	@AfterEach
+	public void dropTestData(SessionFactoryScope factoryScope) throws Exception {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testSelectIndices() {
-		doInHibernate( this::sessionFactory, session -> {
-
-			List<Object> result = session.createQuery(
-					"select indices(p.roles) from Person p"
-			).list();
-
-			assertThat( result.size(), is( 1 ) );
-		});
+	public void testSelectIndices(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			List<?> result = session.createQuery("select indices(p.roles) from Person p" ).list();
+			assertThat( result ).hasSize( 1 );
+		} );
 	}
 
 	@Entity(name = "Person")

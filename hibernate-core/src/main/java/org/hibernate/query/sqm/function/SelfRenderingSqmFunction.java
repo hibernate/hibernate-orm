@@ -254,5 +254,4 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 			return argumentTypeResolver.resolveFunctionArgumentType( function.getArguments(), argumentIndex, converter );
 		}
 	}
-
 }

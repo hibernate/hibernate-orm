@@ -16,7 +16,6 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.tuple.entity.EntityMetamodel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -25,11 +24,11 @@ import java.lang.reflect.Field;
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.hibernate.cfg.AvailableSettings.USE_QUERY_CACHE;
 import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Gavin King
@@ -51,16 +50,15 @@ public class MutableNaturalIdTest {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final EntityMappingType entityMappingType = sessionFactory.getRuntimeMetamodels().getEntityMappingType( User.class );
 		final EntityPersister persister = entityMappingType.getEntityPersister();
-		final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
 
 		// nullability is not specified, so it should be non-nullable by hbm-specific default
-		assertFalse( persister.getPropertyNullability()[entityMetamodel.getPropertyIndex( "name" )] );
-		assertFalse( persister.getPropertyNullability()[entityMetamodel.getPropertyIndex( "org" )] );
+		assertFalse( persister.getPropertyNullability()[persister.getPropertyIndex( "name" )] );
+		assertFalse( persister.getPropertyNullability()[persister.getPropertyIndex( "org" )] );
 	}
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.createQuery( "delete User" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -317,7 +315,7 @@ public class MutableNaturalIdTest {
 							.using( "org", "hb" )
 							.load();
 					assertNotNull( beforeClear );
-					assertEquals( statistics.getPrepareStatementCount(), 1 );
+					assertEquals( 1, statistics.getPrepareStatementCount() );
 
 					session.clear();
 
@@ -326,7 +324,7 @@ public class MutableNaturalIdTest {
 							.using( "org", "hb" )
 							.load();
 					assertNotNull( afterClear );
-					assertEquals( statistics.getPrepareStatementCount(), 2 );
+					assertEquals( 2, statistics.getPrepareStatementCount() );
 
 					assertNotSame( beforeClear, afterClear );
 				}
@@ -349,7 +347,7 @@ public class MutableNaturalIdTest {
 							.using( "org", "hb" )
 							.load();
 					assertNotNull( beforeEvict );
-					assertEquals( statistics.getPrepareStatementCount(), 1 );
+					assertEquals( 1, statistics.getPrepareStatementCount() );
 
 					session.evict( beforeEvict );
 
@@ -358,7 +356,7 @@ public class MutableNaturalIdTest {
 							.using( "org", "hb" )
 							.load();
 					assertNotNull( afterEvict );
-					assertEquals( statistics.getPrepareStatementCount(), 2 );
+					assertEquals( 2, statistics.getPrepareStatementCount() );
 
 					assertNotSame( beforeEvict, afterEvict );
 				}

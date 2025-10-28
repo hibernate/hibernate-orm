@@ -114,9 +114,9 @@ public class DelayedStructJdbcType implements StructuredJdbcType {
 
 	@Override
 	public boolean equals(Object o) {
-		return o != null &&
-				getClass() == o.getClass() &&
-				structName.equals( ( (DelayedStructJdbcType) o ).structName );
+		return o != null
+			&& getClass() == o.getClass()
+			&& structName.equals( ( (DelayedStructJdbcType) o ).structName );
 	}
 
 	@Override

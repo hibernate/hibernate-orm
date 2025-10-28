@@ -4,12 +4,12 @@
  */
 package org.hibernate.bytecode.internal.bytebuddy;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.lang.reflect.InvocationTargetException;
 
 import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyHelper;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class GenerateProxiesTest {
 

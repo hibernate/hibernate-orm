@@ -12,10 +12,10 @@ import java.util.TreeMap;
 import org.hibernate.event.spi.EntityCopyObserver;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.IdentitySet;
-import org.hibernate.pretty.MessageHelper;
+
+import static org.hibernate.event.internal.EntityCopyLogging.EVENT_COPY_LOGGER;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * An {@link EntityCopyObserver} implementation that allows multiple representations of
@@ -25,8 +25,6 @@ import org.hibernate.pretty.MessageHelper;
  * @author Gail Badner
  */
 public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityCopyAllowedLoggedObserver.class );
 
 	public static final EntityCopyObserverFactory FACTORY_OF_SELF = EntityCopyAllowedLoggedObserver::new;
 
@@ -53,15 +51,11 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 			Object mergeEntity2,
 			EventSource session) {
 		final String entityName = session.getEntityName( managedEntity );
-		LOG.trace(
-				String.format(
-						"More than one representation of the same persistent entity being merged for: %s",
-						MessageHelper.infoString(
-								entityName,
-								session.getIdentifier( managedEntity )
-						)
-				)
-		);
+		if ( EVENT_COPY_LOGGER.isTraceEnabled() ) {
+			EVENT_COPY_LOGGER.duplicateRepresentationBeingMerged(
+					infoString( entityName, session.getIdentifier( managedEntity ) )
+			);
+		}
 		Set<Object> detachedEntitiesForManaged = null;
 		if ( managedToMergeEntitiesXref == null ) {
 			// This is the first time multiple representations have been found;
@@ -114,53 +108,45 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 	public void topLevelMergeComplete(EventSource session) {
 		// Log the summary.
 		if ( countsByEntityName != null ) {
-			for ( Map.Entry<String, Integer> entry : countsByEntityName.entrySet() ) {
-				LOG.debug(
-						String.format(
-								"Summary: number of %s entities with multiple representations merged: %d",
-								entry.getKey(),
-								entry.getValue()
-						)
-				);
+			for ( var entry : countsByEntityName.entrySet() ) {
+				EVENT_COPY_LOGGER.mergeSummaryMultipleRepresentations(
+						entry.getKey(), entry.getValue() );
 			}
 		}
 		else {
-			LOG.debug( "No entity copies merged." );
+			EVENT_COPY_LOGGER.noEntityCopiesMerged();
 		}
 
 		if ( managedToMergeEntitiesXref != null ) {
-			for ( Map.Entry<Object,Set<Object>> entry : managedToMergeEntitiesXref.entrySet() ) {
-				Object managedEntity = entry.getKey();
-				Set<Object> mergeEntities = entry.getValue();
-				StringBuilder sb = new StringBuilder( "Details: merged ")
-						.append( mergeEntities.size() )
-						.append( " representations of the same entity " )
-						.append(
-								MessageHelper.infoString(
-										session.getEntityName( managedEntity ),
-										session.getIdentifier( managedEntity )
-								)
-						)
-						.append( " being merged: " );
-				boolean first = true;
-				for ( Object mergeEntity : mergeEntities ) {
-					if ( first ) {
-						first = false;
-					}
-					else {
-						sb.append( ", " );
-					}
-					sb.append(  getManagedOrDetachedEntityString( managedEntity, mergeEntity ) );
-				}
-				sb.append( "; resulting managed entity: [" ).append( managedEntity ).append( ']' );
-				LOG.debug( sb.toString());
+			for ( var entry : managedToMergeEntitiesXref.entrySet() ) {
+				final Object managedEntity = entry.getKey();
+				EVENT_COPY_LOGGER.mergeDetails(
+						entry.getValue().size(),
+						infoString( session.getEntityName( managedEntity ),
+								session.getIdentifier( managedEntity ) ),
+						renderList( entry.getValue(), managedEntity ),
+						String.valueOf( managedEntity )
+				);
 			}
 		}
 	}
 
-	private String getManagedOrDetachedEntityString(Object managedEntity, Object mergeEntity ) {
-		return mergeEntity == managedEntity
-				? "Managed: [" + mergeEntity + "]"
-				: "Detached: [" + mergeEntity + "]";
+	private String renderList(Set<Object> mergeEntities, Object managedEntity) {
+		final var list = new StringBuilder();
+		boolean first = true;
+		for ( Object mergeEntity : mergeEntities ) {
+			if ( first ) {
+				first = false;
+			}
+			else {
+				list.append(", ");
+			}
+			list.append( mergeEntity == managedEntity ? "Managed" : "Detached" )
+					.append( " [" )
+					.append( mergeEntity )
+					.append( ']' );
+		}
+		return list.toString();
 	}
+
 }

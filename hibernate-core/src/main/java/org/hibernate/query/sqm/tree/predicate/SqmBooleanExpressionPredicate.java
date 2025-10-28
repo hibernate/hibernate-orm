@@ -83,17 +83,42 @@ public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate
 	}
 
 	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmBooleanExpressionPredicate that
+			&& this.isNegated() == that.isNegated()
+			&& this.booleanExpression.equals( that.booleanExpression );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + booleanExpression.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmBooleanExpressionPredicate that
+			&& this.isNegated() == that.isNegated()
+			&& this.booleanExpression.isCompatible( that.booleanExpression );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + booleanExpression.cacheHashCode();
+		return result;
+	}
+
+	@Override
 	protected SqmNegatablePredicate createNegatedNode() {
 		return new SqmBooleanExpressionPredicate( booleanExpression, !isNegated(), nodeBuilder() );
 	}
 
 	@Override
 	public String toString() {
-		if ( isNegated() ) {
-			return "SqmBooleanExpressionPredicate( (not) " + booleanExpression + " )";
-		}
-		else {
-			return "SqmBooleanExpressionPredicate( " + booleanExpression + " )";
-		}
+		return isNegated()
+				? "SqmBooleanExpressionPredicate( (not) " + booleanExpression + " )"
+				: "SqmBooleanExpressionPredicate( " + booleanExpression + " )";
 	}
 }

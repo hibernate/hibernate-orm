@@ -6,26 +6,22 @@ package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.cache.MutableCacheKeyBuilder;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.CurrentFunction;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.mapping.BasicValue;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.SoftDeletable;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SoftDeletableModelPart;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
-import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -38,15 +34,14 @@ import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.function.BiConsumer;
 
+import static java.util.Collections.emptyList;
 import static org.hibernate.query.sqm.ComparisonOperator.EQUAL;
 
 /**
@@ -81,70 +76,72 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping {
 			MappingModelCreationProcess modelCreationProcess) {
 		assert bootMapping.getSoftDeleteColumn() != null;
 
-		this.navigableRole = softDeletable.getNavigableRole().append( ROLE_NAME );
 		this.softDeletable = softDeletable;
-		this.strategy = bootMapping.getSoftDeleteStrategy();
+		navigableRole = softDeletable.getNavigableRole().append( ROLE_NAME );
+		strategy = bootMapping.getSoftDeleteStrategy();
 
-		final Dialect dialect = modelCreationProcess.getCreationContext().getDialect();
+		final var dialect = modelCreationProcess.getCreationContext().getDialect();
 
-		final Column softDeleteColumn = bootMapping.getSoftDeleteColumn();
-		final BasicValue columnValue = (BasicValue) softDeleteColumn.getValue();
-		final BasicValue.Resolution<?> resolution = columnValue.resolve();
+		final var softDeleteColumn = bootMapping.getSoftDeleteColumn();
+		final var columnValue = (BasicValue) softDeleteColumn.getValue();
+		final var resolution = columnValue.resolve();
 
-		this.columnName = softDeleteColumn.getName();
 		this.tableName = tableName;
-		this.jdbcMapping = resolution.getJdbcMapping();
+		columnName = softDeleteColumn.getName();
+		jdbcMapping = resolution.getJdbcMapping();
 
 		if ( bootMapping.getSoftDeleteStrategy() == SoftDeleteType.TIMESTAMP ) {
-			this.currentTimestampFunctionName = dialect.currentTimestamp();
-			final BasicType<?> currentTimestampFunctionType = modelCreationProcess
-					.getCreationContext()
-					.getTypeConfiguration()
-					.getBasicTypeForJavaType( Instant.class );
-			final CurrentFunction currentTimestampFunction = new CurrentFunction(
+			currentTimestampFunctionName = dialect.currentTimestamp();
+			final var currentTimestampFunctionType =
+					modelCreationProcess.getCreationContext().getTypeConfiguration()
+							.getBasicTypeForJavaType( Instant.class );
+			final var currentTimestampFunction = new CurrentFunction(
 					currentTimestampFunctionName,
 					currentTimestampFunctionName,
 					currentTimestampFunctionType
 			);
-			this.currentTimestampFunctionExpression = new SelfRenderingFunctionSqlAstExpression<>(
+			currentTimestampFunctionExpression = new SelfRenderingFunctionSqlAstExpression<>(
 					currentTimestampFunctionName,
 					currentTimestampFunction,
-					Collections.emptyList(),
+					emptyList(),
 					currentTimestampFunctionType,
 					softDeletable
 			);
 
-			this.deletionIndicator = currentTimestampFunctionName;
+			deletionIndicator = currentTimestampFunctionName;
 
-			this.deletedLiteralValue = null;
-			this.deletedLiteralText = null;
+			deletedLiteralValue = null;
+			deletedLiteralText = null;
 
-			this.nonDeletedLiteralValue = null;
-			this.nonDeletedLiteralText = null;
+			nonDeletedLiteralValue = null;
+			nonDeletedLiteralText = null;
 		}
 		else {
 			//noinspection unchecked
-			final BasicValueConverter<Boolean, Object> converter = (BasicValueConverter<Boolean, Object>) resolution.getValueConverter();
+			final var converter =
+					(BasicValueConverter<Boolean, ?>)
+							resolution.getValueConverter();
 			//noinspection unchecked
-			final JdbcLiteralFormatter<Object> literalFormatter = resolution.getJdbcMapping().getJdbcLiteralFormatter();
+			final JdbcLiteralFormatter<Object> literalFormatter =
+					resolution.getJdbcMapping().getJdbcLiteralFormatter();
 
 			if ( converter == null ) {
-				// the database column is BIT or BOOLEAN : pass-thru
-				this.deletedLiteralValue = true;
-				this.nonDeletedLiteralValue = false;
+				// the database column is BIT or BOOLEAN: pass-thru
+				deletedLiteralValue = true;
+				nonDeletedLiteralValue = false;
 			}
 			else {
-				this.deletedLiteralValue = converter.toRelationalValue( true );
-				this.nonDeletedLiteralValue = converter.toRelationalValue( false );
+				deletedLiteralValue = converter.toRelationalValue( true );
+				nonDeletedLiteralValue = converter.toRelationalValue( false );
 			}
 
-			this.deletedLiteralText = literalFormatter.toJdbcLiteral( deletedLiteralValue, dialect, null );
-			this.nonDeletedLiteralText = literalFormatter.toJdbcLiteral( nonDeletedLiteralValue, dialect, null );
+			deletedLiteralText = literalFormatter.toJdbcLiteral( deletedLiteralValue, dialect, null );
+			nonDeletedLiteralText = literalFormatter.toJdbcLiteral( nonDeletedLiteralValue, dialect, null );
 
-			this.deletionIndicator = deletedLiteralValue;
+			deletionIndicator = deletedLiteralValue;
 
-			this.currentTimestampFunctionName = null;
-			this.currentTimestampFunctionExpression = null;
+			currentTimestampFunctionName = null;
+			currentTimestampFunctionExpression = null;
 		}
 	}
 
@@ -174,23 +171,17 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping {
 
 	@Override
 	public Assignment createSoftDeleteAssignment(TableReference tableReference) {
-		final ColumnReference columnReference = new ColumnReference( tableReference, this );
-		final Expression valueExpression;
-
-		if ( strategy == SoftDeleteType.TIMESTAMP ) {
-			valueExpression = currentTimestampFunctionExpression;
-		}
-		else {
-			//noinspection rawtypes,unchecked
-			valueExpression = new JdbcLiteral( deletedLiteralValue, jdbcMapping );
-		}
-
+		final var columnReference = new ColumnReference( tableReference, this );
+		final var valueExpression =
+				strategy == SoftDeleteType.TIMESTAMP
+						? currentTimestampFunctionExpression
+						: new JdbcLiteral<>( deletedLiteralValue, jdbcMapping );
 		return new Assignment( columnReference, valueExpression );
 	}
 
 	@Override
 	public Predicate createNonDeletedRestriction(TableReference tableReference) {
-		final ColumnReference softDeleteColumn = new ColumnReference( tableReference, this );
+		final var softDeleteColumn = new ColumnReference( tableReference, this );
 		if ( strategy == SoftDeleteType.TIMESTAMP ) {
 			return new NullnessPredicate( softDeleteColumn, false, jdbcMapping );
 		}
@@ -202,7 +193,7 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping {
 
 	@Override
 	public Predicate createNonDeletedRestriction(TableReference tableReference, SqlExpressionResolver expressionResolver) {
-		final Expression softDeleteColumn = expressionResolver.resolveSqlExpression( tableReference, this );
+		final var softDeleteColumn = expressionResolver.resolveSqlExpression( tableReference, this );
 		if ( strategy == SoftDeleteType.TIMESTAMP ) {
 			return new NullnessPredicate( softDeleteColumn, false, jdbcMapping );
 		}
@@ -217,41 +208,19 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping {
 
 	@Override
 	public ColumnValueBinding createNonDeletedValueBinding(ColumnReference softDeleteColumnReference) {
-		final ColumnWriteFragment nonDeletedFragment;
-		if ( strategy == SoftDeleteType.TIMESTAMP ) {
-			nonDeletedFragment = new ColumnWriteFragment(
-					null,
-					Collections.emptyList(),
-					jdbcMapping
-			);
-		}
-		else {
-			nonDeletedFragment = new ColumnWriteFragment(
-					nonDeletedLiteralText,
-					Collections.emptyList(),
-					jdbcMapping
-			);
-		}
+		final var nonDeletedFragment =
+				strategy == SoftDeleteType.TIMESTAMP
+						? new ColumnWriteFragment( null, emptyList(), jdbcMapping )
+						: new ColumnWriteFragment( nonDeletedLiteralText, emptyList(), jdbcMapping );
 		return new ColumnValueBinding( softDeleteColumnReference, nonDeletedFragment );
 	}
 
 	@Override
 	public ColumnValueBinding createDeletedValueBinding(ColumnReference softDeleteColumnReference) {
-		final ColumnWriteFragment deletedFragment;
-		if ( strategy == SoftDeleteType.TIMESTAMP ) {
-			deletedFragment = new ColumnWriteFragment(
-					currentTimestampFunctionName,
-					Collections.emptyList(),
-					getJdbcMapping()
-			);
-		}
-		else {
-			deletedFragment = new ColumnWriteFragment(
-					deletedLiteralText,
-					Collections.emptyList(),
-					jdbcMapping
-			);
-		}
+		final ColumnWriteFragment deletedFragment =
+				strategy == SoftDeleteType.TIMESTAMP
+						? new ColumnWriteFragment( currentTimestampFunctionName, emptyList(), getJdbcMapping() )
+						: new ColumnWriteFragment( deletedLiteralText, emptyList(), jdbcMapping );
 		return new ColumnValueBinding( softDeleteColumnReference, deletedFragment );
 	}
 
@@ -318,7 +287,7 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping {
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
+		final var sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
@@ -333,12 +302,12 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping {
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		final TableDetails indicatorTable = softDeletable.getSoftDeleteTableDetails();
-		final TableReference tableReference = tableGroup.resolveTableReference(
+		final var indicatorTable = softDeletable.getSoftDeleteTableDetails();
+		final var tableReference = tableGroup.resolveTableReference(
 				navigablePath.getRealParent(),
 				indicatorTable.getTableName()
 		);
-		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
+		final var expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
 		return expressionResolver.resolveSqlSelection(
 				expressionResolver.resolveSqlExpression( tableReference, this ),
 				getJavaType(),
@@ -361,7 +330,7 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping {
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
+		final var sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
 		selectionConsumer.accept( sqlSelection, getJdbcMapping() );
 	}
 

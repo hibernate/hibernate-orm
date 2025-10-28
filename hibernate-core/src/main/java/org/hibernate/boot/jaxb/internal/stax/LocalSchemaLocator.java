@@ -5,14 +5,13 @@
 package org.hibernate.boot.jaxb.internal.stax;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
-import javax.xml.XMLConstants;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
-import org.jboss.logging.Logger;
+import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
+import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
 
 /**
  * Helper for resolving XML Schema references locally.
@@ -22,7 +21,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class LocalSchemaLocator {
-	private static final Logger log = Logger.getLogger( LocalSchemaLocator.class );
 
 	private LocalSchemaLocator() {
 		// Disallow direct instantiation
@@ -35,7 +33,7 @@ public class LocalSchemaLocator {
 	 *
 	 */
 	public static URL resolveLocalSchemaUrl(String schemaResourceName) {
-		URL url = LocalSchemaLocator.class.getClassLoader().getResource( schemaResourceName );
+		final URL url = LocalSchemaLocator.class.getClassLoader().getResource( schemaResourceName );
 		if ( url == null ) {
 			throw new XmlInfrastructureException( "Unable to locate schema [" + schemaResourceName + "] via classpath" );
 		}
@@ -48,11 +46,10 @@ public class LocalSchemaLocator {
 
 	public static Schema resolveLocalSchema(URL schemaUrl) {
 		try {
-			InputStream schemaStream = schemaUrl.openStream();
+			final var schemaStream = schemaUrl.openStream();
 			try {
-				StreamSource source = new StreamSource(schemaUrl.openStream());
-				SchemaFactory schemaFactory = SchemaFactory.newInstance( XMLConstants.W3C_XML_SCHEMA_NS_URI );
-				return schemaFactory.newSchema(source);
+				return SchemaFactory.newInstance( W3C_XML_SCHEMA_NS_URI )
+						.newSchema( new StreamSource( schemaUrl.openStream() ) );
 			}
 			catch ( Exception e ) {
 				throw new XmlInfrastructureException( "Unable to load schema [" + schemaUrl.toExternalForm() + "]", e );
@@ -62,7 +59,7 @@ public class LocalSchemaLocator {
 					schemaStream.close();
 				}
 				catch ( IOException e ) {
-					log.debugf( "Problem closing schema stream - %s", e.toString() );
+					JAXB_LOGGER.problemClosingSchemaStream( e.toString() );
 				}
 			}
 		}

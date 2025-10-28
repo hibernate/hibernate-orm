@@ -26,7 +26,6 @@ import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -179,19 +178,17 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	}
 
 	private TableGroup resolveTableGroup(NavigablePath fetchablePath, DomainResultCreationState creationState) {
-		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
+		final var fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
 		return fromClauseAccess.resolveTableGroup(
 				fetchablePath,
 				np -> {
-					final PluralTableGroup parentTableGroup = (PluralTableGroup) fromClauseAccess.getTableGroup( np.getParent() );
-					switch ( nature ) {
-						case ELEMENT:
-							return parentTableGroup.getElementTableGroup();
-						case INDEX:
-							return parentTableGroup.getIndexTableGroup();
-					}
+					final var parentTableGroup = (PluralTableGroup) fromClauseAccess.getTableGroup( np.getParent() );
+					return switch ( nature ) {
+						case ELEMENT -> parentTableGroup.getElementTableGroup();
+						case INDEX -> parentTableGroup.getIndexTableGroup();
+						default -> throw new IllegalStateException( "Could not find table group for: " + np );
+					};
 
-					throw new IllegalStateException( "Could not find table group for: " + np );
 				}
 		);
 	}
@@ -324,8 +321,10 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	@Override
 	public boolean containsTableReference(String tableExpression) {
 		if ( collectionDescriptor.isOneToMany() ) {
-			return ( (EntityCollectionPart) collectionDescriptor.getAttributeMapping().getElementDescriptor() )
-					.getPartMappingType().containsTableReference( tableExpression );
+			final var elementDescriptor =
+					(EntityCollectionPart)
+							collectionDescriptor.getAttributeMapping().getElementDescriptor();
+			return elementDescriptor.getPartMappingType().containsTableReference( tableExpression );
 		}
 		return collectionDescriptor.getAttributeMapping().containsTableReference( tableExpression );
 	}

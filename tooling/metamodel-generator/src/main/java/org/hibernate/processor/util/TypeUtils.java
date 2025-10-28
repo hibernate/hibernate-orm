@@ -27,22 +27,25 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.ElementFilter;
+import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleTypeVisitor8;
 import javax.tools.Diagnostic;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static java.beans.Introspector.decapitalize;
+import static java.util.stream.Stream.concat;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.processor.util.AccessTypeInformation.DEFAULT_ACCESS_TYPE;
 import static org.hibernate.processor.util.Constants.ACCESS;
-import static org.hibernate.processor.util.Constants.BASIC;
 import static org.hibernate.processor.util.Constants.ELEMENT_COLLECTION;
 import static org.hibernate.processor.util.Constants.EMBEDDABLE;
-import static org.hibernate.processor.util.Constants.EMBEDDED;
 import static org.hibernate.processor.util.Constants.EMBEDDED_ID;
 import static org.hibernate.processor.util.Constants.ENTITY;
 import static org.hibernate.processor.util.Constants.ID;
@@ -247,6 +250,26 @@ public final class TypeUtils {
 		return null;
 	}
 
+	/**
+	 * Checks whether the {@code Element} hosts the annotation (directly or inherited) with the given fully qualified class name.
+	 *
+	 * @param element the element to check for the hosted annotation
+	 * @param qualifiedName the fully qualified class name of the annotation to check for
+	 *
+	 * @return the annotation mirror for the specified annotation class from the {@code Element} or {@code null} in case
+	 *         the {@code TypeElement} does not host the specified annotation (directly or inherited).
+	 */
+	public static @Nullable AnnotationMirror getInheritedAnnotationMirror(Elements elements, Element element, String qualifiedName) {
+		assert element != null;
+		assert qualifiedName != null;
+		for ( AnnotationMirror mirror : elements.getAllAnnotationMirrors(element) ) {
+			if ( isAnnotationMirrorOfType( mirror, qualifiedName ) ) {
+				return mirror;
+			}
+		}
+		return null;
+	}
+
 	public static boolean hasAnnotation(Element element, String qualifiedName) {
 		return getAnnotationMirror( element, qualifiedName ) != null;
 	}
@@ -364,7 +387,12 @@ public final class TypeUtils {
 
 	private static void updateEmbeddableAccessType(Context context, AccessType defaultAccessType, TypeElement embedded) {
 		final String embeddedClassName = embedded.getQualifiedName().toString();
-		final AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo(embeddedClassName);
+		final AccessType forcedAccessType = determineAnnotationSpecifiedAccessType( embedded );
+		final AccessTypeInformation accessTypeInfo =
+				forcedAccessType != null
+						? new AccessTypeInformation( embeddedClassName, null, forcedAccessType )
+						: context.getAccessTypeInfo( embeddedClassName );
+
 		if ( accessTypeInfo == null ) {
 			final AccessTypeInformation newAccessTypeInfo =
 					new AccessTypeInformation( embeddedClassName, null, defaultAccessType );
@@ -543,10 +571,9 @@ public final class TypeUtils {
 				toTypeString( executable.getReturnType() ) );
 	}
 
-	public static boolean isBasicAttribute(Element element, Element returnedElement, Context context) {
-		return hasAnnotation( element, BASIC, ONE_TO_ONE, MANY_TO_ONE, EMBEDDED, EMBEDDED_ID, ID )
-			|| hasAnnotation( element, "org.hibernate.annotations.Type") // METAGEN-28
-			|| returnedElement.asType().accept( new BasicAttributeVisitor( context ), returnedElement );
+	public static boolean isPluralAttribute(Element element) {
+		// TODO: should MANY_TO_ANY be on this list?
+		return hasAnnotation( element, MANY_TO_MANY, ONE_TO_MANY, ELEMENT_COLLECTION );
 	}
 
 	public static @Nullable String getFullyQualifiedClassNameOfTargetEntity(
@@ -657,6 +684,14 @@ public final class TypeUtils {
 				}
 			}
 		}
+		TypeMirror superclass = type.getSuperclass();
+		if ( superclass != null && superclass.getKind() == TypeKind.DECLARED  ) {
+			final DeclaredType declaredType = (DeclaredType) superclass;
+			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+			if ( implementsInterface( typeElement, interfaceName) ) {
+				return true;
+			}
+		}
 		return false;
 	}
 
@@ -745,4 +780,46 @@ public final class TypeUtils {
 
 	public static final Set<String> PRIMITIVE_TYPES =
 			Set.of("boolean", "char", "long", "int", "short", "byte", "double", "float");
+
+	public static String resolveTypeName(TypeElement typeElement, Element element, String name) {
+		final var mirror = resolveTypeMirror( typeElement, element, name );
+		return mirror == null ? name : mirror.toString();
+	}
+
+	public static @Nullable TypeMirror resolveTypeMirror(TypeElement typeElement, Element element, String name) {
+		final var mirrorMap = resolveTypeParameters( typeElement.asType(), element, Map.of(), new HashSet<>() );
+		return mirrorMap == null ? null : mirrorMap.get( name );
+	}
+
+	private static @Nullable Map<String, TypeMirror> resolveTypeParameters(TypeMirror type, Element element, Map<String, TypeMirror> parametersMap, Collection<Element> visited) {
+		if ( !(type instanceof DeclaredType declaredType
+			&& declaredType.asElement() instanceof TypeElement typeElement) ) {
+			return null;
+		}
+		if ( !visited.add( typeElement ) ) {
+			return null;
+		}
+		final var generic = typeElement.getTypeParameters();
+		final var map = new HashMap<String, TypeMirror>();
+		var typeArguments = declaredType.getTypeArguments();
+		if ( !(typeArguments.isEmpty() || generic.size() == typeArguments.size()) ) {
+			return null;
+		}
+		for ( var n = 0; n < generic.size(); ++n ) {
+			final var mirror = typeArguments.isEmpty()
+					? generic.get( 0 ).getBounds().get( 0 )
+					: typeArguments.get( n );
+			final var value = mirror.toString();
+			map.put( generic.get( n ).asType().toString(), parametersMap.getOrDefault( value, mirror ) );
+		}
+		if ( typeElement.equals( element ) ) {
+			return map;
+		}
+		return concat(
+				Stream.of( typeElement.getSuperclass() ),
+				typeElement.getInterfaces().stream()
+		).map( tm -> resolveTypeParameters( tm, element, map, visited ) )
+				.filter( Objects::nonNull )
+				.findFirst().orElse( null );
+	}
 }

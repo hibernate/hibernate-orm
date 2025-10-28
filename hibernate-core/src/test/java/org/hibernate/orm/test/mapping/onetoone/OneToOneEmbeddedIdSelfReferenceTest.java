@@ -38,11 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class OneToOneEmbeddedIdSelfReferenceTest {
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery( "from Tag", Tag.class ).getResultList().forEach( t -> t.setLinkedTag( null ) );
-			session.createMutationQuery( "delete from Element" ).executeUpdate();
-			session.createMutationQuery( "delete from Tag" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

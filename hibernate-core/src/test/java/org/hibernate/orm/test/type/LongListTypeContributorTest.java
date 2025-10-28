@@ -4,70 +4,53 @@
  */
 package org.hibernate.orm.test.type;
 
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Map;
-
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jpa.boot.spi.TypeContributorList;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.jdbc.LongVarcharJdbcType;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import java.io.Serializable;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-
-public class LongListTypeContributorTest extends EntityManagerFactoryBasedFunctionalTest {
-
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] {
-				SpecialItem.class,
-		};
-	}
-
-	@Override
-	protected void entityManagerFactoryBuilt(EntityManagerFactory factory) {
-		( (SessionFactoryImplementor) factory ).getTypeConfiguration().getJavaTypeRegistry()
-				.addDescriptor( StringifiedCollectionTypeContributor.StringifiedCollectionJavaType.INSTANCE );
-	}
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		options.put( "hibernate.type_contributors", (TypeContributorList) () -> Arrays.asList(
-				new StringifiedCollectionTypeContributor()
-		) );
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(
+		typeContributors = LongListTypeContributorTest.StringifiedCollectionTypeContributor.class,
+		annotatedClasses = LongListTypeContributorTest.SpecialItem.class
+)
+@SessionFactory
+public class LongListTypeContributorTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
 	@JiraKey(value = "HHH-11409")
-	public void testParameterRegisterredCollection() {
-
+	public void testParameterRegisteredCollection(SessionFactoryScope factoryScope) {
 		LongList longList = new LongList( 5L, 11L, 6123L, -61235L, 24L );
 
-		inTransaction( em -> {
+		factoryScope.inTransaction( em -> {
 			SpecialItem item = new SpecialItem( "LongList", longList );
 			em.persist( item );
 		} );
 
-		inTransaction( em -> {
-
-			SpecialItem item = (SpecialItem) em.createNativeQuery(
+		factoryScope.inTransaction( em -> {
+			SpecialItem item = em.createNativeQuery(
 							"SELECT * FROM special_table WHERE long_list = ?", SpecialItem.class )
 					.setParameter( 1, longList )
 					.getSingleResult();
@@ -75,7 +58,7 @@ public class LongListTypeContributorTest extends EntityManagerFactoryBasedFuncti
 			assertEquals( "LongList", item.getName() );
 		} );
 
-		inTransaction( em -> {
+		factoryScope.inTransaction( em -> {
 			SpecialItem item = (SpecialItem) em.createNativeQuery(
 							"SELECT * FROM special_table WHERE long_list = :longList", SpecialItem.class )
 					.setParameter( "longList", longList )
@@ -133,9 +116,7 @@ public class LongListTypeContributorTest extends EntityManagerFactoryBasedFuncti
 
 		public LongList(Long... longs) {
 			super( longs.length );
-			for ( Long l : longs ) {
-				this.add( l );
-			}
+			this.addAll( Arrays.asList( longs ) );
 		}
 	}
 
@@ -143,7 +124,7 @@ public class LongListTypeContributorTest extends EntityManagerFactoryBasedFuncti
 
 		@Override
 		public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-//			JavaTypeRegistry.INSTANCE.addDescriptor( StringifiedCollectionJavaType.INSTANCE );
+			typeContributions.contributeJavaType( StringifiedCollectionJavaType.INSTANCE );
 			typeContributions.contributeType( StringifiedCollectionType.INSTANCE );
 		}
 

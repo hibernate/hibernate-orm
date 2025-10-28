@@ -5,8 +5,6 @@
 package org.hibernate.metamodel.internal;
 
 import jakarta.persistence.metamodel.Attribute;
-import jakarta.persistence.metamodel.IdentifiableType;
-import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.Type;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
@@ -14,10 +12,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
@@ -41,10 +36,8 @@ import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.model.domain.internal.PrimitiveBasicTypeImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.EntityJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.ArrayList;
@@ -56,6 +49,8 @@ import java.util.Set;
 import java.util.function.BiFunction;
 
 import static java.util.Collections.unmodifiableMap;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 import static org.hibernate.metamodel.internal.InjectionHelper.injectField;
 
 /**
@@ -73,7 +68,6 @@ import static org.hibernate.metamodel.internal.InjectionHelper.injectField;
  */
 @Internal
 public class MetadataContext {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( MetadataContext.class );
 
 	private final JpaMetamodelImplementor jpaMetamodel;
 	private final RuntimeModelCreationContext runtimeModelCreationContext;
@@ -143,6 +137,18 @@ public class MetadataContext {
 		return metamodel;
 	}
 
+	private <T> PersistentAttribute<T, ?> buildAttribute(ManagedDomainType<T> domainType, Property property) {
+		return attributeFactory.buildAttribute( domainType, property );
+	}
+
+	private <T> SingularPersistentAttribute<T, ?> buildIdAttribute(IdentifiableDomainType<T> type, Property property) {
+		return attributeFactory.buildIdAttribute( type, property );
+	}
+
+	private <T> SingularPersistentAttribute<T, ?> buildVersionAttribute(IdentifiableDomainType<T> type, Property property) {
+		return attributeFactory.buildVersionAttribute( type, property );
+	}
+
 	/**
 	 * Retrieves the {@linkplain Class java type} to {@link EntityTypeImpl} map.
 	 *
@@ -158,22 +164,16 @@ public class MetadataContext {
 
 	public Map<Class<?>, MappedSuperclassDomainType<?>> getMappedSuperclassTypeMap() {
 		// we need to actually build this map...
-		final Map<Class<?>, MappedSuperclassDomainType<?>> mappedSuperClassTypeMap = CollectionHelper.mapOfSize(
-				mappedSuperclassByMappedSuperclassMapping.size()
-		);
-
-		for ( MappedSuperclassDomainType<?> mappedSuperclassType : mappedSuperclassByMappedSuperclassMapping.values() ) {
-			mappedSuperClassTypeMap.put(
-					mappedSuperclassType.getJavaType(),
-					mappedSuperclassType
-			);
+		final Map<Class<?>, MappedSuperclassDomainType<?>> mappedSuperClassTypeMap =
+				mapOfSize( mappedSuperclassByMappedSuperclassMapping.size() );
+		for ( var mappedSuperclassType : mappedSuperclassByMappedSuperclassMapping.values() ) {
+			mappedSuperClassTypeMap.put( mappedSuperclassType.getJavaType(), mappedSuperclassType );
 		}
-
 		return mappedSuperClassTypeMap;
 	}
 
 	public  void registerEntityType(PersistentClass persistentClass, EntityTypeImpl<?> entityType) {
-		final Class<?> javaType = entityType.getJavaType();
+		final var javaType = entityType.getJavaType();
 		if ( javaType != null && javaType != Map.class ) {
 			entityTypes.put( javaType, entityType );
 		}
@@ -186,11 +186,10 @@ public class MetadataContext {
 	public void registerEmbeddableType(
 			EmbeddableDomainType<?> embeddableType,
 			Component bootDescriptor) {
-		assert embeddableType.getJavaType() != null;
-		assert ! Map.class.isAssignableFrom( embeddableType.getJavaType() );
-
-		embeddablesToProcess
-				.computeIfAbsent( embeddableType.getJavaType(), k -> new ArrayList<>( 1 ) )
+		final var javaType = embeddableType.getJavaType();
+		assert javaType != null;
+		assert !Map.class.isAssignableFrom( javaType );
+		embeddablesToProcess.computeIfAbsent( javaType, k -> new ArrayList<>( 1 ) )
 				.add( embeddableType );
 		registerComponentByEmbeddable( embeddableType, bootDescriptor );
 	}
@@ -250,9 +249,8 @@ public class MetadataContext {
 	 *
 	 * @return The corresponding JPA {@link org.hibernate.type.EntityType}, or null.
 	 */
-	@SuppressWarnings("unchecked")
-	public <E> IdentifiableDomainType<E> locateIdentifiableType(String entityName) {
-		return (IdentifiableDomainType<E>) identifiableTypesByName.get( entityName );
+	public IdentifiableDomainType<?> locateIdentifiableType(String entityName) {
+		return identifiableTypesByName.get( entityName );
 	}
 
 	public Map<String, IdentifiableDomainType<?>> getIdentifiableTypesByName() {
@@ -263,64 +261,61 @@ public class MetadataContext {
 			Property property,
 			IdentifiableDomainType<X> entityType,
 			BiFunction<IdentifiableDomainType<X>, Property, PersistentAttribute<X, ?>> factoryFunction) {
-		final PersistentAttribute<X, ?> attribute;
-		final Component component = property.getValue() instanceof Component comp ? comp : null;
-		if ( component != null && component.isGeneric() ) {
+		if ( property.getValue() instanceof Component component && component.isGeneric() ) {
 			// This is an embeddable property that uses generics, we have to retrieve the generic
 			// component previously registered and create the concrete attribute
-			final Component genericComponent = runtimeModelCreationContext.getMetadata()
-					.getGenericComponent( component.getComponentClass() );
-			final Property genericProperty = property.copy();
+			final var genericComponent =
+					runtimeModelCreationContext.getMetadata()
+							.getGenericComponent( component.getComponentClass() );
+			final var genericProperty = property.copy();
 			genericProperty.setValue( genericComponent );
 			genericProperty.setGeneric( true );
-			attribute = factoryFunction.apply( entityType, genericProperty );
+			final var attribute = factoryFunction.apply( entityType, genericProperty );
 			if ( !property.isGeneric() ) {
-				final PersistentAttribute<X, ?> concreteAttribute = factoryFunction.apply( entityType, property );
+				final var concreteAttribute = factoryFunction.apply( entityType, property );
 				if ( concreteAttribute != null ) {
-					@SuppressWarnings("unchecked") final AttributeContainer<X> attributeContainer = (AttributeContainer<X>) entityType;
+					final var managedType = (ManagedDomainType<X>) entityType;
+					final var attributeContainer = (AttributeContainer<X>) managedType;
 					attributeContainer.getInFlightAccess().addConcreteGenericAttribute( concreteAttribute );
 				}
 			}
+			return attribute;
 		}
 		else {
-			attribute = factoryFunction.apply( entityType, property );
+			return factoryFunction.apply( entityType, property );
 		}
-		return attribute;
 	}
 
-	@SuppressWarnings("unchecked")
 	public void wrapUp() {
-		if ( log.isTraceEnabled() ) {
-			log.trace( "Wrapping up metadata context..." );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.trace( "Wrapping up metadata context..." );
 		}
 
 		final boolean staticMetamodelScanEnabled =
-				this.jpaStaticMetaModelPopulationSetting != JpaStaticMetamodelPopulationSetting.DISABLED;
+				jpaStaticMetaModelPopulationSetting != JpaStaticMetamodelPopulationSetting.DISABLED;
 		final Set<String> processedMetamodelClasses = new HashSet<>();
 
 		//we need to process types from superclasses to subclasses
 		for ( Object mapping : orderedMappings ) {
-			if ( PersistentClass.class.isAssignableFrom( mapping.getClass() ) ) {
-				final PersistentClass safeMapping = (PersistentClass) mapping;
-				if ( log.isTraceEnabled() ) {
-					log.trace( "Starting entity [" + safeMapping.getEntityName() + ']' );
+			if ( mapping instanceof PersistentClass persistentClass ) {
+				if ( CORE_LOGGER.isTraceEnabled() ) {
+					CORE_LOGGER.trace( "Starting entity [" + persistentClass.getEntityName() + ']' );
 				}
 				try {
-					final EntityDomainType<Object> jpaMapping = (EntityDomainType<Object>)
-							entityTypesByPersistentClass.get( safeMapping );
+					final var jpaMapping = entityTypesByPersistentClass.get( persistentClass );
 
-					applyIdMetadata( safeMapping, jpaMapping );
-					applyVersionAttribute( safeMapping, jpaMapping );
-					applyGenericProperties( safeMapping, jpaMapping );
+					applyIdMetadata( persistentClass, jpaMapping );
+					applyVersionAttribute( persistentClass, jpaMapping );
+					applyGenericProperties( persistentClass, jpaMapping );
 
-					for ( Property property : safeMapping.getDeclaredProperties() ) {
-						if ( property.getValue() == safeMapping.getIdentifierMapper() ) {
+					for ( var property : persistentClass.getDeclaredProperties() ) {
+						if ( property.getValue() == persistentClass.getIdentifierMapper() ) {
 							// property represents special handling for id-class mappings but we have already
 							// accounted for the embedded property mappings in #applyIdMetadata &&
 							// #buildIdClassAttributes
 							continue;
 						}
-						if ( safeMapping.isVersioned() && property == safeMapping.getVersion() ) {
+						if ( persistentClass.isVersioned() && property == persistentClass.getVersion() ) {
 							// skip the version property, it was already handled previously.
 							continue;
 						}
@@ -334,32 +329,30 @@ public class MetadataContext {
 					}
 				}
 				finally {
-					if ( log.isTraceEnabled() ) {
-						log.trace( "Completed entity [" + safeMapping.getEntityName() + ']' );
+					if ( CORE_LOGGER.isTraceEnabled() ) {
+						CORE_LOGGER.trace( "Completed entity [" + persistentClass.getEntityName() + ']' );
 					}
 				}
 			}
-			else if ( MappedSuperclass.class.isAssignableFrom( mapping.getClass() ) ) {
-				final MappedSuperclass safeMapping = (MappedSuperclass) mapping;
-				if ( log.isTraceEnabled() ) {
-					log.trace( "Starting mapped superclass [" + safeMapping.getMappedClass().getName() + ']' );
+			else if ( mapping instanceof MappedSuperclass mappedSuperclass ) {
+				if ( CORE_LOGGER.isTraceEnabled() ) {
+					CORE_LOGGER.trace( "Starting mapped superclass [" + mappedSuperclass.getMappedClass().getName() + ']' );
 				}
 				try {
-					final MappedSuperclassDomainType<Object> jpaType = (MappedSuperclassDomainType<Object>)
-							mappedSuperclassByMappedSuperclassMapping.get( safeMapping );
+					final var jpaType = mappedSuperclassByMappedSuperclassMapping.get( mappedSuperclass );
 
-					applyIdMetadata( safeMapping, jpaType );
-					applyVersionAttribute( safeMapping, jpaType );
+					applyIdMetadata( mappedSuperclass, jpaType );
+					applyVersionAttribute( mappedSuperclass, jpaType );
 //					applyNaturalIdAttribute( safeMapping, jpaType );
 
-					for ( Property property : safeMapping.getDeclaredProperties() ) {
-						if ( isIdentifierProperty( property, safeMapping ) ) {
+					for ( var property : mappedSuperclass.getDeclaredProperties() ) {
+						if ( isIdentifierProperty( property, mappedSuperclass ) ) {
 							// property represents special handling for id-class mappings but we have already
 							// accounted for the embedded property mappings in #applyIdMetadata &&
 							// #buildIdClassAttributes
 							continue;
 						}
-						else if ( safeMapping.isVersioned() && property == safeMapping.getVersion() ) {
+						else if ( mappedSuperclass.isVersioned() && property == mappedSuperclass.getVersion() ) {
 							// skip the version property, it was already handled previously.
 							continue;
 						}
@@ -373,8 +366,8 @@ public class MetadataContext {
 					}
 				}
 				finally {
-					if ( log.isTraceEnabled() ) {
-						log.trace( "Completed mapped superclass [" + safeMapping.getMappedClass().getName() + ']' );
+					if ( CORE_LOGGER.isTraceEnabled() ) {
+						CORE_LOGGER.trace( "Completed mapped superclass [" + mappedSuperclass.getMappedClass().getName() + ']' );
 					}
 				}
 			}
@@ -385,16 +378,17 @@ public class MetadataContext {
 
 
 		while ( ! embeddablesToProcess.isEmpty() ) {
-			final ArrayList<EmbeddableDomainType<?>> processingEmbeddables = new ArrayList<>( embeddablesToProcess.size() );
-			for ( List<EmbeddableDomainType<?>> embeddableDomainTypes : embeddablesToProcess.values() ) {
+			final List<EmbeddableDomainType<?>> processingEmbeddables =
+					new ArrayList<>( embeddablesToProcess.size() );
+			for ( var embeddableDomainTypes : embeddablesToProcess.values() ) {
 				processingEmbeddables.addAll( embeddableDomainTypes );
 			}
 
 			embeddablesToProcess.clear();
 
-			for ( EmbeddableDomainType<?> embeddable : processingEmbeddables ) {
-				final Component component = componentByEmbeddable.get( embeddable );
-				for ( Property property : component.getProperties() ) {
+			for ( var embeddable : processingEmbeddables ) {
+				final var component = componentByEmbeddable.get( embeddable );
+				for ( var property : component.getProperties() ) {
 					if ( !component.isPolymorphic()
 							|| embeddable.getTypeName().equals( component.getPropertyDeclaringClass( property ) ) ) {
 						addAttribute( embeddable, property, component );
@@ -404,9 +398,9 @@ public class MetadataContext {
 				( ( AttributeContainer<?>) embeddable ).getInFlightAccess().finishUp();
 				// Do not process embeddables for entity types i.e. id-classes or
 				// generic component embeddables used just for concrete type resolution
-				if ( !component.isGeneric() && !( embeddable.getExpressibleJavaType() instanceof EntityJavaType<?> ) ) {
+				if ( !component.isGeneric()
+						&& !( embeddable.getExpressibleJavaType() instanceof EntityJavaType<?> ) ) {
 					embeddables.put( embeddable.getJavaType(), embeddable );
-
 					if ( staticMetamodelScanEnabled ) {
 						populateStaticMetamodel( embeddable, processedMetamodelClasses );
 					}
@@ -416,59 +410,52 @@ public class MetadataContext {
 	}
 
 	private static boolean isIdentifierProperty(Property property, MappedSuperclass mappedSuperclass) {
-		final Component identifierMapper = mappedSuperclass.getIdentifierMapper();
-		return identifierMapper != null && ArrayHelper.contains(
-				identifierMapper.getPropertyNames(),
-				property.getName()
-		);
+		final var identifierMapper = mappedSuperclass.getIdentifierMapper();
+		return identifierMapper != null
+			&& ArrayHelper.contains( identifierMapper.getPropertyNames(), property.getName() );
 	}
 
 	private <T> void addAttribute(EmbeddableDomainType<T> embeddable, Property property, Component component) {
-		final PersistentAttribute<T, ?> attribute =
-				attributeFactory.buildAttribute( embeddable, property);
+		final var attribute = buildAttribute( embeddable, property);
 		if ( attribute != null ) {
-			final Property superclassProperty = getMappedSuperclassProperty(
-					property.getName(),
-					component.getMappedSuperclass()
-			);
+			final var superclassProperty =
+					getMappedSuperclassProperty( property.getName(),
+							component.getMappedSuperclass() );
 			if ( superclassProperty != null && superclassProperty.isGeneric() ) {
-				@SuppressWarnings("unchecked")
-				final AttributeContainer<T> attributeContainer = (AttributeContainer<T>) embeddable;
+				final var managedType = (ManagedDomainType<T>) embeddable;
+				final var attributeContainer = (AttributeContainer<T>) managedType;
 				attributeContainer.getInFlightAccess().addConcreteGenericAttribute( attribute );
 			}
 			else {
-				addAttribute(embeddable, attribute );
+				addAttribute( embeddable, attribute );
 			}
 		}
 	}
 
 	private <T> void buildAttribute(Property property, IdentifiableDomainType<T> jpaType) {
-		final PersistentAttribute<T, ?> attribute =
-				buildAttribute( property, jpaType, attributeFactory::buildAttribute );
+		final var attribute = buildAttribute( property, jpaType, this::buildAttribute );
 		if ( attribute != null ) {
-			addAttribute(jpaType, attribute );
+			addAttribute( jpaType, attribute );
 			if ( property.isNaturalIdentifier() ) {
-				@SuppressWarnings("unchecked")
-				final AttributeContainer<T> attributeContainer = (AttributeContainer<T>) jpaType;
+				final var managedType = (ManagedDomainType<T>) jpaType;
+				final var attributeContainer = (AttributeContainer<T>) managedType;
 				attributeContainer.getInFlightAccess().applyNaturalIdAttribute( attribute );
 			}
 		}
 	}
 
 	private <T> void addAttribute(ManagedDomainType<T> type, PersistentAttribute<T, ?> attribute) {
-		@SuppressWarnings("unchecked")
-		final AttributeContainer<T> container = (AttributeContainer<T>) type;
-		final AttributeContainer.InFlightAccess<T> inFlightAccess = container.getInFlightAccess();
-		final boolean virtual = attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED
-				&& attribute.getAttributeJavaType() instanceof EntityJavaType<?>;
+		final var container = (AttributeContainer<T>) type;
+		final var inFlightAccess = container.getInFlightAccess();
+		final boolean virtual =
+				attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED
+						&& attribute.getAttributeJavaType() instanceof EntityJavaType<?>;
 		if ( virtual ) {
 			@SuppressWarnings("unchecked")
-			final EmbeddableDomainType<T> embeddableDomainType =
-					(EmbeddableDomainType<T>) attribute.getValueGraphType();
-			final Component component = componentByEmbeddable.get( embeddableDomainType );
-			for ( Property property : component.getProperties() ) {
-				final PersistentAttribute<T, ?> subAttribute =
-						attributeFactory.buildAttribute( embeddableDomainType, property );
+			final var embeddableDomainType = (EmbeddableDomainType<T>) attribute.getValueGraphType();
+			final var component = componentByEmbeddable.get( embeddableDomainType );
+			for ( var property : component.getProperties() ) {
+				final var subAttribute = buildAttribute( embeddableDomainType, property );
 				if ( subAttribute != null ) {
 					inFlightAccess.addAttribute( subAttribute );
 				}
@@ -486,28 +473,22 @@ public class MetadataContext {
 
 	private <T> void applyIdMetadata(PersistentClass persistentClass, IdentifiableDomainType<T> identifiableType) {
 		if ( persistentClass.hasIdentifierProperty() ) {
-			final Property declaredIdentifierProperty = persistentClass.getDeclaredIdentifierProperty();
-			@SuppressWarnings("unchecked")
-			final AttributeContainer<T> attributeContainer = (AttributeContainer<T>) identifiableType;
+			final var managedType = (ManagedDomainType<T>) identifiableType;
+			final var attributeContainer = (AttributeContainer<T>) managedType;
+			final var declaredIdentifierProperty = persistentClass.getDeclaredIdentifierProperty();
 			if ( declaredIdentifierProperty != null ) {
-				final SingularPersistentAttribute<T, ?> idAttribute =
+				final var idAttribute =
 						(SingularPersistentAttribute<T, ?>)
-								buildAttribute(
-										declaredIdentifierProperty,
-										identifiableType,
-										attributeFactory::buildIdAttribute
-								);
+								buildAttribute( declaredIdentifierProperty, identifiableType,
+										this::buildIdAttribute );
 				attributeContainer.getInFlightAccess().applyIdAttribute( idAttribute );
 			}
 			else {
-				final Property superclassIdentifier = getMappedSuperclassIdentifier( persistentClass );
+				final var superclassIdentifier = getMappedSuperclassIdentifier( persistentClass );
 				if ( superclassIdentifier != null && superclassIdentifier.isGeneric() ) {
-					// If the superclass identifier is generic we have to build the attribute to register the concrete type
-					final SingularPersistentAttribute<T, ?> concreteIdentifier =
-							attributeFactory.buildIdAttribute(
-									identifiableType,
-									persistentClass.getIdentifierProperty()
-							);
+					// If the superclass identifier is generic, we have to build the attribute to register the concrete type
+					final var concreteIdentifier =
+							buildIdAttribute( identifiableType, persistentClass.getIdentifierProperty() );
 					attributeContainer.getInFlightAccess().addConcreteGenericAttribute( concreteIdentifier );
 				}
 			}
@@ -518,36 +499,39 @@ public class MetadataContext {
 				throw new MappingException( "Expecting Component for id mapping with no id-attribute" );
 			}
 
-			// Handle the actual id-attributes
-			final List<Property> cidProperties;
-			final int propertySpan;
-			final EmbeddableTypeImpl<?> idClassType;
-			final Component identifierMapper = persistentClass.getIdentifierMapper();
-			if ( identifierMapper != null ) {
-				cidProperties = identifierMapper.getProperties();
-				propertySpan = identifierMapper.getPropertySpan();
-				if ( identifierMapper.getComponentClassName() == null ) {
-					// support for no id-class, especially for dynamic models
-					idClassType = null;
-				}
-				else {
-					idClassType = applyIdClassMetadata( (Component) persistentClass.getIdentifier() );
-				}
-			}
-			else {
-				cidProperties = compositeId.getProperties();
-				propertySpan = compositeId.getPropertySpan();
-				idClassType = null;
-			}
-
-			assert compositeId.isEmbedded();
-
-			final IdentifiableDomainType<?> idDomainType =
-					identifiableTypesByName.get( compositeId.getOwner().getEntityName() );
-			@SuppressWarnings("unchecked")
-			final AbstractIdentifiableType<T> idType = (AbstractIdentifiableType<T>) idDomainType;
-			applyIdAttributes( identifiableType, idType, propertySpan, cidProperties, idClassType );
+			applyIdAttributes( persistentClass, identifiableType, compositeId );
 		}
+	}
+
+	private <T> void applyIdAttributes(
+			PersistentClass persistentClass,
+			IdentifiableDomainType<T> identifiableType,
+			Component compositeId) {
+		// Handle the actual id attributes
+		final List<Property> cidProperties;
+		final int propertySpan;
+		final EmbeddableTypeImpl<?> idClassType;
+		final var identifierMapper = persistentClass.getIdentifierMapper();
+		if ( identifierMapper != null ) {
+			cidProperties = identifierMapper.getProperties();
+			propertySpan = identifierMapper.getPropertySpan();
+			idClassType =
+					identifierMapper.getComponentClassName() == null
+							? null  // support for no id-class, especially for dynamic models
+							: applyIdClassMetadata( (Component) persistentClass.getIdentifier() );
+		}
+		else {
+			cidProperties = compositeId.getProperties();
+			propertySpan = compositeId.getPropertySpan();
+			idClassType = null;
+		}
+
+		assert compositeId.isEmbedded();
+
+		final var idDomainType = identifiableTypesByName.get( compositeId.getOwner().getEntityName() );
+		@SuppressWarnings("unchecked")
+		final var idType = (AbstractIdentifiableType<T>) idDomainType;
+		applyIdAttributes( identifiableType, idType, propertySpan, cidProperties, idClassType );
 	}
 
 	private <T> void applyIdAttributes(
@@ -556,17 +540,27 @@ public class MetadataContext {
 			int propertySpan,
 			List<Property> cidProperties,
 			EmbeddableTypeImpl<?> idClassType) {
-		Set<SingularPersistentAttribute<? super T, ?>> idAttributes = idType.getIdClassAttributesSafely();
-		if ( idAttributes == null ) {
-			idAttributes = new HashSet<>( propertySpan );
-			for ( Property cidSubproperty : cidProperties ) {
-				idAttributes.add( attributeFactory.buildIdAttribute( idType, cidSubproperty ) );
-			}
-		}
-
-		@SuppressWarnings("unchecked")
-		final AttributeContainer<T> container = (AttributeContainer<T>) identifiableType;
+		final var idAttributes = idClassAttributes( idType, propertySpan, cidProperties );
+		final var managedType = (ManagedDomainType<T>) identifiableType;
+		final var container = (AttributeContainer<T>) managedType;
 		container.getInFlightAccess().applyNonAggregatedIdAttributes( idAttributes, idClassType);
+	}
+
+	private <T> Set<SingularPersistentAttribute<? super T, ?>> idClassAttributes(
+			AbstractIdentifiableType<T> idType,
+			int propertySpan,
+			List<Property> cidProperties) {
+		final var idAttributes = idType.getIdClassAttributesSafely();
+		if ( idAttributes != null ) {
+			return idAttributes;
+		}
+		else {
+			final Set<SingularPersistentAttribute<? super T, ?>> result = new HashSet<>( propertySpan );
+			for ( Property cidSubproperty : cidProperties ) {
+				result.add( buildIdAttribute( idType, cidSubproperty ) );
+			}
+			return result;
+		}
 	}
 
 	private Property getMappedSuperclassIdentifier(PersistentClass persistentClass) {
@@ -581,91 +575,82 @@ public class MetadataContext {
 		return null;
 	}
 
-	private <Y> EmbeddableTypeImpl<Y> applyIdClassMetadata(Component idClassComponent) {
-		final JavaType<Y> javaType =
-				getTypeConfiguration().getJavaTypeRegistry()
-						.resolveManagedTypeDescriptor( idClassComponent.getComponentClass() );
-
-		final MappedSuperclass mappedSuperclass = idClassComponent.getMappedSuperclass();
-		final MappedSuperclassDomainType<? super Y> superType;
-		if ( mappedSuperclass != null ) {
-			//noinspection unchecked
-			superType = (MappedSuperclassDomainType<? super Y>) locateMappedSuperclassType( mappedSuperclass );
-		}
-		else {
-			superType = null;
-		}
-
-		final EmbeddableTypeImpl<Y> embeddableType = new EmbeddableTypeImpl<>(
-				javaType,
-				superType,
-				null,
-				false,
-				getJpaMetamodel()
-		);
+	private EmbeddableTypeImpl<?> applyIdClassMetadata(Component idClassComponent) {
+		final var embeddableType = embeddableType( idClassComponent, idClassComponent.getComponentClass() );
 		registerEmbeddableType( embeddableType, idClassComponent );
 		return embeddableType;
 	}
 
+	private <Y> EmbeddableTypeImpl<Y> embeddableType(Component idClassComponent, Class<Y> componentClass) {
+		return new EmbeddableTypeImpl<>(
+				getJavaTypeRegistry().resolveManagedTypeDescriptor( componentClass ),
+				getMappedSuperclassDomainType( idClassComponent ),
+				null,
+				false,
+				getJpaMetamodel()
+		);
+	}
+
+	@SuppressWarnings("unchecked")
+	private <Y> MappedSuperclassDomainType<? super Y> getMappedSuperclassDomainType(Component idClassComponent) {
+		final var mappedSuperclass = idClassComponent.getMappedSuperclass();
+		return mappedSuperclass == null ? null
+				: (MappedSuperclassDomainType<? super Y>)
+						locateMappedSuperclassType( mappedSuperclass );
+	}
+
 	private <X> void applyIdMetadata(MappedSuperclass mappingType, MappedSuperclassDomainType<X> jpaMappingType) {
-		@SuppressWarnings("unchecked")
-		final AttributeContainer<X> attributeContainer = (AttributeContainer<X>) jpaMappingType;
+		final var managedType = (ManagedDomainType<X>) jpaMappingType;
+		final var attributeContainer = (AttributeContainer<X>) managedType;
 		if ( mappingType.hasIdentifierProperty() ) {
 			final Property declaredIdentifierProperty = mappingType.getDeclaredIdentifierProperty();
 			if ( declaredIdentifierProperty != null ) {
-				final SingularPersistentAttribute<X, ?> attribute =
+				final var attribute =
 						(SingularPersistentAttribute<X, ?>)
-								buildAttribute(
-										declaredIdentifierProperty,
-										jpaMappingType,
-										attributeFactory::buildIdAttribute
-								);
+								buildAttribute( declaredIdentifierProperty, jpaMappingType,
+										this::buildIdAttribute );
 				attributeContainer.getInFlightAccess().applyIdAttribute( attribute );
 			}
 		}
 		//a MappedSuperclass can have no identifier if the id is set below in the hierarchy
 		else if ( mappingType.getIdentifierMapper() != null ) {
-			final Set<SingularPersistentAttribute<? super X, ?>> attributes =
-					buildIdClassAttributes(
-							jpaMappingType,
-							mappingType.getIdentifierMapper().getProperties()
-					);
+			final var attributes =
+					buildIdClassAttributes( jpaMappingType,
+							mappingType.getIdentifierMapper().getProperties() );
 			attributeContainer.getInFlightAccess().applyIdClassAttributes( attributes );
 		}
 	}
 
 	private <X> void applyVersionAttribute(PersistentClass persistentClass, EntityDomainType<X> jpaEntityType) {
-		final Property declaredVersion = persistentClass.getDeclaredVersion();
+		final var declaredVersion = persistentClass.getDeclaredVersion();
 		if ( declaredVersion != null ) {
-			@SuppressWarnings("unchecked")
-			final AttributeContainer<X> attributeContainer = (AttributeContainer<X>) jpaEntityType;
-			attributeContainer.getInFlightAccess().applyVersionAttribute(
-					attributeFactory.buildVersionAttribute( jpaEntityType, declaredVersion )
-			);
+			final var managedType = (ManagedDomainType<X>) jpaEntityType;
+			final var attributeContainer = (AttributeContainer<X>) managedType;
+			attributeContainer.getInFlightAccess()
+					.applyVersionAttribute( buildVersionAttribute( jpaEntityType, declaredVersion ) );
 		}
 	}
 
 	private <X> void applyVersionAttribute(MappedSuperclass mappingType, MappedSuperclassDomainType<X> jpaMappingType) {
-		final Property declaredVersion = mappingType.getDeclaredVersion();
+		final var declaredVersion = mappingType.getDeclaredVersion();
 		if ( declaredVersion != null ) {
-			@SuppressWarnings("unchecked")
-			final AttributeContainer<X> xAttributeContainer = (AttributeContainer<X>) jpaMappingType;
-			xAttributeContainer.getInFlightAccess().applyVersionAttribute(
-					attributeFactory.buildVersionAttribute( jpaMappingType, declaredVersion )
-			);
+			final var managedType = (ManagedDomainType<X>) jpaMappingType;
+			final var attributeContainer = (AttributeContainer<X>) managedType;
+			attributeContainer.getInFlightAccess()
+					.applyVersionAttribute( buildVersionAttribute( jpaMappingType, declaredVersion ) );
 		}
 	}
 
 	private <X> void applyGenericProperties(PersistentClass persistentClass, EntityDomainType<X> entityType) {
-		MappedSuperclass mappedSuperclass = getMappedSuperclass( persistentClass );
+		var mappedSuperclass = getMappedSuperclass( persistentClass );
 		while ( mappedSuperclass != null ) {
-			for ( Property superclassProperty : mappedSuperclass.getDeclaredProperties() ) {
+			for ( var superclassProperty : mappedSuperclass.getDeclaredProperties() ) {
 				if ( superclassProperty.isGeneric() ) {
-					final Property property = persistentClass.getProperty( superclassProperty.getName() );
-					final PersistentAttribute<X, ?> attribute = attributeFactory.buildAttribute( entityType, property );
-					@SuppressWarnings("unchecked")
-					final AttributeContainer<X> attributeContainer = (AttributeContainer<X>) entityType;
-					attributeContainer.getInFlightAccess().addConcreteGenericAttribute( attribute );
+					final var property = persistentClass.getProperty( superclassProperty.getName() );
+					final var managedType = (ManagedDomainType<X>) entityType;
+					final var attributeContainer = (AttributeContainer<X>) managedType;
+					attributeContainer.getInFlightAccess()
+							.addConcreteGenericAttribute( buildAttribute( entityType, property ) );
 				}
 			}
 			mappedSuperclass = getMappedSuperclass( mappedSuperclass );
@@ -674,7 +659,7 @@ public class MetadataContext {
 
 	private MappedSuperclass getMappedSuperclass(PersistentClass persistentClass) {
 		while ( persistentClass != null ) {
-			final MappedSuperclass mappedSuperclass = persistentClass.getSuperMappedSuperclass();
+			final var mappedSuperclass = persistentClass.getSuperMappedSuperclass();
 			if ( mappedSuperclass != null ) {
 				return mappedSuperclass;
 			}
@@ -684,9 +669,10 @@ public class MetadataContext {
 	}
 
 	private MappedSuperclass getMappedSuperclass(MappedSuperclass mappedSuperclass) {
-		return mappedSuperclass.getSuperMappedSuperclass() != null
-				? mappedSuperclass.getSuperMappedSuperclass()
-				: getMappedSuperclass( mappedSuperclass.getSuperPersistentClass() );
+		final var superMappedSuperclass = mappedSuperclass.getSuperMappedSuperclass();
+		return superMappedSuperclass == null
+				? getMappedSuperclass( mappedSuperclass.getSuperPersistentClass() )
+				: superMappedSuperclass;
 	}
 
 	private Property getMappedSuperclassProperty(String propertyName, MappedSuperclass mappedSuperclass) {
@@ -694,61 +680,54 @@ public class MetadataContext {
 			return null;
 		}
 
-		for ( Property property : mappedSuperclass.getDeclaredProperties() ) {
+		for ( var property : mappedSuperclass.getDeclaredProperties() ) {
 			if ( property.getName().equals( propertyName ) ) {
 				return property;
 			}
 		}
 
-		final Property property = getMappedSuperclassProperty(
-				propertyName,
-				mappedSuperclass.getSuperMappedSuperclass()
-		);
+		final var property =
+				getMappedSuperclassProperty( propertyName,
+						mappedSuperclass.getSuperMappedSuperclass() );
 		if ( property != null ) {
 			return property;
 		}
-
-		if ( mappedSuperclass.getSuperPersistentClass() != null ) {
-			return mappedSuperclass.getSuperPersistentClass().getProperty( propertyName );
+		else {
+			final var superclass = mappedSuperclass.getSuperPersistentClass();
+			return superclass != null ? superclass.getProperty( propertyName ) : null;
 		}
-
-		return null;
 	}
 
 	private <X> Set<SingularPersistentAttribute<? super X, ?>> buildIdClassAttributes(
 			IdentifiableDomainType<X> ownerType,
 			List<Property> properties) {
-		if ( log.isTraceEnabled() ) {
-			log.trace( "Building old-school composite identifier [" + ownerType.getJavaType().getName() + ']' );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.trace( "Building old-school composite identifier [" + ownerType.getJavaType().getName() + ']' );
 		}
-		Set<SingularPersistentAttribute<? super X, ?>> attributes = new HashSet<>();
-		for ( Property property : properties ) {
-			attributes.add( attributeFactory.buildIdAttribute( ownerType, property ) );
+		final Set<SingularPersistentAttribute<? super X, ?>> attributes = new HashSet<>();
+		for ( var property : properties ) {
+			attributes.add( buildIdAttribute( ownerType, property ) );
 		}
 		return attributes;
 	}
 
 	private <X> void populateStaticMetamodel(ManagedDomainType<X> managedType, Set<String> processedMetamodelClassName) {
-		final Class<X> managedTypeClass = managedType.getJavaType();
+		final var managedTypeClass = managedType.getJavaType();
 		if ( managedTypeClass != null // can be null for MAP entity mode, so skip...
 				&& processedMetamodelClassName.add( metamodelClassName( managedType ) ) ) {
-			final Class<?> metamodelClass = metamodelClass( managedType );
+			final var metamodelClass = metamodelClass( managedType );
 			if ( metamodelClass != null ) {
-				populateMetamodelClass( managedType, metamodelClass );
+				registerAttributes( metamodelClass, managedType );
+				injectManagedType( managedType, metamodelClass );
 			}
 			// todo : this does not account for @MappedSuperclass, mainly
 			//        because this is not being tracked in our internal
 			//        metamodel as populated from the annotations properly
-			final ManagedDomainType<? super X> superType = managedType.getSuperType();
+			final var superType = managedType.getSuperType();
 			if ( superType != null ) {
 				populateStaticMetamodel( superType, processedMetamodelClassName );
 			}
 		}
-	}
-
-	private <X> void populateMetamodelClass(ManagedDomainType<X> managedType, Class<?> metamodelClass) {
-		registerAttributes( metamodelClass, managedType );
-		injectManagedType( managedType, metamodelClass );
 	}
 
 	private static <X> void injectManagedType(ManagedDomainType<X> managedType, Class<?> metamodelClass) {
@@ -761,7 +740,13 @@ public class MetadataContext {
 	}
 
 	private static String metamodelClassName(ManagedDomainType<?> managedTypeClass) {
-		return managedTypeClass.getJavaType().getName() + '_';
+		return metamodelClassName( managedTypeClass.getJavaType() );
+	}
+
+	private static String metamodelClassName(Class<?> javaType) {
+		return javaType.isMemberClass()
+				? metamodelClassName( javaType.getEnclosingClass() ) + "$" + javaType.getSimpleName() + "_"
+				: javaType.getName() + '_';
 	}
 
 	public Class<?> metamodelClass(ManagedDomainType<?> managedDomainType) {
@@ -781,13 +766,11 @@ public class MetadataContext {
 
 	private <X> void registerAttributes(Class<?> metamodelClass, ManagedDomainType<X> managedType) {
 		// push the attributes on to the metamodel class...
-		for ( Attribute<X, ?> attribute : managedType.getDeclaredAttributes() ) {
+		for ( var attribute : managedType.getDeclaredAttributes() ) {
 			registerAttribute( metamodelClass, attribute );
 		}
 
-		if ( managedType instanceof IdentifiableType ) {
-			final AbstractIdentifiableType<X> entityType = (AbstractIdentifiableType<X>) managedType;
-
+		if ( managedType instanceof AbstractIdentifiableType<X> entityType ) {
 			// handle version
 			if ( entityType.hasDeclaredVersionAttribute() ) {
 				registerAttribute( metamodelClass, entityType.getDeclaredVersion() );
@@ -795,9 +778,9 @@ public class MetadataContext {
 
 			// handle id-class mappings specially
 			if ( entityType.hasIdClass() ) {
-				final Set<SingularPersistentAttribute<? super X, ?>> attributes = entityType.getIdClassAttributesSafely();
+				final var attributes = entityType.getIdClassAttributesSafely();
 				if ( attributes != null ) {
-					for ( SingularAttribute<? super X, ?> attribute : attributes ) {
+					for ( var attribute : attributes ) {
 						registerAttribute( metamodelClass, attribute );
 					}
 				}
@@ -819,17 +802,15 @@ public class MetadataContext {
 			final boolean allowNonDeclaredFieldReference =
 					attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED
 							|| attribute.getDeclaringType().getPersistenceType() == Type.PersistenceType.EMBEDDABLE;
-
 			injectField( metamodelClass, name, attribute, allowNonDeclaredFieldReference );
 		}
 		catch (NoSuchFieldException e) {
-			log.unableToLocateStaticMetamodelField( metamodelClass.getName(), name );
+			CORE_LOGGER.unableToLocateStaticMetamodelField( metamodelClass.getName(), name );
 //			throw new AssertionFailure(
-//					"Unable to locate static metamodel field : " + metamodelClass.getName() + '#' + name
+//					"Unable to locate static metamodel field: " + metamodelClass.getName() + '#' + name
 //			);
 		}
 	}
-
 
 	public MappedSuperclassDomainType<?> locateMappedSuperclassType(MappedSuperclass mappedSuperclass) {
 		return mappedSuperclassByMappedSuperclassMapping.get( mappedSuperclass );
@@ -840,7 +821,7 @@ public class MetadataContext {
 	}
 
 	public void popEntityWorkedOn(PersistentClass persistentClass) {
-		final PersistentClass stackTop = stackOfPersistentClassesBeingProcessed.remove(
+		final var stackTop = stackOfPersistentClassesBeingProcessed.remove(
 				stackOfPersistentClassesBeingProcessed.size() - 1
 		);
 		if ( stackTop != persistentClass ) {
@@ -855,7 +836,7 @@ public class MetadataContext {
 		);
 	}
 
-	public PersistentClass getPersistentClassHostingProperties(MappedSuperclassTypeImpl<?> mappedSuperclassType) {
+	PersistentClass getPersistentClassHostingProperties(MappedSuperclassTypeImpl<?> mappedSuperclassType) {
 		return mappedSuperClassTypeToPersistentClass.get( mappedSuperclassType );
 	}
 
@@ -867,44 +848,44 @@ public class MetadataContext {
 
 	public <J> BasicDomainType<J> resolveBasicType(Class<J> javaType) {
 		@SuppressWarnings("unchecked")
-		final BasicDomainType<J> domainType = (BasicDomainType<J>) basicDomainTypeMap.get( javaType );
+		final var domainType = (BasicDomainType<J>) basicDomainTypeMap.get( javaType );
 		if ( domainType == null ) {
 			// we cannot use getTypeConfiguration().standardBasicTypeForJavaType(javaType)
 			// because that doesn't return the right thing for primitive types
-			final JavaType<J> javaTypeDescriptor =
-					getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( javaType );
-			final JdbcType jdbcType =
-					javaTypeDescriptor.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
-			final BasicDomainType<J> type =
-					javaType.isPrimitive()
-							? new PrimitiveBasicTypeImpl<>( javaTypeDescriptor, jdbcType, javaType )
-							: new BasicTypeImpl<>( javaTypeDescriptor, jdbcType );
-			basicDomainTypeMap.put( javaType, type );
-			return type;
+			basicDomainTypeMap.put( javaType, basicDomainType( javaType ) );
+			return basicDomainType( javaType );
 		}
 		else {
 			return domainType;
 		}
 	}
 
-	public <J> EmbeddableDomainType<J> locateEmbeddable(Class<J> embeddableClass, Component component) {
-		//noinspection unchecked
-		EmbeddableDomainType<J> domainType = (EmbeddableDomainType<J>) embeddables.get( embeddableClass );
-		if ( domainType == null ) {
-			final List<EmbeddableDomainType<?>> embeddableDomainTypes = embeddablesToProcess.get( embeddableClass );
+	private <J> BasicDomainType<J> basicDomainType(Class<J> javaType) {
+		final var javaTypeDescriptor = getJavaTypeRegistry().resolveDescriptor( javaType );
+		final var jdbcType =
+				javaTypeDescriptor.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
+		return javaType.isPrimitive()
+				? new PrimitiveBasicTypeImpl<>( javaTypeDescriptor, jdbcType, javaType )
+				: new BasicTypeImpl<>( javaTypeDescriptor, jdbcType );
+	}
+
+	public EmbeddableDomainType<?> locateEmbeddable(Class<?> embeddableClass, Component component) {
+		final var domainType = embeddables.get( embeddableClass );
+		if ( domainType != null ) {
+			return domainType;
+		}
+		else {
+			final var embeddableDomainTypes = embeddablesToProcess.get( embeddableClass );
 			if ( embeddableDomainTypes != null ) {
-				for ( EmbeddableDomainType<?> embeddableDomainType : embeddableDomainTypes ) {
-					final Component cachedComponent = componentByEmbeddable.get( embeddableDomainType );
+				for ( var embeddableDomainType : embeddableDomainTypes ) {
+					final var cachedComponent = componentByEmbeddable.get( embeddableDomainType );
 					if ( cachedComponent.isSame( component ) ) {
-						//noinspection unchecked
-						domainType = (EmbeddableDomainType<J>) embeddableDomainType;
-						break;
+						return embeddableDomainType;
 					}
 					else if ( cachedComponent.getComponentClass().equals( component.getComponentClass() ) ) {
 						final int cachedComponentPropertySpan = cachedComponent.getPropertySpan();
 						if ( cachedComponentPropertySpan != component.getPropertySpan() ) {
-							throw new MappingException(
-									"Encountered multiple component mappings for the same java class "
+							throw new MappingException( "Encountered multiple component mappings for the same java class "
 											+ embeddableClass.getName() +
 											" with different property mappings. Every property mapping combination should have its own java class" );
 						}
@@ -912,25 +893,22 @@ public class MetadataContext {
 							for ( int i = 0; i < cachedComponentPropertySpan; i++ ) {
 								if ( !cachedComponent.getProperty( i ).getName()
 										.equals( component.getProperty( i ).getName() ) ) {
-									throw new MappingException(
-											"Encountered multiple component mappings for the same java class "
+									throw new MappingException( "Encountered multiple component mappings for the same java class "
 													+ embeddableClass.getName() +
 													" with different property mappings. Every property mapping combination should have its own java class" );
 								}
 							}
 						}
-						//noinspection unchecked
-						domainType = (EmbeddableDomainType<J>) embeddableDomainType;
-						break;
+						return embeddableDomainType;
 					}
 					else {
 						throw new MappingException( "Encountered multiple component mappings for the same java class "
-															+ embeddableClass.getName() +
-															" with different property mappings. Every property mapping combination should have its own java class" );
+										+ embeddableClass.getName() +
+										" with different property mappings. Every property mapping combination should have its own java class" );
 					}
 				}
 			}
+			return null;
 		}
-		return domainType;
 	}
 }

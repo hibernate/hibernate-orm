@@ -72,10 +72,11 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 	}
 
 	private boolean mustQuote(Identifier identifier) {
+		final String identifierText = identifier.getText();
 		return globallyQuoteIdentifiers
-			|| autoQuoteKeywords && isReservedWord( identifier.getText() )
-			|| autoQuoteInitialUnderscore && identifier.getText().startsWith( "_" )
-			|| autoQuoteDollar && identifier.getText().contains( "$" );
+			|| autoQuoteKeywords && isReservedWord( identifierText )
+			|| autoQuoteInitialUnderscore && identifierText.startsWith( "_" )
+			|| autoQuoteDollar && identifierText.contains( "$" );
 	}
 
 	@Override
@@ -107,15 +108,13 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			// null is used to tell DatabaseMetaData to not limit results based on catalog.
 			return null;
 		}
-
-		if ( identifier == null ) {
-			if ( jdbcEnvironment.getCurrentCatalog() == null ) {
-				return "";
-			}
-			identifier = jdbcEnvironment.getCurrentCatalog();
+		else {
+			final var id =
+					identifier == null
+							? jdbcEnvironment.getCurrentCatalog()
+							: identifier;
+			return id == null ? "" : toMetaDataText( id );
 		}
-
-		return toMetaDataText( identifier );
 	}
 
 	private String toMetaDataText(Identifier identifier) {
@@ -149,15 +148,14 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			// null is used to tell DatabaseMetaData to not limit results based on schema.
 			return null;
 		}
-
-		if ( identifier == null ) {
-			if ( jdbcEnvironment.getCurrentSchema() == null ) {
-				return "";
-			}
-			identifier = jdbcEnvironment.getCurrentSchema();
+		else {
+			final var id =
+					identifier == null
+							? jdbcEnvironment.getCurrentSchema()
+							: identifier;
+			return id == null ? "" : toMetaDataText( id );
 		}
 
-		return toMetaDataText( identifier );
 	}
 
 	@Override

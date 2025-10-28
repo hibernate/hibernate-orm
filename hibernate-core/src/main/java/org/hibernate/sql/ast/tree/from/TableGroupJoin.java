@@ -8,7 +8,6 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.SqlTreeCreationLogger;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -54,12 +53,12 @@ public class TableGroupJoin implements TableJoin, PredicateContainer, DomainResu
 	}
 
 	public void setJoinType(SqlAstJoinType joinType) {
-		SqlTreeCreationLogger.LOGGER.debugf(
-				"Adjusting join-type for TableGroupJoin(%s) : %s -> %s",
-				navigablePath,
-				this.joinType,
-				joinType
-		);
+//		SqlTreeCreationLogger.LOGGER.tracef(
+//				"Adjusting join-type for TableGroupJoin(%s) : %s -> %s",
+//				navigablePath,
+//				this.joinType,
+//				joinType
+//		);
 		this.joinType = joinType;
 	}
 

@@ -23,7 +23,6 @@ import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
@@ -48,8 +47,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.internal.EmptyInterceptor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -62,6 +60,8 @@ import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.SharedCacheMode;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 
 /**
@@ -142,7 +142,6 @@ import jakarta.persistence.SharedCacheMode;
  * @see org.hibernate.jpa.HibernatePersistenceConfiguration
  */
 public class Configuration {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( Configuration.class );
 
 	private final BootstrapServiceRegistry bootstrapServiceRegistry;
 	private final MetadataSources metadataSources;
@@ -173,7 +172,8 @@ public class Configuration {
 	private EntityNotFoundDelegate entityNotFoundDelegate;
 	private SessionFactoryObserver sessionFactoryObserver;
 	private StatementInspector statementInspector;
-	private CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver;
+	private CurrentTenantIdentifierResolver<?> currentTenantIdentifierResolver;
+	private TenantSchemaMapper<?> tenantSchemaMapper;
 	private CustomEntityDirtinessStrategy customEntityDirtinessStrategy;
 	private ColumnOrderingStrategy columnOrderingStrategy;
 	private SharedCacheMode sharedCacheMode;
@@ -200,10 +200,8 @@ public class Configuration {
 	}
 
 	private XmlMappingBinderAccess createMappingBinderAccess(BootstrapServiceRegistry serviceRegistry) {
-		return new XmlMappingBinderAccess(
-				serviceRegistry,
-				(settingName) -> properties == null ? null : properties.get( settingName )
-		);
+		return new XmlMappingBinderAccess( serviceRegistry,
+				settingName -> properties == null ? null : properties.get( settingName ) );
 	}
 
 	/**
@@ -468,9 +466,9 @@ public class Configuration {
 	 * @param highlightSql should logged SQL be highlighted with pretty colors
 	 */
 	public Configuration showSql(boolean showSql, boolean formatSql, boolean highlightSql) {
-		setProperty( AvailableSettings.SHOW_SQL, Boolean.toString(showSql) );
-		setProperty( AvailableSettings.FORMAT_SQL, Boolean.toString(formatSql) );
-		setProperty( AvailableSettings.HIGHLIGHT_SQL, Boolean.toString(highlightSql) );
+		setProperty( JdbcSettings.SHOW_SQL, Boolean.toString(showSql) );
+		setProperty( JdbcSettings.FORMAT_SQL, Boolean.toString(formatSql) );
+		setProperty( JdbcSettings.HIGHLIGHT_SQL, Boolean.toString(highlightSql) );
 		return this;
 	}
 
@@ -480,7 +478,7 @@ public class Configuration {
 	 * @param action the {@link Action}
 	 */
 	public Configuration setSchemaExportAction(Action action) {
-		setProperty( AvailableSettings.HBM2DDL_AUTO, action.getExternalHbm2ddlName() );
+		setProperty( SchemaToolingSettings.HBM2DDL_AUTO, action.getExternalHbm2ddlName() );
 		return this;
 	}
 
@@ -491,8 +489,8 @@ public class Configuration {
 	 * @param pass the password
 	 */
 	public Configuration setCredentials(String user, String pass) {
-		setProperty( AvailableSettings.USER, user );
-		setProperty( AvailableSettings.PASS, pass );
+		setProperty( JdbcSettings.USER, user );
+		setProperty( JdbcSettings.PASS, pass );
 		return this;
 	}
 
@@ -512,7 +510,7 @@ public class Configuration {
 	 * @param jndiName the JNDI name of the datasource
 	 */
 	public Configuration setDatasource(String jndiName) {
-		setProperty( AvailableSettings.DATASOURCE, jndiName );
+		setProperty( JdbcSettings.DATASOURCE, jndiName );
 		return this;
 	}
 
@@ -522,7 +520,7 @@ public class Configuration {
 	 * @param transactionType the {@link PersistenceUnitTransactionType}
 	 */
 	public Configuration setTransactionType(PersistenceUnitTransactionType transactionType) {
-		setProperty( AvailableSettings.JAKARTA_TRANSACTION_TYPE, transactionType.toString() );
+		setProperty( PersistenceSettings.JAKARTA_TRANSACTION_TYPE, transactionType.toString() );
 		return this;
 	}
 
@@ -578,9 +576,7 @@ public class Configuration {
 		if ( userTypeRegistrations == null ) {
 			userTypeRegistrations = new ArrayList<>();
 		}
-		userTypeRegistrations.add(
-				metadataBuilder -> metadataBuilder.applyBasicType( type, keys )
-		);
+		userTypeRegistrations.add( builder -> builder.applyBasicType( type, keys ) );
 		return this;
 	}
 
@@ -759,7 +755,12 @@ public class Configuration {
 		if ( entityClass == null ) {
 			throw new IllegalArgumentException( "The specified class cannot be null" );
 		}
-		return addResource( entityClass.getName().replace( '.', '/' ) + ".hbm.xml" );
+		return addResource( hbmFileName( entityClass ) );
+	}
+
+	private static String hbmFileName(Class<?> entityClass) {
+		return entityClass.getName().replace( '.', '/' )
+			+ ".hbm.xml";
 	}
 
 	/**
@@ -781,8 +782,8 @@ public class Configuration {
 	 *
 	 * @return this (for method chaining)
 	 */
-	public Configuration addAnnotatedClasses(Class... annotatedClasses) {
-		for (Class annotatedClass : annotatedClasses) {
+	public Configuration addAnnotatedClasses(Class<?>... annotatedClasses) {
+		for ( var annotatedClass : annotatedClasses ) {
 			addAnnotatedClass( annotatedClass );
 		}
 		return this;
@@ -812,7 +813,7 @@ public class Configuration {
 	 * @throws MappingException in case there is an error in the mapping data
 	 */
 	public Configuration addPackages(String... packageNames) throws MappingException {
-		for (String packageName : packageNames) {
+		for ( String packageName : packageNames ) {
 			addPackage( packageName );
 		}
 		return this;
@@ -939,7 +940,7 @@ public class Configuration {
 	/**
 	 * The {@link CurrentTenantIdentifierResolver}, if any, that was added to this configuration.
 	 */
-	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
+	public CurrentTenantIdentifierResolver<?> getCurrentTenantIdentifierResolver() {
 		return currentTenantIdentifierResolver;
 	}
 
@@ -948,8 +949,29 @@ public class Configuration {
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	public Configuration setCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver) {
+	public Configuration setCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> currentTenantIdentifierResolver) {
 		this.currentTenantIdentifierResolver = currentTenantIdentifierResolver;
+		return this;
+	}
+
+	/**
+	 * The {@link TenantSchemaMapper}, if any, that was added to this configuration.
+	 *
+	 * @since 7.1
+	 */
+	public TenantSchemaMapper<?> getTenantSchemaMapper() {
+		return tenantSchemaMapper;
+	}
+
+	/**
+	 * Specify a {@link TenantSchemaMapper} to be added to this configuration.
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 7.1
+	 */
+	public Configuration setTenantSchemaMapper(TenantSchemaMapper<?> tenantSchemaMapper) {
+		this.tenantSchemaMapper = tenantSchemaMapper;
 		return this;
 	}
 
@@ -1002,8 +1024,8 @@ public class Configuration {
 	 * @throws HibernateException usually indicates an invalid configuration or invalid mapping information
 	 */
 	public SessionFactory buildSessionFactory(ServiceRegistry serviceRegistry) throws HibernateException {
-		log.debug( "Building session factory using provided StandardServiceRegistry" );
-		final MetadataBuilder metadataBuilder =
+		CORE_LOGGER.buildingFactoryWithProvidedRegistry();
+		final var metadataBuilder =
 				metadataSources.getMetadataBuilder( (StandardServiceRegistry) serviceRegistry );
 
 		if ( implicitNamingStrategy != null ) {
@@ -1022,11 +1044,11 @@ public class Configuration {
 			metadataBuilder.applySharedCacheMode( sharedCacheMode );
 		}
 
-		for ( TypeContributor typeContributor : typeContributorRegistrations ) {
+		for ( var typeContributor : typeContributorRegistrations ) {
 			metadataBuilder.applyTypes( typeContributor );
 		}
 
-		for ( FunctionContributor functionContributor : functionContributorRegistrations ) {
+		for ( var functionContributor : functionContributorRegistrations ) {
 			metadataBuilder.applyFunctions( functionContributor );
 		}
 
@@ -1034,18 +1056,18 @@ public class Configuration {
 			userTypeRegistrations.forEach( registration ->  registration.registerType( metadataBuilder ) );
 		}
 
-		for ( BasicType<?> basicType : basicTypes ) {
+		for ( var basicType : basicTypes ) {
 			metadataBuilder.applyBasicType( basicType );
 		}
 
 		if ( customFunctionDescriptors != null ) {
-			for ( Map.Entry<String, SqmFunctionDescriptor> entry : customFunctionDescriptors.entrySet() ) {
+			for ( var entry : customFunctionDescriptors.entrySet() ) {
 				metadataBuilder.applySqlFunction( entry.getKey(), entry.getValue() );
 			}
 		}
 
 		if ( auxiliaryDatabaseObjectList != null ) {
-			for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : auxiliaryDatabaseObjectList ) {
+			for ( var auxiliaryDatabaseObject : auxiliaryDatabaseObjectList ) {
 				metadataBuilder.applyAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
 			}
 		}
@@ -1055,8 +1077,8 @@ public class Configuration {
 					.forEach( metadataBuilder::applyAttributeConverter );
 		}
 
-		final Metadata metadata = metadataBuilder.build();
-		final SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
+		final var metadata = metadataBuilder.build();
+		final var sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
 
 		if ( interceptor != null && interceptor != EmptyInterceptor.INSTANCE ) {
 			sessionFactoryBuilder.applyInterceptor( interceptor );
@@ -1082,6 +1104,10 @@ public class Configuration {
 			sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( currentTenantIdentifierResolver );
 		}
 
+		if ( tenantSchemaMapper != null ) {
+			sessionFactoryBuilder.applyTenantSchemaMapper( tenantSchemaMapper );
+		}
+
 		if ( customEntityDirtinessStrategy != null ) {
 			sessionFactoryBuilder.applyCustomEntityDirtinessStrategy( customEntityDirtinessStrategy );
 		}
@@ -1101,9 +1127,9 @@ public class Configuration {
 	 * @throws HibernateException usually indicates an invalid configuration or invalid mapping information
 	 */
 	public SessionFactory buildSessionFactory() throws HibernateException {
-		log.debug( "Building session factory using internal StandardServiceRegistryBuilder" );
+		CORE_LOGGER.buildingFactoryWithInternalRegistryBuilder();
 		standardServiceRegistryBuilder.applySettings( properties );
-		StandardServiceRegistry serviceRegistry = standardServiceRegistryBuilder.build();
+		var serviceRegistry = standardServiceRegistryBuilder.build();
 		try {
 			return buildSessionFactory( serviceRegistry );
 		}

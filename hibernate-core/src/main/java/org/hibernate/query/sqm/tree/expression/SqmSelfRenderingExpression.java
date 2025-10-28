@@ -17,10 +17,10 @@ import org.hibernate.sql.ast.tree.expression.Expression;
  * @author Steve Ebersole
  */
 public class SqmSelfRenderingExpression<T> extends AbstractSqmExpression<T> {
-	private final Function<SemanticQueryWalker, Expression> renderer;
+	private final Function<SemanticQueryWalker<?>, Expression> renderer;
 
 	public SqmSelfRenderingExpression(
-			Function<SemanticQueryWalker, Expression> renderer,
+			Function<SemanticQueryWalker<?>, Expression> renderer,
 			SqmBindableType<T> type,
 			NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
@@ -50,5 +50,19 @@ public class SqmSelfRenderingExpression<T> extends AbstractSqmExpression<T> {
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		throw new UnsupportedOperationException();
+	}
+
+	// No equals() / hashCode() because this stuff is only
+	// ever used internally and is irrelevant for caching,
+	// so basing equality on the object identity is fine
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return this == object;
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return System.identityHashCode( this );
 	}
 }

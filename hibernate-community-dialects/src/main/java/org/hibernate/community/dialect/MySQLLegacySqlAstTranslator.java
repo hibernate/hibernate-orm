@@ -222,11 +222,6 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 		}
 	}
 
-	@Override
-	protected String getForShare(int timeoutMillis) {
-		return getDialect().getVersion().isSameOrAfter( 8 ) ? " for share" : " lock in share mode";
-	}
-
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
@@ -389,5 +384,14 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 		appendSql( " like concat('%',replace(replace(replace(" );
 		needle.accept( this );
 		appendSql( ",'~','~~'),'?','~?'),'%','~%'),'%') escape '~'" );
+	}
+
+	@Override
+	protected void appendAssignmentColumn(ColumnReference column) {
+		column.appendColumnForWrite(
+				this,
+				getAffectedTableNames().size() > 1 && !(getStatement() instanceof InsertSelectStatement)
+						? determineColumnReferenceQualifier( column )
+						: null );
 	}
 }

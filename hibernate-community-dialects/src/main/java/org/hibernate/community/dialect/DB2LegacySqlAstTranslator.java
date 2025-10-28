@@ -75,7 +75,7 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected void renderTableReferenceJoins(TableGroup tableGroup, int swappedJoinIndex, boolean forceLeftJoin) {
+	protected void renderTableReferenceJoins(TableGroup tableGroup, LockMode lockMode, int swappedJoinIndex, boolean forceLeftJoin) {
 		// When we are in a recursive CTE, we can't render joins on DB2...
 		// See https://modern-sql.com/feature/with-recursive/db2/error-345-state-42836
 		if ( isInRecursiveQueryPart() ) {
@@ -102,7 +102,7 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 			}
 		}
 		else {
-			super.renderTableReferenceJoins( tableGroup, swappedJoinIndex, forceLeftJoin );
+			super.renderTableReferenceJoins( tableGroup, lockMode, swappedJoinIndex, forceLeftJoin );
 		}
 	}
 
@@ -118,7 +118,7 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 			}
 			appendSql( COMMA_SEPARATOR_CHAR );
 
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+			renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 			if ( tableGroupJoin.getPredicate() != null && !tableGroupJoin.getPredicate().isEmpty() ) {
 				addAdditionalWherePredicate( tableGroupJoin.getPredicate() );
 			}
@@ -210,21 +210,6 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 		else {
 			super.visitAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
 		}
-	}
-
-	@Override
-	protected String getForUpdate() {
-		return " for read only with rs use and keep update locks";
-	}
-
-	@Override
-	protected String getForShare(int timeoutMillis) {
-		return " for read only with rs use and keep share locks";
-	}
-
-	@Override
-	protected String getSkipLocked() {
-		return " skip locked data";
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {

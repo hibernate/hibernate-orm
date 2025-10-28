@@ -42,11 +42,7 @@ public class InsertOrderingWithTablePerClassInheritance extends BaseInsertOrderi
 
 	@AfterEach
 	public void tearDown() {
-		sessionFactoryScope().inTransaction( session -> {
-			session.createQuery( "delete from Address" ).executeUpdate();
-			session.createQuery( "delete from Person" ).executeUpdate();
-			session.createQuery( "delete from SpecialPerson" ).executeUpdate();
-		} );
+		sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

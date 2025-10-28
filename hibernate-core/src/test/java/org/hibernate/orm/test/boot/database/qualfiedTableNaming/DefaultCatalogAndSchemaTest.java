@@ -4,71 +4,6 @@
  */
 package org.hibernate.orm.test.boot.database.qualfiedTableNaming;
 
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
-
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLInsert;
-import org.hibernate.annotations.SQLUpdate;
-import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.internal.MetadataImpl;
-import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
-import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
-import org.hibernate.boot.registry.BootstrapServiceRegistry;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.community.dialect.InformixDialect;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
-import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableStrategy;
-import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.MutationOperationGroup;
-import org.hibernate.sql.model.PreparableMutationOperation;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.schema.TargetType;
-import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToWriter;
-import org.hibernate.tool.schema.spi.DelayedDropRegistryNotAvailableImpl;
-import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
-import org.hibernate.tool.schema.spi.ScriptTargetOutput;
-import org.hibernate.tool.schema.spi.TargetDescriptor;
-
-import org.hibernate.testing.AfterClassOnce;
-import org.hibernate.testing.BeforeClassOnce;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.CustomParameterized;
-import org.hibernate.testing.orm.junit.JiraKeyGroup;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
 import jakarta.persistence.Basic;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -84,18 +19,110 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLUpdate;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.MetadataImpl;
+import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
+import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.MutationOperationGroup;
+import org.hibernate.sql.model.PreparableMutationOperation;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModelFunctionalTesting;
+import org.hibernate.testing.orm.junit.DomainModelProducer;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistryFunctionalTesting;
+import org.hibernate.testing.orm.junit.ServiceRegistryProducer;
+import org.hibernate.testing.orm.junit.SessionFactoryFunctionalTesting;
+import org.hibernate.testing.orm.junit.SessionFactoryProducer;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SessionFactoryScopeAware;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.schema.TargetType;
+import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToWriter;
+import org.hibernate.tool.schema.spi.DelayedDropRegistryNotAvailableImpl;
+import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
+import org.hibernate.tool.schema.spi.ScriptTargetOutput;
+import org.hibernate.tool.schema.spi.TargetDescriptor;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(CustomParameterized.class)
-@JiraKeyGroup( value = {
-		@JiraKey( value = "HHH-14921" ),
-		@JiraKey( value = "HHH-14922" ),
-		@JiraKey( value = "HHH-15212" ),
-		@JiraKey( value = "HHH-16177" )
-} )
-@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-public class DefaultCatalogAndSchemaTest {
+/**
+ * A few important JUnit points - <ol>
+ *     <li>
+ *         We are using {@linkplain ParameterizedClass} to be able to
+ *         ctor-inject the various {@linkplain #options() catalog/schema parameter}
+ *         combinations.  JUnit requires {@linkplain TestInstance.Lifecycle#PER_METHOD}
+ *         for this.
+ *     </li>
+ *     <li>
+ *         We cannot directly use {@linkplain org.hibernate.testing.orm.junit.ServiceRegistry},
+ *         {@linkplain org.hibernate.testing.orm.junit.DomainModel} or
+ *         {@linkplain org.hibernate.testing.orm.junit.SessionFactory} because of the
+ *         need to dynamically create these based on the {@linkplain #options() catalog/schema parameters}.
+ *         So instead we use {@linkplain ServiceRegistryProducer,
+ *         {@linkplain DomainModelProducer} and {@linkplain SessionFactoryProducer} while
+ *         still using the extensions to leverage lifecycle.
+ *     </li>
+ *     <li>
+ *         ParameterizedClass cannot be used to ctor-inject things resolved via a
+ *         {@linkplain org.junit.jupiter.api.extension.ParameterResolver}.  So we leverage
+ *         {@linkplain SessionFactoryScopeAware} to inject the {@linkplain SessionFactoryScope}
+ *         as an inst var to avoid passing it around to all delegate methods.
+ *     </li>
+ * </ol>
+ */
+@JiraKey( value = "HHH-14921" )
+@JiraKey( value = "HHH-14922" )
+@JiraKey( value = "HHH-15212" )
+@JiraKey( value = "HHH-16177" )
+@RequiresDialectFeature(feature= DialectFeatureChecks.SupportsIdentityColumns.class)
+@TestInstance( TestInstance.Lifecycle.PER_METHOD )
+@ParameterizedClass
+@MethodSource("options")
+@ServiceRegistryFunctionalTesting
+@DomainModelFunctionalTesting
+@SessionFactoryFunctionalTesting
+public class DefaultCatalogAndSchemaTest
+		implements ServiceRegistryProducer, DomainModelProducer, SessionFactoryProducer, SessionFactoryScopeAware {
 
 	private static final String SQL_QUOTE_CHARACTER_CLASS = "([`\"]|\\[|\\])";
 
@@ -116,6 +143,7 @@ public class DefaultCatalogAndSchemaTest {
 	private static final String CUSTOM_DELETE_SQL_PART_2 = ", {h-domain}";
 	private static final String CUSTOM_DELETE_SQL_PART_3 = " WHERE id = ?";
 
+
 	enum SettingsMode {
 		// "Standard" way of providing settings, though configuration properties:
 		// both metadata and session factory receive the same settings
@@ -127,54 +155,112 @@ public class DefaultCatalogAndSchemaTest {
 		SESSION_FACTORY_SERVICE_REGISTRY
 	}
 
-	@Parameterized.Parameters(name = "settingsMode = {0}, configuredXmlMappingPath = {1}, configuredDefaultCatalog = {2}, configuredDefaultSchema = {3}")
-	public static List<Object[]> params() {
-		List<Object[]> params = new ArrayList<>();
+	public record Options(
+			SettingsMode settingsMode,
+			String xmlMapping,
+			String defaultCatalog,
+			String defaultSchema,
+			String expectedDefaultCatalog,
+			String expectedDefaultSchema) {
+	}
+
+	public static List<Options> options() {
+		final List<Options> options = new ArrayList<>();
+
 		for ( SettingsMode mode : SettingsMode.values() ) {
 			for ( String defaultCatalog : Arrays.asList( null, "someDefaultCatalog" ) ) {
 				for ( String defaultSchema : Arrays.asList( null, "someDefaultSchema" ) ) {
-					params.add( new Object[] { mode, null, defaultCatalog, defaultSchema,
+					options.add( new Options(
+							mode,
+							null,
+							defaultCatalog,
+							defaultSchema,
 							// The default catalog/schema should be used when
 							// there is no implicit catalog/schema defined in the mapping.
-							defaultCatalog, defaultSchema  } );
+							defaultCatalog,
+							defaultSchema
+					) );
 				}
 			}
-			params.add( new Object[] { mode, "implicit-global-catalog-and-schema.orm.xml",
-					null, null,
-					"someImplicitCatalog", "someImplicitSchema"  } );
+
+			options.add( new Options(
+					mode,
+					"implicit-global-catalog-and-schema.orm.xml",
+					null,
+					null,
+					"someImplicitCatalog",
+					"someImplicitSchema"
+			) );
+
 			// HHH-14922: Inconsistent precedence of orm.xml implicit catalog/schema over "default_catalog"/"default_schema"
-			params.add( new Object[] { mode, "implicit-global-catalog-and-schema.orm.xml",
-					"someDefaultCatalog", "someDefaultSchema",
-					// The default catalog/schema should replace the
-					// implicit catalog/schema defined in the mapping.
-					"someDefaultCatalog", "someDefaultSchema"  } );
+			options.add( new Options(
+					mode,
+					"implicit-global-catalog-and-schema.orm.xml",
+					"someDefaultCatalog",
+					"someDefaultSchema",
+					"someDefaultCatalog",
+					"someDefaultSchema"
+			) );
 		}
-		return params;
+
+		return options;
 	}
 
-	@Parameterized.Parameter
-	public SettingsMode settingsMode;
-	@Parameterized.Parameter(1)
-	public String configuredXmlMappingPath;
-	@Parameterized.Parameter(2)
-	public String configuredDefaultCatalog;
-	@Parameterized.Parameter(3)
-	public String configuredDefaultSchema;
-	@Parameterized.Parameter(4)
-	public String expectedDefaultCatalog;
-	@Parameterized.Parameter(5)
-	public String expectedDefaultSchema;
+	private final Options options;
 
 	private boolean dbSupportsCatalogs;
 	private boolean dbSupportsSchemas;
 
-	private MetadataImplementor metadata;
-	private final List<AutoCloseable> toClose = new ArrayList<>();
-	private SessionFactoryImplementor sessionFactory;
+	private SessionFactoryScope factoryScope;
 
-	@BeforeClassOnce
-	public void initSessionFactory() {
-		List<Class<?>> annotatedClasses = Arrays.asList(
+	private final List<AutoCloseable> autoCloseables = new ArrayList<>();
+
+	public DefaultCatalogAndSchemaTest(Options options) {
+		this.options = options;
+	}
+
+	@Override
+	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder) {
+		switch ( options.settingsMode ) {
+			case METADATA_SERVICE_REGISTRY:
+				configureServiceRegistry( options.defaultCatalog, options.defaultSchema, builder );
+				break;
+			case SESSION_FACTORY_SERVICE_REGISTRY:
+				configureServiceRegistry( null, null, builder );
+				break;
+			default:
+				throw new IllegalStateException( "Unknown settings mode: " + options.settingsMode );
+		}
+
+		return builder.build();
+	}
+
+	private void configureServiceRegistry(String defaultCatalog, String defaultSchema, StandardServiceRegistryBuilder builder) {
+		builder.applySetting( PersistentTableStrategy.DROP_ID_TABLES, "true" );
+		builder.applySetting( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+		builder.applySetting( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+		builder.applySetting( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS, "true" );
+		if ( defaultCatalog != null ) {
+			builder.applySetting( AvailableSettings.DEFAULT_CATALOG, defaultCatalog );
+		}
+		if ( defaultSchema != null ) {
+			builder.applySetting( AvailableSettings.DEFAULT_SCHEMA, defaultSchema );
+		}
+	}
+
+	@Override
+	public MetadataImplementor produceModel(StandardServiceRegistry serviceRegistry) {
+		final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+		metadataSources.addInputStream( getClass().getResourceAsStream( "implicit-file-level-catalog-and-schema.orm.xml" ) );
+		metadataSources.addInputStream( getClass().getResourceAsStream( "implicit-file-level-catalog-and-schema.hbm.xml" ) );
+		metadataSources.addInputStream( getClass().getResourceAsStream( "no-file-level-catalog-and-schema.orm.xml" ) );
+		metadataSources.addInputStream( getClass().getResourceAsStream( "no-file-level-catalog-and-schema.hbm.xml" ) );
+		metadataSources.addInputStream( getClass().getResourceAsStream( "database-object-using-catalog-placeholder.orm.xml" ) );
+		metadataSources.addInputStream( getClass().getResourceAsStream( "database-object-using-schema-placeholder.orm.xml" ) );
+		if ( options.xmlMapping != null ) {
+			metadataSources.addInputStream( getClass().getResourceAsStream( options.xmlMapping ) );
+		}
+		metadataSources.addAnnotatedClasses(
 				EntityWithDefaultQualifiers.class,
 				EntityWithExplicitQualifiers.class,
 				EntityWithJoinedInheritanceWithDefaultQualifiers.class,
@@ -198,67 +284,49 @@ public class DefaultCatalogAndSchemaTest {
 				EntityWithExplicitQualifiersWithEnhancedSequenceGenerator.class
 		);
 
-		StandardServiceRegistry serviceRegistry;
-		switch ( settingsMode ) {
-			case METADATA_SERVICE_REGISTRY:
-				serviceRegistry = createStandardServiceRegistry( configuredDefaultCatalog, configuredDefaultSchema );
-				break;
-			case SESSION_FACTORY_SERVICE_REGISTRY:
-				serviceRegistry = createStandardServiceRegistry( null, null );
-				break;
-			default:
-				throw new IllegalStateException( "Unknown settings mode: " + settingsMode );
-		}
+		return (MetadataImplementor) metadataSources.buildMetadata();
+	}
 
-		final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
-		metadataSources.addInputStream( getClass().getResourceAsStream( "implicit-file-level-catalog-and-schema.orm.xml" ) );
-		metadataSources.addInputStream( getClass().getResourceAsStream( "implicit-file-level-catalog-and-schema.hbm.xml" ) );
-		metadataSources.addInputStream( getClass().getResourceAsStream( "no-file-level-catalog-and-schema.orm.xml" ) );
-		metadataSources.addInputStream( getClass().getResourceAsStream( "no-file-level-catalog-and-schema.hbm.xml" ) );
-		metadataSources.addInputStream( getClass().getResourceAsStream( "database-object-using-catalog-placeholder.hbm.xml" ) );
-		metadataSources.addInputStream( getClass().getResourceAsStream( "database-object-using-schema-placeholder.hbm.xml" ) );
-		if ( configuredXmlMappingPath != null ) {
-			metadataSources.addInputStream( getClass().getResourceAsStream( configuredXmlMappingPath ) );
-		}
-		for ( Class<?> annotatedClass : annotatedClasses ) {
-			metadataSources.addAnnotatedClass( annotatedClass );
-		}
-
-		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
-		metadata = (MetadataImplementor) metadataBuilder.build();
-
+	@Override
+	public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
 		SessionFactoryBuilder sfb;
-		switch ( settingsMode ) {
+		switch ( options.settingsMode ) {
 			case METADATA_SERVICE_REGISTRY:
-				sfb = metadata.getSessionFactoryBuilder();
+				sfb = model.getSessionFactoryBuilder();
 				break;
 			case SESSION_FACTORY_SERVICE_REGISTRY:
-				serviceRegistry = createStandardServiceRegistry( configuredDefaultCatalog, configuredDefaultSchema );
-				BootstrapContext bootstrapContext = ((MetadataImpl) metadata).getBootstrapContext();
+				var srb = ServiceRegistryUtil.serviceRegistryBuilder();
+				configureServiceRegistry( options.defaultCatalog, options.defaultSchema, srb );
+				final StandardServiceRegistry sr = srb.build();
+				autoCloseables.add( sr );
+				var bootstrapContext = ((MetadataImpl) model).getBootstrapContext();
 				sfb = new SessionFactoryBuilderImpl(
-						metadata,
-						new SessionFactoryOptionsBuilder( serviceRegistry, bootstrapContext ),
+						model,
+						new SessionFactoryOptionsBuilder( sr, bootstrapContext ),
 						bootstrapContext
 				);
 				break;
 			default:
-				throw new IllegalStateException( "Unknown settings mode: " + settingsMode );
+				throw new IllegalStateException( "Unknown settings mode: " + options.settingsMode );
 		}
 
-		sessionFactory = (SessionFactoryImplementor) sfb.build();
-		toClose.add( sessionFactory );
+		return (SessionFactoryImplementor) sfb.build();
+	}
 
-		NameQualifierSupport nameQualifierSupport =
-				sessionFactory.getJdbcServices().getJdbcEnvironment().getNameQualifierSupport();
+	@Override
+	public void injectSessionFactoryScope(SessionFactoryScope factoryScope) {
+		this.factoryScope = factoryScope;
+
+		var sessionFactory = factoryScope.getSessionFactory();
+		var nameQualifierSupport = sessionFactory.getJdbcServices().getJdbcEnvironment().getNameQualifierSupport();
 		dbSupportsCatalogs = nameQualifierSupport.supportsCatalogs();
 		dbSupportsSchemas = nameQualifierSupport.supportsSchemas();
 	}
 
-	@AfterClassOnce
-	public void cleanup() throws Throwable {
+	@AfterEach
+	public void handleAutoClosing() throws Throwable {
 		Throwable thrown = null;
-		Collections.reverse( toClose );
-		for ( AutoCloseable closeable : toClose ) {
+		for ( AutoCloseable closeable : autoCloseables ) {
 			try {
 				closeable.close();
 			}
@@ -274,83 +342,57 @@ public class DefaultCatalogAndSchemaTest {
 		if ( thrown != null ) {
 			throw thrown;
 		}
-	}
 
-	private StandardServiceRegistry createStandardServiceRegistry(String defaultCatalog, String defaultSchema) {
-		final BootstrapServiceRegistryBuilder bsrb = new BootstrapServiceRegistryBuilder();
-		bsrb.applyClassLoader( getClass().getClassLoader() );
-		// by default we do not share the BootstrapServiceRegistry nor the StandardServiceRegistry,
-		// so we want the BootstrapServiceRegistry to be automatically closed when the
-		// StandardServiceRegistry is closed.
-		bsrb.enableAutoClose();
-
-		final BootstrapServiceRegistry bsr = bsrb.build();
-
-		final Map<String, Object> settings = new HashMap<>();
-		settings.put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
-		settings.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
-		settings.put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
-		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS, "true" );
-		if ( defaultCatalog != null ) {
-			settings.put( AvailableSettings.DEFAULT_CATALOG, defaultCatalog );
-		}
-		if ( defaultSchema != null ) {
-			settings.put( AvailableSettings.DEFAULT_SCHEMA, defaultSchema );
-		}
-
-		final StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder( bsr );
-		ssrb.applySettings( settings );
-		StandardServiceRegistry registry = ssrb.build();
-		toClose.add( registry );
-		return registry;
+		autoCloseables.clear();
 	}
 
 	@Test
-	public void createSchema_fromSessionFactory() {
-		String script = generateScriptFromSessionFactory( "create" );
+	public void createSchema_fromSessionFactory(DomainModelScope modelScope) {
+		String script = generateScriptFromSessionFactory( "create", modelScope, factoryScope );
 		verifyDDLCreateCatalogOrSchema( script );
 		verifyDDLQualifiers( script );
 	}
 
 	@Test
-	@SkipForDialect(value = SQLServerDialect.class,
-			comment = "SQL Server support catalogs but their implementation of DatabaseMetaData"
+	@SkipForDialect(dialectClass = SQLServerDialect.class,
+			reason = "SQL Server support catalogs but their implementation of DatabaseMetaData"
 					+ " throws exceptions when calling getSchemas/getTables with a non-existing catalog,"
 					+ " which results in nasty errors when generating an update script"
 					+ " and some catalogs don't exist.")
-	@SkipForDialect(value = SybaseDialect.class,
-			comment = "Sybase support catalogs but their implementation of DatabaseMetaData"
+	@SkipForDialect(dialectClass = SybaseDialect.class,
+			matchSubTypes = true,
+			reason = "Sybase support catalogs but their implementation of DatabaseMetaData"
 					+ " throws exceptions when calling getSchemas/getTables with a non-existing catalog,"
 					+ " which results in nasty errors when generating an update script"
 					+ " and some catalogs don't exist.")
-	@SkipForDialect(value = InformixDialect.class,
-			comment = "Informix support catalogs but their implementation of DatabaseMetaData"
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Informix support catalogs but their implementation of DatabaseMetaData"
 					+ " throws exceptions when calling getSchemas/getTables with a non-existing catalog,"
 					+ " which results in nasty errors when generating an update script"
 					+ " and some catalogs don't exist.")
-	public void updateSchema_fromSessionFactory() {
-		String script = generateScriptFromSessionFactory( "update" );
+	public void updateSchema_fromSessionFactory(DomainModelScope modelScope) {
+		String script = generateScriptFromSessionFactory( "update", modelScope, factoryScope );
 		verifyDDLCreateCatalogOrSchema( script );
 		verifyDDLQualifiers( script );
 	}
 
 	@Test
-	public void dropSchema_fromSessionFactory() {
-		String script = generateScriptFromSessionFactory( "drop" );
+	public void dropSchema_fromSessionFactory(DomainModelScope modelScope) {
+		String script = generateScriptFromSessionFactory( "drop",  modelScope, factoryScope );
 		verifyDDLDropCatalogOrSchema( script );
 		verifyDDLQualifiers( script );
 	}
 
 	@Test
-	public void createSchema_fromMetadata() {
-		String script = generateScriptFromMetadata( SchemaExport.Action.CREATE );
+	public void createSchema_fromMetadata(DomainModelScope modelScope) {
+		String script = generateScriptFromMetadata( SchemaExport.Action.CREATE, modelScope );
 		verifyDDLCreateCatalogOrSchema( script );
 		verifyDDLQualifiers( script );
 	}
 
 	@Test
-	public void dropSchema_fromMetadata() {
-		String script = generateScriptFromMetadata( SchemaExport.Action.DROP );
+	public void dropSchema_fromMetadata(DomainModelScope modelScope) {
+		String script = generateScriptFromMetadata( SchemaExport.Action.DROP, modelScope );
 		verifyDDLDropCatalogOrSchema( script );
 		verifyDDLQualifiers( script );
 	}
@@ -389,7 +431,10 @@ public class DefaultCatalogAndSchemaTest {
 		verifyEntityPersisterQualifiers( EntityWithExplicitQualifiersWithEnhancedSequenceGenerator.class, expectedExplicitQualifier() );
 	}
 
-	private void verifyEntityPersisterQualifiers(Class<?> entityClass, ExpectedQualifier expectedQualifier) {
+	private void verifyEntityPersisterQualifiers(
+			Class<?> entityClass,
+			ExpectedQualifier expectedQualifier) {
+		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 		// The hbm.xml mapping unfortunately sets the native entity name on top of the JPA entity name,
 		// so many methods that allow retrieving the entity persister or entity metamodel from the entity class no longer work,
 		// because these methods generally assume the native entity name is the FQCN.
@@ -538,48 +583,50 @@ public class DefaultCatalogAndSchemaTest {
 	}
 
 	private <T extends IdentifierGenerator> T idGenerator(Class<T> expectedType, Class<?> entityClass) {
-		final AbstractEntityPersister persister = (AbstractEntityPersister) sessionFactory.getRuntimeMetamodels()
+		final AbstractEntityPersister persister = (AbstractEntityPersister) factoryScope.getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityClass );
 		return expectedType.cast( persister.getIdentifierGenerator() );
 	}
 
 	private void verifyDDLCreateCatalogOrSchema(String sql) {
-		Dialect dialect = sessionFactory.getJdbcServices().getDialect();
+		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
+		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
 
 		if ( sessionFactory.getJdbcServices().getDialect().canCreateCatalog() ) {
 			assertThat( sql ).contains( dialect.getCreateCatalogCommand( EXPLICIT_CATALOG ) );
 			assertThat( sql ).contains( dialect.getCreateCatalogCommand( IMPLICIT_FILE_LEVEL_CATALOG ) );
-			if ( expectedDefaultCatalog != null ) {
-				assertThat( sql ).contains( dialect.getCreateCatalogCommand( expectedDefaultCatalog ) );
+			if ( options.expectedDefaultCatalog != null ) {
+				assertThat( sql ).contains( dialect.getCreateCatalogCommand( options.expectedDefaultCatalog ) );
 			}
 		}
 
 		if ( sessionFactory.getJdbcServices().getDialect().canCreateSchema() ) {
 			assertThat( sql ).contains( dialect.getCreateSchemaCommand( EXPLICIT_SCHEMA ) );
 			assertThat( sql ).contains( dialect.getCreateSchemaCommand( IMPLICIT_FILE_LEVEL_SCHEMA ) );
-			if ( expectedDefaultSchema != null ) {
-				assertThat( sql ).contains( dialect.getCreateSchemaCommand( expectedDefaultSchema ) );
+			if ( options.expectedDefaultSchema != null ) {
+				assertThat( sql ).contains( dialect.getCreateSchemaCommand( options.expectedDefaultSchema ) );
 			}
 		}
 	}
 
 	private void verifyDDLDropCatalogOrSchema(String sql) {
-		Dialect dialect = sessionFactory.getJdbcServices().getDialect();
+		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
+		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
 
 		if ( sessionFactory.getJdbcServices().getDialect().canCreateCatalog() ) {
 			assertThat( sql ).contains( dialect.getDropCatalogCommand( EXPLICIT_CATALOG ) );
 			assertThat( sql ).contains( dialect.getDropCatalogCommand( IMPLICIT_FILE_LEVEL_CATALOG ) );
-			if ( expectedDefaultCatalog != null ) {
-				assertThat( sql ).contains( dialect.getDropCatalogCommand( expectedDefaultCatalog ) );
+			if ( options.expectedDefaultCatalog != null ) {
+				assertThat( sql ).contains( dialect.getDropCatalogCommand( options.expectedDefaultCatalog ) );
 			}
 		}
 
 		if ( sessionFactory.getJdbcServices().getDialect().canCreateSchema() ) {
 			assertThat( sql ).contains( dialect.getDropSchemaCommand( EXPLICIT_SCHEMA ) );
 			assertThat( sql ).contains( dialect.getDropSchemaCommand( IMPLICIT_FILE_LEVEL_SCHEMA ) );
-			if ( expectedDefaultSchema != null ) {
-				assertThat( sql ).contains( dialect.getDropSchemaCommand( expectedDefaultSchema ) );
+			if ( options.expectedDefaultSchema != null ) {
+				assertThat( sql ).contains( dialect.getDropSchemaCommand( options.expectedDefaultSchema ) );
 			}
 		}
 	}
@@ -621,13 +668,13 @@ public class DefaultCatalogAndSchemaTest {
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithDefaultQualifiersWithEnhancedSequenceGenerator.NAME, expectedDefaultQualifier() );
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithExplicitQualifiersWithEnhancedSequenceGenerator.NAME, expectedExplicitQualifier() );
 
-		if ( dbSupportsCatalogs && expectedDefaultCatalog != null ) {
+		if ( dbSupportsCatalogs && options.expectedDefaultCatalog != null ) {
 			verifyOnlyQualifier( sql, SqlType.DDL, "catalogPrefixedAuxObject",
-					expectedQualifier( expectedDefaultCatalog, null ) );
+					expectedQualifier( options.expectedDefaultCatalog, null ) );
 		}
-		if ( dbSupportsSchemas && expectedDefaultSchema != null ) {
+		if ( dbSupportsSchemas && options.expectedDefaultSchema != null ) {
 			verifyOnlyQualifier( sql, SqlType.DDL, "schemaPrefixedAuxObject",
-					expectedQualifier( null, expectedDefaultSchema ) );
+					expectedQualifier( null, options.expectedDefaultSchema ) );
 		}
 	}
 
@@ -654,7 +701,7 @@ public class DefaultCatalogAndSchemaTest {
 
 		ExpectedQualifier expectedQualifierForTables = expectedQualifier;
 		ExpectedQualifier expectedQualifierForSequences;
-		if ( SqlType.DDL == sqlType && sessionFactory.getJdbcServices().getDialect() instanceof SQLServerDialect ) {
+		if ( SqlType.DDL == sqlType && factoryScope.getSessionFactory().getJdbcServices().getDialect() instanceof SQLServerDialect ) {
 			// SQL Server does not allow the catalog in the sequence name when creating the sequence,
 			// so we need different patterns for sequence names and table names.
 			// See org.hibernate.dialect.SQLServer2012Dialect.SqlServerSequenceExporter.getFormattedSequenceName
@@ -685,7 +732,7 @@ public class DefaultCatalogAndSchemaTest {
 	}
 
 	private ExpectedQualifier expectedDefaultQualifier() {
-		return expectedQualifier( expectedDefaultCatalog, expectedDefaultSchema );
+		return expectedQualifier( options.expectedDefaultCatalog, options.expectedDefaultSchema );
 	}
 
 	private ExpectedQualifier expectedExplicitQualifier() {
@@ -703,10 +750,13 @@ public class DefaultCatalogAndSchemaTest {
 		);
 	}
 
-	private String generateScriptFromSessionFactory(String action) {
-		ServiceRegistryImplementor serviceRegistry = sessionFactory.getServiceRegistry();
-		Map<String, Object> settings = new HashMap<>(
-				serviceRegistry.getService( ConfigurationService.class ).getSettings()
+	private String generateScriptFromSessionFactory(
+			String action,
+			DomainModelScope modelScope,
+			SessionFactoryScope factoryScope) {
+		var serviceRegistry = factoryScope.getSessionFactory().getServiceRegistry();
+		var settings = new HashMap<>(
+				serviceRegistry.requireService( ConfigurationService.class ).getSettings()
 		);
 		StringWriter writer = new StringWriter();
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, action );
@@ -714,20 +764,26 @@ public class DefaultCatalogAndSchemaTest {
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, writer );
 
 		SchemaManagementToolCoordinator.process(
-				metadata, serviceRegistry, settings, DelayedDropRegistryNotAvailableImpl.INSTANCE );
+				modelScope.getDomainModel(),
+				serviceRegistry,
+				settings,
+				DelayedDropRegistryNotAvailableImpl.INSTANCE
+		);
 		return writer.toString();
 	}
 
 	// This is precisely how scripts are generated for the Quarkus DevUI
 	// Don't change this code except to match changes in
 	// https://github.com/quarkusio/quarkus/blob/d07ecb23bfba38ee48868635e155c4b513ce6af9/extensions/hibernate-orm/runtime/src/main/java/io/quarkus/hibernate/orm/runtime/devconsole/HibernateOrmDevConsoleInfoSupplier.java#L61-L92
-	private String generateScriptFromMetadata(SchemaExport.Action action) {
-		ServiceRegistryImplementor sessionFactoryServiceRegistry = sessionFactory.getServiceRegistry();
+	private String generateScriptFromMetadata(
+			SchemaExport.Action action,
+			DomainModelScope modelScope) {
+		ServiceRegistryImplementor serviceRegistry = factoryScope.getSessionFactory().getServiceRegistry();
 		SchemaExport schemaExport = new SchemaExport();
 		schemaExport.setFormat( true );
 		schemaExport.setDelimiter( ";" );
 		StringWriter writer = new StringWriter();
-		schemaExport.doExecution( action, false, metadata, sessionFactoryServiceRegistry,
+		schemaExport.doExecution( action, false, modelScope.getDomainModel(), serviceRegistry,
 				new TargetDescriptor() {
 					@Override
 					public EnumSet<TargetType> getTargetTypes() {

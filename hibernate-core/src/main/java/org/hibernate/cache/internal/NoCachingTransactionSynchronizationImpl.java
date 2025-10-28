@@ -13,7 +13,7 @@ public class NoCachingTransactionSynchronizationImpl implements CacheTransaction
 	public static final NoCachingTransactionSynchronizationImpl INSTANCE = new NoCachingTransactionSynchronizationImpl();
 
 	private NoCachingTransactionSynchronizationImpl() {
-
+		//noop
 	}
 
 	@Override
@@ -23,16 +23,16 @@ public class NoCachingTransactionSynchronizationImpl implements CacheTransaction
 
 	@Override
 	public void transactionJoined() {
-
+		//noop
 	}
 
 	@Override
 	public void transactionCompleting() {
-
+		//noop
 	}
 
 	@Override
 	public void transactionCompleted(boolean successful) {
-
+		//noop
 	}
 }

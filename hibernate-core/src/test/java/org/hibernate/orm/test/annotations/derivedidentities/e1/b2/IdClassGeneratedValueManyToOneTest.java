@@ -35,13 +35,7 @@ public class IdClassGeneratedValueManyToOneTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope){
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from CustomerInventory" ).executeUpdate();
-					session.createQuery( "delete from Item" ).executeUpdate();
-					session.createQuery( "delete from Customer" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

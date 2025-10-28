@@ -4,9 +4,6 @@
  */
 package org.hibernate.property.access.internal;
 
-import java.lang.reflect.Method;
-
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.GetterMethodImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -14,9 +11,12 @@ import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.property.access.spi.SetterMethodImpl;
 
-import org.jboss.logging.Logger;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.util.ReflectHelper.findGetterMethod;
+import static org.hibernate.internal.util.ReflectHelper.findSetterMethod;
+import static org.hibernate.internal.util.ReflectHelper.setterMethodOrNull;
 
 /**
  * {@link PropertyAccess} for accessing the wrapped property via get/set pair, which may be nonpublic.
@@ -26,7 +26,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @see PropertyAccessStrategyBasicImpl
  */
 public class PropertyAccessBasicImpl implements PropertyAccess {
-	private static final Logger log = Logger.getLogger( PropertyAccessBasicImpl.class );
 
 	private final PropertyAccessStrategyBasicImpl strategy;
 	private final GetterMethodImpl getter;
@@ -39,17 +38,13 @@ public class PropertyAccessBasicImpl implements PropertyAccess {
 			boolean setterRequired) {
 		this.strategy = strategy;
 
-		final Method getterMethod = ReflectHelper.findGetterMethod( containerJavaType, propertyName );
-		this.getter = new GetterMethodImpl( containerJavaType, propertyName, getterMethod );
+		final var getterMethod = findGetterMethod( containerJavaType, propertyName );
+		getter = new GetterMethodImpl( containerJavaType, propertyName, getterMethod );
 
-		final Method setterMethod;
-		if ( setterRequired ) {
-			setterMethod = ReflectHelper.findSetterMethod( containerJavaType, propertyName, getterMethod.getReturnType() );
-		}
-		else {
-			setterMethod = ReflectHelper.setterMethodOrNull( containerJavaType, propertyName, getterMethod.getReturnType() );
-		}
-		this.setter = setterMethod != null
+		final var setterMethod = setterRequired
+				? findSetterMethod( containerJavaType, propertyName, getterMethod.getReturnType() )
+				: setterMethodOrNull( containerJavaType, propertyName, getterMethod.getReturnType() );
+		setter = setterMethod != null
 				? new SetterMethodImpl( containerJavaType, propertyName, setterMethod )
 				: null;
 	}

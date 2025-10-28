@@ -7,7 +7,6 @@ package org.hibernate.orm.test.jpa.ops;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
@@ -17,33 +16,27 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil2.fromTransaction;
-import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
 @JiraKey( value = "HHH-14608")
-public class MergeJpaComplianceTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Person.class, Occupation.class, PersonOccupation.class
-		};
-	}
-
-	@Override
-	protected void addConfigOptions(Map config) {
-		config.put( org.hibernate.cfg.AvailableSettings.JPA_PROXY_COMPLIANCE, true );
-	}
+@Jpa(
+		annotatedClasses = {
+				MergeJpaComplianceTest.Person.class,
+				MergeJpaComplianceTest.Occupation.class,
+				MergeJpaComplianceTest.PersonOccupation.class
+		},
+		integrationSettings = {@Setting(name = AvailableSettings.JPA_PROXY_COMPLIANCE, value = "true")}
+)
+public class MergeJpaComplianceTest {
 
 	@Test
-	public void testMerge() {
-		Person person = fromTransaction(
-				entityManagerFactory(),
+	public void testMerge(EntityManagerFactoryScope scope) {
+		Person person = scope.fromTransaction(
 				entityManager -> {
 					Person p;
 					p = new Person( "1", "Fab" );
@@ -60,8 +53,7 @@ public class MergeJpaComplianceTest extends BaseEntityManagerFunctionalTestCase 
 				}
 		);
 
-		inTransaction(
-				entityManagerFactory(),
+		scope.inTransaction(
 				entityManager -> {
 					person.setName( "Fabiana" );
 					entityManager.merge( person );
@@ -100,7 +92,7 @@ public class MergeJpaComplianceTest extends BaseEntityManagerFunctionalTestCase 
 			return occupations;
 		}
 
-		protected void addOccupationPeoplet(PersonOccupation personOccupation) {
+		protected void addOccupationPeople(PersonOccupation personOccupation) {
 			if ( this.occupations == null ) {
 				occupations = new ArrayList<>();
 			}
@@ -173,7 +165,7 @@ public class MergeJpaComplianceTest extends BaseEntityManagerFunctionalTestCase 
 		}
 
 		public PersonOccupation(Person person, Occupation occupation) {
-			person.addOccupationPeoplet( this );
+			person.addOccupationPeople( this );
 			occupation.addPersonOccupation( this );
 		}
 

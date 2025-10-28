@@ -4,14 +4,16 @@
  */
 package org.hibernate.orm.test.jpa.lock;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import jakarta.persistence.LockModeType;
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
-import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.DialectChecks;
@@ -32,7 +34,6 @@ import static org.junit.Assert.fail;
  * @author Andrea Boriero
  */
 @RequiresDialectFeature({DialectChecks.SupportsLockTimeouts.class})
-@SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 @SkipForDialect(value = AltibaseDialect.class, comment = "Altibase does not close Statement after lock timeout")
 public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerFunctionalTestCase {
 
@@ -48,6 +49,10 @@ public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerF
 			org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
 			CONNECTION_PROVIDER
 		);
+		if ( getDialect() instanceof InformixDialect ) {
+			config.put( AvailableSettings.ISOLATION,
+					Connection.TRANSACTION_REPEATABLE_READ );
+		}
 		return config;
 	}
 

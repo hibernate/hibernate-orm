@@ -318,11 +318,10 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 	@Override
 	@SuppressWarnings("unchecked")
 	public final Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map<Object, Object> copyCache) {
-		if ( original == null && target == null ) {
-			return null;
-		}
+		return original == null && target == null
+				? null
+				: converter.getDomainJavaType().getReplacement( (J) original, (J) target, session );
 
-		return converter.getDomainJavaType().getReplacement( (J) original, (J) target, session );
 	}
 
 	@Override

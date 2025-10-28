@@ -43,7 +43,7 @@ import org.hibernate.type.descriptor.jdbc.StructHelper;
 import org.hibernate.type.descriptor.jdbc.StructuredJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.type.descriptor.jdbc.StructHelper.getEmbeddedPart;
+import static org.hibernate.type.descriptor.jdbc.StructHelper.getSubPart;
 import static org.hibernate.type.descriptor.jdbc.StructHelper.instantiate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
@@ -510,7 +510,6 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 										quotes + 1,
 										arrayList,
 										(BasicType<Object>) pluralType.getElementType(),
-										returnEmbeddable,
 										options
 								);
 								assert string.charAt( subEnd - 1 ) == '}';
@@ -620,7 +619,6 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 								quotes + 1,
 								arrayList,
 								(BasicType<Object>) pluralType.getElementType(),
-								returnEmbeddable,
 								options
 						);
 						assert string.charAt( i - 1 ) == '}';
@@ -663,7 +661,6 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 			int quotes,
 			ArrayList<Object> values,
 			BasicType<Object> elementType,
-			boolean returnEmbeddable,
 			WrapperOptions options) throws SQLException {
 		boolean inQuote = false;
 		StringBuilder escapingSb = null;
@@ -854,29 +851,16 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 										i + 1,
 										quotes + 1,
 										subValues,
-										returnEmbeddable,
+										true,
 										options
 								);
-								if ( returnEmbeddable ) {
-									final StructAttributeValues attributeValues = structJdbcType.getAttributeValues(
-											structJdbcType.embeddableMappingType,
-											structJdbcType.orderMapping,
-											subValues,
-											options
-									);
-									values.add( instantiate( structJdbcType.embeddableMappingType, attributeValues ) );
-								}
-								else {
-									if ( structJdbcType.inverseOrderMapping != null ) {
-										StructHelper.orderJdbcValues(
-												structJdbcType.embeddableMappingType,
-												structJdbcType.inverseOrderMapping,
-												subValues.clone(),
-												subValues
-										);
-									}
-									values.add( subValues );
-								}
+								final StructAttributeValues attributeValues = structJdbcType.getAttributeValues(
+										structJdbcType.embeddableMappingType,
+										structJdbcType.orderMapping,
+										subValues,
+										options
+								);
+								values.add( instantiate( structJdbcType.embeddableMappingType, attributeValues ) );
 								// The subEnd points to the first character after the '}',
 								// so move forward the index to point to the next char after quotes
 								assert isDoubleQuote( string, subEnd, expectedQuotes );
@@ -994,38 +978,8 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 	}
 
 	private SelectableMapping getJdbcValueSelectable(int jdbcValueSelectableIndex) {
-		if ( orderMapping != null ) {
-			final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
-			final int size = numberOfAttributeMappings + ( embeddableMappingType.isPolymorphic() ? 1 : 0 );
-			int count = 0;
-			for ( int i = 0; i < size; i++ ) {
-				final ValuedModelPart modelPart = getEmbeddedPart( embeddableMappingType, orderMapping[i] );
-				if ( modelPart.getMappedType() instanceof EmbeddableMappingType embeddableMappingType ) {
-					final SelectableMapping aggregateMapping = embeddableMappingType.getAggregateMapping();
-					if ( aggregateMapping == null ) {
-						final SelectableMapping subSelectable = embeddableMappingType.getJdbcValueSelectable( jdbcValueSelectableIndex - count );
-						if ( subSelectable != null ) {
-							return subSelectable;
-						}
-						count += embeddableMappingType.getJdbcValueCount();
-					}
-					else {
-						if ( count == jdbcValueSelectableIndex ) {
-							return aggregateMapping;
-						}
-						count++;
-					}
-				}
-				else {
-					if ( count == jdbcValueSelectableIndex ) {
-						return (SelectableMapping) modelPart;
-					}
-					count += modelPart.getJdbcTypeCount();
-				}
-			}
-			return null;
-		}
-		return embeddableMappingType.getJdbcValueSelectable( jdbcValueSelectableIndex );
+		return embeddableMappingType.getJdbcValueSelectable(
+				orderMapping != null ? orderMapping[jdbcValueSelectableIndex] : jdbcValueSelectableIndex );
 	}
 
 	private static boolean repeatsChar(String string, int start, int times, char expectedChar) {
@@ -1156,7 +1110,11 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 	public Object[] extractJdbcValues(Object rawJdbcValue, WrapperOptions options) throws SQLException {
 		assert embeddableMappingType != null;
 		final Object[] array = new Object[embeddableMappingType.getJdbcValueCount()];
-		deserializeStruct( getRawStructFromJdbcValue( rawJdbcValue ), 0, 0, array, true, options );
+		final String struct = getRawStructFromJdbcValue( rawJdbcValue );
+		if ( struct == null ) {
+			return null;
+		}
+		deserializeStruct( struct, 0, 0, array, true, options );
 		if ( inverseOrderMapping != null ) {
 			StructHelper.orderJdbcValues( embeddableMappingType, inverseOrderMapping, array.clone(), array );
 		}
@@ -1378,7 +1336,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 				attributeIndex = orderMapping[i];
 			}
 			jdbcIndex += injectAttributeValue(
-					getEmbeddedPart( embeddableMappingType, attributeIndex ),
+					getSubPart( embeddableMappingType, attributeIndex ),
 					attributeValues,
 					attributeIndex,
 					rawJdbcValues,

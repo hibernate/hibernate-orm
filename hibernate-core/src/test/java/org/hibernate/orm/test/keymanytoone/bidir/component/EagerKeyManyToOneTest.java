@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.keymanytoone.bidir.component;
 
-import java.util.List;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
@@ -60,14 +59,7 @@ public class EagerKeyManyToOneTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					List<Customer> customers = session.createQuery( "from Customer" ).list();
-					customers.forEach(
-							customer -> session.remove( customer )
-					);
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

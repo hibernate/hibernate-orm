@@ -44,7 +44,7 @@ public class InheritedNaturalIdCacheTest {
 
 		// try to load `MyEntity#1` as an ExtendedEntity
 		scope.inTransaction( (session) -> {
-			final ExtendedEntity loaded = session.byId( ExtendedEntity.class ).load( 1 );
+			final ExtendedEntity loaded = session.find( ExtendedEntity.class, 1 );
 			assertThat( loaded ).isNull();
 		} );
 	}
@@ -55,7 +55,7 @@ public class InheritedNaturalIdCacheTest {
 
 		// load `MyEntity#1` into the cache
 		scope.inTransaction( (session) -> {
-			final MyEntity loaded = session.byId( MyEntity.class ).load( 1 );
+			final MyEntity loaded = session.find( MyEntity.class, 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
@@ -64,7 +64,7 @@ public class InheritedNaturalIdCacheTest {
 
 		// now try to access it as an ExtendedEntity
 		scope.inTransaction( (session) -> {
-			final ExtendedEntity loaded = session.byId( ExtendedEntity.class ).load( 1 );
+			final ExtendedEntity loaded = session.find( ExtendedEntity.class, 1 );
 			assertThat( loaded ).isNull();
 		} );
 	}
@@ -127,8 +127,7 @@ public class InheritedNaturalIdCacheTest {
 
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.createQuery( "delete MyEntity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.getSessionFactory().getCache().evictAllRegions();
 	}
 }

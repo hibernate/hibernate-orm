@@ -84,6 +84,7 @@ public final class Context {
 	private Boolean fullyXmlConfigured;
 	private boolean addInjectAnnotation = false;
 	private boolean addDependentAnnotation = false;
+	private boolean addComponentAnnotation = false;
 	private boolean addNonnullAnnotation = false;
 	private boolean addGeneratedAnnotation = true;
 	private boolean addGenerationDate;
@@ -92,6 +93,7 @@ public final class Context {
 	private AccessType persistenceUnitDefaultAccessType;
 	private boolean generateJakartaDataStaticMetamodel;
 	private boolean quarkusInjection;
+	private boolean springInjection;
 	private boolean dataEventPackageAvailable;
 
 	// keep track of all classes for which model have been generated
@@ -102,6 +104,8 @@ public final class Context {
 
 	private boolean usesQuarkusOrm = false;
 	private boolean usesQuarkusReactive = false;
+	private boolean usesQuarkusPanache2 = false;
+	private boolean usesQuarkusReactiveCommon = false;
 
 	private String[] includes = {"*"};
 	private String[] excludes = {};
@@ -173,6 +177,14 @@ public final class Context {
 		this.addDependentAnnotation = addDependentAnnotation;
 	}
 
+	public boolean addComponentAnnotation() {
+		return addComponentAnnotation;
+	}
+
+	public void setAddComponentAnnotation(boolean addComponentAnnotation) {
+		this.addComponentAnnotation = addComponentAnnotation;
+	}
+
 	public boolean addNonnullAnnotation() {
 		return addNonnullAnnotation;
 	}
@@ -223,6 +235,14 @@ public final class Context {
 
 	public void setQuarkusInjection(boolean quarkusInjection) {
 		this.quarkusInjection = quarkusInjection;
+	}
+
+	public boolean isSpringInjection() {
+		return springInjection;
+	}
+
+	public void setSpringInjection(boolean springInjection) {
+		this.springInjection = springInjection;
 	}
 
 	public boolean isDataEventPackageAvailable() {
@@ -441,6 +461,22 @@ public final class Context {
 
 	public boolean usesQuarkusReactive() {
 		return usesQuarkusReactive;
+	}
+
+	public void setUsesQuarkusPanache2(boolean b) {
+		usesQuarkusPanache2 = b;
+	}
+
+	public boolean usesQuarkusPanache2() {
+		return usesQuarkusPanache2;
+	}
+
+	public void setUsesQuarkusReactiveCommon(boolean b) {
+		usesQuarkusReactiveCommon = b;
+	}
+
+	public boolean usesQuarkusReactiveCommon() {
+		return usesQuarkusReactiveCommon;
 	}
 
 	public void setInclude(String include) {

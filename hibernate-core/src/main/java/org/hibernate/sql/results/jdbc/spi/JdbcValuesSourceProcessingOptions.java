@@ -15,4 +15,27 @@ public interface JdbcValuesSourceProcessingOptions {
 	Object getEffectiveOptionalId();
 
 	boolean shouldReturnProxies();
+
+	JdbcValuesSourceProcessingOptions NO_OPTIONS =
+			new JdbcValuesSourceProcessingOptions() {
+				@Override
+				public Object getEffectiveOptionalObject() {
+					return null;
+				}
+
+				@Override
+				public String getEffectiveOptionalEntityName() {
+					return null;
+				}
+
+				@Override
+				public Object getEffectiveOptionalId() {
+					return null;
+				}
+
+				@Override
+				public boolean shouldReturnProxies() {
+					return true;
+				}
+			};
 }

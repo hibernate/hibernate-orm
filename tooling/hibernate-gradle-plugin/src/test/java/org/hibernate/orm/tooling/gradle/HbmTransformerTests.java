@@ -18,6 +18,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS;
+import static org.hibernate.orm.tooling.gradle.TestHelper.usingGradleRunner;
 
 
 /**
@@ -33,12 +34,9 @@ class HbmTransformerTests {
 		Copier.copyProject( buildFilePath, projectDir );
 
 		System.out.println( "Starting execution ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-		final GradleRunner gradleRunner = GradleRunner.create()
+		final GradleRunner gradleRunner = usingGradleRunner()
 				.withProjectDir( projectDir.toFile() )
-				.withPluginClasspath()
-				.withDebug( true )
-				.withArguments( "clean", "hbmTransform", "--stacktrace", "--no-build-cache" )
-				.forwardOutput();
+				.withArguments( "clean", "hbmTransform", "--stacktrace", "--no-build-cache", "--configuration-cache" );
 		final BuildResult result = gradleRunner.build();
 
 		final BuildTask transformationResult = result.task( ":hbmTransform" );

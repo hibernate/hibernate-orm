@@ -5,8 +5,8 @@
 package org.hibernate.orm.test.jpa.persistenceunit;
 
 import static org.hibernate.internal.util.ConfigHelper.findAsResource;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Collection;
 import java.util.List;
@@ -14,12 +14,11 @@ import java.util.List;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * HHH-8364 discusses the use of <exclude-unlisted-classes> within Java SE environments.  It was intended for Java EE
- * only, but was probably supported in Java SE/Hibernate for user friendliness.  If we are going to supports its use
+ * only, but was probably supported in Java SE/Hibernate for user-friendliness.  If we are going to supports its use
  * like that, the following should happen:
  *
  * Omitted == do scan
@@ -35,7 +34,7 @@ import org.junit.Test;
  * @author Brett Meyer
  */
 @JiraKey(value = "HHH-8364")
-public class ExcludeUnlistedClassesTest extends BaseUnitTestCase {
+public class ExcludeUnlistedClassesTest {
 
 	@Test
 	public void testExcludeUnlistedClasses() {

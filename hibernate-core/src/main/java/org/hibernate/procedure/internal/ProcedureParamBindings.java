@@ -26,6 +26,7 @@ import jakarta.persistence.ParameterMode;
  * @author Steve Ebersole
  */
 public class ProcedureParamBindings implements QueryParameterBindings {
+
 	private static final Logger LOG = Logger.getLogger( QueryParameterBindings.class );
 
 	private final ProcedureParameterMetadataImpl parameterMetadata;

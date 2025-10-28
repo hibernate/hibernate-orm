@@ -6,12 +6,14 @@ package org.hibernate.envers.internal.revisioninfo;
 
 import java.lang.reflect.Constructor;
 
-import org.hibernate.Session;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.EntityTrackingRevisionListener;
 import org.hibernate.envers.RevisionListener;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.synchronization.SessionCacheCleaner;
+import org.hibernate.envers.internal.tools.OrmTools;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.internal.Helper;
@@ -56,12 +58,14 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 	}
 
 	@Override
-	public void saveRevisionData(Session session, Object revisionData) {
-		session.persist( revisionInfoEntityName, revisionData );
+	public void saveRevisionData(SharedSessionContractImplementor session, Object revisionData) {
+		OrmTools.saveData( revisionInfoEntityName, revisionData, session );
 		if ( revisionInfoNumberReader != null && revisionInfoNumberReader.getRevisionNumber( revisionData ).longValue() < 0 ) {
 			throw new AuditException( "Negative revision numbers are not allowed" );
 		}
-		sessionCacheCleaner.scheduleAuditDataRemoval( session, revisionData );
+		if ( session instanceof SessionImplementor statefulSession ) {
+			sessionCacheCleaner.scheduleAuditDataRemoval( statefulSession, revisionData );
+		}
 	}
 
 	@Override

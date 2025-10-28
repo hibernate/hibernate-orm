@@ -7,17 +7,15 @@ package org.hibernate.orm.test.exceptionhandling;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-
-import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.transaction.TransactionUtil;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 @JiraKey(value = "HHH-12666")
 @RequiresDialect(H2Dialect.class)
@@ -30,140 +28,140 @@ public class TransactionExceptionHandlingTest extends BaseExceptionHandlingTest 
 	}
 
 	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				A.class,
-				B.class
-		};
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { A.class, B.class };
+	}
+
+	@AfterEach
+	void tearDown() {
+		//noinspection resource
+		sessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
 	@Test
-	public void testPersistWithGeneratedValue() throws Exception {
-		Session s = openSession();
-		// Get the transaction and set the timeout BEFORE calling begin()
-		Transaction t = s.getTransaction();
-		t.setTimeout( 1 );
-		assertEquals(
-				-1,
-				( (SessionImplementor) s ).getJdbcCoordinator().determineRemainingTransactionTimeOutPeriod()
-		);
-		t.begin();
-		Thread.sleep( 1000 );
-		try {
-			s.persist( new A() );
-			fail( "should have thrown an exception" );
-		}
-		catch (RuntimeException expected){
-			exceptionExpectations.onTransactionExceptionOnPersistAndMergeAndFlush( expected );
-		}
-		finally {
-			t.rollback();
-			s.close();
+	public void testPersistWithGeneratedValue() {
+		//noinspection resource
+		try (var s = sessionFactory().openSession()) {
+			// Get the transaction and set the timeout BEFORE calling begin()
+			Transaction t = s.getTransaction();
+			t.setTimeout( 1 );
+			Assertions.assertEquals( -1, s.getJdbcCoordinator().determineRemainingTransactionTimeOutPeriod() );
+
+			TransactionUtil.inTransaction( s, (SessionImplementor s2) -> {
+				wait(1000);
+				try {
+					s.persist( new A() );
+					Assertions.fail( "should have thrown an exception" );
+				}
+				catch (RuntimeException expected){
+					exceptionExpectations.onTransactionExceptionOnPersistAndMergeAndFlush( expected );
+				}
+			} );
 		}
 	}
 
-	@Test
-	public void testMergeWithGeneratedValue() throws Exception {
-		Session s = openSession();
-		// Get the transaction and set the timeout BEFORE calling begin()
-		Transaction t = s.getTransaction();
-		t.setTimeout( 1 );
-		assertEquals(
-				-1,
-				( (SessionImplementor) s ).getJdbcCoordinator().determineRemainingTransactionTimeOutPeriod()
-		);
-		t.begin();
-		Thread.sleep( 1000 );
+	private void wait(int millis) {
 		try {
-			s.merge( new A() );
-			fail( "should have thrown an exception" );
+			Thread.sleep( millis );
 		}
-		catch (RuntimeException expected){
-			exceptionExpectations.onTransactionExceptionOnPersistAndMergeAndFlush( expected );
-		}
-		finally {
-			t.rollback();
-			s.close();
+		catch (InterruptedException e) {
+			throw new RuntimeException( e );
 		}
 	}
 
 	@Test
-	public void testSaveWithGeneratedValue() throws Exception {
-		Session s = openSession();
-		// Get the transaction and set the timeout BEFORE calling begin()
-		Transaction t = s.getTransaction();
-		t.setTimeout( 1 );
-		assertEquals(
-				-1,
-				( (SessionImplementor) s ).getJdbcCoordinator().determineRemainingTransactionTimeOutPeriod()
-		);
-		t.begin();
-		Thread.sleep( 1000 );
-		try {
-			s.persist( new A() );
-			fail( "should have thrown an exception" );
-		}
-		catch (RuntimeException expected){
-			exceptionExpectations.onTransactionExceptionOnSaveAndSaveOrUpdate( expected );
-		}
-		finally {
-			t.rollback();
-			s.close();
+	public void testMergeWithGeneratedValue() {
+		//noinspection resource
+		try (var s = sessionFactory().openSession()) {
+			// Get the transaction and set the timeout BEFORE calling begin()
+			Transaction t = s.getTransaction();
+			t.setTimeout( 1 );
+			Assertions.assertEquals( -1, s.getJdbcCoordinator().determineRemainingTransactionTimeOutPeriod() );
+
+			TransactionUtil.inTransaction( s, (SessionImplementor s2) -> {
+				wait( 1000 );
+				try {
+					s.merge( new A() );
+					Assertions.fail( "should have thrown an exception" );
+				}
+				catch (RuntimeException expected){
+					exceptionExpectations.onTransactionExceptionOnPersistAndMergeAndFlush( expected );
+				}
+			} );
 		}
 	}
 
 	@Test
-	public void testFlushWithAssignedValue() throws Exception {
-		Session s = openSession();
-		// Get the transaction and set the timeout BEFORE calling begin()
-		Transaction t = s.getTransaction();
-		t.setTimeout( 1 );
-		assertEquals(
-				-1,
-				( (SessionImplementor) s ).getJdbcCoordinator().determineRemainingTransactionTimeOutPeriod()
-		);
-		t.begin();
-		Thread.sleep( 1000 );
-		try {
-			s.persist( new B( 1 ) );
-			s.flush();
-			fail( "should have thrown an exception" );
-		}
-		catch (RuntimeException expected){
-			exceptionExpectations.onTransactionExceptionOnPersistAndMergeAndFlush( expected );
-		}
-		finally {
-			t.rollback();
-			s.close();
+	public void testSaveWithGeneratedValue() {
+		//noinspection resource
+		try (var s = sessionFactory().openSession()) {
+			// Get the transaction and set the timeout BEFORE calling begin()
+			Transaction t = s.getTransaction();
+			t.setTimeout( 1 );
+			Assertions.assertEquals( -1, s.getJdbcCoordinator().determineRemainingTransactionTimeOutPeriod() );
+
+			TransactionUtil.inTransaction( s, (SessionImplementor s2) -> {
+				wait( 1000 );
+				try {
+					s.persist( new A() );
+					Assertions.fail( "should have thrown an exception" );
+				}
+				catch (RuntimeException expected){
+					exceptionExpectations.onTransactionExceptionOnPersistAndMergeAndFlush( expected );
+				}
+			} );
 		}
 	}
 
 	@Test
-	public void testCommitWithAssignedValue() throws Exception {
-		Session s = openSession();
-		// Get the transaction and set the timeout BEFORE calling begin()
-		Transaction t = s.getTransaction();
-		t.setTimeout( 1 );
-		assertEquals(
-				-1,
-				( (SessionImplementor) s ).getJdbcCoordinator().determineRemainingTransactionTimeOutPeriod()
-		);
-		t.begin();
-		Thread.sleep( 1000 );
-		try {
-			s.persist( new B( 1 ) );
-			s.getTransaction().commit();
-			fail( "should have thrown an exception" );
-		}
-		catch (RuntimeException expected){
-			exceptionExpectations.onTransactionExceptionOnCommit( expected );
-		}
-		finally {
-			t.rollback();
-			s.close();
+	public void testFlushWithAssignedValue() {
+		//noinspection resource
+		try (var s = sessionFactory().openSession()) {
+			// Get the transaction and set the timeout BEFORE calling begin()
+			Transaction t = s.getTransaction();
+			t.setTimeout( 1 );
+			Assertions.assertEquals( -1, s.getJdbcCoordinator().determineRemainingTransactionTimeOutPeriod() );
+
+			TransactionUtil.inTransaction( s, (SessionImplementor s2) -> {
+				wait(1000);
+				try {
+					s.persist( new B( 1 ) );
+					s.flush();
+					Assertions.fail( "should have thrown an exception" );
+				}
+				catch (RuntimeException expected){
+					exceptionExpectations.onTransactionExceptionOnPersistAndMergeAndFlush( expected );
+				}
+			} );
 		}
 	}
 
+	@Test
+	public void testCommitWithAssignedValue() {
+		//noinspection resource
+		try (var s = sessionFactory().openSession()) {
+			// Get the transaction and set the timeout BEFORE calling begin()
+			Transaction t = s.getTransaction();
+			t.setTimeout( 1 );
+			Assertions.assertEquals( -1, s.getJdbcCoordinator().determineRemainingTransactionTimeOutPeriod() );
+
+			t.begin();
+			wait(1000);
+			try {
+				s.persist( new B( 1 ) );
+				s.getTransaction().commit();
+				Assertions.fail( "should have thrown an exception" );
+			}
+			catch (RuntimeException expected){
+				exceptionExpectations.onTransactionExceptionOnCommit( expected );
+			}
+			finally {
+				t.rollback();
+			}
+		}
+	}
+
+	@SuppressWarnings("unused")
 	@Entity(name = "A")
 	public static class A {
 		@Id
@@ -171,6 +169,7 @@ public class TransactionExceptionHandlingTest extends BaseExceptionHandlingTest 
 		private long id;
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity(name = "B")
 	public static class B {
 		@Id

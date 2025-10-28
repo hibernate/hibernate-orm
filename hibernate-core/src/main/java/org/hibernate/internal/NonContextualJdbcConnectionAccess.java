@@ -13,23 +13,24 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.monitor.spi.EventMonitor;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
 
 /**
  * @author Steve Ebersole
  */
 public class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {
+	private final boolean readOnly;
 	private final SessionEventListener listener;
 	private final ConnectionProvider connectionProvider;
 	private final SharedSessionContractImplementor session;
 
 	public NonContextualJdbcConnectionAccess(
+			boolean readOnly,
 			SessionEventListener listener,
 			ConnectionProvider connectionProvider,
 			SharedSessionContractImplementor session) {
 		Objects.requireNonNull( listener );
 		Objects.requireNonNull( connectionProvider );
+		this.readOnly = readOnly;
 		this.listener = listener;
 		this.connectionProvider = connectionProvider;
 		this.session = session;
@@ -37,32 +38,35 @@ public class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, 
 
 	@Override
 	public Connection obtainConnection() throws SQLException {
-		final EventMonitor eventMonitor = session.getEventMonitor();
-		final DiagnosticEvent jdbcConnectionAcquisitionEvent = eventMonitor.beginJdbcConnectionAcquisitionEvent();
+		final var eventMonitor = session.getEventMonitor();
+		final var connectionAcquisitionEvent = eventMonitor.beginJdbcConnectionAcquisitionEvent();
 		try {
 			listener.jdbcConnectionAcquisitionStart();
-			return connectionProvider.getConnection();
+			return readOnly
+					? connectionProvider.getReadOnlyConnection()
+					: connectionProvider.getConnection();
 		}
 		finally {
-			eventMonitor.completeJdbcConnectionAcquisitionEvent(
-					jdbcConnectionAcquisitionEvent,
-					session,
-					null
-			);
+			eventMonitor.completeJdbcConnectionAcquisitionEvent( connectionAcquisitionEvent, session, null );
 			listener.jdbcConnectionAcquisitionEnd();
 		}
 	}
 
 	@Override
 	public void releaseConnection(Connection connection) throws SQLException {
-		final EventMonitor eventMonitor = session.getEventMonitor();
-		final DiagnosticEvent jdbcConnectionReleaseEvent = eventMonitor.beginJdbcConnectionReleaseEvent();
+		final var eventMonitor = session.getEventMonitor();
+		final var connectionReleaseEvent = eventMonitor.beginJdbcConnectionReleaseEvent();
 		try {
 			listener.jdbcConnectionReleaseStart();
-			connectionProvider.closeConnection( connection );
+			if ( readOnly ) {
+				connectionProvider.closeReadOnlyConnection( connection );
+			}
+			else {
+				connectionProvider.closeConnection( connection );
+			}
 		}
 		finally {
-			eventMonitor.completeJdbcConnectionReleaseEvent( jdbcConnectionReleaseEvent, session, null );
+			eventMonitor.completeJdbcConnectionReleaseEvent( connectionReleaseEvent, session, null );
 			listener.jdbcConnectionReleaseEnd();
 		}
 	}

@@ -56,11 +56,7 @@ public class OraclePaginationWithLocksTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete from Person" ).executeUpdate()
-
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -166,6 +162,39 @@ public class OraclePaginationWithLocksTest {
 				}
 		);
 
+	}
+
+	@Test
+	public void testHqlQueryBaseline(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			try {
+				List<Person> people = session.createQuery(
+								"select p from Person p", Person.class )
+						.setMaxResults( 10 )
+						.setLockMode( LockModeType.PESSIMISTIC_WRITE )
+						.setFollowOnLocking( false )
+						.getResultList();
+				assertEquals( 10, people.size() );
+				assertSqlContainsFetch( session );
+			}
+			catch (Exception e) {
+				throw new RuntimeException( e );
+			}
+
+			try {
+				List<Person> people = session.createQuery(
+								"select p from Person p where p.name = 'for update'", Person.class )
+						.setMaxResults( 10 )
+						.setLockMode( LockModeType.PESSIMISTIC_WRITE )
+						.setFollowOnLocking( false )
+						.getResultList();
+				assertEquals( 1, people.size() );
+				assertSqlContainsFetch( session );
+			}
+			catch (Exception e) {
+				throw new RuntimeException( e );
+			}
+		} );
 	}
 
 	@Test

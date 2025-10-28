@@ -7,17 +7,13 @@ package org.hibernate.sql.results.graph.embeddable.internal;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -31,9 +27,9 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.embeddable.AggregateEmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.sql.results.graph.embeddable.AggregateEmbeddableResultGraphNode.determineAggregateValuesArrayPositions;
 
 /**
  * A Fetch for an embeddable that is mapped as aggregate e.g. STRUCT, JSON or XML.
@@ -66,7 +62,7 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent
 		this.fetchTiming = fetchTiming;
 		this.hasTableGroup = hasTableGroup;
 
-		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
 		this.tableGroup = sqlAstCreationState.getFromClauseAccess().resolveTableGroup(
 				getNavigablePath(),
 				np -> {
@@ -88,11 +84,11 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent
 
 		);
 
-		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final TableReference tableReference = tableGroup.getPrimaryTableReference();
-		final SelectableMapping selectableMapping = fetchContainer.getAggregateMapping();
+		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final var tableReference = tableGroup.getPrimaryTableReference();
+		final var selectableMapping = fetchContainer.getAggregateMapping();
 		final Expression expression = sqlExpressionResolver.resolveSqlExpression( tableReference, selectableMapping );
-		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
+		final var typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
 		final SqlSelection aggregateSelection = sqlExpressionResolver.resolveSqlSelection(
 				expression,
 				typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Object[].class ),
@@ -100,7 +96,7 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent
 				typeConfiguration
 		);
 		this.discriminatorFetch = creationState.visitEmbeddableDiscriminatorFetch( this, true );
-		this.aggregateValuesArrayPositions = AggregateEmbeddableResultGraphNode.determineAggregateValuesArrayPositions( fetchParent, aggregateSelection );
+		this.aggregateValuesArrayPositions = determineAggregateValuesArrayPositions( fetchParent, aggregateSelection );
 		resetFetches( creationState.visitNestedFetches( this ) );
 	}
 
@@ -162,7 +158,7 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent
 	}
 
 	@Override
-	public DomainResultAssembler createAssembler(
+	public DomainResultAssembler<?> createAssembler(
 			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		return new EmbeddableAssembler( creationState.resolveInitializer( this, parent, this ).asEmbeddableInitializer() );

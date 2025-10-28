@@ -43,11 +43,7 @@ public class BiDirectionalOneToOneFetchTest {
 
 	@AfterEach
 	public void delete(SessionFactoryScope scope) {
-		scope.inTransaction( s -> {
-			s.createQuery( "delete from EntityA" ).executeUpdate();
-			s.createQuery( "delete from EntityB" ).executeUpdate();
-			s.createQuery( "delete from EntityC" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

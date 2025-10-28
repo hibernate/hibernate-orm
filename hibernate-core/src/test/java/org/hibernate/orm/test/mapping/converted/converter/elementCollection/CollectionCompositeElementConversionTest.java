@@ -24,7 +24,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Steve Ebersole
@@ -49,17 +49,13 @@ public class CollectionCompositeElementConversionTest {
 		);
 
 		scope.inTransaction(
-				(session) -> {
-					assertEquals( 1, session.get( Disguise.class, 1 ).traits.size() );
-				}
+				session -> assertEquals( 1, session.find( Disguise.class, 1 ).traits.size() )
 		);
 	}
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.createQuery( "delete Disguise" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "Disguise" )

@@ -69,12 +69,7 @@ public class CiteriaAsExpressionTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Product" ).executeUpdate();
-					entityManager.createQuery( "delete from TestEntity" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

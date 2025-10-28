@@ -4,77 +4,68 @@
  */
 package org.hibernate.orm.test.exceptionhandling;
 
-import java.sql.SQLException;
-import java.util.Map;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.Id;
 import jakarta.persistence.PersistenceException;
-
 import org.hibernate.JDBCException;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import java.sql.SQLException;
 
+import static org.hibernate.cfg.JpaComplianceSettings.JPA_TRANSACTION_COMPLIANCE;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.fail;
+
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( value = "HHH-13737")
 @RequiresDialect(H2Dialect.class)
-public class NonActiveTransactionSessionFindJdbcExceptionHandlingTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = NonActiveTransactionSessionFindJdbcExceptionHandlingTest.AnEntity.class,
+		integrationSettings = @Setting(name = JPA_TRANSACTION_COMPLIANCE, value = "true")
+)
+public class NonActiveTransactionSessionFindJdbcExceptionHandlingTest {
 
 	@Test
-	public void testJdbcExceptionThrown() {
+	public void testJdbcExceptionThrown(EntityManagerFactoryScope factoryScope) {
 		// delete "description" column so that a JDBCException caused by a SQLException is thrown when looking up the AnEntity
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
-					entityManager.createNativeQuery( "alter table AnEntity drop column description" ).executeUpdate();
-				}
-		);
+		factoryScope.inTransaction( (entityManager) -> {
+			entityManager.createNativeQuery( "alter table AnEntity drop column description" ).executeUpdate();
+		} );
 
-		EntityManager entityManager = getOrCreateEntityManager();
-		try {
-			entityManager.find( AnEntity.class, 1 );
-			fail( "A PersistenceException should have been thrown." );
-		}
-		catch ( PersistenceException ex ) {
-			assertTrue( JDBCException.class.isInstance( ex ) );
-			assertTrue( SQLException.class.isInstance( ex.getCause() ) );
-		}
-		finally {
-			entityManager.close();
-		}
+		factoryScope.inTransaction( (entityManager) -> {
+			try {
+				entityManager.find( AnEntity.class, 1 );
+				fail( "A PersistenceException should have been thrown." );
+			}
+			catch ( PersistenceException ex ) {
+				assertInstanceOf( JDBCException.class, ex );
+				assertInstanceOf( SQLException.class, ex.getCause() );
+			}
+		} );
 	}
 
-	@Before
-	public void setupData() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
-					entityManager.persist( new AnEntity( 1, "description" ) );
-				}
-		);
+	@AfterEach
+	void tearDown(EntityManagerFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
-	@Override
-	@SuppressWarnings("unchecked")
-	protected void addMappings(Map settings) {
-		settings.put( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, true);
+	@BeforeEach
+	public void setupData(EntityManagerFactoryScope factoryScope) {
+		factoryScope.inTransaction( (entityManager) -> {
+			entityManager.persist( new AnEntity( 1, "description" ) );
+		} );
 	}
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { AnEntity.class };
-	}
-
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity(name = "AnEntity")
 	public static class AnEntity {
 		@Id

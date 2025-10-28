@@ -41,12 +41,12 @@ public abstract class AbstractUpdateRowsCoordinator implements UpdateRowsCoordin
 
 	@Override
 	public void updateRows(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
-		MODEL_MUTATION_LOGGER.tracef( "Updating collection rows - %s#%s", mutationTarget.getRolePath(), key );
+		MODEL_MUTATION_LOGGER.updatingCollectionRows( mutationTarget.getRolePath(), key );
 
 		// update all the modified entries
 		int count = doUpdate( key, collection, session );
 
-		MODEL_MUTATION_LOGGER.debugf( "Updated `%s` collection rows - %s#%s", count, mutationTarget.getRolePath(), key );
+		MODEL_MUTATION_LOGGER.updatedCollectionRows( count, mutationTarget.getRolePath(), key );
 	}
 
 	protected abstract int doUpdate(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session);

@@ -25,7 +25,7 @@ import static org.hibernate.sql.results.graph.DomainResultGraphPrinter.Logging.A
 public class DomainResultGraphPrinter {
 	@SubSystemLogging(
 			name = Logging.LOGGER_NAME,
-			description = "Logging of `DomainResult` graphs"
+			description = "Logging of DomainResult graphs"
 	)
 	@Internal
 	interface Logging {
@@ -34,16 +34,13 @@ public class DomainResultGraphPrinter {
 	}
 
 	public static void logDomainResultGraph(List<DomainResult<?>> domainResults) {
-		logDomainResultGraph( "DomainResult Graph", domainResults );
+		logDomainResultGraph( "DomainResult graph", domainResults );
 	}
 
 	public static void logDomainResultGraph(String header, List<DomainResult<?>> domainResults) {
-		if ( !AST_LOGGER.isDebugEnabled() ) {
-			return;
+		if ( AST_LOGGER.isTraceEnabled() ) {
+			new DomainResultGraphPrinter( header ).visitDomainResults( domainResults );
 		}
-
-		final DomainResultGraphPrinter graphPrinter = new DomainResultGraphPrinter( header );
-		graphPrinter.visitDomainResults( domainResults );
 	}
 
 	private final StringBuilder buffer;
@@ -64,11 +61,7 @@ public class DomainResultGraphPrinter {
 			visitGraphNode( domainResult, lastInBranch );
 		}
 
-		AST_LOGGER.debug( buffer.toString() );
-
-		if ( AST_LOGGER.isTraceEnabled() ) {
-			AST_LOGGER.tracef( new Exception(), "Stack trace calling DomainResultGraphPrinter" );
-		}
+		AST_LOGGER.trace( buffer.toString() );
 	}
 
 	private void visitGraphNode(DomainResultGraphNode node, boolean lastInBranch) {
@@ -96,10 +89,6 @@ public class DomainResultGraphPrinter {
 		if ( node instanceof FetchParent fetchParent ) {
 			visitFetches( fetchParent );
 		}
-	}
-
-	private void visitKeyGraphNode(DomainResultGraphNode node, boolean lastInBranch) {
-		visitGraphNode( node, lastInBranch, "(key) " + node.getClass().getSimpleName() );
 	}
 
 	private void visitFetches(FetchParent fetchParent) {

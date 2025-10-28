@@ -22,11 +22,11 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
@@ -43,7 +43,7 @@ import static org.junit.Assert.fail;
 public class ImmutableNaturalIdTest {
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.createQuery( "delete User" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -56,7 +56,7 @@ public class ImmutableNaturalIdTest {
 		assertFalse( userNameMapping.getAttributeMetadata().isNullable() );
 
 		final EntityPersister persister = entityMappingType.getEntityPersister();
-		final int propertyIndex = persister.getEntityMetamodel().getPropertyIndex( "userName" );
+		final int propertyIndex = persister.getPropertyIndex( "userName" );
 		// nullability is not specified, so it should be non-nullable by hbm-specific default
 		assertFalse( persister.getPropertyNullability()[propertyIndex] );
 	}
@@ -75,10 +75,7 @@ public class ImmutableNaturalIdTest {
 		detachedUser.setUserName( "Steve" );
 		try {
 			scope.inTransaction(
-					(session) -> {
-						session.merge( detachedUser );
-					}
-			);
+					(session) -> session.merge( detachedUser ) );
 			fail();
 		}
 		catch (PersistenceException expected) {

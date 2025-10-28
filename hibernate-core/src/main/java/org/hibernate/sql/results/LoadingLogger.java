@@ -31,7 +31,6 @@ import static org.jboss.logging.Logger.Level.DEBUG;
 public interface LoadingLogger extends BasicLogger {
 	String LOGGER_NAME = ResultsLogger.LOGGER_NAME + ".loading";
 
-	Logger LOGGER = Logger.getLogger( LOGGER_NAME );
 	LoadingLogger LOADING_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), LoadingLogger.class, LOGGER_NAME );
 
 	static String subLoggerName(String subName) {
@@ -41,9 +40,6 @@ public interface LoadingLogger extends BasicLogger {
 	static Logger subLogger(String subName) {
 		return Logger.getLogger( subLoggerName( subName ) );
 	}
-
-	boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
-	boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
 
 	@LogMessage(level = DEBUG)
 	@Message(id = 90005801,

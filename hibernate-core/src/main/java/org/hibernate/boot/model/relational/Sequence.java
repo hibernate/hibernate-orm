@@ -56,11 +56,7 @@ public class Sequence implements ContributableDatabaseObject {
 			int incrementSize,
 			String options) {
 		this.contributor = contributor;
-		this.name = new QualifiedSequenceName(
-				catalogName,
-				schemaName,
-				sequenceName
-		);
+		this.name = new QualifiedSequenceName( catalogName, schemaName, sequenceName );
 		this.exportIdentifier = name.render();
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
@@ -97,8 +93,7 @@ public class Sequence implements ContributableDatabaseObject {
 		if ( this.initialValue != initialValue ) {
 			throw new HibernateException(
 					String.format(
-							"Multiple references to database sequence [%s] were encountered attempting to " +
-									"set conflicting values for 'initial value'.  Found [%s] and [%s]",
+							"Multiple generators using the database sequence '%s' are defined, with conflicting 'initialValue' specifications: %s, %s",
 							exportIdentifier,
 							this.initialValue,
 							initialValue
@@ -108,8 +103,7 @@ public class Sequence implements ContributableDatabaseObject {
 		if ( this.incrementSize != incrementSize ) {
 			throw new HibernateException(
 					String.format(
-							"Multiple references to database sequence [%s] were encountered attempting to " +
-									"set conflicting values for 'increment size'.  Found [%s] and [%s]",
+							"Multiple generators using the database sequence '%s' are defined, with conflicting 'allocationSize' specifications: %s, %s",
 							exportIdentifier,
 							this.incrementSize,
 							incrementSize

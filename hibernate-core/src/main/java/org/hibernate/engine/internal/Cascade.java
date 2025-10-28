@@ -6,7 +6,6 @@ package org.hibernate.engine.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.HibernateException;
@@ -14,14 +13,10 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingAction;
-import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.AnyType;
@@ -36,6 +31,7 @@ import org.hibernate.type.Type;
 
 import static java.util.Collections.EMPTY_LIST;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
@@ -46,7 +42,6 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  * @see CascadingAction
  */
 public final class Cascade {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Cascade.class );
 
 	private Cascade() {
 		// NOP
@@ -82,9 +77,9 @@ public final class Cascade {
 			final Object parent,
 			final T anything) throws HibernateException {
 		if ( action.anythingToCascade( persister ) ) { // performance opt
-			final boolean traceEnabled = LOG.isTraceEnabled();
+			final boolean traceEnabled = CORE_LOGGER.isTraceEnabled();
 			if ( traceEnabled ) {
-				LOG.tracev( "Processing cascade {0} for: {1}", action, persister.getEntityName() );
+				CORE_LOGGER.processingCascade( action, persister.getEntityName() );
 			}
 			final var bytecodeEnhancement = persister.getBytecodeEnhancementMetadata();
 			final EntityEntry entry;
@@ -102,11 +97,11 @@ public final class Cascade {
 
 			final Type[] types = persister.getPropertyTypes();
 			final String[] propertyNames = persister.getPropertyNames();
-			final CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
+			final var cascadeStyles = persister.getPropertyCascadeStyles();
 			final boolean hasUninitializedLazyProperties = bytecodeEnhancement.hasUnFetchedAttributes( parent );
 
 			for ( int i = 0; i < types.length; i++) {
-				final CascadeStyle style = cascadeStyles[ i ];
+				final var style = cascadeStyles[ i ];
 				final String propertyName = propertyNames[ i ];
 				final Type type = types[i];
 				final boolean isUninitializedProperty =
@@ -194,7 +189,7 @@ public final class Cascade {
 			}
 
 			if ( traceEnabled ) {
-				LOG.tracev( "Done processing cascade {0} for: {1}", action, persister.getEntityName() );
+				CORE_LOGGER.doneProcessingCascade( action, persister.getEntityName() );
 			}
 		}
 	}
@@ -290,8 +285,8 @@ public final class Cascade {
 		if ( style.hasOrphanDelete() && action.deleteOrphans() ) {
 			// value is orphaned if loaded state for this property shows not null
 			// because it is currently null.
-			final PersistenceContext persistenceContext = eventSource.getPersistenceContextInternal();
-			final EntityEntry entry = persistenceContext.getEntry( parent );
+			final var persistenceContext = eventSource.getPersistenceContextInternal();
+			final var entry = persistenceContext.getEntry( parent );
 			if ( entry != null && entry.getStatus() != Status.SAVING ) {
 				Object loadedValue;
 				if ( componentPath == null ) {
@@ -326,13 +321,11 @@ public final class Cascade {
 				// entity is managed (without first nulling and manually flushing).
 				if ( child == null || loadedValue != null && child != loadedValue ) {
 					EntityEntry valueEntry = persistenceContext.getEntry( loadedValue );
-
 					if ( valueEntry == null && isHibernateProxy( loadedValue ) ) {
 						// un-proxy and re-associate for cascade operation
 						// useful for @OneToOne defined as FetchType.LAZY
 						loadedValue = persistenceContext.unproxyAndReassociate( loadedValue );
 						valueEntry = persistenceContext.getEntry( loadedValue );
-
 						// HHH-11965
 						// Should the unwrapped proxy value be equal via reference to the entity's property value
 						// provided by the 'child' variable, we should not trigger the orphan removal of the
@@ -344,15 +337,12 @@ public final class Cascade {
 					}
 
 					if ( valueEntry != null ) {
-						final EntityPersister persister = valueEntry.getPersister();
+						final var persister = valueEntry.getPersister();
 						final String entityName = persister.getEntityName();
-						if ( LOG.isTraceEnabled() ) {
-							LOG.tracev(
-									"Deleting orphaned entity instance: {0}",
-									infoString( entityName, persister.getIdentifier( loadedValue, eventSource ) )
-							);
+						if ( CORE_LOGGER.isTraceEnabled() ) {
+							CORE_LOGGER.deletingOrphan(
+									infoString( entityName, persister.getIdentifier( loadedValue, eventSource ) ) );
 						}
-
 						if ( isForeignKeyToParent( type ) ) {
 							// If FK direction is to-parent, we must remove the orphan *before* the queued update(s)
 							// occur. Otherwise, replacing the association on a managed entity, without manually
@@ -489,10 +479,10 @@ public final class Cascade {
 			final CascadeStyle style,
 			final T anything,
 			final CollectionType type) {
-		final CollectionPersister persister =
+		final var persister =
 				eventSource.getFactory().getMappingMetamodel()
 						.getCollectionDescriptor( type.getRole() );
-		final Type elemType = persister.getElementType();
+		final var elemType = persister.getElementType();
 		//cascade to current collection elements
 		if ( elemType instanceof EntityType || elemType instanceof AnyType || elemType instanceof ComponentType ) {
 			cascadeCollectionElements(
@@ -532,15 +522,18 @@ public final class Cascade {
 			final List<String> componentPath) {
 		if ( style.reallyDoCascade( action ) ) {
 			//not really necessary, but good for consistency...
-			final PersistenceContext persistenceContext = eventSource.getPersistenceContextInternal();
+			final var persistenceContext = eventSource.getPersistenceContextInternal();
 			persistenceContext.addChildParent( child, parent );
+			final String childEntityName =
+					type instanceof EntityType entityType
+							? entityType.getAssociatedEntityName()
+							: null;
+			CORE_LOGGER.cascading( action, childEntityName );
 			try {
 				action.cascade(
 						eventSource,
 						child,
-						type instanceof EntityType entityType
-								? entityType.getAssociatedEntityName()
-								: null,
+						childEntityName,
 						parentEntityName,
 						propertyName,
 						componentPath,
@@ -574,14 +567,12 @@ public final class Cascade {
 
 		final boolean reallyDoCascade = style.reallyDoCascade( action )
 				&& child != CollectionType.UNFETCHED_COLLECTION;
-
 		if ( reallyDoCascade ) {
-			final boolean traceEnabled = LOG.isTraceEnabled();
+			final boolean traceEnabled = CORE_LOGGER.isTraceEnabled();
 			if ( traceEnabled ) {
-				LOG.tracev( "Cascade {0} for collection: {1}", action, collectionType.getRole() );
+				CORE_LOGGER.cascadingCollection( action, collectionType.getRole() );
 			}
-
-			final Iterator<?> iterator = action.getCascadableChildrenIterator( eventSource, collectionType, child );
+			final var iterator = action.getCascadableChildrenIterator( eventSource, collectionType, child );
 			while ( iterator.hasNext() ) {
 				cascadeProperty(
 						action,
@@ -599,14 +590,13 @@ public final class Cascade {
 						isCascadeDeleteEnabled
 				);
 			}
-
 			if ( traceEnabled ) {
-				LOG.tracev( "Done cascade {0} for collection: {1}", action, collectionType.getRole() );
+				CORE_LOGGER.doneCascadingCollection( action, collectionType.getRole() );
 			}
 		}
 
 		// a newly instantiated collection can't have orphans
-		final PersistentCollection<?> persistentCollection =
+		final var persistentCollection =
 				child instanceof PersistentCollection<?> collection
 						? collection
 						: eventSource.getPersistenceContextInternal()
@@ -620,18 +610,17 @@ public final class Cascade {
 				&& !persistentCollection.isNewlyInstantiated();
 
 		if ( deleteOrphans ) {
-			final boolean traceEnabled = LOG.isTraceEnabled();
+			final boolean traceEnabled = CORE_LOGGER.isTraceEnabled();
 			if ( traceEnabled ) {
-				LOG.tracev( "Deleting orphans for collection: {0}", collectionType.getRole() );
+				CORE_LOGGER.deletingOrphans( collectionType.getRole() );
 			}
 			// we can do the cast since orphan-delete does not apply to:
 			// 1. newly instantiated collections
 			// 2. arrays (we can't track orphans for detached arrays)
 			final String elementEntityName = collectionType.getAssociatedEntityName( eventSource.getFactory() );
 			deleteOrphans( eventSource, elementEntityName, persistentCollection );
-
 			if ( traceEnabled ) {
-				LOG.tracev( "Done deleting orphans for collection: {0}", collectionType.getRole() );
+				CORE_LOGGER.doneDeletingOrphans( collectionType.getRole() );
 			}
 		}
 	}
@@ -639,22 +628,27 @@ public final class Cascade {
 	/**
 	 * Delete any entities that were removed from the collection
 	 */
-	private static void deleteOrphans(EventSource eventSource, String entityName, PersistentCollection<?> pc) {
+	private static void deleteOrphans(EventSource eventSource, String entityName, PersistentCollection<?> collection) {
 		//TODO: suck this logic into the collection!
-		final Collection<?> orphans;
-		if ( pc.wasInitialized() ) {
-			final CollectionEntry entry = eventSource.getPersistenceContextInternal().getCollectionEntry( pc );
-			orphans = entry == null ? EMPTY_LIST : entry.getOrphans( entityName, pc );
-		}
-		else {
-			orphans = pc.getQueuedOrphans( entityName );
-		}
-
-		for ( Object orphan : orphans ) {
+		for ( Object orphan : getOrphans( eventSource, entityName, collection ) ) {
 			if ( orphan != null ) {
-				LOG.tracev( "Deleting orphaned entity instance: {0}", entityName );
+				CORE_LOGGER.deletingOrphanOfType( entityName );
 				eventSource.delete( entityName, orphan, false, DeleteContext.create() );
 			}
+		}
+	}
+
+	private static Collection<?> getOrphans(EventSource eventSource, String entityName, PersistentCollection<?> collection) {
+		if ( collection.wasInitialized() ) {
+			final var collectionEntry =
+					eventSource.getPersistenceContextInternal()
+							.getCollectionEntry( collection );
+			return collectionEntry == null
+					? EMPTY_LIST
+					: collectionEntry.getOrphans( entityName, collection );
+		}
+		else {
+			return collection.getQueuedOrphans( entityName );
 		}
 	}
 
@@ -665,7 +659,7 @@ public final class Cascade {
 
 	private static <T> boolean cascadeDeleteEnabled(CascadingAction<T> action, EntityPersister persister, int i) {
 		return action.directionAffectedByCascadeDelete() == ForeignKeyDirection.TO_PARENT
-			&& persister.getEntityMetamodel().getPropertyOnDeleteActions()[i] == OnDeleteAction.CASCADE;
+			&& persister.getPropertyOnDeleteActions()[i] == OnDeleteAction.CASCADE;
 	}
 
 	private static <T> boolean cascadeDeleteEnabled(CascadingAction<T> action, CompositeType componentType, int i) {

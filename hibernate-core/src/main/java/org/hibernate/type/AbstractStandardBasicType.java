@@ -298,11 +298,10 @@ public abstract class AbstractStandardBasicType<T>
 	@Override
 	@SuppressWarnings("unchecked")
 	public final Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map<Object, Object> copyCache) {
-		if ( original == null && target == null ) {
-			return null;
-		}
+		return original == null && target == null
+				? null
+				: javaType.getReplacement( (T) original, (T) target, session );
 
-		return javaType.getReplacement( (T) original, (T) target, session );
 	}
 
 	@Override

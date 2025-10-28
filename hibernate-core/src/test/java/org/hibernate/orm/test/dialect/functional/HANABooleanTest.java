@@ -4,9 +4,8 @@
  */
 package org.hibernate.orm.test.dialect.functional;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.sql.PreparedStatement;
 
@@ -14,13 +13,19 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PersistenceException;
 
-import org.hibernate.Session;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.query.Query;
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests the correctness of the parameter hibernate.dialect.hana.use_legacy_boolean_type which controls the mapping of
@@ -30,14 +35,15 @@ import org.junit.Test;
  * @author Jonathan Bregler
  */
 @RequiresDialect(HANADialect.class)
-public class HANABooleanTest extends BaseCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = {HANABooleanTest.BooleanEntity.class, HANABooleanTest.LegacyBooleanEntity.class})
+public class HANABooleanTest {
 
 	private static final String ENTITY_NAME = "BooleanEntity";
 	private static final String LEGACY_ENTITY_NAME = "LegacyBooleanEntity";
 
-	@Override
-	protected void prepareTest() throws Exception {
-		doInHibernate( this::sessionFactory, session -> {
+	@BeforeEach
+	protected void prepareTest(SessionFactoryScope scope) throws Exception {
+		scope.inTransaction( session -> {
 			session.doWork( connection -> {
 				try ( PreparedStatement ps = connection
 						.prepareStatement( "CREATE COLUMN TABLE " + ENTITY_NAME + " (key INTEGER, bool BOOLEAN, PRIMARY KEY (key))" ) ) {
@@ -52,9 +58,9 @@ public class HANABooleanTest extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
-	@Override
-	protected void cleanupTest() throws Exception {
-		doInHibernate( this::sessionFactory, session -> {
+	@AfterEach
+	protected void cleanupTest(SessionFactoryScope scope) throws Exception {
+		scope.inTransaction( session -> {
 			session.doWork( connection -> {
 				try ( PreparedStatement ps = connection.prepareStatement( "DROP TABLE " + ENTITY_NAME ) ) {
 					ps.execute();
@@ -75,155 +81,115 @@ public class HANABooleanTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-12132")
-	public void testBooleanType() throws Exception {
-		rebuildSessionFactory( configuration -> {
-			configuration.setProperty( "hibernate.dialect.hana.use_legacy_boolean_type", Boolean.FALSE.toString() );
+	@SessionFactory(exportSchema = false)
+	@ServiceRegistry(settings = {
+			@Setting( name = "hibernate.dialect.hana.use_legacy_boolean_type", value = "false")
+	})
+	public void testBooleanType(SessionFactoryScope scope) {
+		scope.inTransaction(  session -> {
+			BooleanEntity entity = new BooleanEntity();
+			entity.key = 1;
+			entity.bool = Boolean.TRUE;
+
+			session.persist( entity );
 		} );
 
-		Session s = openSession();
-		s.beginTransaction();
+		scope.inTransaction( session -> {
+			Query<BooleanEntity> query = session.createQuery( "select b from " + ENTITY_NAME + " b where bool = true", BooleanEntity.class );
+			BooleanEntity retrievedEntity = query.getSingleResult();
 
-		BooleanEntity entity = new BooleanEntity();
-		entity.key = Integer.valueOf( 1 );
-		entity.bool = Boolean.TRUE;
-
-		s.persist( entity );
-
-		s.flush();
-
-		s.getTransaction().commit();
-
-		s.clear();
-
-		Query<BooleanEntity> legacyQuery = s.createQuery( "select b from " + ENTITY_NAME + " b where bool = true", BooleanEntity.class );
-
-		BooleanEntity retrievedEntity = legacyQuery.getSingleResult();
-
-		assertEquals( Integer.valueOf( 1 ), retrievedEntity.key );
-		assertTrue( retrievedEntity.bool );
+			assertEquals( Integer.valueOf( 1 ), retrievedEntity.key );
+			assertTrue( retrievedEntity.bool );
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-12132")
-	public void testBooleanTypeDefaultBehavior() throws Exception {
-		rebuildSessionFactory();
+	@SessionFactory(exportSchema = false)
+	public void testBooleanTypeDefaultBehavior(SessionFactoryScope scope) {
+		scope.inTransaction(  session -> {
+			BooleanEntity entity = new BooleanEntity();
+			entity.key = 1;
+			entity.bool = Boolean.TRUE;
 
-		Session s = openSession();
-		s.beginTransaction();
-
-		BooleanEntity entity = new BooleanEntity();
-		entity.key = Integer.valueOf( 1 );
-		entity.bool = Boolean.TRUE;
-
-		s.persist( entity );
-
-		s.flush();
-
-		s.getTransaction().commit();
-
-		s.clear();
-
-		Query<BooleanEntity> legacyQuery = s.createQuery( "select b from " + ENTITY_NAME + " b where bool = true", BooleanEntity.class );
-
-		BooleanEntity retrievedEntity = legacyQuery.getSingleResult();
-
-		assertEquals( Integer.valueOf( 1 ), retrievedEntity.key );
-		assertTrue( retrievedEntity.bool );
-	}
-
-	@Test(expected = PersistenceException.class)
-	@JiraKey(value = "HHH-12132")
-	public void testLegacyBooleanType() throws Exception {
-		rebuildSessionFactory( configuration -> {
-			configuration.setProperty( "hibernate.dialect.hana.use_legacy_boolean_type", Boolean.FALSE.toString() );
+			session.persist( entity );
 		} );
 
-		Session s = openSession();
-		s.beginTransaction();
+		scope.inTransaction(  session -> {
+			Query<BooleanEntity> query = session.createQuery( "select b from " + ENTITY_NAME + " b where bool = true", BooleanEntity.class );
+			BooleanEntity retrievedEntity = query.getSingleResult();
 
-		LegacyBooleanEntity legacyEntity = new LegacyBooleanEntity();
-		legacyEntity.key = Integer.valueOf( 2 );
-		legacyEntity.bool = Boolean.FALSE;
+			assertEquals( Integer.valueOf( 1 ), retrievedEntity.key );
+			assertTrue( retrievedEntity.bool );
+		} );
+	}
 
-		s.persist( legacyEntity );
-		s.flush();
+	@Test/*(expected = PersistenceException.class)*/
+	@JiraKey(value = "HHH-12132")
+	@SessionFactory(exportSchema = false)
+	@ServiceRegistry(settings = {
+			@Setting( name = "hibernate.dialect.hana.use_legacy_boolean_type", value = "false")
+	})
+	public void testLegacyBooleanType(SessionFactoryScope scope) throws Exception {
+		scope.inTransaction(  session -> {
+			LegacyBooleanEntity entity = new LegacyBooleanEntity();
+			entity.key = 2;
+			entity.bool = Boolean.FALSE;
 
-		s.getTransaction().commit();
+			session.persist( entity );
+		} );
 
-		s.clear();
-
-		Query<LegacyBooleanEntity> query = s.createQuery( "select b from " + LEGACY_ENTITY_NAME + " b where bool = true", LegacyBooleanEntity.class );
-
-		query.getSingleResult();
+		scope.inTransaction(   session -> {
+			Query<LegacyBooleanEntity> query = session.createQuery( "select b from " + LEGACY_ENTITY_NAME + " b where bool = true", LegacyBooleanEntity.class );
+			Assertions.assertThrows( PersistenceException.class, () -> query.getSingleResult() );
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-12132")
-	public void testLegacyBooleanTypeLegacyBehavior() throws Exception {
-		rebuildSessionFactory( configuration -> {
-			configuration.setProperty( "hibernate.dialect.hana.use_legacy_boolean_type", Boolean.TRUE.toString() );
+	@SessionFactory(exportSchema = false)
+	@ServiceRegistry(settings = {
+			@Setting( name = "hibernate.dialect.hana.use_legacy_boolean_type", value = "true")
+	})
+	public void testLegacyBooleanTypeLegacyBehavior(SessionFactoryScope scope) throws Exception {
+		scope.inTransaction(  session -> {
+			LegacyBooleanEntity entity = new LegacyBooleanEntity();
+			entity.key = 1;
+			entity.bool = Boolean.TRUE;
+
+			session.persist( entity );
 		} );
 
-		Session s = openSession();
-		s.beginTransaction();
+		scope.inTransaction(   session -> {
+			Query<LegacyBooleanEntity> query = session.createQuery( "select b from " + LEGACY_ENTITY_NAME + " b where bool = true", LegacyBooleanEntity.class );
+			LegacyBooleanEntity retrievedEntity = query.getSingleResult();
 
-		LegacyBooleanEntity legacyEntity = new LegacyBooleanEntity();
-		legacyEntity.key = Integer.valueOf( 1 );
-		legacyEntity.bool = Boolean.TRUE;
-
-		s.persist( legacyEntity );
-
-		s.flush();
-
-		s.getTransaction().commit();
-
-		s.clear();
-
-		Query<LegacyBooleanEntity> legacyQuery = s.createQuery( "select b from " + LEGACY_ENTITY_NAME + " b where bool = true", LegacyBooleanEntity.class );
-
-		LegacyBooleanEntity retrievedEntity = legacyQuery.getSingleResult();
-
-		assertEquals( Integer.valueOf( 1 ), retrievedEntity.key );
-		assertTrue( retrievedEntity.bool );
+			assertEquals( Integer.valueOf( 1 ), retrievedEntity.key );
+			assertTrue( retrievedEntity.bool );
+		} );
 	}
 
-	@Test(expected = PersistenceException.class)
+	@Test/*(expected = PersistenceException.class)*/
 	@JiraKey(value = "HHH-12132")
-	public void testBooleanTypeLegacyBehavior() throws Exception {
-		rebuildSessionFactory( configuration -> {
-			configuration.setProperty( "hibernate.dialect.hana.use_legacy_boolean_type", Boolean.TRUE.toString() );
+	@SessionFactory(exportSchema = false)
+	@ServiceRegistry(settings = {
+			@Setting( name = "hibernate.dialect.hana.use_legacy_boolean_type", value = "true")
+	})
+	public void testBooleanTypeLegacyBehavior(SessionFactoryScope scope) throws Exception {
+		scope.inTransaction(  session -> {
+			BooleanEntity entity = new BooleanEntity();
+			entity.key = 2;
+			entity.bool = Boolean.FALSE;
+
+			session.persist( entity );
 		} );
 
-		Session s = openSession();
-		s.beginTransaction();
-
-		BooleanEntity entity = new BooleanEntity();
-		entity.key = Integer.valueOf( 2 );
-		entity.bool = Boolean.FALSE;
-
-		s.persist( entity );
-		s.flush();
-
-		s.getTransaction().commit();
-
-		s.clear();
-
-		Query<BooleanEntity> query = s.createQuery( "select b from " + ENTITY_NAME + " b where bool = true", BooleanEntity.class );
-
-		query.getSingleResult();
+		scope.inTransaction(   session -> {
+			Query<BooleanEntity> query = session.createQuery( "select b from " + ENTITY_NAME + " b where bool = true", BooleanEntity.class );
+			Assertions.assertThrows( PersistenceException.class, () -> query.getSingleResult() );
+		} );
 	}
 
-	@Override
-	protected boolean createSchema() {
-		return false;
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{
-				BooleanEntity.class, LegacyBooleanEntity.class
-		};
-	}
 
 	@Entity(name = LEGACY_ENTITY_NAME)
 	public static class LegacyBooleanEntity {

@@ -5,7 +5,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.HibernateException;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.FullNameImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatorValueDetails;
@@ -13,7 +12,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.java.CharacterJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
@@ -22,6 +20,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static org.hibernate.Hibernate.unproxy;
+import static org.hibernate.internal.util.collections.CollectionHelper.concurrentMap;
 import static org.hibernate.persister.entity.DiscriminatorHelper.NOT_NULL_DISCRIMINATOR;
 import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINATOR;
 
@@ -48,11 +48,11 @@ public class UnifiedAnyDiscriminatorConverter<O,R> extends DiscriminatorConverte
 
 		this.implicitValueStrategy = resolveImplicitValueStrategy( implicitValueStrategy, explicitValueMappings );
 
-		this.detailsByValue = CollectionHelper.concurrentMap( explicitValueMappings.size() );
-		this.detailsByEntityName = CollectionHelper.concurrentMap( explicitValueMappings.size() );
+		detailsByValue = concurrentMap( explicitValueMappings.size() );
+		detailsByEntityName = concurrentMap( explicitValueMappings.size() );
 		explicitValueMappings.forEach( (value,entityName) -> {
 			final String importedEntityName = mappingMetamodel.getImportedName( entityName );
-			final EntityPersister entityMapping = mappingMetamodel.getEntityDescriptor( importedEntityName );
+			final var entityMapping = mappingMetamodel.getEntityDescriptor( importedEntityName );
 			register( value, entityMapping );
 		} );
 	}
@@ -75,7 +75,7 @@ public class UnifiedAnyDiscriminatorConverter<O,R> extends DiscriminatorConverte
 	}
 
 	private DiscriminatorValueDetails register(Object value, EntityMappingType entityMapping) {
-		final DiscriminatorValueDetails details = new DiscriminatorValueDetailsImpl( value, entityMapping );
+		final var details = new DiscriminatorValueDetailsImpl( value, entityMapping );
 		detailsByValue.put( value, details );
 		detailsByEntityName.put( entityMapping.getEntityName(), details );
 		return details;
@@ -95,36 +95,28 @@ public class UnifiedAnyDiscriminatorConverter<O,R> extends DiscriminatorConverte
 			return detailsByValue.get( NULL_DISCRIMINATOR );
 		}
 
-		final DiscriminatorValueDetails existing = detailsByValue.get( relationalValue );
+		final var existing = detailsByValue.get( relationalValue );
 		if ( existing != null ) {
 			return existing;
 		}
 
 		if ( relationalValue.getClass().isEnum() ) {
-			final Object enumValue;
-			if ( getRelationalJavaType() instanceof StringJavaType ) {
-				enumValue = ( (Enum<?>) relationalValue ).name();
-			}
-			else if ( getRelationalJavaType() instanceof CharacterJavaType ) {
-				enumValue = ( (Enum<?>) relationalValue ).name().charAt( 0 );
-			}
-			else {
-				enumValue = ( (Enum<?>) relationalValue ).ordinal();
-			}
-			final DiscriminatorValueDetails enumMatch = detailsByValue.get( enumValue );
+			final Object enumValue = enumValue( (Enum<?>) relationalValue );
+			final var enumMatch = detailsByValue.get( enumValue );
 			if ( enumMatch != null ) {
 				return enumMatch;
 			}
 		}
 
 		if ( implicitValueStrategy != null ) {
-			final EntityMappingType entityMapping = implicitValueStrategy.toEntityMapping( relationalValue, discriminatorRole, mappingMetamodel );
+			final var entityMapping =
+					implicitValueStrategy.toEntityMapping( relationalValue, discriminatorRole, mappingMetamodel );
 			if ( entityMapping != null ) {
 				return register( relationalValue, entityMapping );
 			}
 		}
 
-		final DiscriminatorValueDetails nonNullMatch = detailsByValue.get( NOT_NULL_DISCRIMINATOR );
+		final var nonNullMatch = detailsByValue.get( NOT_NULL_DISCRIMINATOR );
 		if ( nonNullMatch != null ) {
 			return nonNullMatch;
 		}
@@ -132,15 +124,28 @@ public class UnifiedAnyDiscriminatorConverter<O,R> extends DiscriminatorConverte
 		throw new HibernateException( "Unknown discriminator value (" + discriminatorRole.getFullPath() + ") : " + relationalValue );
 	}
 
+	private Object enumValue(Enum<?> relationalEnum) {
+		final var relationalJavaType = getRelationalJavaType();
+		if ( relationalJavaType instanceof StringJavaType ) {
+			return relationalEnum.name();
+		}
+		else if ( relationalJavaType instanceof CharacterJavaType ) {
+			return relationalEnum.name().charAt( 0 );
+		}
+		else {
+			return relationalEnum.ordinal();
+		}
+	}
+
 	@Override
 	public DiscriminatorValueDetails getDetailsForEntityName(String entityName) {
-		final DiscriminatorValueDetails existing = detailsByEntityName.get( entityName );
+		final var existing = detailsByEntityName.get( entityName );
 		if ( existing != null) {
 			return existing;
 		}
 
 		if ( implicitValueStrategy != null ) {
-			final EntityMappingType entityMapping = mappingMetamodel.getEntityDescriptor( entityName );
+			final var entityMapping = mappingMetamodel.getEntityDescriptor( entityName );
 			assert entityMapping != null;
 			final Object discriminatorValue = implicitValueStrategy.toDiscriminatorValue(
 					entityMapping,
@@ -160,12 +165,35 @@ public class UnifiedAnyDiscriminatorConverter<O,R> extends DiscriminatorConverte
 
 	@Override
 	public <X> X fromValueDetails(Function<DiscriminatorValueDetails, X> handler) {
-		for ( DiscriminatorValueDetails valueDetails : detailsByEntityName.values() ) {
+		for ( var valueDetails : detailsByEntityName.values() ) {
 			final X result = handler.apply( valueDetails );
 			if ( result != null ) {
 				return result;
 			}
 		}
 		return null;
+	}
+
+	@Override
+	protected String getEntityName(O domainForm) {
+		final Class<?> entityClass;
+		if ( domainForm == null ) {
+			return null;
+		}
+		else if ( domainForm instanceof Class<?> clazz ) {
+			entityClass = clazz;
+		}
+		else if ( domainForm instanceof String name ) {
+			return name;
+		}
+		else {
+			entityClass = unproxy( domainForm ).getClass();
+		}
+		try {
+			return mappingMetamodel.getEntityDescriptor( entityClass ).getEntityName();
+		}
+		catch (IllegalArgumentException iae) {
+			throw new IllegalArgumentException( "Illegal discriminator value: " + domainForm );
+		}
 	}
 }

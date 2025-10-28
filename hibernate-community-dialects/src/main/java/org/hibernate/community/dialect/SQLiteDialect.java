@@ -4,12 +4,8 @@
  */
 package org.hibernate.community.dialect;
 
-import java.sql.Types;
-import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
-
+import jakarta.persistence.TemporalType;
+import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
@@ -19,9 +15,12 @@ import org.hibernate.community.dialect.identity.SQLiteIdentityColumnSupport;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
+import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.NoLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
@@ -38,18 +37,19 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.dialect.NullOrdering;
 import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
@@ -59,7 +59,11 @@ import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import jakarta.persistence.TemporalType;
+import java.sql.Types;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.common.TemporalUnit.DAY;
@@ -71,6 +75,7 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INT
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
+import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.DECIMAL;
@@ -84,7 +89,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
  * An SQL dialect for SQLite.
@@ -113,27 +117,17 @@ public class SQLiteDialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case DECIMAL:
-				return getVersion().isBefore( 3 ) ? columnType( SqlTypes.NUMERIC ) : super.columnType( sqlTypeCode );
-			case CHAR:
-				return getVersion().isBefore( 3 ) ? "char" : super.columnType( sqlTypeCode );
-			case NCHAR:
-				return getVersion().isBefore( 3 ) ? "nchar" : super.columnType( sqlTypeCode );
+		return switch ( sqlTypeCode ) {
+			case DECIMAL -> getVersion().isBefore( 3 ) ? columnType( SqlTypes.NUMERIC ) : super.columnType( sqlTypeCode );
+			case CHAR -> getVersion().isBefore( 3 ) ? "char" : super.columnType( sqlTypeCode );
+			case NCHAR -> getVersion().isBefore( 3 ) ? "nchar" : super.columnType( sqlTypeCode );
 			// No precision support
-			case FLOAT:
-				return "float";
-			case TIMESTAMP:
-			case TIMESTAMP_WITH_TIMEZONE:
-				return "timestamp";
-			case TIME_WITH_TIMEZONE:
-				return "time";
-			case BINARY:
-			case VARBINARY:
-				return "blob";
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+			case FLOAT -> "float";
+			case TIMESTAMP, TIMESTAMP_WITH_TIMEZONE -> "timestamp";
+			case TIME_WITH_TIMEZONE -> "time";
+			case BINARY, VARBINARY -> "blob";
+			default ->  super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -178,32 +172,20 @@ public class SQLiteDialect extends Dialect {
 	 */
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		switch ( unit ) {
-			case SECOND:
-				return "cast(strftime('%S.%f',?2) as double)";
-			case MINUTE:
-				return "strftime('%M',?2)";
-			case HOUR:
-				return "strftime('%H',?2)";
-			case DAY:
-			case DAY_OF_MONTH:
-				return "(strftime('%d',?2)+1)";
-			case MONTH:
-				return "strftime('%m',?2)";
-			case YEAR:
-				return "strftime('%Y',?2)";
-			case DAY_OF_WEEK:
-				return "(strftime('%w',?2)+1)";
-			case DAY_OF_YEAR:
-				return "strftime('%j',?2)";
-			case EPOCH:
-				return "strftime('%s',?2)";
-			case WEEK:
-				// Thanks https://stackoverflow.com/questions/15082584/sqlite-return-wrong-week-number-for-2013
-				return "((strftime('%j',date(?2,'-3 days','weekday 4'))-1)/7+1)";
-			default:
-				return super.extractPattern(unit);
-		}
+		return switch ( unit ) {
+			case SECOND -> "cast(strftime('%S.%f',?2) as double)";
+			case MINUTE -> "strftime('%M',?2)";
+			case HOUR -> "strftime('%H',?2)";
+			case DAY, DAY_OF_MONTH -> "(strftime('%d',?2)+1)";
+			case MONTH -> "strftime('%m',?2)";
+			case YEAR -> "strftime('%Y',?2)";
+			case DAY_OF_WEEK -> "(strftime('%w',?2)+1)";
+			case DAY_OF_YEAR -> "strftime('%j',?2)";
+			case EPOCH -> "strftime('%s',?2)";
+			// Thanks https://stackoverflow.com/questions/15082584/sqlite-return-wrong-week-number-for-2013
+			case WEEK -> "((strftime('%j',date(?2,'-3 days','weekday 4'))-1)/7+1)";
+			default -> super.extractPattern(unit);
+		};
 	}
 
 	@Override
@@ -350,6 +332,7 @@ public class SQLiteDialect extends Dialect {
 		}
 		functionFactory.windowFunctions();
 		functionFactory.listagg_groupConcat();
+		functionFactory.regexpLike_regexp();
 	}
 
 	@Override
@@ -391,19 +374,19 @@ public class SQLiteDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLockTimeouts() {
-		// may be http://sqlite.org/c3ref/db_mutex.html ?
-		return false;
+	public LockingSupport getLockingSupport() {
+		return NoLockingSupport.NO_LOCKING_SUPPORT;
+	}
+
+	@Override
+	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
+		// SQLite does not support the FOR UPDATE clause
+		return NON_CLAUSE_STRATEGY;
 	}
 
 	@Override
 	public String getForUpdateString() {
 		return "";
-	}
-
-	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return false;
 	}
 
 	@Override

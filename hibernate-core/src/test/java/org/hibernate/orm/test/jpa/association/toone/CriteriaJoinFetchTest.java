@@ -76,13 +76,7 @@ public class CriteriaJoinFetchTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Address" ).executeUpdate();
-					entityManager.createQuery( "delete from Note" ).executeUpdate();
-					entityManager.createQuery( "delete from Customer" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

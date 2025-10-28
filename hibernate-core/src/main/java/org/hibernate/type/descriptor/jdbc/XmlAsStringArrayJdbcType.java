@@ -174,4 +174,20 @@ public class XmlAsStringArrayJdbcType extends XmlArrayJdbcType implements Adjust
 
 		};
 	}
+
+	@Override
+	public boolean equals(Object that) {
+		return super.equals( that )
+			&& that instanceof XmlAsStringArrayJdbcType jdbcType
+			&& ddlTypeCode == jdbcType.ddlTypeCode
+			&& nationalized == jdbcType.nationalized;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + Boolean.hashCode( nationalized );
+		result = 31 * result + ddlTypeCode;
+		return result;
+	}
 }

@@ -5,14 +5,16 @@
 package org.hibernate.query.sqm.tree.predicate;
 
 import java.util.Collection;
+import java.util.Objects;
 
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmWhereClause implements SqmPredicateCollection {
+public class SqmWhereClause implements SqmPredicateCollection, SqmCacheable {
 	private final NodeBuilder nodeBuilder;
 
 	private SqmPredicate predicate;
@@ -45,12 +47,10 @@ public class SqmWhereClause implements SqmPredicateCollection {
 
 	@Override
 	public void applyPredicate(SqmPredicate predicate) {
-		if ( this.predicate == null ) {
-			this.predicate = predicate;
-		}
-		else {
-			this.predicate = nodeBuilder.and( this.predicate, predicate );
-		}
+		this.predicate =
+				this.predicate == null
+						? predicate
+						: nodeBuilder.and( this.predicate, predicate );
 	}
 
 	@Override
@@ -70,5 +70,27 @@ public class SqmWhereClause implements SqmPredicateCollection {
 	@Override
 	public String toString() {
 		return "where " + predicate;
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		return other instanceof SqmWhereClause that
+			&& Objects.equals( this.predicate, that.predicate );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode( this.predicate );
+	}
+
+	@Override
+	public boolean isCompatible(Object other) {
+		return other instanceof SqmWhereClause that
+			&& SqmCacheable.areCompatible( this.predicate, that.predicate );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return SqmCacheable.cacheHashCode( this.predicate );
 	}
 }

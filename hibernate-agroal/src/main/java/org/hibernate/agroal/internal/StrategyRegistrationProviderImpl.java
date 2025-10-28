@@ -4,12 +4,12 @@
  */
 package org.hibernate.agroal.internal;
 
-import java.util.Collections;
-
 import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+
+import static java.util.Collections.singleton;
 
 /**
  * Provides the {@link AgroalConnectionProvider} to the
@@ -20,8 +20,8 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 public final class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
 
 	@Override
-	public Iterable<StrategyRegistration> getStrategyRegistrations() {
-		final SimpleStrategyRegistrationImpl<ConnectionProvider> strategyRegistration = new SimpleStrategyRegistrationImpl<>(
+	public Iterable<StrategyRegistration<?>> getStrategyRegistrations() {
+		return singleton( new SimpleStrategyRegistrationImpl<>(
 				ConnectionProvider.class,
 				AgroalConnectionProvider.class,
 				AgroalConnectionProvider.class.getSimpleName(),
@@ -29,7 +29,6 @@ public final class StrategyRegistrationProviderImpl implements StrategyRegistrat
 				"Agroal",
 				// for consistency's sake
 				"org.hibernate.connection.AgroalConnectionProvider"
-		);
-		return Collections.singleton( strategyRegistration );
+		) );
 	}
 }

@@ -9,17 +9,13 @@ import org.hibernate.HibernateException;
 import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.CollectionType;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
@@ -28,45 +24,43 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
  * @author Gavin King
  */
 public final class Collections {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Collections.class );
 
 	/**
 	 * record the fact that this collection was dereferenced
 	 *
-	 * @param coll The collection to be updated by un-reachability.
+	 * @param collection The collection to be updated by unreachability.
 	 * @param session The session
 	 */
-	public static void processUnreachableCollection(PersistentCollection<?> coll, SessionImplementor session) {
-		if ( coll.getOwner() == null ) {
-			processNeverReferencedCollection( coll, session );
+	public static void processUnreachableCollection(PersistentCollection<?> collection, SessionImplementor session) {
+		if ( collection.getOwner() == null ) {
+			processNeverReferencedCollection( collection, session );
 		}
 		else {
-			processDereferencedCollection( coll, session );
+			processDereferencedCollection( collection, session );
 		}
 	}
 
-	private static void processDereferencedCollection(PersistentCollection<?> coll, SessionImplementor session) {
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final CollectionEntry entry = persistenceContext.getCollectionEntry( coll );
-		final CollectionPersister loadedPersister = entry.getLoadedPersister();
+	private static void processDereferencedCollection(PersistentCollection<?> collection, SessionImplementor session) {
+		final var persistenceContext = session.getPersistenceContextInternal();
+		final var entry = persistenceContext.getCollectionEntry( collection );
+		final var loadedPersister = entry.getLoadedPersister();
 
-		if ( loadedPersister != null && LOG.isDebugEnabled() ) {
-			LOG.debug("Collection dereferenced: "
-					+ collectionInfoString( loadedPersister, coll, entry.getLoadedKey(), session ) );
+		if ( loadedPersister != null && CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.collectionDereferenced(
+					collectionInfoString( loadedPersister, collection, entry.getLoadedKey(), session ) );
 		}
 
 		// do a check
-		final boolean hasOrphanDelete = loadedPersister != null && loadedPersister.hasOrphanDelete();
-		if ( hasOrphanDelete ) {
-			final Object ownerId = getOwnerId( coll, session, loadedPersister );
-			final EntityKey key = session.generateEntityKey( ownerId, loadedPersister.getOwnerEntityPersister() );
+		if ( loadedPersister != null && loadedPersister.hasOrphanDelete() ) {
+			final Object ownerId = getOwnerId( collection, session, loadedPersister );
+			final var key = session.generateEntityKey( ownerId, loadedPersister.getOwnerEntityPersister() );
 			final Object owner = persistenceContext.getEntity( key );
 			if ( owner == null ) {
 				throw new AssertionFailure( "collection owner not associated with session: " + loadedPersister.getRole() );
 			}
-			final EntityEntry e = persistenceContext.getEntry( owner );
+			final var entityEntry = persistenceContext.getEntry( owner );
 			//only collections belonging to deleted entities are allowed to be dereferenced in the case of orphan delete
-			if ( e != null && !e.getStatus().isDeletedOrGone() ) {
+			if ( entityEntry != null && !entityEntry.getStatus().isDeletedOrGone() ) {
 				throw new HibernateException(
 						"A collection with orphan deletion was no longer referenced by the owning entity instance: "
 						+ loadedPersister.getRole()
@@ -77,27 +71,27 @@ public final class Collections {
 		// do the work
 		entry.setCurrentPersister( null );
 		entry.setCurrentKey( null );
-		prepareCollectionForUpdate( coll, entry, session.getFactory() );
+		prepareCollectionForUpdate( collection, entry, session.getFactory() );
 
 	}
 
 	private static Object getOwnerId(
-			PersistentCollection<?> coll,
+			PersistentCollection<?> collection,
 			SessionImplementor session,
 			CollectionPersister loadedPersister) {
-
+		final Object owner = collection.getOwner();
 		Object ownerId =
 				loadedPersister.getOwnerEntityPersister()
-						.getIdentifier( coll.getOwner(), session );
+						.getIdentifier( owner, session );
 		if ( ownerId == null ) {
 			// the owning entity may have been deleted and its identifier unset due to
-			// identifier-rollback; in which case, try to look up its identifier from
+			// identifier rollback; in which case, try to look up its identifier from
 			// the persistence context
 			if ( session.getFactory().getSessionFactoryOptions()
 					.isIdentifierRollbackEnabled() ) {
-				final EntityEntry ownerEntry =
+				final var ownerEntry =
 						session.getPersistenceContextInternal()
-								.getEntry( coll.getOwner() );
+								.getEntry( owner );
 				if ( ownerEntry != null ) {
 					ownerId = ownerEntry.getId();
 				}
@@ -109,22 +103,22 @@ public final class Collections {
 		return ownerId;
 	}
 
-	private static void processNeverReferencedCollection(PersistentCollection<?> coll, SessionImplementor session)
+	private static void processNeverReferencedCollection(PersistentCollection<?> collection, SessionImplementor session)
 			throws HibernateException {
-		final CollectionEntry entry =
+		final var entry =
 				session.getPersistenceContextInternal()
-						.getCollectionEntry( coll );
+						.getCollectionEntry( collection );
+		final var loadedPersister = entry.getLoadedPersister();
+		final Object loadedKey = entry.getLoadedKey();
 
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debug( "Found collection with unloaded owner: " +
-					collectionInfoString( entry.getLoadedPersister(), coll, entry.getLoadedKey(), session ) );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.collectionWithUnloadedOwner(
+					collectionInfoString( loadedPersister, collection, loadedKey, session ) );
 		}
 
-		entry.setCurrentPersister( entry.getLoadedPersister() );
-		entry.setCurrentKey( entry.getLoadedKey() );
-
-		prepareCollectionForUpdate( coll, entry, session.getFactory() );
-
+		entry.setCurrentPersister( loadedPersister );
+		entry.setCurrentKey( loadedKey );
+		prepareCollectionForUpdate( collection, entry, session.getFactory() );
 	}
 
 	/**
@@ -141,87 +135,90 @@ public final class Collections {
 			Object entity,
 			SessionImplementor session) {
 		collection.setOwner( entity );
-		final CollectionEntry ce =
+		final var collectionEntry =
 				session.getPersistenceContextInternal()
 						.getCollectionEntry( collection );
 
-		if ( ce == null ) {
+		if ( collectionEntry == null ) {
 			// refer to comment in StatefulPersistenceContext.addCollection()
 			throw new HibernateException( "Found two representations of same collection: " + type.getRole() );
 		}
 
-		final SessionFactoryImplementor factory = session.getFactory();
-		final CollectionPersister persister =
+		final var factory = session.getFactory();
+		final var persister =
 				factory.getMappingMetamodel()
 						.getCollectionDescriptor( type.getRole() );
 
-		ce.setCurrentPersister( persister );
+		collectionEntry.setCurrentPersister( persister );
 		//TODO: better to pass the id in as an argument?
-		ce.setCurrentKey( type.getKeyOfOwner( entity, session ) );
+		collectionEntry.setCurrentKey( type.getKeyOfOwner( entity, session ) );
 
 		final boolean isBytecodeEnhanced =
 				persister.getOwnerEntityPersister()
 						.getBytecodeEnhancementMetadata()
 						.isEnhancedForLazyLoading();
 		if ( isBytecodeEnhanced && !collection.wasInitialized() ) {
-			// the class of the collection owner is enhanced for lazy loading and we found an un-initialized PersistentCollection
-			// 		- skip it
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( "Skipping uninitialized bytecode-lazy collection: "
-						+ collectionInfoString( persister, collection, ce.getCurrentKey(), session ) );
+			// the class of the collection owner is enhanced for lazy loading,
+			// and we found an un-initialized PersistentCollection, so skip it
+			if ( CORE_LOGGER.isTraceEnabled() ) {
+				CORE_LOGGER.skippingUninitializedBytecodeLazyCollection(
+						collectionInfoString( persister, collection, collectionEntry.getCurrentKey(), session ) );
 			}
-			ce.setReached( true );
-			ce.setProcessed( true );
-			return;
+			collectionEntry.setReached( true );
+			collectionEntry.setProcessed( true );
 		}
-
 		// The CollectionEntry.isReached() stuff is just to detect any silly users
 		// who set up circular or shared references between/to collections.
-		if ( ce.isReached() ) {
+		else if ( collectionEntry.isReached() ) {
 			// We've been here before
 			throw new HibernateException( "Found shared references to a collection: " + type.getRole() );
 		}
+		else {
+			collectionEntry.setReached( true );
+			logReachedCollection( collection, session, persister, collectionEntry );
+			prepareCollectionForUpdate( collection, collectionEntry, factory );
+		}
+	}
 
-		ce.setReached( true );
-
-		if ( LOG.isDebugEnabled() ) {
+	private static void logReachedCollection(
+			PersistentCollection<?> collection,
+			SessionImplementor session,
+			CollectionPersister persister,
+			CollectionEntry collectionEntry) {
+		if ( CORE_LOGGER.isTraceEnabled() ) {
 			if ( collection.wasInitialized() ) {
-				LOG.debugf(
-						"Collection found: %s, was: %s (initialized)",
+				CORE_LOGGER.collectionFoundInitialized(
 						collectionInfoString(
 								persister,
 								collection,
-								ce.getCurrentKey(),
+								collectionEntry.getCurrentKey(),
 								session
 						),
 						collectionInfoString(
-								ce.getLoadedPersister(),
+								collectionEntry.getLoadedPersister(),
 								collection,
-								ce.getLoadedKey(),
+								collectionEntry.getLoadedKey(),
 								session
 						)
 				);
 			}
 			else {
-				LOG.debugf(
-						"Collection found: %s, was: %s (uninitialized)",
+				CORE_LOGGER.collectionFoundUninitialized(
 						collectionInfoString(
 								persister,
 								collection,
-								ce.getCurrentKey(),
+								collectionEntry.getCurrentKey(),
 								session
 						),
 						collectionInfoString(
-								ce.getLoadedPersister(),
+								collectionEntry.getLoadedPersister(),
 								collection,
-								ce.getLoadedKey(),
+								collectionEntry.getLoadedKey(),
 								session
 						)
 				);
 			}
 		}
-
-		prepareCollectionForUpdate( collection, ce, factory );
 	}
 
 	/**
@@ -231,23 +228,22 @@ public final class Collections {
 	 */
 	private static void prepareCollectionForUpdate(
 			PersistentCollection<?> collection,
-			CollectionEntry entry,
+			CollectionEntry collectionEntry,
 			SessionFactoryImplementor factory) {
-		if ( entry.isProcessed() ) {
+		if ( collectionEntry.isProcessed() ) {
 			throw new AssertionFailure( "collection was processed twice by flush()" );
 		}
-		entry.setProcessed( true );
+		collectionEntry.setProcessed( true );
 
-		final CollectionPersister loadedPersister = entry.getLoadedPersister();
-		final CollectionPersister currentPersister = entry.getCurrentPersister();
+		final var loadedPersister = collectionEntry.getLoadedPersister();
+		final var currentPersister = collectionEntry.getCurrentPersister();
 		if ( loadedPersister != null || currentPersister != null ) {
 			// it is or was referenced _somewhere_
-
 
 			// if either its role changed, or its key changed
 			final boolean ownerChanged =
 					loadedPersister != currentPersister
-						|| wasKeyChanged( entry, factory, currentPersister );
+						|| wasKeyChanged( collectionEntry, factory, currentPersister );
 
 			if ( ownerChanged ) {
 				// do a check
@@ -263,21 +259,21 @@ public final class Collections {
 
 				// do the work
 				if ( currentPersister != null ) {
-					entry.setDorecreate( true );
+					collectionEntry.setDorecreate( true );
 				}
 
 				if ( loadedPersister != null ) {
 					// we will need to remove the old entries
-					entry.setDoremove( true );
-					if ( entry.isDorecreate() ) {
-						LOG.trace( "Forcing collection initialization" );
+					collectionEntry.setDoremove( true );
+					if ( collectionEntry.isDorecreate() ) {
+						CORE_LOGGER.forcingCollectionInitialization();
 						collection.forceInitialization();
 					}
 				}
 			}
 			else if ( collection.isDirty() ) {
 				// the collection's elements have changed
-				entry.setDoupdate( true );
+				collectionEntry.setDoupdate( true );
 			}
 		}
 	}
@@ -290,7 +286,7 @@ public final class Collections {
 			CollectionEntry entry, SessionFactoryImplementor factory, CollectionPersister currentPersister) {
 		return currentPersister != null
 			&& !currentPersister.getKeyType().isEqual( entry.getLoadedKey(), entry.getCurrentKey(), factory )
-			&& !(entry.getLoadedKey() instanceof DelayedPostInsertIdentifier);
+			&& !( entry.getLoadedKey() instanceof DelayedPostInsertIdentifier );
 	}
 
 	/**
@@ -301,9 +297,9 @@ public final class Collections {
 		if ( persister != null
 				// TODO: same optimization for @OneToMany @OnDelete(action=SET_NULL)
 				&& !persister.isOneToMany() && persister.isCascadeDeleteEnabled() ) {
-			final EntityKey entityKey = session.generateEntityKey( key, persister.getOwnerEntityPersister() );
-			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-			final EntityEntry entry = persistenceContext.getEntry( persistenceContext.getEntity( entityKey ) );
+			final var entityKey = session.generateEntityKey( key, persister.getOwnerEntityPersister() );
+			final var persistenceContext = session.getPersistenceContextInternal();
+			final var entry = persistenceContext.getEntry( persistenceContext.getEntity( entityKey ) );
 			return entry == null || entry.getStatus().isDeletedOrGone();
 		}
 		else {
@@ -316,5 +312,4 @@ public final class Collections {
 	 */
 	private Collections() {
 	}
-
 }

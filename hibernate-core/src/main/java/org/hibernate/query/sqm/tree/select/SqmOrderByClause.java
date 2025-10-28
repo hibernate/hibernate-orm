@@ -7,7 +7,9 @@ package org.hibernate.query.sqm.tree.select;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -18,7 +20,7 @@ import static java.util.Collections.unmodifiableList;
 /**
  * @author Steve Ebersole
  */
-public class SqmOrderByClause implements Serializable {
+public class SqmOrderByClause implements Serializable, SqmCacheable {
 	private boolean hasPositionalSortItem;
 	private List<SqmSortSpecification> sortSpecifications;
 
@@ -84,5 +86,27 @@ public class SqmOrderByClause implements Serializable {
 				this.hasPositionalSortItem = true;
 			}
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmOrderByClause that
+			&& Objects.equals( this.sortSpecifications, that.sortSpecifications );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode( sortSpecifications );
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmOrderByClause that
+			&& SqmCacheable.areCompatible( this.sortSpecifications, that.sortSpecifications );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return SqmCacheable.cacheHashCode( sortSpecifications );
 	}
 }

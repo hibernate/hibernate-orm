@@ -26,18 +26,16 @@ public class NaturalIdDataCachingConfigImpl
 		super( accessType );
 		this.rootEntityDescriptor = rootEntityDescriptor;
 		this.navigableRole = new NavigableRole( rootEntityDescriptor.getEntityName() );
-
-		// sucks that we need to do this here.  persister does the same "calculation"
+		// Sucks that we need to do this here. Persister does the same "calculation"
 		this.mutable = hasAnyMutableNaturalIdProps();
 	}
 
 	private boolean hasAnyMutableNaturalIdProps() {
 		for ( Property property : rootEntityDescriptor.getDeclaredProperties() ) {
-			if ( property.isNaturalIdentifier() && property.isUpdateable() ) {
+			if ( property.isNaturalIdentifier() && property.isUpdatable() ) {
 				return true;
 			}
 		}
-
 		return false;
 	}
 

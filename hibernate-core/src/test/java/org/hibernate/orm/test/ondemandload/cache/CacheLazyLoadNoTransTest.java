@@ -70,13 +70,7 @@ public class CacheLazyLoadNoTransTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope){
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Application" ).executeUpdate();
-					session.createQuery( "delete from Item" ).executeUpdate();
-					session.createQuery( "delete from Customer" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

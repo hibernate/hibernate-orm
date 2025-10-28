@@ -8,26 +8,19 @@ import java.util.function.Consumer;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.EntityHolder;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping.IdentifierValueMapper;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
@@ -64,27 +57,29 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 			MappingModelCreationProcess creationProcess) {
 		super( new MutableAttributeMappingList( idClassSource.getPropertySpan() ) );
 
-		this.navigableRole = idMapping.getNavigableRole().append( NavigablePath.IDENTIFIER_MAPPER_PROPERTY );
 		this.idMapping = idMapping;
 		this.virtualIdEmbeddable = virtualIdEmbeddable;
 
-		this.javaType = creationProcess.getCreationContext().getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.resolveManagedTypeDescriptor( idClassSource.getComponentClass() );
+		navigableRole = idMapping.getNavigableRole().append( NavigablePath.IDENTIFIER_MAPPER_PROPERTY );
 
-		this.representationStrategy = new IdClassRepresentationStrategy(
+		javaType =
+				creationProcess.getCreationContext().getTypeConfiguration().getJavaTypeRegistry()
+						.resolveManagedTypeDescriptor( idClassSource.getComponentClass() );
+
+		representationStrategy = new IdClassRepresentationStrategy(
 				this,
 				idClassSource.sortProperties() == null,
 				idClassSource::getPropertyNames
 		);
 
-		final PropertyAccess propertyAccess = PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
-				null,
-				EntityIdentifierMapping.ID_ROLE_NAME,
-				true );
-		final AttributeMetadata attributeMetadata = MappingModelCreationHelper.getAttributeMetadata(
-				propertyAccess
-		);
+		final var propertyAccess =
+				PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
+						null,
+						EntityIdentifierMapping.ID_ROLE_NAME,
+						true
+				);
+		final var attributeMetadata =
+				MappingModelCreationHelper.getAttributeMetadata( propertyAccess );
 
 		embedded = new EmbeddedAttributeMapping(
 				NavigablePath.IDENTIFIER_MAPPER_PROPERTY,
@@ -103,7 +98,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 				propertyAccess
 		);
 
-		final CompositeType idClassType = idClassSource.getType();
+		final var idClassType = idClassSource.getType();
 		( (CompositeTypeImplementor) idClassType ).injectMappingModelPart( embedded, creationProcess );
 
 		creationProcess.registerInitializationCallback(
@@ -169,33 +164,31 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		final Object[] propertyValues = new Object[virtualIdEmbeddable.getNumberOfAttributeMappings()];
 
 		for ( int i = 0; i < propertyValues.length; i++ ) {
-			final AttributeMapping attributeMapping = virtualIdEmbeddable.getAttributeMapping( i );
-			final Object o = attributeMapping.getValue( entity );
-			if ( o == null ) {
-				final AttributeMapping idClassAttributeMapping = getAttributeMapping( i );
-				if ( idClassAttributeMapping.getPropertyAccess().getGetter().getReturnTypeClass().isPrimitive() ) {
-					propertyValues[i] = idClassAttributeMapping.getExpressibleJavaType().getDefaultValue();
-				}
-				else {
-					propertyValues[i] = null;
-				}
+			final var attributeMapping = virtualIdEmbeddable.getAttributeMapping( i );
+			final Object object = attributeMapping.getValue( entity );
+			if ( object == null ) {
+				final var idClassAttributeMapping = getAttributeMapping( i );
+				propertyValues[i] =
+						idClassAttributeMapping.getPropertyAccess().getGetter().getReturnTypeClass().isPrimitive()
+								? idClassAttributeMapping.getExpressibleJavaType().getDefaultValue()
+								: null;
 			}
 			//JPA 2 @MapsId + @IdClass points to the pk of the entity
 			else if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping
 					&& !( getAttributeMapping( i ) instanceof ToOneAttributeMapping ) ) {
-				final ModelPart targetPart =
+				final var targetPart =
 						toOneAttributeMapping.getForeignKeyDescriptor()
 								.getPart( toOneAttributeMapping.getSideNature().inverse() );
 				if ( targetPart.isEntityIdentifierMapping() ) {
-					propertyValues[i] = ( (EntityIdentifierMapping) targetPart ).getIdentifier( o );
+					propertyValues[i] = ( (EntityIdentifierMapping) targetPart ).getIdentifier( object );
 				}
 				else {
-					propertyValues[i] = o;
+					propertyValues[i] = object;
 					assert false;
 				}
 			}
 			else {
-				propertyValues[i] = o;
+				propertyValues[i] = object;
 			}
 		}
 
@@ -206,33 +199,32 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 
 	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
-		final SessionFactoryImplementor factory = session.getFactory();
-		final EntityPersister entityDescriptor =
+		final var factory = session.getFactory();
+		final var entityDescriptor =
 				factory.getMappingMetamodel()
 						.getEntityDescriptor( entity.getClass() );
 		final Object[] propertyValues = new Object[attributeMappings.size()];
 		virtualIdEmbeddable.forEachAttribute(
 				(position, virtualIdAttribute) -> {
-					final AttributeMapping idClassAttribute = attributeMappings.get( position );
-					Object o = idClassAttribute.getValue( id );
+					final var idClassAttribute = attributeMappings.get( position );
+					Object object = idClassAttribute.getValue( id );
 					if ( virtualIdAttribute instanceof ToOneAttributeMapping toOneAttributeMapping
-							&& !( idClassAttribute instanceof ToOneAttributeMapping ) ) {
-						final EntityPersister entityPersister =
-								toOneAttributeMapping.getEntityMappingType().getEntityPersister();
-						final EntityKey entityKey = session.generateEntityKey( o, entityPersister );
-						final PersistenceContext persistenceContext = session.getPersistenceContext();
-						final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
+						&& !( idClassAttribute instanceof ToOneAttributeMapping ) ) {
+						final var entityPersister =
+								toOneAttributeMapping.getEntityMappingType()
+										.getEntityPersister();
+						final var entityKey = session.generateEntityKey( object, entityPersister );
+						final var persistenceContext = session.getPersistenceContext();
+						final var holder = persistenceContext.getEntityHolder( entityKey );
 						// use the managed object i.e. proxy or initialized entity
-						o = holder == null ? null : holder.getManagedObject();
-						if ( o == null ) {
+						object = holder == null ? null : holder.getManagedObject();
+						if ( object == null ) {
 							// get the association out of the entity itself
-							o = entityDescriptor.getPropertyValue(
-									entity,
-									toOneAttributeMapping.getAttributeName()
-							);
+							object = entityDescriptor.getPropertyValue( entity,
+									toOneAttributeMapping.getAttributeName() );
 						}
 					}
-					propertyValues[position] = o;
+					propertyValues[position] = object;
 				}
 		);
 

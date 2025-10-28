@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 
 /**
@@ -11,4 +12,5 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
  */
 public interface JdbcParameter extends Expression {
 	JdbcParameterBinder getParameterBinder();
+	@Nullable Integer getParameterId();
 }

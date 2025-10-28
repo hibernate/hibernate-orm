@@ -14,7 +14,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.metamodel.mapping.AssociationKey;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -192,10 +191,10 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			return true;
 		}
 		else {
-			AttributeMapping attributeMapping = modelPart.asAttributeMapping();
+			var attributeMapping = modelPart.asAttributeMapping();
 			while ( attributeMapping != null
 					&& attributeMapping.getDeclaringType() instanceof EmbeddableMappingType embeddableMappingType ) {
-				final EmbeddableValuedModelPart declaringModelPart = embeddableMappingType.getEmbeddedValueMapping();
+				final var declaringModelPart = embeddableMappingType.getEmbeddedValueMapping();
 				if ( declaringModelPart == keyPart ) {
 					return true;
 				}
@@ -226,7 +225,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			TableGroupProducer declaringTableGroupProducer,
 			IntFunction<SelectableMapping> selectableMappingAccess,
 			MappingModelCreationProcess creationProcess) {
-		SelectableMapping[] selectionMappings = new SelectableMapping[keySelectableMappings.getJdbcTypeCount()];
+		final var selectionMappings = new SelectableMapping[keySelectableMappings.getJdbcTypeCount()];
 		for ( int i = 0; i < selectionMappings.length; i++ ) {
 			selectionMappings[i] = selectableMappingAccess.apply( i );
 		}
@@ -426,7 +425,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			TableReference targetSideReference,
 			TableReference keySideReference,
 			SqlAstCreationState creationState) {
-		final Junction predicate = new Junction( Junction.Nature.CONJUNCTION );
+		final var predicate = new Junction( Junction.Nature.CONJUNCTION );
 		targetSelectableMappings.forEachSelectable(
 				(i, selection) -> {
 					final ComparisonPredicate comparisonPredicate = new ComparisonPredicate(

@@ -6,15 +6,14 @@ package org.hibernate.internal.util.xml;
 
 import java.io.InputStream;
 import java.io.Serializable;
-import java.lang.invoke.MethodHandles;
 
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ConfigHelper;
 
-import org.jboss.logging.Logger;
 
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * An {@link EntityResolver} implementation which attempts to resolve
@@ -43,8 +42,6 @@ import org.xml.sax.InputSource;
 @Deprecated
 public class DTDEntityResolver implements EntityResolver, Serializable {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, DTDEntityResolver.class.getName() );
-
 	private static final String HIBERNATE_NAMESPACE = "http://www.hibernate.org/dtd/";
 	private static final String OLD_HIBERNATE_NAMESPACE = "http://hibernate.sourceforge.net/";
 	private static final String USER_NAMESPACE = "classpath://";
@@ -52,25 +49,25 @@ public class DTDEntityResolver implements EntityResolver, Serializable {
 	public InputSource resolveEntity(String publicId, String systemId) {
 		InputSource source = null; // returning null triggers default behavior
 		if ( systemId != null ) {
-			LOG.debugf( "Trying to resolve system-id [%s]", systemId );
+			CORE_LOGGER.debugf( "Trying to resolve system-id [%s]", systemId );
 			if ( systemId.startsWith( HIBERNATE_NAMESPACE ) ) {
-				LOG.debug( "Recognized hibernate namespace; attempting to resolve on classpath under org/hibernate/" );
+				CORE_LOGGER.debug( "Recognized Hibernate namespace; attempting to resolve on classpath under org/hibernate/" );
 				source = resolveOnClassPath( publicId, systemId, HIBERNATE_NAMESPACE );
 			}
 			else if ( systemId.startsWith( OLD_HIBERNATE_NAMESPACE ) ) {
-				LOG.recognizedObsoleteHibernateNamespace( OLD_HIBERNATE_NAMESPACE, HIBERNATE_NAMESPACE );
-				LOG.debug( "Attempting to resolve on classpath under org/hibernate/" );
+				CORE_LOGGER.recognizedObsoleteHibernateNamespace( OLD_HIBERNATE_NAMESPACE, HIBERNATE_NAMESPACE );
+				CORE_LOGGER.debug( "Attempting to resolve on classpath under org/hibernate/" );
 				source = resolveOnClassPath( publicId, systemId, OLD_HIBERNATE_NAMESPACE );
 			}
 			else if ( systemId.startsWith( USER_NAMESPACE ) ) {
-				LOG.debug( "Recognized local namespace; attempting to resolve on classpath" );
+				CORE_LOGGER.debug( "Recognized local namespace; attempting to resolve on classpath" );
 				String path = systemId.substring( USER_NAMESPACE.length() );
 				InputStream stream = resolveInLocalNamespace( path );
 				if ( stream == null ) {
-					LOG.debugf( "Unable to locate [%s] on classpath", systemId );
+					CORE_LOGGER.debugf( "Unable to locate [%s] on classpath", systemId );
 				}
 				else {
-					LOG.debugf( "Located [%s] on classpath", systemId );
+					CORE_LOGGER.debugf( "Located [%s] on classpath", systemId );
 					source = new InputSource( stream );
 					source.setPublicId( publicId );
 					source.setSystemId( systemId );
@@ -85,13 +82,13 @@ public class DTDEntityResolver implements EntityResolver, Serializable {
 		String path = "org/hibernate/" + systemId.substring( namespace.length() );
 		InputStream dtdStream = resolveInHibernateNamespace( path );
 		if ( dtdStream == null ) {
-			LOG.debugf( "Unable to locate [%s] on classpath", systemId );
+			CORE_LOGGER.debugf( "Unable to locate [%s] on classpath", systemId );
 			if ( systemId.substring( namespace.length() ).contains("2.0") ) {
-				LOG.usingOldDtd();
+				CORE_LOGGER.usingOldDtd();
 			}
 		}
 		else {
-			LOG.debugf( "Located [%s] on classpath", systemId );
+			CORE_LOGGER.debugf( "Located [%s] on classpath", systemId );
 			source = new InputSource( dtdStream );
 			source.setPublicId( publicId );
 			source.setSystemId( systemId );

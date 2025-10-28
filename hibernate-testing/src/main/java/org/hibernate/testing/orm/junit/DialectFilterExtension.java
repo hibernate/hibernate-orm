@@ -8,8 +8,10 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 
+import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -17,7 +19,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.jboss.logging.Logger;
 
 /**
- * JUnit 5 extension used to add {@link RequiresDialect} and {@link SkipForDialect}
+ * JUnit Jupiter extension used to add {@link RequiresDialect} and {@link SkipForDialect}
  * handling
  *
  * @author Steve Ebersole
@@ -83,9 +85,7 @@ public class DialectFilterExtension implements ExecutionCondition {
 							matchingMinorVersion,
 							matchingMicroVersion,
 							dialect,
-							requiresDialect.matchSubTypes()
-									? VersionMatchMode.SAME_OR_NEWER
-									: VersionMatchMode.SAME
+							requiresDialect.versionMatchMode()
 					);
 				}
 				else {
@@ -157,28 +157,44 @@ public class DialectFilterExtension implements ExecutionCondition {
 			return false;
 		}
 
-		if ( matchingMinorVersion < 0 ) {
-			matchingMinorVersion = 0;
-		}
+		final int minorVersion = Math.max( matchingMinorVersion, 0 );
+		final int microVersion = Math.max( matchingMicroVersion, 0 );
 
-		if ( matchingMicroVersion < 0 ) {
-			matchingMicroVersion = 0;
-		}
-
-		if ( matchMode == VersionMatchMode.SAME_OR_NEWER ) {
-			return dialect.getVersion().isSameOrAfter( matchingMajorVersion, matchingMinorVersion, matchingMicroVersion );
-		}
-		if ( matchMode == VersionMatchMode.SAME_OR_OLDER
-				&& dialect.getVersion().isBefore( matchingMajorVersion, matchingMinorVersion, matchingMicroVersion ) ) {
-			return true;
-		}
-		return dialect.getVersion().isSame( matchingMajorVersion );
+		return switch ( matchMode ) {
+			case SAME -> {
+				if ( matchingMicroVersion < 0 ) {
+					yield matchingMinorVersion < 0
+							? dialect.getVersion().isSame( matchingMajorVersion )
+							: dialect.getVersion().isSame( matchingMajorVersion, matchingMinorVersion );
+				}
+				else {
+					yield dialect.getVersion().isSame( matchingMajorVersion, matchingMinorVersion, matchingMicroVersion );
+				}
+			}
+			case SAME_OR_OLDER -> dialect.getVersion().isSameOrBefore( matchingMajorVersion, minorVersion, microVersion );
+			case SAME_OR_NEWER -> dialect.getVersion().isSameOrAfter( matchingMajorVersion, minorVersion, microVersion );
+			case NEWER -> dialect.getVersion().isAfter( matchingMajorVersion, minorVersion, microVersion );
+			case OLDER -> dialect.getVersion().isBefore( matchingMajorVersion, minorVersion, microVersion );
+		};
 	}
 
-	public enum VersionMatchMode {
-		SAME,
-		SAME_OR_NEWER,
-		SAME_OR_OLDER
+	record DialectVersionKey(Class<? extends Dialect> dialect, DatabaseVersion version) {
+		public static DialectVersionKey of(SkipForDialect annotation) {
+			final Class<? extends Dialect> dialectClass = annotation.dialectClass();
+			int majorVersion = DatabaseVersion.NO_VERSION;
+			int minorVersion = DatabaseVersion.NO_VERSION;
+			int microVersion = DatabaseVersion.NO_VERSION;
+			if ( annotation.majorVersion() != -1 ) {
+				majorVersion = annotation.majorVersion();
+				if ( annotation.minorVersion() != -1 ) {
+					minorVersion += annotation.minorVersion();
+					if ( annotation.microVersion() != -1 ) {
+						microVersion += annotation.microVersion();
+					}
+				}
+			}
+			return new DialectVersionKey( dialectClass, new SimpleDatabaseVersion( majorVersion, minorVersion, microVersion ) );
+		}
 	}
 
 	private ConditionEvaluationResult evaluateSkipConditions(ExtensionContext context, Dialect dialect, String enabledResult) {
@@ -187,21 +203,21 @@ public class DialectFilterExtension implements ExecutionCondition {
 				SkipForDialect.class,
 				SkipForDialectGroup.class,
 				(methodAnnotation, methodAnnotations, classAnnotation, classAnnotations) -> {
-					final LinkedHashMap<Class<?>, SkipForDialect> map = new LinkedHashMap<>();
+					final LinkedHashMap<DialectVersionKey, SkipForDialect> map = new LinkedHashMap<>();
 					if ( classAnnotation != null ) {
-						map.put( classAnnotation.dialectClass(), classAnnotation );
+						map.put( DialectVersionKey.of( classAnnotation ), classAnnotation );
 					}
 					if ( classAnnotations != null ) {
 						for ( SkipForDialect annotation : classAnnotations ) {
-							map.put( annotation.dialectClass(), annotation );
+							map.put( DialectVersionKey.of( annotation ), annotation );
 						}
 					}
 					if ( methodAnnotation != null ) {
-						map.put( methodAnnotation.dialectClass(), methodAnnotation );
+						map.put( DialectVersionKey.of( methodAnnotation ), methodAnnotation );
 					}
 					if ( methodAnnotations != null ) {
 						for ( SkipForDialect annotation : methodAnnotations ) {
-							map.put( annotation.dialectClass(), annotation );
+							map.put( DialectVersionKey.of( annotation ), annotation );
 						}
 					}
 					return map.values();
@@ -218,9 +234,7 @@ public class DialectFilterExtension implements ExecutionCondition {
 						effectiveSkipForDialect.minorVersion(),
 						effectiveSkipForDialect.microVersion(),
 						dialect,
-						effectiveSkipForDialect.matchSubTypes()
-								? VersionMatchMode.SAME_OR_OLDER
-								: VersionMatchMode.SAME
+						effectiveSkipForDialect.versionMatchMode()
 				);
 
 				if ( versionsMatch ) {

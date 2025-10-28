@@ -4,17 +4,6 @@
  */
 package org.hibernate.orm.test.unionsubclass3;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
-
-import java.util.List;
-
-import org.hibernate.Transaction;
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -23,29 +12,39 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import java.util.List;
 
 /**
  * @author pholvs
  */
-public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {Child.class, Parent.class, Father.class, Mother.class};
-	}
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = {
+		UnionSubclassTest.Child.class,
+		UnionSubclassTest.Parent.class,
+		UnionSubclassTest.Father.class,
+		UnionSubclassTest.Mother.class
+})
+@SessionFactory
+public class UnionSubclassTest {
 
-	@After
-	public void tearDown() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createMutationQuery( "delete from Parent" ).executeUpdate();
-		} );
+	@AfterEach
+	public void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	@JiraKey( value = "HHH-12114")
-	public void testUnionSubclassClassResults() {
-		doInHibernate( this::sessionFactory, session -> {
+	@JiraKey("HHH-12114")
+	public void testUnionSubclassClassResults(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
 			Father father = new Father();
 			father.id = 1L;
 			father.fathersDay = "FD1";
@@ -88,8 +87,9 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 			session.persist(child3);
 			session.persist(child4);
 		});
-		doInHibernate( this::sessionFactory, session -> {
-			List results = session.createQuery(
+
+		factoryScope.inTransaction( session -> {
+			var results = session.createQuery(
 				"select c " +
 				"from Child c"
 				+ " left join c.parent p1 "
@@ -99,77 +99,67 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 				"	or "
 				+ "  	(TYPE(p2) = Mother and p2.mothersDay = 'MD1')")
 			.getResultList();
-			assertEquals(2, results.size());
+			Assertions.assertEquals( 2, results.size() );
 		} );
 	}
 
 	@Test
-	@JiraKey( value = "HHH-12565")
-	public void typeOfLeafTPC() {
-		doInHibernate( this::sessionFactory, session -> {
-			List results = session.createQuery(
+	@JiraKey("HHH-12565")
+	public void typeOfLeafTPC(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
+			var results = session.createQuery(
 					"select TYPE(f) " +
 							"from Father f" +
 							" where f.id = -1")
 					.getResultList();
-			assertEquals(0, results.size());
+			Assertions.assertEquals( 0, results.size() );
 		} );
 	}
 
 	@Test
-	@JiraKey( value = "HHH-12565")
-	public void typeOfLeafTPCWithoutWhere() {
-		doInHibernate( this::sessionFactory, session -> {
-			List results = session.createQuery("select TYPE(f) from Father f")
+	@JiraKey("HHH-12565")
+	public void typeOfLeafTPCWithoutWhere(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
+			var results = session.createQuery("select TYPE(f) from Father f")
 					.getResultList();
-			assertEquals(0, results.size());
+			Assertions.assertEquals( 0, results.size() );
 		} );
 	}
 
 	@Test
-	@JiraKey( value = "HHH-12565")
-	public void typeOfParentInheritorTPCCriteriaTest() {
-		inSession(
-				session -> {
-					Transaction transaction = session.beginTransaction();
-					Father father = new Father();
-					father.id = 42L;
-					session.persist( father );
-					session.flush();
+	@JiraKey("HHH-12565")
+	public void typeOfParentInheritorTPCCriteriaTest(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
+			Father father = new Father();
+			father.id = 42L;
+			session.persist( father );
+			session.flush();
 
-					HibernateCriteriaBuilder cb = session.getSessionFactory().getCriteriaBuilder();
-					CriteriaQuery<Parent> query = cb.createQuery( Parent.class );
-					Root<Parent> root = query.from( Parent.class );
-					query.where( cb.equal( root.type(), cb.literal(Father.class) ) );
-					List<Parent> result = session.createQuery( query ).getResultList();
-					Assertions.assertEquals( result, List.of( father ) );
-
-					transaction.rollback();
-				}
-		);
+			HibernateCriteriaBuilder cb = session.getSessionFactory().getCriteriaBuilder();
+			CriteriaQuery<Parent> query = cb.createQuery( Parent.class );
+			Root<Parent> root = query.from( Parent.class );
+			query.where( cb.equal( root.type(), cb.literal(Father.class) ) );
+			List<Parent> result = session.createQuery( query ).getResultList();
+			Assertions.assertEquals( result, List.of( father ) );
+		} );
 	}
 
 	@Test
-	@JiraKey( value = "HHH-12565")
-	public void typeOfTPCCriteriaTest() {
-		inSession(
-				session -> {
-					Transaction transaction = session.beginTransaction();
-					Father father = new Father();
-					father.id = 42L;
-					session.persist( father );
-					session.flush();
+	@JiraKey("HHH-12565")
+	public void typeOfTPCCriteriaTest(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction(session -> {
+			Father father = new Father();
+			father.id = 42L;
+			session.persist( father );
+			session.flush();
 
-					HibernateCriteriaBuilder cb = session.getSessionFactory().getCriteriaBuilder();
-					CriteriaQuery<Class> query = cb.createQuery( Class.class );
-					Root<Parent> root = query.from( Parent.class );
-					query.select( root.type() );
-					List<Class> result = session.createQuery( query ).getResultList();
-					Assertions.assertEquals( List.of( Father.class ), result );
-
-					transaction.rollback();
-				}
-		);
+			HibernateCriteriaBuilder cb = session.getSessionFactory().getCriteriaBuilder();
+			CriteriaQuery<Class> query = cb.createQuery( Class.class );
+			Root<Parent> root = query.from( Parent.class );
+			query.select( root.type() );
+			List<Class> result = session.createQuery( query ).getResultList();
+			Assertions.assertEquals( List.of( Father.class ), result );
+		} );
 	}
 
 	@Entity(name = "Child")

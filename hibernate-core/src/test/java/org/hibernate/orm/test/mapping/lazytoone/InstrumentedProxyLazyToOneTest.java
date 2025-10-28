@@ -64,12 +64,7 @@ public class InstrumentedProxyLazyToOneTest {
 
 	@AfterEach
 	protected void cleanupTestData(SessionFactoryScope scope) throws Exception {
-		scope.inTransaction(
-				(session) -> {
-					session.createMutationQuery( "delete Flight" ).executeUpdate();
-					session.createMutationQuery( "delete Airport" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

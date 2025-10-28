@@ -4,28 +4,26 @@
  */
 package org.hibernate.orm.test.fetchprofiles.join;
 
-
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class Student {
-	private Long id;
+	private Integer id;
 	private String name;
 
 	public Student() {
 	}
 
-	public Student(String name) {
+	public Student(Integer id, String name) {
+		this.id = id;
 		this.name = name;
 	}
 
-	public Long getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 

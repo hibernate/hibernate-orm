@@ -7,7 +7,6 @@ package org.hibernate.orm.test.envers.integration.basic;
 import org.hibernate.Session;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.internal.tools.MutableInteger;
 import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
@@ -33,8 +32,7 @@ public class RegisterUserEventListenersTest extends BaseEnversFunctionalTestCase
 	@Test
 	@JiraKey(value = "HHH-7478")
 	public void testTransactionProcessSynchronization() {
-		final EventListenerRegistry registry = sessionFactory().getServiceRegistry()
-				.getService( EventListenerRegistry.class );
+		final EventListenerRegistry registry = sessionFactory().getEventListenerRegistry();
 		final CountingPostInsertTransactionBoundaryListener listener = new CountingPostInsertTransactionBoundaryListener();
 
 		registry.getEventListenerGroup( EventType.POST_INSERT ).appendListener( listener );
@@ -58,15 +56,15 @@ public class RegisterUserEventListenersTest extends BaseEnversFunctionalTestCase
 
 		@Override
 		public void onPostInsert(PostInsertEvent event) {
-			event.getSession().getActionQueue().registerProcess(
+			event.getSession().getTransactionCompletionCallbacks().registerCallback(
 					new BeforeTransactionCompletionProcess() {
 						@Override
-						public void doBeforeTransactionCompletion(SessionImplementor session) {
+						public void doBeforeTransactionCompletion(SharedSessionContractImplementor session) {
 							beforeCounter.increase();
 						}
 					}
 			);
-			event.getSession().getActionQueue().registerProcess(
+			event.getSession().getTransactionCompletionCallbacks().registerCallback(
 					new AfterTransactionCompletionProcess() {
 						@Override
 						public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {

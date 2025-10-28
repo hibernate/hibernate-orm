@@ -9,18 +9,36 @@ import org.hibernate.type.BindableType;
 import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
+import java.util.Comparator;
+
 /**
  * Models a parameter expression declared in the query.
  *
  * @implNote Each usage of a given named/positional query parameter
- * will result in a unique SqmParameter instance, each will simply
- * use to the same binding.  This is important to distinguish usage
- * of the same parameter in different clauses which effects the
- * rendering and value binding.
+ * will result in a unique {@code SqmParameter} instance, each will
+ * simply use to the same binding. This is important to distinguish
+ * usage of the same parameter in different clauses which effects
+ * the rendering and value binding.
  *
  * @author Steve Ebersole
  */
-public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpression<T>, Comparable<SqmParameter<T>> {
+public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpression<T> {
+	Comparator<SqmParameter<?>> COMPARATOR = new Comparator<>() {
+		@Override
+		public int compare(SqmParameter<?> o1, SqmParameter<?> o2) {
+			if ( o1 instanceof SqmNamedParameter<?> one ) {
+				return o2 instanceof SqmNamedParameter<?>
+						? one.getName().compareTo( o2.getName() )
+						: -1;
+			}
+			else if ( o1 instanceof SqmPositionalParameter<?> one ) {
+				return o2 instanceof SqmPositionalParameter<?>
+						? one.getPosition().compareTo( o2.getPosition() )
+						: 1;
+			}
+			throw new HibernateException( "Unexpected SqmParameter type for comparison : " + this + " & " + o2 );
+		}
+	};
 	/**
 	 * If this represents a named parameter, return that parameter name;
 	 * otherwise return {@code null}.
@@ -69,27 +87,4 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 
 	@Override
 	SqmParameter<T> copy(SqmCopyContext context);
-
-	/**
-	 * @implSpec Defined as default since this is an SPI to
-	 * support any previous extensions
-	 */
-	@Override
-	default int compareTo(SqmParameter<T> anotherParameter) {
-		if ( this instanceof SqmNamedParameter<?> one ) {
-			return anotherParameter instanceof SqmNamedParameter<?>
-					? one.getName().compareTo( anotherParameter.getName() )
-					: -1;
-		}
-		else if ( this instanceof SqmPositionalParameter<?> one ) {
-			return anotherParameter instanceof SqmPositionalParameter<?>
-					? one.getPosition().compareTo( anotherParameter.getPosition() )
-					: 1;
-		}
-		else if ( this instanceof SqmJpaCriteriaParameterWrapper
-				&& anotherParameter instanceof SqmJpaCriteriaParameterWrapper ) {
-			return Integer.compare( this.hashCode(), anotherParameter.hashCode() );
-		}
-		throw new HibernateException( "Unexpected SqmParameter type for comparison : " + this + " & " + anotherParameter );
-	}
 }

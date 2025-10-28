@@ -19,22 +19,23 @@ import org.jboss.logging.Logger;
  */
 public final class NationalizedTypeMappings {
 
-	private static final Logger log = Logger.getLogger( NationalizedTypeMappings.class );
+	private static final Logger LOG = Logger.getLogger( NationalizedTypeMappings.class );
 
 	private NationalizedTypeMappings() {
 	}
 
 	public static int toNationalizedTypeCode(final int jdbcCode) {
-		switch ( jdbcCode ) {
-			case Types.CHAR: return Types.NCHAR;
-			case Types.CLOB: return Types.NCLOB;
-			case Types.LONGVARCHAR: return Types.LONGNVARCHAR;
-			case Types.VARCHAR: return Types.NVARCHAR;
-			default:
-				if ( log.isDebugEnabled() ) {
-					log.debug( "Unable to locate nationalized jdbc-code equivalent for given jdbc code : " + jdbcCode );
+		return switch ( jdbcCode ) {
+			case Types.CHAR -> Types.NCHAR;
+			case Types.CLOB -> Types.NCLOB;
+			case Types.LONGVARCHAR -> Types.LONGNVARCHAR;
+			case Types.VARCHAR -> Types.NVARCHAR;
+			default -> {
+				if ( LOG.isDebugEnabled() ) {
+					LOG.debug( "Unable to locate nationalized jdbc-code equivalent for given jdbc code : " + jdbcCode );
 				}
-				return jdbcCode;
-		}
+				yield jdbcCode;
+			}
+		};
 	}
 }

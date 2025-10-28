@@ -13,7 +13,7 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 /**
  * @author Vlad Mihalcea
@@ -45,9 +45,7 @@ public class ClobCharArrayTest {
 
 	@AfterEach
 	public void dropData(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.createQuery("delete Product").executeUpdate()
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	//tag::basic-clob-char-array-example[]

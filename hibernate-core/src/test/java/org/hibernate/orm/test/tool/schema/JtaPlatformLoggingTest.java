@@ -4,56 +4,41 @@
  */
 package org.hibernate.orm.test.tool.schema;
 
-import java.lang.invoke.MethodHandles;
-import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.internal.CoreMessageLogger;
-
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.logger.LoggerInspectionRule;
-import org.hibernate.testing.logger.Triggerable;
-import org.junit.Rule;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Logger;
+import org.hibernate.testing.orm.junit.MessageKeyInspection;
+import org.hibernate.testing.orm.junit.MessageKeyWatcher;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SettingConfiguration;
+import org.junit.jupiter.api.Test;
 
-import org.jboss.logging.Logger;
-
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Vlad Mihalcea
  */
 @JiraKey( value = "HHH-12763" )
-public class JtaPlatformLoggingTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, JtaPlatformInitiator.class.getName() ) );
-
-	private Triggerable triggerable = logInspection.watchForLogMessages( "HHH000490" );
-
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		TestingJtaBootstrap.prepare( settings );
-		settings.put( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta" );
-	}
+@MessageKeyInspection(
+		messageKey = "HHH000490",
+		resetBeforeEach = false,
+		logger = @Logger( loggerName = CoreMessageLogger.NAME )
+)
+@ServiceRegistry(settingConfigurations = @SettingConfiguration( configurer = TestingJtaBootstrap.class ) )
+@DomainModel(annotatedClasses = JtaPlatformLoggingTest.TestEntity.class)
+public class JtaPlatformLoggingTest {
 
 	@Test
-	public void test() {
-		assertTrue( triggerable.triggerMessage().startsWith("HHH000490: Using JTA platform"));
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-			TestEntity.class
-		};
+	public void test(MessageKeyWatcher messageKeyWatcher) {
+		assertTrue( messageKeyWatcher.wasTriggered() );
+		assertThat( messageKeyWatcher.getTriggeredMessages() ).hasSize( 1 );
+		assertThat( messageKeyWatcher.getTriggeredMessages().get( 0 ) ).startsWith( "HHH000490: Using JTA platform" );
 	}
 
 	@Entity( name = "TestEntity" )

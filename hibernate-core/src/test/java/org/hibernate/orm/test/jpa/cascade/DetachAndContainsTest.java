@@ -36,12 +36,7 @@ public class DetachAndContainsTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Tooth" ).executeUpdate();
-					entityManager.createQuery( "delete from Mouth" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

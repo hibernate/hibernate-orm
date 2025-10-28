@@ -95,14 +95,7 @@ public class DynamicUpdateAndCollectionsTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from SamplingOrder" ).executeUpdate();
-					session.createQuery( "delete from Customer" ).executeUpdate();
-					session.createQuery( "delete from User" ).executeUpdate();
-					session.createQuery( "delete from Role" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

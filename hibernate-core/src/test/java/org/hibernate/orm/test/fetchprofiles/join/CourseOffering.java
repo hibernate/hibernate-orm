@@ -7,31 +7,30 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class CourseOffering {
-	private Long id;
+	private Integer id;
 	private Course course;
 	private int semester;
 	private int year;
-	private Set enrollments = new HashSet();
+	private Set<Enrollment> enrollments = new HashSet<>();
 
 	public CourseOffering() {
 	}
 
-	public CourseOffering(Course course, int semester, int year) {
+	public CourseOffering(Integer id, Course course, int semester, int year) {
+		this.id = id;
 		this.course = course;
 		this.semester = semester;
 		this.year = year;
 	}
 
-	public Long getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 
@@ -59,11 +58,11 @@ public class CourseOffering {
 		this.year = year;
 	}
 
-	public Set getEnrollments() {
+	public Set<Enrollment> getEnrollments() {
 		return enrollments;
 	}
 
-	public void setEnrollments(Set enrollments) {
+	public void setEnrollments(Set<Enrollment> enrollments) {
 		this.enrollments = enrollments;
 	}
 }

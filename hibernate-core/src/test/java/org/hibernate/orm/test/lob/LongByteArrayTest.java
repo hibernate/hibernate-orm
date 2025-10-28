@@ -4,16 +4,15 @@
  */
 package org.hibernate.orm.test.lob;
 
-import java.util.Arrays;
-
 import org.hibernate.dialect.SybaseASEDialect;
-
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -24,9 +23,15 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
 public abstract class LongByteArrayTest {
 	private static final int ARRAY_SIZE = 10000;
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.dropData();
+	}
 
 	@Test
 	public void testBoundedLongByteArrayAccess(SessionFactoryScope scope) {
@@ -34,47 +39,37 @@ public abstract class LongByteArrayTest {
 		byte[] changed = buildRecursively( ARRAY_SIZE, false );
 		byte[] empty = new byte[] {};
 
-		Long id = scope.fromTransaction(
-				session -> {
-					LongByteArrayHolder entity = new LongByteArrayHolder();
-					session.persist( entity );
-					return entity.getId();
-				}
-		);
+		Long id = scope.fromTransaction(session -> {
+			var entity = new LongByteArrayHolder();
+			session.persist( entity );
+			return entity.getId();
+		} );
 
-		scope.inTransaction(
-				session -> {
-					LongByteArrayHolder entity = session.get( LongByteArrayHolder.class, id );
-					assertNull( entity.getLongByteArray() );
-					entity.setLongByteArray( original );
-				}
-		);
+		scope.inTransaction(session -> {
+			var entity = session.find( LongByteArrayHolder.class, id );
+			assertNull( entity.getLongByteArray() );
+			entity.setLongByteArray( original );
+		} );
 
-		scope.inTransaction(
-				session -> {
-					LongByteArrayHolder entity = session.get( LongByteArrayHolder.class, id );
-					Assertions.assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
-					assertEquals( original, entity.getLongByteArray() );
-					entity.setLongByteArray( changed );
-				}
-		);
+		scope.inTransaction(session -> {
+			var entity = session.find( LongByteArrayHolder.class, id );
+			Assertions.assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
+			assertEquals( original, entity.getLongByteArray() );
+			entity.setLongByteArray( changed );
+		} );
 
-		scope.inTransaction(
-				session -> {
-					LongByteArrayHolder entity = session.get( LongByteArrayHolder.class, id );
-					Assertions.assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
-					assertEquals( changed, entity.getLongByteArray() );
-					entity.setLongByteArray( null );
-				}
-		);
+		scope.inTransaction(session -> {
+			var entity = session.get( LongByteArrayHolder.class, id );
+			Assertions.assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
+			assertEquals( changed, entity.getLongByteArray() );
+			entity.setLongByteArray( null );
+		} );
 
-		scope.inTransaction(
-				session -> {
-					LongByteArrayHolder entity = session.get( LongByteArrayHolder.class, id );
-					assertNull( entity.getLongByteArray() );
-					entity.setLongByteArray( empty );
-				}
-		);
+		scope.inTransaction(session -> {
+			var entity = session.find( LongByteArrayHolder.class, id );
+			assertNull( entity.getLongByteArray() );
+			entity.setLongByteArray( empty );
+		} );
 	}
 
 	@Test
@@ -82,54 +77,38 @@ public abstract class LongByteArrayTest {
 	public void testEmptyArray(SessionFactoryScope scope) {
 		byte[] empty = new byte[] {};
 
-		LongByteArrayHolder longByteArrayHolder = new LongByteArrayHolder();
-		scope.inTransaction(
-				session -> {
-					longByteArrayHolder.setLongByteArray( empty );
-					session.persist( longByteArrayHolder );
-				}
-		);
+		var longByteArrayHolder = new LongByteArrayHolder();
+		scope.inTransaction(session -> {
+			longByteArrayHolder.setLongByteArray( empty );
+			session.persist( longByteArrayHolder );
+		} );
 
-		scope.inTransaction(
-				session -> {
-					LongByteArrayHolder entity = session.get( LongByteArrayHolder.class, longByteArrayHolder.getId() );
-					if ( entity.getLongByteArray() != null ) {
-						Assertions.assertEquals( empty.length, entity.getLongByteArray().length );
-						assertEquals( empty, entity.getLongByteArray() );
-					}
-				}
-		);
+		scope.inTransaction(session -> {
+			var entity = session.find( LongByteArrayHolder.class, longByteArrayHolder.getId() );
+			if ( entity.getLongByteArray() != null ) {
+				Assertions.assertEquals( empty.length, entity.getLongByteArray().length );
+				assertEquals( empty, entity.getLongByteArray() );
+			}
+		} );
 	}
 
 	@Test
 	public void testSaving(SessionFactoryScope scope) {
 		byte[] value = buildRecursively( ARRAY_SIZE, true );
 
-		Long id = scope.fromTransaction(
-				session -> {
-					LongByteArrayHolder entity = new LongByteArrayHolder();
-					entity.setLongByteArray( value );
-					session.persist( entity );
-					return entity.getId();
-				}
-		);
+		var id = scope.fromTransaction(session -> {
+			var entity = new LongByteArrayHolder();
+			entity.setLongByteArray( value );
+			session.persist( entity );
+			return entity.getId();
+		} );
 
-		scope.inTransaction(
-				session -> {
-					LongByteArrayHolder entity = session.get( LongByteArrayHolder.class, id );
-					Assertions.assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
-					assertEquals( value, entity.getLongByteArray() );
-					session.remove( entity );
-				}
-		);
-	}
-
-	@AfterEach
-	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete from LongByteArrayHolder" ).executeUpdate()
-		);
+		scope.inTransaction(session -> {
+			var entity = session.get( LongByteArrayHolder.class, id );
+			Assertions.assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
+			assertEquals( value, entity.getLongByteArray() );
+			session.remove( entity );
+		} );
 	}
 
 	private byte[] buildRecursively(int size, boolean on) {

@@ -46,9 +46,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @RequiresDialectFeature( feature = DialectFeatureChecks.CurrentTimestampHasMicrosecondPrecision.class )
@@ -109,7 +109,7 @@ public class DefaultGeneratedValueIdentityTest {
 		assertEquals( "Bob", theEntity.name );
 
 		scope.inTransaction( (session) -> {
-			TheEntity _theEntity = session.get( TheEntity.class, theEntity.id );
+			TheEntity _theEntity = session.find( TheEntity.class, theEntity.id );
 			assertNotNull( _theEntity.createdDate );
 			assertNotNull( _theEntity.alwaysDate );
 			assertNotNull( _theEntity.vmCreatedDate );
@@ -134,7 +134,7 @@ public class DefaultGeneratedValueIdentityTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (s) -> s.createQuery( "delete TheEntity" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "TheEntity" )

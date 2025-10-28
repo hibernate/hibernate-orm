@@ -28,9 +28,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-@DomainModel(
-		standardModels = StandardDomainModel.GAMBIT
-)
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(standardModels = StandardDomainModel.GAMBIT)
 @SessionFactory
 @SessionFactoryFunctionalTesting
 public class MultiIdEntityLoadTests {
@@ -205,12 +204,7 @@ public class MultiIdEntityLoadTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete BasicEntity" ).executeUpdate();
-					session.createQuery( "delete EntityWithAggregateId" ).executeUpdate();
-				}
-		);
+		scope.dropData();
 	}
 
 }

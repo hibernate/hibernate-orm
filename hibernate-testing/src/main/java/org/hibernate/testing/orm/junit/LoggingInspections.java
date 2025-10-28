@@ -10,6 +10,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
@@ -37,6 +38,11 @@ public @interface LoggingInspections {
 		 * JBoss Logging to prefix each messaged log event
 		 */
 		String messageKey();
+
+		/**
+		 * Whether to reset the inspection {@linkplain BeforeEachCallback before each test} method.
+		 */
+		boolean resetBeforeEach() default true;
 
 		/**
 		 * Descriptor of the log messages to watch for

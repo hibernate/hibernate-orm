@@ -4,64 +4,78 @@
  */
 package org.hibernate.orm.test.jpa.compliance.tck2_2.caching;
 
-import java.util.Map;
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
-import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import org.hamcrest.CoreMatchers;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-public class SubclassOnlyCachingTests extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				SubclassOnlyCachingTests.Person.class,
+				SubclassOnlyCachingTests.Employee.class,
+				SubclassOnlyCachingTests.Customer.class
+		}
+)
+@SessionFactory(generateStatistics = true)
+@ServiceRegistry( settings = {
+		@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true"),
+		@Setting(name = AvailableSettings.JPA_SHARED_CACHE_MODE, value = "ENABLE_SELECTIVE")
+}
+)
+public class SubclassOnlyCachingTests {
 	@Test
-	public void testMapping() {
+	public void testMapping(SessionFactoryScope scope) {
 		assertThat(
-				sessionFactory().getMappingMetamodel().getEntityDescriptor( Person.class ).hasCache(),
+				scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( Person.class ).hasCache(),
 				CoreMatchers.is( false )
 		);
 		assertThat(
-				sessionFactory().getMappingMetamodel().getEntityDescriptor( Employee.class ).hasCache(),
+				scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( Employee.class ).hasCache(),
 				CoreMatchers.is( false )
 		);
 		assertThat(
-				sessionFactory().getMappingMetamodel().getEntityDescriptor( Customer.class ).hasCache(),
+				scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( Customer.class ).hasCache(),
 				CoreMatchers.is( true )
 		);
 	}
 
 	@Test
-	public void testOnlySubclassIsCached() {
-		final StatisticsImplementor statistics = sessionFactory().getStatistics();
+	public void testOnlySubclassIsCached(SessionFactoryScope scope) {
+		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 
-		inTransaction(
+		scope.inTransaction(
 				s -> s.persist( new Customer( 1, "Acme Corp", "123" ) )
 		);
 
-		assertTrue( sessionFactory().getCache().contains( Customer.class, 1 ) );
+		assertTrue( scope.getSessionFactory().getCache().contains( Customer.class, 1 ) );
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					statistics.clear();
 
-					final Customer customer = s.get( Customer.class, 1 );
+					final Customer customer = s.find( Customer.class, 1 );
 
 					assertTrue( Hibernate.isInitialized( customer ) );
 
@@ -70,28 +84,9 @@ public class SubclassOnlyCachingTests extends BaseNonConfigCoreFunctionalTestCas
 		);
 	}
 
-	@After
-	public void cleanupData() {
-		inTransaction(
-				s -> s.createQuery( "delete from Person" ).executeUpdate()
-		);
-	}
-
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		super.addSettings( settings );
-
-		settings.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
-		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
-		settings.put( AvailableSettings.JPA_SHARED_CACHE_MODE, SharedCacheMode.ENABLE_SELECTIVE );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( Person.class );
-		sources.addAnnotatedClass( Employee.class );
-		sources.addAnnotatedClass( Customer.class );
+	@AfterEach
+	public void cleanupData(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
 	@Entity( name = "Person" )

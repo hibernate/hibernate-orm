@@ -15,7 +15,7 @@ import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.resource.beans.internal.BeansMessageLogger.BEANS_MSG_LOGGER;
 
 import java.util.Set;
 
@@ -32,8 +32,6 @@ import java.util.Set;
  * the JPA 2.2 spec.
  */
 public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
-	private static final Logger log = Logger.getLogger( JpaCompliantLifecycleStrategy.class );
-
 	public static final JpaCompliantLifecycleStrategy INSTANCE = new JpaCompliantLifecycleStrategy();
 
 	private JpaCompliantLifecycleStrategy() {
@@ -141,7 +139,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 				throw e;
 			}
 			catch (Exception e) {
-				log.debugf( "Error resolving CDI bean [%s] - using fallback", beanType.getName() );
+				BEANS_MSG_LOGGER.errorResolvingCdiBeanUsingFallback( beanType.getName() );
 				beanInstance = fallbackProducer.produceBeanInstance( beanType );
 
 				try {
@@ -255,7 +253,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 				beanInstance = bean.create( creationalContext );
 			}
 			catch (Exception e) {
-				log.debugf( "Error resolving CDI bean [%s] - using fallback", beanName );
+				BEANS_MSG_LOGGER.errorResolvingCdiBeanUsingFallback( beanName );
 				beanInstance = fallbackProducer.produceBeanInstance( beanName, beanType );
 
 				try {

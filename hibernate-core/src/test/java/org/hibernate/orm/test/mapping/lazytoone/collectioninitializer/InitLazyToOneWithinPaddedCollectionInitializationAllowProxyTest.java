@@ -125,13 +125,7 @@ public class InitLazyToOneWithinPaddedCollectionInitializationAllowProxyTest {
 
 	@AfterEach
 	void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete from UserAuthorization" ).executeUpdate();
-			session.createMutationQuery( "delete from Offer" ).executeUpdate();
-			session.createMutationQuery( "delete from CostCenter" ).executeUpdate();
-			session.createMutationQuery( "delete from User" ).executeUpdate();
-			session.createMutationQuery( "delete from Company" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

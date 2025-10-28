@@ -55,8 +55,8 @@ public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
 		final SubGraphGenerator subGraphCreator;
 
 		if ( attributeNodeContext.attributePath().attributeQualifier() == null ) {
-			if ( PARSING_LOGGER.isDebugEnabled() ) {
-				PARSING_LOGGER.debugf(
+			if ( PARSING_LOGGER.isTraceEnabled() ) {
+				PARSING_LOGGER.tracef(
 						"%s Start attribute : %s",
 						StringHelper.repeat( ">>", attributeNodeStack.depth() + 1 ),
 						attributeName
@@ -68,8 +68,8 @@ public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
 		else {
 			final String qualifierName = attributeNodeContext.attributePath().attributeQualifier().ATTR_NAME().getText();
 
-			if ( PARSING_LOGGER.isDebugEnabled() ) {
-				PARSING_LOGGER.debugf(
+			if ( PARSING_LOGGER.isTraceEnabled() ) {
+				PARSING_LOGGER.tracef(
 						"%s Start qualified attribute : %s.%s",
 						StringHelper.repeat( ">>", attributeNodeStack.depth() + 1 ),
 						attributeName,
@@ -97,8 +97,8 @@ public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
 			}
 		}
 
-		if ( PARSING_LOGGER.isDebugEnabled() ) {
-			PARSING_LOGGER.debugf(
+		if ( PARSING_LOGGER.isTraceEnabled() ) {
+			PARSING_LOGGER.tracef(
 					"%s Finished attribute : %s",
 					StringHelper.repeat( "<<", attributeNodeStack.depth() + 1 ),
 					attributeName
@@ -127,16 +127,16 @@ public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
 			return PathQualifierType.VALUE;
 		}
 
-		throw new InvalidGraphException( "Invalid path qualifier [" + qualifier + "] - expecting `key` or `value`" );
+		throw new InvalidGraphException( "Invalid path qualifier [" + qualifier + "] - expecting 'key' or 'value'" );
 	}
 
 	@Override
 	public SubGraphImplementor<?> visitSubGraph(GraphLanguageParser.SubGraphContext subGraphContext) {
 		final String subTypeName = subGraphContext.typeIndicator() == null ? null : subGraphContext.typeIndicator().TYPE_NAME().getText();
 
-		if ( PARSING_LOGGER.isDebugEnabled() ) {
-			PARSING_LOGGER.debugf(
-					"%s Starting graph : %s",
+		if ( PARSING_LOGGER.isTraceEnabled() ) {
+			PARSING_LOGGER.tracef(
+					"%s Starting graph: %s",
 					StringHelper.repeat( ">>", attributeNodeStack.depth() + 2 ),
 					subTypeName
 			);
@@ -160,8 +160,8 @@ public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
 			graphStack.pop();
 		}
 
-		if ( PARSING_LOGGER.isDebugEnabled() ) {
-			PARSING_LOGGER.debugf(
+		if ( PARSING_LOGGER.isTraceEnabled() ) {
+			PARSING_LOGGER.tracef(
 					"%s Finished graph : %s",
 					StringHelper.repeat( "<<", attributeNodeStack.depth() + 2 ),
 					subGraph.getGraphedType().getTypeName()

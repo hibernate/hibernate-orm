@@ -6,6 +6,7 @@ package org.hibernate.orm.test.onetoone.singletable;
 
 import java.util.List;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.exception.ConstraintViolationException;
 
@@ -51,18 +52,14 @@ public class SingleTableOneToOneTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from SubClass2" ).executeUpdate();
-					session.createMutationQuery( "delete from SubClass1" ).executeUpdate();
-					session.createMutationQuery( "delete from Container1" ).executeUpdate();
-					session.createMutationQuery( "delete from Container2" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase ignores unique constraints on nullable columns")
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true,
+			reason = "SybaseDialect ignores unique constraints on nullable columns")
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "InformixDialect ignores unique constraints on nullable columns")
 	public void testMultipleRelationshipsOnSingleTableInheritanceWronglyMappedAsOneToOne(SessionFactoryScope scope) {
 		assertThrows(
 				ConstraintViolationException.class,

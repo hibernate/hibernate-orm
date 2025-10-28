@@ -11,46 +11,35 @@ import jakarta.persistence.Id;
 import jakarta.persistence.TableGenerator;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Andrea Boriero
  */
 @JiraKey(value = "HHH-12157")
-public class TableGeneratorVisibilityTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, true );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				TestEntity1.class,
-				TestEntity2.class,
-				TestEntity3.class
-		};
-	}
+@DomainModel(annotatedClasses = {
+		TableGeneratorVisibilityTest.TestEntity1.class,
+		TableGeneratorVisibilityTest.TestEntity2.class,
+		TableGeneratorVisibilityTest.TestEntity3.class
+})
+@SessionFactory
+@ServiceRegistry(settings = {@Setting(name = AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, value = "true")})
+public class TableGeneratorVisibilityTest {
 
 	@Test
-	public void testGeneratorIsVisible() {
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.persist( new TestEntity1() );
-		} );
+	public void testGeneratorIsVisible(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new TestEntity1() ) );
 
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.persist( new TestEntity2() );
-		} );
+		scope.inTransaction( session -> session.persist( new TestEntity2() ) );
 
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.persist( new TestEntity3() );
-		} );
+		scope.inTransaction( session -> session.persist( new TestEntity3() ) );
 	}
 
 	@Entity(name = "TestEntity1")

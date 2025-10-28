@@ -27,12 +27,11 @@ public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implem
 	private final LongAdder optimisticFailureCount = new LongAdder();
 
 	EntityStatisticsImpl(EntityPersister rootEntityDescriptor) {
-		super(
-				() -> rootEntityDescriptor.getCacheAccessStrategy() != null
-						? rootEntityDescriptor.getCacheAccessStrategy().getRegion()
-						: null
-		);
-		this.rootEntityName = rootEntityDescriptor.getRootEntityName();
+		super( () -> {
+			final var cache = rootEntityDescriptor.getCacheAccessStrategy();
+			return cache != null ? cache.getRegion() : null;
+		} );
+		rootEntityName = rootEntityDescriptor.getRootEntityName();
 	}
 
 	public long getDeleteCount() {
@@ -92,7 +91,7 @@ public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implem
 	}
 
 	public String toString() {
-		final StringBuilder buffer = new StringBuilder()
+		final var text = new StringBuilder()
 				.append( "EntityStatistics" )
 				.append( "[rootEntityName=" ).append( rootEntityName )
 				.append( ",loadCount=" ).append( this.loadCount )
@@ -102,7 +101,7 @@ public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implem
 				.append( ",deleteCount=" ).append( this.deleteCount )
 				.append( ",fetchCount=" ).append( this.fetchCount )
 				.append( ",optimisticLockFailureCount=" ).append( this.optimisticFailureCount );
-		appendCacheStats( buffer );
-		return buffer.append( ']' ).toString();
+		appendCacheStats( text );
+		return text.append( ']' ).toString();
 	}
 }

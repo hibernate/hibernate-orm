@@ -26,11 +26,14 @@ import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 
 /**
- * Class responsible for extracting SQL statements from import script. Supports instructions/comments and quoted
- * strings spread over multiple lines. Each statement must end with semicolon.
+ * Class responsible for extracting SQL statements from an import script.
+ * Supports instructions/comments and quoted strings spread over multiple lines.
+ * Each statement must end with a semicolon.
  *
  * @author Lukasz Antoniak
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.cfg.SchemaToolingSettings#HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR
  */
 public class MultiLineSqlScriptExtractor implements SqlScriptCommandExtractor {
 	public static final String SHORT_NAME = "multi-line";
@@ -40,20 +43,20 @@ public class MultiLineSqlScriptExtractor implements SqlScriptCommandExtractor {
 	@Override
 	public List<String> extractCommands(Reader reader, Dialect dialect) {
 		try {
-			final SqlScriptParser.ScriptContext scriptParseTree = buildScriptParseTree( reader );
-			final SqlScriptVisitor visitor = new SqlScriptVisitor( dialect );
+			final var scriptParseTree = buildScriptParseTree( reader );
+			final var visitor = new SqlScriptVisitor( dialect );
 			return visitor.visitScript( scriptParseTree );
 		}
 		catch (Exception exception) {
 			if ( exception instanceof SqlScriptException sqlScriptException ) {
 				throw sqlScriptException;
 			}
-			throw new SqlScriptException( "Error during sql-script parsing.", exception );
+			throw new SqlScriptException( "Error during SQL script parsing", exception );
 		}
 	}
 
 	private static SqlScriptParser.ScriptContext buildScriptParseTree(Reader reader) throws IOException {
-		final SqlScriptLexer lexer = new SqlScriptLexer( CharStreams.fromReader( reader ) );
+		final var lexer = new SqlScriptLexer( CharStreams.fromReader( reader ) );
 		return buildScriptParseTree( lexer );
 	}
 
@@ -95,7 +98,7 @@ public class MultiLineSqlScriptExtractor implements SqlScriptCommandExtractor {
 				String msg,
 				RecognitionException e) {
 			if ( msg.contains( "missing ';'" ) ) {
-				throw new SqlScriptException( "Import script Sql statements must terminate with a ';' char" );
+				throw new SqlScriptException( "Import script SQL statements must terminate with a ';' char" );
 			}
 			super.syntaxError( recognizer, offendingSymbol, line, charPositionInLine, msg, e );
 		}

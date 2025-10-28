@@ -22,7 +22,10 @@ import org.hibernate.proxy.HibernateProxy;
  * Most of this code was originally an internal detail of {@code PojoEntityTuplizer},
  * then extracted to make it easier for integrators to initialize a custom
  * {@link org.hibernate.proxy.ProxyFactory}.
+ *
+ * @deprecated No longer used. Will be removed.
  */
+@Deprecated(since = "7.2", forRemoval = true)
 public final class ProxyFactoryHelper {
 
 	private ProxyFactoryHelper() {

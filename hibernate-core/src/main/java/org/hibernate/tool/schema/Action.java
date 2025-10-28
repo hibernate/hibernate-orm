@@ -4,7 +4,7 @@
  */
 package org.hibernate.tool.schema;
 
-import static org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_AUTO;
 
 /**
  * Enumerates the actions that may be performed by the
@@ -13,10 +13,10 @@ import static org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO;
  * several useful actions supported by Hibernate which are not covered by the JPA specification.
  * <ul>
  * <li>An action to be executed against the database may be specified using the configuration
- *     property {@value org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_DATABASE_ACTION}
- *     or using the property {@value org.hibernate.cfg.AvailableSettings#HBM2DDL_AUTO}.
+ *     property {@value org.hibernate.cfg.SchemaToolingSettings#JAKARTA_HBM2DDL_DATABASE_ACTION}
+ *     or using the property {@value org.hibernate.cfg.SchemaToolingSettings#HBM2DDL_AUTO}.
  * <li>An action to be written to a script may be specified using the configuration property
- *     {@value org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_SCRIPTS_ACTION}.
+ *     {@value org.hibernate.cfg.SchemaToolingSettings#JAKARTA_HBM2DDL_SCRIPTS_ACTION}.
  * </ul>
  *
  * @apiNote There is an ambiguity surrounding the value {@code "create"} here. The old-school
@@ -116,7 +116,17 @@ public enum Action {
 	 *
 	 * @since 7.0
 	 */
-	POPULATE;
+	POPULATE,
+	/**
+	 * Synchronize sequences with the data held in tables.
+	 *
+	 * @apiNote This action is not defined by JPA.
+	 *
+	 * @see org.hibernate.tool.schema.spi.SchemaPopulator
+	 *
+	 * @since 7.2
+	 */
+	SYNCHRONIZE;
 
 	/**
 	 * @see #NONE
@@ -150,6 +160,10 @@ public enum Action {
 	 * @see #POPULATE
 	 */
 	public static final String ACTION_POPULATE = "populate";
+	/**
+	 * @see #SYNCHRONIZE
+	 */
+	public static final String ACTION_SYNCHRONIZE = "synchronize";
 
 	/**
 	 * @see #NONE
@@ -170,8 +184,8 @@ public enum Action {
 
 	/**
 	 * The string configuration value identifying this action in JPA-standard configuration
-	 * via {@value org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_DATABASE_ACTION}
-	 * or {@value org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_SCRIPTS_ACTION}.
+	 * via {@value org.hibernate.cfg.SchemaToolingSettings#JAKARTA_HBM2DDL_DATABASE_ACTION}
+	 * or {@value org.hibernate.cfg.SchemaToolingSettings#JAKARTA_HBM2DDL_SCRIPTS_ACTION}.
 	 */
 	public String getExternalJpaName() {
 		return switch ( this ) {
@@ -185,7 +199,7 @@ public enum Action {
 
 	/**
 	 * The string configuration value identifying this action in old-school Hibernate
-	 * configuration via  {@value org.hibernate.cfg.AvailableSettings#HBM2DDL_AUTO}.
+	 * configuration via  {@value org.hibernate.cfg.SchemaToolingSettings#HBM2DDL_AUTO}.
 	 */
 	public String getExternalHbm2ddlName() {
 		return switch ( this ) {
@@ -197,6 +211,7 @@ public enum Action {
 			case VALIDATE -> ACTION_VALIDATE;
 			case UPDATE -> ACTION_UPDATE;
 			case POPULATE -> ACTION_POPULATE;
+			case SYNCHRONIZE -> ACTION_SYNCHRONIZE;
 			default -> null;
 		};
 	}
@@ -210,8 +225,8 @@ public enum Action {
 
 	/**
 	 * Interpret the value of the JPA-standard configuration property
-	 * {@value org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_DATABASE_ACTION}
-	 * or {@value org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_SCRIPTS_ACTION}
+	 * {@value org.hibernate.cfg.SchemaToolingSettings#JAKARTA_HBM2DDL_DATABASE_ACTION}
+	 * or {@value org.hibernate.cfg.SchemaToolingSettings#JAKARTA_HBM2DDL_SCRIPTS_ACTION}
 	 * as an instance of {@link Action}.
 	 *
 	 * @param value The encountered config value
@@ -236,7 +251,7 @@ public enum Action {
 		}
 
 		// prefer JPA external names
-		for ( Action action : values() ) {
+		for ( var action : values() ) {
 			final String jpaName = action.getExternalJpaName();
 			if ( jpaName != null && jpaName.equals( name ) ) {
 				return action;
@@ -244,7 +259,7 @@ public enum Action {
 		}
 
 		// then check hbm2ddl names
-		for ( Action action : values() ) {
+		for ( var action : values() ) {
 			final String hbm2ddlName = action.getExternalHbm2ddlName();
 			if ( hbm2ddlName != null && hbm2ddlName.equals( name ) ) {
 				return action;
@@ -252,7 +267,7 @@ public enum Action {
 		}
 
 		// lastly, look at the enum name
-		for ( Action action : values() ) {
+		for ( var action : values() ) {
 			if ( action.name().equals( name ) ) {
 				return action;
 			}
@@ -263,8 +278,8 @@ public enum Action {
 
 	/**
 	 * Interpret the value of the old-school Hibernate configuration property
-	 * {@value org.hibernate.cfg.AvailableSettings#HBM2DDL_AUTO} as an instance
-	 * of {@link Action}.
+	 * {@value org.hibernate.cfg.SchemaToolingSettings#HBM2DDL_AUTO} as an
+	 * instance of {@link Action}.
 	 *
 	 * @param value The encountered config value
 	 *
@@ -288,7 +303,7 @@ public enum Action {
 		}
 
 		// prefer hbm2ddl names
-		for ( Action action : values() ) {
+		for ( var action : values() ) {
 			final String hbm2ddlName = action.getExternalHbm2ddlName();
 			if ( hbm2ddlName != null && hbm2ddlName.equals( name ) ) {
 				return action;
@@ -296,7 +311,7 @@ public enum Action {
 		}
 
 		// then check JPA external names
-		for ( Action action : values() ) {
+		for ( var action : values() ) {
 			final String jpaName = action.getExternalJpaName();
 			if ( jpaName != null && jpaName.equals( name ) ) {
 				return action;

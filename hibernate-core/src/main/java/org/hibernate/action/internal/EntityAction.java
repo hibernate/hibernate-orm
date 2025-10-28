@@ -8,7 +8,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.ComparableExecutable;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.persister.entity.EntityPersister;
@@ -94,7 +93,7 @@ public abstract class EntityAction
 	 */
 	public final Object getId() {
 		if ( id instanceof DelayedPostInsertIdentifier ) {
-			final EntityEntry entry = session.getPersistenceContextInternal().getEntry( instance );
+			final var entry = session.getPersistenceContextInternal().getEntry( instance );
 			final Object eeId = entry == null ? null : entry.getId();
 			return eeId instanceof DelayedPostInsertIdentifier ? null : eeId;
 		}
@@ -148,13 +147,14 @@ public abstract class EntityAction
 	}
 
 	@Override
-	public int compareTo(ComparableExecutable o) {
+	public int compareTo(ComparableExecutable executable) {
 		//sort first by entity name
-		final int roleComparison = entityName.compareTo( o.getPrimarySortClassifier() );
+		final int roleComparison = entityName.compareTo( executable.getPrimarySortClassifier() );
 		return roleComparison != 0
 				? roleComparison
 				//then by id
-				: persister.getIdentifierType().compare( id, o.getSecondarySortIndex(), session.getSessionFactory() );
+				: persister.getIdentifierType()
+						.compare( id, executable.getSecondarySortIndex(), session.getFactory() );
 	}
 
 	@Override
@@ -181,8 +181,12 @@ public abstract class EntityAction
 		// guard against NullPointerException
 		if ( session != null ) {
 			this.session = session;
-			this.persister = session.getFactory().getMappingMetamodel().getEntityDescriptor( entityName );
-			this.instance = session.getPersistenceContext().getEntity( session.generateEntityKey( id, persister ) );
+			this.persister =
+					session.getFactory().getMappingMetamodel()
+							.getEntityDescriptor( entityName );
+			this.instance =
+					session.getPersistenceContext()
+							.getEntity( session.generateEntityKey( id, persister ) );
 		}
 	}
 

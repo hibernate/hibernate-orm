@@ -4,12 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
-
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -19,8 +16,12 @@ import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Consumer;
 
 import static jakarta.persistence.metamodel.Type.PersistenceType.EMBEDDABLE;
 
@@ -40,7 +41,7 @@ public class SqmMapEntryReference<K,V>
 
 	private final JavaType<Map.Entry<K,V>> mapEntryTypeDescriptor;
 
-	private String explicitAlias;
+	private @Nullable String explicitAlias;
 
 	public SqmMapEntryReference(
 			SqmPath<?> mapPath,
@@ -146,6 +147,34 @@ public class SqmMapEntryReference<K,V>
 		hql.append( "entry(" );
 		mapPath.appendHqlString( hql, context );
 		hql.append( ')' );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmMapEntryReference<?, ?> that
+			&& mapPath.equals( that.mapPath )
+			&& Objects.equals( explicitAlias, that.explicitAlias );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = mapPath.hashCode();
+		result = 31 * result + Objects.hashCode( explicitAlias );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmMapEntryReference<?, ?> that
+			&& mapPath.isCompatible( that.mapPath )
+			&& Objects.equals( explicitAlias, that.explicitAlias );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = mapPath.cacheHashCode();
+		result = 31 * result + Objects.hashCode( explicitAlias );
+		return result;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

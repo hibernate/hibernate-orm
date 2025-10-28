@@ -150,10 +150,6 @@ public class ListenerCompleteXmlTests {
 
 	@AfterEach
 	void dropData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete LineItem" ).executeUpdate();
-			session.createMutationQuery( "delete Order" ).executeUpdate();
-			session.createMutationQuery( "delete Product" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

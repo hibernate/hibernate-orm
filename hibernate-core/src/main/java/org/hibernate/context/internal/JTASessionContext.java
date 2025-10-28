@@ -4,24 +4,22 @@
  */
 package org.hibernate.context.internal;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import jakarta.transaction.Synchronization;
 import jakarta.transaction.Transaction;
-import jakarta.transaction.TransactionManager;
 
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.context.spi.AbstractCurrentSessionContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.internal.CoreMessageLogger;
+import static org.hibernate.context.internal.CurrentSessionLogging.CURRENT_SESSION_LOGGER;
 
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
-import org.jboss.logging.Logger;
+
+import static org.hibernate.engine.transaction.internal.jta.JtaStatusHelper.isActive;
 
 /**
  * An implementation of {@link org.hibernate.context.spi.CurrentSessionContext} which scopes the notion
@@ -44,11 +42,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class JTASessionContext extends AbstractCurrentSessionContext {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			JTASessionContext.class.getName()
-	);
 
 	private transient final Map<Object, Session> currentSessionMap = new ConcurrentHashMap<>();
 
@@ -63,8 +56,8 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 
 	@Override
 	public Session currentSession() throws HibernateException {
-		final JtaPlatform jtaPlatform = factory().getServiceRegistry().requireService( JtaPlatform.class );
-		final TransactionManager transactionManager = jtaPlatform.retrieveTransactionManager();
+		final var jtaPlatform = factory().getServiceRegistry().requireService( JtaPlatform.class );
+		final var transactionManager = jtaPlatform.retrieveTransactionManager();
 		if ( transactionManager == null ) {
 			throw new HibernateException( "No TransactionManagerLookup specified" );
 		}
@@ -75,7 +68,7 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 			if ( txn == null ) {
 				throw new HibernateException( "Unable to locate current JTA transaction" );
 			}
-			if ( !JtaStatusHelper.isActive( txn.getStatus() ) ) {
+			if ( !isActive( txn.getStatus() ) ) {
 				// We could register the session against the transaction even though it is
 				// not started, but we'd have no guarantee of ever getting the map
 				// entries cleaned up (aside from spawning threads).
@@ -104,7 +97,7 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 					currentSession.close();
 				}
 				catch ( Throwable e ) {
-					LOG.debug( "Unable to release generated current-session on failed synchronization registration", e );
+					CURRENT_SESSION_LOGGER.unableToReleaseGeneratedCurrentSessionOnFailedSynchronizationRegistration(e);
 				}
 				throw new HibernateException( "Unable to register cleanup Synchronization with TransactionManager" );
 			}

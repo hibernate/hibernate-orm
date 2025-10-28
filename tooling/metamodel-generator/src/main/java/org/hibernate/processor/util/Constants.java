@@ -4,8 +4,6 @@
  */
 package org.hibernate.processor.util;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,6 +19,8 @@ public final class Constants {
 	public static final String MAPPED_SUPERCLASS = "jakarta.persistence.MappedSuperclass";
 	public static final String EMBEDDABLE = "jakarta.persistence.Embeddable";
 	public static final String EMBEDDED = "jakarta.persistence.Embedded";
+	public static final String ENUMERATED = "jakarta.persistence.Enumerated";
+	public static final String LOB = "jakarta.persistence.Lob";
 	public static final String ID = "jakarta.persistence.Id";
 	public static final String ID_CLASS = "jakarta.persistence.IdClass";
 	public static final String EMBEDDED_ID = "jakarta.persistence.EmbeddedId";
@@ -37,6 +37,7 @@ public final class Constants {
 	public static final String ACCESS = "jakarta.persistence.Access";
 	public static final String CONVERT = "jakarta.persistence.Convert";
 	public static final String GENERATED_VALUE = "jakarta.persistence.GeneratedValue";
+	public static final String ORDER_BY = "jakarta.persistence.OrderBy";
 
 	public static final String NAMED_QUERY = "jakarta.persistence.NamedQuery";
 	public static final String NAMED_QUERIES = "jakarta.persistence.NamedQueries";
@@ -158,46 +159,37 @@ public final class Constants {
 	public static final String PANACHE_REACTIVE_REPOSITORY_BASE = "io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase";
 	public static final String PANACHE_REACTIVE_ENTITY_BASE = "io.quarkus.hibernate.reactive.panache.PanacheEntityBase";
 
+	public static final String SPRING_OBJECT_PROVIDER = "org.springframework.beans.factory.ObjectProvider";
+	public static final String SPRING_STATELESS_SESSION_PROVIDER = SPRING_OBJECT_PROVIDER + "<" + HIB_STATELESS_SESSION + ">";
+	public static final String SPRING_COMPONENT = "org.springframework.stereotype.Component";
+
+	public static final String PANACHE2_ENTITY_MARKER = "io.quarkus.hibernate.panache.PanacheEntityMarker";
+	public static final String PANACHE2_MANAGED_BLOCKING_REPOSITORY_BASE = "io.quarkus.hibernate.panache.managed.blocking.PanacheManagedBlockingRepositoryBase";
+	public static final String PANACHE2_STATELESS_BLOCKING_REPOSITORY_BASE = "io.quarkus.hibernate.panache.stateless.blocking.PanacheStatelessBlockingRepositoryBase";
+	public static final String PANACHE2_MANAGED_REACTIVE_REPOSITORY_BASE = "io.quarkus.hibernate.panache.managed.reactive.PanacheManagedReactiveRepositoryBase";
+	public static final String PANACHE2_STATELESS_REACTIVE_REPOSITORY_BASE = "io.quarkus.hibernate.panache.stateless.reactive.PanacheStatelessReactiveRepositoryBase";
+
 	public static final Map<String, String> COLLECTIONS = Map.of(
-			COLLECTION, Constants.COLLECTION_ATTRIBUTE,
-			SET, Constants.SET_ATTRIBUTE,
-			LIST, Constants.LIST_ATTRIBUTE,
-			MAP, Constants.MAP_ATTRIBUTE,
+			COLLECTION, COLLECTION_ATTRIBUTE,
+			SET, SET_ATTRIBUTE,
+			LIST, LIST_ATTRIBUTE,
+			MAP, MAP_ATTRIBUTE,
 			// Hibernate also supports the SortedSet and SortedMap interfaces
-			java.util.SortedSet.class.getName(), Constants.SET_ATTRIBUTE,
-			java.util.SortedMap.class.getName(), Constants.MAP_ATTRIBUTE
+			java.util.SortedSet.class.getName(), SET_ATTRIBUTE,
+			java.util.SortedMap.class.getName(), MAP_ATTRIBUTE
 	);
 
 	public static final Set<String> SESSION_TYPES =
 			Set.of(
-					Constants.ENTITY_MANAGER,
-					Constants.HIB_SESSION,
-					Constants.HIB_STATELESS_SESSION,
-					Constants.MUTINY_SESSION,
-					Constants.UNI_MUTINY_SESSION
+					ENTITY_MANAGER,
+					HIB_SESSION,
+					HIB_STATELESS_SESSION,
+					MUTINY_SESSION,
+					MUTINY_STATELESS_SESSION,
+					UNI_MUTINY_SESSION,
+					UNI_MUTINY_STATELESS_SESSION,
+					SPRING_STATELESS_SESSION_PROVIDER
 			);
-
-	//TODO: this is not even an exhaustive list of built-in basic types
-	//      so any logic that relies on incomplete this list is broken!
-	public static final Set<String> BASIC_TYPES =  Set.of(
-			String.class.getName(),
-			Boolean.class.getName(),
-			Byte.class.getName(),
-			Character.class.getName(),
-			Short.class.getName(),
-			Integer.class.getName(),
-			Long.class.getName(),
-			Float.class.getName(),
-			Double.class.getName(),
-			BigInteger.class.getName(),
-			BigDecimal.class.getName(),
-			java.util.Date.class.getName(),
-			java.util.Calendar.class.getName(),
-			java.sql.Date.class.getName(),
-			java.sql.Time.class.getName(),
-			java.sql.Timestamp.class.getName(),
-			java.sql.Blob.class.getName()
-	);
 
 	public static final List<String> BASIC_ARRAY_TYPES = List.of(
 			Character.class.getName(),

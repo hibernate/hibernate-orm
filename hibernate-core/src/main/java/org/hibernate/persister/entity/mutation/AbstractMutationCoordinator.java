@@ -18,7 +18,6 @@ import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.ModelMutationLogging;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.ValuesAnalysis;
@@ -28,6 +27,9 @@ import org.hibernate.sql.model.ast.builder.ColumnValuesTableMutationBuilder;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
 import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
+
+import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
+
 
 /**
  * Base support for coordinating mutations against an entity
@@ -99,10 +101,7 @@ public abstract class AbstractMutationCoordinator {
 					}
 					else {
 						skipped++;
-						ModelMutationLogging.MODEL_MUTATION_LOGGER.debugf(
-								"Skipping table update - %s",
-								tableMutation.getTableName()
-						);
+						MODEL_MUTATION_LOGGER.skippingUpdate( tableMutation.getTableName() );
 					}
 				}
 				if ( skipped != 0 ) {

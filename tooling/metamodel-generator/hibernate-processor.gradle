@@ -6,7 +6,7 @@
 plugins {
 	id "local.publishing-java-module"
 	id "local.publishing-group-relocation"
-	id "org.hibernate.build.version-injection"
+    id "org.hibernate.build.version-injection"
 }
 
 description = 'Hibernate compile-time tooling'
@@ -57,11 +57,11 @@ dependencies {
     api libs.byteBuddy
 	api libs.logging
 
-	quarkusOrmPanacheImplementation "io.quarkus:quarkus-hibernate-orm-panache:3.6.2"
-	quarkusHrPanacheImplementation "io.quarkus:quarkus-hibernate-reactive-panache:3.6.2"
+	quarkusOrmPanacheImplementation "io.quarkus:quarkus-hibernate-orm-panache:3.24.1"
+	quarkusHrPanacheImplementation "io.quarkus:quarkus-hibernate-reactive-panache:3.24.1"
     jakartaDataImplementation "jakarta.data:jakarta.data-api:1.0.0"
-	jakartaDataImplementation "org.hibernate.reactive:hibernate-reactive-core:2.2.2.Final"
-	jakartaDataImplementation "io.quarkus:quarkus-hibernate-orm-panache:3.6.2"
+	jakartaDataImplementation "org.hibernate.reactive:hibernate-reactive-core:3.0.1.Final"
+	jakartaDataImplementation "io.quarkus:quarkus-hibernate-orm-panache:3.24.1"
 }
 
 // The source set gets a custom configuration which extends the normal test implementation config
@@ -77,49 +77,38 @@ configurations {
     jakartaDataCompileOnly.extendsFrom(testCompileOnly)
 }
 
+versionInjection {
+    into( 'org.hibernate.processor.Version', 'initVersion' )
+}
+
 def quarkusOrmPanacheTestTask = tasks.register( 'quarkusOrmPanacheTest', Test ) {
 	description = 'Runs the Quarkus ORM Panache tests.'
 	group = 'verification'
+	useJUnitPlatform()
 
 	testClassesDirs = sourceSets.quarkusOrmPanache.output.classesDirs
 	classpath = sourceSets.quarkusOrmPanache.runtimeClasspath
-	javaLauncher = tasks.test.javaLauncher
 	shouldRunAfter test
-}
-tasks.named( "compileQuarkusOrmPanacheJava", JavaCompile ) {
-	sourceCompatibility = tasks.compileTestJava.sourceCompatibility
-	targetCompatibility = tasks.compileTestJava.targetCompatibility
-	javaCompiler = tasks.compileTestJava.javaCompiler
 }
 
 def quarkusHrPanacheTestTask = tasks.register( 'quarkusHrPanacheTest', Test ) {
 	description = 'Runs the Quarkus HR Panache tests.'
 	group = 'verification'
+	useJUnitPlatform()
 
 	testClassesDirs = sourceSets.quarkusHrPanache.output.classesDirs
 	classpath = sourceSets.quarkusHrPanache.runtimeClasspath
-	javaLauncher = tasks.test.javaLauncher
 	shouldRunAfter test
-}
-tasks.named( "compileQuarkusHrPanacheJava", JavaCompile ) {
-	sourceCompatibility = tasks.compileTestJava.sourceCompatibility
-	targetCompatibility = tasks.compileTestJava.targetCompatibility
-	javaCompiler = tasks.compileTestJava.javaCompiler
 }
 
 def jakartaDataTestTask = tasks.register( 'jakartaDataTest', Test ) {
     description = 'Runs the Jakarta Data tests.'
     group = 'verification'
+	useJUnitPlatform()
 
     testClassesDirs = sourceSets.jakartaData.output.classesDirs
     classpath = sourceSets.jakartaData.runtimeClasspath
-	javaLauncher = tasks.test.javaLauncher
     shouldRunAfter test
-}
-tasks.named( "compileJakartaDataJava", JavaCompile ) {
-	sourceCompatibility = tasks.compileTestJava.sourceCompatibility
-	targetCompatibility = tasks.compileTestJava.targetCompatibility
-	javaCompiler = tasks.compileTestJava.javaCompiler
 }
 
 check.dependsOn quarkusHrPanacheTestTask

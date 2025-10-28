@@ -5,7 +5,7 @@
 package org.hibernate.envers.strategy.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.Session;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
@@ -59,7 +59,7 @@ public interface AuditStrategy {
 	 * @param revision Current revision data.
 	 */
 	void perform(
-			Session session,
+			SharedSessionContractImplementor session,
 			String entityName,
 			Configuration configuration,
 			Object id,
@@ -78,7 +78,7 @@ public interface AuditStrategy {
 	 * @param revision Current revision data
 	 */
 	void performCollectionChange(
-			Session session,
+			SharedSessionContractImplementor session,
 			String entityName,
 			String propertyName,
 			Configuration configuration,

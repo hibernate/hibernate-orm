@@ -45,14 +45,7 @@ public class OptimisticLockTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope){
-		scope.inTransaction(
-				session ->
-				{
-					session.createQuery( "delete from LockDirty" ).executeUpdate();
-					session.createQuery( "delete from LockAll" ).executeUpdate();
-				}
-		);
-
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

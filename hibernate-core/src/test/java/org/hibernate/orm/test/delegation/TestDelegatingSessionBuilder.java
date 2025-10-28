@@ -19,7 +19,6 @@ import org.hibernate.engine.spi.AbstractDelegatingSessionBuilder;
 @SuppressWarnings("unused")
 public class TestDelegatingSessionBuilder extends AbstractDelegatingSessionBuilder {
 
-	@SuppressWarnings("rawtypes")
 	public TestDelegatingSessionBuilder(SessionBuilder delegate) {
 		super( delegate );
 	}

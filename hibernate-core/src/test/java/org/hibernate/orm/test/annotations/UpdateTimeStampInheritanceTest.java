@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.generator.internal.CurrentTimestampGeneration;
@@ -46,22 +47,15 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 				UpdateTimeStampInheritanceTest.AbstractPerson.class,
 				UpdateTimeStampInheritanceTest.Address.class
 		},
-		settingProviders = @SettingProvider(settingName = CurrentTimestampGeneration.CLOCK_SETTING_NAME, provider = UpdateTimeStampInheritanceTest.ClockProvider.class)
+		settingProviders = @SettingProvider(settingName = CurrentTimestampGeneration.CLOCK_SETTING_NAME, provider = MutableClockSettingProvider.class)
 )
 public class UpdateTimeStampInheritanceTest {
 	private static final String customerId = "1";
-	private static final MutableClock clock = new MutableClock();
-
-	public static class ClockProvider implements SettingProvider.Provider<MutableClock> {
-
-		@Override
-		public MutableClock getSetting() {
-			return clock;
-		}
-	}
+	private MutableClock clock;
 
 	@BeforeEach
 	public void setUp(EntityManagerFactoryScope scope) {
+		clock = CurrentTimestampGeneration.getClock( scope.getEntityManagerFactory().unwrap( SessionFactory.class ) );
 		clock.reset();
 		scope.inTransaction( entityManager -> {
 			Customer customer = new Customer();
@@ -74,10 +68,7 @@ public class UpdateTimeStampInheritanceTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction( entityManager -> {
-			entityManager.createQuery( "delete Customer" ).executeUpdate();
-			entityManager.createQuery( "delete Address" ).executeUpdate();
-		} );
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -215,9 +206,7 @@ public class UpdateTimeStampInheritanceTest {
 			entityManager.unwrap( Session.class ).merge( customer );
 		} );
 
-		scope.inTransaction( entityManager -> {
-			assertModifiedAtWasNotUpdated( entityManager.find( Customer.class, customerId ) );
-		} );
+		scope.inTransaction( entityManager -> assertModifiedAtWasNotUpdated(entityManager.find(Customer.class, customerId)) );
 	}
 
 	private void assertModifiedAtWasNotUpdated(Customer customer) {

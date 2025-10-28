@@ -13,7 +13,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.tuple.entity.EntityMetamodel;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -27,10 +26,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Alex Burgel
@@ -60,12 +59,7 @@ public class ImmutableManyToOneNaturalIdHbmTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					session.createQuery( "delete Child" ).executeUpdate();
-					session.createQuery( "delete Parent" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -76,9 +70,8 @@ public class ImmutableManyToOneNaturalIdHbmTest {
 		final EntityMappingType childMapping = runtimeMetamodels.getEntityMappingType( Child.class.getName() );
 
 		final EntityPersister persister = childMapping.getEntityPersister();
-		final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
-		final int nameIndex = entityMetamodel.getPropertyIndex( "name" );
-		final int parentIndex = entityMetamodel.getPropertyIndex( "parent" );
+		final int nameIndex = persister.getPropertyIndex( "name" );
+		final int parentIndex = persister.getPropertyIndex( "parent" );
 
 		// checking alphabetic sort in relation to EntityPersister/EntityMetamodel
 		assertThat( nameIndex, lessThan( parentIndex ) );
@@ -109,7 +102,7 @@ public class ImmutableManyToOneNaturalIdHbmTest {
 
 	@Test
 	public void testNaturalIdCheck(SessionFactoryScope scope) {
-		final Child child = scope.fromTransaction( (s) -> s.get( Child.class, 1 ) );
+		final Child child = scope.fromTransaction( (s) -> s.find( Child.class, 1 ) );
 
 		// child is detached...
 		//   - change the name and attempt to reattach it, which should fail

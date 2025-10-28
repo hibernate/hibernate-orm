@@ -20,9 +20,8 @@ import org.junit.jupiter.api.Test;
  *
  * @author Gail Badner
  */
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/idgen/biginteger/sequence/ZeroScaleMapping.hbm.xml"
-)
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/idgen/biginteger/sequence/ZeroScaleMapping.hbm.xml")
 @SessionFactory
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSequences.class )
 public class BigIntegerSequenceGeneratorZeroScaleTest extends BigIntegerSequenceGeneratorTest {
@@ -31,5 +30,4 @@ public class BigIntegerSequenceGeneratorZeroScaleTest extends BigIntegerSequence
 	public void testBasics(SessionFactoryScope scope) {
 		super.testBasics( scope );
 	}
-
 }

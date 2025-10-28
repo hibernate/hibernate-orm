@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * A {@link FunctionArgumentTypeResolver} that resolves the argument types for the {@code array_contains} function.
  */
-public class ArrayContainsArgumentTypeResolver extends AbstractFunctionArgumentTypeResolver {
+public class ArrayContainsArgumentTypeResolver implements AbstractFunctionArgumentTypeResolver {
 
 	public static final FunctionArgumentTypeResolver INSTANCE = new ArrayContainsArgumentTypeResolver();
 

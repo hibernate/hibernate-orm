@@ -76,29 +76,38 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
-		hql.append( literalValue );
+		hql.append( literalValue )
+			.append( switch ( typeCategory ) {
+				case BIG_DECIMAL -> "bd";
+				case FLOAT -> "f";
+				case BIG_INTEGER -> "bi";
+				case LONG -> "l";
+				case INTEGER, DOUBLE -> "";
+			} );
+	}
 
-		switch ( typeCategory ) {
-			case BIG_DECIMAL: {
-				hql.append( "bd" );
-				break;
-			}
-			case FLOAT: {
-				hql.append( "f" );
-				break;
-			}
-			case BIG_INTEGER: {
-				hql.append( "bi" );
-				break;
-			}
-			case LONG: {
-				hql.append( "l" );
-				break;
-			}
-			default: {
-				// nothing to do for double/integer
-			}
-		}
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmHqlNumericLiteral<?> that
+			&& literalValue.equals( that.literalValue )
+			&& typeCategory.equals( that.typeCategory );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = literalValue.hashCode();
+		result = 31 * result + typeCategory.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
 	}
 
 	@Override

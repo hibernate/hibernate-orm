@@ -20,6 +20,8 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
+import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.resolveFromSettings;
+
 /**
  * This {@link ConnectionProvider} extends any other ConnectionProvider
  * that would be used by default taken the current configuration properties.
@@ -68,6 +70,7 @@ public class ConnectionProviderDelegate implements
 	public void configure(Map<String, Object> configurationValues) {
 		if ( !configured ) {
 			if ( connectionProvider == null ) {
+				resolveFromSettings( configurationValues );
 				Map<String, Object> settings = new HashMap<>( configurationValues );
 				settings.remove( AvailableSettings.CONNECTION_PROVIDER );
 				connectionProvider = ConnectionProviderInitiator.INSTANCE.initiateService(

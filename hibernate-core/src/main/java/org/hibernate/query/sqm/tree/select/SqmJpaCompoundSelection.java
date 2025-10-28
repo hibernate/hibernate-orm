@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.select;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.hibernate.query.criteria.JpaCompoundSelection;
@@ -13,6 +14,7 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
@@ -122,11 +124,58 @@ public class SqmJpaCompoundSelection<T>
 
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
-		selectableNodes.get( 0 ).appendHqlString( hql, context );
+		appendSelectableNode( hql, context, selectableNodes.get( 0 ) );
 		for ( int i = 1; i < selectableNodes.size(); i++ ) {
 			hql.append(", ");
-			selectableNodes.get( i ).appendHqlString( hql, context );
+			appendSelectableNode( hql, context, selectableNodes.get( i ) );
 		}
+	}
+
+	private static void appendSelectableNode(StringBuilder hql, SqmRenderContext context, SqmSelectableNode<?> sqmSelectableNode) {
+		sqmSelectableNode.appendHqlString( hql, context );
+		if ( sqmSelectableNode.getAlias() != null ) {
+			hql.append( " as " ).append( sqmSelectableNode.getAlias() );
+		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if ( !(object instanceof SqmJpaCompoundSelection<?> that)
+			|| selectableNodes.size() != that.selectableNodes.size() ) {
+			return false;
+		}
+		for ( SqmSelectableNode<?> selectableNode : selectableNodes ) {
+			if ( !selectableNode.equals( that )
+				|| !Objects.equals( selectableNode.getAlias(), that.getAlias() ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode( selectableNodes );
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		if ( !(object instanceof SqmJpaCompoundSelection<?> that)
+			|| selectableNodes.size() != that.selectableNodes.size() ) {
+			return false;
+		}
+		for ( SqmSelectableNode<?> selectableNode : selectableNodes ) {
+			if ( !selectableNode.isCompatible( that )
+				|| !Objects.equals( selectableNode.getAlias(), that.getAlias() ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return SqmCacheable.cacheHashCode( selectableNodes );
 	}
 
 	@Override

@@ -576,6 +576,7 @@ The following special functions make it possible to discover or narrow expressio
 | `cast()` | Narrow a basic type | `cast(x as Type)` | ✔
 | `str()` | Cast to a string | `str(x)` | ✖
 | `ordinal()` | Get the ordinal value of an enum | `ordinal(x)` | ✖
+| `string()` | Get the string-valued name of an enum | `string(x)` | ✖
 |===
 
 Let's see what these functions do.
@@ -647,15 +648,16 @@ select str(id) from Order
 
 [[function-ordinal]]
 [discrete]
-===== Extracting the ordinal value of an enum
+===== Extracting the ordinal value or name of an enum
 
-The function `ordinal(x)` extracts the ordinal value of an enum.
-It supports both enum fields mapped as `ORDINAL` and `STRING`.
+The function `ordinal(x)` extracts the ordinal value of an enum, and the function `string(x)` extracts the name of the enum value as a string.
 
 [source, hql]
 ----
-select ordinal(p.type) from Phone p
+select ordinal(p.type), string(p.type) from Phone p
 ----
+
+Both functions work with enum fields mapped as `ORDINAL` and with enum fields mapped as `STRING`.
 
 [[functions-null]]
 ==== Functions for working with null values
@@ -1493,7 +1495,7 @@ Their syntax is defined by:
 include::{extrasdir}/predicate_like_bnf.txt[]
 ----
 
-The expression on the right is a pattern, where:
+The expression on the right is usually a SQL-style pattern, where:
 
 * `_` matches any single character,
 * `%` matches any number of characters, and
@@ -1506,6 +1508,14 @@ from Book where title not like '% for Dummies'
 ----
 
 The optional `escape` character allows a pattern to include a literal `_` or `%` character.
+
+Alternatively, the `regexp` keyword specifies that the pattern should be interpreted as a regular expression:
+
+[[like-regexp-predicate-example]]
+[source, hql]
+----
+from Book where title not like regexp '.+ for Dummies'
+----
 
 As you can guess, `not like` and `not ilike` are the enemies of `like` and `ilike`, and evaluate to the exact opposite boolean values.
 

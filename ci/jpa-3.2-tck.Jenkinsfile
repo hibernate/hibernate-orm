@@ -22,7 +22,7 @@ else {
 pipeline {
     agent none
     tools {
-        jdk 'OpenJDK 17 Latest'
+        jdk 'OpenJDK 21 Latest'
     }
     options {
   		rateLimitBuilds(throttle: [count: throttleCount, durationName: 'day', userBoost: true])
@@ -49,11 +49,6 @@ pipeline {
             stages {
                 stage('Build') {
                     steps {
-                        script {
-                            docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-                                docker.image('openjdk:17-jdk').pull()
-                            }
-                        }
                         dir('hibernate') {
                             checkout scm
                             withEnv([
@@ -72,9 +67,7 @@ pipeline {
                                 ).trim()
                                 switch (params.RDBMS) {
                                     case "mysql":
-                                        docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-                                            docker.image('mysql:8.2.0').pull()
-                                        }
+                                        docker.image('mysql:8.2.0').pull()
                                         sh "./docker_db.sh mysql"
                                         break;
                                     case "mssql":
@@ -82,15 +75,11 @@ pipeline {
                                         sh "./docker_db.sh mssql"
                                         break;
                                     case "oracle":
-                                        docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-                                            docker.image('gvenzl/oracle-free:23').pull()
-                                        }
+                                        docker.image('gvenzl/oracle-free:23').pull()
                                         sh "./docker_db.sh oracle"
                                         break;
                                     case "postgresql":
-                                        docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-                                            docker.image('postgis/postgis:16-3.4').pull()
-                                        }
+                                        docker.image('postgis/postgis:16-3.4').pull()
                                         sh "./docker_db.sh postgresql"
                                         break;
                                     case "db2":
@@ -98,9 +87,7 @@ pipeline {
                                         sh "./docker_db.sh db2"
                                         break;
                                     case "sybase":
-                                        docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-                                            docker.image('nguoianphu/docker-sybase').pull()
-                                        }
+                                        docker.image('nguoianphu/docker-sybase').pull()
                                         sh "./docker_db.sh sybase"
                                         break;
                                 }

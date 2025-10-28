@@ -22,7 +22,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Chris Cranford
@@ -93,7 +93,7 @@ public class AttributeAccessorTest {
 
 	public static class BasicAttributeAccessor extends PropertyAccessStrategyBasicImpl {
 		@Override
-		public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName, boolean setterRequired) {
+		public PropertyAccess buildPropertyAccess(Class<?> containerJavaType, String propertyName, boolean setterRequired) {
 			return super.buildPropertyAccess( containerJavaType, propertyName, setterRequired );
 		}
 	}

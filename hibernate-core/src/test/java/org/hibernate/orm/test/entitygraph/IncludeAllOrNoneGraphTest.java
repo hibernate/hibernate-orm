@@ -61,8 +61,7 @@ public class IncludeAllOrNoneGraphTest {
 	@AfterEach
 	void cleanUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete RootEntity" ).executeUpdate();
-			session.createMutationQuery( "delete ContainedEntity" ).executeUpdate();
+			scope.getSessionFactory().getSchemaManager().truncate();
 		} );
 	}
 

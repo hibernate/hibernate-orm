@@ -62,12 +62,7 @@ public class OneToManyPersistAndLoad2Test {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					Parent parent = session.get( Parent.class, 1l );
-					session.remove( parent );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

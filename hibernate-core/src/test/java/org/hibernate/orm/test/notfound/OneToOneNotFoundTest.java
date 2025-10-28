@@ -84,10 +84,7 @@ public class OneToOneNotFoundTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete ShowDescription" ).executeUpdate();
-			session.createMutationQuery( "delete Show" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

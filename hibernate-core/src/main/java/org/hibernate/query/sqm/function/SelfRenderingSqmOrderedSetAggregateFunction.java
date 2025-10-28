@@ -7,12 +7,14 @@ package org.hibernate.query.sqm.function;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -138,28 +140,31 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 		final List<? extends SqmTypedNode<?>> arguments = getArguments();
 		hql.append( getFunctionName() );
 		hql.append( '(' );
-		int i = 1;
-		if ( arguments.get( 0 ) instanceof SqmDistinct<?> ) {
-			arguments.get( 0 ).appendHqlString( hql, context );
-			if ( arguments.size() > 1 ) {
-				hql.append( ' ' );
-				arguments.get( 1 ).appendHqlString( hql, context );
-				i = 2;
+		if ( !arguments.isEmpty() ) {
+			int i = 1;
+			if ( arguments.get( 0 ) instanceof SqmDistinct<?> ) {
+				arguments.get( 0 ).appendHqlString( hql, context );
+				if ( arguments.size() > 1 ) {
+					hql.append( ' ' );
+					arguments.get( 1 ).appendHqlString( hql, context );
+					i = 2;
+				}
+			}
+			for ( ; i < arguments.size(); i++ ) {
+				hql.append( ", " );
+				arguments.get( i ).appendHqlString( hql, context );
 			}
 		}
-		for ( ; i < arguments.size(); i++ ) {
-			hql.append(", ");
-			arguments.get( i ).appendHqlString( hql, context );
-		}
-
 		hql.append( ')' );
 		if ( withinGroup != null ) {
 			hql.append( " within group (order by " );
 			final List<SqmSortSpecification> sortSpecifications = withinGroup.getSortSpecifications();
-			sortSpecifications.get( 0 ).appendHqlString( hql, context );
-			for ( int j = 1; j < sortSpecifications.size(); j++ ) {
-				hql.append( ", " );
-				sortSpecifications.get( j ).appendHqlString( hql, context );
+			if ( !sortSpecifications.isEmpty() ) {
+				sortSpecifications.get( 0 ).appendHqlString( hql, context );
+				for ( int j = 1; j < sortSpecifications.size(); j++ ) {
+					hql.append( ", " );
+					sortSpecifications.get( j ).appendHqlString( hql, context );
+				}
 			}
 			hql.append( ')' );
 		}
@@ -169,5 +174,33 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 			getFilter().appendHqlString( hql, context );
 			hql.append( ')' );
 		}
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		return super.equals( o )
+			&& o instanceof SelfRenderingSqmOrderedSetAggregateFunction<?> that
+			&& Objects.equals( withinGroup, that.withinGroup );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + Objects.hashCode( withinGroup );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object o) {
+		return super.isCompatible( o )
+			&& o instanceof SelfRenderingSqmOrderedSetAggregateFunction<?> that
+			&& SqmCacheable.areCompatible( withinGroup, that.withinGroup );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( withinGroup );
+		return result;
 	}
 }

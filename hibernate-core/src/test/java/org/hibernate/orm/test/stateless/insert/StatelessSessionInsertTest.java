@@ -48,7 +48,6 @@ public class StatelessSessionInsertTest {
 
 	@Entity
 	@Table(name = "departments")
-	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	public static class Department {
 		@Id
 		private Integer id;
@@ -65,7 +64,6 @@ public class StatelessSessionInsertTest {
 
 	@Entity
 	@Table(name = "employees")
-	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	public static class Employee {
 		@Id
 		private Integer id;

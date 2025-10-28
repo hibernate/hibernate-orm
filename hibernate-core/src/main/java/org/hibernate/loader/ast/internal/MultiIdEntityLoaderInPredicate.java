@@ -7,7 +7,6 @@ package org.hibernate.loader.ast.internal;
 import java.util.List;
 
 import org.hibernate.LockOptions;
-import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -29,7 +28,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.hibernate.engine.spi.SubselectFetch.createRegistrationHandler;
 import static org.hibernate.loader.ast.internal.LoaderSelectBuilder.createSelect;
-import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
 /**
  * Standard implementation of {@link org.hibernate.loader.ast.spi.MultiIdEntityLoader}
@@ -96,29 +94,30 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 			MultiIdLoadOptions loadOptions,
 			SharedSessionContractImplementor session,
 			int numberOfIdsInBatch) {
-		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.tracef( "#loadEntitiesById(`%s`, `%s`, ..)",
-					getLoadable().getEntityName(), numberOfIdsInBatch );
-		}
+//		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+//			MULTI_KEY_LOAD_LOGGER.tracef( "#loadEntitiesById(`%s`, `%s`, ..)",
+//					getLoadable().getEntityName(), numberOfIdsInBatch );
+//		}
 
-		final JdbcParametersList.Builder jdbcParametersBuilder =
+		final var jdbcParametersBuilder =
 				JdbcParametersList.newBuilder( numberOfIdsInBatch * idJdbcTypeCount );
 
-		final SelectStatement sqlAst = createSelect(
-				getLoadable(),
-				// null here means to select everything
-				null,
-				getLoadable().getIdentifierMapping(),
-				null,
-				numberOfIdsInBatch,
-				session.getLoadQueryInfluencers(),
-				lockOptions,
-				jdbcParametersBuilder::add,
-				getSessionFactory()
-		);
+		final var sqlAst =
+				createSelect(
+						getLoadable(),
+						// null here means to select everything
+						null,
+						getLoadable().getIdentifierMapping(),
+						null,
+						numberOfIdsInBatch,
+						session.getLoadQueryInfluencers(),
+						lockOptions,
+						jdbcParametersBuilder::add,
+						getSessionFactory()
+				);
 
-		final JdbcParametersList jdbcParameters = jdbcParametersBuilder.build();
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
+		final var jdbcParameters = jdbcParametersBuilder.build();
+		final var jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		int offset = 0;
 		for ( int i = 0; i < numberOfIdsInBatch; i++ ) {
 			offset += jdbcParameterBindings.registerParametersForEachJdbcValue(
@@ -160,7 +159,7 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 			SelectStatement sqlAst,
 			JdbcParametersList jdbcParameters,
 			JdbcParameterBindings jdbcParameterBindings) {
-		final BatchFetchQueue batchFetchQueue = session.getPersistenceContext().getBatchFetchQueue();
+		final var batchFetchQueue = session.getPersistenceContext().getBatchFetchQueue();
 		return session.getLoadQueryInfluencers().hasSubselectLoadableCollections( getLoadable().getEntityPersister() )
 				? createRegistrationHandler( batchFetchQueue, sqlAst, jdbcParameters, jdbcParameterBindings )
 				: null;

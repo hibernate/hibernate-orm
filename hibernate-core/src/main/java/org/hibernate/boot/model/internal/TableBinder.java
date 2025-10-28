@@ -44,6 +44,7 @@ import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.isQuoted;
 import static org.hibernate.internal.util.StringHelper.nullIfBlank;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.unquote;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
@@ -144,7 +145,7 @@ public class TableBinder {
 
 		final boolean ownerEntityTableQuoted = isQuoted( ownerEntityTable );
 		final boolean associatedEntityTableQuoted = isQuoted( associatedEntityTable );
-		final NamingStrategyHelper namingStrategyHelper = new NamingStrategyHelper() {
+		final var namingStrategyHelper = new NamingStrategyHelper() {
 			@Override
 			public Identifier determineImplicitName(final MetadataBuildingContext buildingContext) {
 				final ImplicitNamingStrategy namingStrategy = buildingContext.getBuildingOptions().getImplicitNamingStrategy();
@@ -263,7 +264,7 @@ public class TableBinder {
 				}
 
 				if ( ownerEntityTableQuoted || associatedEntityTableQuoted ) {
-					name = Identifier.quote( name );
+					name = name.quoted();
 				}
 
 				return name;
@@ -485,7 +486,7 @@ public class TableBinder {
 			MetadataBuildingContext buildingContext,
 			String subselect,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
-		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
+		final var metadataCollector = buildingContext.getMetadataCollector();
 
 		final Table table = addTable(
 				nullIfBlank( schema ),
@@ -559,11 +560,11 @@ public class TableBinder {
 			associatedClass = destinationEntity;
 		}
 		else {
-			final PropertyHolder holder = joinColumns.getPropertyHolder();
+			final var holder = joinColumns.getPropertyHolder();
 			associatedClass = holder == null ? null : holder.getPersistentClass();
 		}
 
-		final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
+		final var firstColumn = joinColumns.getJoinColumns().get(0);
 		if ( joinColumns.hasMappedBy() ) {
 			// use the columns of the property referenced by mappedBy
 			// copy them and link the copy to the actual value
@@ -646,7 +647,7 @@ public class TableBinder {
 			component.sortProperties();
 		}
 		// works because the pk has to be on the primary table
-		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
+		final var metadataCollector = buildingContext.getMetadataCollector();
 		final Dialect dialect = metadataCollector.getDatabase().getJdbcEnvironment().getDialect();
 		for ( int j = 0; j < key.getColumnSpan(); j++ ) {
 			if ( !matchUpJoinColumnsWithKeyColumns( referencedEntity, joinColumns, value, metadataCollector, dialect, j ) ) {
@@ -733,7 +734,7 @@ public class TableBinder {
 		else if ( value instanceof DependantValue ) {
 			final String propertyName = joinColumns.getPropertyName();
 			if ( propertyName != null ) {
-				Collection collection = (Collection) referencedEntity.getRecursiveProperty( propertyName ).getValue();
+				final var collection = (Collection) referencedEntity.getRecursiveProperty( propertyName ).getValue();
 				referencedPropertyName = collection.getReferencedPropertyName();
 			}
 			else {
@@ -896,7 +897,7 @@ public class TableBinder {
 			for ( jakarta.persistence.CheckConstraint checkConstraintAnnotationUsage : checkConstraintAnnotationUsages ) {
 				table.addCheck(
 						new CheckConstraint(
-								checkConstraintAnnotationUsage.name(),
+								nullIfEmpty( checkConstraintAnnotationUsage.name() ),
 								checkConstraintAnnotationUsage.constraint(),
 								checkConstraintAnnotationUsage.options()
 						)

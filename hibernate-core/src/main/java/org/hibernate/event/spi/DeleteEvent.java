@@ -14,7 +14,7 @@ package org.hibernate.event.spi;
  *
  * @see org.hibernate.Session#remove
  */
-public class DeleteEvent extends AbstractEvent {
+public class DeleteEvent extends AbstractSessionEvent {
 	private final Object object;
 	private String entityName;
 	private boolean cascadeDeleteEnabled;

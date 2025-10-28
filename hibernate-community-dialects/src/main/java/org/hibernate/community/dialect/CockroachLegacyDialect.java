@@ -23,7 +23,6 @@ import org.hibernate.dialect.FunctionalDependencyAnalysisSupportImpl;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.PostgreSQLDriverKind;
-import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.TimeZoneSupport;
@@ -34,6 +33,7 @@ import org.hibernate.dialect.function.FormatFunction;
 import org.hibernate.dialect.function.PostgreSQLTruncFunction;
 import org.hibernate.dialect.identity.CockroachDBIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
@@ -70,12 +70,15 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.tool.schema.extract.internal.InformationExtractorPostgreSQLImpl;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+import org.hibernate.tool.schema.extract.spi.InformationExtractor;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
-import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
@@ -92,11 +95,12 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Map;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.hibernate.dialect.lock.internal.CockroachLockingSupport.COCKROACH_LOCKING_SUPPORT;
+import static org.hibernate.dialect.lock.internal.CockroachLockingSupport.LEGACY_COCKROACH_LOCKING_SUPPORT;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.common.TemporalUnit.EPOCH;
@@ -211,54 +215,31 @@ public class CockroachLegacyDialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case TINYINT:
-				return "smallint"; //no tinyint
-			case INTEGER:
-				return "int4";
-
-			case NCHAR:
-				return columnType( CHAR );
-			case NVARCHAR:
-				return columnType( VARCHAR );
-
-			case NCLOB:
-			case CLOB:
-				return "string";
-
-			case BINARY:
-			case VARBINARY:
-			case BLOB:
-				return "bytes";
+		return switch ( sqlTypeCode ) {
+			case TINYINT -> "smallint"; //no tinyint
+			case INTEGER -> "int4";
+			case NCHAR -> columnType( CHAR );
+			case NVARCHAR -> columnType( VARCHAR );
+			case NCLOB, CLOB -> "string";
+			case BINARY, VARBINARY, BLOB -> "bytes";
 
 			// We do not use the time with timezone type because PG deprecated it and it lacks certain operations like subtraction
 //			case TIME_UTC:
 //				return columnType( TIME_WITH_TIMEZONE );
 
-			case TIMESTAMP_UTC:
-				return columnType( TIMESTAMP_WITH_TIMEZONE );
+			case TIMESTAMP_UTC -> columnType( TIMESTAMP_WITH_TIMEZONE );
 
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
 	protected String castType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case CHAR:
-			case NCHAR:
-			case VARCHAR:
-			case NVARCHAR:
-			case LONG32VARCHAR:
-			case LONG32NVARCHAR:
-				return "string";
-			case BINARY:
-			case VARBINARY:
-			case LONG32VARBINARY:
-				return "bytes";
-		}
-		return super.castType( sqlTypeCode );
+		return switch ( sqlTypeCode ) {
+			case CHAR, NCHAR, VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR -> "string";
+			case BINARY, VARBINARY, LONG32VARBINARY -> "bytes";
+			default -> super.castType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -343,22 +324,16 @@ public class CockroachLegacyDialect extends Dialect {
 
 	@Override
 	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
-		switch ( columnTypeName ) {
-			case "bool":
-				return Types.BOOLEAN;
-			case "float4":
-				// Use REAL instead of FLOAT to get Float as recommended Java type
-				return Types.REAL;
-			case "float8":
-				return Types.DOUBLE;
-			case "int2":
-				return Types.SMALLINT;
-			case "int4":
-				return Types.INTEGER;
-			case "int8":
-				return Types.BIGINT;
-		}
-		return super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
+		return switch ( columnTypeName ) {
+			case "bool" -> Types.BOOLEAN;
+			// Use REAL instead of FLOAT to get Float as recommended Java type
+			case "float4" -> Types.REAL;
+			case "float8" -> Types.DOUBLE;
+			case "int2" -> Types.SMALLINT;
+			case "int4" -> Types.INTEGER;
+			case "int8" -> Types.BIGINT;
+			default -> super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
+		};
 	}
 
 	@Override
@@ -417,9 +392,9 @@ public class CockroachLegacyDialect extends Dialect {
 		}
 
 		// Force Blob binding to byte[] for CockroachDB
-		jdbcTypeRegistry.addDescriptor( Types.BLOB, VarbinaryJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptor( Types.CLOB, VarcharJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptor( Types.NCLOB, VarcharJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcType.MATERIALIZED );
+		jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.MATERIALIZED );
+		jdbcTypeRegistry.addDescriptor( Types.NCLOB, ClobJdbcType.MATERIALIZED );
 
 		// The next two contributions are the same as for Postgresql
 		typeContributions.contributeJdbcType( ObjectNullAsBinaryTypeJdbcType.INSTANCE );
@@ -547,6 +522,7 @@ public class CockroachLegacyDialect extends Dialect {
 				)
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+		functionFactory.regexpLike_postgresql( false );
 	}
 
 	@Override
@@ -994,25 +970,10 @@ public class CockroachLegacyDialect extends Dialect {
 		if ( getVersion().isBefore( 20, 1 ) ) {
 			return "";
 		}
-		/*
-		 * Parent's implementation for (aliases, lockOptions) ignores aliases.
-		 */
-		if ( aliases.isEmpty() ) {
-			LockMode lockMode = lockOptions.getLockMode();
-			for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
-				// seek the highest lock mode
-				if ( entry.getValue().greaterThan(lockMode) ) {
-					aliases = entry.getKey();
-				}
-			}
-		}
-		LockMode lockMode = lockOptions.getAliasSpecificLockMode( aliases );
-		if (lockMode == null ) {
-			lockMode = lockOptions.getLockMode();
-		}
+		final LockMode lockMode = lockOptions.getLockMode();
 		return switch ( lockMode ) {
-			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeOut() );
-			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeOut() );
+			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeout() );
+			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeout() );
 			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString( aliases );
 			case UPGRADE_SKIPLOCKED -> getForUpdateSkipLockedString( aliases );
 			default -> "";
@@ -1100,12 +1061,16 @@ public class CockroachLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return false;
+	public LockingSupport getLockingSupport() {
+		return getVersion().isSameOrAfter( 20, 1 )
+				? COCKROACH_LOCKING_SUPPORT
+				: LEGACY_COCKROACH_LOCKING_SUPPORT;
 	}
 
 	@Override
 	public boolean useInputStreamToInsertBlob() {
+		// PG-JDBC treats setBinaryStream()/setCharacterStream() calls like bytea/varchar, which are not LOBs,
+		// so disable stream bindings for this dialect completely
 		return false;
 	}
 
@@ -1130,29 +1095,8 @@ public class CockroachLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsNoWait() {
-		return getVersion().isSameOrAfter( 20, 1 );
-	}
-
-	@Override
-	public boolean supportsWait() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		// See https://www.cockroachlabs.com/docs/stable/select-for-update.html#wait-policies
-		return false;
-	}
-
-	@Override
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
 		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
-	}
-
-	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return getVersion().isSameOrAfter( 20, 1 ) ? RowLockStrategy.TABLE : RowLockStrategy.NONE;
 	}
 
 	@Override
@@ -1163,15 +1107,15 @@ public class CockroachLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 
-		if ( dbMetaData == null ) {
+		if ( metadata == null ) {
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.LOWER );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 
-		return super.buildIdentifierHelper( builder, dbMetaData );
+		return super.buildIdentifierHelper( builder, metadata );
 	}
 
 	@Override
@@ -1218,19 +1162,15 @@ public class CockroachLegacyDialect extends Dialect {
 			if ( sqlState == null ) {
 				return null;
 			}
-			switch ( sqlState ) {
-				case "40P01":
-					// DEADLOCK DETECTED
-					return new LockAcquisitionException( message, sqlException, sql);
-				case "55P03":
-					// LOCK NOT AVAILABLE
-					return new PessimisticLockException( message, sqlException, sql);
-				case "57014":
-					return new QueryTimeoutException( message, sqlException, sql );
-				default:
-					// returning null allows other delegates to operate
-					return null;
-			}
+			return switch ( sqlState ) {
+				// DEADLOCK DETECTED
+				case "40P01" -> new LockAcquisitionException( message, sqlException, sql);
+				// LOCK NOT AVAILABLE
+				case "55P03" -> new PessimisticLockException( message, sqlException, sql);
+				case "57014" -> new QueryTimeoutException( message, sqlException, sql );
+				// returning null allows other delegates to operate
+				default -> null;
+			};
 		};
 	}
 
@@ -1281,4 +1221,8 @@ public class CockroachLegacyDialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
+		return new InformationExtractorPostgreSQLImpl( extractionContext );
+	}
 }

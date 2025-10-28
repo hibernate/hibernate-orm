@@ -13,7 +13,6 @@ import java.util.function.Function;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -359,7 +358,8 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	void registerUserType(Class<?> embeddableType, Class<? extends UserType<?>> userType);
 	Class<? extends UserType<?>> findRegisteredUserType(Class<?> basicType);
 
-	void addCollectionTypeRegistration(CollectionTypeRegistration registrationAnnotation);
+	@Deprecated(since = "7.2", forRemoval = true) // let's not leak annotation types onto this SPI
+	void addCollectionTypeRegistration(org.hibernate.annotations.CollectionTypeRegistration registrationAnnotation);
 	void addCollectionTypeRegistration(CollectionClassification classification, CollectionTypeRegistrationDescriptor descriptor);
 	CollectionTypeRegistrationDescriptor findCollectionTypeRegistration(CollectionClassification classification);
 
@@ -408,21 +408,8 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	Map<String,Join> getJoins(String entityName);
 
 
-	class CollectionTypeRegistrationDescriptor {
-		private final Class<? extends UserCollectionType> implementation;
-		private final Map<String,String> parameters;
-
-		public CollectionTypeRegistrationDescriptor(Class<? extends UserCollectionType> implementation, Map<String,String> parameters) {
-			this.implementation = implementation;
-			this.parameters = parameters;
-		}
-
-		public Class<? extends UserCollectionType> getImplementation() {
-			return implementation;
-		}
-
-		public Map<String,String> getParameters() {
-			return parameters;
-		}
+	record CollectionTypeRegistrationDescriptor(
+			Class<? extends UserCollectionType> implementation,
+			Map<String, String> parameters) {
 	}
 }

@@ -4,15 +4,6 @@
  */
 package org.hibernate.type.descriptor.java.spi;
 
-import java.io.Serializable;
-import java.lang.reflect.Array;
-import java.lang.reflect.ParameterizedType;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.MappingException;
@@ -29,9 +20,9 @@ import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicCollectionType;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.converter.internal.CollectionConverter;
 import org.hibernate.type.ConvertedBasicCollectionType;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.converter.internal.CollectionConverter;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.AbstractJavaType;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
@@ -41,6 +32,19 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import java.io.Serializable;
+import java.lang.reflect.ParameterizedType;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+
+import static java.lang.reflect.Array.get;
+import static java.lang.reflect.Array.getLength;
+import static java.lang.reflect.Array.newInstance;
+import static java.lang.reflect.Array.set;
+
+
 /**
  * Descriptor for handling persistent collections.
  *
@@ -48,8 +52,9 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 @Incubating
 @AllowReflection // Needed for arbitrary array wrapping/unwrapping
-public class BasicCollectionJavaType<C extends Collection<E>, E> extends AbstractJavaType<C> implements
-		BasicPluralJavaType<E> {
+public class BasicCollectionJavaType<C extends Collection<E>, E>
+		extends AbstractJavaType<C>
+		implements BasicPluralJavaType<E> {
 
 	private final CollectionSemantics<C, E> semantics;
 	private final JavaType<E> componentJavaType;
@@ -75,8 +80,8 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 		}
 		// Always determine the recommended type to make sure this is a valid basic java type
 		// (even though we only use this inside the if block, we want it to throw here if something wrong)
-		final JdbcType recommendedComponentJdbcType = componentJavaType.getRecommendedJdbcType( indicators );
-		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
+		final var recommendedComponentJdbcType = componentJavaType.getRecommendedJdbcType( indicators );
+		final var typeConfiguration = indicators.getTypeConfiguration();
 		return typeConfiguration.getJdbcTypeRegistry()
 				.resolveTypeConstructorDescriptor(
 						indicators.getPreferredSqlTypeCodeForArray( recommendedComponentJdbcType.getDefaultSqlTypeCode() ),
@@ -102,50 +107,66 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			BasicType<E> elementType,
 			ColumnTypeInformation columnTypeInformation,
 			JdbcTypeIndicators stdIndicators) {
-		final JavaType<E> elementJavaType = elementType.getJavaTypeDescriptor();
-		final Class<?> elementJavaTypeClass = elementJavaType.getJavaTypeClass();
+		final var elementJavaType = elementType.getJavaTypeDescriptor();
+		final var elementJavaTypeClass = elementJavaType.getJavaTypeClass();
 		if ( elementType instanceof BasicPluralType<?, ?>
 				|| elementJavaTypeClass != null && elementJavaTypeClass.isArray() ) {
 			return null;
 		}
-		final BasicCollectionJavaType<C, E> collectionJavaType;
-		if ( componentJavaType == elementJavaType) {
-			collectionJavaType = this;
-		}
-		else {
-			collectionJavaType = new BasicCollectionJavaType<>(
-					(ParameterizedType) getJavaType(),
-					elementJavaType,
-					semantics
-			);
-			// Register the collection type as that will be resolved in the next step
-			typeConfiguration.getJavaTypeRegistry().addDescriptor( collectionJavaType );
-		}
-		final BasicValueConverter<E, ?> valueConverter = elementType.getValueConverter();
-		final int arrayTypeCode = stdIndicators.getPreferredSqlTypeCodeForArray( elementType.getJdbcType().getDefaultSqlTypeCode() );
-		final JdbcType arrayJdbcType =
+		final var collectionJavaType = collectionJavaType( typeConfiguration, elementJavaType );
+		final int elementSqlTypeCode = elementType.getJdbcType().getDefaultSqlTypeCode();
+		final int arrayTypeCode = stdIndicators.getPreferredSqlTypeCodeForArray( elementSqlTypeCode );
+		final var arrayJdbcType =
 				typeConfiguration.getJdbcTypeRegistry()
 						.resolveTypeConstructorDescriptor( arrayTypeCode, elementType, columnTypeInformation );
+		final var valueConverter = elementType.getValueConverter();
 		if ( valueConverter == null ) {
-			return typeConfiguration.getBasicTypeRegistry().resolve(
-					collectionJavaType,
-					arrayJdbcType,
-					() -> new BasicCollectionType<>( elementType, arrayJdbcType, collectionJavaType )
-			);
+			return typeConfiguration.getBasicTypeRegistry()
+					.resolve( collectionJavaType, arrayJdbcType,
+							() -> new BasicCollectionType<>( elementType, arrayJdbcType, collectionJavaType ) );
 		}
 		else {
-			final Class<?> arrayClass =
-					Array.newInstance( valueConverter.getRelationalJavaType().getJavaTypeClass(), 0 )
-							.getClass();
-			final JavaType<Object> relationalJavaType =
-					typeConfiguration.getJavaTypeRegistry().resolveDescriptor( arrayClass );
-			//noinspection unchecked,rawtypes
-			return new ConvertedBasicCollectionType(
+			return convertedCollectionType(
+					typeConfiguration,
 					elementType,
 					arrayJdbcType,
 					collectionJavaType,
-					new CollectionConverter( valueConverter, collectionJavaType, relationalJavaType )
+					valueConverter
 			);
+		}
+	}
+
+	private static <C extends Collection<E>, E, R> ConvertedBasicCollectionType<C, E> convertedCollectionType(
+			TypeConfiguration typeConfiguration,
+			BasicType<E> elementType,
+			JdbcType arrayJdbcType,
+			BasicCollectionJavaType<C, E> collectionJavaType,
+			BasicValueConverter<E, R> elementValueConverter) {
+		final var elementRelationalJavaType = elementValueConverter.getRelationalJavaType();
+		final var relationalJavaType =
+				typeConfiguration.getJavaTypeRegistry()
+						.resolveArrayDescriptor( elementRelationalJavaType.getJavaTypeClass() );
+		return new ConvertedBasicCollectionType<>(
+				elementType,
+				arrayJdbcType,
+				collectionJavaType,
+				new CollectionConverter<>( elementValueConverter, collectionJavaType, relationalJavaType )
+		);
+	}
+
+	private BasicCollectionJavaType<C, E> collectionJavaType(
+			TypeConfiguration typeConfiguration,
+			JavaType<E> elementJavaType) {
+		if ( componentJavaType == elementJavaType ) {
+			return this;
+		}
+		else {
+			final var parameterizedType = (ParameterizedType) getJavaType();
+			final var collectionJavaType =
+					new BasicCollectionJavaType<>( parameterizedType, elementJavaType, semantics );
+			// Register the collection type as that will be resolved in the next step
+			typeConfiguration.getJavaTypeRegistry().addDescriptor( collectionJavaType );
+			return collectionJavaType;
 		}
 	}
 
@@ -154,19 +175,19 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 		if ( value == null ) {
 			return "null";
 		}
-		final Iterator<E> iterator = value.iterator();
+		final var iterator = value.iterator();
 		if ( !iterator.hasNext() ) {
 			return "[]";
 		}
-		final StringBuilder sb = new StringBuilder();
-		sb.append( '[' );
+		final var string = new StringBuilder();
+		string.append( '[' );
 		do {
 			final E element = iterator.next();
-			sb.append( componentJavaType.extractLoggableRepresentation( element ) );
+			string.append( componentJavaType.extractLoggableRepresentation( element ) );
 			if ( !iterator.hasNext() ) {
-				return sb.append( ']' ).toString();
+				return string.append( ']' ).toString();
 			}
-			sb.append( ", " );
+			string.append( ", " );
 		} while ( true );
 	}
 
@@ -186,8 +207,8 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			case LIST:
 			case ORDERED_SET:
 			case SORTED_SET:
-				final Iterator<E> iterator1 = one.iterator();
-				final Iterator<E> iterator2 = another.iterator();
+				final var iterator1 = one.iterator();
+				final var iterator2 = another.iterator();
 				while ( iterator1.hasNext() ) {
 					if ( !componentJavaType.areEqual( iterator1.next(), iterator2.next() ) ) {
 						return false;
@@ -225,32 +246,32 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 		if ( value == null ) {
 			return null;
 		}
-		final StringBuilder sb = new StringBuilder();
-		sb.append( '{' );
+		final var string = new StringBuilder();
+		string.append( '{' );
 		String glue = "";
 		for ( E v : value ) {
-			sb.append( glue );
+			string.append( glue );
 			if ( v == null ) {
-				sb.append( "null" );
+				string.append( "null" );
 				glue = ",";
 				continue;
 			}
-			sb.append( '"' );
-			String valstr = this.componentJavaType.toString( v );
+			string.append( '"' );
+			String valstr = componentJavaType.toString( v );
 			// using replaceAll is a shorter, but much slower way to do this
 			for (int i = 0, len = valstr.length(); i < len; i ++ ) {
 				char c = valstr.charAt( i );
 				// Surrogate pairs. This is how they're done.
 				if (c == '\\' || c == '"') {
-					sb.append( '\\' );
+					string.append( '\\' );
 				}
-				sb.append( c );
+				string.append( c );
 			}
-			sb.append( '"' );
+			string.append( '"' );
 			glue = ",";
 		}
-		sb.append( '}' );
-		return sb.toString();
+		string.append( '}' );
+		return string.toString();
 	}
 
 	@Override
@@ -351,8 +372,8 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			return (X) value.toArray();
 		}
 		else if ( Object[].class.isAssignableFrom( type ) ) {
-			final Class<?> preferredJavaTypeClass = type.getComponentType();
-			final Object[] unwrapped = (Object[]) Array.newInstance( preferredJavaTypeClass, value.size() );
+			final var preferredJavaTypeClass = type.getComponentType();
+			final Object[] unwrapped = (Object[]) newInstance( preferredJavaTypeClass, value.size() );
 			int i = 0;
 			for ( E element : value ) {
 				unwrapped[i] = componentJavaType.unwrap( element, preferredJavaTypeClass, options );
@@ -362,12 +383,12 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			return (X) unwrapped;
 		}
 		else if ( type.isArray() ) {
-			final Class<?> preferredJavaTypeClass = type.getComponentType();
+			final var preferredJavaTypeClass = type.getComponentType();
 			//noinspection unchecked
-			final X unwrapped = (X) Array.newInstance( preferredJavaTypeClass, value.size() );
+			final X unwrapped = (X) newInstance( preferredJavaTypeClass, value.size() );
 			int i = 0;
 			for ( E element : value ) {
-				Array.set( unwrapped, i, componentJavaType.unwrap( element, preferredJavaTypeClass, options ) );
+				set( unwrapped, i, componentJavaType.unwrap( element, preferredJavaTypeClass, options ) );
 				i++;
 			}
 			return unwrapped;
@@ -395,7 +416,8 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 
 		if ( value instanceof Object[] raw ) {
 			final C wrapped = semantics.instantiateRaw( raw.length, null );
-			if ( componentJavaType.getJavaTypeClass().isAssignableFrom( value.getClass().getComponentType() ) ) {
+			if ( componentJavaType.getJavaTypeClass()
+					.isAssignableFrom( value.getClass().getComponentType() ) ) {
 				for ( Object o : raw ) {
 					//noinspection unchecked
 					wrapped.add( (E) o );
@@ -423,10 +445,10 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			return fromCollection( (Collection<E>) value, options );
 		}
 		else if ( value.getClass().isArray() ) {
-			final int length = Array.getLength( value );
+			final int length = getLength( value );
 			final C wrapped = semantics.instantiateRaw( length, null );
 			for ( int i = 0; i < length; i++ ) {
-				wrapped.add( componentJavaType.wrap( Array.get( value, i ), options ) );
+				wrapped.add( componentJavaType.wrap( get( value, i ), options ) );
 			}
 			return wrapped;
 		}

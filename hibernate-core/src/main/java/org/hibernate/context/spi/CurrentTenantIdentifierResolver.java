@@ -4,6 +4,7 @@
  */
 package org.hibernate.context.spi;
 
+
 /**
  * A callback registered with the {@link org.hibernate.SessionFactory} that is
  * responsible for resolving the current tenant identifier.

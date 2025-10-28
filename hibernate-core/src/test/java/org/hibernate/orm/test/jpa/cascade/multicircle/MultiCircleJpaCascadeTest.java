@@ -6,7 +6,6 @@ package org.hibernate.orm.test.jpa.cascade.multicircle;
 
 import jakarta.persistence.RollbackException;
 
-import org.hibernate.SessionFactory;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TransientPropertyValueException;
 
@@ -16,7 +15,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -123,8 +122,7 @@ public class MultiCircleJpaCascadeTest {
 
 	@AfterEach
 	public void cleanup(EntityManagerFactoryScope scope) {
-		scope.getEntityManagerFactory().unwrap(SessionFactory.class)
-				.getSchemaManager().truncateMappedObjects();
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

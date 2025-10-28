@@ -497,6 +497,15 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 		}
 	}
 
+	@Override
+	public <T> void writeToTarget(T value, JavaType<T> javaType, Object target, WrapperOptions options) {
+	}
+
+	@Override
+	public <T> T readFromSource(JavaType<T> javaType, Object source, WrapperOptions options) {
+		return null;
+	}
+
 	private JAXBElementTransformer createTransformer(
 			StringBuilderSqlAppender appender,
 			Class<?> elementClass,
@@ -504,7 +513,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 			Object exampleElement,
 			JAXBIntrospector introspector,
 			WrapperOptions wrapperOptions) {
-		final JavaType<Object> elementJavaType =
+		final JavaType<?> elementJavaType =
 				wrapperOptions.getTypeConfiguration().getJavaTypeRegistry()
 						.findDescriptor( elementClass );
 		if ( exampleElement == null && ( elementJavaType == null || JavaTypeHelper.isUnknown( elementJavaType ) ) ) {

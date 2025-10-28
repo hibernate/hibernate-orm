@@ -24,9 +24,8 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.junit.Assert;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -73,10 +72,7 @@ public class OneToManyBidirectionalTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery( "delete from Item" ).executeUpdate();
-			session.createQuery( "delete from Order" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -190,7 +186,7 @@ public class OneToManyBidirectionalTest {
 			assertTrue( Hibernate.isInitialized( order ) );
 			assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
 
-			Assert.assertFalse( Hibernate.isInitialized( order.getLineItems() ) );
+			Assertions.assertFalse( Hibernate.isInitialized( order.getLineItems() ) );
 
 			assertThat( order.getLineItems().size(), is( 2 ) );
 
@@ -234,7 +230,7 @@ public class OneToManyBidirectionalTest {
 			assertTrue( Hibernate.isInitialized( order ) );
 			assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
 
-			Assert.assertFalse( Hibernate.isInitialized( order.getLineItems() ) );
+			Assertions.assertFalse( Hibernate.isInitialized( order.getLineItems() ) );
 			assertThat( order.getLineItems().size(), is( 2 ) );
 
 			/*
@@ -274,7 +270,7 @@ public class OneToManyBidirectionalTest {
 			assertTrue( Hibernate.isInitialized( order ) );
 			assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 
-			Assert.assertFalse( Hibernate.isInitialized( order.getLineItems() ) );
+			Assertions.assertFalse( Hibernate.isInitialized( order.getLineItems() ) );
 
 			assertThat( order.getLineItems().size(), is( 2 ) );
 
@@ -289,7 +285,7 @@ public class OneToManyBidirectionalTest {
 
 			assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
 
-			Assert.assertTrue( Hibernate.isInitialized( order.getLineItems() ) );
+			Assertions.assertTrue( Hibernate.isInitialized( order.getLineItems() ) );
 
 			for ( Item itm : order.getLineItems() ) {
 				assertThat( itm.getOrder(), is( order ) );
@@ -326,7 +322,7 @@ public class OneToManyBidirectionalTest {
 			assertTrue( Hibernate.isInitialized( order ) );
 			assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
 
-			Assert.assertFalse( Hibernate.isInitialized( order.getLineItems() ) );
+			Assertions.assertFalse( Hibernate.isInitialized( order.getLineItems() ) );
 			assertThat( order.getLineItems().size(), is( 2 ) );
 
 			/*
@@ -517,7 +513,7 @@ public class OneToManyBidirectionalTest {
 			 */
 
 			// todo (6.0): this was originally intended to produce only a single SQL join,
-			//  but joins are created before fetches, thus we don't know about bi-directional fetching/joining
+			//  but joins are created before fetches, thus we don't know about bidirectional fetching/joining
 			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 2 );
 			sqlStatementInterceptor.clear();
 
@@ -562,7 +558,7 @@ public class OneToManyBidirectionalTest {
 			 */
 
 			// todo (6.0): this was originally intended to produce only a single SQL join,
-			//  but joins are created before fetches, thus we don't know about bi-directional fetching/joining
+			//  but joins are created before fetches, thus we don't know about bidirectional fetching/joining
 			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 2 );
 			sqlStatementInterceptor.clear();
 

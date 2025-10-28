@@ -71,12 +71,7 @@ public class JpaConstructorInitializationAndDynamicUpdateTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( em -> {
-					em.createQuery( "delete from Person" ).executeUpdate();
-					em.createQuery( "delete from LoginAccount" ).executeUpdate();
-					em.createQuery( "delete from AccountPreferences" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

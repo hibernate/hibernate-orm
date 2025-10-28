@@ -168,13 +168,7 @@ public class MixedInheritanceTest {
 
 	@AfterEach
 	public void cleanupTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "from Person", Person.class ).list().forEach(
-							cust -> session.remove( cust )
-					);
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Person")

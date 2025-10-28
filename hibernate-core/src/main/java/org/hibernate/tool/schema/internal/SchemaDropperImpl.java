@@ -19,7 +19,6 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
@@ -31,9 +30,6 @@ import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -59,6 +55,7 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 import static org.hibernate.tool.schema.internal.Helper.applyScript;
 import static org.hibernate.tool.schema.internal.Helper.applySqlString;
@@ -72,7 +69,7 @@ import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabl
  * @author Steve Ebersole
  */
 public class SchemaDropperImpl implements SchemaDropper {
-	private static final Logger log = Logger.getLogger( SchemaDropperImpl.class );
+	private static final Logger LOG = Logger.getLogger( SchemaDropperImpl.class );
 
 	private final HibernateSchemaManagementTool tool;
 	private final SchemaFilter schemaFilter;
@@ -110,7 +107,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			SourceDescriptor sourceDescriptor,
 			TargetDescriptor targetDescriptor) {
 		if ( !targetDescriptor.getTargetTypes().isEmpty() ) {
-			final Map<String, Object> configuration = options.getConfigurationValues();
+			final var configuration = options.getConfigurationValues();
 			final JdbcContext jdbcContext = tool.resolveJdbcContext( configuration );
 			doDrop(
 					metadata,
@@ -147,7 +144,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			Dialect dialect,
 			SourceDescriptor sourceDescriptor,
 			GenerationTarget... targets) {
-		for ( GenerationTarget target : targets ) {
+		for ( var target : targets ) {
 			target.prepare();
 		}
 
@@ -155,12 +152,12 @@ public class SchemaDropperImpl implements SchemaDropper {
 			performDrop( metadata, options, inclusionFilter, dialect, sourceDescriptor, targets );
 		}
 		finally {
-			for ( GenerationTarget target : targets ) {
+			for ( var target : targets ) {
 				try {
 					target.release();
 				}
 				catch (Exception e) {
-					log.debugf( "Problem releasing GenerationTarget [%s] : %s", target, e.getMessage() );
+					LOG.debugf( "Problem releasing GenerationTarget [%s]: %s", target, e.getMessage() );
 				}
 			}
 		}
@@ -173,9 +170,9 @@ public class SchemaDropperImpl implements SchemaDropper {
 			Dialect dialect,
 			SourceDescriptor sourceDescriptor,
 			GenerationTarget... targets) {
-		final SqlScriptCommandExtractor commandExtractor = getCommandExtractor();
+		final var commandExtractor = tool.getServiceRegistry().getService( SqlScriptCommandExtractor.class );
 		final boolean format = interpretFormattingEnabled( options.getConfigurationValues() );
-		final Formatter formatter = format ? FormatStyle.DDL.getFormatter() : FormatStyle.NONE.getFormatter();
+		final var formatter = format ? FormatStyle.DDL.getFormatter() : FormatStyle.NONE.getFormatter();
 
 		switch ( sourceDescriptor.getSourceType() ) {
 			case SCRIPT:
@@ -195,10 +192,6 @@ public class SchemaDropperImpl implements SchemaDropper {
 		}
 	}
 
-	private SqlScriptCommandExtractor getCommandExtractor() {
-		return tool.getServiceRegistry().getService(SqlScriptCommandExtractor.class);
-	}
-
 	private void dropFromMetadata(
 			Metadata metadata,
 			ExecutionOptions options,
@@ -211,7 +204,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 		applySqlString( dialect.getBeforeDropStatement(), formatter, options, targets );
 
-		final SqlStringGenerationContext context = createSqlStringGenerationContext( options, metadata );
+		final var context = createSqlStringGenerationContext( options, metadata );
 		// Reverse the list on drop to retain possible dependencies
 		dropAuxiliaryObjectsBeforeTables( metadata, options, dialect, formatter, context, targets );
 		dropConstraintsTablesSequences(
@@ -237,7 +230,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
 		final Set<String> exportIdentifiers = setOfSize( 50 );
-		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
+		for ( var namespace : metadata.getDatabase().getNamespaces() ) {
 			if ( schemaFilter.includeNamespace( namespace ) ) {
 
 				// we need to drop all constraints/indexes prior to dropping the tables
@@ -288,7 +281,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			Formatter formatter,
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
-		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject :
+		for ( var auxiliaryDatabaseObject :
 				reverse( metadata.getDatabase().getAuxiliaryDatabaseObjects() ) ) {
 			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation()
 					&& auxiliaryDatabaseObject.appliesToDialect(dialect) ) {
@@ -310,7 +303,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			Formatter formatter,
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
-		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject :
+		for ( var auxiliaryDatabaseObject :
 				reverse( metadata.getDatabase().getAuxiliaryDatabaseObjects() ) ) {
 			if ( auxiliaryDatabaseObject.beforeTablesOnCreation()
 					&& auxiliaryDatabaseObject.appliesToDialect(dialect) ) {
@@ -335,7 +328,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			SqlStringGenerationContext context,
 			Namespace namespace,
 			GenerationTarget[] targets) {
-		for ( Sequence sequence : namespace.getSequences() ) {
+		for ( var sequence : namespace.getSequences() ) {
 			if ( schemaFilter.includeSequence( sequence )
 					&& inclusionFilter.matches( sequence ) ) {
 				checkExportIdentifier( sequence, exportIdentifiers);
@@ -360,7 +353,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			SqlStringGenerationContext context,
 			Namespace namespace,
 			GenerationTarget[] targets) {
-		for ( Table table : namespace.getTables() ) {
+		for ( var table : namespace.getTables() ) {
 			if ( table.isPhysicalTable()
 					&& table.isView()
 					&& schemaFilter.includeTable( table )
@@ -374,7 +367,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 				);
 			}
 		}
-		for ( Table table : namespace.getTables() ) {
+		for ( var table : namespace.getTables() ) {
 			if ( table.isPhysicalTable()
 					&& !table.isView()
 					&& schemaFilter.includeTable( table )
@@ -398,9 +391,9 @@ public class SchemaDropperImpl implements SchemaDropper {
 			Formatter formatter,
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
-		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
+		for ( var namespace : metadata.getDatabase().getNamespaces() ) {
 			if ( schemaFilter.includeNamespace( namespace ) ) {
-				final List<UserDefinedType> dependencyOrderedUserDefinedTypes =
+				final var dependencyOrderedUserDefinedTypes =
 						namespace.getDependencyOrderedUserDefinedTypes();
 				Collections.reverse( dependencyOrderedUserDefinedTypes );
 				for ( UserDefinedType userDefinedType : dependencyOrderedUserDefinedTypes ) {
@@ -428,7 +421,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		boolean tryToDropSchemas = options.shouldManageNamespaces() && dialect.canCreateSchema();
 		if ( tryToDropCatalogs || tryToDropSchemas) {
 			final Set<Identifier> exportedCatalogs = new HashSet<>();
-			for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
+			for ( var namespace : metadata.getDatabase().getNamespaces() ) {
 				if ( schemaFilter.includeNamespace( namespace ) ) {
 					Namespace.Name logicalName = namespace.getName();
 					Namespace.Name physicalName = namespace.getPhysicalName();
@@ -469,13 +462,13 @@ public class SchemaDropperImpl implements SchemaDropper {
 			SqlStringGenerationContext context,
 			ContributableMatcher inclusionFilter,
 			GenerationTarget... targets) {
-		final Dialect dialect = metadata.getDatabase().getJdbcEnvironment().getDialect();
+		final var dialect = metadata.getDatabase().getJdbcEnvironment().getDialect();
 		if ( dialect.dropConstraints() ) {
 			for ( Table table : namespace.getTables() ) {
 				if ( table.isPhysicalTable()
 						&& schemaFilter.includeTable( table )
 						&& inclusionFilter.matches( table ) ) {
-					for ( ForeignKey foreignKey : table.getForeignKeyCollection() ) {
+					for ( var foreignKey : table.getForeignKeyCollection() ) {
 						applySqlStrings(
 								dialect.getForeignKeyExporter().getSqlDropStrings( foreignKey, metadata, context ),
 								formatter,
@@ -512,7 +505,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 	 * For tests
 	 */
 	public void doDrop(Metadata metadata, boolean manageNamespaces, GenerationTarget... targets) {
-		final ServiceRegistry serviceRegistry =
+		final var serviceRegistry =
 				( (MetadataImplementor) metadata ).getMetadataBuildingOptions()
 						.getServiceRegistry();
 		doDrop(
@@ -534,7 +527,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			final boolean manageNamespaces,
 			GenerationTarget... targets) {
 		if ( targets == null || targets.length == 0 ) {
-			final JdbcContext jdbcContext = tool.resolveJdbcContext( settings );
+			final var jdbcContext = tool.resolveJdbcContext( settings );
 			targets = new GenerationTarget[] {
 				new GenerationTargetToDatabase(
 						serviceRegistry.requireService( TransactionCoordinatorBuilder.class )
@@ -562,7 +555,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 						return ExceptionHandlerLoggedImpl.INSTANCE;
 					}
 				},
-				(contributed) -> true,
+				contributed -> true,
 				serviceRegistry.requireService( JdbcEnvironment.class ).getDialect(),
 				new SourceDescriptor() {
 					@Override
@@ -597,7 +590,6 @@ public class SchemaDropperImpl implements SchemaDropper {
 	}
 
 	private static class DelayedDropActionImpl implements DelayedDropAction, Serializable {
-		private static final CoreMessageLogger log = CoreLogging.messageLogger( DelayedDropActionImpl.class );
 
 		private final ArrayList<String> commands;
 		private GenerationTarget target;
@@ -609,9 +601,9 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 		@Override
 		public void perform(ServiceRegistry serviceRegistry) {
-			log.startingDelayedSchemaDrop();
+			CORE_LOGGER.startingDelayedSchemaDrop();
 
-			final JdbcContext jdbcContext = new JdbcContextDelayedDropImpl( serviceRegistry );
+			final var jdbcContext = new JdbcContextDelayedDropImpl( serviceRegistry );
 
 			if ( target == null ) {
 				target = new GenerationTargetToDatabase(
@@ -630,8 +622,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 					catch (CommandAcceptanceException e) {
 						// implicitly we do not "halt on error", but we do want to
 						// report the problem
-						log.unsuccessfulSchemaManagementCommand( command );
-						log.debugf( e, "Error performing delayed DROP command [%s]", command );
+						CORE_LOGGER.unsuccessfulSchemaManagementCommand( command );
+						CORE_LOGGER.unsuccessfulDelayedDropCommand( e );
 					}
 				}
 			}

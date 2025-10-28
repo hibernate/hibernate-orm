@@ -9,6 +9,8 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
@@ -387,4 +389,13 @@ public final class MessageHelper {
 		return info.toString();
 	}
 
+	public static String collectionInfoString(PluralAttributeMapping loadable, Object key) {
+		final CollectionPersister collectionDescriptor = loadable.getCollectionDescriptor();
+		return collectionInfoString( collectionDescriptor, key, collectionDescriptor.getFactory() );
+	}
+
+	public static String infoString(EntityMappingType loadable, Object id) {
+		final EntityPersister persister = loadable.getEntityPersister();
+		return infoString( persister, id, persister.getFactory() );
+	}
 }

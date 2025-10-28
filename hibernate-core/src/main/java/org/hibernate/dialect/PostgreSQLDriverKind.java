@@ -15,16 +15,17 @@ public enum PostgreSQLDriverKind {
 	VERT_X,
 	OTHER;
 
-	public static PostgreSQLDriverKind determineKind(DialectResolutionInfo dialectResolutionInfo) {
-		final String driverName = dialectResolutionInfo.getDriverName();
+	public static PostgreSQLDriverKind determineKind(DialectResolutionInfo info) {
+		final String driverName = info.getDriverName();
 		// By default we assume PgJDBC
 		if ( driverName == null ) {
 			return PG_JDBC;
 		}
-		switch ( driverName ) {
-			case "PostgreSQL JDBC Driver":
-				return PG_JDBC;
+		else {
+			return switch ( driverName ) {
+				case "PostgreSQL JDBC Driver" -> PG_JDBC;
+				default -> OTHER;
+			};
 		}
-		return OTHER;
 	}
 }

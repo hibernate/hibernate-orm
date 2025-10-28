@@ -55,12 +55,7 @@ public class EagerManyToOneEmbeddedIdFKTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from System" ).executeUpdate();
-					session.createQuery( "delete from SystemUser" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

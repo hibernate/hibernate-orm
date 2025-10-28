@@ -15,8 +15,6 @@ import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -52,16 +50,16 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators stdIndicators) {
-		final TypeConfiguration typeConfiguration = stdIndicators.getTypeConfiguration();
-		final JdbcTypeRegistry stdRegistry = typeConfiguration.getJdbcTypeRegistry();
+		final var typeConfiguration = stdIndicators.getTypeConfiguration();
+		final var jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
 
 		if ( stdIndicators.isLob() ) {
 			return stdIndicators.isNationalized()
-					? stdRegistry.getDescriptor( Types.NCLOB )
-					: stdRegistry.getDescriptor( Types.CLOB );
+					? jdbcTypeRegistry.getDescriptor( Types.NCLOB )
+					: jdbcTypeRegistry.getDescriptor( Types.CLOB );
 		}
 		else if ( stdIndicators.isNationalized() ) {
-			return stdRegistry.getDescriptor( Types.NVARCHAR );
+			return jdbcTypeRegistry.getDescriptor( Types.NVARCHAR );
 		}
 
 		return super.getRecommendedJdbcType( stdIndicators );

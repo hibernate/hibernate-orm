@@ -15,7 +15,8 @@ import org.hibernate.service.UnknownUnwrapTypeException;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractDataSourceBasedMultiTenantConnectionProviderImpl<T> implements MultiTenantConnectionProvider<T> {
+public abstract class AbstractDataSourceBasedMultiTenantConnectionProviderImpl<T>
+		implements MultiTenantConnectionProvider<T> {
 	protected abstract DataSource selectAnyDataSource();
 	protected abstract DataSource selectDataSource(T tenantIdentifier);
 
@@ -46,18 +47,17 @@ public abstract class AbstractDataSourceBasedMultiTenantConnectionProviderImpl<T
 
 	@Override
 	public boolean isUnwrappableAs(Class<?> unwrapType) {
-		return
-			DataSource.class.isAssignableFrom( unwrapType ) ||
-			MultiTenantConnectionProvider.class.isAssignableFrom( unwrapType );
+		return unwrapType.isInstance( this )
+			|| unwrapType.isAssignableFrom( DataSource.class );
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( MultiTenantConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+		if ( unwrapType.isInstance( this ) ) {
 			return (T) this;
 		}
-		else if ( DataSource.class.isAssignableFrom( unwrapType ) ) {
+		else if ( unwrapType.isAssignableFrom( DataSource.class ) ) {
 			return (T) selectAnyDataSource();
 		}
 		else {

@@ -49,15 +49,13 @@ public class ColumnQuoteTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery( "delete from Product" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			Product product = session.get( Product.class, testProductId );
+			Product product = session.find( Product.class, testProductId );
 			assertThat( product.fieldWithHibernateQuoating, is( fieldWithHibernateQuotingValue ) );
 			assertThat( product.fieldWithJpaQuoting, is( fieldWithJpaQuotingValue ) );
 		} );
@@ -66,13 +64,13 @@ public class ColumnQuoteTest {
 	@Test
 	public void testUpdate(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			Product product = session.get( Product.class, testProductId );
+			Product product = session.find( Product.class, testProductId );
 			product.fieldWithHibernateQuoating = changedFieldWithHibernateQuotingValue;
 			product.fieldWithJpaQuoting = changedFieldWithJpaQuotingValue;
 			session.flush();
 		} );
 		scope.inTransaction( session -> {
-			Product product = session.get( Product.class, testProductId );
+			Product product = session.find( Product.class, testProductId );
 			assertThat( product.fieldWithHibernateQuoating, is( changedFieldWithHibernateQuotingValue ) );
 			assertThat( product.fieldWithJpaQuoting, is( changedFieldWithJpaQuotingValue ) );
 		} );

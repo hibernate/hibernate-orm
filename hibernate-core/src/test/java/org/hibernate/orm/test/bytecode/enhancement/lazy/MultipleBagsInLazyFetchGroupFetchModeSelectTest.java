@@ -43,9 +43,7 @@ public class MultipleBagsInLazyFetchGroupFetchModeSelectTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( em -> {
-			em.createQuery( "delete from StringsEntity" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@BeforeEach

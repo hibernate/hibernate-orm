@@ -81,9 +81,10 @@ public class VarcharJdbcType implements AdjustableJdbcType {
 	protected boolean shouldUseMaterializedLob(JdbcTypeIndicators indicators) {
 		final Dialect dialect = indicators.getDialect();
 		final long length = indicators.getColumnLength();
-		final long maxLength = indicators.isNationalized() ?
-				dialect.getMaxNVarcharCapacity() :
-				dialect.getMaxVarcharCapacity();
+		final long maxLength =
+				indicators.isNationalized()
+						? dialect.getMaxNVarcharCapacity()
+						: dialect.getMaxVarcharCapacity();
 		return length > maxLength && dialect.useMaterializedLobWhenCapacityExceeded();
 	}
 

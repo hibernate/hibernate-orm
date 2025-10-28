@@ -6,9 +6,7 @@ package org.hibernate.metamodel.mapping.ordering.ast;
 
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
-import org.hibernate.query.hql.internal.BasicDotIdentifierConsumer;
 
-import org.jboss.logging.Logger;
 
 /**
  * Represents the translation of an individual part of a path in `@OrderBy` translation
@@ -18,7 +16,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class PathConsumer {
-	private static final Logger log = Logger.getLogger( BasicDotIdentifierConsumer.class );
 
 	private final TranslationContext translationContext;
 
@@ -48,20 +45,17 @@ public class PathConsumer {
 			reset();
 		}
 
-		if ( pathSoFar.length() != 0 ) {
+		if ( !pathSoFar.isEmpty() ) {
 			pathSoFar.append( '.' );
 		}
 		pathSoFar.append( unquotedIdentifier );
 
-		log.tracef(
-				"BasicDotIdentifierHandler#consumeIdentifier( %s, %s, %s ) - %s",
-				unquotedIdentifier,
-				isBase,
-				isTerminal,
-				pathSoFar
-		);
-
-		currentPart = currentPart.resolvePathPart( unquotedIdentifier, identifier, isTerminal, translationContext );
+		try {
+			currentPart = currentPart.resolvePathPart( unquotedIdentifier, identifier, isTerminal, translationContext );
+		}
+		catch (PathResolutionException pre) {
+			throw new PathResolutionException( "Unable to resolve path '" + pathSoFar + "'" );
+		}
 	}
 
 	private void reset() {

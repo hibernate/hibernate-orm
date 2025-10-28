@@ -7,6 +7,8 @@ package org.hibernate.testing.orm.junit;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 /**
+ * Allows setting multiple configuration values at once.
+ *
  * @author Steve Ebersole
  */
 public @interface SettingConfiguration {

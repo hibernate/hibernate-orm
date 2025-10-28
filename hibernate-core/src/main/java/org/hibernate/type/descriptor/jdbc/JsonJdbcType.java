@@ -4,6 +4,7 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
+import java.io.IOException;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,11 +17,15 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.spi.JsonGeneratingVisitor;
+import org.hibernate.type.format.StringJsonDocumentReader;
+import org.hibernate.type.format.StringJsonDocumentWriter;
 
 /**
  * Specialized type mapping for {@code JSON} and the JSON SQL data type.
  *
  * @author Christian Beikov
+ * @author Emmanuel Jannetti
  */
 public class JsonJdbcType implements AggregateJdbcType {
 	/**
@@ -73,9 +78,9 @@ public class JsonJdbcType implements AggregateJdbcType {
 			return null;
 		}
 		if ( embeddableMappingType != null ) {
-			return JsonHelper.fromString(
+			return JsonHelper.deserialize(
 					embeddableMappingType,
-					string,
+					new StringJsonDocumentReader(string),
 					javaType.getJavaTypeClass() != Object[].class,
 					options
 			);
@@ -86,18 +91,32 @@ public class JsonJdbcType implements AggregateJdbcType {
 	@Override
 	public Object createJdbcValue(Object domainValue, WrapperOptions options) throws SQLException {
 		assert embeddableMappingType != null;
-		return JsonHelper.toString( embeddableMappingType, domainValue, options );
+		final StringJsonDocumentWriter writer = new StringJsonDocumentWriter();
+		try {
+			JsonGeneratingVisitor.INSTANCE.visit( embeddableMappingType, domainValue, options, writer );
+			return writer.getJson();
+		}
+		catch (IOException e) {
+			throw new SQLException( e );
+		}
 	}
 
 	@Override
 	public Object[] extractJdbcValues(Object rawJdbcValue, WrapperOptions options) throws SQLException {
 		assert embeddableMappingType != null;
-		return JsonHelper.fromString( embeddableMappingType, (String) rawJdbcValue, false, options );
+		return JsonHelper.deserialize( embeddableMappingType, new StringJsonDocumentReader( (String) rawJdbcValue ), false, options );
 	}
 
 	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {
 		if ( embeddableMappingType != null ) {
-			return JsonHelper.toString( embeddableMappingType, value, options );
+			try {
+				final StringJsonDocumentWriter writer = new StringJsonDocumentWriter();
+				JsonGeneratingVisitor.INSTANCE.visit( embeddableMappingType, value, options, writer );
+				return writer.getJson();
+			}
+			catch (IOException e) {
+				throw new RuntimeException("Failed to serialize JSON mapping", e );
+			}
 		}
 		return options.getJsonFormatMapper().toString( value, javaType, options );
 	}

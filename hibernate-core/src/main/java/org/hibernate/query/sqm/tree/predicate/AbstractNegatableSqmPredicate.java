@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.predicate;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmBindableType;
 
+
 /**
  * @author Steve Ebersole
  */
@@ -33,7 +34,7 @@ public abstract class AbstractNegatableSqmPredicate extends AbstractSqmPredicate
 
 	@Override
 	public void negate() {
-		this.negated = !this.negated;
+		negated = !negated;
 	}
 
 	protected abstract SqmNegatablePredicate createNegatedNode();
@@ -44,5 +45,4 @@ public abstract class AbstractNegatableSqmPredicate extends AbstractSqmPredicate
 		// a new instance.
 		return createNegatedNode();
 	}
-
 }

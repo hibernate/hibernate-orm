@@ -6,9 +6,11 @@ package org.hibernate.community.dialect;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.sql.ast.MySQLSqlAstTranslator;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -49,6 +51,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  */
 public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
+	private static final int MAX_CHAR_SIZE = 8192;
 	private final SingleStoreDialect dialect;
 
 	public SingleStoreSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, SingleStoreDialect dialect) {
@@ -106,7 +109,8 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	@Override
 	public void visitColumnReference(ColumnReference columnReference) {
 		final Statement currentStatement;
-		if ( "excluded".equals( columnReference.getQualifier() ) && ( currentStatement = getStatementStack().getCurrent() ) instanceof InsertSelectStatement && ( (InsertSelectStatement) currentStatement ).getSourceSelectStatement() == null ) {
+		if ( "excluded".equals(
+				columnReference.getQualifier() ) && (currentStatement = getStatementStack().getCurrent()) instanceof InsertSelectStatement && ((InsertSelectStatement) currentStatement).getSourceSelectStatement() == null ) {
 			// Accessing the excluded row for an insert-values statement in the conflict clause requires the values qualifier
 			appendSql( "values(" );
 			columnReference.appendReadExpression( this, null );
@@ -169,8 +173,8 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 		// Since SingleStore does not support aliasing the insert target table,
 		// we must detect column reference that are used in the conflict clause
 		// and use the table expression as qualifier instead
-		if ( getClauseStack().getCurrent() != Clause.SET || !( ( currentDmlStatement = getCurrentDmlStatement() ) instanceof InsertSelectStatement ) || ( dmlAlias = currentDmlStatement.getTargetTable()
-				.getIdentificationVariable() ) == null || !dmlAlias.equals( columnReference.getQualifier() ) ) {
+		if ( getClauseStack().getCurrent() != Clause.SET || !((currentDmlStatement = getCurrentDmlStatement()) instanceof InsertSelectStatement) || (dmlAlias = currentDmlStatement.getTargetTable()
+				.getIdentificationVariable()) == null || !dmlAlias.equals( columnReference.getQualifier() ) ) {
 			return columnReference.getQualifier();
 		}
 		// Qualify the column reference with the table expression also when in subqueries
@@ -202,19 +206,14 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
-		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart && supportsWindowFunctions() && !isRowsOnlyFetchClauseType(
+		return useOffsetFetchClause(
+				queryPart ) && getQueryPartForRowNumbering() != queryPart && supportsWindowFunctions() && !isRowsOnlyFetchClauseType(
 				queryPart );
 	}
 
 	@Override
 	protected boolean shouldEmulateLateralWithIntersect(QueryPart queryPart) {
 		return getDialect().supportsSimpleQueryGrouping() || !queryPart.hasOffsetOrFetchClause();
-	}
-
-	//SingleStore doesn't support 'FOR UPDATE' clause with distributed joins
-	@Override
-	protected String getForUpdate() {
-		return dialect.getForUpdateString();
 	}
 
 	@Override
@@ -323,8 +322,9 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	@Override
 	protected void renderCombinedLimitClause(Expression offsetExpression, Expression fetchExpression) {
 		if ( offsetExpression != null || fetchExpression != null ) {
-			if ( getCurrentQueryPart() instanceof QueryGroup && ( ( (QueryGroup) getCurrentQueryPart() ).getSetOperator() == SetOperator.UNION || ( (QueryGroup) getCurrentQueryPart() ).getSetOperator() == SetOperator.UNION_ALL ) ) {
-				throw new UnsupportedOperationException( "SingleStore doesn't support UNION/UNION ALL with limit clause" );
+			if ( getCurrentQueryPart() instanceof QueryGroup && (((QueryGroup) getCurrentQueryPart()).getSetOperator() == SetOperator.UNION || ((QueryGroup) getCurrentQueryPart()).getSetOperator() == SetOperator.UNION_ALL) ) {
+				throw new UnsupportedOperationException(
+						"SingleStore doesn't support UNION/UNION ALL with limit clause" );
 			}
 		}
 		super.renderCombinedLimitClause( offsetExpression, fetchExpression );
@@ -376,7 +376,7 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 			// Since escape with empty or null character is ignored we need
 			// four backslashes to render a single one in a like pattern
 			if ( pattern instanceof Literal ) {
-				Object literalValue = ( (Literal) pattern ).getLiteralValue();
+				Object literalValue = ((Literal) pattern).getLiteralValue();
 				if ( literalValue == null ) {
 					pattern.accept( this );
 				}
@@ -403,9 +403,60 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 		return true;
 	}
 
+	public static String getSqlType(CastTarget castTarget, SessionFactoryImplementor factory) {
+		final String sqlType = getCastTypeName( castTarget, factory.getTypeConfiguration() );
+		return getSqlType( castTarget, sqlType, factory.getJdbcServices().getDialect() );
+	}
+
+	private static String getSqlType(CastTarget castTarget, String sqlType, Dialect dialect) {
+		if ( sqlType != null ) {
+			int parenthesesIndex = sqlType.indexOf( '(' );
+			final String baseName = parenthesesIndex == -1 ? sqlType : sqlType.substring( 0, parenthesesIndex ).trim();
+			switch ( baseName.toLowerCase( Locale.ROOT ) ) {
+				case "bit":
+					return "unsigned";
+				case "tinyint":
+				case "smallint":
+				case "integer":
+				case "bigint":
+					return "signed";
+				case "float":
+				case "real":
+				case "double precision":
+					final int precision = castTarget.getPrecision() == null ?
+							dialect.getDefaultDecimalPrecision() :
+							castTarget.getPrecision();
+					final int scale = castTarget.getScale() == null ? Size.DEFAULT_SCALE : castTarget.getScale();
+					return "decimal(" + precision + "," + scale + ")";
+				case "char":
+				case "varchar":
+				case "text":
+				case "mediumtext":
+				case "longtext":
+				case "set":
+				case "enum":
+					if ( castTarget.getLength() == null ) {
+						if ( castTarget.getJdbcMapping().getJdbcJavaType().getJavaType() == Character.class ) {
+							return "char(1)";
+						}
+						else {
+							return "char";
+						}
+					}
+					return castTarget.getLength() > MAX_CHAR_SIZE ? "char" : "char(" + castTarget.getLength() + ")";
+				case "binary":
+				case "varbinary":
+				case "mediumblob":
+				case "longblob":
+					return castTarget.getLength() == null ? "binary" : "binary(" + castTarget.getLength() + ")";
+			}
+		}
+		return sqlType;
+	}
+
 	@Override
 	public void visitCastTarget(CastTarget castTarget) {
-		String sqlType = MySQLSqlAstTranslator.getSqlType( castTarget, getSessionFactory() );
+		String sqlType = getSqlType( castTarget, getSessionFactory() );
 		if ( sqlType != null ) {
 			appendSql( sqlType );
 		}

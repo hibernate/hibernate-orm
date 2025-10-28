@@ -6,11 +6,9 @@ package org.hibernate.engine.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.internal.CoreLogging;
-
-import org.jboss.logging.Logger;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * A strategy for determining if an identifier value is an identifier of
@@ -21,7 +19,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Gavin King
  */
 public class IdentifierValue implements UnsavedValueStrategy {
-	private static final Logger LOG = CoreLogging.logger( IdentifierValue.class );
 
 	private final @Nullable Object value;
 
@@ -31,7 +28,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	public static final IdentifierValue ANY = new IdentifierValue() {
 		@Override
 		public Boolean isUnsaved(Object id) {
-			LOG.trace( "ID unsaved-value strategy ANY" );
+			CORE_LOGGER.idUnsavedValueStrategy( "ANY" );
 			return Boolean.TRUE;
 		}
 
@@ -52,7 +49,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	public static final IdentifierValue NONE = new IdentifierValue() {
 		@Override
 		public Boolean isUnsaved(Object id) {
-			LOG.trace( "ID unsaved-value strategy NONE" );
+			CORE_LOGGER.idUnsavedValueStrategy( "NONE" );
 			return Boolean.FALSE;
 		}
 
@@ -74,7 +71,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	public static final IdentifierValue NULL = new IdentifierValue() {
 		@Override
 		public Boolean isUnsaved(@Nullable Object id) {
-			LOG.trace( "ID unsaved-value strategy NULL" );
+			CORE_LOGGER.idUnsavedValueStrategy( "NULL" );
 			return id == null;
 		}
 
@@ -95,7 +92,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	public static final IdentifierValue UNDEFINED = new IdentifierValue() {
 		@Override
 		public @Nullable Boolean isUnsaved(Object id) {
-			LOG.trace( "ID unsaved-value strategy UNDEFINED" );
+			CORE_LOGGER.idUnsavedValueStrategy( "UNDEFINED" );
 			return null;
 		}
 
@@ -127,7 +124,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 */
 	@Override
 	public @Nullable Boolean isUnsaved(@Nullable Object id) {
-		LOG.tracev( "ID unsaved-value: {0}", value );
+		CORE_LOGGER.idUnsavedValue( value );
 		return id == null || id.equals( value );
 	}
 

@@ -36,6 +36,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.LockMode.READ;
 
 /**
  * @author Steve Ebersole
@@ -54,8 +55,10 @@ public class LoadPlanBuilderTest {
 
 		final SingleIdEntityLoaderStandardImpl<?> loader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, new LoadQueryInfluencers( sessionFactory ) );
 
-		final SingleIdLoadPlan<?> loadPlan =
-				loader.resolveLoadPlan( LockOptions.READ, new LoadQueryInfluencers( sessionFactory ) );
+		final SingleIdLoadPlan<?> loadPlan = loader.resolveLoadPlan(
+				new LockOptions( READ ),
+				new LoadQueryInfluencers( sessionFactory )
+		);
 
 		final List<DomainResult<?>> domainResults = loadPlan.getJdbcSelect()
 				.getJdbcValuesMappingProducer()
@@ -93,7 +96,10 @@ public class LoadPlanBuilderTest {
 			}
 		};
 
-		final SingleIdLoadPlan<?> loadPlan = loader.resolveLoadPlan( LockOptions.READ, influencers );
+		final SingleIdLoadPlan<?> loadPlan = loader.resolveLoadPlan(
+				new LockOptions( READ ),
+				influencers
+		);
 		final List<DomainResult<?>> domainResults = loadPlan.getJdbcSelect()
 				.getJdbcValuesMappingProducer()
 				.resolve( null, new LoadQueryInfluencers( sessionFactory ), sessionFactory )

@@ -175,16 +175,6 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
-	protected String getForShare(int timeoutMillis) {
-		return " for read only";
-	}
-
-	@Override
-	protected String getForUpdateWithClause() {
-		return " with rs";
-	}
-
-	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		// Derby only supports the OFFSET and FETCH clause with ROWS
 		assertRowsOnlyFetchClauseType( queryPart );
@@ -244,8 +234,7 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 		if ( expression instanceof Literal ) {
 			appendSql( "'0'" );
 		}
-		else if ( expression instanceof Summarization ) {
-			Summarization summarization = (Summarization) expression;
+		else if ( expression instanceof Summarization summarization ) {
 			appendSql( summarization.getKind().sqlText() );
 			appendSql( OPEN_PARENTHESIS );
 			renderCommaSeparated( summarization.getGroupings() );

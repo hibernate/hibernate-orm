@@ -4,14 +4,6 @@
  */
 package org.hibernate.orm.test.hql;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -20,26 +12,32 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertTrue;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Vlad Mihalcea
  */
-public class SelectDistinctTest extends BaseEntityManagerFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = {
+		SelectDistinctTest.Person.class,
+		SelectDistinctTest.Book.class
+})
+@SessionFactory
+public class SelectDistinctTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class,
-			Book.class
-		};
-	}
-
-	@Before
-	public void init() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	@BeforeEach
+	public void createTestData(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Person gavinKing = new Person("Gavin", "King");
 			Person stephenKing = new Person("Stephen", "King");
 			Person vladMihalcea = new Person("Vlad", "Mihalcea");
@@ -57,10 +55,14 @@ public class SelectDistinctTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
-	@Test
-	public void testDistinctProjection() {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	@Test
+	public void testDistinctProjection(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-distinct-projection-query-example[]
 			List<String> lastNames = entityManager.createQuery(
 				"select distinct p.lastName " +
@@ -68,11 +70,8 @@ public class SelectDistinctTest extends BaseEntityManagerFunctionalTestCase {
 			.getResultList();
 			//end::hql-distinct-projection-query-example[]
 
-			assertTrue(
-				lastNames.size() == 2 &&
-				lastNames.contains("King") &&
-				lastNames.contains("Mihalcea")
-			);
+			assertThat( lastNames ).hasSize( 2 );
+			assertThat( lastNames ).contains( "King", "Mihalcea" );
 		});
 	}
 

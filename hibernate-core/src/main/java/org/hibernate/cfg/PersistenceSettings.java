@@ -142,11 +142,14 @@ public interface PersistenceSettings {
 
 	/**
 	 * Identifies a comma-separated list of values indicating the types of things we should
-	 * auto-detect during scanning. Allowable values include:
+	 * autodetect during scanning. Allowable values include:
 	 * <ul>
 	 *     <li>{@code "class"} specifies that {@code .class} files are discovered as managed classes
 	 *     <li>{@code "hbm"} specifies that {@code hbm.xml} files are discovered as mapping files
 	 * </ul>
+	 * When {@code .class} discovery is enabled, the module {@code hibernate-scan-jandex}
+	 * must be added as a dependency, or some other implementation of the service
+	 * {@link org.hibernate.boot.archive.scan.spi.ScannerFactory} must be made available.
 	 *
 	 * @see org.hibernate.boot.MetadataBuilder#applyScanOptions
 	 */

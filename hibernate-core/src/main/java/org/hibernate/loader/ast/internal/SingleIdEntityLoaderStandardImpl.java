@@ -15,7 +15,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 
 /**
@@ -53,10 +52,10 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 		this.loadPlanCreator = loadPlanCreator;
 		// see org.hibernate.persister.entity.AbstractEntityPersister#createLoaders
 		// we should preload a few - maybe LockMode.NONE and LockMode.READ
-		final LockOptions lockOptions = LockOptions.NONE;
-		final SingleIdLoadPlan<T> plan = loadPlanCreator.apply( LockOptions.NONE, influencers );
-		if ( isLoadPlanReusable( lockOptions, influencers ) ) {
-			selectByLockMode.put( lockOptions.getLockMode(), plan );
+		final var noLocking = new LockOptions();
+		final var singleIdLoadPlan = loadPlanCreator.apply( noLocking, influencers );
+		if ( isLoadPlanReusable( noLocking, influencers ) ) {
+			selectByLockMode.put( LockMode.NONE, singleIdLoadPlan );
 		}
 	}
 
@@ -99,14 +98,14 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 
 	private SingleIdLoadPlan<T> getRegularLoadPlan(LockOptions lockOptions, LoadQueryInfluencers influencers) {
 		if ( isLoadPlanReusable( lockOptions, influencers )  ) {
-			final SingleIdLoadPlan<T> existing = selectByLockMode.get( lockOptions.getLockMode() );
+			final var existing = selectByLockMode.get( lockOptions.getLockMode() );
 			if ( existing != null ) {
 				return existing;
 			}
 			else {
-				final SingleIdLoadPlan<T> plan = loadPlanCreator.apply( lockOptions, influencers );
-				selectByLockMode.put( lockOptions.getLockMode(), plan );
-				return plan;
+				final var singleIdLoadPlan = loadPlanCreator.apply( lockOptions, influencers );
+				selectByLockMode.put( lockOptions.getLockMode(), singleIdLoadPlan );
+				return singleIdLoadPlan;
 			}
 		}
 		else {
@@ -115,27 +114,29 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 	}
 
 	private SingleIdLoadPlan<T> getInternalCascadeLoadPlan(LockOptions lockOptions, LoadQueryInfluencers influencers) {
-		final CascadingFetchProfile fetchProfile =
-				influencers.getEnabledCascadingFetchProfile();
+		final var fetchProfile = influencers.getEnabledCascadingFetchProfile();
 		if ( selectByInternalCascadeProfile == null ) {
 			selectByInternalCascadeProfile = new EnumMap<>( CascadingFetchProfile.class );
 		}
 		else {
-			final SingleIdLoadPlan<T> existing =
-					selectByInternalCascadeProfile.get( fetchProfile );
+			final var existing = selectByInternalCascadeProfile.get( fetchProfile );
 			if ( existing != null ) {
 				return existing;
 			}
 		}
-		final SingleIdLoadPlan<T> plan = loadPlanCreator.apply( lockOptions, influencers );
+		final var plan = loadPlanCreator.apply( lockOptions, influencers );
 		selectByInternalCascadeProfile.put( fetchProfile, plan );
 		return plan;
 	}
 
 	private boolean isLoadPlanReusable(LockOptions lockOptions, LoadQueryInfluencers influencers) {
-		return lockOptions.getTimeOut() == LockOptions.WAIT_FOREVER
-			&& !getLoadable().isAffectedByEntityGraph( influencers )
-			&& !getLoadable().isAffectedByEnabledFetchProfiles( influencers );
+		if ( lockOptions.getLockMode().isPessimistic() && lockOptions.hasNonDefaultOptions() ) {
+			return false;
+		}
+		else {
+			return !getLoadable().isAffectedByEntityGraph( influencers )
+				&& !getLoadable().isAffectedByEnabledFetchProfiles( influencers );
+		}
 	}
 
 	private static <T> SingleIdLoadPlan<T> createLoadPlan(
@@ -144,23 +145,22 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 			LoadQueryInfluencers influencers,
 			SessionFactoryImplementor factory) {
 
-		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
-		final SelectStatement sqlAst = LoaderSelectBuilder.createSelect(
-				loadable,
-				// null here means to select everything
-				null,
-				loadable.getIdentifierMapping(),
-				null,
-				1,
-				influencers,
-				lockOptions,
-				jdbcParametersBuilder::add,
-				factory
-		);
+		final var jdbcParametersBuilder = JdbcParametersList.newBuilder();
 		return new SingleIdLoadPlan<>(
 				loadable,
 				loadable.getIdentifierMapping(),
-				sqlAst,
+				LoaderSelectBuilder.createSelect(
+						loadable,
+						// null here means to select everything
+						null,
+						loadable.getIdentifierMapping(),
+						null,
+						1,
+						influencers,
+						lockOptions,
+						jdbcParametersBuilder::add,
+						factory
+				),
 				jdbcParametersBuilder.build(),
 				lockOptions,
 				factory

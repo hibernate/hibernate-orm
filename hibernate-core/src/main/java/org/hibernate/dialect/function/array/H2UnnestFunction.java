@@ -63,7 +63,6 @@ public class H2UnnestFunction extends UnnestFunction {
 	protected <T> SelfRenderingSqmSetReturningFunction<T> generateSqmSetReturningFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			QueryEngine queryEngine) {
-		//noinspection unchecked
 		return new SelfRenderingSqmSetReturningFunction<>(
 				this,
 				this,
@@ -212,6 +211,7 @@ public class H2UnnestFunction extends UnnestFunction {
 					null,
 					null,
 					null,
+					null,
 					false,
 					false,
 					false,
@@ -249,6 +249,7 @@ public class H2UnnestFunction extends UnnestFunction {
 							selectableMapping.getCustomWriteExpression(),
 							selectableMapping.getColumnDefinition(),
 							selectableMapping.getLength(),
+							selectableMapping.getArrayLength(),
 							selectableMapping.getPrecision(),
 							selectableMapping.getScale(),
 							selectableMapping.getTemporalPrecision(),
@@ -289,6 +290,7 @@ public class H2UnnestFunction extends UnnestFunction {
 							null,
 							typedMapping.getColumnDefinition(),
 							typedMapping.getLength(),
+							typedMapping.getArrayLength(),
 							typedMapping.getPrecision(),
 							typedMapping.getScale(),
 							typedMapping.getTemporalPrecision(),
@@ -307,6 +309,7 @@ public class H2UnnestFunction extends UnnestFunction {
 							elementSelectionExpression,
 							new SelectablePath( CollectionPart.Nature.ELEMENT.getName() ),
 							elementReadExpression,
+							null,
 							null,
 							null,
 							null,

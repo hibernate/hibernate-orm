@@ -12,7 +12,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -53,12 +52,19 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 
 
 	public JdbcTimeJavaType() {
-		super( Time.class, TimeMutabilityPlan.INSTANCE );
+		super( Date.class, TimeMutabilityPlan.INSTANCE );
 	}
 
 	@Override
 	public TemporalType getPrecision() {
 		return TemporalType.TIME;
+	}
+
+	@Override
+	public Class<Date> getJavaType() {
+		// wrong, but needed for backward compatibility
+		//noinspection unchecked, rawtypes
+		return (Class) java.sql.Time.class;
 	}
 
 	@Override
@@ -70,7 +76,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 
 	@Override
 	public int extractHashCode(Date value) {
-		final Calendar calendar = Calendar.getInstance();
+		final var calendar = Calendar.getInstance();
 		calendar.setTime( value );
 		int hashCode = 1;
 		hashCode = 31 * hashCode + calendar.get( Calendar.HOUR_OF_DAY );
@@ -94,8 +100,8 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 			return true;
 		}
 
-		final Calendar calendar1 = Calendar.getInstance();
-		final Calendar calendar2 = Calendar.getInstance();
+		final var calendar1 = Calendar.getInstance();
+		final var calendar2 = Calendar.getInstance();
 		calendar1.setTime( one );
 		calendar2.setTime( another );
 
@@ -119,9 +125,9 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 
 		if ( LocalTime.class.isAssignableFrom( type ) ) {
 			final Time time = value instanceof java.sql.Time
-					? ( (java.sql.Time) value )
+					? (java.sql.Time) value
 					: new java.sql.Time( value.getTime() % 86_400_000 );
-			final LocalTime localTime = time.toLocalTime();
+			final var localTime = time.toLocalTime();
 			long millis = time.getTime() % 1000;
 			if ( millis == 0 ) {
 				return localTime;
@@ -153,9 +159,9 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 		}
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
-			final GregorianCalendar cal = new GregorianCalendar();
-			cal.setTimeInMillis( value.getTime() );
-			return cal;
+			final var gregorianCalendar = new GregorianCalendar();
+			gregorianCalendar.setTimeInMillis( value.getTime() );
+			return gregorianCalendar;
 		}
 
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
@@ -216,9 +222,9 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 	@Override
 	public Date fromString(CharSequence string) {
 		try {
-			final TemporalAccessor accessor = LITERAL_FORMATTER.parse( string );
-			final LocalTime localTime = LocalTime.from( accessor );
-			final Time time = Time.valueOf( localTime );
+			final var temporalAccessor = LITERAL_FORMATTER.parse( string );
+			final var localTime = LocalTime.from( temporalAccessor );
+			final var time = Time.valueOf( localTime );
 			time.setTime( time.getTime() + localTime.getNano() / 1_000_000 );
 			return time;
 		}
@@ -230,8 +236,8 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 	@Override
 	public Date fromEncodedString(CharSequence charSequence, int start, int end) {
 		try {
-			final TemporalAccessor accessor = ENCODED_FORMATTER.parse( subSequence( charSequence, start, end ) );
-			return java.sql.Time.valueOf( accessor.query( LocalTime::from ) );
+			final var temporalAccessor = ENCODED_FORMATTER.parse( subSequence( charSequence, start, end ) );
+			return java.sql.Time.valueOf( temporalAccessor.query( LocalTime::from ) );
 		}
 		catch ( DateTimeParseException pe) {
 			throw new HibernateException( "could not parse time string " + subSequence( charSequence, start, end ), pe );

@@ -55,10 +55,26 @@ public interface EventListenerGroup<T> {
 	 */
 	void addDuplicationStrategy(DuplicationStrategy strategy);
 
+	/**
+	 * Add a listener to the group.
+	 */
 	void appendListener(T listener);
+
+	/**
+	 * Add the given listeners to the group.
+	 */
+	@SuppressWarnings("unchecked") // heap pollution due to varargs
 	void appendListeners(T... listeners);
 
+	/**
+	 * Add a listener to the group.
+	 */
 	void prependListener(T listener);
+
+	/**
+	 * Add the given listeners to the group.
+	 */
+	@SuppressWarnings("unchecked") // heap pollution due to varargs
 	void prependListeners(T... listeners);
 
 	/**

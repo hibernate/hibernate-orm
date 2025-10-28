@@ -4,59 +4,49 @@
  */
 package org.hibernate.test.c3p0;
 
-import java.lang.management.ManagementFactory;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-
 import org.hibernate.c3p0.internal.C3P0ConnectionProvider;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import java.lang.management.ManagementFactory;
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
 
 /**
  * @author Strong Liu
  */
 @SkipForDialect(dialectClass = SybaseASEDialect.class,
 		reason = "JtdsConnection.isValid not implemented")
-public class C3P0ConnectionProviderTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected void releaseSessionFactory() {
-		super.releaseSessionFactory();
-		try {
-			//c3p0 does not close physical connections right away, so without this hack a connection leak false alarm is triggered.
-			Thread.sleep( 100 );
-		}
-		catch ( InterruptedException e ) {
-		}
-	}
-
+@ServiceRegistry
+@DomainModel
+@SessionFactory
+public class C3P0ConnectionProviderTest {
 	@Test
-	public void testC3P0isDefaultWhenThereIsC3P0Properties() {
-		JdbcServices jdbcServices = serviceRegistry().requireService( JdbcServices.class );
-		ConnectionProviderJdbcConnectionAccess connectionAccess =
-			assertTyping(
+	public void testC3P0isDefaultWhenThereIsC3P0Properties(ServiceRegistryScope registryScope) throws Exception {
+		var serviceRegistry = registryScope.getRegistry();
+		var jdbcServices = serviceRegistry.requireService( JdbcServices.class );
+		var connectionAccess = assertTyping(
 				ConnectionProviderJdbcConnectionAccess.class,
 				jdbcServices.getBootstrapJdbcConnectionAccess()
-			);
-		assertTrue( connectionAccess.getConnectionProvider() instanceof C3P0ConnectionProvider );
+		);
+		assertThat( connectionAccess.getConnectionProvider() ).isInstanceOf( C3P0ConnectionProvider.class );
 	}
 
 	@Test
-	public void testHHH6635() throws Exception {
+	public void testHHH6635(SessionFactoryScope factoryScope) throws Exception {
+		var sf = factoryScope.getSessionFactory();
 		MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
 		Set<ObjectName> set = mBeanServer.queryNames( null, null );
 		boolean mbeanfound = false;
@@ -67,42 +57,30 @@ public class C3P0ConnectionProviderTest extends BaseCoreFunctionalTestCase {
 				// see according c3p0 settings in META-INF/persistence.xml
 
 				int actual_minPoolSize = (Integer) mBeanServer.getAttribute( obj, "minPoolSize" );
-				assertEquals( 0, actual_minPoolSize );
+				assertThat( actual_minPoolSize ).isEqualTo( 0 );
 
 				int actual_initialPoolSize = (Integer) mBeanServer.getAttribute( obj, "initialPoolSize" );
-				assertEquals( 0, actual_initialPoolSize );
+				assertThat( actual_initialPoolSize ).isEqualTo( 0 );
 
 				int actual_maxPoolSize = (Integer) mBeanServer.getAttribute( obj, "maxPoolSize" );
-				assertEquals( 800, actual_maxPoolSize );
+				assertThat( actual_maxPoolSize ).isEqualTo( 800 );
 
 				int actual_maxStatements = (Integer) mBeanServer.getAttribute( obj, "maxStatements" );
-				assertEquals( 50, actual_maxStatements );
+				assertThat( actual_maxStatements ).isEqualTo( 50 );
 
 				int actual_maxIdleTime = (Integer) mBeanServer.getAttribute( obj, "maxIdleTime" );
-				assertEquals( 300, actual_maxIdleTime );
+				assertThat( actual_maxIdleTime ).isEqualTo( 300 );
 
 				int actual_idleConnectionTestPeriod = (Integer) mBeanServer.getAttribute(
 						obj,
 						"idleConnectionTestPeriod"
 				);
-				assertEquals( 3000, actual_idleConnectionTestPeriod );
+				assertThat( actual_idleConnectionTestPeriod ).isEqualTo( 3000 );
+
 				break;
 			}
 		}
 
-		assertTrue( "PooledDataSource BMean not found, please verify version of c3p0", mbeanfound );
-	}
-
-	@Test @JiraKey(value="HHH-9498")
-	public void testIsolationPropertyCouldBeEmpty() {
-		C3P0ConnectionProvider provider = new C3P0ConnectionProvider();
-		try {
-			Map<String,Object> configuration = new HashMap<>();
-			configuration.put( Environment.ISOLATION, "" );
-			provider.configure( configuration );
-		}
-		finally {
-			provider.stop();
-		}
+		assertThat( mbeanfound ).as( "PooledDataSource BMean not found, please verify version of c3p0" ).isTrue();
 	}
 }

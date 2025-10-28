@@ -11,10 +11,11 @@ import java.util.Locale;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.CompositeType;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
@@ -22,26 +23,19 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
 @RequiresDialect(H2Dialect.class)
-public class ColumnTransformerTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Savings.class
-		};
-	}
+@Jpa( annotatedClasses = {ColumnTransformerTest.Savings.class} )
+public class ColumnTransformerTest {
 
 	@Test
-	public void testLifecycle() {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
 		//tag::mapping-column-read-and-write-composite-type-persistence-example[]
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::basic-datetime-temporal-date-persist-example[]
 			Savings savings = new Savings();
 			savings.setId(1L);
@@ -49,7 +43,7 @@ public class ColumnTransformerTest extends BaseEntityManagerFunctionalTestCase {
 			entityManager.persist(savings);
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Savings savings = entityManager.find(Savings.class, 1L);
 			assertEquals(10, savings.getWallet().getAmount().intValue());
 			assertEquals(Currency.getInstance(Locale.US), savings.getWallet().getCurrency());

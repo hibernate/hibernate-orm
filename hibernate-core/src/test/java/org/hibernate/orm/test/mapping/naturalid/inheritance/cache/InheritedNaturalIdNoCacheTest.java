@@ -34,9 +34,7 @@ public class InheritedNaturalIdNoCacheTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.createQuery( "delete MyEntity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -89,7 +87,7 @@ public class InheritedNaturalIdNoCacheTest {
 		//			1) caching is enabled && the natural-id resolution is cached -> WrongClassException
 		//			2) otherwise -> return null
 		scope.inTransaction( (session) -> {
-			final ExtendedEntity loaded = session.byId( ExtendedEntity.class ).load( 1 );
+			final ExtendedEntity loaded = session.find( ExtendedEntity.class, 1 );
 			assertThat( loaded ).isNull();
 		} );
 	}

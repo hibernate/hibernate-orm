@@ -17,40 +17,23 @@ public class CommunityDialectSelector implements DialectSelector {
 		if ( name.isEmpty() ) {
 			return null;
 		}
-		switch ( name ) {
-			case "Cache71":
-			case "Cache":
-				return CacheDialect.class;
-			case "CUBRID":
-				return CUBRIDDialect.class;
-			case "Altibase":
-				return AltibaseDialect.class;
-			case "Firebird":
-				return FirebirdDialect.class;
-			case "Informix10":
-			case "Informix":
-				return InformixDialect.class;
-			case "Ingres9":
-			case "Ingres10":
-			case "Ingres":
-				return IngresDialect.class;
-			case "MimerSQL":
-				return MimerSQLDialect.class;
-			case "RDMSOS2200":
-				return RDMSOS2200Dialect.class;
-			case "SAPDB":
-			case "MaxDB":
-				return MaxDBDialect.class;
-			case "SybaseAnywhere":
-				return SybaseAnywhereDialect.class;
-			case "TimesTen":
-				return TimesTenDialect.class;
-			case "SingleStore":
-				return SingleStoreDialect.class;
-			case "Derby":
-				return DerbyDialect.class;
-		}
-		return null;
+		return switch ( name ) {
+			case "Cache71", "Cache" -> CacheDialect.class;
+			case "CUBRID" -> CUBRIDDialect.class;
+			case "Altibase" -> AltibaseDialect.class;
+			case "Firebird" -> FirebirdDialect.class;
+			case "Informix10", "Informix" -> InformixDialect.class;
+			case "Ingres9", "Ingres10", "Ingres" -> IngresDialect.class;
+			case "MimerSQL" -> MimerSQLDialect.class;
+			case "RDMSOS2200" -> RDMSOS2200Dialect.class;
+			case "SAPDB", "MaxDB" -> MaxDBDialect.class;
+			case "SybaseAnywhere" -> SybaseAnywhereDialect.class;
+			case "Teradata14", "Teradata" -> TeradataDialect.class;
+			case "TimesTen" -> TimesTenDialect.class;
+			case "SingleStore" -> SingleStoreDialect.class;
+			case "Derby" -> DerbyDialect.class;
+			default -> null;
+		};
 	}
 
 }

@@ -24,8 +24,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * @author Gail Badner
@@ -53,14 +53,14 @@ public class NaturalIdInUninitializedAssociationTest {
 	public void testImmutableNaturalId(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					final AnEntity e = session.get( AnEntity.class, 3 );
+					final AnEntity e = session.find( AnEntity.class, 3 );
 					assertFalse( Hibernate.isInitialized( e.entityImmutableNaturalId ) );
 				}
 		);
 
 		scope.inTransaction(
 				(session) -> {
-					final AnEntity e = session.get( AnEntity.class, 3 );
+					final AnEntity e = session.find( AnEntity.class, 3 );
 					Hibernate.initialize( e.entityImmutableNaturalId );
 					assertEquals( "immutable name", e.entityImmutableNaturalId.getName() );
 				}
@@ -71,14 +71,14 @@ public class NaturalIdInUninitializedAssociationTest {
 	public void testMutableNaturalId(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					final AnEntity e = session.get( AnEntity.class, 3 );
+					final AnEntity e = session.find( AnEntity.class, 3 );
 					assertFalse( Hibernate.isInitialized( e.entityMutableNaturalId ) );
 				}
 		);
 
 		scope.inTransaction(
 				(session) -> {
-					final AnEntity e = session.get( AnEntity.class, 3 );
+					final AnEntity e = session.find( AnEntity.class, 3 );
 					assertEquals( "mutable name", e.entityMutableNaturalId.getName() );
 				}
 		);
@@ -101,11 +101,7 @@ public class NaturalIdInUninitializedAssociationTest {
 
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					session.remove( session.get( AnEntity.class, 3 ) );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "AnEntity")

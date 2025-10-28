@@ -11,35 +11,31 @@ import jakarta.persistence.Id;
 import jakarta.persistence.TableGenerator;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Andrea Boriero
  */
 @JiraKey(value = "HHH-12157")
-public class TableGeneratorMultipleDefinitionTest extends BaseUnitTestCase {
+@ServiceRegistry(settings = {@Setting(name = AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, value = "true")})
+public class TableGeneratorMultipleDefinitionTest {
 
-	@Test(expected = IllegalArgumentException.class)
-	public void testDuplicateGeneratorNamesDefinition() {
-		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, "true" )
-				.build();
-		try {
-			new MetadataSources( ssr )
-					.addAnnotatedClass( TestEntity2.class )
-					.addAnnotatedClass( TestEntity1.class )
-					.buildMetadata();
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
+	@Test
+	public void testDuplicateGeneratorNamesDefinition(ServiceRegistryScope scope) {
+		Assertions.assertThrows( IllegalArgumentException.class, () -> {
+					new MetadataSources( scope.getRegistry() )
+							.addAnnotatedClass( TestEntity2.class )
+							.addAnnotatedClass( TestEntity1.class )
+							.buildMetadata();
+				}
+		);
 	}
 
 	@Entity(name = "TestEntity1")

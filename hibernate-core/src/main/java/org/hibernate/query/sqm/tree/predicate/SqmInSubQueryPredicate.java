@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
 import jakarta.persistence.criteria.Expression;
 
+
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
 
 /**
@@ -123,5 +124,37 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 				!isNegated(),
 				nodeBuilder()
 		);
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmInSubQueryPredicate<?> that
+			&& this.isNegated() == that.isNegated()
+			&& this.testExpression.equals( that.testExpression )
+			&& this.subQueryExpression.equals( that.subQueryExpression );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = testExpression.hashCode();
+		result = 31 * result + subQueryExpression.hashCode();
+		result = 31 * result + Boolean.hashCode( isNegated() );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmInSubQueryPredicate<?> that
+			&& this.isNegated() == that.isNegated()
+			&& this.testExpression.isCompatible( that.testExpression )
+			&& this.subQueryExpression.isCompatible( that.subQueryExpression );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = testExpression.cacheHashCode();
+		result = 31 * result + subQueryExpression.cacheHashCode();
+		result = 31 * result + Boolean.hashCode( isNegated() );
+		return result;
 	}
 }

@@ -4,8 +4,8 @@
  */
 package org.hibernate.orm.test.datasource;
 
-import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -17,15 +17,16 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.util.Map;
 import java.util.logging.Logger;
 
+@SuppressWarnings( "unused" ) // used by DatasourceTest in this package
 public class TestDataSourceConnectionProvider
-		extends DatasourceConnectionProviderImpl
+		extends DataSourceConnectionProvider
 		implements ServiceRegistryAwareService {
 
-	final DriverManagerConnectionProviderImpl delegate = new DriverManagerConnectionProviderImpl();
+	final DriverManagerConnectionProvider delegate = new DriverManagerConnectionProvider();
 
 	@Override
-	public void configure(Map<String, Object> configValues) {
-		delegate.configure(configValues);
+	public void configure(Map<String, Object> configuration) {
+		delegate.configure( configuration );
 		setDataSource( new DataSource() {
 			PrintWriter logWriter = new PrintWriter( System.out );
 			@Override
@@ -73,7 +74,7 @@ public class TestDataSourceConnectionProvider
 				throw new SQLFeatureNotSupportedException();
 			}
 		} );
-		super.configure( configValues );
+		super.configure( configuration );
 	}
 
 	@Override

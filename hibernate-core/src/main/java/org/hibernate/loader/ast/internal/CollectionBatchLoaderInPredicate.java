@@ -5,7 +5,6 @@
 package org.hibernate.loader.ast.internal;
 
 import org.hibernate.LockOptions;
-import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -14,15 +13,14 @@ import org.hibernate.loader.ast.spi.CollectionBatchLoader;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
-import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.countIds;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
+import static org.hibernate.pretty.MessageHelper.collectionInfoString;
+import static org.hibernate.sql.exec.spi.JdbcParameterBindings.NO_BINDINGS;
 
 /**
  * {@link CollectionBatchLoader} for batch fetching using a SQL {@code IN} predicate.
@@ -46,20 +44,19 @@ public class CollectionBatchLoaderInPredicate
 		super( domainBatchSize, influencers, attributeMapping, sessionFactory );
 
 		keyColumnCount = attributeMapping.getKeyDescriptor().getJdbcTypeCount();
-		sqlBatchSize = sessionFactory.getJdbcServices()
-				.getDialect()
-				.getBatchLoadSizingStrategy()
-				.determineOptimalBatchLoadSize( keyColumnCount, domainBatchSize, false );
-		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.debugf(
-					"Using IN-predicate batch fetching strategy for collection `%s` : %s (%s)",
+		sqlBatchSize =
+				sessionFactory.getJdbcServices().getDialect()
+						.getBatchLoadSizingStrategy()
+						.determineOptimalBatchLoadSize( keyColumnCount, domainBatchSize, false );
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.enabledCollectionInPredicate(
 					attributeMapping.getNavigableRole().getFullPath(),
 					sqlBatchSize,
 					domainBatchSize
 			);
 		}
 
-		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
+		final var jdbcParametersBuilder = JdbcParametersList.newBuilder();
 		this.sqlAst = LoaderSelectBuilder.createSelect(
 				attributeMapping,
 				null,
@@ -67,38 +64,35 @@ public class CollectionBatchLoaderInPredicate
 				null,
 				sqlBatchSize,
 				influencers,
-				LockOptions.NONE,
+				new LockOptions(),
 				jdbcParametersBuilder::add,
 				sessionFactory
 		);
 
-		final QuerySpec querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
-		final TableGroup tableGroup = querySpec.getFromClause().getRoots().get( 0 );
+		final var querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
+		final var tableGroup = querySpec.getFromClause().getRoots().get( 0 );
 		attributeMapping.applySoftDeleteRestrictions( tableGroup, querySpec::applyPredicate );
 
-		this.jdbcParameters = jdbcParametersBuilder.build();
-		assert this.jdbcParameters.size() == this.sqlBatchSize * this.keyColumnCount;
+		jdbcParameters = jdbcParametersBuilder.build();
+		assert jdbcParameters.size() == sqlBatchSize * keyColumnCount;
 
-		jdbcSelect = sessionFactory.getJdbcServices()
-				.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
-				.buildSelectTranslator( sessionFactory, sqlAst )
-				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
+		jdbcSelect =
+				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+						.buildSelectTranslator( sessionFactory, sqlAst )
+						.translate( NO_BINDINGS, QueryOptions.NONE );
 	}
 
 	@Override
 	void initializeKeys(Object key, Object[] keysToInitialize, SharedSessionContractImplementor session) {
 		final boolean loggerDebugEnabled = MULTI_KEY_LOAD_LOGGER.isDebugEnabled();
 		if ( loggerDebugEnabled ) {
-			MULTI_KEY_LOAD_LOGGER.debugf(
-					"Collection keys to batch-fetch initialize (`%s#%s`) %s",
-					getLoadable().getNavigableRole().getFullPath(),
-					key,
+			MULTI_KEY_LOAD_LOGGER.collectionKeysToInitialize(
+					collectionInfoString( getLoadable(), key ),
 					keysToInitialize
 			);
 		}
 
-		final MultiKeyLoadChunker<Object> chunker = new MultiKeyLoadChunker<>(
+		final var chunker = new MultiKeyLoadChunker<>(
 				sqlBatchSize,
 				keyColumnCount,
 				getLoadable().getKeyDescriptor(),
@@ -107,29 +101,29 @@ public class CollectionBatchLoaderInPredicate
 				jdbcSelect
 		);
 
-		final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
+		final var batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
 
 		chunker.processChunks(
 				keysToInitialize,
 				countIds( keysToInitialize ),
-				(jdbcParameterBindings, session1) -> {
-					// Create a RegistrationHandler for handling any subselect fetches we encounter handling this chunk
-					final SubselectFetch.RegistrationHandler registrationHandler = SubselectFetch.createRegistrationHandler(
-							batchFetchQueue,
-							sqlAst,
-							jdbcParameters,
-							jdbcParameterBindings
-					);
-					return new ExecutionContextWithSubselectFetchHandler( session, registrationHandler );
-				},
+				(jdbcParameterBindings, session1) ->
+						// Create a RegistrationHandler for handling any
+						// subselect fetches we encounter handling this chunk
+						new ExecutionContextWithSubselectFetchHandler(
+								session,
+								SubselectFetch.createRegistrationHandler(
+										batchFetchQueue,
+										sqlAst,
+										jdbcParameters,
+										jdbcParameterBindings
+								)
+						),
 				(key1, relativePosition, absolutePosition) -> {
 				},
 				(startIndex) -> {
 					if ( loggerDebugEnabled ) {
-						MULTI_KEY_LOAD_LOGGER.debugf(
-								"Processing collection batch-fetch chunk (`%s#%s`) %s - %s",
-								getLoadable().getNavigableRole().getFullPath(),
-								key,
+						MULTI_KEY_LOAD_LOGGER.processingCollectionBatchFetchChunk(
+								collectionInfoString( getLoadable(), key ),
 								startIndex,
 								startIndex + (sqlBatchSize-1)
 						);
@@ -137,10 +131,8 @@ public class CollectionBatchLoaderInPredicate
 				},
 				(startIndex, nonNullElementCount) -> {
 					if ( loggerDebugEnabled ) {
-						MULTI_KEY_LOAD_LOGGER.debugf(
-								"Finishing collection batch-fetch chunk (`%s#%s`) %s - %s (%s)",
-								getLoadable().getNavigableRole().getFullPath(),
-								key,
+						MULTI_KEY_LOAD_LOGGER.finishingCollectionBatchFetchChunk(
+								collectionInfoString( getLoadable(), key ),
 								startIndex,
 								startIndex + (sqlBatchSize-1),
 								nonNullElementCount

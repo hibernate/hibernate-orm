@@ -13,7 +13,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.tuple.TupleType;
 import org.hibernate.type.BindingContext;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmCollation;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
@@ -51,15 +50,15 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	// this number has to be distinct from every code in SqlTypes!
 //	private static final int ENUM_UNKNOWN_JDBC_TYPE = -101977;
 
-	final ArgumentsValidator delegate;
+	private final ArgumentsValidator delegate;
 	private final FunctionParameterType[] types;
 
 	public ArgumentTypesValidator(ArgumentsValidator delegate, FunctionParameterType... types) {
 		this.types = types;
-		if ( delegate == null ) {
-			delegate = StandardArgumentsValidators.exactly(types.length);
-		}
-		this.delegate = delegate;
+		this.delegate =
+				delegate == null
+						? StandardArgumentsValidators.exactly( types.length )
+						: delegate;
 	}
 
 	/**
@@ -75,22 +74,22 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			BindingContext bindingContext) {
 		delegate.validate( arguments, functionName, bindingContext );
 		int count = 0;
-		for (SqmTypedNode<?> argument : arguments) {
+		for ( var argument : arguments ) {
 //			JdbcTypeIndicators indicators = typeConfiguration.getCurrentBaseSqlTypeIndicators();
-			final SqmExpressible<?> nodeType = argument.getNodeType();
-			final FunctionParameterType type = count < types.length ? types[count++] : types[types.length - 1];
-			if ( nodeType != null && type != FunctionParameterType.ANY ) {
+			final var nodeType = argument.getNodeType();
+			final var parameterType = count < types.length ? types[count++] : types[types.length - 1];
+			if ( nodeType != null && parameterType != FunctionParameterType.ANY ) {
 				if ( nodeType instanceof TupleType<?> ) {
-					throwTupleError(type, functionName, count);
+					throwTupleError(parameterType, functionName, count);
 				}
-				final JavaType<?> javaType = nodeType.getRelationalJavaType();
-				if (javaType != null) {
-					checkArgumentType( functionName, count, argument, type, javaType );
+				final var javaType = nodeType.getRelationalJavaType();
+				if ( javaType != null ) {
+					checkArgumentType( functionName, count, argument, parameterType, javaType );
 				}
-				switch (type) {
+				switch ( parameterType ) {
 					case TEMPORAL_UNIT:
 						if ( !(argument instanceof SqmExtractUnit) && !(argument instanceof SqmDurationUnit) ) {
-							throwError(type, Object.class, null, functionName, count);
+							throwError(parameterType, Object.class, null, functionName, count);
 						}
 						break;
 					// the following are not really necessary for the functions we have today
@@ -99,12 +98,12 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 					// something crazy by the parser
 					case TRIM_SPEC:
 						if ( !(argument instanceof SqmTrimSpecification) ) {
-							throwError(type, Object.class, null, functionName, count);
+							throwError(parameterType, Object.class, null, functionName, count);
 						}
 						break;
 					case COLLATION:
 						if ( !(argument instanceof SqmCollation) ) {
-							throwError(type, Object.class, null, functionName, count);
+							throwError(parameterType, Object.class, null, functionName, count);
 						}
 						break;
 					case NO_UNTYPED:
@@ -179,10 +178,10 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	@Override
 	public void validateSqlTypes(List<? extends SqlAstNode> arguments, String functionName) {
 		int count = 0;
-		for ( SqlAstNode argument : arguments ) {
+		for ( var argument : arguments ) {
 			if ( argument instanceof Expression expression ) {
-				final JdbcMappingContainer expressionType = expression.getExpressionType();
-				if (expressionType != null) {
+				final var expressionType = expression.getExpressionType();
+				if ( expressionType != null ) {
 					if ( isUnknownExpressionType( expressionType ) ) {
 						count += expressionType.getJdbcTypeCount();
 					}
@@ -199,23 +198,23 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	 */
 	public static boolean isUnknownExpressionType(JdbcMappingContainer expressionType) {
 		return expressionType instanceof JavaObjectType
-			|| expressionType instanceof BasicType
-				&& isUnknown( ((BasicType<?>) expressionType).getJavaTypeDescriptor() );
+			|| expressionType instanceof BasicType<?> basicType
+				&& isUnknown( basicType.getJavaTypeDescriptor() );
 	}
 
 	private int validateArgument(int paramNumber, JdbcMappingContainer expressionType, String functionName) {
 		final int jdbcTypeCount = expressionType.getJdbcTypeCount();
 		for ( int i = 0; i < jdbcTypeCount; i++ ) {
-			final JdbcMapping mapping = expressionType.getJdbcMapping( i );
-			final FunctionParameterType type =
+			final var parameterType =
 					paramNumber < types.length
 							? types[paramNumber++]
 							: types[types.length - 1];
-			if ( type != null ) {
+			if ( parameterType != null ) {
+				final var mapping = expressionType.getJdbcMapping( i );
 				checkArgumentType(
 						paramNumber,
 						functionName,
-						type,
+						parameterType,
 						mapping.getJdbcType(),
 						mapping.getJavaTypeDescriptor().getJavaType()
 				);
@@ -310,7 +309,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 		String sig = delegate.getSignature();
 		for (int i=0; i<types.length; i++) {
 			String argName = types.length == 1 ? "arg" : "arg" + i;
-			sig = sig.replace(argName, types[i] + " " + argName);
+			sig = sig.replace( argName, types[i] + " " + argName );
 		}
 		return sig;
 	}

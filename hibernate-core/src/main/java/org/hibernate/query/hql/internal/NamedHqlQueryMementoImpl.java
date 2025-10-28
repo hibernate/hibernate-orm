@@ -15,7 +15,7 @@ import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.named.AbstractNamedQueryMemento;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.SqmSelectionQuery;
-import org.hibernate.query.sqm.internal.QuerySqmImpl;
+import org.hibernate.query.sqm.internal.SqmQueryImpl;
 import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -147,6 +147,6 @@ public class NamedHqlQueryMementoImpl<R> extends AbstractNamedQueryMemento<R>
 
 	@Override
 	public <T> SqmQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType) {
-		return new QuerySqmImpl<>( this, resultType, session );
+		return new SqmQueryImpl<>( this, resultType, session );
 	}
 }

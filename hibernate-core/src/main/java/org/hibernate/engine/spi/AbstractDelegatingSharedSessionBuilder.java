@@ -8,12 +8,12 @@ import java.sql.Connection;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
+import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
-import org.hibernate.SessionBuilder;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -27,7 +27,6 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  * @author Guillaume Smet
  */
 public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSessionBuilder {
-
 	private final SharedSessionBuilder delegate;
 
 	public AbstractDelegatingSharedSessionBuilder(SharedSessionBuilder delegate) {
@@ -95,6 +94,12 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 		return this;
 	}
 
+	@Override
+	public SharedSessionBuilder noSessionInterceptorCreation() {
+		delegate.noSessionInterceptorCreation();
+		return this;
+	}
+
 	@Override @Deprecated
 	public SharedSessionBuilder statementInspector(StatementInspector statementInspector) {
 		delegate.statementInspector( statementInspector );
@@ -102,8 +107,20 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 	}
 
 	@Override
-	public SessionBuilder statementInspector(UnaryOperator<String> operator) {
+	public SharedSessionBuilder statementInspector(UnaryOperator<String> operator) {
 		delegate.statementInspector( operator );
+		return this;
+	}
+
+	@Override
+	public SharedSessionBuilder statementInspector() {
+		delegate.statementInspector();
+		return this;
+	}
+
+	@Override
+	public SharedSessionBuilder noStatementInspector() {
+		delegate.noStatementInspector();
 		return this;
 	}
 
@@ -134,6 +151,18 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 	@Override
 	public SharedSessionBuilder tenantIdentifier(Object tenantIdentifier) {
 		delegate.tenantIdentifier( tenantIdentifier );
+		return this;
+	}
+
+	@Override
+	public SharedSessionBuilder readOnly(boolean readOnly) {
+		delegate.readOnly( readOnly );
+		return this;
+	}
+
+	@Override
+	public SharedSessionBuilder initialCacheMode(CacheMode cacheMode) {
+		delegate.initialCacheMode( cacheMode );
 		return this;
 	}
 
@@ -188,6 +217,18 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 	@Override
 	public SharedSessionBuilder identifierRollback(boolean identifierRollback) {
 		delegate.identifierRollback( identifierRollback );
+		return this;
+	}
+
+	@Override
+	public SharedSessionBuilder defaultBatchFetchSize(int defaultBatchFetchSize) {
+		delegate.defaultBatchFetchSize( defaultBatchFetchSize );
+		return this;
+	}
+
+	@Override
+	public SharedSessionBuilder subselectFetchEnabled(boolean subselectFetchEnabled) {
+		delegate.subselectFetchEnabled( subselectFetchEnabled );
 		return this;
 	}
 }

@@ -5,150 +5,129 @@
 package org.hibernate.orm.test.flush;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.persistence.TransactionRequiredException;
 
-import org.hibernate.Session;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.query.sqm.internal.QuerySqmImpl;
+import org.hamcrest.MatcherAssert;
 
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ExpectedException;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.nullValue;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.hibernate.cfg.TransactionSettings.ALLOW_UPDATE_OUTSIDE_TRANSACTION;
 
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-10877")
-public class NonTransactionalDataAccessTest extends BaseCoreFunctionalTestCase {
+public class NonTransactionalDataAccessTest {
 
-	private String allowUpdateOperationOutsideTransaction = "true";
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {MyEntity.class};
+	@BeforeEach
+	void prepareTestData(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> session.persist( new MyEntity( "entity" ) ) );
 	}
 
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty(
-				AvailableSettings.ALLOW_UPDATE_OUTSIDE_TRANSACTION,
-				allowUpdateOperationOutsideTransaction
-		);
-	}
-
-	@Override
-	protected void prepareTest() throws Exception {
-		final MyEntity entity = new MyEntity( "entity" );
-		inTransaction(
-				session -> {
-					session.persist( entity );
-				}
-		);
-	}
-
-	@After
-	public void tearDown() {
-		inTransaction(
-				session -> {
-					session.createQuery( "delete from MyEntity" ).executeUpdate();
-				}
-		);
+	@AfterEach
+	public void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testFlushAllowingOutOfTransactionUpdateOperations() throws Exception {
-		allowUpdateOperationOutsideTransaction = "true";
-		rebuildSessionFactory();
-		prepareTest();
-		try (Session s = openSession()) {
-			final MyEntity entity = (MyEntity) s.createQuery( "from MyEntity e where e.name = :n" )
+	@ServiceRegistry(settings = @Setting(name = ALLOW_UPDATE_OUTSIDE_TRANSACTION, value = "true"))
+	@DomainModel(annotatedClasses = MyEntity.class)
+	@SessionFactory
+	public void testFlushAllowingOutOfTransactionUpdateOperations(SessionFactoryScope factoryScope) {
+		factoryScope.inSession( (session) -> {
+			final MyEntity entity = (MyEntity) session.createQuery( "from MyEntity e where e.name = :n" )
 					.setParameter( "n", "entity" )
 					.uniqueResult();
-			assertThat( entity, not( nullValue() ) );
+			MatcherAssert.assertThat( entity, not( nullValue() ) );
 			entity.setName( "changed" );
 			session.flush();
-		}
+		} );
 	}
 
 	@Test
-	public void testNativeQueryAllowingOutOfTransactionUpdateOperations() throws Exception {
-		allowUpdateOperationOutsideTransaction = "true";
-		rebuildSessionFactory();
-		prepareTest();
-		try (Session s = openSession()) {
-			s.createNativeQuery( "delete from MY_ENTITY" ).executeUpdate();
-		}
-	}
-
-	@Test(expected = TransactionRequiredException.class)
-	public void testNativeQueryDisallowingOutOfTransactionUpdateOperations() throws Exception {
-		allowUpdateOperationOutsideTransaction = "false";
-		rebuildSessionFactory();
-		prepareTest();
-		try (Session s = openSession()) {
-			s.createNativeQuery( "delete from MY_ENTITY" ).executeUpdate();
-		}
-	}
-
-	@Test(expected = TransactionRequiredException.class)
-	public void testFlushDisallowingOutOfTransactionUpdateOperations() throws Exception {
-		allowUpdateOperationOutsideTransaction = "false";
-		rebuildSessionFactory();
-		prepareTest();
-		try (Session s = openSession()) {
-			final MyEntity entity = (MyEntity) s.createQuery( "from MyEntity e where e.name = :n" )
-					.setParameter( "n", "entity" )
-					.uniqueResult();
-			assertThat( entity, not( nullValue() ) );
-			entity.setName( "changed" );
-			session.flush();
-		}
-	}
-
-	@Test(expected = TransactionRequiredException.class)
-	public void testFlushOutOfTransaction() throws Exception {
-		allowUpdateOperationOutsideTransaction = "";
-		rebuildSessionFactory();
-		prepareTest();
-		try (Session s = openSession()) {
-			final MyEntity entity = (MyEntity) s.createQuery( "from MyEntity e where e.name = :n" )
-					.setParameter( "n", "entity" )
-					.uniqueResult();
-			assertThat( entity, not( nullValue() ) );
-			entity.setName( "changed" );
-			session.flush();
-		}
+	@ServiceRegistry(settings = @Setting(name = ALLOW_UPDATE_OUTSIDE_TRANSACTION, value = "true"))
+	@DomainModel(annotatedClasses = MyEntity.class)
+	@SessionFactory
+	public void testNativeQueryAllowingOutOfTransactionUpdateOperations(SessionFactoryScope factoryScope) {
+		factoryScope.inSession( (session) -> {
+			session.createNativeQuery( "delete from MY_ENTITY" ).executeUpdate();
+		} );
 	}
 
 	@Test
-	public void hhh17743Test() throws Exception {
-		allowUpdateOperationOutsideTransaction = "true";
-		rebuildSessionFactory();
-		prepareTest();
+	@ExpectedException(TransactionRequiredException.class)
+	@ServiceRegistry(settings = @Setting(name = ALLOW_UPDATE_OUTSIDE_TRANSACTION, value = "false"))
+	@DomainModel(annotatedClasses = MyEntity.class)
+	@SessionFactory
+	public void testNativeQueryDisallowingOutOfTransactionUpdateOperations(SessionFactoryScope factoryScope) {
+		factoryScope.inSession( (session) -> {
+			session.createNativeQuery( "delete from MY_ENTITY" ).executeUpdate();
+		} );
+	}
 
-		try(Session s = openSession();
-			EntityManager entityManager = s.getEntityManagerFactory().createEntityManager();) {
+	@Test
+	@ExpectedException(TransactionRequiredException.class)
+	@ServiceRegistry(settings = @Setting(name = ALLOW_UPDATE_OUTSIDE_TRANSACTION, value = "false"))
+	@DomainModel(annotatedClasses = MyEntity.class)
+	@SessionFactory
+	public void testFlushDisallowingOutOfTransactionUpdateOperations(SessionFactoryScope factoryScope) {
+		factoryScope.inSession( (session) -> {
+			final MyEntity entity = (MyEntity) session.createQuery( "from MyEntity e where e.name = :n" )
+					.setParameter( "n", "entity" )
+					.uniqueResult();
+			MatcherAssert.assertThat( entity, not( nullValue() ) );
+			entity.setName( "changed" );
+			session.flush();
+		} );
+	}
 
+	@Test
+	@ExpectedException(TransactionRequiredException.class)
+	@ServiceRegistry(settings = @Setting(name = ALLOW_UPDATE_OUTSIDE_TRANSACTION, value = "false"))
+	@DomainModel(annotatedClasses = MyEntity.class)
+	@SessionFactory
+	public void testFlushOutOfTransaction(SessionFactoryScope factoryScope) {
+		factoryScope.inSession( (session) -> {
+			final MyEntity entity = (MyEntity) session.createQuery( "from MyEntity e where e.name = :n" )
+					.setParameter( "n", "entity" )
+					.uniqueResult();
+			MatcherAssert.assertThat( entity, not( nullValue() ) );
+			entity.setName( "changed" );
+			session.flush();
+		} );
+	}
+
+	@Test
+	@ServiceRegistry(settings = @Setting(name = ALLOW_UPDATE_OUTSIDE_TRANSACTION, value = "true"))
+	@DomainModel(annotatedClasses = MyEntity.class)
+	@SessionFactory
+	public void hhh17743Test(SessionFactoryScope factoryScope) {
+		factoryScope.inSession( (session) -> {
 			MyEntity entity = new MyEntity("N1");
-			entityManager.persist(entity);
+			session.persist(entity);
 
-			QuerySqmImpl q = (QuerySqmImpl)entityManager.createNamedQuery("deleteByName");
+			var q = session.createNamedQuery("deleteByName");
 			q.setParameter("name", "N1");
 			int d = q.executeUpdate();
-			assertEquals(0, d);
-		}
+			Assertions.assertEquals( 0, d );
+		} );
 	}
 
 	@Entity(name = "MyEntity")

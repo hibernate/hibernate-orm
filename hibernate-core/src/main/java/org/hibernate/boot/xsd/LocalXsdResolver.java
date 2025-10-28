@@ -5,18 +5,17 @@
 package org.hibernate.boot.xsd;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
-import javax.xml.XMLConstants;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 import org.hibernate.internal.util.xml.XsdException;
 
-import org.jboss.logging.Logger;
-
 import org.xml.sax.SAXException;
+
+import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
+import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
 
 /**
  * When Hibernate loads an XSD we fully expect that to be resolved from our
@@ -33,18 +32,10 @@ public class LocalXsdResolver {
 	}
 
 	public static boolean isValidJpaVersion(String version) {
-		switch ( version ) {
-			case "1.0":
-			case "2.0":
-			case "2.1":
-			case "2.2":
-			case "3.0":
-			case "3.1":
-			case "3.2":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( version ) {
+			case "1.0", "2.0", "2.1", "2.2", "3.0", "3.1", "3.2" -> true;
+			default -> false;
+		};
 	}
 
 	public static URL resolveLocalXsdUrl(String resourceName) {
@@ -87,11 +78,10 @@ public class LocalXsdResolver {
 			throw new XsdException( "Unable to locate schema [" + schemaResourceName + "] via classpath", schemaResourceName );
 		}
 		try {
-			InputStream schemaStream = url.openStream();
+			final var schemaStream = url.openStream();
 			try {
-				StreamSource source = new StreamSource( url.openStream() );
-				SchemaFactory schemaFactory = SchemaFactory.newInstance( XMLConstants.W3C_XML_SCHEMA_NS_URI );
-				return schemaFactory.newSchema( source );
+				return SchemaFactory.newInstance( W3C_XML_SCHEMA_NS_URI )
+						.newSchema( new StreamSource( url.openStream() ) );
 			}
 			catch ( SAXException | IOException e ) {
 				throw new XsdException( "Unable to load schema [" + schemaResourceName + "]", e, schemaResourceName );
@@ -101,7 +91,7 @@ public class LocalXsdResolver {
 					schemaStream.close();
 				}
 				catch ( IOException e ) {
-					Logger.getLogger( LocalXsdResolver.class ).debugf( "Problem closing schema stream [%s]", e.toString() );
+					JAXB_LOGGER.problemClosingSchemaStream( e.toString() );
 				}
 			}
 		}

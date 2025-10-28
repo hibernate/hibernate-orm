@@ -94,7 +94,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 	}
 
 	@Override
-	public DomainResultAssembler createAssembler(InitializerParent<?> parent, AssemblerCreationState creationState) {
+	public DomainResultAssembler<?> createAssembler(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return new CircularBiDirectionalFetchAssembler(
 				getResultJavaType(),
 				keyResult == null ? null : keyResult.createResultAssembler( parent, creationState ),

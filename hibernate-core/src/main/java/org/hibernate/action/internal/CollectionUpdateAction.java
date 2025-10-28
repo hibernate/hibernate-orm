@@ -7,16 +7,13 @@ package org.hibernate.action.internal;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.spi.PostCollectionUpdateEvent;
 import org.hibernate.event.spi.PostCollectionUpdateEventListener;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.stat.spi.StatisticsImplementor;
 
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
@@ -48,9 +45,9 @@ public final class CollectionUpdateAction extends CollectionAction {
 	@Override
 	public void execute() throws HibernateException {
 		final Object key = getKey();
-		final SharedSessionContractImplementor session = getSession();
-		final CollectionPersister persister = getPersister();
-		final PersistentCollection<?> collection = getCollection();
+		final var session = getSession();
+		final var persister = getPersister();
+		final var collection = getCollection();
 		final boolean affectedByFilters = persister.isAffectedByEnabledFilters( session );
 
 		preUpdate();
@@ -65,8 +62,8 @@ public final class CollectionUpdateAction extends CollectionAction {
 			// Do nothing - we only need to notify the cache
 		}
 		else {
-			final EventMonitor eventMonitor = session.getEventMonitor();
-			final DiagnosticEvent event = eventMonitor.beginCollectionUpdateEvent();
+			final var eventMonitor = session.getEventMonitor();
+			final var event = eventMonitor.beginCollectionUpdateEvent();
 			boolean success = false;
 			try {
 				if ( !affectedByFilters && collection.empty() ) {
@@ -101,10 +98,31 @@ public final class CollectionUpdateAction extends CollectionAction {
 		evict();
 		postUpdate();
 
-		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		final var statistics = session.getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
 			statistics.updateCollection( persister.getRole() );
 		}
+	}
+
+	/**
+	 * Sort update actions with deletions to the start of the line
+	 * in order to limit the chance of a unique key violation.
+	 */
+	@Override
+	public int compareTo(ComparableExecutable executable) {
+		if ( executable instanceof CollectionUpdateAction that
+				&& getPrimarySortClassifier().equals( executable.getPrimarySortClassifier() ) ) {
+			final var persister = getPersister();
+			final boolean hasDeletes = this.getCollection().hasDeletes( persister );
+			final boolean otherHasDeletes = that.getCollection().hasDeletes( persister );
+			if ( hasDeletes && !otherHasDeletes ) {
+				return -1;
+			}
+			if ( otherHasDeletes && !hasDeletes ) {
+				return 1;
+			}
+		}
+		return super.compareTo( executable );
 	}
 
 	private void preUpdate() {

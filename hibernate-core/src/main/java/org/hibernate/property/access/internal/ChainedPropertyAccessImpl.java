@@ -13,6 +13,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessException;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
 
@@ -53,12 +54,14 @@ public class ChainedPropertyAccessImpl implements PropertyAccess, Getter, Setter
 		return result;
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public @Nullable Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
+	public @Nullable Object getForInsert(Object owner, Map<Object, Object> mergeMap, SharedSessionContractImplementor session) {
 		@Nullable Object result = owner;
 		for ( int i = 0; i < propertyAccesses.length; i++ ) {
-			result = propertyAccesses[i].getGetter().getForInsert( NullnessUtil.castNonNull( result ), mergeMap, session );
+			if ( result == null ) {
+				throw new PropertyAccessException( "Could not chain accessor because result of previous accessor was null" );
+			}
+			result = propertyAccesses[i].getGetter().getForInsert( result, mergeMap, session );
 		}
 		return result;
 	}

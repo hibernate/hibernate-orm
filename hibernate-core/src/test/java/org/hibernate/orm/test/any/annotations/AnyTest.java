@@ -112,20 +112,7 @@ public class AnyTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete StringProperty" ).executeUpdate();
-					session.createMutationQuery( "delete IntegerProperty" ).executeUpdate();
-					session.createMutationQuery( "delete LongProperty" ).executeUpdate();
-					session.createMutationQuery( "delete CharProperty" ).executeUpdate();
-
-					session.createMutationQuery( "delete PropertyHolder" ).executeUpdate();
-					session.createMutationQuery( "delete PropertyList" ).executeUpdate();
-					session.createMutationQuery( "delete PropertyMap" ).executeUpdate();
-					session.createMutationQuery( "delete PropertySet" ).executeUpdate();
-					session.createMutationQuery( "delete LazyPropertySet" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

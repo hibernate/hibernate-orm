@@ -1336,11 +1336,7 @@ public class DeepInheritanceWithNonEntitiesProxyTest {
 
 	@AfterEach
 	public void clearTestData(SessionFactoryScope scope){
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from AEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	public static class NonEntityAMappedSuperclassSuperclass {

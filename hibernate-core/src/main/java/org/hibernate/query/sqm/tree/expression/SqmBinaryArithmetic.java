@@ -12,6 +12,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
+
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.SUBTRACT;
 import static org.hibernate.type.spi.TypeConfiguration.isDuration;
@@ -31,11 +32,12 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 			NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
-				(SqmBindableType<T>) nodeBuilder.getTypeConfiguration().resolveArithmeticType(
-						lhsOperand.getExpressible(),
-						rhsOperand.getExpressible(),
-						operator
-				),
+				(SqmBindableType<T>) // TODO: this cast is unsound
+						nodeBuilder.getTypeConfiguration().resolveArithmeticType(
+								lhsOperand.getExpressible(),
+								rhsOperand.getExpressible(),
+								operator
+						),
 				nodeBuilder
 		);
 
@@ -43,12 +45,15 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 		this.operator = operator;
 		this.rhsOperand = rhsOperand;
 
-		if ( lhsOperand.getExpressible() == null && isDuration( rhsOperand.getExpressible() ) &&
-				( operator == ADD || operator == SUBTRACT ) ) {
+		final SqmBindableType<?> lhsExpressible = lhsOperand.getExpressible();
+		final SqmBindableType<?> rhsExpressible = rhsOperand.getExpressible();
+		if ( lhsExpressible == null
+				&& isDuration( rhsExpressible )
+				&& ( operator == ADD || operator == SUBTRACT ) ) {
 			return;
 		}
-		this.lhsOperand.applyInferableType( rhsOperand.getExpressible() );
-		this.rhsOperand.applyInferableType( lhsOperand.getExpressible() );
+		this.lhsOperand.applyInferableType( rhsExpressible );
+		this.rhsOperand.applyInferableType( lhsExpressible );
 	}
 
 	public SqmBinaryArithmetic(
@@ -141,4 +146,35 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 		rhsOperand.appendHqlString( hql, context );
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmBinaryArithmetic<?> that
+			&& this.operator == that.operator
+			&& this.lhsOperand.equals( that.lhsOperand )
+			&& this.rhsOperand.equals( that.rhsOperand );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = lhsOperand.hashCode();
+		result = 31 * result + operator.hashCode();
+		result = 31 * result + rhsOperand.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmBinaryArithmetic<?> that
+			&& this.operator == that.operator
+			&& this.lhsOperand.isCompatible( that.lhsOperand )
+			&& this.rhsOperand.isCompatible( that.rhsOperand );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = lhsOperand.cacheHashCode();
+		result = 31 * result + operator.hashCode();
+		result = 31 * result + rhsOperand.cacheHashCode();
+		return result;
+	}
 }

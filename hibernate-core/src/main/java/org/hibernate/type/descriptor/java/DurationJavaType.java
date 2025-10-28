@@ -66,10 +66,10 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 			return null;
 		}
 		else {
-		final String seconds = String.valueOf( value.getSeconds() );
-		final String nanos = String.valueOf( value.getNano() );
-		final String zeros = StringHelper.repeat( '0', 9 - nanos.length() );
-		return seconds + zeros + nanos;
+			final String seconds = String.valueOf( value.getSeconds() );
+			final String nanos = String.valueOf( value.getNano() );
+			final String zeros = StringHelper.repeat( '0', 9 - nanos.length() );
+			return seconds + zeros + nanos;
 		}
 	}
 
@@ -171,12 +171,9 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 
 	@Override
 	public int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
-		if ( jdbcType.getDdlTypeCode() == SqlTypes.INTERVAL_SECOND ) {
-			return dialect.getDefaultIntervalSecondScale();
-		}
-		else {
-			// For non-interval types, we use the type numeric(21)
-			return 0;
-		}
+		return jdbcType.getDdlTypeCode() == SqlTypes.INTERVAL_SECOND
+				? dialect.getDefaultIntervalSecondScale()
+				: 0; // For non-interval types, we use the type numeric(21)
+
 	}
 }

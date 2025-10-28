@@ -57,8 +57,8 @@ public class RemovedEntityTest extends AbstractJPATest {
 
 		Item item = fromTransaction(
 				session -> {
-					session.remove( session.get( Item.class, id ) );
-					return session.get( Item.class, id );
+					session.remove( session.find( Item.class, id ) );
+					return session.find( Item.class, id );
 				}
 		);
 
@@ -79,26 +79,26 @@ public class RemovedEntityTest extends AbstractJPATest {
 
 		inTransaction(
 				session -> {
-					Item item = session.get( Item.class, id );
+					Item item = session.find( Item.class, id );
 					String sessionAsString = session.toString();
 
 					session.remove( item );
 
-					Item item2 = session.get( Item.class, id );
+					Item item2 = session.find( Item.class, id );
 					assertNull( item2, "expecting removed entity to be returned as null from get()" );
 
 					session.persist( item );
 					assertEquals(  sessionAsString, session.toString(), "expecting session to be as it was before" );
 
 					item.setName( "Rescued" );
-					item = session.get( Item.class, id );
+					item = session.find( Item.class, id );
 					assertNotNull( item, "expecting rescued entity to be returned from get()" );
 				}
 		);
 
 		Item item = fromTransaction(
 				session ->
-						session.get( Item.class, id )
+						session.find( Item.class, id )
 		);
 
 		assertNotNull( item, "expecting removed entity to be returned as null from get()" );

@@ -16,7 +16,6 @@ import org.hibernate.type.BindableType;
 import org.hibernate.type.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
 import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -56,9 +55,9 @@ public class BindingTypeHelper {
 		// since the main purpose of that method is to determine the final java type based on the reflective type
 		// + the explicit @Temporal(TemporalType...) configuration
 		if ( temporalJtd == null || java.util.Date.class.isAssignableFrom( temporalJtd.getJavaTypeClass() ) ) {
-			final JavaType<?> descriptor =
+			final var descriptor =
 					typeConfiguration.getJavaTypeRegistry()
-							.getDescriptor( resolveJavaTypeClass( precision ) );
+							.resolveDescriptor( resolveJavaTypeClass( precision ) );
 			//noinspection unchecked
 			return (TemporalJavaType<T>) descriptor;
 		}

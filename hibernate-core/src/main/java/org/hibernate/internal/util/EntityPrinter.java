@@ -7,17 +7,16 @@ package org.hibernate.internal.util;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.TypedValue;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
+
+import static org.hibernate.Hibernate.isInitialized;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * Renders entities and query parameters to a nicely readable string.
@@ -25,7 +24,6 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public final class EntityPrinter {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityPrinter.class );
 
 	private final SessionFactoryImplementor factory;
 
@@ -38,7 +36,7 @@ public final class EntityPrinter {
 	 * @return the entity rendered to a string
 	 */
 	public String toString(String entityName, Object entity) throws HibernateException {
-		final EntityPersister entityPersister =
+		final var entityPersister =
 				factory.getMappingMetamodel()
 						.getEntityDescriptor( entityName );
 		if ( entityPersister == null || !entityPersister.isInstance( entity ) ) {
@@ -62,7 +60,7 @@ public final class EntityPrinter {
 					if ( values[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 						strValue = values[i].toString();
 					}
-					else if ( !Hibernate.isInitialized( values[i] ) ) {
+					else if ( !isInitialized( values[i] ) ) {
 						strValue = "<uninitialized>";
 					}
 					else {
@@ -76,7 +74,7 @@ public final class EntityPrinter {
 	}
 
 	public String toString(Type[] types, Object[] values) throws HibernateException {
-		final StringBuilder buffer = new StringBuilder();
+		final var buffer = new StringBuilder();
 		for ( int i = 0; i < types.length; i++ ) {
 			if ( types[i] != null ) {
 				buffer.append( types[i].toLoggableString( values[i], factory ) ).append( ", " );
@@ -87,10 +85,12 @@ public final class EntityPrinter {
 
 	public String toString(Map<String, TypedValue> namedTypedValues) throws HibernateException {
 		final Map<String, String> result = new HashMap<>();
-		for ( Map.Entry<String, TypedValue> entry : namedTypedValues.entrySet() ) {
+		for ( var entry : namedTypedValues.entrySet() ) {
 			final String key = entry.getKey();
-			final TypedValue value = entry.getValue();
-			result.put( key, value.getType().toLoggableString( value.getValue(), factory ) );
+			final var typedValue = entry.getValue();
+			result.put( key,
+					typedValue.getType()
+							.toLoggableString( typedValue.getValue(), factory ) );
 		}
 		return result.toString();
 	}
@@ -98,19 +98,18 @@ public final class EntityPrinter {
 	// Cannot use Map as an argument because it clashes with the previous method (due to type erasure)
 	public void logEntities(Iterable<Map.Entry<EntityKey, EntityHolder>> entitiesByEntityKey)
 			throws HibernateException {
-		if ( LOG.isDebugEnabled() && entitiesByEntityKey.iterator().hasNext() ) {
-			LOG.debug( "Listing entities:" );
+		if ( CORE_LOGGER.isDebugEnabled() && entitiesByEntityKey.iterator().hasNext() ) {
+			CORE_LOGGER.debug( "Listing entities:" );
 			int i = 0;
-			for ( Map.Entry<EntityKey, EntityHolder> entityKeyAndEntity : entitiesByEntityKey ) {
-				final EntityHolder holder = entityKeyAndEntity.getValue();
-				if ( holder.getEntity() == null ) {
-					continue;
+			for ( var entityKeyAndEntity : entitiesByEntityKey ) {
+				final var holder = entityKeyAndEntity.getValue();
+				if ( holder.getEntity() != null ) {
+					if ( i++ > 20 ) {
+						CORE_LOGGER.debug( "More......" );
+						break;
+					}
+					CORE_LOGGER.debug( toString( entityKeyAndEntity.getKey().getEntityName(), holder.getEntity() ) );
 				}
-				if ( i++ > 20 ) {
-					LOG.debug( "More......" );
-					break;
-				}
-				LOG.debug( toString( entityKeyAndEntity.getKey().getEntityName(), holder.getEntity() ) );
 			}
 		}
 	}

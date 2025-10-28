@@ -14,7 +14,7 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 @Library('hibernate-jenkins-pipeline-helpers') _
 import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 
-@Field final String DEFAULT_JDK_VERSION = '17'
+@Field final String DEFAULT_JDK_VERSION = '21'
 @Field final String DEFAULT_JDK_TOOL = "OpenJDK ${DEFAULT_JDK_VERSION} Latest"
 @Field final String NODE_PATTERN_BASE = 'Worker&&Containers'
 @Field List<BuildEnvironment> environments
@@ -27,10 +27,10 @@ stage('Configure') {
 		// Minimum supported versions
 		new BuildEnvironment( dbName: 'hsqldb_2_6' ),
 		new BuildEnvironment( dbName: 'mysql_8_0' ),
-		new BuildEnvironment( dbName: 'mariadb_10_5' ),
+		new BuildEnvironment( dbName: 'mariadb_10_6' ),
 		new BuildEnvironment( dbName: 'postgresql_13' ),
 		new BuildEnvironment( dbName: 'edb_13' ),
-		new BuildEnvironment( dbName: 'db2_10_5', longRunning: true ),
+		new BuildEnvironment( dbName: 'db2_11_5' ), // Unfortunately there is no SQL Server 11.1 image, but 11.5 should mostly have feature parity
 		new BuildEnvironment( dbName: 'mssql_2017' ), // Unfortunately there is no SQL Server 2008 image, so we have to test with 2017
 // 		new BuildEnvironment( dbName: 'sybase_16' ), // There only is a Sybase ASE 16 image, so no pint in testing that nightly
 		new BuildEnvironment( dbName: 'sybase_jconn' ),
@@ -111,8 +111,8 @@ stage('Build') {
 									sh "./docker_db.sh mysql_8_0"
 									state[buildEnv.tag]['containerName'] = "mysql"
 									break;
-								case "mariadb_10_5":
-									sh "./docker_db.sh mariadb_10_5"
+								case "mariadb_10_6":
+									sh "./docker_db.sh mariadb_10_6"
 									state[buildEnv.tag]['containerName'] = "mariadb"
 									break;
 								case "postgresql_13":
@@ -123,11 +123,8 @@ stage('Build') {
 									sh "./docker_db.sh edb_13"
 									state[buildEnv.tag]['containerName'] = "edb"
 									break;
-								case "db2_10_5":
-									docker.withRegistry('https://quay.io', 'hibernate.quay.io') {
-										docker.image('hibernate/db2express-c@sha256:a499afd9709a1f69fb41703e88def9869955234c3525547e2efc3418d1f4ca2b').pull()
-									}
-									sh "./docker_db.sh db2_10_5"
+								case "db2_11_5":
+									sh "./docker_db.sh db2_11_5"
 									state[buildEnv.tag]['containerName'] = "db2"
 									break;
 								case "mssql_2017":

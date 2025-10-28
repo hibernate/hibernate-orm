@@ -4,18 +4,8 @@
  */
 package org.hibernate.envers.strategy.internal;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
+import jakarta.persistence.LockModeType;
 import org.hibernate.FlushMode;
-import org.hibernate.LockOptions;
-import org.hibernate.Session;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -32,16 +22,16 @@ import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentDat
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.internal.synchronization.SessionCacheCleaner;
+import org.hibernate.envers.internal.tools.OrmTools;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.strategy.spi.AuditStrategyContext;
 import org.hibernate.envers.strategy.spi.MappingContext;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.sql.ComparisonRestriction;
@@ -52,6 +42,15 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.MapType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.MIDDLE_ENTITY_ALIAS;
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
@@ -152,16 +151,14 @@ public class ValidityAuditStrategy implements AuditStrategy {
 
 	@Override
 	public void perform(
-			final Session session,
+			final SharedSessionContractImplementor session,
 			final String entityName,
 			final Configuration configuration,
 			final Object id,
 			final Object data,
 			final Object revision) {
 		final String auditedEntityName = configuration.getAuditEntityName( entityName );
-
-		// Save the audit data
-		session.persist( auditedEntityName, data );
+		OrmTools.saveData( auditedEntityName, data, session );
 
 		// Update the end date of the previous row.
 		//
@@ -173,12 +170,12 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		final boolean reuseEntityIdentifier = configuration.isAllowIdentifierReuse();
 		if ( reuseEntityIdentifier || getRevisionType( configuration, data ) != RevisionType.ADD ) {
 			// Register transaction completion process to guarantee execution of UPDATE statement after INSERT.
-			( (EventSource) session ).getActionQueue().registerProcess( sessionImplementor -> {
+			session.getTransactionCompletionCallbacks().registerCallback( (s) -> {
 				// Construct the update contexts
 				final List<UpdateContext> contexts = getUpdateContexts(
 						entityName,
 						auditedEntityName,
-						sessionImplementor,
+						session,
 						configuration,
 						id,
 						revision
@@ -196,7 +193,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 				}
 
 				for ( UpdateContext context : contexts ) {
-					final int rows = executeUpdate( sessionImplementor, context );
+					final int rows = executeUpdate( session, context );
 					if ( rows != 1 ) {
 						final RevisionType revisionType = getRevisionType( configuration, data );
 						if ( !reuseEntityIdentifier || revisionType != RevisionType.ADD ) {
@@ -214,27 +211,30 @@ public class ValidityAuditStrategy implements AuditStrategy {
 				}
 			} );
 		}
-		sessionCacheCleaner.scheduleAuditDataRemoval( session, data );
+		if ( session instanceof SessionImplementor statefulSession ) {
+			sessionCacheCleaner.scheduleAuditDataRemoval( statefulSession, data );
+		}
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public void performCollectionChange(
-			Session session,
+			SharedSessionContractImplementor session,
 			String entityName,
 			String propertyName,
 			Configuration configuration,
-			PersistentCollectionChangeData persistentCollectionChangeData, Object revision) {
+			PersistentCollectionChangeData persistentCollectionChangeData,
+			Object revision) {
 		final QueryBuilder qb = new QueryBuilder(
 				persistentCollectionChangeData.getEntityName(),
 				MIDDLE_ENTITY_ALIAS,
-				( (SharedSessionContractImplementor) session ).getFactory()
+				session.getFactory()
 		);
 
 		final String originalIdPropName = configuration.getOriginalIdPropertyName();
-		final Map<String, Object> originalId = (Map<String, Object>) persistentCollectionChangeData.getData().get(
-				originalIdPropName
-		);
+		final Map<String, Object> originalId = (Map<String, Object>) persistentCollectionChangeData
+				.getData()
+				.get( originalIdPropName );
 		final String revisionFieldName = configuration.getRevisionFieldName();
 		final String revisionTypePropName = configuration.getRevisionTypePropertyName();
 		final String ordinalPropName = configuration.getEmbeddableSetOrdinalPropertyName();
@@ -251,26 +251,36 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			}
 		}
 
-		if ( isNonIdentifierWhereConditionsRequired( entityName, propertyName, (SessionImplementor) session ) ) {
+		if ( isNonIdentifierWhereConditionsRequired( entityName, propertyName, session ) ) {
 			addNonIdentifierWhereConditions( qb, persistentCollectionChangeData.getData(), originalIdPropName );
 		}
 
 		addEndRevisionNullRestriction( configuration, qb.getRootParameters() );
 
-		final List<Object> l = qb.toQuery( session ).setHibernateFlushMode(FlushMode.MANUAL).setLockOptions( LockOptions.UPGRADE ).list();
+		final List<Object> l = qb.toQuery( session )
+				.setHibernateFlushMode(FlushMode.MANUAL)
+				.setLockMode( LockModeType.PESSIMISTIC_WRITE )
+				.list();
 
 		// Update the last revision if one exists.
 		// HHH-5967: with collections, the same element can be added and removed multiple times. So even if it's an
 		// ADD, we may need to update the last revision.
-		if ( l.size() > 0 ) {
+		if ( !l.isEmpty() ) {
 			updateLastRevision(
-					session, configuration, l, originalId, persistentCollectionChangeData.getEntityName(), revision
+					session,
+					configuration,
+					l,
+					originalId,
+					persistentCollectionChangeData.getEntityName(),
+					revision
 			);
 		}
 
 		// Save the audit data
-		session.persist( persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData() );
-		sessionCacheCleaner.scheduleAuditDataRemoval( session, persistentCollectionChangeData.getData() );
+		OrmTools.saveData( persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData(), session );
+		if ( session instanceof SessionImplementor statefulSession ) {
+			sessionCacheCleaner.scheduleAuditDataRemoval( statefulSession, persistentCollectionChangeData.getData() );
+		}
 	}
 
 	/**
@@ -349,7 +359,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 
 	@SuppressWarnings("unchecked")
 	private void updateLastRevision(
-			Session session,
+			SharedSessionContractImplementor session,
 			Configuration configuration,
 			List<Object> l,
 			Object id,
@@ -373,8 +383,10 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			}
 
 			// Saving the previous version
-			session.persist( auditedEntityName, previousData );
-			sessionCacheCleaner.scheduleAuditDataRemoval( session, previousData );
+			OrmTools.saveData( auditedEntityName, previousData, session );
+			if ( session instanceof SessionImplementor statefulSession ) {
+				sessionCacheCleaner.scheduleAuditDataRemoval( statefulSession, previousData );
+			}
 		}
 		else {
 			throw new RuntimeException( "Cannot find previous revision for entity " + auditedEntityName + " and id " + id );
@@ -403,7 +415,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		return convertRevEndTimestampToDate( value );
 	}
 
-	private EntityPersister getEntityPersister(String entityName, SessionImplementor sessionImplementor) {
+	private EntityPersister getEntityPersister(String entityName, SharedSessionContractImplementor sessionImplementor) {
 		return sessionImplementor.getFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityName );
@@ -427,7 +439,10 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		}
 	}
 
-	private boolean isNonIdentifierWhereConditionsRequired(String entityName, String propertyName, SessionImplementor session) {
+	private boolean isNonIdentifierWhereConditionsRequired(
+			String entityName,
+			String propertyName,
+			SharedSessionContractImplementor session) {
 		final Type propertyType = session.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityName ).getPropertyType( propertyName );
@@ -464,7 +479,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	 * @param context the update context to be executed
 	 * @return the number of rows affected by the operation
 	 */
-	private int executeUpdate(SessionImplementor session, UpdateContext context) {
+	private int executeUpdate(SharedSessionContractImplementor session, UpdateContext context) {
 		final String sql = context.toStatementString();
 		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 
@@ -490,7 +505,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	private List<UpdateContext> getUpdateContexts(
 			String entityName,
 			String auditEntityName,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Configuration configuration,
 			Object id,
 			Object revision) {
@@ -503,16 +518,14 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			if ( entity instanceof JoinedSubclassEntityPersister ) {
 				// iterate subclasses, excluding root
 				while ( entity.getMappedSuperclass() != null ) {
-					contexts.add(
-							getNonRootUpdateContext(
-									entityName,
-									auditEntityName,
-									session,
-									configuration,
-									id,
-									revision
-							)
-					);
+					contexts.add( getNonRootUpdateContext(
+							entityName,
+							auditEntityName,
+							session,
+							configuration,
+							id,
+							revision
+					) );
 					entityName = entity.getEntityMappingType().getSuperMappingType().getEntityName();
 					auditEntityName = configuration.getAuditEntityName( entityName );
 					entity = getEntityPersister( entityName, session );
@@ -521,16 +534,14 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		}
 
 		// add root
-		contexts.add(
-				getUpdateContext(
-						entityName,
-						auditEntityName,
-						session,
-						configuration,
-						id,
-						revision
-				)
-		);
+		contexts.add( getUpdateContext(
+				entityName,
+				auditEntityName,
+				session,
+				configuration,
+				id,
+				revision
+		) );
 
 		return contexts;
 	}
@@ -538,7 +549,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	private UpdateContext getUpdateContext(
 			String entityName,
 			String auditEntityName,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Configuration configuration,
 			Object id,
 			Object revision) {
@@ -604,7 +615,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	private UpdateContext getNonRootUpdateContext(
 			String entityName,
 			String auditEntityName,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Configuration configuration,
 			Object id,
 			Object revision) {
@@ -681,7 +692,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	}
 
 	private interface QueryParameterBinding {
-		int bind(int index, PreparedStatement statement, SessionImplementor session) throws SQLException;
+		int bind(int index, PreparedStatement statement, SharedSessionContractImplementor session) throws SQLException;
 	}
 
 	private static class QueryParameterBindingType implements QueryParameterBinding {
@@ -693,7 +704,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			this.value = value;
 		}
 
-		public int bind(int index, PreparedStatement statement, SessionImplementor session) throws SQLException {
+		public int bind(int index, PreparedStatement statement, SharedSessionContractImplementor session) throws SQLException {
 			type.nullSafeSet( statement, value, index, session );
 			return type.getColumnSpan( session.getSessionFactory().getRuntimeMetamodels() );
 		}
@@ -712,7 +723,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		public int bind(
 				int index,
 				PreparedStatement statement,
-				SessionImplementor session) {
+				SharedSessionContractImplementor session) {
 			try {
 				return modelPart.breakDownJdbcValues(
 						value,

@@ -4,16 +4,16 @@
  */
 package org.hibernate.orm.test.hql;
 
-import java.util.List;
 
-import org.hibernate.query.Query;
-import org.hibernate.Session;
 
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static junit.framework.TestCase.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests the "treat" keyword in HQL.
@@ -23,65 +23,43 @@ import static junit.framework.TestCase.assertEquals;
  *
  * @see org.hibernate.orm.test.jpa.ql.TreatKeywordTest
  */
-public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
-	}
-
-	@Override
-	public String[] getMappings() {
-		return new String[] { "hql/Animal.hbm.xml" };
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/hql/Animal.hbm.xml")
+@SessionFactory
+public class TreatKeywordTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
 	@JiraKey( value = "HHH-9342" )
-	public void memberOfTreatTest() {
+	public void memberOfTreatTest(SessionFactoryScope factoryScope) {
 		// prepare test data
-		Session s = openSession();
-		s.getTransaction().begin();
+		factoryScope.inTransaction( (s) -> {
+			var owner = new Human();
+			s.persist( owner );
 
-		Human owner = new Human();
-		s.persist( owner );
+			var wildDog = new Dog();
+			s.persist( wildDog );
 
-		Dog wildDog = new Dog();
-		s.persist( wildDog );
+			var petDog = new Dog();
+			petDog.setOwner( owner );
+			s.persist( petDog );
 
-		Dog petDog = new Dog();
-		petDog.setOwner( owner );
-		s.persist( petDog );
+			var petCat = new Cat();
+			petCat.setOwner( owner );
+			s.persist( petCat );
+		} );
 
-		Cat petCat = new Cat();
-		petCat.setOwner( owner );
-		s.persist( petCat );
-
-		s.getTransaction().commit();
-		s.close();
-
-
-		// perform test
-		s = openSession();
-		s.getTransaction().begin();
-		Query q = s.createQuery(
-				"select pet" +
-						" from Animal pet, Animal owner" +
-						" where pet member of treat (owner as Human).pets"
-		);
-		@SuppressWarnings("unchecked")
-		List<Animal> results = q.list();
-		assertEquals( 2, results.size() );
-		s.getTransaction().commit();
-		s.close();
-
-
-		// clean up test data
-		s = openSession();
-		s.getTransaction().begin();
-		s.remove( petCat );
-		s.remove( petDog );
-		s.remove( wildDog );
-		s.remove( owner );
-		s.getTransaction().commit();
-		s.close();
+		factoryScope.inTransaction( (s) -> {
+			var hql = """
+					select pet
+					from Animal pet, Animal owner
+					where pet member of treat (owner as Human).pets
+					""";
+			var results = s.createQuery( hql ).list();
+			assertEquals( 2, results.size() );
+		} );
 	}
 }

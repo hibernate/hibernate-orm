@@ -44,12 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class AttributeJoinWithRestrictedJoinedInheritanceTest {
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( s -> {
-			s.createMutationQuery( "delete from RootOne" ).executeUpdate();
-			s.createMutationQuery( "delete from SubChildEntityA1" ).executeUpdate();
-			s.createMutationQuery( "delete from SubChildEntityA2" ).executeUpdate();
-			s.createMutationQuery( "delete from BaseClass" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -72,6 +67,29 @@ public class AttributeJoinWithRestrictedJoinedInheritanceTest {
 			assertEquals( 2, resultList.size() );
 			assertResult( resultList.get( 0 ), 1, 11, 11, "child_a_1", SubChildEntityA1.class );
 			assertResult( resultList.get( 1 ), 2, 21, null, null, null );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	public void testTreatedJoinWithCondition(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			final ChildEntityA childEntityA1 = new SubChildEntityA1( 11 );
+			childEntityA1.setName( "childA1" );
+			s.persist( childEntityA1 );
+			final ChildEntityA childEntityA2 = new SubChildEntityA2( 21 );
+			childEntityA2.setName( "childA2" );
+			s.persist( childEntityA2 );
+			s.persist( new RootOne( 1, childEntityA1 ) );
+			s.persist( new RootOne( 2, childEntityA2 ) );
+		} );
+		scope.inTransaction( s -> {
+			final Tuple tuple = s.createQuery(
+					"select r, ce " +
+					"from RootOne r join treat(r.child as ChildEntityA) ce on ce.name = 'childA1'",
+					Tuple.class
+			).getSingleResult();
+			assertResult( tuple, 1, 11, 11, "child_a_1", SubChildEntityA1.class );
 		} );
 	}
 
@@ -115,6 +133,7 @@ public class AttributeJoinWithRestrictedJoinedInheritanceTest {
 		@Id
 		@Column(name = "ident")
 		private Integer id;
+		private String name;
 
 		@Column( name = "disc_col", insertable = false, updatable = false )
 		private String discCol;
@@ -132,6 +151,14 @@ public class AttributeJoinWithRestrictedJoinedInheritanceTest {
 
 		public String getDiscCol() {
 			return discCol;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
 		}
 	}
 

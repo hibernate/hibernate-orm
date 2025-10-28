@@ -77,12 +77,8 @@ public class BatchEntityWithSelectFetchWithDisableProxyTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope){
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Order" ).executeUpdate();
-					session.createMutationQuery( "delete from Product" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.getSessionFactory().getCache().evictAllRegions();
 	}
 
 	@Test

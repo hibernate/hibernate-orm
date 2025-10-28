@@ -24,18 +24,18 @@ import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.xsd.MappingXsdSupport;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
-import org.jboss.logging.Logger;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
+import static org.hibernate.cfg.AvailableSettings.VALIDATE_XML;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 
 /**
@@ -45,7 +45,6 @@ import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
  * @author Steve Ebersole
  */
 public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor> {
-	private static final Logger log = Logger.getLogger( MappingBinder.class );
 
 	private final XMLEventFactory xmlEventFactory = XMLEventFactory.newInstance();
 
@@ -96,21 +95,20 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 	public MappingBinder(
 			ResourceStreamLocator resourceStreamLocator,
 			@Nullable Function<String, Object> settingsAccess) {
-		super( resourceStreamLocator == null ? MappingBinder.class.getClassLoader()::getResourceAsStream : resourceStreamLocator );
+		super( resourceStreamLocator == null
+				? MappingBinder.class.getClassLoader()::getResourceAsStream
+				: resourceStreamLocator );
 
 		if ( settingsAccess == null ) {
 			this.optionsAccess = () -> VALIDATING;
 		}
 		else {
-			this.optionsAccess = () -> new Options() {
-				@Override
-				public boolean validateMappings() {
-					final Object setting = settingsAccess.apply( AvailableSettings.VALIDATE_XML );
-					if ( setting == null ) {
-						return false;
-					}
-					return BOOLEAN.convert( setting );
+			this.optionsAccess = () -> (Options) () -> {
+				final Object setting = settingsAccess.apply( VALIDATE_XML );
+				if ( setting == null ) {
+					return false;
 				}
+				return BOOLEAN.convert( setting );
 			};
 		}
 	}
@@ -119,7 +117,7 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 		this(
 				serviceRegistry.getService( ClassLoaderService.class ),
 				(settingName) -> {
-					final ConfigurationService configurationService =
+					final var configurationService =
 							serviceRegistry instanceof ServiceRegistryImplementor serviceRegistryImplementor
 									? serviceRegistryImplementor.fromRegistryOrChildren( ConfigurationService.class )
 									: serviceRegistry.getService( ConfigurationService.class );
@@ -163,13 +161,9 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 			Origin origin) {
 		final String rootElementLocalName = rootElementStartEvent.getName().getLocalPart();
 		if ( "hibernate-mapping".equals( rootElementLocalName ) ) {
-			if ( log.isDebugEnabled() ) {
-				log.debugf( "Performing JAXB binding of hbm.xml document : %s", origin.toString() );
-			}
-
-			final XMLEventReader hbmReader = new HbmEventReader( staxEventReader, xmlEventFactory );
-			final JaxbHbmHibernateMapping hbmBindings = jaxb(
-					hbmReader,
+			JAXB_LOGGER.performingJaxbBindingOfHbmXmlDocument( origin.toString() );
+			final var hbmBindings = jaxb(
+					new HbmEventReader( staxEventReader, xmlEventFactory ),
 					MappingXsdSupport.INSTANCE.hbmXsd().getSchema(),
 					hbmJaxbContext(),
 					origin
@@ -181,11 +175,9 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 		else {
 			assert "entity-mappings".equals( rootElementLocalName );
 			try {
-				log.debugf( "Performing JAXB binding of orm.xml document : %s", origin.toString() );
-
-				final XMLEventReader reader = new MappingEventReader( staxEventReader, xmlEventFactory );
-				final JaxbEntityMappingsImpl bindingRoot = jaxb(
-						reader,
+				JAXB_LOGGER.performingJaxbBindingOfOrmXmlDocument( origin.toString() );
+				final var bindingRoot = jaxb(
+						new MappingEventReader( staxEventReader, xmlEventFactory ),
 						MappingXsdSupport.latestDescriptor().getSchema(),
 						mappingJaxbContext(),
 						origin

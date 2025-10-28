@@ -83,10 +83,7 @@ public class BatchFetchStrategyLoadingTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete Thing1" ).executeUpdate();
-			session.createMutationQuery( "delete Thing2" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "Thing1" )

@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.bulkid;
 
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 
 /**
@@ -12,7 +13,12 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 public class DefaultMutationStrategyCompositeIdTest extends AbstractMutationStrategyCompositeIdTest {
 
 	@Override
-	protected Class<? extends SqmMultiTableMutationStrategy> getMultiTableBulkIdStrategyClass() {
+	protected Class<? extends SqmMultiTableMutationStrategy> getMultiTableMutationStrategyClass() {
+		return null;
+	}
+
+	@Override
+	protected Class<? extends SqmMultiTableInsertStrategy> getMultiTableInsertStrategyClass() {
 		return null;
 	}
 }

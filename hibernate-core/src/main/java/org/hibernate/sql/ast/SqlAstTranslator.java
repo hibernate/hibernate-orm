@@ -13,16 +13,35 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 /**
+ * {@linkplain #translate Translates} a {@linkplain #getSqlAst() SQL AST}
+ * and produces a {@linkplain JdbcOperation}
+ *
  * @author Steve Ebersole
  */
 public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker {
+	/**
+	 * Perform the translation and produce the JdbcOperation.
+	 */
+	T translate(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions);
 
+	/**
+	 * The SQL AST being translated.
+	 *
+	 * @since 7.1
+	 */
+	@Incubating
+	Statement getSqlAst();
+
+	/**
+	 * Access to the SessionFactory.
+	 */
 	SessionFactoryImplementor getSessionFactory();
 
 	/**
@@ -61,6 +80,4 @@ public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker 
 	Set<String> getAffectedTableNames();
 
 	void addAffectedTableName(String tableName);
-
-	T translate(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions);
 }

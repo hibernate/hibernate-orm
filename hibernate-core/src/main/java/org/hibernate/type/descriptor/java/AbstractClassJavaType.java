@@ -34,7 +34,7 @@ public abstract class AbstractClassJavaType<T> implements BasicJavaType<T>, Seri
 	 *
 	 * @see #AbstractClassJavaType(Class, MutabilityPlan)
 	 */
-	protected AbstractClassJavaType(Class<? extends T> type) {
+	protected AbstractClassJavaType(Class<T> type) {
 		this( type, ImmutableMutabilityPlan.instance() );
 	}
 
@@ -44,12 +44,12 @@ public abstract class AbstractClassJavaType<T> implements BasicJavaType<T>, Seri
 	 * @param type The Java type.
 	 * @param mutabilityPlan The plan for handling mutability aspects of the java type.
 	 */
-	protected AbstractClassJavaType(Class<? extends T> type, MutabilityPlan<? extends T> mutabilityPlan) {
+	protected AbstractClassJavaType(Class<T> type, MutabilityPlan<T> mutabilityPlan) {
 		this(
 				type,
 				mutabilityPlan,
 				Comparable.class.isAssignableFrom( type )
-						? ComparableComparator.instance()
+						? ComparableComparator.INSTANCE
 						: null
 		);
 	}
@@ -61,14 +61,13 @@ public abstract class AbstractClassJavaType<T> implements BasicJavaType<T>, Seri
 	 * @param mutabilityPlan The plan for handling mutability aspects of the java type.
 	 * @param comparator The comparator for handling comparison of values
 	 */
-	@SuppressWarnings("unchecked")
 	protected AbstractClassJavaType(
-			Class<? extends T> type,
-			MutabilityPlan<? extends T> mutabilityPlan,
-			Comparator<? extends T> comparator) {
-		this.type = (Class<T>) type;
-		this.mutabilityPlan = (MutabilityPlan<T>) mutabilityPlan;
-		this.comparator = (Comparator<T>) comparator;
+			Class<T> type,
+			MutabilityPlan<T> mutabilityPlan,
+			Comparator<T> comparator) {
+		this.type = type;
+		this.mutabilityPlan = mutabilityPlan;
+		this.comparator = comparator;
 	}
 
 	@Override

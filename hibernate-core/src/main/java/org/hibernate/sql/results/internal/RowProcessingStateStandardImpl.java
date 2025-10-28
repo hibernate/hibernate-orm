@@ -17,7 +17,6 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesCacheHit;
-import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -28,7 +27,7 @@ import org.hibernate.sql.results.spi.RowReader;
  */
 public class RowProcessingStateStandardImpl extends BaseExecutionContext implements RowProcessingState {
 
-	private final JdbcValuesSourceProcessingStateStandardImpl resultSetProcessingState;
+	private final JdbcValuesSourceProcessingState resultSetProcessingState;
 
 	private final RowReader<?> rowReader;
 	private final JdbcValues jdbcValues;
@@ -38,7 +37,7 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 	private final InitializerData[] initializerData;
 
 	public RowProcessingStateStandardImpl(
-			JdbcValuesSourceProcessingStateStandardImpl resultSetProcessingState,
+			JdbcValuesSourceProcessingState resultSetProcessingState,
 			ExecutionContext executionContext,
 			RowReader<?> rowReader,
 			JdbcValues jdbcValues) {
@@ -66,8 +65,7 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 			// because the EntityEntrys would already have the desired lock mode
 			return LockMode.NONE;
 		}
-		final LockMode effectiveLockMode = resultSetProcessingState.getQueryOptions().getLockOptions()
-				.getEffectiveLockMode( alias );
+		final LockMode effectiveLockMode = resultSetProcessingState.getQueryOptions().getLockOptions().getLockMode();
 		return effectiveLockMode == LockMode.NONE
 				? jdbcValues.getValuesMapping().determineDefaultLockMode( alias, effectiveLockMode )
 				: effectiveLockMode;

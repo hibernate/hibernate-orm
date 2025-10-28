@@ -66,10 +66,10 @@ public class SessionFactoryInterceptorTransactionTest extends BaseEnversJPAFunct
 
 	@Test
 	public void testInterceptorInvocations() throws Exception {
-		// Expect the interceptor to have been created once and invoked twice, once for the original session
-		// and follow-up for the Envers temporary session.
+		// The interceptor should only be created once and should only be invoked twice
+		// Once for the original session, and follow-up for the Envers temporary session
 		final Map<TestInterceptor, Integer> invocationMap = TestInterceptor.getBeforeCompletionCallbacks();
 		assertEquals( 1, invocationMap.size() );
-		assertEquals( invocationMap.values().stream().filter( v -> v == 2 ).count(), 1 );
+		invocationMap.values().forEach( c -> assertEquals( 2, c.intValue() ) );
 	}
 }

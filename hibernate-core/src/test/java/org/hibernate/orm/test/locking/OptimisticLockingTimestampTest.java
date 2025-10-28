@@ -4,44 +4,41 @@
  */
 package org.hibernate.orm.test.locking;
 
-import java.sql.Timestamp;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import java.sql.Timestamp;
 
 /**
  * @author Vlad Mihalcea
  */
-public class OptimisticLockingTimestampTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class
-		};
+@SuppressWarnings("JUnitMalformedDeclaration")
+@Jpa(annotatedClasses = OptimisticLockingTimestampTest.Person.class)
+public class OptimisticLockingTimestampTest {
+	@AfterEach
+	void tearDown(EntityManagerFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void test() {
-		Person _person = doInJPA(this::entityManagerFactory, entityManager -> {
-			Person person = new Person();
+	public void test(EntityManagerFactoryScope factoryScope) {
+		var _person = factoryScope.fromTransaction( entityManager -> {
+			var person = new Person();
 			person.setName("John Doe");
 			entityManager.persist(person);
-
 			return person;
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Person person = entityManager.find(Person.class, _person.getId());
+		factoryScope.inTransaction( entityManager -> {
+			var person = entityManager.find(Person.class, _person.getId());
 			person.setName(person.getName().toUpperCase());
-		});
+		} );
 	}
 
 	//tag::locking-optimistic-entity-mapping-example[]

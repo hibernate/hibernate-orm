@@ -16,9 +16,11 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
@@ -29,18 +31,18 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Andrea Boriero
  */
-
+@SkipForDialect(dialectClass = InformixDialect.class,
+		reason = "Informix has a strange syntax for 'alter table add constraint'")
 public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 	private File output;
 	private StandardServiceRegistry ssr;
-	private MetadataImplementor metadata;
 
 	@Before
 	public void setUp() throws IOException {
@@ -150,13 +152,13 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 		) );
 	}
 
-	private void createSchema(Class[] annotatedClasses) {
+	private void createSchema(Class<?>[] annotatedClasses) {
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 
-		for ( Class c : annotatedClasses ) {
+		for ( Class<?> c : annotatedClasses ) {
 			metadataSources.addAnnotatedClass( c );
 		}
-		metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
 		metadata.orderColumns( false );
 		metadata.validate();
 		new SchemaExport()
@@ -171,7 +173,8 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 		final String expectedAlterTableStatement = alterTableStatement.toSQL();
 		final List<String> sqlLines = Files.readAllLines( output.toPath(), Charset.defaultCharset() );
 
-		assertThat( "Expected alter table statement not found", sqlLines, hasItem( containsString( expectedAlterTableStatement ) ) );
+		assertThat( "Expected alter table statement not found", sqlLines,
+				hasItem( containsString( expectedAlterTableStatement ) ) );
 	}
 
 	private static class AlterTableStatement {
@@ -195,7 +198,7 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 		}
 
 		public String toSQL() {
-			JdbcEnvironment jdbcEnvironment = ssr.getService( JdbcEnvironment.class );
+			JdbcEnvironment jdbcEnvironment = ssr.requireService( JdbcEnvironment.class );
 			Dialect dialect = jdbcEnvironment.getDialect();
 			IdentifierHelper identifierHelper = jdbcEnvironment.getIdentifierHelper();
 			UnaryOperator<String> asIdentifier = identifier -> identifierHelper.toIdentifier( identifier ).render( dialect );

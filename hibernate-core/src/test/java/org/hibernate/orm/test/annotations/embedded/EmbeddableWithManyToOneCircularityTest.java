@@ -55,19 +55,7 @@ public class EmbeddableWithManyToOneCircularityTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "from EntityTest", EntityTest.class ).getResultList().forEach( entity -> {
-						final EntityTest2 entity2 = entity.getEntity2();
-						if ( entity2 != null && entity2.getEmbeddedAttribute() != null ) {
-							entity2.getEmbeddedAttribute().setEntity( null );
-						}
-						session.remove( entity );
-					} );
-					session.flush();
-					session.createMutationQuery( "delete from EntityTest2" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -76,11 +76,7 @@ public class SimpleStaticInsertTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete Vendor" ).executeUpdate();
-			session.createMutationQuery( "delete Payment" ).executeUpdate();
-			session.createMutationQuery( "delete SalesAssociate" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Target({ ElementType.TYPE, ElementType.METHOD})

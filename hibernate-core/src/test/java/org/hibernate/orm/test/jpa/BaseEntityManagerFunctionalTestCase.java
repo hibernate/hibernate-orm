@@ -46,7 +46,10 @@ import static java.util.Collections.emptyMap;
  *
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
+ *
+ * @deprecated This is all JUnit 4 based; Use JUnit 5 or 6 instead.
  */
+@Deprecated
 public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCase {
 
 	// IMPL NOTE : Here we use @Before and @After (instead of @BeforeClassOnce and @AfterClassOnce like we do in
@@ -298,19 +301,27 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		if ( em == null ) {
 			return;
 		}
-		if ( !em.isOpen() ) {
-			return;
+		try {
+			if ( !em.isOpen() ) {
+				return;
+			}
+			try {
+				if ( em.getTransaction().isActive() ) {
+					log.warn( "You left an open transaction! Fix your test case. For now, we are closing it for you." );
+					em.getTransaction().rollback();
+				}
+			}
+			finally {
+				if ( em.isOpen() ) {
+					// as we open an EM before the test runs, it will still be open if the test uses a custom EM.
+					// or, the person may have forgotten to close. So, do not raise a "fail", but log the fact.
+					log.warn( "The EntityManager is not closed. Closing it." );
+					em.close();
+				}
+			}
 		}
-
-		if ( em.getTransaction().isActive() ) {
-			em.getTransaction().rollback();
-			log.warn("You left an open transaction! Fix your test case. For now, we are closing it for you.");
-		}
-		if ( em.isOpen() ) {
-			// as we open an EM before the test runs, it will still be open if the test uses a custom EM.
-			// or, the person may have forgotten to close. So, do not raise a "fail", but log the fact.
-			em.close();
-			log.warn("The EntityManager is not closed. Closing it.");
+		catch (RuntimeException e) {
+			log.debug( "Ignoring exception during clean up", e );
 		}
 	}
 

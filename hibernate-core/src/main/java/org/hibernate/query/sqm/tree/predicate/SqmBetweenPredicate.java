@@ -12,6 +12,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
+
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
 
 /**
@@ -94,6 +95,42 @@ public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
 		lowerBound.appendHqlString( hql, context );
 		hql.append( " and " );
 		upperBound.appendHqlString( hql, context );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmBetweenPredicate that
+			&& this.isNegated() == that.isNegated()
+			&& expression.equals( that.expression )
+			&& lowerBound.equals( that.lowerBound )
+			&& upperBound.equals( that.upperBound );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + expression.hashCode();
+		result = 31 * result + lowerBound.hashCode();
+		result = 31 * result + upperBound.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmBetweenPredicate that
+			&& this.isNegated() == that.isNegated()
+			&& expression.isCompatible( that.expression )
+			&& lowerBound.isCompatible( that.lowerBound )
+			&& upperBound.isCompatible( that.upperBound );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + expression.cacheHashCode();
+		result = 31 * result + lowerBound.cacheHashCode();
+		result = 31 * result + upperBound.cacheHashCode();
+		return result;
 	}
 
 	@Override

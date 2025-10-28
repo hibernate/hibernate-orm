@@ -35,10 +35,7 @@ public class GenerationTargetToScript implements GenerationTarget {
 
 	@Override
 	public void accept(String command) {
-		if ( delimiter != null ) {
-			command += delimiter;
-		}
-		scriptTarget.accept( command );
+		scriptTarget.accept( delimiter == null ? command : command + delimiter );
 	}
 
 	@Override

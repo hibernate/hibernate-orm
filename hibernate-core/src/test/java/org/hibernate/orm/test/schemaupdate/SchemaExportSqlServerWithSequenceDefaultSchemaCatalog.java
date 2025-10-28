@@ -30,6 +30,7 @@ import jakarta.persistence.Table;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.resolveUsername;
 
 /**
  * @author Andrea Boriero
@@ -52,7 +53,7 @@ public class SchemaExportSqlServerWithSequenceDefaultSchemaCatalog {
 	public void setUp() {
 		serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( Environment.DEFAULT_SCHEMA, "dbo" )
-				.applySetting( Environment.DEFAULT_CATALOG, "hibernate_orm_test" )
+				.applySetting( Environment.DEFAULT_CATALOG, resolveUsername( "hibernate_orm_test_$worker" ) )
 				.build();
 		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
 				.addAnnotatedClass( MyEntity.class )

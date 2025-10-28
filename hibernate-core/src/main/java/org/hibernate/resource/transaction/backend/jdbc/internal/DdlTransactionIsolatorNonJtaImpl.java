@@ -41,13 +41,12 @@ public class DdlTransactionIsolatorNonJtaImpl implements DdlTransactionIsolator 
 	public Connection getIsolatedConnection(boolean autocommit) {
 		if ( jdbcConnection == null ) {
 			try {
-				this.jdbcConnection = jdbcContext.getJdbcConnectionAccess().obtainConnection();
-
+				jdbcConnection = jdbcContext.getJdbcConnectionAccess().obtainConnection();
 				try {
 					if ( jdbcConnection.getAutoCommit() != autocommit ) {
 						try {
 							if ( autocommit ) {
-								ConnectionAccessLogger.INSTANCE.informConnectionLocalTransactionForNonJtaDdl( jdbcContext.getJdbcConnectionAccess() );
+								ConnectionAccessLogger.INSTANCE.informConnectionLocalTransactionForNonJtaDdl();
 								jdbcConnection.commit();
 							}
 							jdbcConnection.setAutoCommit( autocommit );
@@ -122,7 +121,7 @@ public class DdlTransactionIsolatorNonJtaImpl implements DdlTransactionIsolator 
 				}
 			}
 			if ( originalException != null ) {
-				ExceptionHelper.doThrow( originalException );
+				ExceptionHelper.rethrow( originalException );
 			}
 		}
 	}

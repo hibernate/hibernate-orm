@@ -59,4 +59,5 @@ public class EmbeddedDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implemen
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitDiscriminatorPath( this );
 	}
+
 }

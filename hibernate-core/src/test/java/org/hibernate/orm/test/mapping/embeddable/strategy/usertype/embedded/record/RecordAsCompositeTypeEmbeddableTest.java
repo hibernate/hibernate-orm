@@ -13,40 +13,37 @@ import org.hibernate.HibernateException;
 import org.hibernate.annotations.CompositeType;
 import org.hibernate.metamodel.spi.ValueAccess;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.usertype.CompositeUserType;
 
 import org.javamoney.moneta.FastMoney;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.money.MonetaryAmount;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Objects;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class RecordAsCompositeTypeEmbeddableTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { RecordAsCompositeTypeEmbeddableEntity.class };
-	}
+@DomainModel(annotatedClasses = RecordAsCompositeTypeEmbeddableTest.RecordAsCompositeTypeEmbeddableEntity.class)
+@SessionFactory
+public class RecordAsCompositeTypeEmbeddableTest {
 
 	@Test
-	public void test() {
+	public void test(SessionFactoryScope scope) {
 		MonetaryAmount amount = FastMoney.of( 1, "BRL" );
 
 		RecordAsCompositeTypeEmbeddableEntity entity = new RecordAsCompositeTypeEmbeddableEntity();
 		entity.setAmount( amount );
 		entity.setId( 1L );
 
-		inTransaction( session -> {
-			session.persist( entity );
-		} );
+		scope.inTransaction( session -> session.persist(entity) );
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			RecordAsCompositeTypeEmbeddableEntity result = session.find(
 					RecordAsCompositeTypeEmbeddableEntity.class,
 					1L
@@ -60,9 +57,7 @@ public class RecordAsCompositeTypeEmbeddableTest extends BaseCoreFunctionalTestC
 				BigDecimal amount,
 				String currency
 		) {
-		}
-
-		;
+	}
 
 		public MonetaryAmountType() {
 		}

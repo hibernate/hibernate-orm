@@ -27,7 +27,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * overridden in a given {@linkplain FetchProfile fetch profile}.
  * <p>
  * Note that join fetching is incompatible with lazy fetching, and so
- * {@code @Fetch(JOIN)} implies {@code fetch=EAGER}.
+ * {@code @Fetch(JOIN)} implies {@code fetch=EAGER}, overriding any
+ * explicitly-specified {@code fetch=LAZY} setting.
  *
  * @author Emmanuel Bernard
  *

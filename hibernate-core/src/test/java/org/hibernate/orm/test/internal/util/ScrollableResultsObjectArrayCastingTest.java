@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
  * @author Dragoş Haiduc
  * @author Nathan Xu
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( value = "HHH-14231" )
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class )
 @Jpa( annotatedClasses = ScrollableResultsObjectArrayCastingTest.Product.class )
@@ -42,9 +43,7 @@ public class ScrollableResultsObjectArrayCastingTest {
 
 	@AfterEach
 	public void dropTestData(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				(entityManager) -> entityManager.createQuery( "delete Product" ).executeUpdate()
-		);
+		scope.dropData();
 	}
 
 

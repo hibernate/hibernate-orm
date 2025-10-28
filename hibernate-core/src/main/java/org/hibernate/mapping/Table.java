@@ -8,11 +8,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.hibernate.Incubating;
@@ -29,6 +29,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyList;
@@ -45,7 +46,7 @@ import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
  * @author Gavin King
  */
 public class Table implements Serializable, ContributableDatabaseObject {
-	private static final Logger log = Logger.getLogger( Table.class );
+	private static final Logger LOG = Logger.getLogger( Table.class );
 	private static final Column[] EMPTY_COLUMN_ARRAY = new Column[0];
 
 	private final String contributor;
@@ -73,6 +74,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	private String options;
 
 	private List<Function<SqlStringGenerationContext, InitCommand>> initCommandProducers;
+	private List<BiFunction<SqlStringGenerationContext, DdlTransactionIsolator, InitCommand>> resyncCommandProducers;
+	private List<Function<SqlStringGenerationContext, InitCommand>> resetCommandProducers;
 
 	@Deprecated(since="6.2", forRemoval = true)
 	public Table() {
@@ -139,7 +142,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	 */
 	@Deprecated
 	public static String qualify(String catalog, String schema, String table) {
-		final StringBuilder qualifiedName = new StringBuilder();
+		final var qualifiedName = new StringBuilder();
 		if ( catalog != null ) {
 			qualifiedName.append( catalog ).append( '.' );
 		}
@@ -250,22 +253,18 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public Column getColumn(Identifier name) {
-		if ( name == null ) {
-			return null;
-		}
-		return columns.get( name.getCanonicalName() );
+		return name == null ? null
+				: columns.get( name.getCanonicalName() );
 	}
 
 	@Internal
 	public Column getColumn(InFlightMetadataCollector collector, String logicalName) {
-		if ( name == null ) {
-			return null;
-		}
-		return getColumn( new Column( collector.getPhysicalColumnName( this, logicalName ) ) );
+		return name == null ? null
+				: getColumn( new Column( collector.getPhysicalColumnName( this, logicalName ) ) );
 	}
 
 	public Column getColumn(int n) {
-		final Iterator<Column> iter = columns.values().iterator();
+		final var iter = columns.values().iterator();
 		for ( int i = 0; i < n - 1; i++ ) {
 			iter.next();
 		}
@@ -273,14 +272,14 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public void addColumn(Column column) {
-		final Column old = getColumn( column );
-		if ( old == null ) {
+		final var oldColumn = getColumn( column );
+		if ( oldColumn == null ) {
 			if ( primaryKey != null ) {
-				for ( Column pkColumn : primaryKey.getColumns() ) {
-					if ( pkColumn.getCanonicalName().equals( column.getCanonicalName() ) ) {
+				for ( var primaryKeyColumn : primaryKey.getColumns() ) {
+					if ( primaryKeyColumn.getCanonicalName().equals( column.getCanonicalName() ) ) {
 						column.setNullable( false );
-						if ( log.isDebugEnabled() ) {
-							log.debugf(
+						if ( LOG.isTraceEnabled() ) {
+							LOG.tracef(
 									"Forcing column [%s] to be non-null as it is part of the primary key for table [%s]",
 									column.getCanonicalName(),
 									getNameIdentifier().getCanonicalName()
@@ -293,7 +292,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			column.uniqueInteger = columns.size();
 		}
 		else {
-			column.uniqueInteger = old.uniqueInteger;
+			column.uniqueInteger = oldColumn.uniqueInteger;
 		}
 	}
 
@@ -377,9 +376,9 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 		// Never remove explicit unique keys based on column matching
 		if ( !uniqueKey.isExplicit() ) {
-			// condition 1 : check against other unique keys
-			for ( UniqueKey otherUniqueKey : uniqueKeys.values() ) {
-				// make sure it's not the same unique key
+			// condition 1: check against other unique keys
+			for ( var otherUniqueKey : uniqueKeys.values() ) {
+				// make sure it's a different unique key
 				if ( uniqueKey != otherUniqueKey
 						&& otherUniqueKey.getColumns().containsAll( uniqueKey.getColumns() )
 						&& uniqueKey.getColumns().containsAll( otherUniqueKey.getColumns() ) ) {
@@ -388,7 +387,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			}
 		}
 
-		// condition 2 : check against pk
+		// condition 2: check against the primary key
 		if ( isSameAsPrimaryKeyColumns( uniqueKey ) ) {
 			primaryKey.setOrderingUniqueKey( uniqueKey );
 			return true;
@@ -468,7 +467,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public Index addIndex(Index index) {
-		final Index current =  indexes.get( index.getName() );
+		final var current =  indexes.get( index.getName() );
 		if ( current != null ) {
 			throw new MappingException( "Index " + index.getName() + " already exists" );
 		}
@@ -477,7 +476,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public UniqueKey addUniqueKey(UniqueKey uniqueKey) {
-		final UniqueKey current = uniqueKeys.get( uniqueKey.getName() );
+		final var current = uniqueKeys.get( uniqueKey.getName() );
 		if ( current != null ) {
 			throw new MappingException( "UniqueKey " + uniqueKey.getName() + " already exists" );
 		}
@@ -552,8 +551,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 						}
 					} )
 					.render( context.getMetadataCollector().getDatabase().getDialect() );
-			final UniqueKey uniqueKey = getOrCreateUniqueKey( keyName );
-			for ( Column keyColumn : keyColumns ) {
+			final var uniqueKey = getOrCreateUniqueKey( keyName );
+			for ( var keyColumn : keyColumns ) {
 				uniqueKey.addColumn( keyColumn );
 			}
 		}
@@ -592,7 +591,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			String keyDefinition,
 			String options,
 			List<Column> referencedColumns) {
-		final ForeignKeyKey key = new ForeignKeyKey( keyColumns, referencedEntityName, referencedColumns );
+		final var key = new ForeignKeyKey( keyColumns, referencedEntityName, referencedColumns );
 
 		ForeignKey foreignKey = foreignKeys.get( key );
 		if ( foreignKey == null ) {
@@ -600,7 +599,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			foreignKey.setReferencedEntityName( referencedEntityName );
 			foreignKey.setKeyDefinition( keyDefinition );
 			foreignKey.setOptions( options );
-			for ( Column keyColumn : keyColumns ) {
+			for ( var keyColumn : keyColumns ) {
 				foreignKey.addColumn( keyColumn );
 			}
 
@@ -609,8 +608,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 				foreignKey.addReferencedColumns( referencedColumns );
 			}
 
-			// NOTE : if the name is null, we will generate an implicit name during second pass processing
-			// after we know the referenced table name (which might not be resolved yet).
+			// NOTE: if the name is null, we will generate an implicit name during second pass processing
+			//       after we know the referenced table name (which might not be resolved yet).
 			foreignKey.setName( keyName );
 
 			foreignKeys.put( key, foreignKey );
@@ -631,7 +630,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		final var uniqueKeyEntries = uniqueKeys.entrySet().iterator();
 		while ( uniqueKeyEntries.hasNext() ) {
 			final var uniqueKeyEntry = uniqueKeyEntries.next();
-			final UniqueKey uniqueKey = uniqueKeyEntry.getValue();
+			final var uniqueKey = uniqueKeyEntry.getValue();
 			if ( isSameAsPrimaryKeyColumns( uniqueKey ) ) {
 				primaryKey.setOrderingUniqueKey( uniqueKey );
 				uniqueKeyEntries.remove();
@@ -671,7 +670,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public String toString() {
-		final StringBuilder string = new StringBuilder()
+		final var string = new StringBuilder()
 				.append( getClass().getSimpleName() )
 				.append( '(' );
 		if ( getCatalog() != null ) {
@@ -749,7 +748,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	public void reorderColumns(List<Column> columns) {
 		assert this.columns.size() == columns.size() && this.columns.values().containsAll( columns );
 		this.columns.clear();
-		for ( Column column : columns ) {
+		for ( var column : columns ) {
 			this.columns.put( column.getCanonicalName(), column );
 		}
 	}
@@ -813,16 +812,44 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public List<InitCommand> getInitCommands(SqlStringGenerationContext context) {
-		if ( initCommandProducers == null ) {
-			return emptyList();
+		return initCommandProducers == null
+				? emptyList()
+				: initCommandProducers.stream()
+						.map( producer -> producer.apply( context ) )
+						.distinct()
+						.toList();
+	}
+
+	public void addResyncCommand(BiFunction<SqlStringGenerationContext, DdlTransactionIsolator, InitCommand> commandProducer) {
+		if ( resyncCommandProducers == null ) {
+			resyncCommandProducers = new ArrayList<>();
 		}
-		else {
-			final List<InitCommand> initCommands = new ArrayList<>();
-			for ( Function<SqlStringGenerationContext, InitCommand> producer : initCommandProducers ) {
-				initCommands.add( producer.apply( context ) );
-			}
-			return unmodifiableList( initCommands );
+		resyncCommandProducers.add( commandProducer );
+	}
+
+	public List<InitCommand> getResyncCommands(SqlStringGenerationContext context, DdlTransactionIsolator isolator) {
+		return resyncCommandProducers == null
+				? emptyList()
+				: resyncCommandProducers.stream()
+						.map( producer -> producer.apply( context, isolator ) )
+						.distinct()
+						.toList();
+	}
+
+	public void addResetCommand(Function<SqlStringGenerationContext, InitCommand> commandProducer) {
+		if ( resetCommandProducers == null ) {
+			resetCommandProducers = new ArrayList<>();
 		}
+		resetCommandProducers.add( commandProducer );
+	}
+
+	public List<InitCommand> getResetCommands(SqlStringGenerationContext context) {
+		return resetCommandProducers == null
+				? emptyList()
+				: resetCommandProducers.stream()
+						.map( producer -> producer.apply( context ) )
+						.distinct()
+						.toList();
 	}
 
 	public String getOptions() {

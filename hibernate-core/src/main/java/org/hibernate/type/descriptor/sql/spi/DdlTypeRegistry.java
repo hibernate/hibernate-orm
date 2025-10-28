@@ -19,7 +19,6 @@ import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.jboss.logging.Logger;
 
 /**
  * A registry mapping {@link org.hibernate.type.SqlTypes JDBC type codes}
@@ -30,7 +29,7 @@ import org.jboss.logging.Logger;
  * @since 6.0
  */
 public class DdlTypeRegistry implements Serializable {
-	private static final Logger log = Logger.getLogger( DdlTypeRegistry.class );
+//	private static final Logger LOG = Logger.getLogger( DdlTypeRegistry.class );
 
 	private final Map<Integer, DdlType> ddlTypes = new HashMap<>();
 	private final Map<String, Integer> sqlTypes = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
@@ -59,7 +58,7 @@ public class DdlTypeRegistry implements Serializable {
 			for ( String rawTypeName : previous.getRawTypeNames() ) {
 				sqlTypes.remove( rawTypeName );
 			}
-			log.debugf( "addDescriptor(%d, %s) replaced previous registration(%s)", sqlTypeCode, ddlType, previous );
+//			LOG.tracef( "addDescriptor(%d, %s) replaced previous registration(%s)", sqlTypeCode, ddlType, previous );
 		}
 		addSqlType( ddlType, sqlTypeCode );
 	}
@@ -135,8 +134,8 @@ public class DdlTypeRegistry implements Serializable {
 	}
 
 	/**
-	 * Get the SQL type name for the specified {@link java.sql.Types JDBC type code},
-	 * filling in the placemarkers {@code $l}, {@code $p}, and {@code $s}
+	 * Get the SQL type name for the specified {@linkplain java.sql.Types JDBC
+	 * type code}, filling in the placemarkers {@code $l}, {@code $p}, and {@code $s}
 	 * with the default length, precision, and scale for the given SQL dialect.
 	 *
 	 * @param typeCode the JDBC type code

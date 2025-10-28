@@ -6,8 +6,6 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
 import org.hibernate.Hibernate;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.internal.EntityRepresentationStrategyPojoStandard;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
@@ -21,15 +19,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.jboss.logging.Logger;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import java.lang.invoke.MethodHandles;
-
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * Tests for cases where we do not want a {@linkplain org.hibernate.proxy.ProxyFactory}
@@ -40,9 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @EnhancementOptions(lazyLoading = true)
 public class NoProxyFactoryTests extends BaseNonConfigCoreFunctionalTestCase {
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, EntityRepresentationStrategyPojoStandard.class.getName() )
-	);
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( CORE_LOGGER );
 
 	/**
 	 * See org.hibernate.internal.CoreMessageLogger#unableToCreateProxyFactory

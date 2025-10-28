@@ -1,6 +1,5 @@
 [[associations]]
 === Associations
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-association: {core-project-dir}/src/test/java/org/hibernate/orm/test/associations
 :example-dir-any: {core-project-dir}/src/test/java/org/hibernate/orm/test/any
@@ -745,7 +744,7 @@ The `loan_payments` table holds the associations between `Loan` and `Payment` re
 include::{example-dir-any}/discriminator/many/Loan.java[tags=associations-many-to-any-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/associations-many-to-any-example.sql[]
 ----
@@ -766,7 +765,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 include::{example-dir-association}/JoinFormulaTest.java[tags=associations-JoinFormula-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/associations-JoinFormula-example.sql[]
 ----
@@ -795,7 +794,7 @@ When fetching the `User` entities, the `country` property is mapped by the `@Joi
 include::{example-dir-association}/JoinFormulaTest.java[tags=associations-JoinFormula-fetching-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/associations-JoinFormula-fetching-example.sql[]
 ----
@@ -816,7 +815,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 include::{example-dir-association}/JoinColumnOrFormulaTest.java[tags=associations-JoinColumnOrFormula-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/associations-JoinColumnOrFormula-example.sql[]
 ----
@@ -845,7 +844,7 @@ When fetching the `User` entities, the `country` property is mapped by the `@Joi
 include::{example-dir-association}/JoinColumnOrFormulaTest.java[tags=associations-JoinColumnOrFormula-fetching-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/associations-JoinColumnOrFormula-fetching-example.sql[]
 ----

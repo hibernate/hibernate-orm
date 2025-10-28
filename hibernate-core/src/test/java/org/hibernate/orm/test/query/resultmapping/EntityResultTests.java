@@ -426,15 +426,6 @@ public class EntityResultTests extends AbstractUsageTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					// discriminator hierarchy data
-					session.createQuery( "delete DiscriminatedRoot" ).executeUpdate();
-					// converted values data
-					session.createQuery( "delete EntityOfBasics" ).executeUpdate();
-					// embedded values
-					session.createQuery( "delete EntityWithEmbedded" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

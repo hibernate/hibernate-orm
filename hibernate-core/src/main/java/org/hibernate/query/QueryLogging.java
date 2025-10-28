@@ -46,10 +46,6 @@ public interface QueryLogging extends BasicLogger {
 		return Logger.getLogger( subLoggerName( subName ) );
 	}
 
-	static <T> T subLogger(String subName, Class<T> loggerJavaType) {
-		return Logger.getMessageLogger( MethodHandles.lookup(), loggerJavaType, subLoggerName( subName ) );
-	}
-
 	@LogMessage(level = ERROR)
 	@Message(value = "Error in named query: %s", id = 90003001)
 	void namedQueryError(String queryName, @Cause HibernateException e);

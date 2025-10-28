@@ -8,6 +8,8 @@ import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
 
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
+
 public class EnhancementContext extends DefaultEnhancementContext {
 
 	private ClassLoader classLoader = null;
@@ -36,6 +38,9 @@ public class EnhancementContext extends DefaultEnhancementContext {
 
 	@Override
 	public boolean doBiDirectionalAssociationManagement(UnloadedField field) {
+		if ( enableAssociationManagement ) {
+			DEPRECATION_LOGGER.deprecatedSettingForRemoval( "management of bidirectional persistent association attributes", "false" );
+		}
 		return enableAssociationManagement;
 	}
 
@@ -56,6 +61,9 @@ public class EnhancementContext extends DefaultEnhancementContext {
 
 	@Override
 	public boolean doExtendedEnhancement(UnloadedClass classDescriptor) {
+		if (enableExtendedEnhancement) {
+			DEPRECATION_LOGGER.deprecatedSettingForRemoval("extended enhancement", "false");
+		}
 		return enableExtendedEnhancement;
 	}
 

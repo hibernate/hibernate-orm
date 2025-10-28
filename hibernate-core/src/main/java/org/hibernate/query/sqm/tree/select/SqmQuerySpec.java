@@ -7,7 +7,9 @@ package org.hibernate.query.sqm.tree.select;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.Internal;
@@ -26,6 +28,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmNode;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -295,9 +298,8 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		// NOTE : this call comes from JPA which inherently supports just a
 		// single (possibly "compound") selection.
 		// We have this special case where we return the SqmSelectClause itself if it doesn't have exactly 1 item
-		if ( selection instanceof SqmSelectClause ) {
+		if ( selection instanceof SqmSelectClause sqmSelectClause ) {
 			if ( selection != selectClause ) {
-				final SqmSelectClause sqmSelectClause = (SqmSelectClause) selection;
 				final List<SqmSelection<?>> selections = sqmSelectClause.getSelections();
 				selectClause.setSelection( selections.get( 0 ).getSelectableNode() );
 				for ( int i = 1; i < selections.size(); i++ ) {
@@ -374,18 +376,42 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			setWhereClause( null );
 		}
 		else {
-			SqmWhereClause whereClause = getWhereClause();
-			if ( whereClause == null ) {
-				setWhereClause( whereClause = new SqmWhereClause( nodeBuilder() ) );
-			}
-			else {
-				whereClause.setPredicate( null );
-			}
+			final SqmWhereClause whereClause = resetWhereClause();
 			for ( Predicate restriction : restrictions ) {
 				whereClause.applyPredicate( (SqmPredicate) restriction );
 			}
 		}
 		return this;
+	}
+
+	@Override
+	public SqmQuerySpec<T> setRestriction(List<Predicate> restrictions) {
+		if ( restrictions == null ) {
+			throw new IllegalArgumentException( "The predicate list cannot be null" );
+		}
+		else if ( restrictions.isEmpty() ) {
+			setWhereClause( null );
+		}
+		else {
+			final SqmWhereClause whereClause = resetWhereClause();
+			for ( Predicate restriction : restrictions ) {
+				whereClause.applyPredicate( (SqmPredicate) restriction );
+			}
+		}
+		return this;
+	}
+
+	private SqmWhereClause resetWhereClause() {
+		final SqmWhereClause whereClause = getWhereClause();
+		if ( whereClause == null ) {
+			final SqmWhereClause newWhereClause = new SqmWhereClause( nodeBuilder() );
+			setWhereClause( newWhereClause );
+			return newWhereClause;
+		}
+		else {
+			whereClause.setPredicate( null );
+			return whereClause;
+		}
 	}
 
 	@Override
@@ -443,6 +469,12 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Override
+	public SqmQuerySpec<T> setGroupRestriction(List<Predicate> restrictions) {
+		havingClausePredicate = nodeBuilder().wrap( restrictions );
+		return this;
+	}
+
+	@Override
 	public SqmQuerySpec<T> setSortSpecifications(List<? extends JpaOrder> sortSpecifications) {
 		super.setSortSpecifications( sortSpecifications );
 		return this;
@@ -486,7 +518,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			}
 		}
 		else {
-			selectedFromSet = new HashSet<>( selectClause.getSelections().size() );
+			selectedFromSet = Collections.newSetFromMap( new IdentityHashMap<>( selectClause.getSelections().size() ) );
 			for ( SqmSelection<?> selection : selectClause.getSelections() ) {
 				collectSelectedFromSet( selectedFromSet, selection.getSelectableNode() );
 			}
@@ -595,10 +627,12 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 				hql.append( "distinct " );
 			}
 			final List<SqmSelection<?>> selections = selectClause.getSelections();
-			selections.get( 0 ).appendHqlString( hql, context );
-			for ( int i = 1; i < selections.size(); i++ ) {
-				hql.append( ", " );
-				selections.get( i ).appendHqlString( hql, context );
+			if ( !selections.isEmpty() ) {
+				selections.get( 0 ).appendHqlString( hql, context );
+				for ( int i = 1; i < selections.size(); i++ ) {
+					hql.append( ", " );
+					selections.get( i ).appendHqlString( hql, context );
+				}
 			}
 		}
 		if ( fromClause != null ) {
@@ -675,5 +709,49 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmQuerySpec<?> that
+			&& super.equals( object )
+			&& Objects.equals( fromClause, that.fromClause )
+			&& Objects.equals( selectClause, that.selectClause )
+			&& Objects.equals( whereClause, that.whereClause )
+			&& Objects.equals( groupByClauseExpressions, that.groupByClauseExpressions )
+			&& Objects.equals( havingClausePredicate, that.havingClausePredicate );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + Objects.hashCode( fromClause );
+		result = 31 * result + Objects.hashCode( selectClause );
+		result = 31 * result + Objects.hashCode( whereClause );
+		result = 31 * result + Objects.hashCode( groupByClauseExpressions );
+		result = 31 * result + Objects.hashCode( havingClausePredicate );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmQuerySpec<?> that
+			&& super.isCompatible( object )
+			&& SqmCacheable.areCompatible( fromClause, that.fromClause )
+			&& SqmCacheable.areCompatible( selectClause, that.selectClause )
+			&& SqmCacheable.areCompatible( whereClause, that.whereClause )
+			&& SqmCacheable.areCompatible( groupByClauseExpressions, that.groupByClauseExpressions )
+			&& SqmCacheable.areCompatible( havingClausePredicate, that.havingClausePredicate );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( fromClause );
+		result = 31 * result + SqmCacheable.cacheHashCode( selectClause );
+		result = 31 * result + SqmCacheable.cacheHashCode( whereClause );
+		result = 31 * result + SqmCacheable.cacheHashCode( groupByClauseExpressions );
+		result = 31 * result + SqmCacheable.cacheHashCode( havingClausePredicate );
+		return result;
 	}
 }

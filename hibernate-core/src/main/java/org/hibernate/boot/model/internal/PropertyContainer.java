@@ -22,14 +22,11 @@ import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.spi.AccessType;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.RecordComponentDetails;
-import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.models.spi.TypeVariableScope;
 
 
@@ -40,6 +37,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Transient;
+
+import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.internal.util.collections.CollectionHelper.toSmallList;
 
 /**
  * Access to the members of a {@linkplain ClassDetails class} which define a persistent attribute
@@ -90,15 +90,12 @@ public class PropertyContainer {
 			ClassDetails classDetails,
 			TypeVariableScope typeAtStake,
 			AccessType classLevelAccessType) {
-		final List<FieldDetails> fields = collectPotentialAttributeMembers( classDetails.getFields() );
-		final List<MethodDetails> getters = collectPotentialAttributeMembers( classDetails.getMethods() );
-		final List<RecordComponentDetails> recordComponents = collectPotentialAttributeMembers( classDetails.getRecordComponents() );
+		final var fields = collectPotentialAttributeMembers( classDetails.getFields() );
+		final var getters = collectPotentialAttributeMembers( classDetails.getMethods() );
+		final var recordComponents = collectPotentialAttributeMembers( classDetails.getRecordComponents() );
 
-		final Map<String, MemberDetails> attributeMemberMap = buildAttributeMemberMap(
-				recordComponents,
-				fields,
-				getters
-		);
+		final Map<String, MemberDetails> attributeMemberMap =
+				buildAttributeMemberMap( recordComponents, fields, getters );
 
 		final Map<String,MethodDetails> persistentAttributesFromGetters = new HashMap<>();
 		final Map<String,RecordComponentDetails> persistentAttributesFromComponents = new HashMap<>();
@@ -169,46 +166,40 @@ public class PropertyContainer {
 
 		// Check fields...
 		for ( int i = 0; i < fields.size(); i++ ) {
-			final FieldDetails fieldDetails = fields.get( i );
-			final Access localAccessAnnotation = fieldDetails.getDirectAnnotationUsage( Access.class );
-			if ( localAccessAnnotation == null
-					|| localAccessAnnotation.value() != jakarta.persistence.AccessType.FIELD ) {
-				continue;
+			final var fieldDetails = fields.get( i );
+			final var localAccessAnnotation = fieldDetails.getDirectAnnotationUsage( Access.class );
+			if ( localAccessAnnotation != null
+					&& localAccessAnnotation.value() == jakarta.persistence.AccessType.FIELD ) {
+				persistentAttributeMap.put( fieldDetails.getName(), fieldDetails );
 			}
-			persistentAttributeMap.put( fieldDetails.getName(), fieldDetails );
 		}
 
 		// Check getters...
 		for ( int i = 0; i < getters.size(); i++ ) {
-			final MethodDetails getterDetails = getters.get( i );
-			final Access localAccessAnnotation = getterDetails.getDirectAnnotationUsage( Access.class );
-			if ( localAccessAnnotation == null
-					|| localAccessAnnotation.value() != jakarta.persistence.AccessType.PROPERTY ) {
-				continue;
+			final var getterDetails = getters.get( i );
+			final var localAccessAnnotation = getterDetails.getDirectAnnotationUsage( Access.class );
+			if ( localAccessAnnotation != null
+					&& localAccessAnnotation.value() == jakarta.persistence.AccessType.PROPERTY ) {
+				final String name = getterDetails.resolveAttributeName();
+				// HHH-10242 detect registration of the same property getter twice - eg boolean isId() + UUID getId()
+				final var previous = persistentAttributesFromGetters.get( name );
+				if ( previous != null ) {
+					throwAmbiguousPropertyException( classDetails, previous, getterDetails );
+				}
+				persistentAttributeMap.put( name, getterDetails );
+				persistentAttributesFromGetters.put( name, getterDetails );
 			}
 
-			final String name = getterDetails.resolveAttributeName();
-
-			// HHH-10242 detect registration of the same property getter twice - eg boolean isId() + UUID getId()
-			final MethodDetails previous = persistentAttributesFromGetters.get( name );
-			if ( previous != null ) {
-				throwAmbiguousPropertyException( classDetails, previous, getterDetails );
-			}
-
-			persistentAttributeMap.put( name, getterDetails );
-			persistentAttributesFromGetters.put( name, getterDetails );
 		}
 
 		// Check record components...
 		for ( int i = 0; i < recordComponents.size(); i++ ) {
-			final RecordComponentDetails componentDetails = recordComponents.get( i );
-			final Access localAccessAnnotation = componentDetails.getDirectAnnotationUsage( Access.class );
-			if ( localAccessAnnotation == null ) {
-				continue;
+			final var recordComponentDetails = recordComponents.get( i );
+			if ( recordComponentDetails.hasDirectAnnotationUsage( Access.class ) ) {
+				final String name = recordComponentDetails.getName();
+				persistentAttributeMap.put( name, recordComponentDetails );
+				persistentAttributesFromComponents.put( name, recordComponentDetails );
 			}
-			final String name = componentDetails.getName();
-			persistentAttributeMap.put( name, componentDetails );
-			persistentAttributesFromComponents.put( name, componentDetails );
 		}
 	}
 
@@ -302,30 +293,25 @@ public class PropertyContainer {
 			TypeVariableScope typeAtStake,
 			Map<String, MemberDetails> attributeMemberMap) {
 		final ArrayList<MemberDetails> output = new ArrayList<>( attributeMemberMap.size() );
-		for ( MemberDetails attributeMemberDetails : attributeMemberMap.values() ) {
-			final TypeDetails memberType = attributeMemberDetails.resolveRelativeType( typeAtStake );
-			if ( !memberType.isResolved()
-					&& !discoverTypeWithoutReflection( classDetails, attributeMemberDetails ) ) {
-				final String msg = "Property '" + StringHelper.qualify( classDetails.getName(), attributeMemberDetails.getName() ) +
+		for ( var attributeMemberDetails : attributeMemberMap.values() ) {
+			if ( !attributeMemberDetails.resolveRelativeType( typeAtStake ).isResolved()
+					&& !discoverTypeWithoutReflection( attributeMemberDetails ) ) {
+				final String msg = "Property '" + qualify( classDetails.getName(), attributeMemberDetails.getName() ) +
 						"' has an unbound type and no explicit target entity (resolve this generics usage issue" +
 						" or set an explicit target attribute with '@OneToMany(target=)' or use an explicit '@Type')";
 				throw new AnnotationException( msg );
 			}
 			output.add( attributeMemberDetails );
 		}
-		return CollectionHelper.toSmallList( output );
+		return toSmallList( output );
 	}
 
 	private AccessType determineLocalClassDefinedAccessStrategy() {
-		AccessType classDefinedAccessType = AccessType.DEFAULT;
-		final Access access = classDetails.getDirectAnnotationUsage( Access.class );
-		if ( access != null ) {
-			classDefinedAccessType = AccessType.getAccessStrategy( access.value() );
-		}
-		return classDefinedAccessType;
+		final var access = classDetails.getDirectAnnotationUsage( Access.class );
+		return access == null ? AccessType.DEFAULT : AccessType.getAccessStrategy( access.value() );
 	}
 
-	private static boolean discoverTypeWithoutReflection(ClassDetails classDetails, MemberDetails memberDetails) {
+	private static boolean discoverTypeWithoutReflection(MemberDetails memberDetails) {
 		if ( memberDetails.hasDirectAnnotationUsage( TargetEmbeddable.class ) ) {
 			return true;
 		}
@@ -342,22 +328,22 @@ public class PropertyContainer {
 			return true;
 		}
 
-		final OneToOne oneToOneAnn = memberDetails.getDirectAnnotationUsage( OneToOne.class );
+		final var oneToOneAnn = memberDetails.getDirectAnnotationUsage( OneToOne.class );
 		if ( oneToOneAnn != null ) {
 			return oneToOneAnn.targetEntity() != void.class;
 		}
 
-		final OneToMany oneToManyAnn = memberDetails.getDirectAnnotationUsage( OneToMany.class );
+		final var oneToManyAnn = memberDetails.getDirectAnnotationUsage( OneToMany.class );
 		if ( oneToManyAnn != null ) {
 			return oneToManyAnn.targetEntity() != void.class;
 		}
 
-		final ManyToOne manyToOneAnn = memberDetails.getDirectAnnotationUsage( ManyToOne.class );
+		final var manyToOneAnn = memberDetails.getDirectAnnotationUsage( ManyToOne.class );
 		if ( manyToOneAnn != null ) {
 			return manyToOneAnn.targetEntity() != void.class;
 		}
 
-		final ManyToMany manyToManyAnn = memberDetails.getDirectAnnotationUsage( ManyToMany.class );
+		final var manyToManyAnn = memberDetails.getDirectAnnotationUsage( ManyToMany.class );
 		if ( manyToManyAnn != null ) {
 			return manyToManyAnn.targetEntity() != void.class;
 		}
@@ -366,7 +352,7 @@ public class PropertyContainer {
 			return true;
 		}
 
-		final ManyToAny manToAnyAnn = memberDetails.getDirectAnnotationUsage( ManyToAny.class );
+		final var manToAnyAnn = memberDetails.getDirectAnnotationUsage( ManyToAny.class );
 		if ( manToAnyAnn != null ) {
 			return true;
 		}
@@ -387,6 +373,7 @@ public class PropertyContainer {
 	private static boolean mustBeSkipped(MemberDetails memberDetails) {
 		//TODO make those hardcoded tests more portable (through the bytecode provider?)
 		return memberDetails.hasDirectAnnotationUsage( Transient.class )
-				|| (memberDetails.getType() != null && "net.sf.cglib.transform.impl.InterceptFieldCallback".equals( memberDetails.getType().getName() ) );
+			|| memberDetails.getType() != null
+				&& "net.sf.cglib.transform.impl.InterceptFieldCallback".equals( memberDetails.getType().getName() );
 	}
 }

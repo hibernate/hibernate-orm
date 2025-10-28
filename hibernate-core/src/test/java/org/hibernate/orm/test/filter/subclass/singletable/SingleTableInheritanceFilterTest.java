@@ -46,9 +46,7 @@ public class SingleTableInheritanceFilterTest extends AbstractStatefulStatelessF
 
 	@AfterEach
 	public void cleanup() {
-		scope.inTransaction(
-				s -> s.createMutationQuery( "delete from AbstractSuperClass" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@ParameterizedTest

@@ -4,15 +4,6 @@
  */
 package org.hibernate.engine.spi;
 
-import java.sql.Connection;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import javax.naming.NamingException;
-import javax.naming.Reference;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceUnitTransactionType;
@@ -21,7 +12,6 @@ import jakarta.persistence.Query;
 import jakarta.persistence.SynchronizationType;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.TypedQueryReference;
-
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -34,14 +24,15 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventEngine;
-import org.hibernate.graph.RootGraph;
+import org.hibernate.generator.Generator;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
@@ -55,10 +46,19 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.generator.Generator;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import javax.naming.NamingException;
+import javax.naming.Reference;
+import java.sql.Connection;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Base delegating implementation of the {@link SessionFactory} and
@@ -229,7 +229,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public RootGraph<Map<String, ?>> createGraphForDynamicEntity(String entityName) {
+	public RootGraphImplementor<Map<String, ?>> createGraphForDynamicEntity(String entityName) {
 		return delegate.createGraphForDynamicEntity( entityName );
 	}
 
@@ -421,5 +421,10 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public <R> TypedQueryReference<R> addNamedQuery(String name, TypedQuery<R> query) {
 		return delegate.addNamedQuery( name, query );
+	}
+
+	@Override
+	public Object resolveTenantIdentifier() {
+		return delegate.resolveTenantIdentifier();
 	}
 }

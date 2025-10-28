@@ -277,9 +277,6 @@ public class ImplicitSelectWithJoinTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete Product" ).executeUpdate();
-			session.createMutationQuery( "delete Vendor" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

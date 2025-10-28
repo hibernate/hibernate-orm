@@ -19,7 +19,7 @@ import org.jboss.logging.Logger;
 import static org.hibernate.testing.orm.junit.FailureExpectedExtension.failureExpectedValidation;
 
 /**
- * JUnit 5 extension used to support {@link NotImplementedYet} handling
+ * JUnit Jupiter extension used to support {@link NotImplementedYet} handling
  *
  * @author Jan Schatteman
  */

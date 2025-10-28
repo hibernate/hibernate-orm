@@ -48,7 +48,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
+import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
@@ -360,6 +360,7 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 					null,
 					null,
 					null,
+					null,
 					false,
 					false,
 					false,
@@ -393,6 +394,7 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 						null,
 						typedMapping.getColumnDefinition(),
 						typedMapping.getLength(),
+						typedMapping.getArrayLength(),
 						typedMapping.getPrecision(),
 						typedMapping.getScale(),
 						typedMapping.getTemporalPrecision(),
@@ -411,6 +413,7 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 						elementSelectionExpression,
 						new SelectablePath( CollectionPart.Nature.ELEMENT.getName() ),
 						customReadExpression,
+						null,
 						null,
 						null,
 						null,

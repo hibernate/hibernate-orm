@@ -51,13 +51,7 @@ public class HibernateGetClassTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "update TestEntity e set e.manyToOne = null" ).executeUpdate();
-					session.createMutationQuery( "delete from TestEntity" ).executeUpdate();
-					session.createMutationQuery( "delete from TestRegularEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

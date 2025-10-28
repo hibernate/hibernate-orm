@@ -52,6 +52,9 @@ public class EmbeddableForeignKeyResultImpl<T>
 		resetFetches( creationState.visitFetches( this ) );
 	}
 
+	/*
+	 * Used by Hibernate Reactive
+	 */
 	protected EmbeddableForeignKeyResultImpl(EmbeddableForeignKeyResultImpl<T> original) {
 		super( original );
 		this.resultVariable = original.resultVariable;
@@ -123,7 +126,7 @@ public class EmbeddableForeignKeyResultImpl<T>
 	public EmbeddableInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return getReferencedModePart() instanceof NonAggregatedIdentifierMapping
 				? new NonAggregatedIdentifierMappingInitializer( this, null, creationState, true )
-				: new EmbeddableInitializerImpl( this, null, null, creationState, true );
+				: new EmbeddableInitializerImpl( this, null, null, null, creationState, true );
 	}
 
 	@Override

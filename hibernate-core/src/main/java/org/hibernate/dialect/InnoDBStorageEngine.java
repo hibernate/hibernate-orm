@@ -9,7 +9,7 @@ package org.hibernate.dialect;
  *
  * @author Vlad Mihalcea
  */
-public class InnoDBStorageEngine implements MySQLStorageEngine{
+public class InnoDBStorageEngine implements MySQLStorageEngine {
 
 	public static final MySQLStorageEngine INSTANCE = new InnoDBStorageEngine();
 

@@ -64,7 +64,7 @@ public class ImmutableMapAsBasicTests {
 				.getEntityDescriptor( TestEntity.class );
 
 		final Property property = persistentClass.getProperty( "data" );
-		assertThat( property.isUpdateable() ).isFalse();
+		assertThat( property.isUpdatable() ).isFalse();
 
 		final BasicValue value = (BasicValue) property.getValue();
 		final BasicValue.Resolution<?> resolution = value.resolve();
@@ -86,7 +86,7 @@ public class ImmutableMapAsBasicTests {
 		// mutate the managed entity state
 		scope.inTransaction( (session) -> {
 			// load a managed reference
-			final TestEntity managed = session.get( TestEntity.class, 1 );
+			final TestEntity managed = session.find( TestEntity.class, 1 );
 			assertThat( managed.data ).hasSize( 2 );
 
 			// make the change
@@ -109,7 +109,7 @@ public class ImmutableMapAsBasicTests {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 
 		// load a detached reference
-		final TestEntity detached = scope.fromTransaction( (session) -> session.get( TestEntity.class, 1 ) );
+		final TestEntity detached = scope.fromTransaction( (session) -> session.find( TestEntity.class, 1 ) );
 		assertThat( detached.data ).hasSize( 2 );
 
 		// make the change
@@ -134,7 +134,7 @@ public class ImmutableMapAsBasicTests {
 		// make no changes to a managed entity
 		scope.inTransaction( (session) -> {
 			// Load a managed reference
-			final TestEntity managed = session.get( TestEntity.class, 1 );
+			final TestEntity managed = session.find( TestEntity.class, 1 );
 			assertThat( managed.data ).hasSize( 2 );
 
 			// make no changes
@@ -153,7 +153,7 @@ public class ImmutableMapAsBasicTests {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 
 		// load a detached instance
-		final TestEntity detached = scope.fromTransaction( (session) -> session.get( TestEntity.class, 1 ) );
+		final TestEntity detached = scope.fromTransaction( (session) -> session.find( TestEntity.class, 1 ) );
 		assertThat( detached.data ).hasSize( 2 );
 
 		// clear statements in prep for next check
@@ -180,9 +180,7 @@ public class ImmutableMapAsBasicTests {
 
 	@AfterEach
 	void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete TestEntity" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "TestEntity" )

@@ -73,12 +73,7 @@ public class CachedQueryShallowCollectionTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				em -> {
-					em.createQuery( "delete from Employee" ).executeUpdate();
-					em.createQuery( "delete from Manager" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

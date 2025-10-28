@@ -12,11 +12,14 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.MutableValue;
-import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.hibernate.type.SqlTypes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,20 +45,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlAggregate.class)
-@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 23, matchSubTypes = true,
+@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 23, versionMatchMode = VersionMatchMode.SAME_OR_NEWER,
 		reason = "Currently failing on Oracle 23+ due to Bug 37319693 - ORA-00600 with check constraint on xml type")
-public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			XmlHolder.class
-		};
-	}
+@DomainModel(annotatedClasses = {NestedXmlEmbeddableTest.XmlHolder.class})
+@SessionFactory
+public class NestedXmlEmbeddableTest {
 
 	@BeforeEach
-	public void setUp() {
-		inTransaction(
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.persist( new XmlHolder( 1L, "XYZ", 10, "String \"<abc>A&B</abc>\"", EmbeddableAggregate.createAggregate1() ) );
 					session.persist( new XmlHolder( 2L, null, 20, "String 'abc'", EmbeddableAggregate.createAggregate2() ) );
@@ -64,17 +62,13 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@AfterEach
-	protected void cleanupTest() {
-		inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from XmlHolder h" ).executeUpdate();
-				}
-		);
+	protected void cleanupTest(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
 	@Test
-	public void testUpdate() {
-		sessionFactoryScope().inTransaction(
+	public void testUpdate(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					XmlHolder XmlHolder = entityManager.find( XmlHolder.class, 1L );
 					XmlHolder.setAggregate( EmbeddableAggregate.createAggregate2() );
@@ -89,8 +83,8 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testFetch() {
-		sessionFactoryScope().inSession(
+	public void testFetch(SessionFactoryScope scope) {
+		scope.inSession(
 				entityManager -> {
 					List<XmlHolder> XmlHolders = entityManager.createQuery( "from XmlHolder b where b.id = 1", XmlHolder.class ).getResultList();
 					assertEquals( 1, XmlHolders.size() );
@@ -105,8 +99,8 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testFetchNull() {
-		sessionFactoryScope().inSession(
+	public void testFetchNull(SessionFactoryScope scope) {
+		scope.inSession(
 				entityManager -> {
 					List<XmlHolder> XmlHolders = entityManager.createQuery( "from XmlHolder b where b.id = 2", XmlHolder.class ).getResultList();
 					assertEquals( 1, XmlHolders.size() );
@@ -120,8 +114,8 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testDomainResult() {
-		sessionFactoryScope().inSession(
+	public void testDomainResult(SessionFactoryScope scope) {
+		scope.inSession(
 				entityManager -> {
 					List<TheXml> structs = entityManager.createQuery( "select b.theXml from XmlHolder b where b.id = 1", TheXml.class ).getResultList();
 					assertEquals( 1, structs.size() );
@@ -135,8 +129,8 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testSelectionItems() {
-		sessionFactoryScope().inSession(
+	public void testSelectionItems(SessionFactoryScope scope) {
+		scope.inSession(
 				entityManager -> {
 					List<Tuple> tuples = entityManager.createQuery(
 							"select " +
@@ -213,8 +207,8 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testDeleteWhere() {
-		sessionFactoryScope().inTransaction(
+	public void testDeleteWhere(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					entityManager.createMutationQuery( "delete XmlHolder b where b.theXml is not null" ).executeUpdate();
 					assertNull( entityManager.find( XmlHolder.class, 1L ) );
@@ -224,8 +218,8 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testUpdateAggregate() {
-		sessionFactoryScope().inTransaction(
+	public void testUpdateAggregate(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					entityManager.createMutationQuery( "update XmlHolder b set b.theXml = null" ).executeUpdate();
 					assertNull( entityManager.find( XmlHolder.class, 1L ).getAggregate() );
@@ -235,14 +229,14 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-17695" )
-	public void testNullNestedAggregate() {
-		sessionFactoryScope().inTransaction(
+	public void testNullNestedAggregate(SessionFactoryScope scope) {
+		scope.inTransaction(
 			entityManager -> {
 				XmlHolder XmlHolder = new XmlHolder(3L, "abc", 30, "String 'xyz'", null );
 				entityManager.persist( XmlHolder );
 			}
 		);
-		sessionFactoryScope().inTransaction(
+		scope.inTransaction(
 				entityManager -> {
 					XmlHolder XmlHolder = entityManager.createQuery( "from XmlHolder b where b.id = 3", XmlHolder.class ).getSingleResult();
 					assertEquals( "abc", XmlHolder.theXml.stringField );
@@ -255,8 +249,8 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-17695" )
-	public void testNullNestedEmbeddable() {
-		sessionFactoryScope().inTransaction(
+	public void testNullNestedEmbeddable(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					XmlHolder XmlHolder = new XmlHolder( );
 					XmlHolder.setId( 3L );
@@ -264,7 +258,7 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 					entityManager.persist( XmlHolder );
 				}
 		);
-		sessionFactoryScope().inTransaction(
+		scope.inTransaction(
 				entityManager -> {
 					XmlHolder XmlHolder = entityManager.createQuery( "from XmlHolder b where b.id = 3", XmlHolder.class ).getSingleResult();
 					assertEquals( "abc", XmlHolder.theXml.stringField );
@@ -276,8 +270,8 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-17695" )
-	public void testNullNestedEmbeddableAndAggregate() {
-		sessionFactoryScope().inTransaction(
+	public void testNullNestedEmbeddableAndAggregate(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					XmlHolder XmlHolder = new XmlHolder( );
 					XmlHolder.setId( 3L );
@@ -285,7 +279,7 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 					entityManager.persist( XmlHolder );
 				}
 		);
-		sessionFactoryScope().inTransaction(
+		scope.inTransaction(
 				entityManager -> {
 					XmlHolder XmlHolder = entityManager.createQuery( "from XmlHolder b where b.id = 3", XmlHolder.class ).getSingleResult();
 					assertEquals( "abc", XmlHolder.theXml.stringField );
@@ -297,8 +291,8 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
-	public void testUpdateAggregateMember() {
-		sessionFactoryScope().inTransaction(
+	public void testUpdateAggregateMember(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					entityManager.createMutationQuery( "update XmlHolder b set b.theXml.nested.theString = null" ).executeUpdate();
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
@@ -310,8 +304,8 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
-	public void testUpdateAggregateMemberOnNestedNull() {
-		sessionFactoryScope().inTransaction(
+	public void testUpdateAggregateMemberOnNestedNull(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					entityManager.createMutationQuery( "update XmlHolder b set b.theXml.simpleEmbeddable.doubleNested = null" ).executeUpdate();
 					entityManager.createMutationQuery( "update XmlHolder b set b.theXml.simpleEmbeddable.doubleNested.theNested.theLeaf.stringField = 'Abc'" ).executeUpdate();
@@ -322,8 +316,8 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
-	public void testUpdateMultipleAggregateMembers() {
-		sessionFactoryScope().inTransaction(
+	public void testUpdateMultipleAggregateMembers(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					entityManager.createMutationQuery( "update XmlHolder b set b.theXml.nested.theString = null, b.theXml.nested.theUuid = null" ).executeUpdate();
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
@@ -336,8 +330,8 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
-	public void testUpdateAllAggregateMembers() {
-		sessionFactoryScope().inTransaction(
+	public void testUpdateAllAggregateMembers(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
 					entityManager.createMutationQuery(

@@ -46,12 +46,7 @@ public class DeleteOneToManyOrphansTest {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete Feature" ).executeUpdate();
-					session.createQuery( "delete Product" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

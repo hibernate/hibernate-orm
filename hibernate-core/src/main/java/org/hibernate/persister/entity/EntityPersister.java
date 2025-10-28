@@ -18,6 +18,7 @@ import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -212,7 +213,30 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 *@return The metamodel
 	 */
+	@Deprecated(since = "7.2", forRemoval = true)
 	EntityMetamodel getEntityMetamodel();
+
+	boolean isPolymorphic();
+
+	boolean isDynamicUpdate();
+
+	boolean isDynamicInsert();
+
+	OnDeleteAction[] getPropertyOnDeleteActions();
+
+	Generator[] getGenerators();
+
+	boolean hasImmutableNaturalId();
+
+	boolean isNaturalIdentifierInsertGenerated();
+
+	boolean isLazy();
+
+	int getPropertySpan();
+
+	boolean hasPreInsertGeneratedProperties();
+
+	boolean hasPreUpdateGeneratedProperties();
 
 	/**
 	 * Called from {@link EnhancementAsProxyLazinessInterceptor} to trigger load of
@@ -292,8 +316,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	}
 
 	default void visitQuerySpaces(Consumer<String> querySpaceConsumer) {
-		final String[] spaces = getSynchronizedQuerySpaces();
-		for (String space : spaces) {
+		for ( String space : getSynchronizedQuerySpaces() ) {
 			querySpaceConsumer.accept(space);
 		}
 	}
@@ -496,7 +519,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @return The type of the version property; or -66, if not versioned.
 	 */
-	int getVersionProperty();
+	int getVersionPropertyIndex();
 
 	/**
 	 * Determine whether this entity defines a natural identifier.
@@ -603,7 +626,10 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	/**
 	 * Load the id for the entity based on the natural id.
+	 *
+	 * @deprecated No longer used
 	 */
+	@Deprecated(since = "7.2")
 	Object loadEntityIdByNaturalId(
 			Object[] naturalIdValues,
 			LockOptions lockOptions,
@@ -613,17 +639,6 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * Load an instance of the persistent class.
 	 */
 	Object load(Object id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session);
-
-	/**
-	 * @deprecated Use {@link #load(Object, Object, LockMode, SharedSessionContractImplementor)}
-	 */
-	@Deprecated(since = "6.0")
-	default Object load(
-			Object id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session,
-			@SuppressWarnings("unused") Boolean readOnly)
-			throws HibernateException {
-		return load( id, optionalObject, lockMode, session );
-	}
 
 	/**
 	 * Load an instance of the persistent class.
@@ -873,10 +888,6 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * Get the cascade styles of the properties (optional operation)
 	 */
 	CascadeStyle[] getPropertyCascadeStyles();
-
-	default boolean isPropertySelectable(int propertyNumber) {
-		return true;
-	}
 
 	/**
 	 * Get the identifier type
@@ -1353,14 +1364,6 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	boolean storeDiscriminatorInShallowQueryCacheLayout();
 
 	boolean hasFilterForLoadByKey();
-
-	/**
-	 * The property name of the "special" identifier property in HQL
-	 *
-	 * @deprecated this feature of HQL is now deprecated
-	 */
-	@Deprecated(since = "6.2")
-	String ENTITY_ID = "id";
 
 	/**
 	 * @return Metadata for each unique key defined

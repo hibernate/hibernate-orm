@@ -81,10 +81,7 @@ public class InvalidPropertyNameTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery( "delete from SomeEntity" ).executeUpdate();
-			session.createQuery( "delete from SomeEntityWithFalsePositive" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "SomeEntity")

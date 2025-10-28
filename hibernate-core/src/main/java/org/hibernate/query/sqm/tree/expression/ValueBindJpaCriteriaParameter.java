@@ -10,8 +10,12 @@ import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
+import java.util.Objects;
+
+
 /**
- * It is a JpaCriteriaParameter created from a value when ValueHandlingMode is equal to BIND
+ * A {@link JpaCriteriaParameter} created from a value when
+ * {@link org.hibernate.query.criteria.ValueHandlingMode} is {@code BIND}.
  *
  * @see org.hibernate.query.criteria.ValueHandlingMode
  */
@@ -50,18 +54,38 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 		SqmLiteral.appendHqlString( hql, getJavaTypeDescriptor(), value );
 	}
 
+	// For caching purposes, any two ValueBindJpaCriteriaParameter objects are compatible as ensured by the parent impl,
+	// but for equals/hashCode, use equals/hashCode of the underlying value, if available, from the nodes JavaType
+
 	@Override
-	public boolean equals(Object o) {
-		return this == o;
+	public final boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o instanceof ValueBindJpaCriteriaParameter<?> that ) {
+			if ( value == null ) {
+				return that.value == null && Objects.equals( getNodeType(), that.getNodeType() );
+			}
+			final var javaType = getJavaTypeDescriptor();
+			if ( that.value != null ) {
+				if ( javaType != null ) {
+					//noinspection unchecked
+					return javaType.equals( that.getJavaTypeDescriptor() ) && javaType.areEqual( value, (T) that.value );
+				}
+				else {
+					return that.getJavaTypeDescriptor() == null && value.equals( that.value );
+				}
+			}
+		}
+		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return System.identityHashCode( this );
-	}
-
-	@Override
-	public int compareTo(SqmParameter anotherParameter) {
-		return this == anotherParameter ? 0 : 1;
+		if ( value == null ) {
+			return 0;
+		}
+		final var javaType = getJavaTypeDescriptor();
+		return javaType == null ? value.hashCode() : javaType.extractHashCode( value );
 	}
 }

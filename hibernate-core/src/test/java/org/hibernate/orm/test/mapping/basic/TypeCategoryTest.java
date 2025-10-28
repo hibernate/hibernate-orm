@@ -9,27 +9,19 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class TypeCategoryTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Contact.class
-		};
-	}
+@Jpa( annotatedClasses = {TypeCategoryTest.Contact.class} )
+public class TypeCategoryTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Contact contact = new Contact();
 			contact.id = 1;
 			entityManager.persist(contact);
@@ -55,7 +47,7 @@ public class TypeCategoryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Embeddable
-	public class Name {
+	public static class Name {
 
 		private String firstName;
 

@@ -4,6 +4,7 @@
  */
 package org.hibernate.bytecode.spi;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
@@ -55,8 +56,34 @@ public interface BytecodeProvider extends Service {
 	 * @param clazz The class to be reflected upon.
 	 * @param propertyAccessMap The ordered property access map
 	 * @return The reflection optimization delegate.
+	 * @deprecated Use {@link #getReflectionOptimizer(Class, PropertyInfo[])} instead
 	 */
+	@Deprecated(forRemoval = true)
 	@Nullable ReflectionOptimizer getReflectionOptimizer(Class<?> clazz, Map<String, PropertyAccess> propertyAccessMap);
+
+	/**
+	 * Retrieve the ReflectionOptimizer delegate for this provider
+	 * capable of generating reflection optimization components.
+	 *
+	 * @param clazz The class to be reflected upon.
+	 * @param propertyInfos The ordered property infos
+	 * @return The reflection optimization delegate.
+	 */
+	default @Nullable ReflectionOptimizer getReflectionOptimizer(Class<?> clazz, PropertyInfo[] propertyInfos) {
+		final Map<String, PropertyAccess> map = new HashMap<>();
+		for ( int i = 0; i < propertyInfos.length; i++ ) {
+			map.put( propertyInfos[i].propertyName(), propertyInfos[i].propertyAccess() );
+		}
+		return getReflectionOptimizer( clazz, map );
+	}
+
+	/**
+	 * Information about a property of a class, needed for generating reflection optimizers.
+	 *
+	 * @param propertyName The name of the property
+	 * @param propertyAccess The property access
+	 */
+	record PropertyInfo(String propertyName, PropertyAccess propertyAccess) {}
 
 	/**
 	 * Returns a byte code enhancer that implements the enhancements described in the supplied enhancement context.

@@ -9,8 +9,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.InstantiationException;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.EntityHolder;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.internal.util.MutableObject;
@@ -22,24 +20,17 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
-import org.hibernate.query.sqm.sql.SqmTranslation;
-import org.hibernate.query.sqm.sql.SqmTranslator;
-import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
-import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
-import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
 import org.hibernate.sql.results.internal.RowTransformerCheckingImpl;
@@ -93,33 +84,30 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		this.sqm = sqm;
 		this.domainParameterXref = domainParameterXref;
 
-		final ListResultsConsumer.UniqueSemantic uniqueSemantic =
+		final var uniqueSemantic =
 				sqm.producesUniqueResults() && !containsCollectionFetches( queryOptions )
 						? ListResultsConsumer.UniqueSemantic.NONE
 						: ListResultsConsumer.UniqueSemantic.ALLOW;
-		this.executeQueryInterpreter = (resultsConsumer, executionContext, sqmInterpretation, jdbcParameterBindings) -> {
-			final SharedSessionContractImplementor session = executionContext.getSession();
-			final JdbcSelect jdbcSelect = sqmInterpretation.jdbcOperation();
+		executeQueryInterpreter = (resultsConsumer, executionContext, sqmInterpretation, jdbcParameterBindings) -> {
+			final var session = executionContext.getSession();
+			final var jdbcSelect = sqmInterpretation.jdbcOperation();
 			try {
-				final SubselectFetch.RegistrationHandler subSelectFetchKeyHandler = SubselectFetch.createRegistrationHandler(
+				final var subSelectFetchKeyHandler = SubselectFetch.createRegistrationHandler(
 						session.getPersistenceContext().getBatchFetchQueue(),
 						sqmInterpretation.statement(),
 						JdbcParametersList.empty(),
 						jdbcParameterBindings
 				);
 				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames(), true );
-				final Expression fetchExpression = sqmInterpretation.statement().getQueryPart()
-						.getFetchClauseExpression();
-				final int resultCountEstimate = fetchExpression != null
-						? interpretIntExpression( fetchExpression, jdbcParameterBindings )
-						: -1;
+				final var fetchExpression =
+						sqmInterpretation.statement().getQueryPart().getFetchClauseExpression();
 				return session.getFactory().getJdbcServices().getJdbcSelectExecutor().executeQuery(
 						jdbcSelect,
 						jdbcParameterBindings,
 						listInterpreterExecutionContext( hql, executionContext, jdbcSelect, subSelectFetchKeyHandler ),
 						determineRowTransformer( sqm, resultType, tupleMetadata, executionContext.getQueryOptions() ),
 						null,
-						resultCountEstimate,
+						resultCountEstimate( jdbcParameterBindings, fetchExpression ),
 						resultsConsumer
 				);
 			}
@@ -128,22 +116,19 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			}
 		};
 		this.listInterpreter = (unused, executionContext, sqmInterpretation, jdbcParameterBindings) -> {
-			final SharedSessionContractImplementor session = executionContext.getSession();
-			final JdbcSelect jdbcSelect = sqmInterpretation.jdbcOperation();
+			final var session = executionContext.getSession();
+			final var jdbcSelect = sqmInterpretation.jdbcOperation();
 			try {
-				final SubselectFetch.RegistrationHandler subSelectFetchKeyHandler = SubselectFetch.createRegistrationHandler(
+				final var subSelectFetchKeyHandler = SubselectFetch.createRegistrationHandler(
 						session.getPersistenceContext().getBatchFetchQueue(),
 						sqmInterpretation.statement(),
 						JdbcParametersList.empty(),
 						jdbcParameterBindings
 				);
 				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames(), true );
-				final Expression fetchExpression =
+				final var fetchExpression =
 						sqmInterpretation.statement().getQueryPart()
 								.getFetchClauseExpression();
-				final int resultCountEstimate = fetchExpression != null
-						? interpretIntExpression( fetchExpression, jdbcParameterBindings )
-						: -1;
 				//noinspection unchecked
 				return session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 						jdbcSelect,
@@ -152,7 +137,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						determineRowTransformer( sqm, resultType, tupleMetadata, executionContext.getQueryOptions() ),
 						(Class<R>) executionContext.getResultType(),
 						uniqueSemantic,
-						resultCountEstimate
+						resultCountEstimate( jdbcParameterBindings, fetchExpression )
 				);
 			}
 			finally {
@@ -161,28 +146,30 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		};
 
 		this.scrollInterpreter = (scrollMode, executionContext, sqmInterpretation, jdbcParameterBindings) -> {
-			final SharedSessionContractImplementor session = executionContext.getSession();
-			final JdbcSelect jdbcSelect = sqmInterpretation.jdbcOperation();
+			final var session = executionContext.getSession();
+			final var jdbcSelect = sqmInterpretation.jdbcOperation();
 			try {
-				final JdbcSelectExecutor jdbcSelectExecutor = session.getFactory().getJdbcServices().getJdbcSelectExecutor();
 				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames(), true );
-				final Expression fetchExpression = sqmInterpretation.statement().getQueryPart().getFetchClauseExpression();
-				final int resultCountEstimate = fetchExpression != null
-						? interpretIntExpression( fetchExpression, jdbcParameterBindings )
-						: -1;
-				return jdbcSelectExecutor.scroll(
+				final var fetchExpression = sqmInterpretation.statement().getQueryPart().getFetchClauseExpression();
+				return session.getFactory().getJdbcServices().getJdbcSelectExecutor().scroll(
 						jdbcSelect,
 						scrollMode,
 						jdbcParameterBindings,
 						new SqmJdbcExecutionContextAdapter( executionContext, jdbcSelect ),
 						determineRowTransformer( sqm, resultType, tupleMetadata, executionContext.getQueryOptions() ),
-						resultCountEstimate
+						resultCountEstimate( jdbcParameterBindings, fetchExpression )
 				);
 			}
 			finally {
 				domainParameterXref.clearExpansions();
 			}
 		};
+	}
+
+	private static int resultCountEstimate(JdbcParameterBindings jdbcParameterBindings, Expression fetchExpression) {
+		return fetchExpression == null
+				? -1
+				: interpretIntExpression( fetchExpression, jdbcParameterBindings );
 	}
 
 	protected static SqmJdbcExecutionContextAdapter listInterpreterExecutionContext(
@@ -336,15 +323,15 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			SqmSelectStatement<?> sqm,
 			QueryOptions queryOptions) {
 		@SuppressWarnings("unchecked")
-		final TupleTransformer<T> tupleTransformer = (TupleTransformer<T>) queryOptions.getTupleTransformer();
+		final var tupleTransformer = (TupleTransformer<T>) queryOptions.getTupleTransformer();
 		return new RowTransformerTupleTransformerAdapter<>( adapterAliases( sqm ), tupleTransformer );
 	}
 
 	private static String[] adapterAliases(SqmSelectStatement<?> sqm) {
 		final List<String> aliases = new ArrayList<>();
-		for ( SqmSelection<?> sqmSelection : sqm.getQuerySpec().getSelectClause().getSelections() ) {
+		for ( var sqmSelection : sqm.getQuerySpec().getSelectClause().getSelections() ) {
 			// The row a tuple transformer gets to see only contains 1 element for a dynamic instantiation
-			final SqmSelectableNode<?> selectableNode = sqmSelection.getSelectableNode();
+			final var selectableNode = sqmSelection.getSelectableNode();
 			if ( selectableNode instanceof SqmDynamicInstantiation<?> ) {
 				aliases.add( sqmSelection.getAlias() );
 			}
@@ -377,7 +364,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	}
 
 	private <T, X> T withCacheableSqmInterpretation(DomainQueryExecutionContext executionContext, X context, SqmInterpreter<T, X> interpreter) {
-		// NOTE : VERY IMPORTANT - intentional double-lock checking
+		// NOTE: VERY IMPORTANT - intentional double-lock checking
 		//		The other option would be to leverage `java.util.concurrent.locks.ReadWriteLock`
 		//		to protect access.  However, synchronized is much simpler here.  We will verify
 		// 		during throughput testing whether this is an issue and consider changes then
@@ -459,31 +446,31 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			DomainParameterXref domainParameterXref,
 			DomainQueryExecutionContext executionContext,
 			MutableObject<JdbcParameterBindings> firstJdbcParameterBindingsConsumer) {
-		final SharedSessionContractImplementor session = executionContext.getSession();
-		final SessionFactoryImplementor sessionFactory = session.getFactory();
+		final var session = executionContext.getSession();
+		final var sessionFactory = session.getFactory();
 
-		final SqmTranslatorFactory sqmTranslatorFactory = sessionFactory.getQueryEngine().getSqmTranslatorFactory();
-		final SqmTranslator<SelectStatement> sqmTranslator = sqmTranslatorFactory.createSelectTranslator(
-				sqm,
-				executionContext.getQueryOptions(),
-				domainParameterXref,
-				executionContext.getQueryParameterBindings(),
-				executionContext.getSession().getLoadQueryInfluencers(),
-				sessionFactory.getSqlTranslationEngine(),
-				true
-		);
-		final SqmTranslation<SelectStatement> sqmInterpretation = sqmTranslator.translate();
+		final var sqmTranslator =
+				sessionFactory.getQueryEngine().getSqmTranslatorFactory()
+						.createSelectTranslator(
+								sqm,
+								executionContext.getQueryOptions(),
+								domainParameterXref,
+								executionContext.getQueryParameterBindings(),
+								executionContext.getSession().getLoadQueryInfluencers(),
+								sessionFactory.getSqlTranslationEngine(),
+								true
+						);
+		final var sqmInterpretation = sqmTranslator.translate();
 
-		final SqlAstTranslator<JdbcOperationQuerySelect> selectTranslator = sessionFactory
-				.getJdbcServices()
-				.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
-				.buildSelectTranslator( sessionFactory, sqmInterpretation.getSqlAst() );
+		final var selectTranslator =
+				sessionFactory.getJdbcServices().getJdbcEnvironment()
+						.getSqlAstTranslatorFactory()
+						.buildSelectTranslator( sessionFactory, sqmInterpretation.getSqlAst() );
 
 		final var jdbcParamsXref =
 				generateJdbcParamsXref( domainParameterXref, sqmInterpretation::getJdbcParamsBySqmParam );
 
-		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
+		final var jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
 				jdbcParamsXref,

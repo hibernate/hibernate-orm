@@ -10,15 +10,10 @@ import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.SimpleSelect;
-import org.hibernate.stat.spi.StatisticsImplementor;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import static org.hibernate.Timeouts.NO_WAIT_MILLI;
@@ -65,10 +60,10 @@ public abstract class AbstractSelectLockingStrategy implements LockingStrategy {
 	 */
 	@Deprecated
 	protected String generateLockString(int lockTimeout) {
-		final SessionFactoryImplementor factory = lockable.getFactory();
-		final LockOptions lockOptions = new LockOptions( lockMode );
+		final var factory = lockable.getFactory();
+		final var lockOptions = new LockOptions( lockMode );
 		lockOptions.setTimeOut( lockTimeout );
-		final SimpleSelect select =
+		final var select =
 				new SimpleSelect( factory )
 						.setLockOptions( lockOptions )
 						.setTableName( lockable.getRootTableName() )
@@ -87,26 +82,26 @@ public abstract class AbstractSelectLockingStrategy implements LockingStrategy {
 	public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session)
 			throws StaleObjectStateException, JDBCException {
 		final String sql = determineSql( timeout );
-		final SessionFactoryImplementor factory = session.getFactory();
-		final EntityPersister lockable = getLockable();
+		final var factory = session.getFactory();
+		final var lockable = getLockable();
 		try {
-			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-			final PreparedStatement st = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
+			final var jdbcCoordinator = session.getJdbcCoordinator();
+			final var preparedStatement = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
 			try {
-				lockable.getIdentifierType().nullSafeSet( st, id, 1, session );
+				lockable.getIdentifierType().nullSafeSet( preparedStatement, id, 1, session );
 				if ( lockable.isVersioned() ) {
 					lockable.getVersionType().nullSafeSet(
-							st,
+							preparedStatement,
 							version,
 							lockable.getIdentifierType().getColumnSpan( factory.getRuntimeMetamodels() ) + 1,
 							session
 					);
 				}
 
-				final ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st, sql );
+				final var resultSet = jdbcCoordinator.getResultSetReturn().extract( preparedStatement, sql );
 				try {
-					if ( !rs.next() ) {
-						final StatisticsImplementor statistics = factory.getStatistics();
+					if ( !resultSet.next() ) {
+						final var statistics = factory.getStatistics();
 						if ( statistics.isStatisticsEnabled() ) {
 							statistics.optimisticFailure( lockable.getEntityName() );
 						}
@@ -114,11 +109,11 @@ public abstract class AbstractSelectLockingStrategy implements LockingStrategy {
 					}
 				}
 				finally {
-					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( rs, st );
+					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( resultSet, preparedStatement );
 				}
 			}
 			finally {
-				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( st );
+				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( preparedStatement );
 				jdbcCoordinator.afterStatementExecution();
 			}
 		}

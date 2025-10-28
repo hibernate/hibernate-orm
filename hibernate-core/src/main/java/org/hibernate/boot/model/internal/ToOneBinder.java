@@ -335,6 +335,7 @@ public class ToOneBinder {
 		handleLazy( toOne, property );
 		handleFetch( toOne, property );
 		handleFetchProfileOverrides( toOne, property, propertyHolder, inferredData );
+		handleMapsId( toOne, property );
 	}
 
 	private static void handleLazy(ToOne toOne, MemberDetails property) {
@@ -370,6 +371,13 @@ public class ToOneBinder {
 		}
 		else {
 			toOne.setFetchMode( getFetchMode( getJpaFetchType( property ) ) );
+		}
+	}
+
+	private static void handleMapsId(ToOne toOne, MemberDetails property) {
+		final MapsId mapsIdAnnotation = property.getDirectAnnotationUsage( MapsId.class );
+		if ( mapsIdAnnotation != null ) {
+			toOne.setHasMapsId( true );
 		}
 	}
 

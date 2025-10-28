@@ -286,6 +286,9 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 */
 	Collection<FilterDefinition> getAutoEnabledFilters();
 
+	@Incubating
+	boolean hasLoadByKeyFilter();
+
 	/**
 	 * Obtain the {@link JdbcServices} service.
 	 */

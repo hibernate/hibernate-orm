@@ -182,6 +182,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private final transient Map<String, FilterDefinition> filters;
 	private final transient Collection<FilterDefinition> autoEnabledFilters = new ArrayList<>();
+	private transient boolean hasLoadByKeyFilter = false;
 	private final transient JavaType<Object> tenantIdentifierJavaType;
 
 	private final transient EventListenerGroups eventListenerGroups;
@@ -245,6 +246,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		for ( var filter : filters.values() ) {
 			if ( filter.isAutoEnabled() ) {
 				autoEnabledFilters.add( filter );
+			}
+			if ( filter.isAppliedToLoadByKey() ) {
+				hasLoadByKeyFilter = true;
 			}
 		}
 
@@ -960,6 +964,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public Collection<FilterDefinition> getAutoEnabledFilters() {
 		return autoEnabledFilters;
+	}
+
+	public boolean hasLoadByKeyFilter() {
+		return hasLoadByKeyFilter;
 	}
 
 	@Override

@@ -27,7 +27,7 @@ public final class JacksonJsonFormatMapper extends AbstractJsonFormatMapper {
 	private final ObjectMapper objectMapper;
 
 	public JacksonJsonFormatMapper() {
-		this( new ObjectMapper().findAndRegisterModules() );
+		this( new ObjectMapper().registerModules( ObjectMapper.findModules( JacksonJsonFormatMapper.class.getClassLoader() ) ) );
 	}
 
 	public JacksonJsonFormatMapper(ObjectMapper objectMapper) {

@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class UncorrelatedSubqueryTest {
 	@Test
 	public void testGetCorrelatedParentIllegalStateException(EntityManagerFactoryScope scope) {
-		// test that attempting to call getCorrelatedParent on a uncorrelated query/subquery
+		// test that attempting to call getCorrelatedParent on an uncorrelated query/subquery
 		// throws ISE
 
 		CriteriaBuilder builder = scope.getEntityManagerFactory().getCriteriaBuilder();

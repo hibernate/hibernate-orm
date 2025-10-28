@@ -4,17 +4,6 @@
  */
 package org.hibernate.orm.test.jpa.criteria.valuehandlingmode.inline;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
-import org.hibernate.cfg.AvailableSettings;
-
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.Setting;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -29,12 +18,23 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+
+import org.junit.jupiter.api.Test;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
 @Jpa(
 		annotatedClasses = {
 				ExpressionsTest.Address.class,
 				ExpressionsTest.Phone.class
-		}
-		, properties = @Setting(name = AvailableSettings.CRITERIA_VALUE_HANDLING_MODE, value = "inline")
+		},
+		properties = @Setting(name = AvailableSettings.CRITERIA_VALUE_HANDLING_MODE, value = "inline")
 )
 public class ExpressionsTest {
 
@@ -137,7 +137,7 @@ public class ExpressionsTest {
 		private String city;
 		private String state;
 		private String zip;
-		private List<Phone> phones = new java.util.ArrayList<Phone>();
+		private List<Phone> phones = new java.util.ArrayList<>();
 
 		public Address() {
 		}

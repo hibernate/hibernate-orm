@@ -105,27 +105,27 @@ public class GroupByTest {
 	}
 
 	@Entity(name = "Address")
-	@Table(name = "ADRESS_TABLE")
+	@Table(name = "ADDRESS_TABLE")
 	public static class Address {
 		@Id
 		private Integer id;
 
-		private String descriptiom;
+		private String description;
 
 		public Address() {
 		}
 
-		public Address(Integer id, String descriptiom) {
+		public Address(Integer id, String description) {
 			this.id = id;
-			this.descriptiom = descriptiom;
+			this.description = description;
 		}
 
 		public Integer getId() {
 			return id;
 		}
 
-		public String getDescriptiom() {
-			return descriptiom;
+		public String getDescription() {
+			return description;
 		}
 	}
 }

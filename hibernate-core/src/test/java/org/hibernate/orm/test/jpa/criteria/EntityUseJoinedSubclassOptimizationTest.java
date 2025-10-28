@@ -42,7 +42,7 @@ public class EntityUseJoinedSubclassOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "from Thing t where type(t) = House" )
+					entityManager.createSelectionQuery( "from Thing t where type(t) = House", Thing.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					// We need to join all tables because the EntityResult will create fetches for all subtypes.
@@ -95,7 +95,7 @@ public class EntityUseJoinedSubclassOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "select 1 from Thing t where type(t) = Building" )
+					entityManager.createSelectionQuery( "select 1 from Thing t where type(t) = Building", Integer.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals(
@@ -123,7 +123,7 @@ public class EntityUseJoinedSubclassOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "select t.id from Thing t where type(t) = House" )
+					entityManager.createSelectionQuery( "select t.id from Thing t where type(t) = House", Thing.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					// If we use select items directly, we only use the entity name on which the attribute was declared,
@@ -149,7 +149,7 @@ public class EntityUseJoinedSubclassOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "from Thing t where type(t) <> House" )
+					entityManager.createSelectionQuery( "from Thing t where type(t) <> House", Thing.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					// We need to join all tables because the EntityDomainResult will create fetches for all subtypes
@@ -200,7 +200,7 @@ public class EntityUseJoinedSubclassOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "from Thing t where type(t) in (House, Car)" )
+					entityManager.createSelectionQuery( "from Thing t where type(t) in (House, Car)", Thing.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals(
@@ -249,7 +249,7 @@ public class EntityUseJoinedSubclassOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "from Thing t where type(t) in (House, Skyscraper)" )
+					entityManager.createSelectionQuery( "from Thing t where type(t) in (House, Skyscraper)", Thing.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals(
@@ -298,7 +298,7 @@ public class EntityUseJoinedSubclassOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "from Thing t where type(t) not in (House, Car)" )
+					entityManager.createSelectionQuery( "from Thing t where type(t) not in (House, Car)", Thing.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals(
@@ -347,7 +347,7 @@ public class EntityUseJoinedSubclassOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "from Thing t where treat(t as House).familyName is not null" )
+					entityManager.createSelectionQuery( "from Thing t where treat(t as House).familyName is not null", Thing.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					// We need to join all tables because the EntityResult will create fetches for all subtypes.
@@ -389,7 +389,7 @@ public class EntityUseJoinedSubclassOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "select treat(t as House) from Thing t where treat(t as House).familyName is not null" )
+					entityManager.createSelectionQuery( "select treat(t as House) from Thing t where treat(t as House).familyName is not null", Thing.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					// We need to join all tables because the EntityResult will create fetches for all subtypes.
@@ -416,7 +416,7 @@ public class EntityUseJoinedSubclassOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "from Thing t where treat(t as Skyscraper).doors is not null" )
+					entityManager.createSelectionQuery( "from Thing t where treat(t as Skyscraper).doors is not null", Thing.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals(
@@ -465,7 +465,7 @@ public class EntityUseJoinedSubclassOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "select treat(t as Skyscraper) from Thing t where treat(t as Skyscraper).doors is not null" )
+					entityManager.createSelectionQuery( "select treat(t as Skyscraper) from Thing t where treat(t as Skyscraper).doors is not null", Thing.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals(
@@ -494,7 +494,7 @@ public class EntityUseJoinedSubclassOptimizationTest {
 		scope.inTransaction(
 				entityManager -> {
 					sqlStatementInterceptor.clear();
-					entityManager.createSelectionQuery( "select t.nr from Skyscraper t" )
+					entityManager.createSelectionQuery( "select t.nr from Skyscraper t", Integer.class )
 							.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals(

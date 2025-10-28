@@ -33,7 +33,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public class CriteriaWithDynamicInstantiationAndOrderByTest {
 
 	private static final Long ITEM_ID = 1l;
-	private static final String ITEM_NAME = "cisel";
+	private static final String ITEM_NAME = "chisel";
 
 	@BeforeAll
 	public void setUp(EntityManagerFactoryScope scope) {

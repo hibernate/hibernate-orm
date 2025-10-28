@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.jpa.criteria;
 
-import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -20,31 +19,39 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Andrea Boriero
  */
-public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				TreatJoinTest.Item.class,
+				TreatJoinTest.Price.class,
+				TreatJoinTest.Book.class,
+				TreatJoinTest.Bid.class,
+				TreatJoinTest.Author.class,
+				TreatJoinTest.Car.class,
+				TreatJoinTest.Person.class}
+)
+public class TreatJoinTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {Item.class, Price.class, Book.class, Bid.class, Author.class, Car.class, Person.class};
-	}
-
-	@Before
-	public void setUp(){
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	@BeforeEach
+	public void setUp(EntityManagerFactoryScope scope){
+		scope.inTransaction( entityManager -> {
 			Price price = new Price( 10, "EUR" );
 			Author author = new Author( "Andrea Camilleri" );
 			Book book = new Book( author, "Il nipote del Negus", price );
@@ -58,10 +65,15 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 	}
 
+	@AfterEach
+	public void cleanupTestData(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
+	}
+
 	@Test
 	@JiraKey(value = "HHH-8488")
-	public void testTreatJoin() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testTreatJoin(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			CriteriaQuery<String> query = cb.createQuery( String.class );
 			Root<Bid> bid = query.from( Bid.class );
@@ -76,8 +88,8 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-8488")
-	public void testTreatJoin2() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testTreatJoin2(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Bid> query = cb.createQuery( Bid.class );
 			Root<Bid> bid = query.from( Bid.class );
@@ -95,8 +107,8 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-8488")
-	public void testJoinMethodOnATreatedJoin() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testJoinMethodOnATreatedJoin(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			CriteriaQuery<String> query = cb.createQuery( String.class );
 			Root<Bid> bid = query.from( Bid.class );
@@ -117,8 +129,8 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey( value = "HHH-11081")
-	public void testTreatedJoinInWhereClause() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testTreatedJoinInWhereClause(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Bid> query = cb.createQuery( Bid.class );
 			Root<Bid> bid = query.from( Bid.class );
@@ -134,8 +146,8 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-10561")
-	public void testJoinOnTreatedRoot() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testJoinOnTreatedRoot(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Item> criteria = cb.createQuery(Item.class);
 			Root<Item> root = criteria.from(Item.class);
@@ -153,8 +165,8 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-10561")
-	public void testJoinOnTreatedRootWithJoin() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testJoinOnTreatedRootWithJoin(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Item> criteria = cb.createQuery(Item.class);
 			Root<Item> root = criteria.from(Item.class);
@@ -170,8 +182,8 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-10767")
-	public void testJoinOnTreatedJoin() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testJoinOnTreatedJoin(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Bid> criteria = cb.createQuery(Bid.class);
 			Root<Bid> root = criteria.from(Bid.class);

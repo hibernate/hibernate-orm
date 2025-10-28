@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinTable;
@@ -20,96 +18,94 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Janario Oliveira
  * @author Gail Badner
  */
-public class SuperclassCollectionTest extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				PersonBaseBase.class, Person.class, OtherPerson.class, Address.class,
-				OtherSubclass.class
-		};
-	}
+@Jpa(annotatedClasses = {
+		SuperclassCollectionTest.PersonBaseBase.class,
+		SuperclassCollectionTest.Person.class,
+		SuperclassCollectionTest.OtherPerson.class,
+		SuperclassCollectionTest.Address.class,
+		SuperclassCollectionTest.OtherSubclass.class
+})
+public class SuperclassCollectionTest {
 
 	@Test
-	public void testPerson() {
+	public void testPerson(EntityManagerFactoryScope scope) {
 		String address = "super-address";
 		String localAddress = "local-address";
 
-		PersonBaseBase person = createPerson( new Person(), address, localAddress );
+		PersonBaseBase person = createPerson( scope, new Person(), address, localAddress );
 
-		assertAddress( person, address, localAddress );
+		assertAddress( scope, person, address, localAddress );
 	}
 
 	@Test
-	public void testOtherSubclass() {
+	public void testOtherSubclass(EntityManagerFactoryScope scope) {
 		String address = "other-super-address";
 		String localAddress = "other-local-address";
-		PersonBaseBase person = createPerson( new OtherSubclass(), address, localAddress );
+		PersonBaseBase person = createPerson( scope, new OtherSubclass(), address, localAddress );
 
-		assertAddress( person, address, localAddress );
+		assertAddress( scope, person, address, localAddress );
 	}
 
 	@Test
 	@JiraKey( value = "HHH-10556")
-	public void testOtherPerson() {
+	public void testOtherPerson(EntityManagerFactoryScope scope) {
 		String address = "other-person-super-address";
 		String localAddress = "other-person-local-address";
 
-		PersonBaseBase person = createPerson( new OtherPerson(), address, localAddress );
+		PersonBaseBase person = createPerson( scope, new OtherPerson(), address, localAddress );
 
-		assertAddress( person, address, localAddress );
+		assertAddress( scope, person, address, localAddress );
 	}
 
-	private void assertAddress(PersonBaseBase person, String address, String localAddress) {
-		List<Object> results = find( person.getClass(), person.id, "addresses" );
+	private void assertAddress(EntityManagerFactoryScope scope, PersonBaseBase person, String address, String localAddress) {
+		List<Object> results = find( scope, person.getClass(), person.id, "addresses" );
 		assertEquals( 1, results.size() );
 
 		assertEquals( person.addresses.get( 0 ).id, ( (Address) results.get( 0 ) ).id );
 		assertEquals( address, ( (Address) results.get( 0 ) ).name );
 
 
-		results = find( person.getClass(), person.id, "localAddresses" );
+		results = find( scope, person.getClass(), person.id, "localAddresses" );
 		assertEquals( 1, results.size() );
 
 		assertEquals( person.getLocalAddresses().get( 0 ).id, ( (Address) results.get( 0 ) ).id );
 		assertEquals( localAddress, ( (Address) results.get( 0 ) ).name );
 
-		getOrCreateEntityManager().close();
 	}
 
-	private PersonBaseBase createPerson(PersonBaseBase person, String address, String localAddress) {
-		EntityManager em = createEntityManager();
-		EntityTransaction tx = em.getTransaction();
-		tx.begin();
+	private PersonBaseBase createPerson(EntityManagerFactoryScope scope, PersonBaseBase person, String address, String localAddress) {
+		PersonBaseBase personBaseBase;
 
 		person.addresses.add( new Address( address ) );
 		person.getLocalAddresses().add( new Address( localAddress ) );
-		person = em.merge( person );
-		tx.commit();
-		return person;
+		personBaseBase = scope.fromTransaction( entityManager -> entityManager.merge( person ) );
+		return personBaseBase;
 	}
 
-	private List<Object> find(Class<?> clazz, int id, String path) {
-		EntityManager em = createEntityManager();
-		CriteriaBuilder cb = em.getCriteriaBuilder();
-		CriteriaQuery<Object> cq = cb.createQuery();
-		Root<?> root = cq.from( clazz );
+	private List<Object> find(EntityManagerFactoryScope scope, Class<?> clazz, int id, String path) {
+		return scope.fromEntityManager(  entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaQuery<Object> cq = cb.createQuery();
+			Root<?> root = cq.from( clazz );
 
-		cq.select( root.get( path ) )
-				.where( cb.equal( root.get( "id" ), id ) );
+			cq.select( root.get( path ) )
+					.where( cb.equal( root.get( "id" ), id ) );
 
-		TypedQuery<Object> query = em.createQuery( cq );
-		return query.getResultList();
+			TypedQuery<Object> query = entityManager.createQuery( cq );
+			return query.getResultList();
+		} );
 	}
 
 	@Entity(name="Address")
@@ -133,7 +129,7 @@ public class SuperclassCollectionTest extends BaseEntityManagerFunctionalTestCas
 		@GeneratedValue
 		Integer id;
 		@OneToMany(cascade = CascadeType.ALL)
-		List<Address> addresses = new ArrayList<Address>();
+		List<Address> addresses = new ArrayList<>();
 
 		protected abstract List<Address> getLocalAddresses();
 	}
@@ -146,7 +142,7 @@ public class SuperclassCollectionTest extends BaseEntityManagerFunctionalTestCas
 	public static class Person extends PersonBase {
 		@OneToMany(cascade = CascadeType.ALL)
 		@JoinTable(name = "person_localaddress")
-		List<Address> localAddresses = new ArrayList<Address>();
+		List<Address> localAddresses = new ArrayList<>();
 
 		@Override
 		public List<Address> getLocalAddresses() {
@@ -166,7 +162,7 @@ public class SuperclassCollectionTest extends BaseEntityManagerFunctionalTestCas
 	public static class OtherSubclass extends PersonBaseBase {
 		@OneToMany(cascade = CascadeType.ALL)
 		@JoinTable(name = "other_person_localaddress")
-		List<Address> localAddresses = new ArrayList<Address>();
+		List<Address> localAddresses = new ArrayList<>();
 
 		@Override
 		public List<Address> getLocalAddresses() {

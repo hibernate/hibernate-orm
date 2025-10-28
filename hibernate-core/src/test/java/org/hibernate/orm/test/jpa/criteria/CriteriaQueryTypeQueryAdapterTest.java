@@ -4,16 +4,6 @@
  */
 package org.hibernate.orm.test.jpa.criteria;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-
-import java.io.Serializable;
-import java.time.Instant;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
@@ -26,27 +16,31 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.Query;
 import org.hibernate.query.SemanticException;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
 
-public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunctionalTestCase {
+import org.junit.jupiter.api.Test;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Bid.class,
-				Item.class
-		};
-	}
+import java.io.Serializable;
+import java.time.Instant;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+@Jpa(annotatedClasses = {CriteriaQueryTypeQueryAdapterTest.Bid.class, CriteriaQueryTypeQueryAdapterTest.Item.class})
+public class CriteriaQueryTypeQueryAdapterTest {
 
 	@Test
 	@JiraKey(value = "HHH-12685")
-	public void testCriteriaQueryParameterIsBoundCheckNotFails() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testCriteriaQueryParameterIsBoundCheckNotFails(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Item> query = builder.createQuery( Item.class );
 			Root<Item> root = query.from( Item.class );
@@ -62,8 +56,8 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 
 	@Test
 	@JiraKey(value = "HHH-12685")
-	public void testCriteriaQueryGetParameters() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testCriteriaQueryGetParameters(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Item> query = builder.createQuery( Item.class );
 			Root<Item> root = query.from( Item.class );
@@ -82,54 +76,69 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 	}
 
 	@JiraKey(value = "HHH-12685")
-	@Test(expected = IllegalArgumentException.class)
-	public void testCriteriaQueryGetParameterOfWrongType() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-			CriteriaQuery<Item> query = builder.createQuery( Item.class );
-			Root<Item> root = query.from( Item.class );
-			ParameterExpression<String> parameter = builder.parameter( String.class, "name" );
-			Predicate predicate = builder.equal( root.get( "name" ), parameter );
-			query.where( predicate );
-			TypedQuery<Item> criteriaQuery = entityManager.createQuery( query );
-			criteriaQuery.getParameter( "name", Integer.class );
-		} );
+	@Test
+	public void testCriteriaQueryGetParameterOfWrongType(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager ->
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+						CriteriaQuery<Item> query = builder.createQuery( Item.class );
+						Root<Item> root = query.from( Item.class );
+						ParameterExpression<String> parameter = builder.parameter( String.class, "name" );
+						Predicate predicate = builder.equal( root.get( "name" ), parameter );
+						query.where( predicate );
+						TypedQuery<Item> criteriaQuery = entityManager.createQuery( query );
+						criteriaQuery.getParameter( "name", Integer.class );
+					}
+			)
+		);
 	}
 
 	@JiraKey(value = "HHH-12685")
-	@Test(expected = IllegalArgumentException.class)
-	public void testCriteriaQueryGetNonExistingParameter() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-			CriteriaQuery<Item> query = builder.createQuery( Item.class );
-			Root<Item> root = query.from( Item.class );
-			ParameterExpression<String> parameter = builder.parameter( String.class, "name" );
-			Predicate predicate = builder.equal( root.get( "name" ), parameter );
-			query.where( predicate );
-			TypedQuery<Item> criteriaQuery = entityManager.createQuery( query );
-			criteriaQuery.getParameter( "placedAt" );
-		} );
-	}
-
-	@Test(expected = IllegalArgumentException.class)
-	@JiraKey("HHH-13932")
-	public void testCriteriaQuerySetNonExistingParameter() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-			CriteriaQuery<Item> query = builder.createQuery( Item.class );
-			Root<Item> root = query.from( Item.class );
-			ParameterExpression<String> parameter = builder.parameter( String.class, "name" );
-			Predicate predicate = builder.equal( root.get( "name" ), parameter );
-			query.where( predicate );
-			TypedQuery<Item> criteriaQuery = entityManager.createQuery( query );
-			ParameterExpression<String> nonExistingParam = builder.parameter( String.class, "nonExistingParam" );
-			criteriaQuery.setParameter( nonExistingParam, "George" );
-		} );
+	@Test
+	public void testCriteriaQueryGetNonExistingParameter(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager ->
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+						CriteriaQuery<Item> query = builder.createQuery( Item.class );
+						Root<Item> root = query.from( Item.class );
+						ParameterExpression<String> parameter = builder.parameter( String.class, "name" );
+						Predicate predicate = builder.equal( root.get( "name" ), parameter );
+						query.where( predicate );
+						TypedQuery<Item> criteriaQuery = entityManager.createQuery( query );
+						criteriaQuery.getParameter( "placedAt" );
+					}
+			)
+		);
 	}
 
 	@Test
-	public void testSetParameterPassingTypeNotFails() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	@JiraKey("HHH-13932")
+	public void testCriteriaQuerySetNonExistingParameter(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager ->
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+						CriteriaQuery<Item> query = builder.createQuery( Item.class );
+						Root<Item> root = query.from( Item.class );
+						ParameterExpression<String> parameter = builder.parameter( String.class, "name" );
+						Predicate predicate = builder.equal( root.get( "name" ), parameter );
+						query.where( predicate );
+						TypedQuery<Item> criteriaQuery = entityManager.createQuery( query );
+						ParameterExpression<String> nonExistingParam = builder.parameter( String.class, "nonExistingParam" );
+						criteriaQuery.setParameter( nonExistingParam, "George" );
+					}
+			)
+		);
+	}
+
+	@Test
+	public void testSetParameterPassingTypeNotFails(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Item> query = builder.createQuery( Item.class );
 
@@ -146,8 +155,8 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 	}
 
 	@Test
-	public void testSetParameterTypeInstantNotFails() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testSetParameterTypeInstantNotFails(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Bid> query = builder.createQuery( Bid.class );
 
@@ -163,41 +172,51 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 		} );
 	}
 
-	@Test(expected = SemanticException.class)
-	public void testSetParameterOfTypeInstantToAFloatParameterType() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-			CriteriaQuery<Bid> query = builder.createQuery( Bid.class );
+	@Test
+	public void testSetParameterOfTypeInstantToAFloatParameterType(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager ->
+			assertThrows(
+					SemanticException.class,
+					() -> {
+						CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+						CriteriaQuery<Bid> query = builder.createQuery( Bid.class );
 
-			Predicate predicate = builder.equal(
-					query.from( Bid.class ).get( "amount" ),
-					builder.parameter( Instant.class, "placedAt" )
-			);
-			query.where( predicate );
+						Predicate predicate = builder.equal(
+								query.from( Bid.class ).get( "amount" ),
+								builder.parameter( Instant.class, "placedAt" )
+						);
+						query.where( predicate );
 
-			Query<?> criteriaQuery = (Query<?>) entityManager.createQuery( query );
+						Query<?> criteriaQuery = (Query<?>) entityManager.createQuery( query );
 
-			criteriaQuery.setParameter( "placedAt", Instant.now() ).list();
-		} );
+						criteriaQuery.setParameter( "placedAt", Instant.now() ).list();
+					}
+			)
+		);
 	}
 
 
-	@Test(expected = SemanticException.class)
-	public void testSetParameterOfTypeDateToAFloatParameterType() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-			CriteriaQuery<Bid> query = builder.createQuery( Bid.class );
+	@Test
+	public void testSetParameterOfTypeDateToAFloatParameterType(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager ->
+			assertThrows(
+					SemanticException.class,
+					() -> {
+						CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+						CriteriaQuery<Bid> query = builder.createQuery( Bid.class );
 
-			Predicate predicate = builder.equal(
-					query.from( Bid.class ).get( "amount" ),
-					builder.parameter( Date.class, "placedAt" )
-			);
-			query.where( predicate );
+						Predicate predicate = builder.equal(
+								query.from( Bid.class ).get( "amount" ),
+								builder.parameter( Date.class, "placedAt" )
+						);
+						query.where( predicate );
 
-			Query<?> criteriaQuery = (Query<?>) entityManager.createQuery( query );
+						Query<?> criteriaQuery = (Query<?>) entityManager.createQuery( query );
 
-			criteriaQuery.setParameter( "placedAt", Date.from(Instant.now()), TemporalType.DATE ).list();
-		} );
+						criteriaQuery.setParameter( "placedAt", Date.from(Instant.now()), TemporalType.DATE ).list();
+					}
+			)
+		);
 	}
 
 	@Entity(name = "Bid")

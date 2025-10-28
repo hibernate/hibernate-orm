@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.jpa.criteria.selectcase;
 
-import java.util.List;
-import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
@@ -15,15 +13,16 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.criteria.ValueHandlingMode;
-
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests query rendering and execution
@@ -40,17 +39,16 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Fabio Massimo Ercoli
  */
-public class SelectCaseLiteralHandlingBindTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Programmer.class };
-	}
+@Jpa(
+		annotatedClasses = {SelectCaseLiteralHandlingBindTest.Programmer.class},
+		integrationSettings = {@Setting(name = AvailableSettings.CRITERIA_VALUE_HANDLING_MODE,
+				value = "BIND")}
+)
+public class SelectCaseLiteralHandlingBindTest {
 
 	@Test
-	public void selectCaseExpression() {
-
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void selectCaseExpression(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Tuple> query = cb.createTupleQuery();
 			Root<Programmer> programmer = query.from( Programmer.class );
@@ -73,9 +71,8 @@ public class SelectCaseLiteralHandlingBindTest extends BaseEntityManagerFunction
 
 	@Test
 	@JiraKey(value = "HHH-13001")
-	public void selectSumOnCaseExpression() {
-
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void selectSumOnCaseExpression(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Tuple> query = cb.createTupleQuery();
 			Root<Programmer> programmer = query.from( Programmer.class );
@@ -99,9 +96,8 @@ public class SelectCaseLiteralHandlingBindTest extends BaseEntityManagerFunction
 	}
 
 	@Test
-	public void whereCaseExpression() {
-
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void whereCaseExpression(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Programmer> query = cb.createQuery(Programmer.class);
 			Root<Programmer> programmer = query.from( Programmer.class );
@@ -120,13 +116,6 @@ public class SelectCaseLiteralHandlingBindTest extends BaseEntityManagerFunction
 			assertNotNull( resultList );
 			assertTrue( resultList.isEmpty() );
 		} );
-	}
-
-	@Override
-	protected Map getConfig() {
-		Map config = super.getConfig();
-		config.put( AvailableSettings.CRITERIA_VALUE_HANDLING_MODE, ValueHandlingMode.BIND );
-		return config;
 	}
 
 	@Entity(name = "Programmer")

@@ -20,7 +20,7 @@ public interface SqmCacheable {
 	int cacheHashCode();
 
 	static boolean areCompatible(@Nullable SqmCacheable e1, @Nullable SqmCacheable e2) {
-		return e1 == null ? e2 == null : e1.isCompatible( e2 );
+		return e1 == null ? e2 == null : e2 != null && e1.isCompatible( e2 );
 	}
 
 	static boolean areCompatible(@Nullable Collection<? extends SqmCacheable> collection1, @Nullable Collection<? extends SqmCacheable> collection2) {

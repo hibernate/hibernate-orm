@@ -71,12 +71,26 @@ public class ConfigLoader {
 
 	public LoadedConfig loadConfigXmlFile(File cfgXmlFile) {
 		try {
-			final JaxbCfgHibernateConfiguration jaxbCfg = jaxbProcessorHolder.getValue().unmarshal(
-					new FileInputStream( cfgXmlFile ),
-					new Origin( SourceType.FILE, cfgXmlFile.getAbsolutePath() )
-			);
+			FileInputStream cfgFileStream = null;
+			try {
+				cfgFileStream = new FileInputStream( cfgXmlFile );
 
-			return LoadedConfig.consume( jaxbCfg );
+				final JaxbCfgHibernateConfiguration jaxbCfg = jaxbProcessorHolder.getValue().unmarshal(
+						cfgFileStream,
+						new Origin( SourceType.FILE, cfgXmlFile.getAbsolutePath() )
+				);
+
+				return LoadedConfig.consume( jaxbCfg );
+			}
+			finally {
+				try {
+					assert cfgFileStream != null;
+					cfgFileStream.close();
+				}
+				catch (IOException e) {
+					log.debug( "Unable to close cfg.xml URL stream", e );
+				}
+			}
 		}
 		catch (FileNotFoundException e) {
 			throw new ConfigurationException(

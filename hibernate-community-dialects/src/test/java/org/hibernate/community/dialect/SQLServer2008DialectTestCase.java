@@ -169,7 +169,7 @@ public class SQLServer2008DialectTestCase extends BaseUnitTestCase {
 				"select top(?) col0_.CONTENTID as CONTENT1_12_ " +
 						"where col0_.CONTENTTYPE='PAGE' and (col0_.CONTENTID in " +
 						"(select distinct col2_.PREVVER from CONTENT col2_ where (col2_.PREVVER is not null)))",
-				withLimit( selectDistinctSubselectSQL, toRowSelection( 0, 5 ) )
+				withLimit( selectDistinctSubselectSQL, toRowSelection( null, 5 ) )
 		);
 	}
 
@@ -255,7 +255,7 @@ public class SQLServer2008DialectTestCase extends BaseUnitTestCase {
 		assertEquals(
 				"select top(?) product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
 						"from Product2 product2x0_ order by product2x0_.id",
-				withLimit( query, toRowSelection( 0, 1 ) )
+				withLimit( query, toRowSelection( null, 1 ) )
 		);
 
 		final String distinctQuery = "select distinct product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
@@ -264,7 +264,7 @@ public class SQLServer2008DialectTestCase extends BaseUnitTestCase {
 		assertEquals(
 				"select distinct top(?) product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
 						"from Product2 product2x0_ order by product2x0_.id",
-				withLimit( distinctQuery, toRowSelection( 0, 5 ) )
+				withLimit( distinctQuery, toRowSelection( null, 5 ) )
 		);
 	}
 
@@ -407,14 +407,14 @@ public class SQLServer2008DialectTestCase extends BaseUnitTestCase {
 
 		assertEquals(
 				"select top(?) t1.c1 as col_0_0, (select case when count(t2.c1)>0 then 'ADDED' else 'UNMODIFIED' end from table2 t2 WHERE (t2.c1 in (?))) as col_1_0 from table1 t1 WHERE 1=1 ORDER BY t1.c1 ASC",
-				withLimit( query, toRowSelection( 0, 5 ) )
+				withLimit( query, toRowSelection( null, 5 ) )
 		);
 	}
 
 	@Test
 	@JiraKey("HHH-8916")
 	public void testGetLimitStringUsingCTEQueryNoOffset() {
-		Limit selection = toRowSelection( 0, 5 );
+		Limit selection = toRowSelection( null, 5 );
 
 		// test top-based CTE with single CTE query_ definition with no odd formatting
 		final String query1 = "WITH a (c1, c2) AS (SELECT c1, c2 FROM t) SELECT c1, c2 FROM a";
@@ -640,7 +640,7 @@ public class SQLServer2008DialectTestCase extends BaseUnitTestCase {
 		return dialect.getLimitHandler().processSql( sql, -1, null, new LimitQueryOptions( limit ) );
 	}
 
-	private Limit toRowSelection(int firstRow, int maxRows) {
+	private Limit toRowSelection(Integer firstRow, Integer maxRows) {
 		Limit selection = new Limit();
 		selection.setFirstRow( firstRow );
 		selection.setMaxRows( maxRows );

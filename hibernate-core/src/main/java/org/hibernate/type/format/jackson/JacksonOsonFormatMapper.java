@@ -34,7 +34,7 @@ public final class JacksonOsonFormatMapper extends AbstractJsonFormatMapper {
 	 * Creates a new JacksonOsonFormatMapper
 	 */
 	public JacksonOsonFormatMapper() {
-		this( new ObjectMapper().findAndRegisterModules() );
+		this( new ObjectMapper().registerModules( ObjectMapper.findModules( JacksonOsonFormatMapper.class.getClassLoader() ) ) );
 	}
 
 	public JacksonOsonFormatMapper(ObjectMapper objectMapper) {

@@ -70,18 +70,16 @@ public class InstrumentationDetector extends EntityModelDetector {
 		} else if(enhanceEnabled){
 			Class<?>[] interfaces = mappedClass.getInterfaces();
 			boolean enhanced = false;
-			for (int i = 0; i < interfaces.length; i++) {
-				Class<?> intface = interfaces[i];	
-				if(intface.getName().equals(Managed.class.getName())) {
-					enhanced = true;
-				} 							
-			}
+            for (Class<?> intface : interfaces) {
+                if (intface.getName().equals(Managed.class.getName())) {
+                    enhanced = true;
+                    break;
+                }
+            }
 			
-			if (enhanceEnabled && !enhanced) {
+			if (!enhanced) {
 				collector.reportIssue( new Issue("LAZY_NOT_INSTRUMENTED", Issue.HIGH_PRIORITY, "'" + clazz.getEntityName() + "' has lazy='false', but its class '" + mappedClass.getName() + "' has not been instrumented with javaassist") );
 				return;
-			} else {
-				// unknown bytecodeprovider...can't really check for that.
 			}
 			
 		}
@@ -89,7 +87,6 @@ public class InstrumentationDetector extends EntityModelDetector {
 
 	@Override
 	protected void visitProperty(
-			PersistentClass clazz, 
 			Property property,
 			IssueCollector collector) {
 	}

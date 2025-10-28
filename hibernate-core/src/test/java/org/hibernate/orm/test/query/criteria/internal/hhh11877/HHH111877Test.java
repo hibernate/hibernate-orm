@@ -8,32 +8,29 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
-
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Archie Cobbs
  * @author Nathan Xu
  */
-@JiraKey( value = "HHH-11877" )
-@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-public class HHH111877Test extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Foo.class };
-	}
+@JiraKey(value = "HHH-11877")
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
+@Jpa(
+		annotatedClasses = {
+				Foo.class
+		}
+)
+public class HHH111877Test {
 
 	@Test
-	public void testNoExceptionThrow() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testNoExceptionThrow(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
 			final CriteriaQuery<Foo> cq = cb.createQuery( Foo.class );

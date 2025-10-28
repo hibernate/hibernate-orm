@@ -9,37 +9,32 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
-
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Archie Cobbs
  * @author Nathan Xu
  */
-@JiraKey( value = "HHH-14197" )
-@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-public class HHH14197Test extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
+@JiraKey(value = "HHH-14197")
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
+@Jpa(
+		annotatedClasses = {
 				Department.class,
 				Employee.class
-		};
-	}
+		}
+)
+public class HHH14197Test {
 
 	@Test
-	public void testValidSQLGenerated() {
+	public void testValidSQLGenerated(EntityManagerFactoryScope scope) {
 		// without fixing HHH-14197, invalid SQL would be generated without root
 		// "... where exists (select employee0_.id as id1_1_ from  where ...) ... "
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			final CriteriaQuery<Employee> query = cb.createQuery( Employee.class );
 			final Root<Employee> employee = query.from( Employee.class );

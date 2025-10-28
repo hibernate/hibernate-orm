@@ -4,9 +4,6 @@
  */
 package org.hibernate.orm.test.query.hql;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -14,99 +11,83 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
-
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Christian Beikov
  */
-public class CountExpressionTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				CountExpressionTest.Document.class,
+				CountExpressionTest.Person.class,
+				CountExpressionTest.CountDistinctTestEntity.class
+		}
+)
+@SessionFactory
+public class CountExpressionTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-			Document.class,
-			Person.class,
-			CountDistinctTestEntity.class
-		};
-	}
-
-	@Override
-	protected void prepareTest() throws Exception {
-		doInHibernate( this::sessionFactory, session -> {
+	@BeforeEach
+	public void prepareTest(SessionFactoryScope scope) throws Exception {
+		scope.inTransaction( session -> {
 			Document document = new Document();
 			document.setId( 1 );
 
 			Person p1 = new Person();
 			Person p2 = new Person();
 
-			p1.getLocalized().put(1, "p1.1");
-			p1.getLocalized().put(2, "p1.2");
-			p2.getLocalized().put(1, "p2.1");
-			p2.getLocalized().put(2, "p2.2");
+			p1.getLocalized().put( 1, "p1.1" );
+			p1.getLocalized().put( 2, "p1.2" );
+			p2.getLocalized().put( 1, "p2.1" );
+			p2.getLocalized().put( 2, "p2.2" );
 
-			document.getContacts().put(1, p1);
-			document.getContacts().put(2, p2);
+			document.getContacts().put( 1, p1 );
+			document.getContacts().put( 2, p2 );
 
-			session.persist(p1);
-			session.persist(p2);
-			session.persist(document);
+			session.persist( p1 );
+			session.persist( p2 );
+			session.persist( document );
 		} );
 	}
 
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
+
 
 	@Test
 	@JiraKey(value = "HHH-9182")
-	public void testCountDistinctExpression() {
-		doInHibernate( this::sessionFactory, session -> {
-			List results = session.createQuery(
-				"SELECT " +
-				"	d.id, " +
-				"	COUNT(DISTINCT CONCAT(CAST(KEY(l) AS String), 'test')) " +
-				"FROM Document d " +
-				"LEFT JOIN d.contacts c " +
-				"LEFT JOIN c.localized l " +
-				"GROUP BY d.id")
-			.getResultList();
-
-			assertEquals(1, results.size());
-			Object[] tuple = (Object[]) results.get( 0 );
-			assertEquals(1, tuple[0]);
-			assertEquals(2L, tuple[1]);
-		} );
-	}
-
-	@Test
-	@JiraKey(value = "HHH-11042")
-	@SkipForDialect(dialectClass = InformixDialect.class,
-			reason = "Informix allows only one column in count(distinct)")
-	public void testCountDistinctTuple() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testCountDistinctExpression(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			List results = session.createQuery(
 							"SELECT " +
-									"	d.id, " +
-									"	COUNT(DISTINCT (KEY(l), l)) " +
-									"FROM Document d " +
-									"LEFT JOIN d.contacts c " +
-									"LEFT JOIN c.localized l " +
-									"GROUP BY d.id")
+							"	d.id, " +
+							"	COUNT(DISTINCT CONCAT(CAST(KEY(l) AS String), 'test')) " +
+							"FROM Document d " +
+							"LEFT JOIN d.contacts c " +
+							"LEFT JOIN c.localized l " +
+							"GROUP BY d.id" )
 					.getResultList();
 
-			assertEquals(1, results.size());
+			assertThat( results ).hasSize( 1 );
+
 			Object[] tuple = (Object[]) results.get( 0 );
-			assertEquals(1, tuple[0]);
-			assertEquals(4L, tuple[1]);
+			assertThat( tuple[0] ).isEqualTo( 1 );
+			assertThat( tuple[1] ).isEqualTo( 2L );
 		} );
 	}
 
@@ -114,20 +95,44 @@ public class CountExpressionTest extends BaseCoreFunctionalTestCase {
 	@JiraKey(value = "HHH-11042")
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "Informix allows only one column in count(distinct)")
-	public void testCountDistinctTupleSanity() {
-		doInHibernate( this::sessionFactory, session -> {
-			// A simple concatenation of tuple arguments would produce a distinct count of 1 in this case
-			// This test checks if the chr(0) count tuple distinct emulation works correctly
-			session.persist( new CountDistinctTestEntity("10", "1") );
-			session.persist( new CountDistinctTestEntity("1", "01") );
-			List<Long> results = session.createQuery("SELECT count(distinct (t.x,t.y)) FROM CountDistinctTestEntity t", Long.class)
+	public void testCountDistinctTuple(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			List results = session.createQuery(
+							"SELECT " +
+							"	d.id, " +
+							"	COUNT(DISTINCT (KEY(l), l)) " +
+							"FROM Document d " +
+							"LEFT JOIN d.contacts c " +
+							"LEFT JOIN c.localized l " +
+							"GROUP BY d.id" )
 					.getResultList();
 
-			assertEquals(1, results.size());
-			assertEquals( 2L, results.get( 0 ).longValue() );
+			assertThat( results ).hasSize( 1 );
+
+			Object[] tuple = (Object[]) results.get( 0 );
+			assertThat( tuple[0] ).isEqualTo( 1 );
+			assertThat( tuple[1] ).isEqualTo( 4L );
 		} );
 	}
 
+	@Test
+	@JiraKey(value = "HHH-11042")
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Informix allows only one column in count(distinct)")
+	public void testCountDistinctTupleSanity(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			// A simple concatenation of tuple arguments would produce a distinct count of 1 in this case
+			// This test checks if the chr(0) count tuple distinct emulation works correctly
+			session.persist( new CountDistinctTestEntity( "10", "1" ) );
+			session.persist( new CountDistinctTestEntity( "1", "01" ) );
+			List<Long> results = session.createQuery( "SELECT count(distinct (t.x,t.y)) FROM CountDistinctTestEntity t",
+							Long.class )
+					.getResultList();
+
+			assertThat( results ).hasSize( 1 );
+			assertThat( results.get( 0 ) ).isEqualTo( 2L );
+		} );
+	}
 
 
 	@Entity(name = "Document")

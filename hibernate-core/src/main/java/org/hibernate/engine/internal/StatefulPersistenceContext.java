@@ -404,29 +404,20 @@ class StatefulPersistenceContext implements PersistenceContext {
 		EntityHolderImpl holder = getOrInitializeNewHolder().withEntity( key, key.getPersister(), entity );
 		final EntityHolderImpl oldHolder = entityHolderMap.putIfAbsent( key, newEntityHolder );
 		if ( oldHolder != null ) {
+			// An initializer can't claim an entity holder if it's already initialized
+			if ( oldHolder.isInitialized() ) {
+				return oldHolder;
+			}
 			if ( entity != null ) {
 				assert oldHolder.entity == null || oldHolder.entity == entity;
 				oldHolder.entity = entity;
-			}
-			// Skip setting a new entity initializer if there already is one owner
-			// Also skip if an entity exists which is different from the effective optional object.
-			// The effective optional object is the current object to be refreshed,
-			// which always needs re-initialization, even if already initialized
-			if ( oldHolder.entityInitializer != null
-					|| oldHolder.entity != null && oldHolder.state != EntityHolderState.ENHANCED_PROXY && (
-					processingState.getProcessingOptions().getEffectiveOptionalObject() == null
-							|| oldHolder.entity != processingState.getProcessingOptions().getEffectiveOptionalObject() )
-			) {
-				return oldHolder;
 			}
 			holder = oldHolder;
 		}
 		else {
 			newEntityHolder = null;
 		}
-		assert holder.entityInitializer == null || holder.entityInitializer == initializer;
 		holder.entityInitializer = initializer;
-		processingState.registerLoadingEntityHolder( holder );
 		return holder;
 	}
 

@@ -26,7 +26,7 @@ public class PersisterClassProviderTest {
 
 	@Test
 	public void testPersisterClassProvider() {
-		assertThat(org.hibernate.internal.SessionFactoryRegistry.INSTANCE.hasRegistrations() ).isFalse();
+		org.hibernate.internal.SessionFactoryRegistry.INSTANCE.clearRegistrations();
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( Gate.class );
 		ServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()

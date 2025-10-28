@@ -4,15 +4,6 @@
  */
 package org.hibernate.orm.test.query.criteria;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import org.hibernate.Session;
-import org.hibernate.query.Query;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -21,31 +12,43 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
+import org.hibernate.Session;
+import org.hibernate.query.Query;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @JiraKey(value = "HHH-15073")
-public class CriteriaPrimitiveIdTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { MyEntity.class };
-	}
+@DomainModel(
+		annotatedClasses = {
+				CriteriaPrimitiveIdTest.MyEntity.class
+		}
+)
+@SessionFactory
+public class CriteriaPrimitiveIdTest {
 
 	@Test
-	public void test() {
-		inTransaction( session -> {
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			session.persist( new MyEntity( 1L ) );
 			session.persist( new MyEntity( 2L ) );
 			session.persist( new MyEntity( 3L ) );
 		} );
-		inTransaction( session -> {
-			EntityType<MyEntity> type = sessionFactory().getJpaMetamodel().entity( MyEntity.class );
+
+		scope.inTransaction( session -> {
+			EntityType<MyEntity> type = scope.getSessionFactory().getJpaMetamodel().entity( MyEntity.class );
 			SingularAttribute<? super MyEntity, Long> idAttribute = type.getId( long.class );
 			Query<Long> query = createQueryForIdentifierListing( session, type, idAttribute );
 			assertThat( query.list() ).containsExactlyInAnyOrder( 1L, 2L, 3L );
 		} );
 	}
 
-	private <E, I> Query<I> createQueryForIdentifierListing(Session session,
+	private <E, I> Query<I> createQueryForIdentifierListing(
+			Session session,
 			EntityType<E> type, SingularAttribute<? super E, I> idAttribute) {
 		CriteriaBuilder criteriaBuilder = session.getSessionFactory().getCriteriaBuilder();
 		CriteriaQuery<I> criteriaQuery = criteriaBuilder.createQuery( idAttribute.getJavaType() );

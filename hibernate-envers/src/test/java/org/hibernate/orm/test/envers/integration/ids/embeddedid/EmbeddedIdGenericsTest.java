@@ -20,14 +20,15 @@ import jakarta.persistence.Table;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.junit.Test;
-
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests an entity mapping that uses an {@link EmbeddedId} mapping that makes use of generics.
@@ -35,18 +36,15 @@ import static org.junit.Assert.assertEquals;
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-13564")
-public class EmbeddedIdGenericsTest extends BaseEnversJPAFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { NotificationType.class, Trigger.class };
-	}
+@EnversTest
+@Jpa(annotatedClasses = {EmbeddedIdGenericsTest.NotificationType.class, EmbeddedIdGenericsTest.Trigger.class})
+public class EmbeddedIdGenericsTest {
 
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1
 		// Store NotificationType and Trigger instance
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final NotificationType type = new NotificationType( "code" );
 			entityManager.persist( type );
 
@@ -59,17 +57,21 @@ public class EmbeddedIdGenericsTest extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	public void testAuditQueryMappedSuperclassWithEmbeddedId() {
-		// There should be at least one revision for Trigger
-		List resultList = getAuditReader().createQuery().forRevisionsOfEntity( Trigger.class, true, true ).getResultList();
-		assertEquals( 1, resultList.size() );
+	public void testAuditQueryMappedSuperclassWithEmbeddedId(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
+			// There should be at least one revision for Trigger
+			List resultList = AuditReaderFactory.get( entityManager )
+					.createQuery()
+					.forRevisionsOfEntity( Trigger.class, true, true )
+					.getResultList();
+			assertEquals( 1, resultList.size() );
 
-		// Trigger should be hydrated with a composite-id values below
-		Trigger entityInstance = (Trigger) resultList.get( 0 );
-		assertEquals( "str", entityInstance.getPk().getEventType() );
-		assertEquals( "code", entityInstance.getPk().getNotificationType().getCode() );
+			// Trigger should be hydrated with a composite-id values below
+			Trigger entityInstance = (Trigger) resultList.get( 0 );
+			assertEquals( "str", entityInstance.getPk().getEventType() );
+			assertEquals( "code", entityInstance.getPk().getNotificationType().getCode() );
+		} );
 	}
-
 
 	@MappedSuperclass
 	public abstract static class CompositeIdBaseEntity<PK extends Serializable> implements Serializable {

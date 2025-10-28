@@ -5,117 +5,122 @@
 package org.hibernate.orm.test.envers.integration.ids.idclass;
 
 import java.util.Arrays;
-import jakarta.persistence.EntityManager;
 
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-import junit.framework.Assert;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @JiraKey(value = "HHH-4751")
-public class IdClassWithRelationTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {SampleClass.class, RelationalClassId.class, ClassType.class})
+public class IdClassWithRelationTest {
 	private RelationalClassId entityId = null;
 	private String typeId = null;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { SampleClass.class, RelationalClassId.class, ClassType.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1
-		em.getTransaction().begin();
-		ClassType type = new ClassType( "type", "initial description" );
-		SampleClass entity = new SampleClass();
-		entity.setType( type );
-		entity.setSampleValue( "initial data" );
-		em.persist( type );
-		em.persist( entity );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			ClassType type = new ClassType( "type", "initial description" );
+			SampleClass entity = new SampleClass();
+			entity.setType( type );
+			entity.setSampleValue( "initial data" );
+			em.persist( type );
+			em.persist( entity );
 
-		typeId = type.getType();
-		entityId = new RelationalClassId( entity.getId(), new ClassType( "type", "initial description" ) );
+			typeId = type.getType();
+			entityId = new RelationalClassId( entity.getId(), new ClassType( "type", "initial description" ) );
+		} );
 
 		// Revision 2
-		em.getTransaction().begin();
-		type = em.find( ClassType.class, type.getType() );
-		type.setDescription( "modified description" );
-		em.merge( type );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			ClassType type = em.find( ClassType.class, typeId );
+			type.setDescription( "modified description" );
+			em.merge( type );
+		} );
 
 		// Revision 3
-		em.getTransaction().begin();
-		entity = em.find( SampleClass.class, entityId );
-		entity.setSampleValue( "modified data" );
-		em.merge( entity );
-		em.getTransaction().commit();
-
-		em.close();
+		scope.inTransaction( em -> {
+			SampleClass entity = em.find( SampleClass.class, entityId );
+			entity.setSampleValue( "modified data" );
+			em.merge( entity );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		Assert.assertEquals( Arrays.asList( 1, 2 ), getAuditReader().getRevisions( ClassType.class, typeId ) );
-		Assert.assertEquals( Arrays.asList( 1, 3 ), getAuditReader().getRevisions( SampleClass.class, entityId ) );
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1, 2 ), auditReader.getRevisions( ClassType.class, typeId ) );
+			assertEquals( Arrays.asList( 1, 3 ), auditReader.getRevisions( SampleClass.class, entityId ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfEntity() {
-		// given
-		SampleClass entity = new SampleClass( entityId.getId(), entityId.getType(), "initial data" );
+	public void testHistoryOfEntity(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
 
-		// when
-		SampleClass ver1 = getAuditReader().find( SampleClass.class, entityId, 1 );
+			// given
+			SampleClass entity = new SampleClass( entityId.getId(), entityId.getType(), "initial data" );
 
-		// then
-		Assert.assertEquals( entity.getId(), ver1.getId() );
-		Assert.assertEquals( entity.getSampleValue(), ver1.getSampleValue() );
-		Assert.assertEquals( entity.getType().getType(), ver1.getType().getType() );
-		Assert.assertEquals( entity.getType().getDescription(), ver1.getType().getDescription() );
+			// when
+			SampleClass ver1 = auditReader.find( SampleClass.class, entityId, 1 );
 
-		// given
-		entity.setSampleValue( "modified data" );
-		entity.getType().setDescription( "modified description" );
+			// then
+			assertEquals( entity.getId(), ver1.getId() );
+			assertEquals( entity.getSampleValue(), ver1.getSampleValue() );
+			assertEquals( entity.getType().getType(), ver1.getType().getType() );
+			assertEquals( entity.getType().getDescription(), ver1.getType().getDescription() );
 
-		// when
-		SampleClass ver2 = getAuditReader().find( SampleClass.class, entityId, 3 );
+			// given
+			entity.setSampleValue( "modified data" );
+			entity.getType().setDescription( "modified description" );
 
-		// then
-		Assert.assertEquals( entity.getId(), ver2.getId() );
-		Assert.assertEquals( entity.getSampleValue(), ver2.getSampleValue() );
-		Assert.assertEquals( entity.getType().getType(), ver2.getType().getType() );
-		Assert.assertEquals( entity.getType().getDescription(), ver2.getType().getDescription() );
+			// when
+			SampleClass ver2 = auditReader.find( SampleClass.class, entityId, 3 );
+
+			// then
+			assertEquals( entity.getId(), ver2.getId() );
+			assertEquals( entity.getSampleValue(), ver2.getSampleValue() );
+			assertEquals( entity.getType().getType(), ver2.getType().getType() );
+			assertEquals( entity.getType().getDescription(), ver2.getType().getDescription() );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfType() {
-		// given
-		ClassType type = new ClassType( typeId, "initial description" );
+	public void testHistoryOfType(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
 
-		// when
-		ClassType ver1 = getAuditReader().find( ClassType.class, typeId, 1 );
+			// given
+			ClassType type = new ClassType( typeId, "initial description" );
 
-		// then
-		Assert.assertEquals( type, ver1 );
-		Assert.assertEquals( type.getDescription(), ver1.getDescription() );
+			// when
+			ClassType ver1 = auditReader.find( ClassType.class, typeId, 1 );
 
-		// given
-		type.setDescription( "modified description" );
+			// then
+			assertEquals( type, ver1 );
+			assertEquals( type.getDescription(), ver1.getDescription() );
 
-		// when
-		ClassType ver2 = getAuditReader().find( ClassType.class, typeId, 2 );
+			// given
+			type.setDescription( "modified description" );
 
-		// then
-		Assert.assertEquals( type, ver2 );
-		Assert.assertEquals( type.getDescription(), ver2.getDescription() );
+			// when
+			ClassType ver2 = auditReader.find( ClassType.class, typeId, 2 );
+
+			// then
+			assertEquals( type, ver2 );
+			assertEquals( type.getDescription(), ver2.getDescription() );
+		} );
 	}
 }

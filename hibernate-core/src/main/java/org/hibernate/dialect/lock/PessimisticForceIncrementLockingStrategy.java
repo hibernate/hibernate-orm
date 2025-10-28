@@ -6,7 +6,6 @@ package org.hibernate.dialect.lock;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.OptimisticLockHelper;
 import org.hibernate.persister.entity.EntityPersister;
@@ -44,7 +43,7 @@ public class PessimisticForceIncrementLockingStrategy implements LockingStrategy
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
-		final EntityEntry entry = session.getPersistenceContextInternal().getEntry( object );
+		final var entry = session.getPersistenceContextInternal().getEntry( object );
 		OptimisticLockHelper.forceVersionIncrement( object, entry, session );
 	}
 

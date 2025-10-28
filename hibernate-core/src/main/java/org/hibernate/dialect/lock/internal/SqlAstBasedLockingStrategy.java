@@ -12,15 +12,11 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.LockingStrategyException;
 import org.hibernate.dialect.lock.PessimisticEntityLockException;
-import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -28,7 +24,6 @@ import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -39,12 +34,10 @@ import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.lock.LockingHelper;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.spi.NoRowException;
 import org.hibernate.sql.results.spi.SingleResultConsumer;
-import org.hibernate.stat.spi.StatisticsImplementor;
 
 import java.util.List;
 import java.util.Locale;
@@ -72,16 +65,17 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 			Object version,
 			Object object,
 			int timeout,
-			SharedSessionContractImplementor session) throws StaleObjectStateException, LockingStrategyException {
-		final SessionFactoryImplementor factory = session.getFactory();
+			SharedSessionContractImplementor session)
+				throws StaleObjectStateException, LockingStrategyException {
+		final var factory = session.getFactory();
 
-		final LockOptions lockOptions = new LockOptions( lockMode );
+		final var lockOptions = new LockOptions( lockMode );
 		lockOptions.setScope( lockScope );
 		lockOptions.setTimeOut( timeout );
 
-		final QuerySpec rootQuerySpec = new QuerySpec( true );
-		final NavigablePath entityPath = new NavigablePath( entityToLock.getRootPathName() );
-		final EntityIdentifierMapping idMapping = entityToLock.getIdentifierMapping();
+		final var rootQuerySpec = new QuerySpec( true );
+		final var entityPath = new NavigablePath( entityToLock.getRootPathName() );
+		final var idMapping = entityToLock.getIdentifierMapping();
 
 		// NOTE: there are 2 possible ways to handle the select list for the query...
 		// 		1) use normal `idMapping.createDomainResult`.  for simple ids, this is fine; however,
@@ -91,21 +85,20 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 		//			look at simplifying LoaderSelectBuilder.visitFetches for reusability
 		//		2) for now, we'll just manually build the selection list using "one of" the id columns
 		//			and manually build a simple `BasicResult`
-		final LoaderSqlAstCreationState sqlAstCreationState = new LoaderSqlAstCreationState(
+		final var sqlAstCreationState = new LoaderSqlAstCreationState(
 				rootQuerySpec,
 				new SqlAliasBaseManager(),
 				new SimpleFromClauseAccessImpl(),
 				lockOptions,
-				(fetchParent, creationState) -> {
-					// todo (db-locking) : look to simplify LoaderSelectBuilder.visitFetches for reusability
-					return ImmutableFetchList.EMPTY;
-				},
+				// todo (db-locking) : look to simplify LoaderSelectBuilder.visitFetches for reusability
+				(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
+
 				true,
 				new LoadQueryInfluencers( factory ),
 				factory.getSqlTranslationEngine()
 		);
 
-		final TableGroup rootTableGroup = entityToLock.createRootTableGroup(
+		final var rootTableGroup = entityToLock.createRootTableGroup(
 				true,
 				entityPath,
 				null,
@@ -117,20 +110,22 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
 		sqlAstCreationState.getFromClauseAccess().registerTableGroup( entityPath, rootTableGroup );
 
-		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final SelectableMapping firstIdColumn = idMapping.getSelectable( 0 );
+		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final var firstIdColumn = idMapping.getSelectable( 0 );
 		sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression( rootTableGroup.getPrimaryTableReference(), firstIdColumn ),
 				firstIdColumn.getJdbcMapping().getJdbcJavaType(),
 				null,
 				session.getTypeConfiguration()
 		);
-		final BasicResult<Object> idResult = new BasicResult<>( 0, null, idMapping.getJdbcMapping( 0 ) );
+		final BasicResult<Object> idResult =
+				new BasicResult<>( 0, null, idMapping.getJdbcMapping( 0 ) );
 
-		final int jdbcParamCount = entityToLock.getVersionMapping() != null
-				? idMapping.getJdbcTypeCount() + 1
-				: idMapping.getJdbcTypeCount();
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParamCount );
+		final var versionMapping = entityToLock.getVersionMapping();
+
+		final int jdbcTypeCount = idMapping.getJdbcTypeCount();
+		final int jdbcParamCount = versionMapping == null ? jdbcTypeCount : jdbcTypeCount + 1;
+		final var jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParamCount );
 		idMapping.breakDownJdbcValues(
 				id,
 				(valueIndex, value, jdbcValueMapping) -> handleRestriction(
@@ -144,8 +139,8 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 				session
 		);
 
-		if ( entityToLock.getVersionMapping() != null ) {
-			entityToLock.getVersionMapping().breakDownJdbcValues(
+		if ( versionMapping != null ) {
+			versionMapping.breakDownJdbcValues(
 					version,
 					(valueIndex, value, jdbcValueMapping) -> handleRestriction(
 							value,
@@ -159,30 +154,28 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 			);
 		}
 
-		final SelectStatement selectStatement = new SelectStatement( rootQuerySpec, List.of( idResult ) );
-		final JdbcSelect selectOperation = session
-				.getDialect()
-				.getSqlAstTranslatorFactory()
-				.buildSelectTranslator( factory, selectStatement )
-				.translate( jdbcParameterBindings, sqlAstCreationState );
+		final var selectStatement = new SelectStatement( rootQuerySpec, List.of( idResult ) );
+		final JdbcSelect selectOperation =
+				session.getDialect().getSqlAstTranslatorFactory()
+						.buildSelectTranslator( factory, selectStatement )
+						.translate( jdbcParameterBindings, sqlAstCreationState );
 
-		final JdbcSelectExecutor jdbcSelectExecutor = factory.getJdbcServices().getJdbcSelectExecutor();
-		final LockingExecutionContext lockingExecutionContext = new LockingExecutionContext( session );
-
+		final var lockingExecutionContext = new LockingExecutionContext( session );
 		try {
-			jdbcSelectExecutor.executeQuery(
-					selectOperation,
-					jdbcParameterBindings,
-					lockingExecutionContext,
-					null,
-					idResult.getResultJavaType().getJavaTypeClass(),
-					1,
-					SingleResultConsumer.instance()
-			);
+			factory.getJdbcServices().getJdbcSelectExecutor()
+					.executeQuery(
+							selectOperation,
+							jdbcParameterBindings,
+							lockingExecutionContext,
+							null,
+							idResult.getResultJavaType().getJavaTypeClass(),
+							1,
+							SingleResultConsumer.instance()
+					);
 
 			if ( lockOptions.getScope() == Locking.Scope.INCLUDE_COLLECTIONS ) {
 				SqmMutationStrategyHelper.visitCollectionTables( entityToLock, (attribute) -> {
-					final PersistentCollection<?> collectionToLock = (PersistentCollection<?>) attribute.getValue( object );
+					final var collectionToLock = (PersistentCollection<?>) attribute.getValue( object );
 					LockingHelper.lockCollectionTable(
 							attribute,
 							lockMode,
@@ -193,27 +186,25 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 				} );
 			}
 		}
-		catch (LockTimeoutException e) {
+		catch (LockTimeoutException lockTimeout) {
 			throw new PessimisticEntityLockException(
 					object,
 					String.format( Locale.ROOT, "Lock timeout exceeded attempting to lock row(s) for %s", object ),
-					e
+					lockTimeout
 			);
 		}
-		catch (NoRowException e) {
-			if ( entityToLock.optimisticLockStyle() != OptimisticLockStyle.NONE ) {
-				final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		catch (NoRowException noRow) {
+			if ( !entityToLock.optimisticLockStyle().isNone() ) {
+				final String entityName = entityToLock.getEntityName();
+				final var statistics = session.getFactory().getStatistics();
 				if ( statistics.isStatisticsEnabled() ) {
-					statistics.optimisticFailure( entityToLock.getEntityName() );
+					statistics.optimisticFailure( entityName );
 				}
-				throw new StaleObjectStateException(
-						entityToLock.getEntityName(),
-						id,
-						"No rows were returned from JDBC query for versioned entity"
-				);
+				throw new StaleObjectStateException( entityName, id,
+						"No rows were returned from JDBC query for versioned entity" );
 			}
 			else {
-				throw e;
+				throw noRow;
 			}
 		}
 	}
@@ -225,8 +216,8 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 			LoaderSqlAstCreationState sqlAstCreationState,
 			TableGroup rootTableGroup,
 			JdbcParameterBindings jdbcParameterBindings) {
-		final JdbcMapping jdbcMapping = jdbcValueMapping.getJdbcMapping();
-		final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+		final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
+		final var jdbcParameter = new JdbcParameterImpl( jdbcMapping );
 		rootQuerySpec.applyPredicate(
 				new ComparisonPredicate(
 						sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
@@ -238,8 +229,8 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 				)
 		);
 
-		final JdbcParameterBindingImpl jdbcParameterBinding = new JdbcParameterBindingImpl( jdbcMapping, value );
-		jdbcParameterBindings.addBinding( jdbcParameter, jdbcParameterBinding );
+		jdbcParameterBindings.addBinding( jdbcParameter,
+				new JdbcParameterBindingImpl( jdbcMapping, value ) );
 	}
 
 }

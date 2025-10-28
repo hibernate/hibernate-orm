@@ -53,7 +53,7 @@ elif [ "$RDBMS" == "oracle_db23c" ]; then
   export SERVICE=$(echo $INFO | jq -r '.database' | jq -r '.service')
   goal="-Pdb=oracle_cloud_db23c -DrunID=$RUNID -DdbHost=$HOST -DdbService=$SERVICE"
 # OTP
-elif [ "$RDBMS" == "autonomous-transaction-processing-serverless" ] || [ "$RDBMS" == "base-database-service-19c" ] || [ "$RDBMS" == "base-database-service-21c" ] || [ "$RDBMS" == "base-database-service-23ai" ]; then
+elif [ "$RDBMS" == "autonomous-transaction-processing-serverless-19c" ] || [ "$RDBMS" == "autonomous-transaction-processing-serverless-26ai" ] || [ "$RDBMS" == "autonomous-transaction-processing-serverless" ] || [ "$RDBMS" == "base-database-service-19c" ] || [ "$RDBMS" == "base-database-service-21c" ] || [ "$RDBMS" == "base-database-service-26ai" ]; then
   echo "Managing OTP Database..."
   goal="-Pdb=oracle_test_pilot_database -DrunID=$RUNID -DdbPassword=$TESTPILOT_PASSWORD -DdbConnectionStringSuffix=$TESTPILOT_CONNECTION_STRING_SUFFIX"
 elif [ "$RDBMS" == "db2" ] || [ "$RDBMS" == "db2_11_5" ]; then

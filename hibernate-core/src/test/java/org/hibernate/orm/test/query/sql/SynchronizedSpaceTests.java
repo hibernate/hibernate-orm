@@ -4,21 +4,6 @@
  */
 package org.hibernate.orm.test.query.sql;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.NamedNativeQuery;
-import org.hibernate.cache.spi.CacheImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.query.NativeQuery;
-
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityResult;
@@ -27,43 +12,90 @@ import jakarta.persistence.Query;
 import jakarta.persistence.QueryHint;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.NamedNativeQuery;
+import org.hibernate.cache.spi.CacheImplementor;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.testing.cache.CachingRegionFactory;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_SPACES;
 
 /**
  * @author Steve Ebersole
  */
-public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				SynchronizedSpaceTests.CachedEntity.class,
+				SynchronizedSpaceTests.NonCachedEntity.class
+		},
+		overrideCacheStrategy = false
+)
+@SessionFactory
+@ServiceRegistry(
+		settingProviders = @SettingProvider(
+				settingName = AvailableSettings.CACHE_REGION_FACTORY,
+				provider = SynchronizedSpaceTests.CachingRegionFactoryProvider.class
+		)
+)
+public class SynchronizedSpaceTests {
+
+	public static class CachingRegionFactoryProvider implements SettingProvider.Provider<String> {
+
+		@Override
+		public String getSetting() {
+			return CachingRegionFactory.class.getName();
+		}
+	}
+
 	@Test
-	public void testNonSyncedCachedScenario() {
+	public void testNonSyncedCachedScenario(SessionFactoryScope scope) {
 		// CachedEntity updated by native-query without adding query spaces
 		// 		- the outcome should be all cached data being invalidated
 
 		checkUseCase(
+				scope,
 				"cached_entity",
-				query -> {},
+				query -> {
+				},
 				// the 2 CachedEntity entries should not be there
 				false
 		);
 
 		// and of course, let's make sure the update happened :)
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "from CachedEntity", CachedEntity.class ).list().forEach(
-							cachedEntity -> assertThat( cachedEntity.name, is( "updated" ) )
+							cachedEntity -> assertThat( cachedEntity.name ).isEqualTo( "updated" )
 					);
 				}
 		);
 	}
 
 	private void checkUseCase(
+			SessionFactoryScope scope,
 			String table,
 			Consumer<Query> updateQueryConfigurer,
 			boolean shouldExistAfter) {
 
 		checkUseCase(
+				scope,
 				(session) -> {
 					final Query nativeQuery = session.createNativeQuery( "update " + table + " set name = 'updated'" );
 					updateQueryConfigurer.accept( nativeQuery );
@@ -75,21 +107,22 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 	}
 
 	private void checkUseCase(
-			Function<SessionImplementor,Query> queryProducer,
+			SessionFactoryScope scope,
+			Function<SessionImplementor, Query> queryProducer,
 			Consumer<Query> executor,
 			boolean shouldExistAfter) {
 
 		// first, load both `CachedEntity` instances into the L2 cache
-		loadAll();
+		loadAll( scope );
 
-		final CacheImplementor cacheSystem = sessionFactory().getCache();
+		final CacheImplementor cacheSystem = scope.getSessionFactory().getCache();
 
 		// make sure they are there
-		assertThat( cacheSystem.containsEntity( CachedEntity.class, 1 ), is( true ) );
-		assertThat( cacheSystem.containsEntity( CachedEntity.class, 2 ), is( true ) );
+		assertThat( cacheSystem.containsEntity( CachedEntity.class, 1 ) ).isTrue();
+		assertThat( cacheSystem.containsEntity( CachedEntity.class, 2 ) ).isTrue();
 
 		// create a query to update the specified table - allowing the passed consumer to register a space if needed
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					// notice the type is the JPA Query interface
 					final Query nativeQuery = queryProducer.apply( session );
@@ -98,84 +131,89 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 		);
 
 		// see if the entries exist based on the expectation
-		assertThat( cacheSystem.containsEntity( CachedEntity.class, 1 ), is( shouldExistAfter ) );
-		assertThat( cacheSystem.containsEntity( CachedEntity.class, 2 ), is( shouldExistAfter ) );
+		assertThat( cacheSystem.containsEntity( CachedEntity.class, 1 ) ).isEqualTo( shouldExistAfter );
+		assertThat( cacheSystem.containsEntity( CachedEntity.class, 2 ) ).isEqualTo( shouldExistAfter );
 	}
 
 	@Test
-	public void testSyncedCachedScenario() {
+	public void testSyncedCachedScenario(SessionFactoryScope scope) {
 		final String tableName = "cached_entity";
 
 		checkUseCase(
+				scope,
 				tableName,
-				query -> ( (NativeQuery<?>) query ).addSynchronizedQuerySpace( tableName ),
+				query -> ((NativeQuery<?>) query).addSynchronizedQuerySpace( tableName ),
 				// the 2 CachedEntity entries should not be there
 				false
 		);
 
 		// and of course, let's make sure the update happened :)
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "from CachedEntity", CachedEntity.class ).list().forEach(
-							cachedEntity -> assertThat( cachedEntity.name, is( "updated" ) )
+							cachedEntity -> assertThat( cachedEntity.name ).isEqualTo( "updated" )
 					);
 				}
 		);
 	}
 
 	@Test
-	public void testNonSyncedNonCachedScenario() {
+	public void testNonSyncedNonCachedScenario(SessionFactoryScope scope) {
 		// NonCachedEntity updated by native-query without adding query spaces
 		// 		- the outcome should be all cached data being invalidated
 
 		checkUseCase(
+				scope,
 				"non_cached_entity",
-				query -> {},
+				query -> {
+				},
 				// the 2 CachedEntity entries should not be there
 				false
 		);
 
 		// and of course, let's make sure the update happened :)
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "from NonCachedEntity", NonCachedEntity.class ).list().forEach(
-							cachedEntity -> assertThat( cachedEntity.name, is( "updated" ) )
+							cachedEntity -> assertThat( cachedEntity.name ).isEqualTo( "updated" )
 					);
 				}
 		);
 	}
 
 	@Test
-	public void testSyncedNonCachedScenario() {
+	public void testSyncedNonCachedScenario(SessionFactoryScope scope) {
 		// NonCachedEntity updated by native-query with query spaces
 		// 		- the caches for CachedEntity are not invalidated - they are not affected by the specified query-space
 
 		final String tableName = "non_cached_entity";
 
 		checkUseCase(
+				scope,
 				tableName,
-				query -> ( (NativeQuery<?>) query ).addSynchronizedQuerySpace( tableName ),
+				query -> ((NativeQuery<?>) query).addSynchronizedQuerySpace( tableName ),
 				// the 2 CachedEntity entries should still be there
 				true
 		);
 
 		// and of course, let's make sure the update happened :)
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "from NonCachedEntity", NonCachedEntity.class ).list().forEach(
-							cachedEntity -> assertThat( cachedEntity.name, is( "updated" ) )
+							cachedEntity -> assertThat( cachedEntity.name ).isEqualTo( "updated" )
 					);
 				}
 		);
 	}
 
 	@Test
-	public void testSyncedNonCachedScenarioUsingHint() {
+	public void testSyncedNonCachedScenarioUsingHint(SessionFactoryScope scope) {
 		// same as `#testSyncedNonCachedScenario`, but here using the hint
 
 		final String tableName = "non_cached_entity";
 
 		checkUseCase(
+				scope,
 				tableName,
 				query -> query.setHint( HINT_NATIVE_SPACES, tableName ),
 				// the 2 CachedEntity entries should still be there
@@ -183,17 +221,17 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 		);
 
 		// and of course, let's make sure the update happened :)
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "from NonCachedEntity", NonCachedEntity.class ).list().forEach(
-							cachedEntity -> assertThat( cachedEntity.name, is( "updated" ) )
+							cachedEntity -> assertThat( cachedEntity.name ).isEqualTo( "updated" )
 					);
 				}
 		);
 	}
 
 	@Test
-	public void testSyncedNonCachedScenarioUsingHintWithCollection() {
+	public void testSyncedNonCachedScenarioUsingHintWithCollection(SessionFactoryScope scope) {
 		// same as `#testSyncedNonCachedScenario`, but here using the hint
 
 		final String tableName = "non_cached_entity";
@@ -201,6 +239,7 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 		spaces.add( tableName );
 
 		checkUseCase(
+				scope,
 				tableName,
 				query -> query.setHint( HINT_NATIVE_SPACES, spaces ),
 				// the 2 CachedEntity entries should still be there
@@ -208,23 +247,24 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 		);
 
 		// and of course, let's make sure the update happened :)
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "from NonCachedEntity", NonCachedEntity.class ).list().forEach(
-							cachedEntity -> assertThat( cachedEntity.name, is( "updated" ) )
+							cachedEntity -> assertThat( cachedEntity.name ).isEqualTo( "updated" )
 					);
 				}
 		);
 	}
 
 	@Test
-	public void testSyncedNonCachedScenarioUsingHintWithArray() {
+	public void testSyncedNonCachedScenarioUsingHintWithArray(SessionFactoryScope scope) {
 		// same as `#testSyncedNonCachedScenario`, but here using the hint
 
 		final String tableName = "non_cached_entity";
-		final String[] spaces = { tableName };
+		final String[] spaces = {tableName};
 
 		checkUseCase(
+				scope,
 				tableName,
 				query -> query.setHint( HINT_NATIVE_SPACES, spaces ),
 				// the 2 CachedEntity entries should still be there
@@ -232,18 +272,19 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 		);
 
 		// and of course, let's make sure the update happened :)
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "from NonCachedEntity", NonCachedEntity.class ).list().forEach(
-							cachedEntity -> assertThat( cachedEntity.name, is( "updated" ) )
+							cachedEntity -> assertThat( cachedEntity.name ).isEqualTo( "updated" )
 					);
 				}
 		);
 	}
 
 	@Test
-	public void testSyncedNonCachedScenarioUsingAnnotationWithReturnClass() {
+	public void testSyncedNonCachedScenarioUsingAnnotationWithReturnClass(SessionFactoryScope scope) {
 		checkUseCase(
+				scope,
 				(session) -> session.createNamedQuery( "NonCachedEntity_return_class" ),
 				Query::getResultList,
 				true
@@ -251,8 +292,9 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void testSyncedNonCachedScenarioUsingAnnotationWithResultSetMapping() {
+	public void testSyncedNonCachedScenarioUsingAnnotationWithResultSetMapping(SessionFactoryScope scope) {
 		checkUseCase(
+				scope,
 				(session) -> session.createNamedQuery( "NonCachedEntity_resultset_mapping" ),
 				Query::getResultList,
 				true
@@ -260,8 +302,9 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void testSyncedNonCachedScenarioUsingAnnotationWithSpaces() {
+	public void testSyncedNonCachedScenarioUsingAnnotationWithSpaces(SessionFactoryScope scope) {
 		checkUseCase(
+				scope,
 				(session) -> session.createNamedQuery( "NonCachedEntity_spaces" ),
 				Query::getResultList,
 				true
@@ -269,8 +312,9 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void testSyncedNonCachedScenarioUsingJpaAnnotationWithNoResultMapping() {
+	public void testSyncedNonCachedScenarioUsingJpaAnnotationWithNoResultMapping(SessionFactoryScope scope) {
 		checkUseCase(
+				scope,
 				(session) -> session.createNamedQuery( "NonCachedEntity_raw_jpa" ),
 				Query::getResultList,
 				true
@@ -278,16 +322,17 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void testSyncedNonCachedScenarioUsingJpaAnnotationWithHint() {
+	public void testSyncedNonCachedScenarioUsingJpaAnnotationWithHint(SessionFactoryScope scope) {
 		checkUseCase(
+				scope,
 				(session) -> session.createNamedQuery( "NonCachedEntity_hint_jpa" ),
 				Query::getResultList,
 				true
 		);
 	}
 
-	private void loadAll() {
-		inTransaction(
+	private void loadAll(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "from CachedEntity" ).list();
 
@@ -298,8 +343,9 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 		);
 	}
 
-	public void prepareTest() {
-		inTransaction(
+	@BeforeEach
+	public void prepareTest(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.persist( new CachedEntity( 1, "first cached" ) );
 					session.persist( new CachedEntity( 2, "second cached" ) );
@@ -309,34 +355,23 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 				}
 		);
 
-		cleanupCache();
+		cleanupCache( scope );
 	}
 
-	public void cleanupTest() {
-		cleanupCache();
-
-		inTransaction(
-				session -> {
-					session.createQuery( "delete CachedEntity" ).executeUpdate();
-					session.createQuery( "delete NonCachedEntity" ).executeUpdate();
-				}
-		);
+	@AfterEach
+	public void cleanupTest(SessionFactoryScope scope) {
+		cleanupCache( scope );
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { CachedEntity.class, NonCachedEntity.class };
+	private void cleanupCache(SessionFactoryScope scope) {
+		scope.getSessionFactory().getCache().evictAllRegions();
 	}
 
-	@Override
-	protected boolean overrideCacheStrategy() {
-		return false;
-	}
-
-	@Entity( name = "CachedEntity" )
-	@Table( name = "cached_entity" )
-	@Cacheable( true )
-	@Cache( usage = CacheConcurrencyStrategy.READ_WRITE )
+	@Entity(name = "CachedEntity")
+	@Table(name = "cached_entity")
+	@Cacheable
+	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 	public static class CachedEntity {
 		@Id
 		private Integer id;
@@ -351,9 +386,9 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 		}
 	}
 
-	@Entity( name = "NonCachedEntity" )
-	@Table( name = "non_cached_entity" )
-	@Cacheable( false )
+	@Entity(name = "NonCachedEntity")
+	@Table(name = "non_cached_entity")
+	@Cacheable(false)
 	@NamedNativeQuery(
 			name = "NonCachedEntity_return_class",
 			query = "select * from non_cached_entity",
@@ -366,7 +401,7 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 	)
 	@SqlResultSetMapping(
 			name = "NonCachedEntity_resultset_mapping",
-			entities = @EntityResult( entityClass = NonCachedEntity.class )
+			entities = @EntityResult(entityClass = NonCachedEntity.class)
 	)
 	@NamedNativeQuery(
 			name = "NonCachedEntity_spaces",
@@ -381,7 +416,7 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 			name = "NonCachedEntity_hint_jpa",
 			query = "select * from non_cached_entity",
 			hints = {
-					@QueryHint( name = HINT_NATIVE_SPACES, value = "non_cached_entity" )
+					@QueryHint(name = HINT_NATIVE_SPACES, value = "non_cached_entity")
 			}
 	)
 	public static class NonCachedEntity {

@@ -4,11 +4,8 @@
  */
 package org.hibernate.orm.test.query.hql;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,6 +18,10 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,36 +31,34 @@ import java.util.Set;
  *
  * @author Steve Ebersole
  */
-public class WithClauseJoinRewriteTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
-				AbstractObject.class,
-				AbstractConfigurationObject.class,
-				ConfigurationObject.class
-		};
-	}
+@DomainModel(
+		annotatedClasses = {
+			WithClauseJoinRewriteTest.AbstractObject.class,
+				WithClauseJoinRewriteTest.AbstractConfigurationObject.class,
+				WithClauseJoinRewriteTest.ConfigurationObject.class
+		}
+)
+@SessionFactory
+public class WithClauseJoinRewriteTest {
 
 	@Test
 	@JiraKey(value = "HHH-11230")
-	public void testInheritanceReAliasing() {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
+	public void testInheritanceReAliasing(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
 
-		// Just assert that the query is successful
-		List<Object[]> results = s.createQuery(
-				"SELECT usedBy.id, usedBy.name, COUNT(inverse.id) " +
-				"FROM " + AbstractConfigurationObject.class.getName() + " config " +
-				"INNER JOIN config.usedBy usedBy " +
-				"LEFT JOIN usedBy.uses inverse ON inverse.id = config.id " +
-				"WHERE config.id = 0 " +
-				"GROUP BY usedBy.id, usedBy.name",
-				Object[].class
-		).getResultList();
-
-		tx.commit();
-		s.close();
+					// Just assert that the query is successful
+					List<Object[]> results = session.createQuery(
+							"SELECT usedBy.id, usedBy.name, COUNT(inverse.id) " +
+							"FROM " + AbstractConfigurationObject.class.getName() + " config " +
+							"INNER JOIN config.usedBy usedBy " +
+							"LEFT JOIN usedBy.uses inverse ON inverse.id = config.id " +
+							"WHERE config.id = 0 " +
+							"GROUP BY usedBy.id, usedBy.name",
+							Object[].class
+					).getResultList();
+				}
+		);
 	}
 
 	@Entity

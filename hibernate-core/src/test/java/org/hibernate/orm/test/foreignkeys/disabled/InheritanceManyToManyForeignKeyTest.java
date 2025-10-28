@@ -42,7 +42,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class InheritanceManyToManyForeignKeyTest {
 
 	@Test
-	@SkipForDialect(dialectClass = SybaseDialect.class,
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true,
 			reason = "Only dates between January 1, 1753 and December 31, 9999 are accepted.")
 	public void testForeignKeyNameUnicity(SessionFactoryScope scope) {
 		UserEvents userEvents = new UserEvents();
@@ -120,6 +120,5 @@ public class InheritanceManyToManyForeignKeyTest {
 		@Id
 		@GeneratedValue
 		private Long id;
-
 	}
 }

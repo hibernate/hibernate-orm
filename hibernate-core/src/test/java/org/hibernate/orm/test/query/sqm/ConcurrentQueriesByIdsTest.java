@@ -4,34 +4,36 @@
  */
 package org.hibernate.orm.test.query.sqm;
 
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import org.hibernate.Session;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import jakarta.persistence.Basic;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-
-import org.hibernate.Session;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ConcurrentQueriesByIdsTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				ConcurrentQueriesByIdsTest.SimpleEntity.class
+		}
+)
+@SessionFactory
+public class ConcurrentQueriesByIdsTest {
 
 	public static final String QUERY_STRING = "select e from simple e where e.id in (:ids)";
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { SimpleEntity.class };
-	}
-
 	@Test
-	public void run() throws InterruptedException {
-		inTransaction( session -> {
+	public void run(SessionFactoryScope scope) throws InterruptedException {
+		scope.inTransaction( session -> {
 			for ( int i = 0; i < 100; i++ ) {
 				SimpleEntity entity = new SimpleEntity();
 				entity.setId( i );
@@ -45,7 +47,7 @@ public class ConcurrentQueriesByIdsTest extends BaseCoreFunctionalTestCase {
 
 		for ( int i = 0; i < 10; i++ ) {
 			int index = i;
-			results[i] = CompletableFuture.supplyAsync( () -> executeQuery( index ), executorService );
+			results[i] = CompletableFuture.supplyAsync( () -> executeQuery( scope, index ), executorService );
 		}
 		for ( int i = 0; i < 10; i++ ) {
 			assertThat( results[i].join() ).hasSize( 10 );
@@ -54,10 +56,10 @@ public class ConcurrentQueriesByIdsTest extends BaseCoreFunctionalTestCase {
 		executorService.shutdown();
 	}
 
-	private List<SimpleEntity> executeQuery(int index) {
-		try (Session session = sessionFactory().openSession()) {
-			return executeQuery( session, index );
-		}
+	private List<SimpleEntity> executeQuery(SessionFactoryScope scope, int index) {
+		return scope.fromSession(
+				session -> executeQuery( session, index )
+		);
 	}
 
 	private List<SimpleEntity> executeQuery(Session session, int index) {
@@ -67,7 +69,7 @@ public class ConcurrentQueriesByIdsTest extends BaseCoreFunctionalTestCase {
 				.setParameter(
 						"ids",
 						Arrays.asList( base + 0, base + 1, base + 2, base + 3, base + 4, base + 5,
-									base + 6, base + 7, base + 8, base + 9
+								base + 6, base + 7, base + 8, base + 9
 						)
 				)
 				.list();

@@ -260,7 +260,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 
 	private NavigablePath determineNavigablePath(LegacyFetchBuilder fetchBuilder) {
 		final var ownerResult = alias2Return.get( fetchBuilder.getOwnerAlias() );
-		final NavigablePath path;
+		NavigablePath path;
 		if ( ownerResult instanceof NativeQuery.RootReturn rootReturn ) {
 			path = rootReturn.getNavigablePath();
 		}
@@ -269,6 +269,9 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		}
 		else {
 			throw new AssertionFailure( "Unexpected fetch builder" );
+		}
+		if ( alias2CollectionPersister.containsKey( fetchBuilder.getOwnerAlias() ) ) {
+			path = path.append( "{element}" );
 		}
 		return path.append( fetchBuilder.getFetchable().getFetchableName() );
 	}

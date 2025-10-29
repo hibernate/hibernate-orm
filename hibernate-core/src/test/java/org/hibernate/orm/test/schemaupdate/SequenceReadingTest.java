@@ -4,28 +4,28 @@
  */
 package org.hibernate.orm.test.schemaupdate;
 
-import java.util.EnumSet;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistryFunctionalTesting;
+import org.hibernate.testing.orm.junit.ServiceRegistryProducer;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import java.util.EnumSet;
+
+import static org.hibernate.cfg.JdbcSettings.DIALECT;
 
 /**
  * Regression test fr a bug in org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl
@@ -34,37 +34,34 @@ import org.junit.Test;
  *
  * @see
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( value = "HHH-9745" )
 @RequiresDialect( H2Dialect.class )
-public class SequenceReadingTest extends BaseCoreFunctionalTestCase {
+@ServiceRegistryFunctionalTesting
+@DomainModel(annotatedClasses = SequenceReadingTest.MyEntity.class)
+public class SequenceReadingTest implements ServiceRegistryProducer {
+	@Override
+	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder) {
+		return builder.applySetting( DIALECT, MyExtendedH2Dialect.class ).build();
+	}
 
 	@Test
-	public void testSequenceReading() {
-		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( AvailableSettings.DIALECT, MyExtendedH2Dialect.class )
-				.build();
-		try {
-			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( MyEntity.class )
-					.buildMetadata();
-			metadata.orderColumns( false );
-			metadata.validate();
+	public void testSequenceReading(DomainModelScope modelScope) {
+		var model = modelScope.getDomainModel();
+		model.orderColumns( false );
+		model.validate();
 
-			try {
-				// try to update the schema
-				new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), metadata );
-			}
-			finally {
-				try {
-					// clean up
-					new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
-				}
-				catch (Exception ignore) {
-				}
-			}
+		try {
+			// try to update the schema
+			new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), model );
 		}
 		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
+			try {
+				// clean up
+				new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), model );
+			}
+			catch (Exception ignore) {
+			}
 		}
 	}
 

@@ -4,105 +4,72 @@
  */
 package org.hibernate.orm.test.schemaupdate;
 
-import java.util.EnumSet;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
-
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.query.Query;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.Environment;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import java.util.EnumSet;
+
+import static org.hibernate.cfg.MappingSettings.DEFAULT_SCHEMA;
+import static org.hibernate.cfg.MappingSettings.GLOBALLY_QUOTED_IDENTIFIERS;
 
 /**
  * @author Yoann Rodiere
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-10191")
 @RequiresDialect(PostgreSQLDialect.class)
-public class SchemaUpdateWithFunctionIndexTest extends BaseNonConfigCoreFunctionalTestCase {
-	protected ServiceRegistry serviceRegistry;
-	protected MetadataImplementor metadata;
+@ServiceRegistry(settings = {
+		@Setting(name= GLOBALLY_QUOTED_IDENTIFIERS, value = "false"),
+		@Setting(name = DEFAULT_SCHEMA, value = "public")
+})
+@DomainModel(annotatedClasses = SchemaUpdateWithFunctionIndexTest.MyEntity.class)
+@SessionFactory
+public class SchemaUpdateWithFunctionIndexTest {
 
 	@Test
-	public void testUpdateSchema() {
-		new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ), metadata );
+	public void testUpdateSchema(DomainModelScope modelScope) {
+		new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ), modelScope.getDomainModel() );
 	}
 
-	@Before
-	public void setUp() {
-		dropFunctionIndex();
-		dropTable();
-		createTable();
-		createFunctionIndex();
-		serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( Environment.GLOBALLY_QUOTED_IDENTIFIERS, "false" )
-				.applySetting( Environment.DEFAULT_SCHEMA, "public" )
-				.build();
-		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( MyEntity.class )
-				.buildMetadata();
+	@BeforeEach
+	public void setUp(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> session.doWork( (connection) -> {
+			try (var statement = connection.createStatement()) {
+				statement.execute( "DROP INDEX IF EXISTS uk_MyEntity_name_lowercase;" );
+				statement.execute( "DROP TABLE IF EXISTS MyEntity;" );
+				statement.execute( "CREATE TABLE MyEntity(id bigint, name varchar(255));" );
+				statement.execute( "CREATE UNIQUE INDEX uk_MyEntity_name_lowercase ON MyEntity (lower(name));" );
+			}
+		} ) );
 	}
 
-	private void createTable() {
-		Session session = openSession();
-		Transaction transaction = session.beginTransaction();
-		Query query = session.createNativeQuery( "CREATE TABLE MyEntity(id bigint, name varchar(255));" );
-		query.executeUpdate();
-		transaction.commit();
-		session.close();
-	}
-
-	private void createFunctionIndex() {
-		Session session = openSession();
-		Transaction transaction = session.beginTransaction();
-		Query query = session.createNativeQuery( "CREATE UNIQUE INDEX uk_MyEntity_name_lowercase ON MyEntity (lower(name));" );
-		query.executeUpdate();
-		transaction.commit();
-		session.close();
-	}
-
-	private void dropTable() {
-		Session session = openSession();
-		Transaction transaction = session.beginTransaction();
-		Query query = session.createNativeQuery( "DROP TABLE IF EXISTS MyEntity;" );
-		query.executeUpdate();
-		transaction.commit();
-		session.close();
-	}
-
-	private void dropFunctionIndex() {
-		Session session = openSession();
-		Transaction transaction = session.beginTransaction();
-		Query query = session.createNativeQuery( "DROP INDEX IF EXISTS uk_MyEntity_name_lowercase;" );
-		query.executeUpdate();
-		transaction.commit();
-		session.close();
-	}
-
-	@After
-	public void tearDown() {
-		dropFunctionIndex();
-		dropTable();
-		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ), metadata );
-		StandardServiceRegistryBuilder.destroy( serviceRegistry );
+	@AfterEach
+	public void tearDown(DomainModelScope modelScope, SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> session.doWork( (connection) -> {
+			try (var statement = connection.createStatement()) {
+				statement.execute( "DROP INDEX IF EXISTS uk_MyEntity_name_lowercase;" );
+				statement.execute( "DROP TABLE IF EXISTS MyEntity;" );
+			}
+		} ) );
+		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ), modelScope.getDomainModel() );
 	}
 
 	@Entity

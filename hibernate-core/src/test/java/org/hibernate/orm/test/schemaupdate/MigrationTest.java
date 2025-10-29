@@ -4,53 +4,36 @@
  */
 package org.hibernate.orm.test.schemaupdate;
 
-import java.util.EnumSet;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
-
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import java.util.EnumSet;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Max Rydahl Andersen
  * @author Brett Meyer
  */
-public class MigrationTest extends BaseUnitTestCase {
-	private ServiceRegistry serviceRegistry;
-
-	@Before
-	public void setUp() {
-		serviceRegistry = ServiceRegistryUtil.serviceRegistry();
-	}
-
-	@After
-	public void tearDown() {
-		StandardServiceRegistryBuilder.destroy( serviceRegistry );
-		serviceRegistry = null;
-	}
-
+@SuppressWarnings("JUnitMalformedDeclaration")
+@org.hibernate.testing.orm.junit.ServiceRegistry
+public class MigrationTest {
 	@Test
-	public void testSimpleColumnAddition() {
+	public void testSimpleColumnAddition(ServiceRegistryScope registryScope) {
 		String resource1 = "org/hibernate/orm/test/schemaupdate/1_Version.hbm.xml";
 		String resource2 = "org/hibernate/orm/test/schemaupdate/2_Version.hbm.xml";
 
-		MetadataImplementor v1metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
+		MetadataImplementor v1metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
 				.addResource( resource1 )
 				.buildMetadata();
 
@@ -68,7 +51,7 @@ public class MigrationTest extends BaseUnitTestCase {
 
 		assertEquals( 0, v1schemaUpdate.getExceptions().size() );
 
-		MetadataImplementor v2metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
+		MetadataImplementor v2metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
 				.addResource( resource2 )
 				.buildMetadata();
 
@@ -89,11 +72,11 @@ public class MigrationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testSimpleColumnTypeChange() {
+	public void testSimpleColumnTypeChange(ServiceRegistryScope registryScope) {
 		String resource1 = "org/hibernate/orm/test/schemaupdate/1_Version.hbm.xml";
 		String resource4 = "org/hibernate/orm/test/schemaupdate/4_Version.hbm.xml";
 
-		MetadataImplementor v1metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
+		MetadataImplementor v1metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
 				.addResource( resource1 )
 				.buildMetadata();
 
@@ -111,7 +94,7 @@ public class MigrationTest extends BaseUnitTestCase {
 
 		assertEquals( 0, v1schemaUpdate.getExceptions().size() );
 
-		MetadataImplementor v2metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
+		MetadataImplementor v2metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
 				.addResource( resource4 )
 				.buildMetadata();
 
@@ -131,59 +114,10 @@ public class MigrationTest extends BaseUnitTestCase {
 
 	}
 
-//	/**
-//	 * 3_Version.hbm.xml contains a named unique constraint and an un-named
-//	 * unique constraint (will receive a randomly-generated name).  Create
-//	 * the original schema with 2_Version.hbm.xml.  Then, run SchemaUpdate
-//	 * TWICE using 3_Version.hbm.xml.  Neither RECREATE_QUIETLY nor SKIP should
-//	 * generate any exceptions.
-//	 */
-//	@Test
-//	@JiraKey( value = "HHH-8162" )
-//	public void testConstraintUpdate() {
-//		doConstraintUpdate(UniqueConstraintSchemaUpdateStrategy.DROP_RECREATE_QUIETLY);
-//		doConstraintUpdate(UniqueConstraintSchemaUpdateStrategy.RECREATE_QUIETLY);
-//		doConstraintUpdate(UniqueConstraintSchemaUpdateStrategy.SKIP);
-//	}
-//
-//	private void doConstraintUpdate(UniqueConstraintSchemaUpdateStrategy strategy) {
-//		// original
-//		String resource1 = "org/hibernate/test/schemaupdate/2_Version.hbm.xml";
-//		// adds unique constraint
-//		String resource2 = "org/hibernate/test/schemaupdate/3_Version.hbm.xml";
-//
-//		MetadataImplementor v1metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-//				.addResource( resource1 )
-//				.buildMetadata();
-//		MetadataImplementor v2metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-//				.addResource( resource2 )
-//				.buildMetadata();
-//
-//		new SchemaExport( v1metadata ).execute( false, true, true, false );
-//
-//		// adds unique constraint
-//		Configuration v2cfg = new Configuration();
-//		v2cfg.getProperties().put( AvailableSettings.UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY, strategy );
-//		v2cfg.addResource( resource2 );
-//		SchemaUpdate v2schemaUpdate = new SchemaUpdate( serviceRegistry, v2cfg );
-//		v2schemaUpdate.execute( true, true );
-//		assertEquals( 0, v2schemaUpdate.getExceptions().size() );
-//
-//		Configuration v3cfg = new Configuration();
-//		v3cfg.getProperties().put( AvailableSettings.UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY, strategy );
-//		v3cfg.addResource( resource2 );
-//		SchemaUpdate v3schemaUpdate = new SchemaUpdate( serviceRegistry, v3cfg );
-//		v3schemaUpdate.execute( true, true );
-//		assertEquals( 0, v3schemaUpdate.getExceptions().size() );
-//
-//		new SchemaExport( serviceRegistry, v3cfg ).drop( false, true );
-//	}
-
-
 	@Test
 	@JiraKey( value = "HHH-9713" )
-	public void testIndexCreationViaSchemaUpdate() {
-		MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
+	public void testIndexCreationViaSchemaUpdate(ServiceRegistryScope registryScope) {
+		MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
 				.addAnnotatedClass( EntityWithIndex.class )
 				.buildMetadata();
 
@@ -210,8 +144,8 @@ public class MigrationTest extends BaseUnitTestCase {
 
 	@Test
 	@JiraKey( value = "HHH-9550" )
-	public void testSameTableNameDifferentExplicitSchemas() {
-		MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
+	public void testSameTableNameDifferentExplicitSchemas(ServiceRegistryScope registryScope) {
+		MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
 				.addAnnotatedClass( CustomerInfo.class )
 				.addAnnotatedClass( PersonInfo.class )
 				.buildMetadata();

@@ -4,14 +4,11 @@
  */
 package org.hibernate.orm.test.jpa;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.Query;
 
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -20,30 +17,35 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.stat.Statistics;
-
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
 
-import jakarta.persistence.EntityExistsException;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.PersistenceException;
-import jakarta.persistence.Query;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gavin King
  */
-public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
+public class EntityManagerTest extends EntityManagerFactoryBasedFunctionalTest {
 	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] {
@@ -53,221 +55,207 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		};
 	}
 
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings({"unchecked"})
 	protected void addConfigOptions(Map options) {
 		options.put( Environment.GENERATE_STATISTICS, "true" );
 		options.put( Environment.JPA_CLOSED_COMPLIANCE, "true" );
 	}
 
 	@Override
-	public Map<Class<?>, String> getCachedClasses() {
-		Map<Class<?>, String> result = new HashMap<>();
+	public Map<Class, String> getCachedClasses() {
+		Map<Class, String> result = new HashMap<>();
 		result.put( Item.class, "read-write" );
 		return result;
 	}
 
 	@Override
 	public Map<String, String> getCachedCollections() {
-		Map<String, String> result = new HashMap<String, String>();
-		result.put( Item.class.getName() + ".distributors", "read-write,"+Item.class.getName() + ".distributors" );
+		Map<String, String> result = new HashMap<>();
+		result.put( Item.class.getName() + ".distributors", "read-write," + Item.class.getName() + ".distributors" );
 		return result;
+	}
+
+	@AfterEach
+	public void cleanupTestData() {
+		entityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test
 	public void testEntityManager() {
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
 
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		em.persist( item );
-		assertTrue( em.contains( item ) );
-		em.getTransaction().commit();
+		inEntityManager( entityManager -> {
+			entityManager.getTransaction().begin();
+			entityManager.persist( item );
+			assertTrue( entityManager.contains( item ) );
+			entityManager.getTransaction().commit();
 
-		assertTrue( em.contains( item ) );
+			entityManager.getTransaction().begin();
+			Item item1 = (Item) entityManager.createQuery( "select i from Item i where descr like 'M%'" )
+					.getSingleResult();
+			assertNotNull( item1 );
+			assertSame( item, item1 );
+			item.setDescr( "Micro$oft wireless mouse" );
+			assertTrue( entityManager.contains( item ) );
+			entityManager.getTransaction().commit();
 
-		em.getTransaction().begin();
-		Item item1 = ( Item ) em.createQuery( "select i from Item i where descr like 'M%'" ).getSingleResult();
-		assertNotNull( item1 );
-		assertSame( item, item1 );
-		item.setDescr( "Micro$oft wireless mouse" );
-		assertTrue( em.contains( item ) );
-		em.getTransaction().commit();
+			assertTrue( entityManager.contains( item ) );
 
-		assertTrue( em.contains( item ) );
+			entityManager.getTransaction().begin();
+			item1 = entityManager.find( Item.class, "Mouse" );
+			assertSame( item, item1 );
+			entityManager.getTransaction().commit();
+			assertTrue( entityManager.contains( item ) );
 
-		em.getTransaction().begin();
-		item1 = em.find( Item.class, "Mouse" );
-		assertSame( item, item1 );
-		em.getTransaction().commit();
-		assertTrue( em.contains( item ) );
+			item1 = entityManager.find( Item.class, "Mouse" );
+			assertSame( item, item1 );
+			assertTrue( entityManager.contains( item ) );
 
-		item1 = em.find( Item.class, "Mouse" );
-		assertSame( item, item1 );
-		assertTrue( em.contains( item ) );
+			item1 = (Item) entityManager.createQuery( "select i from Item i where descr like 'M%'" ).getSingleResult();
+			assertNotNull( item1 );
+			assertSame( item, item1 );
+			assertTrue( entityManager.contains( item ) );
 
-		item1 = ( Item ) em.createQuery( "select i from Item i where descr like 'M%'" ).getSingleResult();
-		assertNotNull( item1 );
-		assertSame( item, item1 );
-		assertTrue( em.contains( item ) );
-
-		em.getTransaction().begin();
-		assertTrue( em.contains( item ) );
-		em.remove( item );
-		em.remove( item ); //Second should be no-op
-		em.getTransaction().commit();
-
-		em.close();
+			entityManager.getTransaction().begin();
+			assertTrue( entityManager.contains( item ) );
+			entityManager.remove( item );
+			entityManager.remove( item ); //Second should be no-op
+			entityManager.getTransaction().commit();
+		} );
 	}
 
 	@Test
-	public void testConfiguration() throws Exception {
+	public void testConfiguration() {
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
 		Distributor res = new Distributor();
 		res.setName( "Bruce" );
-		item.setDistributors( new HashSet<Distributor>() );
+		item.setDistributors( new HashSet<>() );
 		item.getDistributors().add( res );
 		Statistics stats = entityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled( true );
 
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-
-		em.persist( res );
-		em.persist( item );
-		assertTrue( em.contains( item ) );
-
-		em.getTransaction().commit();
-		em.close();
+		inTransaction( entityManager -> {
+			entityManager.persist( res );
+			entityManager.persist( item );
+			assertTrue( entityManager.contains( item ) );
+		} );
 
 		assertEquals( 1, stats.getSecondLevelCachePutCount() );
 		assertEquals( 0, stats.getSecondLevelCacheHitCount() );
 
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		Item second = em.find( Item.class, item.getName() );
-		assertEquals( 1, second.getDistributors().size() );
-		assertEquals( 1, stats.getSecondLevelCacheHitCount() );
-		em.getTransaction().commit();
-		em.close();
+		inTransaction( entityManager -> {
+			Item second = entityManager.find( Item.class, item.getName() );
+			assertEquals( 1, second.getDistributors().size() );
+			assertEquals( 1, stats.getSecondLevelCacheHitCount() );
+		} );
 
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		second = em.find( Item.class, item.getName() );
-		assertEquals( 1, second.getDistributors().size() );
-		assertEquals( 3, stats.getSecondLevelCacheHitCount() );
-		em.remove( second );
-		em.remove( second.getDistributors().iterator().next() );
-		em.getTransaction().commit();
-		em.close();
+		inTransaction( entityManager -> {
+			Item second = entityManager.find( Item.class, item.getName() );
+			assertEquals( 1, second.getDistributors().size() );
+			assertEquals( 3, stats.getSecondLevelCacheHitCount() );
+			entityManager.remove( second );
+			entityManager.remove( second.getDistributors().iterator().next() );
+		} );
 
 		stats.clear();
 		stats.setStatisticsEnabled( false );
 	}
 
 	@Test
-	public void testContains() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		Integer nonManagedObject = Integer.valueOf( 4 );
-		try {
-			em.contains( nonManagedObject );
-			fail( "Should have raised an exception" );
-		}
-		catch ( IllegalArgumentException iae ) {
-			//success
-			if ( em.getTransaction() != null ) {
-				em.getTransaction().rollback();
-			}
-		}
-		finally {
-			em.close();
-		}
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		Item item = new Item();
-		item.setDescr( "Mine" );
-		item.setName( "Juggy" );
-		em.persist( item );
-		em.getTransaction().commit();
-		em.getTransaction().begin();
-		item = em.getReference( Item.class, item.getName() );
-		assertTrue( em.contains( item ) );
-		em.remove( item );
-		em.getTransaction().commit();
-		em.close();
+	public void testContains() {
+		inTransaction( entityManager -> {
+			Integer nonManagedObject = 4;
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> entityManager.contains( nonManagedObject ),
+					"Should have raised an IllegalArgumentException"
+			);
+		} );
+		final String name = fromTransaction( entityManager -> {
+			Item item = new Item();
+			item.setDescr( "Mine" );
+			item.setName( "Juggy" );
+			entityManager.persist( item );
+			return item.getName();
+		} );
+		inTransaction( entityManager -> {
+			Item item = entityManager.getReference( Item.class, name );
+			assertTrue( entityManager.contains( item ) );
+			entityManager.remove( item );
+		} );
 	}
 
 	@Test
-	public void testClear() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		Wallet w = new Wallet();
-		w.setBrand( "Lacoste" );
-		w.setModel( "Minimic" );
-		w.setSerial( "0100202002" );
-		em.persist( w );
-		em.flush();
-		em.clear();
-		assertFalse( em.contains( w ) );
-		em.getTransaction().rollback();
-		em.close();
+	public void testClear() {
+		inTransaction( entityManager -> {
+			Wallet w = new Wallet();
+			w.setBrand( "Lacoste" );
+			w.setModel( "Minimic" );
+			w.setSerial( "0100202002" );
+			entityManager.persist( w );
+			entityManager.flush();
+			entityManager.clear();
+			assertFalse( entityManager.contains( w ) );
+		} );
 	}
 
 	@Test
-	public void testFlushMode() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.setFlushMode( FlushModeType.COMMIT );
-		assertEquals( FlushModeType.COMMIT, em.getFlushMode() );
-		( (Session) em ).setHibernateFlushMode( FlushMode.ALWAYS );
-		assertEquals( em.getFlushMode(), FlushModeType.AUTO );
-		em.close();
+	public void testFlushMode() {
+		inEntityManager( entityManager -> {
+			entityManager.setFlushMode( FlushModeType.COMMIT );
+			assertEquals( FlushModeType.COMMIT, entityManager.getFlushMode() );
+			((Session) entityManager).setHibernateFlushMode( FlushMode.ALWAYS );
+			assertEquals( FlushModeType.AUTO, entityManager.getFlushMode() );
+		} );
 	}
 
 	@Test
-	public void testPersistNoneGenerator() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		Wallet w = new Wallet();
-		w.setBrand( "Lacoste" );
-		w.setModel( "Minimic" );
-		w.setSerial( "0100202002" );
-		em.persist( w );
-		em.getTransaction().commit();
-		em.getTransaction().begin();
-		Wallet wallet = em.find( Wallet.class, w.getSerial() );
-		assertEquals( w.getBrand(), wallet.getBrand() );
-		em.remove( wallet );
-		em.getTransaction().commit();
-		em.close();
+	public void testPersistNoneGenerator() {
+		inTransaction( entityManager -> {
+			Wallet w = new Wallet();
+			w.setBrand( "Lacoste" );
+			w.setModel( "Minimic" );
+			w.setSerial( "0100202002" );
+			entityManager.persist( w );
+			entityManager.getTransaction().commit();
+			entityManager.getTransaction().begin();
+			Wallet wallet = entityManager.find( Wallet.class, w.getSerial() );
+			assertEquals( w.getBrand(), wallet.getBrand() );
+			entityManager.remove( wallet );
+		} );
 	}
 
 	@Test
 	public void testSerializableException() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			Query query = em.createQuery( "SELECT p FETCH JOIN p.distributors FROM Item p" );
-			query.getSingleResult();
-		}
-		catch ( IllegalArgumentException e ) {
-			ByteArrayOutputStream stream = new ByteArrayOutputStream();
-			ObjectOutput out = new ObjectOutputStream( stream );
-			out.writeObject( e );
-			out.close();
-			byte[] serialized = stream.toByteArray();
-			stream.close();
-			ByteArrayInputStream byteIn = new ByteArrayInputStream( serialized );
-			ObjectInputStream in = new ObjectInputStream( byteIn );
-			IllegalArgumentException deserializedException = ( IllegalArgumentException ) in.readObject();
-			in.close();
-			byteIn.close();
-			assertNull( deserializedException.getCause().getCause() );
-			assertNull( e.getCause().getCause() );
-		}
-		em.getTransaction().rollback();
-		em.close();
-
+		inTransaction( entityManager -> {
+			IllegalArgumentException iae = assertThrows(
+					IllegalArgumentException.class,
+					() -> {
+						Query query = entityManager.createQuery(
+								"SELECT p FETCH JOIN p.distributors FROM Item p" );
+						query.getSingleResult();
+					}
+			);
+			try {
+				ByteArrayOutputStream stream = new ByteArrayOutputStream();
+				ObjectOutput out = new ObjectOutputStream( stream );
+				out.writeObject( iae );
+				out.close();
+				byte[] serialized = stream.toByteArray();
+				stream.close();
+				ByteArrayInputStream byteIn = new ByteArrayInputStream( serialized );
+				ObjectInputStream in = new ObjectInputStream( byteIn );
+				IllegalArgumentException deserializedException = (IllegalArgumentException) in.readObject();
+				in.close();
+				byteIn.close();
+				assertNull( deserializedException.getCause().getCause() );
+				assertNull( iae.getCause().getCause() );
+			}
+			catch (IOException | ClassNotFoundException e) {
+				throw new RuntimeException( e );
+			}
+		} );
 
 		Exception e = new HibernateException( "Exception", new NullPointerException( "NPE" ) );
 		ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -278,255 +266,185 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		stream.close();
 		ByteArrayInputStream byteIn = new ByteArrayInputStream( serialized );
 		ObjectInputStream in = new ObjectInputStream( byteIn );
-		HibernateException deserializedException = ( HibernateException ) in.readObject();
+		HibernateException deserializedException = (HibernateException) in.readObject();
 		in.close();
 		byteIn.close();
-		assertNotNull( "Arbitrary exceptions nullified", deserializedException.getCause() );
+		assertNotNull( deserializedException.getCause(), "Arbitrary exceptions nullified" );
 		assertNotNull( e.getCause() );
 	}
 
 	@Test
-	public void testIsOpen() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		assertTrue( em.isOpen() );
-		em.getTransaction().begin();
-		assertTrue( em.isOpen() );
-		em.getTransaction().rollback();
-		em.close();
-		assertFalse( em.isOpen() );
-	}
-
-	@Test
-	@JiraKey( value = "EJB-9" )
-	public void testGet() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		Item item = em.getReference( Item.class, "nonexistentone" );
+	public void testIsOpen() {
+		EntityManager entityManager = entityManagerFactory().createEntityManager();
 		try {
-			item.getDescr();
-			em.getTransaction().commit();
-			fail( "Object with wrong id should have failed" );
-		}
-		catch ( EntityNotFoundException e ) {
-			//success
-			if ( em.getTransaction() != null ) {
-				em.getTransaction().rollback();
-			}
+			assertTrue( entityManager.isOpen() );
+			entityManager.getTransaction().begin();
+			assertTrue( entityManager.isOpen() );
+			entityManager.getTransaction().rollback();
+			entityManager.close();
+			assertFalse( entityManager.isOpen() );
 		}
 		finally {
-			em.close();
+			if (entityManager.isOpen()) {
+				entityManager.close();
+			}
 		}
 	}
 
 	@Test
-	public void testGetProperties() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		Map<String, Object> properties = em.getProperties();
-		assertNotNull( properties );
-		try {
-			properties.put( "foo", "bar" );
-			fail();
-		}
-		catch ( UnsupportedOperationException e ) {
-			// success
-		}
-
-		assertTrue( properties.containsKey(HibernateHints.HINT_FLUSH_MODE) );
+	@JiraKey(value = "EJB-9")
+	public void testGet() throws Exception {
+		inEntityManager( entityManager -> {
+			Item item = entityManager.getReference( Item.class, "nonexistentone" );
+			assertThrows(
+					EntityNotFoundException.class,
+					item::getDescr,
+					"Object with wrong id should have thrown an EntityNotFoundException"
+			);
+		} );
 	}
 
 	@Test
-	public void testSetProperty() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		Wallet wallet = new Wallet();
-		wallet.setSerial( "000" );
-		em.persist( wallet );
-		em.getTransaction().commit();
-
-		em.clear();
-		assertEquals( em.getProperties().get(HibernateHints.HINT_FLUSH_MODE), FlushMode.AUTO );
-		assertNotNull(
-				"With default settings the entity should be persisted on commit.",
-				em.find( Wallet.class, wallet.getSerial() )
-		);
-
-		em.getTransaction().begin();
-		wallet = em.merge( wallet );
-		em.remove( wallet );
-		em.getTransaction().commit();
-
-		em.clear();
-		assertNull( "The entity should have been removed.", em.find( Wallet.class, wallet.getSerial() ) );
-
-		em.setProperty( "org.hibernate.flushMode", "MANUAL" +
-				"" );
-		em.getTransaction().begin();
-		wallet = new Wallet();
-		wallet.setSerial( "000" );
-		em.persist( wallet );
-		em.getTransaction().commit();
-
-		em.clear();
-		assertNull(
-				"With a flush mode of manual the entity should not have been persisted.",
-				em.find( Wallet.class, wallet.getSerial() )
-		);
-		assertEquals( "MANUAL", em.getProperties().get(HibernateHints.HINT_FLUSH_MODE) );
-		em.close();
+	public void testGetProperties() {
+		inEntityManager( entityManager -> {
+			Map<String, Object> properties = entityManager.getProperties();
+			assertNotNull( properties );
+			assertThrows(
+					UnsupportedOperationException.class,
+					() -> properties.put( "foo", "bar" )
+			);
+			assertTrue( properties.containsKey( HibernateHints.HINT_FLUSH_MODE ) );
+		} );
 	}
 
 	@Test
-	public void testSetAndGetUnserializableProperty() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		try {
+	public void testSetProperty() {
+		inEntityManager( entityManager -> {
+			entityManager.getTransaction().begin();
+			Wallet wallet = new Wallet();
+			wallet.setSerial( "000" );
+			entityManager.persist( wallet );
+			entityManager.getTransaction().commit();
+
+			entityManager.clear();
+			assertEquals( FlushMode.AUTO,
+					entityManager.getProperties().get( HibernateHints.HINT_FLUSH_MODE ) );
+			assertNotNull(
+					entityManager.find( Wallet.class, wallet.getSerial() ),
+					"With default settings the entity should be persisted on commit."
+			);
+
+			entityManager.getTransaction().begin();
+			wallet = entityManager.merge( wallet );
+			entityManager.remove( wallet );
+			entityManager.getTransaction().commit();
+
+			entityManager.clear();
+			assertNull(
+					entityManager.find( Wallet.class, wallet.getSerial() ),
+					"The entity should have been removed."
+			);
+
+			entityManager.setProperty( "org.hibernate.flushMode", "MANUAL" );
+
+			entityManager.getTransaction().begin();
+			wallet = new Wallet();
+			wallet.setSerial( "000" );
+			entityManager.persist( wallet );
+			entityManager.getTransaction().commit();
+
+			entityManager.clear();
+			assertNull(
+					entityManager.find( Wallet.class, wallet.getSerial() ),
+					"With a flush mode of manual the entity should not have been persisted."
+			);
+			assertEquals( "MANUAL",
+					entityManager.getProperties().get( HibernateHints.HINT_FLUSH_MODE ) );
+		} );
+	}
+
+	@Test
+	public void testSetAndGetUnserializableProperty() {
+		inEntityManager( entityManager -> {
 			MyObject object = new MyObject();
 			object.value = 5;
-			em.setProperty( "MyObject", object );
-			assertFalse( em.getProperties().keySet().contains( "MyObject" ) );
-		}
-		finally {
-			em.close();
-		}
+			entityManager.setProperty( "MyObject", object );
+			assertFalse( entityManager.getProperties().containsKey( "MyObject" ) );
+		} );
 	}
 
 	@Test
-	public void testSetAndGetSerializedProperty() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		try {
-			em.setProperty( "MyObject", "Test123" );
-			assertTrue( em.getProperties().keySet().contains( "MyObject" ) );
-			assertEquals( "Test123", em.getProperties().get( "MyObject" ) );
-		}
-		finally {
-			em.close();
-		}
+	public void testSetAndGetSerializedProperty() {
+		inEntityManager( entityManager -> {
+			entityManager.setProperty( "MyObject", "Test123" );
+			assertTrue( entityManager.getProperties().containsKey( "MyObject" ) );
+			assertEquals( "Test123", entityManager.getProperties().get( "MyObject" ) );
+		} );
 	}
 
 	@Test
-	public void testPersistExisting() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		Wallet w = new Wallet();
-		w.setBrand( "Lacoste" );
-		w.setModel( "Minimic" );
-		w.setSerial( "0100202002" );
-		em.persist( w );
-		w = new Wallet();
-		w.setBrand( "Lacoste" );
-		w.setModel( "Minimic" );
-		w.setSerial( "0100202002" );
-		try {
-			em.persist( w );
-		}
-		catch ( EntityExistsException eee ) {
-			//success
-			if ( em.getTransaction() != null ) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-			return;
-		}
-		try {
-			em.getTransaction().commit();
-			fail( "Should have raised an exception" );
-		}
-		catch ( PersistenceException pe ) {
-		}
-		finally {
-			em.close();
-		}
+	public void testPersistExisting() {
+		inTransaction( entityManager -> {
+			Wallet w = new Wallet();
+			w.setBrand( "Lacoste" );
+			w.setModel( "Minimic" );
+			w.setSerial( "0100202002" );
+			entityManager.persist( w );
+			final Wallet w2 = new Wallet();
+			w2.setBrand( "Lacoste" );
+			w2.setModel( "Minimic" );
+			w2.setSerial( "0100202002" );
+			assertThrows(
+					EntityExistsException.class,
+					() -> entityManager.persist( w2 ),
+					"Should have thrown an EntityExistsException"
+			);
+		} );
 	}
 
 	@Test
-	public void testFactoryClosed() throws Exception {
-		EntityManager em = createIsolatedEntityManager();
-		assertTrue( em.isOpen() );
-		assertTrue( em.getEntityManagerFactory().isOpen());
-
-		em.getEntityManagerFactory().close();	// closing the entity manager factory should close the EM
-		assertFalse(em.isOpen());
-
-		try {
-			em.close();
-			fail("closing entity manager that uses a closed session factory, must throw IllegalStateException");
-		}
-		catch( IllegalStateException expected) {
-			// success
-		}
+	public void testEntityNotFoundException() {
+		inTransaction( entityManager -> {
+			Wallet w = new Wallet();
+			w.setBrand( "Lacoste" );
+			w.setModel( "Minimic" );
+			w.setSerial( "0324" );
+			entityManager.persist( w );
+			Wallet wallet = entityManager.find( Wallet.class, w.getSerial() );
+			entityManager.createNativeQuery( "delete from Wallet" ).executeUpdate();
+			assertThrows(
+					EntityNotFoundException.class,
+					() -> entityManager.refresh( wallet ),
+					"Should have raised an EntityNotFoundException"
+			);
+		} );
 	}
 
 	@Test
-	public void testEntityNotFoundException() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		Wallet w = new Wallet();
-		w.setBrand("Lacoste");
-		w.setModel("Minimic");
-		w.setSerial("0324");
-		em.persist(w);
-		Wallet wallet = em.find( Wallet.class, w.getSerial() );
-		em.createNativeQuery("delete from Wallet").executeUpdate();
-		try {
-			em.refresh(wallet);
-		} catch (EntityNotFoundException enfe) {
-			// success
-			if (em.getTransaction() != null) {
-				em.getTransaction().rollback();
-			}
-			em.close();
-			return;
-		}
-
-		try {
-			em.getTransaction().commit();
-			fail("Should have raised an EntityNotFoundException");
-		} catch (PersistenceException pe) {
-		} finally {
-			em.close();
-		}
-	}
-
-	@Test
-	@JiraKey( value = "HHH-11958" )
+	@JiraKey(value = "HHH-11958")
 	public void testReadonlyHibernateQueryHint() {
+		final String serial = "0324";
 
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		Wallet w = new Wallet();
-		w.setBrand("Lacoste");
-		w.setModel("Minimic");
-		w.setSerial("0324");
-		em.persist(w);
-		try {
-			em.getTransaction().commit();
-		} finally {
-			em.close();
-		}
+		inTransaction( entityManager -> {
+			Wallet w = new Wallet();
+			w.setBrand( "Lacoste" );
+			w.setModel( "Minimic" );
+			w.setSerial( serial );
+			entityManager.persist( w );
+		} );
 
-		em = getOrCreateEntityManager();
 		Map<String, Object> hints = new HashMap<>();
-		hints.put(HINT_READ_ONLY, true);
+		hints.put( HINT_READ_ONLY, true );
 
-		em.getTransaction().begin();
+		inTransaction( entityManager -> {
+			Wallet fetchedWallet = entityManager.find( Wallet.class, serial, hints );
+			fetchedWallet.setBrand( "Givenchy" );
+		} );
 
-		Wallet fetchedWallet = em.find(Wallet.class, w.getSerial(), hints);
-		fetchedWallet.setBrand("Givenchy");
-
-		try {
-			em.getTransaction().commit();
-		} finally {
-			em.close();
-		}
-
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		fetchedWallet = em.find(Wallet.class, w.getSerial());
-		try {
-			em.getTransaction().commit();
-			assertEquals("Lacoste", fetchedWallet.getBrand());
-		} finally {
-			em.close();
-		}
+		inTransaction( entityManager -> {
+				Wallet fetchedWallet = entityManager.find( Wallet.class, serial );
+			assertEquals( "Lacoste", fetchedWallet.getBrand() );
+		} );
 	}
 
 	private static class MyObject {

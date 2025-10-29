@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.schemaupdate;
 
-import java.io.Serializable;
-import java.util.List;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
@@ -14,63 +12,52 @@ import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
-
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
-
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.jboss.logging.Logger;
+import org.junit.jupiter.api.Test;
+
+import java.io.Serializable;
+import java.util.List;
 
 import static jakarta.persistence.ConstraintMode.NO_CONSTRAINT;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-9865")
+@ServiceRegistry
+@DomainModel(annotatedClasses = ImplicitCompositeKeyJoinTest.Employee.class)
 public class ImplicitCompositeKeyJoinTest {
 	private static final Logger LOGGER = Logger.getLogger( ImplicitCompositeKeyJoinTest.class );
 
 	@Test
-	public void testSchemaCreationSQLCommandIsGeneratedWithTheCorrectColumnSizeValues() throws Exception {
-		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
-		try {
-			final org.hibernate.boot.Metadata metadata = new MetadataSources( ssr )
-					.addAnnotatedClass( Employee.class )
-					.buildMetadata();
+	public void testCorrectColumnSizeValues(ServiceRegistryScope registryScope, DomainModelScope modelScope) {
+		boolean createTableEmployeeFound = false;
 
-			boolean createTableEmployeeFound = false;
+		final List<String> commands = new SchemaCreatorImpl( registryScope.getRegistry() )
+				.generateCreationCommands( modelScope.getDomainModel(), false );
 
-			final List<String> commands = new SchemaCreatorImpl( ssr ).generateCreationCommands(
-					metadata,
-					false
-			);
+		for ( String command : commands ) {
+			LOGGER.info( command );
+			if ( command.toLowerCase().matches( "^create( (column|row))? table employee.+" ) ) {
+				final String[] columnsDefinition = getColumnsDefinition( command );
 
-			for ( String command : commands ) {
-				LOGGER.info( command );
-				if ( command.toLowerCase().matches( "^create( (column|row))? table employee.+" ) ) {
-					final String[] columnsDefinition = getColumnsDefinition( command );
-
-					for ( String columnsDefinition1 : columnsDefinition ) {
-						checkColumnSize( columnsDefinition1 );
-					}
-					createTableEmployeeFound = true;
+				for ( String columnsDefinition1 : columnsDefinition ) {
+					checkColumnSize( columnsDefinition1 );
 				}
+				createTableEmployeeFound = true;
 			}
-			assertTrue(
-					"Expected create table command for Employee entity not found",
-					createTableEmployeeFound
-			);
 		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
+		assertTrue( createTableEmployeeFound,
+				"Expected create table command for Employee entity not found" );
 	}
 
 	private String[] getColumnsDefinition(String command) {

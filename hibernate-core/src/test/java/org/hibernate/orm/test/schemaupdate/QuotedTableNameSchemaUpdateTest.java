@@ -4,68 +4,51 @@
  */
 package org.hibernate.orm.test.schemaupdate;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.hbm2ddl.SchemaUpdate;
+import org.hibernate.tool.schema.TargetType;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
+import org.junit.jupiter.api.io.TempDir;
+
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.EnumSet;
 import java.util.List;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.hbm2ddl.SchemaUpdate;
-import org.hibernate.tool.schema.TargetType;
-
-import org.hibernate.testing.Skip;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.hibernate.cfg.SchemaToolingSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS;
 
 /**
  * @author Andrea Boriero
  */
-
-public class QuotedTableNameSchemaUpdateTest extends BaseUnitTestCase {
-
-	private File output;
-	private StandardServiceRegistry ssr;
-
-	@Before
-	public void setUp() throws IOException {
-		output = File.createTempFile( "update_script", ".sql" );
-		output.deleteOnExit();
-		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( AvailableSettings.HBM2DDL_CREATE_SCHEMAS, "true" )
-				.build();
-	}
-
-	@After
-	public void tearsDown() {
-		StandardServiceRegistryBuilder.destroy( ssr );
-	}
-
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ServiceRegistry(settings = @Setting(name = JAKARTA_HBM2DDL_CREATE_SCHEMAS, value = "true"))
+public class QuotedTableNameSchemaUpdateTest {
 
 	@Test
 	@JiraKey(value = "HHH-10820")
-	@Skip(condition = Skip.OperatingSystem.Windows.class, message = "On Windows, MySQL is case insensitive!")
-	public void testSchemaUpdateWithQuotedTableName() throws Exception {
-		final MetadataSources metadataSources = new MetadataSources( ssr );
-		metadataSources.addAnnotatedClass( QuotedTable.class );
+	@DisabledOnOs(value = OS.WINDOWS, disabledReason = "On Windows, MySQL is case insensitive!")
+	public void testSchemaUpdateWithQuotedTableName(
+			ServiceRegistryScope registryScope,
+			@TempDir File tempDir) throws Exception {
+		var output = new File( tempDir, "update_script.sql" );
 
-		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		var metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
+				.addAnnotatedClass( QuotedTable.class )
+				.buildMetadata();
 		metadata.orderColumns( false );
 		metadata.validate();
 

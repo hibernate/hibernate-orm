@@ -4,16 +4,6 @@
  */
 package org.hibernate.orm.test.schemaupdate;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -29,137 +19,144 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
-
-import org.hibernate.boot.MetadataSources;
+import org.hamcrest.MatcherAssert;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.testing.SkipLog;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.ServiceRegistryFunctionalTesting;
+import org.hibernate.testing.orm.junit.ServiceRegistryProducer;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import org.hibernate.testing.SkipLog;
-import org.hibernate.testing.orm.junit.DialectContext;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import java.io.File;
+import java.nio.file.Files;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.hibernate.cfg.MappingSettings.KEYWORD_AUTO_QUOTING_ENABLED;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY;
 
 /**
  * @author Andrea Boriero
  */
-@RunWith(Parameterized.class)
-public class SchemaUpdateTest {
-
-	private boolean skipTest;
-
-	@Parameterized.Parameters
-	public static Collection<String> parameters() {
-		return Arrays.asList(
-				new String[] {JdbcMetadataAccessStrategy.GROUPED.toString(), JdbcMetadataAccessStrategy.INDIVIDUALLY.toString()}
+@SkipForDialect(dialectClass = SQLServerDialect.class)
+@SkipForDialect(dialectClass = SybaseDialect.class)
+@SkipForDialect(dialectClass = TiDBDialect.class)
+@ParameterizedClass
+@MethodSource("parameters")
+@TestInstance( TestInstance.Lifecycle.PER_METHOD )
+@ServiceRegistryFunctionalTesting
+@DomainModel(annotatedClasses = {
+		SchemaUpdateTest.LowercaseTableNameEntity.class,
+		SchemaUpdateTest.TestEntity.class,
+		SchemaUpdateTest.UppercaseTableNameEntity.class,
+		SchemaUpdateTest.MixedCaseTableNameEntity.class,
+		SchemaUpdateTest.Match.class,
+		SchemaUpdateTest.InheritanceRootEntity.class,
+		SchemaUpdateTest.InheritanceChildEntity.class,
+		SchemaUpdateTest.InheritanceSecondChildEntity.class
+})
+public class SchemaUpdateTest implements ServiceRegistryProducer {
+	public static Collection<JdbcMetadataAccessStrategy> parameters() {
+		return List.of(
+				JdbcMetadataAccessStrategy.GROUPED,
+				JdbcMetadataAccessStrategy.INDIVIDUALLY
 		);
 	}
 
-	@Parameterized.Parameter
-	public String jdbcMetadataExtractorStrategy;
+	public JdbcMetadataAccessStrategy jdbcMetadataExtractorStrategy;
+	private final File output;
 
-	private File output;
-	private StandardServiceRegistry ssr;
-	private MetadataImplementor metadata;
+	private boolean skip;
 
-	@Before
-	public void setUp() throws IOException {
-		if ( SQLServerDialect.class.isAssignableFrom( DialectContext.getDialect().getClass() )
-				|| SybaseDialect.class.isAssignableFrom( DialectContext.getDialect().getClass() )
-				|| TiDBDialect.class.isAssignableFrom( DialectContext.getDialect().getClass() ) ) {
-			// SQLServerDialect, SybaseDialect and TiDB store case-insensitive quoted identifiers in mixed case,
-			// so the checks at the end of this method won't work.
-			// For TiDB, only 'lower_case_table_names=2' is supported.
-			skipTest = true;
-			return;
-		}
-		output = File.createTempFile( "update_script", ".sql" );
-		output.deleteOnExit();
-		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, "true" )
-				.applySetting( AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY, jdbcMetadataExtractorStrategy )
+	public SchemaUpdateTest(
+			JdbcMetadataAccessStrategy jdbcMetadataExtractorStrategy,
+			@TempDir File outputDir) {
+		this.jdbcMetadataExtractorStrategy = jdbcMetadataExtractorStrategy;
+		this.output = new File( outputDir, "update_script.sql" );
+	}
+
+	@Override
+	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder) {
+		return builder.applySetting( KEYWORD_AUTO_QUOTING_ENABLED, true )
+				.applySetting( HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY, jdbcMetadataExtractorStrategy )
 				.build();
+	}
 
-		final MetadataSources metadataSources = new MetadataSources( ssr );
-		metadataSources.addAnnotatedClass( LowercaseTableNameEntity.class );
-		metadataSources.addAnnotatedClass( TestEntity.class );
-		metadataSources.addAnnotatedClass( UppercaseTableNameEntity.class );
-		metadataSources.addAnnotatedClass( MixedCaseTableNameEntity.class );
-		metadataSources.addAnnotatedClass( Match.class );
-		metadataSources.addAnnotatedClass( InheritanceRootEntity.class );
-		metadataSources.addAnnotatedClass( InheritanceChildEntity.class );
-		metadataSources.addAnnotatedClass( InheritanceSecondChildEntity.class );
-
-		metadata = (MetadataImplementor) metadataSources.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
-
+	@BeforeEach
+	void prepare(ServiceRegistryScope registryScope) {
 		// Databases that use case-insensitive quoted identifiers need to be skipped.
 		// The following checks will work for checking those dialects that store case-insensitive
 		// quoted identifiers as upper-case or lower-case. It does not work for dialects that
 		// store case-insensitive identifiers in mixed case (like SQL Server).
-		final IdentifierHelper identifierHelper  = ssr.getService( JdbcEnvironment.class ).getIdentifierHelper();
+		final IdentifierHelper identifierHelper  = registryScope.getRegistry().requireService( JdbcEnvironment.class ).getIdentifierHelper();
 		final String lowerCaseName = identifierHelper.toMetaDataObjectName( Identifier.toIdentifier( "testentity", true ) );
 		final String upperCaseName = identifierHelper.toMetaDataObjectName( Identifier.toIdentifier("TESTENTITY", true ) );
 		final String mixedCaseName = identifierHelper.toMetaDataObjectName( Identifier.toIdentifier("TESTentity", true ) );
 		if ( lowerCaseName.equals( upperCaseName ) ||
-				lowerCaseName.equals( mixedCaseName ) ||
-				upperCaseName.equals( mixedCaseName ) ) {
-			StandardServiceRegistryBuilder.destroy( ssr );
-			skipTest = true;
+			lowerCaseName.equals( mixedCaseName ) ||
+			upperCaseName.equals( mixedCaseName ) ) {
+			skip = true;
 		}
 	}
 
-	@After
-	public void tearsDown() {
-		if ( skipTest ) {
+	@AfterEach
+	public void tearsDown(DomainModelScope modelScope) {
+		if ( skip ) {
 			return;
 		}
+
 		new SchemaExport().setHaltOnError( true )
 				.setOutputFile( output.getAbsolutePath() )
 				.setFormat( false )
-				.drop( EnumSet.of( TargetType.DATABASE ), metadata );
-		StandardServiceRegistryBuilder.destroy( ssr );
+				.drop( EnumSet.of( TargetType.DATABASE ), modelScope.getDomainModel() );
 	}
 
 	@Test
-	public void testSchemaUpdateAndValidation() throws Exception {
-		if ( skipTest ) {
+	public void testSchemaUpdateAndValidation(DomainModelScope modelScope) throws Exception {
+		if ( skip ) {
 			SkipLog.reportSkip( "skipping test because quoted names are not case-sensitive." );
 			return;
 		}
 
 		new SchemaUpdate().setHaltOnError( true )
-				.execute( EnumSet.of( TargetType.DATABASE ), metadata );
+				.execute( EnumSet.of( TargetType.DATABASE ), modelScope.getDomainModel() );
 
-		new SchemaValidator().validate( metadata );
+		new SchemaValidator().validate( modelScope.getDomainModel() );
 
 		new SchemaUpdate().setHaltOnError( true )
 				.setOutputFile( output.getAbsolutePath() )
 				.setFormat( false )
-				.execute( EnumSet.of( TargetType.DATABASE, TargetType.SCRIPT ), metadata );
+				.execute( EnumSet.of( TargetType.DATABASE, TargetType.SCRIPT ), modelScope.getDomainModel() );
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		assertThat( "The update output file should be empty", fileContent, is( "" ) );
+		MatcherAssert.assertThat( "The update output file should be empty", fileContent, is( "" ) );
 	}
 
 	@Entity(name = "TestEntity")
@@ -206,6 +203,7 @@ public class SchemaUpdateTest {
 		MixedCaseTableNameEntity mixedCaseTableNameEntity;
 	}
 
+	@SuppressWarnings("unused")
 	@Entity(name = "TestEntity3")
 	@Table(name = "`TESTentity`", indexes = {@Index(name = "index1", columnList = "`FieLd1`"), @Index(name = "Index2", columnList = "`FIELD_2`")})
 	public static class MixedCaseTableNameEntity {
@@ -224,6 +222,7 @@ public class SchemaUpdateTest {
 		private Set<Match> matches = new HashSet<>();
 	}
 
+	@SuppressWarnings("unused")
 	@Entity(name = "Match")
 	public static class Match {
 		@Id

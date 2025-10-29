@@ -54,7 +54,6 @@ class ConcreteProxyWithSealedClassesTest {
 
 	@Entity(name = "Postman")
 	@Table(name = "Postman")
-	@ConcreteProxy
 	public static non-sealed class Postman extends Actor {
 	}
 }

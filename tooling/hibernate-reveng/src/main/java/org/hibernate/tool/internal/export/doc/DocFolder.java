@@ -41,17 +41,15 @@ public class DocFolder {
     /**
      * The File instance.
      */
-    private File file;
+    private final File file;
 
     /**
      * Holds a list with the folders that are between this folder and root.
      */
-    private List<DocFolder> pathFolders = new ArrayList<DocFolder>();
+    private final List<DocFolder> pathFolders = new ArrayList<>();
 
     /**
      * Constructor for the root folder.
-     * 
-     * @param pFileRoot the File that represents the root for the documentation.
      */
     public DocFolder(File root) {
         super();
@@ -100,11 +98,8 @@ public class DocFolder {
                         + file.getAbsolutePath() );
             }
         }
-
-        if (parent != null) {
-            pathFolders.addAll(parent.getPathFolders() );
-            pathFolders.add(this);
-        }
+        pathFolders.addAll(parent.getPathFolders() );
+        pathFolders.add(this);
     }
 
     /**

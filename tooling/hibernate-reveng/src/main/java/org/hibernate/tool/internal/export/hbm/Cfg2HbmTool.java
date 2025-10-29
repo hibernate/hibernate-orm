@@ -31,7 +31,6 @@ import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -66,7 +65,7 @@ import org.hibernate.tool.internal.util.ValueUtil;
  */
 public class Cfg2HbmTool {
 
-	private final class HasEntityPersisterVisitor implements PersistentClassVisitor {
+	private static final class HasEntityPersisterVisitor implements PersistentClassVisitor {
 		private final String name;
 
 		private HasEntityPersisterVisitor(String name) {
@@ -78,7 +77,7 @@ public class Cfg2HbmTool {
 		}
 
 		private Object bool(boolean b) {
-			return Boolean.valueOf( b );
+			return b;
 		}
 
 		public Object accept(JoinedSubclass subclass) {
@@ -100,31 +99,27 @@ public class Cfg2HbmTool {
 
 	/**
 	 * Remove any internal keys from the set, eg, any Keys that are prefixed by
-	 * 'target_', {@link PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER} and return the filtered collection.
-	 *
-	 * @param properties
-	 * @return
+	 * 'target_' and return the filtered collection.
 	 */
 	public static Properties getFilteredIdentifierGeneratorProperties(Properties properties, Properties environmentProperties) {
 		if (properties != null){
 			Properties fProp = new Properties();
-			Iterator<?> itr = properties.keySet().iterator();
-			while (itr.hasNext() ) {
-				String key = (String) itr.next();
-				if ("schema".equals(key)) {
-					String schema = properties.getProperty(key);
-					if (!isDefaultSchema(schema, environmentProperties)) {
-						fProp.put(key, schema);
-					} 
-				} else if ("catalog".equals(key)) {
-					String catalog = properties.getProperty(key);
-					if (!isDefaultCatalog(catalog, environmentProperties)) {
-						fProp.put(key, catalog);
-					}
-				} else if (! key.startsWith("target_")) {
-					fProp.put(key, properties.get(key));
-				}
-			}
+            for (Object o : properties.keySet()) {
+                String key = (String) o;
+                if ("schema".equals(key)) {
+                    String schema = properties.getProperty(key);
+                    if (!isDefaultSchema(schema, environmentProperties)) {
+                        fProp.put(key, schema);
+                    }
+                } else if ("catalog".equals(key)) {
+                    String catalog = properties.getProperty(key);
+                    if (!isDefaultCatalog(catalog, environmentProperties)) {
+                        fProp.put(key, catalog);
+                    }
+                } else if (!key.startsWith("target_")) {
+                    fProp.put(key, properties.get(key));
+                }
+            }
 			return fProp;
 		}
 		return null;
@@ -177,21 +172,16 @@ public class Cfg2HbmTool {
 
 	public boolean isUnsavedValue(Property property) {
 		SimpleValue sv = (SimpleValue) property.getValue();
-		return ((sv.getNullValue()==null) || "undefined".equals(sv.getNullValue())) ? false : true;
+		return (sv.getNullValue() != null) && !"undefined".equals(sv.getNullValue());
 	}
 
 	public String getUnsavedValue(Property property) {
 		return ( (SimpleValue) property.getValue() ).getNullValue();
 	}
 
-	/**
-	 *
-	 * @param property
-	 * @return
-	 */
 	public boolean isIdentifierGeneratorProperties(Property property) {
 		Properties val = this.getIdentifierGeneratorProperties(property);
-		return (val==null) ? false : true;
+		return val != null;
 	}
 	
 	public Properties getIdentifierGeneratorProperties(Property property) {
@@ -213,10 +203,6 @@ public class Cfg2HbmTool {
 		return result;
 	}
 	
-	/**
-	 * @param property
-	 * @return
-	 */
 	public Set<?> getFilteredIdentifierGeneratorKeySet(Property property, Properties props) {
 		return getFilteredIdentifierGeneratorProperties(this.getIdentifierGeneratorProperties(property), props).keySet();
 	}
@@ -228,10 +214,9 @@ public class Cfg2HbmTool {
     public boolean isOneToMany(Value value) {
         if(value instanceof Collection) {
             return ( (Collection)value ).isOneToMany();
-        }else if(value instanceof OneToMany){
-        	return true;
         }
-        return false;
+		else
+			return value instanceof OneToMany;
     }
 
         public boolean isManyToMany(Property property) {
@@ -284,9 +269,7 @@ public class Cfg2HbmTool {
 				return true;
 			} else if ("timestamp".equals(typeName) || "java.sql.Timestamp".equals(typeName)) {
 				return true;
-			} else if ("time".equals(typeName) || "java.sql.Time".equals(typeName)) {
-				return true;
-			}
+			} else return "time".equals(typeName) || "java.sql.Time".equals(typeName);
 		}
 		return false;
 	}
@@ -322,7 +305,7 @@ public class Cfg2HbmTool {
 
 	public boolean isFilterDefinitions(Metadata md) {
 		Map<String, FilterDefinition> filterdefs = md.getFilterDefinitions();
-		return filterdefs == null || filterdefs.isEmpty() ? false : true;
+		return filterdefs != null && !filterdefs.isEmpty();
 	}
 
 	public boolean isClassLevelOptimisticLockMode(PersistentClass pc) {
@@ -347,11 +330,7 @@ public class Cfg2HbmTool {
 
 	public boolean hasFetchMode(Property property) {
 		String fetch = getFetchMode(property);
-		if(fetch==null || "default".equals(fetch)) {
-			return false;
-		} else {
-			return true;
-		}
+        return fetch != null && !"default".equals(fetch);
 	}
 	public String getFetchMode(Property property) {
 		FetchMode fetchMode = property.getValue().getFetchMode();
@@ -372,7 +351,7 @@ public class Cfg2HbmTool {
 	}
 
 	public String columnAttributes(Column column, boolean isPrimaryKeyColumn) {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		if (column.getPrecision() != null) {
 			sb.append("precision=\"").append(column.getPrecision() ).append("\" ");
 		}
@@ -436,30 +415,29 @@ public class Cfg2HbmTool {
 
 
 	public boolean needsTable(PersistentClass clazz) {
-		Boolean accept = (Boolean) clazz.accept(new PersistentClassVisitor(){
-		
-			public Object accept(Subclass subclass) {
-				return Boolean.FALSE;
-			}
-		
-			public Object accept(JoinedSubclass subclass) {
-				return Boolean.TRUE;
-			}
-		
-			public Object accept(SingleTableSubclass subclass) {
-				return Boolean.FALSE;
-			}
-		
-			public Object accept(UnionSubclass subclass) {
-				return Boolean.TRUE;
-			}
-		
-			public Object accept(RootClass class1) {
-				return Boolean.TRUE;
-			}
-		});						
-		
-		return accept.booleanValue();
+
+        return (Boolean) clazz.accept(new PersistentClassVisitor(){
+
+            public Object accept(Subclass subclass) {
+                return Boolean.FALSE;
+            }
+
+            public Object accept(JoinedSubclass subclass) {
+                return Boolean.TRUE;
+            }
+
+            public Object accept(SingleTableSubclass subclass) {
+                return Boolean.FALSE;
+            }
+
+            public Object accept(UnionSubclass subclass) {
+                return Boolean.TRUE;
+            }
+
+            public Object accept(RootClass class1) {
+                return Boolean.TRUE;
+            }
+        });
 	}
 
 	public boolean isSubclass(PersistentClass clazz) {
@@ -473,12 +451,11 @@ public class Cfg2HbmTool {
 	public boolean hasCustomEntityPersister(PersistentClass clazz) {
 		ServiceRegistry sr = clazz.getServiceRegistry();
 		PersisterClassResolver pcr = sr.getService(PersisterClassResolver.class);
+		if (pcr == null) return false;
 		Class<?> entityPersisterClass = pcr.getEntityPersisterClass(clazz);
 		if(entityPersisterClass==null) return false;
 		final String name = entityPersisterClass.getName();
-
-		Boolean object = (Boolean) clazz.accept( new HasEntityPersisterVisitor( name ) );
-		return object.booleanValue();
+        return (Boolean) clazz.accept(new HasEntityPersisterVisitor(name));
 	}
 
 	public String getHibernateTypeName(Property p) {

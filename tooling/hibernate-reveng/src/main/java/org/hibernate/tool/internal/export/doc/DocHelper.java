@@ -82,47 +82,47 @@ public final class DocHelper {
 	 * Map with Tables keyed by Schema FQN. The keys are Strings and the values
 	 * are Lists of Tables
 	 */
-	private Map<String, List<Table>> tablesBySchema = 
+	private final Map<String, List<Table>> tablesBySchema =
 			new HashMap<String, List<Table>>();
 
 	/**
 	 * Map with classes keyed by package name. PackageName is String key and
 	 * values are List of POJOClass
 	 */
-	private Map<String, List<POJOClass>> classesByPackage = 
+	private final Map<String, List<POJOClass>> classesByPackage =
 			new HashMap<String, List<POJOClass>>();
 
 	/**
 	 * Lits of all POJOClass
 	 */
-	private List<POJOClass> classes = 
+	private final List<POJOClass> classes =
 			new ArrayList<POJOClass>();
 
 	/**
 	 * Map where the keys are column names (tableFQN.column) and the values are
 	 * lists with the Value instances where those columns referenced.
 	 */
-	private Map<String, List<Value>> valuesByColumn = 
+	private final Map<String, List<Value>> valuesByColumn =
 			new HashMap<String, List<Value>>();
 
 	/**
 	 * Holds intances of Property keyed by Value objects.
 	 */
-	private Map<Value, List<Property>> propsByValue = 
+	private final Map<Value, List<Property>> propsByValue =
 			new HashMap<Value, List<Property>>();
 
 	/**
 	 * List with all the tables.
 	 */
-	private List<Table> tables = new ArrayList<Table>();
+	private final List<Table> tables = new ArrayList<Table>();
 
 	/**
 	 * Map that holds the Schema FQN for each Table. The keys are Table
 	 * instances and the values are Strings with the Schema FQN for that table.
 	 */
-	private Map<Table, String> tableSchemaNames = new HashMap<Table, String>();
+	private final Map<Table, String> tableSchemaNames = new HashMap<Table, String>();
 
-	private Metadata metadata;
+	private final Metadata metadata;
 
 	public DocHelper(Metadata metadata, Properties properties, Cfg2JavaTool cfg2JavaTool) {
 
@@ -141,107 +141,80 @@ public final class DocHelper {
 		if (defaultSchema == null) {
 			defaultSchema = DEFAULT_NO_SCHEMA_NAME;
 		}
-		
-		Iterator<Table> tablesIter = metadata.collectTableMappings().iterator();
 
-		while (tablesIter.hasNext()) {
-			Table table = tablesIter.next();
+        for (Table table : metadata.collectTableMappings()) {
+            if (!table.isPhysicalTable()) {
+                continue;
+            }
+            tables.add(table);
 
-			if (!table.isPhysicalTable()) {
-				continue;
-			}
-			tables.add(table);
+            StringBuilder sb = new StringBuilder();
 
-			StringBuffer sb = new StringBuffer();
+            String catalog = table.getCatalog();
+            if (catalog == null) {
+                catalog = defaultCatalog;
+            }
+            if (catalog != null) {
+                sb.append(catalog).append(".");
+            }
 
-			String catalog = table.getCatalog();
-			if (catalog == null) {
-				catalog = defaultCatalog;
-			}
-			if (catalog != null) {
-				sb.append(catalog + ".");
-			}
+            String schema = table.getSchema();
+            if (schema == null) {
+                schema = defaultSchema;
+            }
 
-			String schema = table.getSchema();
-			if (schema == null) {
-				schema = defaultSchema;
-			}
+            sb.append(schema);
 
-			sb.append(schema);
+            String qualSchemaName = sb.toString();
 
-			String qualSchemaName = sb.toString();
+            tableSchemaNames.put(table, qualSchemaName);
 
-			tableSchemaNames.put(table, qualSchemaName);
+            List<Table> tableList = tablesBySchema.computeIfAbsent(qualSchemaName, k -> new ArrayList<>());
+            tableList.add(table);
 
-			List<Table> tableList = tablesBySchema.get(qualSchemaName);
-			if (tableList == null) {
-				tableList = new ArrayList<Table>();
-				tablesBySchema.put(qualSchemaName, tableList);
-			}
-			tableList.add(table);
-
-			for(Column column : table.getColumns()) {
-				String columnFQN = getQualifiedColumnName(table, column);
-				List<Value> values = valuesByColumn.get(columnFQN);
-				if (values == null) {
-					values = new ArrayList<Value>();
-					valuesByColumn.put(columnFQN, values);
-				}
-				values.add(column.getValue());
-			}
-		}
+            for (Column column : table.getColumns()) {
+                String columnFQN = getQualifiedColumnName(table, column);
+                List<Value> values = valuesByColumn.computeIfAbsent(columnFQN, k -> new ArrayList<>());
+                values.add(column.getValue());
+            }
+        }
 
 		Map<String, Component> components = new HashMap<String, Component>();
 
-		Iterator<PersistentClass> classesItr = metadata.getEntityBindings().iterator();
-		while (classesItr.hasNext()) {
-			PersistentClass clazz = classesItr.next();
+        for (PersistentClass clazz : metadata.getEntityBindings()) {
+            POJOClass pojoClazz = cfg2JavaTool.getPOJOClass(clazz);
+            ConfigurationNavigator.collectComponents(components, pojoClazz);
 
-			POJOClass pojoClazz = cfg2JavaTool.getPOJOClass(clazz);
-			ConfigurationNavigator.collectComponents(components, pojoClazz);
+            this.processClass(pojoClazz);
 
-			this.processClass(pojoClazz);
+            for (Property property : clazz.getProperties()) {
+                Value value = property.getValue();
+                List<Property> props = propsByValue.computeIfAbsent(value, k -> new ArrayList<>());
+                props.add(property);
+            }
+        }
 
-			for (Property property : clazz.getProperties()) {
-				Value value = property.getValue();
-				List<Property> props = propsByValue.get(value);
-				if (props == null) {
-					props = new ArrayList<Property>();
-					propsByValue.put(value, props);
-				}
-				props.add(property);
-			}
-		}
-
-		Iterator<Component> iterator = components.values().iterator();
-		while (iterator.hasNext()) {
-			Component component = (Component) iterator.next();
-			ComponentPOJOClass element =
-					new ComponentPOJOClass(component, cfg2JavaTool);
-			this.processClass(element);
-		}
+        for (Component component : components.values()) {
+            ComponentPOJOClass element =
+                    new ComponentPOJOClass(component, cfg2JavaTool);
+            this.processClass(element);
+        }
 	}
 
 	/**
 	 * Populate classes List and classesByPackage Map
-	 * 
-	 * @param pojoClazz
 	 */
 	private void processClass(POJOClass pojoClazz) {
 
 		classes.add(pojoClazz);
 		String packageName = pojoClazz.getPackageName();
 
-		if ("".equals(packageName)) {
+		if (packageName == null || packageName.isEmpty()) {
 			packageName = DEFAULT_NO_PACKAGE;
 		}
 
-		List<POJOClass> classList = classesByPackage.get(packageName);
-		if (classList == null) {
-			classList = new ArrayList<POJOClass>();
-			classesByPackage.put(packageName, classList);
-		}
-		classList.add(pojoClazz);
+        List<POJOClass> classList = classesByPackage.computeIfAbsent(packageName, k -> new ArrayList<POJOClass>());
+        classList.add(pojoClazz);
 	}
 
 	/**
@@ -257,8 +230,6 @@ public final class DocHelper {
 	/**
 	 * return a Map which has List of POJOClass as value keyed by package name
 	 * as String.
-	 * 
-	 * @return
 	 */
 	public Map<String, List<POJOClass>> getClassesByPackage() {
 		return classesByPackage;
@@ -277,8 +248,6 @@ public final class DocHelper {
 
 	/**
 	 * Return a sorted List of packages
-	 * 
-	 * @return
 	 */
 	public List<String> getPackages() {
 		List<String> packages = new ArrayList<String>(classesByPackage.keySet());
@@ -295,8 +264,7 @@ public final class DocHelper {
 	 * @return a list with all the tables.
 	 */
 	public List<Table> getTables(String schema) {
-		List<Table> list = tablesBySchema.get(schema);
-		return list;
+        return tablesBySchema.get(schema);
 	}
 
 	/**
@@ -309,7 +277,7 @@ public final class DocHelper {
 	public List<POJOClass> getClasses(String packageName) {
 		List<POJOClass> clazzes = classesByPackage.get(packageName);
 		List<POJOClass> orderedClasses = new ArrayList<POJOClass>(clazzes);
-		Collections.sort(orderedClasses, POJOCLASS_COMPARATOR);
+		orderedClasses.sort(POJOCLASS_COMPARATOR);
 		return orderedClasses;
 	}
 
@@ -324,12 +292,10 @@ public final class DocHelper {
 
 	/**
 	 * Return a sorted List of all POJOClass
-	 * 
-	 * @return
 	 */
 	public List<POJOClass> getClasses() {
 		List<POJOClass> orderedClasses = new ArrayList<POJOClass>(classes);
-		Collections.sort(orderedClasses, POJOCLASS_COMPARATOR);
+		orderedClasses.sort(POJOCLASS_COMPARATOR);
 		return orderedClasses;
 	}
 
@@ -422,14 +388,14 @@ public final class DocHelper {
 
 	public int getPrecision(Column column) {
 		return column.getPrecision() == null ? 
-				TypeUtils.DEFAULT_COLUMN_PRECISION : 
-					column.getPrecision().intValue();
+				TypeUtils.DEFAULT_COLUMN_PRECISION :
+                column.getPrecision();
 	}
 
 	public int getScale(Column column) {
 		return column.getScale() == null ? 
-				TypeUtils.DEFAULT_COLUMN_SCALE : 
-					column.getScale().intValue();
+				TypeUtils.DEFAULT_COLUMN_SCALE :
+                column.getScale();
 	}
 	
 	public Iterator<Column> getPrimaryKeyColumnIterator(Table table) {
@@ -469,14 +435,12 @@ public final class DocHelper {
 	public List<Property> getProperties(Table table, Column column) {
 
 		List<Property> result = new ArrayList<Property>();
-		Iterator<Value> values = getValues(table, column).iterator();
-		while (values.hasNext()) {
-			Value value = values.next();
-			List<Property> props = propsByValue.get(value);
-			if (props != null) {
-				result.addAll(props);
-			}
-		}
+        for (Value value : getValues(table, column)) {
+            List<Property> props = propsByValue.get(value);
+            if (props != null) {
+                result.addAll(props);
+            }
+        }
 		return result;
 	}
 
@@ -490,10 +454,8 @@ public final class DocHelper {
 	 */
 	// TODO We haven't taken into account Array?
 	public POJOClass getComponentPOJO(Property property) {
-		if (property.getValue() instanceof Component) {
-			Component comp = (Component) property.getValue();
-			ComponentPOJOClass componentPOJOClass = new ComponentPOJOClass(comp, new Cfg2JavaTool());
-			return componentPOJOClass;
+		if (property.getValue() instanceof Component comp) {
+            return new ComponentPOJOClass(comp, new Cfg2JavaTool());
 		} else {
 			return null;
 		}
@@ -515,7 +477,7 @@ public final class DocHelper {
 
 	public List<Property> getOrderedProperties(POJOClass pojoClass) {
 		List<Property> orderedProperties = getAllProperties(pojoClass);
-		Collections.sort(orderedProperties, PROPERTY_COMPARATOR);
+		orderedProperties.sort(PROPERTY_COMPARATOR);
 
 		return orderedProperties;
 	}
@@ -532,7 +494,7 @@ public final class DocHelper {
 
 	public List<Property> getOrderedSimpleProperties(POJOClass pojoClass) {
 		List<Property> orderedProperties = getSimpleProperties(pojoClass);
-		Collections.sort(orderedProperties, PROPERTY_COMPARATOR);
+		orderedProperties.sort(PROPERTY_COMPARATOR);
 		return orderedProperties;
 	}
 

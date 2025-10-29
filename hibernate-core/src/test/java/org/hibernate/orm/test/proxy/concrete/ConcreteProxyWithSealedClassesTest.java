@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -44,6 +45,7 @@ class ConcreteProxyWithSealedClassesTest {
 
 	@Entity(name = "actor")
 	@Table(name = "actor")
+	@ConcreteProxy
 	public static abstract sealed class Actor {
 		@Id
 		@GeneratedValue
@@ -52,6 +54,7 @@ class ConcreteProxyWithSealedClassesTest {
 
 	@Entity(name = "Postman")
 	@Table(name = "Postman")
+	@ConcreteProxy
 	public static non-sealed class Postman extends Actor {
 	}
 }

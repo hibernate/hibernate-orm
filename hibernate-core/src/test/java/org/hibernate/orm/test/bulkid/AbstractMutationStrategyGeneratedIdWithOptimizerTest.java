@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import jakarta.persistence.SequenceGenerator;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -112,7 +113,8 @@ public abstract class AbstractMutationStrategyGeneratedIdWithOptimizerTest {
 	public static class Person {
 
 		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE)
+		@GeneratedValue( generator = "a_sequence")
+		@SequenceGenerator(name = "a_sequence", sequenceName = "person_sequence")
 		private Integer id;
 
 		private String name;

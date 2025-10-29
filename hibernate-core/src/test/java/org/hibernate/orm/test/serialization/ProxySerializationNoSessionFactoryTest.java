@@ -4,37 +4,34 @@
  */
 package org.hibernate.orm.test.serialization;
 
-import java.io.Serializable;
-
-import org.hibernate.Hibernate;
-import org.hibernate.SessionFactory;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.internal.SessionFactoryRegistry;
-import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.proxy.HibernateProxy;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.hibernate.tool.schema.Action;
-import org.junit.Test;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import org.hibernate.Hibernate;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.SessionFactoryRegistry;
+import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.hibernate.tool.schema.Action;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import java.io.Serializable;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.testing.orm.transaction.TransactionUtil.fromTransaction;
+import static org.hibernate.testing.orm.transaction.TransactionUtil.inTransaction;
 
 /**
  * @author Marco Belladelli
  */
-public class ProxySerializationNoSessionFactoryTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class ProxySerializationNoSessionFactoryTest {
 	@Test
 	public void testUninitializedProxy() {
 		executeTest( false );
@@ -52,45 +49,46 @@ public class ProxySerializationNoSessionFactoryTest extends BaseUnitTestCase {
 				.addAnnotatedClass( ChildEntity.class );
 		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		final SimpleEntity parent;
-		try (final SessionFactory factory = cfg.buildSessionFactory()) {
-			doInHibernate( () -> factory, session -> {
-				final SimpleEntity entity = new SimpleEntity();
-				entity.setId( 1L );
-				entity.setName( "TheParent" );
-				session.persist( entity );
+		try (final SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory()) {
+			inTransaction( factory, session -> {
+						final SimpleEntity entity = new SimpleEntity();
+						entity.setId( 1L );
+						entity.setName( "TheParent" );
+						session.persist( entity );
 
-				final ChildEntity child = new ChildEntity();
-				child.setId( 1L );
-				child.setParent( entity );
-				session.persist( child );
-			} );
-
-			parent = doInHibernate( () -> factory, session -> {
-				final ChildEntity childEntity = session.find( ChildEntity.class, 1L );
-				final SimpleEntity entity = childEntity.getParent();
-				if ( initializeProxy ) {
-					assertEquals( "TheParent",entity.getName() );
-				}
-				return entity;
-			} );
+						final ChildEntity child = new ChildEntity();
+						child.setId( 1L );
+						child.setParent( entity );
+						session.persist( child );
+					}
+			);
+			parent = fromTransaction( factory, session -> {
+						final ChildEntity childEntity = session.find( ChildEntity.class, 1L );
+						final SimpleEntity entity = childEntity.getParent();
+						if ( initializeProxy ) {
+							assertThat( entity.getName() ).isEqualTo( "TheParent" );
+						}
+						return entity;
+					}
+			);
 		}
 
 		// The session factory is not available anymore
-		assertFalse( SessionFactoryRegistry.INSTANCE.hasRegistrations() );
+		assertThat( SessionFactoryRegistry.INSTANCE.hasRegistrations() ).isFalse();
 
-		assertTrue( parent instanceof HibernateProxy );
-		assertEquals( initializeProxy, Hibernate.isInitialized( parent ) );
+		assertThat( parent instanceof HibernateProxy ).isTrue();
+		assertThat( Hibernate.isInitialized( parent ) ).isEqualTo( initializeProxy );
 
 		// Serialization and deserialization should still work
 		final SimpleEntity clone = (SimpleEntity) SerializationHelper.clone( parent );
-		assertNotNull( clone );
-		assertEquals( parent.getId(), clone.getId() );
+		assertThat( clone ).isNotNull();
+		assertThat( clone.getId() ).isEqualTo( parent.getId() );
 		if ( initializeProxy ) {
-			assertEquals( parent.getName(), clone.getName() );
+			assertThat( clone.getName() ).isEqualTo( parent.getName() );
 		}
 	}
 
-	@Entity( name = "SimpleEntity" )
+	@Entity(name = "SimpleEntity")
 	static class SimpleEntity implements Serializable {
 		@Id
 		private Long id;
@@ -114,12 +112,12 @@ public class ProxySerializationNoSessionFactoryTest extends BaseUnitTestCase {
 		}
 	}
 
-	@Entity( name = "ChildEntity" )
+	@Entity(name = "ChildEntity")
 	static class ChildEntity {
 		@Id
 		private Long id;
 
-		@ManyToOne( fetch = FetchType.LAZY )
+		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn
 		private SimpleEntity parent;
 

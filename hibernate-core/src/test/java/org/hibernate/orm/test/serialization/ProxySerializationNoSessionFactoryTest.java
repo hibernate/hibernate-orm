@@ -43,6 +43,7 @@ public class ProxySerializationNoSessionFactoryTest {
 	}
 
 	private void executeTest(boolean initializeProxy) {
+		SessionFactoryRegistry.INSTANCE.clearRegistrations();
 		final Configuration cfg = new Configuration()
 				.setProperty( AvailableSettings.HBM2DDL_AUTO, Action.ACTION_CREATE_THEN_DROP )
 				.addAnnotatedClass( SimpleEntity.class )

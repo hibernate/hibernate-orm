@@ -13,6 +13,7 @@ import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.type.SerializationException;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,6 +26,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 @BaseUnitTest
 public class SessionFactorySerializationTest {
 	public static final String NAME = "mySF";
+
+	@BeforeAll
+	public void clearRegistry() {
+		SessionFactoryRegistry.INSTANCE.clearRegistrations();
+	}
 
 	@Test
 	public void testNamedSessionFactorySerialization() {

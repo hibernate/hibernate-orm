@@ -61,6 +61,10 @@ public class ClassesAuditingData {
 		return persistentClassToAuditingData.values();
 	}
 
+	public ClassAuditingData getClassAuditingData(String entityName) {
+		return entityNameToAuditingData.get( entityName );
+	}
+
 	/**
 	 * After all meta-data is read, updates calculated fields. This includes:
 	 * <ul>

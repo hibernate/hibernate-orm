@@ -4,25 +4,24 @@
  */
 package org.hibernate.orm.test.sql.hand.custom;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Iterator;
-
 import org.hibernate.LockMode;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.sql.hand.Employment;
 import org.hibernate.orm.test.sql.hand.ImageHolder;
 import org.hibernate.orm.test.sql.hand.Organization;
 import org.hibernate.orm.test.sql.hand.Person;
 import org.hibernate.orm.test.sql.hand.TextHolder;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import java.util.Date;
+import java.util.Iterator;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 /**
  * Abstract test case defining tests for the support for user-supplied (aka
@@ -30,139 +29,143 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("unused")
-public abstract class CustomSQLTestSupport extends BaseCoreFunctionalTestCase {
-	public String getCacheConcurrencyStrategy() {
-		return null;
+@DomainModel(
+		overrideCacheStrategy = false
+)
+@SessionFactory
+public abstract class CustomSQLTestSupport {
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
 	@Test
-	public void testHandSQL() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
+	public void testHandSQL(SessionFactoryScope scope) {
 		Organization ifa = new Organization( "IFA" );
-		Organization jboss = new Organization( "JBoss" );
-		Person gavin = new Person( "Gavin" );
-		Employment emp = new Employment( gavin, jboss, "AU" );
-		s.persist( jboss );
-		Object orgId = jboss.getId();
-		s.persist( ifa );
-		s.persist( gavin );
-		s.persist( emp );
-		t.commit();
+		Object orgId = scope.fromTransaction(
+				session -> {
+					Organization jboss = new Organization( "JBoss" );
+					Person gavin = new Person( "Gavin" );
+					Employment emp = new Employment( gavin, jboss, "AU" );
+					session.persist( jboss );
+					Object oId = jboss.getId();
+					session.persist( ifa );
+					session.persist( gavin );
+					session.persist( emp );
+					Person christian = new Person( "Christian" );
+					session.persist( christian );
+					Employment emp2 = new Employment( christian, jboss, "EU" );
+					session.persist( emp2 );
+					return oId;
+				}
+		);
 
-		t = s.beginTransaction();
-		Person christian = new Person( "Christian" );
-		s.persist( christian );
-		Employment emp2 = new Employment( christian, jboss, "EU" );
-		s.persist( emp2 );
-		t.commit();
-		s.close();
+		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+		sessionFactory.getCache().evictEntityData( Organization.class );
+		sessionFactory.getCache().evictEntityData( Person.class );
+		sessionFactory.getCache().evictEntityData( Employment.class );
 
-		sessionFactory().getCache().evictEntityData( Organization.class );
-		sessionFactory().getCache().evictEntityData( Person.class );
-		sessionFactory().getCache().evictEntityData( Employment.class );
+		scope.inTransaction(
+				session -> {
+					Organization jboss = session.get( Organization.class, orgId );
+					assertThat( jboss.getEmployments() ).hasSize( 2 );
+					assertThat( jboss.getName() ).isEqualTo( "JBOSS" );
+					Employment emp = jboss.getEmployments().iterator().next();
+					Person gavin = emp.getEmployee();
+					assertThat( gavin.getName() ).isEqualTo( "GAVIN" );
+					assertThat( session.getCurrentLockMode( gavin ) ).isEqualTo( LockMode.PESSIMISTIC_WRITE );
+					emp.setEndDate( new Date() );
+					Employment emp3 = new Employment( gavin, jboss, "US" );
+					session.persist( emp3 );
+				}
+		);
 
-		s = openSession();
-		t = s.beginTransaction();
-		jboss = ( Organization ) s.get( Organization.class, orgId );
-		assertEquals( jboss.getEmployments().size(), 2 );
-		assertEquals( jboss.getName(), "JBOSS" );
-		emp = ( Employment ) jboss.getEmployments().iterator().next();
-		gavin = emp.getEmployee();
-		assertEquals( "GAVIN" , gavin.getName() );
-		assertEquals( LockMode.PESSIMISTIC_WRITE , s.getCurrentLockMode( gavin ));
-		emp.setEndDate( new Date() );
-		Employment emp3 = new Employment( gavin, jboss, "US" );
-		s.persist( emp3 );
-		t.commit();
-		s.close();
-
-		s = openSession();
-		t = s.beginTransaction();
-		Iterator itr = s.getNamedQuery( "allOrganizationsWithEmployees" ).list().iterator();
-		assertTrue( itr.hasNext() );
-		Organization o = ( Organization ) itr.next();
-		assertEquals( o.getEmployments().size(), 3 );
-		Iterator itr2 = o.getEmployments().iterator();
-		while ( itr2.hasNext() ) {
-			Employment e = ( Employment ) itr2.next();
-			s.remove( e );
-		}
-		itr2 = o.getEmployments().iterator();
-		while ( itr2.hasNext() ) {
-			Employment e = ( Employment ) itr2.next();
-			s.remove( e.getEmployee() );
-		}
-		s.remove( o );
-		assertFalse( itr.hasNext() );
-		s.remove( ifa );
-		t.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					Iterator itr = session.getNamedQuery( "allOrganizationsWithEmployees" ).list().iterator();
+					assertThat( itr.hasNext() ).isTrue();
+					Organization o = (Organization) itr.next();
+					assertThat( o.getEmployments() ).hasSize( 3 );
+					Iterator itr2 = o.getEmployments().iterator();
+					while ( itr2.hasNext() ) {
+						Employment e = (Employment) itr2.next();
+						session.remove( e );
+					}
+					itr2 = o.getEmployments().iterator();
+					while ( itr2.hasNext() ) {
+						Employment e = (Employment) itr2.next();
+						session.remove( e.getEmployee() );
+					}
+					session.remove( o );
+					assertThat( itr.hasNext() ).isFalse();
+					session.remove( ifa );
+				}
+		);
 	}
 
 	@Test
-	public void testTextProperty() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		String description = buildLongString( 15000, 'a' );
-		TextHolder holder = new TextHolder( description );
-		s.persist( holder );
-		t.commit();
-		s.close();
+	public void testTextProperty(SessionFactoryScope scope) {
+		String d = buildLongString( 15000, 'a' );
+		TextHolder h = new TextHolder( d );
+		scope.inTransaction(
+				session -> {
+					session.persist( h );
+				}
+		);
 
-		s = openSession();
-		t = s.beginTransaction();
-		holder = s.get(  TextHolder.class, holder.getId() );
-		assertEquals( description, holder.getDescription() );
-		description = buildLongString( 15000, 'b' );
-		holder.setDescription( description );
-		s.persist( holder );
-		t.commit();
-		s.close();
+		String description = buildLongString( 15000, 'b' );
+		scope.inTransaction(
+				session -> {
+					TextHolder holder = session.get( TextHolder.class, h.getId() );
+					assertThat( holder.getDescription() ).isEqualTo( d );
+					holder.setDescription( description );
+					session.persist( holder );
+				}
+		);
 
-		s = openSession();
-		t = s.beginTransaction();
-		holder = s.get( TextHolder.class, holder.getId() );
-		assertEquals( description, holder.getDescription() );
-		s.remove( holder );
-		t.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					TextHolder holder = session.get( TextHolder.class, h.getId() );
+					assertThat( holder.getDescription() ).isEqualTo( description );
+					session.remove( holder );
+				}
+		);
 	}
 
 	@Test
-	public void testImageProperty() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
+	public void testImageProperty(SessionFactoryScope scope) {
 		// Make sure the last byte is non-zero as Sybase cuts that off
-		byte[] photo = buildLongByteArray( 14999, true );
-		ImageHolder holder = new ImageHolder( photo );
-		s.persist( holder );
-		t.commit();
-		s.close();
+		byte[] p = buildLongByteArray( 14999, true );
+		ImageHolder h = new ImageHolder( p );
+		scope.inTransaction(
+				session -> {
+					session.persist( h );
+				}
+		);
 
-		s = openSession();
-		t = s.beginTransaction();
-		holder = s.get( ImageHolder.class, holder.getId() );
-		assertTrue( Arrays.equals( photo, holder.getPhoto() ) );
-		photo = buildLongByteArray( 15000, false );
-		holder.setPhoto( photo );
-		s.persist( holder );
-		t.commit();
-		s.close();
+		byte[] photo = buildLongByteArray( 15000, false );
+		scope.inTransaction(
+				session -> {
+					ImageHolder holder = session.get( ImageHolder.class, h.getId() );
+					assertThat( holder.getPhoto() ).isEqualTo( p );
+					holder.setPhoto( photo );
+					session.persist( holder );
+				}
+		);
 
-		s = openSession();
-		t = s.beginTransaction();
-		holder = s.get( ImageHolder.class, holder.getId() );
-		assertTrue( Arrays.equals( photo, holder.getPhoto() ) );
-		s.remove( holder );
-		t.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					ImageHolder holder = session.get( ImageHolder.class, h.getId() );
+					assertThat( holder.getPhoto() ).isEqualTo( photo );
+					session.remove( h );
+				}
+		);
 	}
 
 	private String buildLongString(int size, char baseChar) {
 		StringBuilder buff = new StringBuilder();
-		for( int i = 0; i < size; i++ ) {
+		for ( int i = 0; i < size; i++ ) {
 			buff.append( baseChar );
 		}
 		return buff.toString();
@@ -179,6 +182,6 @@ public abstract class CustomSQLTestSupport extends BaseCoreFunctionalTestCase {
 	}
 
 	private byte mask(boolean on) {
-		return on ? ( byte ) 1 : ( byte ) 0;
+		return on ? (byte) 1 : (byte) 0;
 	}
 }

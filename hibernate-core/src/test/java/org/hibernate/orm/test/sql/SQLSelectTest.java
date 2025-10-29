@@ -13,27 +13,28 @@ import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SettingProvider;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.annotations.ResultCheckStyle.COUNT;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
 
 /**
  * This test is for replicating the HHH-10557 issue.
@@ -42,65 +43,70 @@ import static org.junit.Assert.assertEquals;
  */
 @RequiresDialect(H2Dialect.class)
 @RequiresDialect(PostgreSQLDialect.class)
-public class SQLSelectTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				SQLSelectTest.Person.class
+		},
+		settingProviders = @SettingProvider(
+				settingName = DEFAULT_LIST_SEMANTICS,
+				provider = SQLSelectTest.ListSemanticsProvider.class
+		)
+)
+public class SQLSelectTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class
-		};
+	public static class ListSemanticsProvider implements SettingProvider.Provider<String> {
+		@Override
+		public String getSetting() {
+			return CollectionClassification.BAG.name();
+		}
 	}
 
-	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		options.put( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
-	}
-
-	@Before
-	public void init() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			SessionImplementor session = entityManager.unwrap( SessionImplementor.class);
+	@BeforeAll
+	public void init(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			Dialect dialect = scope.getDialect();
+			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			DdlTypeRegistry ddlTypeRegistry = session.getTypeConfiguration().getDdlTypeRegistry();
-			session.doWork(connection -> {
-				try(Statement statement = connection.createStatement();) {
-					statement.executeUpdate(String.format( "ALTER TABLE person %s valid %s",
-														getDialect().getAddColumnString(),
-							ddlTypeRegistry.getTypeName( Types.BOOLEAN, getDialect())));
-					statement.executeUpdate(String.format( "ALTER TABLE Person_phones %s valid %s",
-														getDialect().getAddColumnString(),
-							ddlTypeRegistry.getTypeName( Types.BOOLEAN, getDialect())));
+			session.doWork( connection -> {
+				try (Statement statement = connection.createStatement()) {
+					statement.executeUpdate( String.format( "ALTER TABLE person %s valid %s",
+							dialect.getAddColumnString(),
+							ddlTypeRegistry.getTypeName( Types.BOOLEAN, dialect ) ) );
+					statement.executeUpdate( String.format( "ALTER TABLE Person_phones %s valid %s",
+							dialect.getAddColumnString(),
+							ddlTypeRegistry.getTypeName( Types.BOOLEAN, dialect ) ) );
 				}
-			});
-		});
+			} );
+		} );
 	}
 
-	@Test @JiraKey(value = "HHH-10557")
-	public void test_HHH10557() {
+	@Test
+	@JiraKey(value = "HHH-10557")
+	public void test_HHH10557(EntityManagerFactoryScope scope) {
 
-		Person _person = doInJPA(this::entityManagerFactory, entityManager -> {
+		Person _person = scope.fromTransaction( entityManager -> {
 			Person person = new Person();
-			person.setName("John Doe");
-			entityManager.persist(person);
-			person.getPhones().add("123-456-7890");
-			person.getPhones().add("123-456-0987");
+			person.setName( "John Doe" );
+			entityManager.persist( person );
+			person.getPhones().add( "123-456-7890" );
+			person.getPhones().add( "123-456-0987" );
 			return person;
-		});
+		} );
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Long postId = _person.getId();
-			Person person = entityManager.find(Person.class, postId);
-			assertEquals(2, person.getPhones().size());
-			person.getPhones().remove(0);
-			person.setName("Mr. John Doe");
-		});
+			Person person = entityManager.find( Person.class, postId );
+			assertThat( person.getPhones() ).hasSize( 2 );
+			person.getPhones().remove( 0 );
+			person.setName( "Mr. John Doe" );
+		} );
 
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Long postId = _person.getId();
-			Person person = entityManager.find(Person.class, postId);
-			assertEquals(1, person.getPhones().size());
-		});
+			Person person = entityManager.find( Person.class, postId );
+			assertThat( person.getPhones() ).hasSize( 1 );
+		} );
 	}
 
 

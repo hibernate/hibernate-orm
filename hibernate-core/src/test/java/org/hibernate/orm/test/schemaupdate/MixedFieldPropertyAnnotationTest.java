@@ -4,43 +4,39 @@
  */
 package org.hibernate.orm.test.schemaupdate;
 
-import java.util.EnumSet;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.CustomRunner;
-import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import java.util.EnumSet;
 
 /**
  * @author Andrea Boriero
  */
 @JiraKey(value = "HHH-9849")
-@RunWith(CustomRunner.class)
 @RequiresDialect(MySQLDialect.class)
 public class MixedFieldPropertyAnnotationTest {
 	protected ServiceRegistry serviceRegistry;
 	protected MetadataImplementor metadata;
 
 	@Test
-	public void testUpdateSchema() throws Exception {
+	public void testUpdateSchema() {
 		new SchemaUpdate().execute( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ), metadata );
 	}
 

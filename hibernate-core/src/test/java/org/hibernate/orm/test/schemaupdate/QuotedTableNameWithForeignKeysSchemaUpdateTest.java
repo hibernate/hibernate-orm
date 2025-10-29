@@ -4,87 +4,49 @@
  */
 package org.hibernate.orm.test.schemaupdate;
 
-import java.util.EnumSet;
-
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import java.util.EnumSet;
 
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-10197")
-public class QuotedTableNameWithForeignKeysSchemaUpdateTest extends BaseUnitTestCase {
+@ServiceRegistry
+@DomainModel(xmlMappings = "org/hibernate/orm/test/schemaupdate/UserGroup.hbm.xml")
+public class QuotedTableNameWithForeignKeysSchemaUpdateTest {
 
-	@Before
-	public void setUp() {
-		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
-		try {
-			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addResource( "org/hibernate/orm/test/schemaupdate/UserGroup.hbm.xml" )
-					.buildMetadata();
-			metadata.orderColumns( false );
-			metadata.validate();
-			new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), metadata );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
+	@BeforeEach
+	public void setUp(DomainModelScope modelScope) {
+		final MetadataImplementor domainModel = modelScope.getDomainModel();
+		domainModel.orderColumns( false );
+		domainModel.validate();
+		new SchemaExport().create( EnumSet.of( TargetType.DATABASE ), domainModel );
+	}
+
+	@AfterEach
+	public void tearDown(DomainModelScope modelScope) {
+		new SchemaExport().drop( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ), modelScope.getDomainModel() );
 	}
 
 	@Test
-	public void testUpdateExistingSchema() {
-		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
-		try {
-			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addResource( "org/hibernate/orm/test/schemaupdate/UserGroup.hbm.xml" )
-					.buildMetadata();
-			new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), metadata );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
+	public void testUpdateExistingSchema(DomainModelScope modelScope) {
+		new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), modelScope.getDomainModel() );
 	}
 
 	@Test
-	public void testGeneratingUpdateScript() {
-		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
-		try {
-
-			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addResource( "org/hibernate/orm/test/schemaupdate/UserGroup.hbm.xml" )
-					.buildMetadata();
-			new SchemaUpdate().execute( EnumSet.of( TargetType.STDOUT ), metadata );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
-	}
-
-	@After
-	public void tearDown() {
-		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
-		try {
-
-			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addResource( "org/hibernate/orm/test/schemaupdate/UserGroup.hbm.xml" )
-					.buildMetadata();
-			new SchemaExport().drop( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ), metadata );
-
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
+	public void testGeneratingUpdateScript(DomainModelScope modelScope) {
+		new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), modelScope.getDomainModel() );
 	}
 }

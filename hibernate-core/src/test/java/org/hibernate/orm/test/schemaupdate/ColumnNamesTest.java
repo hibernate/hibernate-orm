@@ -7,94 +7,96 @@ package org.hibernate.orm.test.schemaupdate;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.List;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.ServiceRegistryFunctionalTesting;
+import org.hibernate.testing.orm.junit.ServiceRegistryProducer;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.cfg.MappingSettings.KEYWORD_AUTO_QUOTING_ENABLED;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY;
 
 /**
  * @author Andrea Boriero
  */
-@RunWith(Parameterized.class)
-public class ColumnNamesTest {
-	@Parameterized.Parameters
-	public static Collection<String> parameters() {
-		return Arrays.asList(
-				new String[] {JdbcMetadataAccessStrategy.GROUPED.toString(), JdbcMetadataAccessStrategy.INDIVIDUALLY.toString()}
+@ParameterizedClass
+@MethodSource("parameters")
+@TestInstance( TestInstance.Lifecycle.PER_METHOD )
+@ServiceRegistryFunctionalTesting
+@DomainModel(annotatedClasses = ColumnNamesTest.Employee.class)
+public class ColumnNamesTest implements ServiceRegistryProducer {
+	public static Collection<JdbcMetadataAccessStrategy> parameters() {
+		return List.of(
+				JdbcMetadataAccessStrategy.GROUPED,
+				JdbcMetadataAccessStrategy.INDIVIDUALLY
 		);
 	}
 
-	@Parameterized.Parameter
-	public String jdbcMetadataExtractorStrategy;
+	private final File output;
+	private final JdbcMetadataAccessStrategy jdbcMetadataExtractorStrategy;
 
-	private StandardServiceRegistry ssr;
-	private Metadata metadata;
-	private File output;
-
-	@Before
-	public void setUp() throws IOException {
-		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, "true" )
-				.applySetting( AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY, jdbcMetadataExtractorStrategy )
-				.build();
-		output = File.createTempFile( "update_script", ".sql" );
-		output.deleteOnExit();
-
-		metadata = new MetadataSources( ssr )
-				.addAnnotatedClass( Employee.class )
-				.buildMetadata();
-		new SchemaExport().create( EnumSet.of( TargetType.DATABASE ), metadata );
+	public ColumnNamesTest(
+			JdbcMetadataAccessStrategy jdbcMetadataExtractorStrategy,
+			@TempDir File outputDir) {
+		this.jdbcMetadataExtractorStrategy = jdbcMetadataExtractorStrategy;
+		this.output = new File( outputDir, "update_script.sql" );
 	}
 
-	@After
-	public void tearDown() {
-		try {
-			new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
+	@Override
+	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder) {
+		return ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( KEYWORD_AUTO_QUOTING_ENABLED, "true" )
+				.applySetting( HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY, jdbcMetadataExtractorStrategy )
+				.build();
+	}
+
+	@BeforeEach
+	public void setUp(DomainModelScope modelScope) {
+		new SchemaExport().create( EnumSet.of( TargetType.DATABASE ), modelScope.getDomainModel() );
+	}
+
+	@AfterEach
+	public void tearDown(DomainModelScope modelScope) {
+		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), modelScope.getDomainModel() );
 	}
 
 	@Test
-	public void testSchemaUpdateWithQuotedColumnNames() throws Exception {
+	public void testSchemaUpdateWithQuotedColumnNames(DomainModelScope modelScope) throws IOException {
 		new SchemaUpdate()
 				.setOutputFile( output.getAbsolutePath() )
-				.execute(
-						EnumSet.of( TargetType.SCRIPT ),
-						metadata
-				);
+				.execute( EnumSet.of( TargetType.SCRIPT ), modelScope.getDomainModel() );
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		assertThat( "The update output file should be empty", fileContent, is( "" ) );
+		assertThat( fileContent ).as( "The update output file should be empty" ).isEmpty();
 	}
 
 	@Entity
 	@Table(name = "Employee")
-	public class Employee {
+	public static class Employee {
 		@Id
 		private long id;
 

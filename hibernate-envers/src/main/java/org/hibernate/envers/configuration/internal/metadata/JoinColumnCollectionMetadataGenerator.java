@@ -54,19 +54,27 @@ public class JoinColumnCollectionMetadataGenerator extends AbstractCollectionMet
 
 	@Override
 	public void addCollection(CollectionMetadataContext context) {
+		final var referencingEntityName = context.getReferencingEntityName();
 		LOG.debugf(
 				"Adding audit mapping for property %s.%s: one-to-many collection, using a join column on the referenced entity",
-				context.getReferencingEntityName(),
+				referencingEntityName,
 				context.getPropertyName()
 		);
 
 		final Collection collection = context.getCollection();
 		final PropertyAuditingData propertyAuditingData = context.getPropertyAuditingData();
-		final String mappedBy = CollectionMappedByResolver.resolveMappedBy( collection, propertyAuditingData );
+		final var referencedEntityName = context.getReferencedEntityName();
+		final String mappedBy = CollectionMappedByResolver.resolveMappedBy(
+				referencingEntityName,
+				collection,
+				propertyAuditingData,
+				referencedEntityName,
+				getMetadataBuildingContext()
+		);
 
 		final IdMappingData referencedIdMapping = getReferencedIdMappingData(
-				context.getReferencingEntityName(),
-				context.getReferencedEntityName(),
+				referencingEntityName,
+				referencedEntityName,
 				propertyAuditingData,
 				false
 		);
@@ -78,7 +86,7 @@ public class JoinColumnCollectionMetadataGenerator extends AbstractCollectionMet
 		final MiddleIdData referencingIdData = createMiddleIdData(
 				referencingIdMapping,
 				mappedBy + "_",
-				context.getReferencingEntityName()
+				referencingEntityName
 		);
 
 		// And for the referenced side. The prefixed mapper won't be used (as this collection isn't persisted
@@ -86,7 +94,7 @@ public class JoinColumnCollectionMetadataGenerator extends AbstractCollectionMet
 		final MiddleIdData referencedIdData = createMiddleIdData(
 				referencedIdMapping,
 				null,
-				context.getReferencedEntityName()
+				referencedEntityName
 		);
 
 		// Generating the element mapping.
@@ -102,18 +110,18 @@ public class JoinColumnCollectionMetadataGenerator extends AbstractCollectionMet
 		final RelationQueryGenerator queryGenerator = new OneAuditEntityQueryGenerator(
 				getMetadataBuildingContext().getConfiguration(),
 				referencingIdData,
-				context.getReferencedEntityName(),
+				referencedEntityName,
 				referencedIdData,
 				context.getCollection().getElement() instanceof ComponentType,
 				mappedBy,
-				CollectionMappedByResolver.isMappedByKey( collection, mappedBy ),
+				CollectionMappedByResolver.isMappedByKey( collection, mappedBy, referencedEntityName, getMetadataBuildingContext() ),
 				getOrderByCollectionRole( collection, collection.getOrderBy() )
 		);
 
 		// Creating common mapper data.
 		final CommonCollectionMapperData commonCollectionMapperData = createCommonCollectionMapperData(
 				context,
-				context.getReferencedEntityName(),
+				referencedEntityName,
 				referencingIdData,
 				queryGenerator
 		);
@@ -126,7 +134,7 @@ public class JoinColumnCollectionMetadataGenerator extends AbstractCollectionMet
 			final String auditMappedBy = getAddOneToManyAttachedAuditMappedBy( context );
 
 			fakeBidirectionalRelationMapper = getBidirectionalRelationMapper(
-					context.getReferencingEntityName(),
+					referencingEntityName,
 					referencingIdMapping,
 					auditMappedBy
 			);
@@ -153,7 +161,7 @@ public class JoinColumnCollectionMetadataGenerator extends AbstractCollectionMet
 		referencingEntityConfiguration.addToManyNotOwningRelation(
 				context.getPropertyName(),
 				mappedBy,
-				context.getReferencedEntityName(),
+				referencedEntityName,
 				referencingIdData.getPrefixedMapper(),
 				fakeBidirectionalRelationMapper,
 				fakeBidirectionalRelationIndexMapper,

@@ -105,11 +105,9 @@ public class Cfg2JavaTool {
 	 * Convert string into something that can be rendered nicely into a javadoc
 	 * comment.
 	 * Prefix each line with a star ('*').
-	 *
-	 * @param string
 	 */
 	public String toJavaDoc(String string, int indent) {
-		StringBuffer result = new StringBuffer();
+		StringBuilder result = new StringBuilder();
 
 		if ( string != null ) {
 			String[] lines = StringUtil.split( string, "\n\r\f" );
@@ -152,15 +150,6 @@ public class Cfg2JavaTool {
 	}
 
 	/**
-	 * Method that tries to get the typename for a property WITHOUT reflection.
-	 */
-	/*public String getJavaTypeName(Property p) {
-		String javaTypeName = getJavaTypeName( p, false );
-		return javaTypeName;
-	}*/
-
-
-	/**
 	 * Returns the typename for a property, using generics if this is a Set type and useGenerics is set to true.
 	 */
 	public String getJavaTypeName(Property p, boolean useGenerics) {
@@ -171,16 +160,16 @@ public class Cfg2JavaTool {
 		String overrideType = getMetaAsString( p, "property-type" );
 		if ( !StringHelper.isEmpty( overrideType ) ) {
 			String importType = importContext.importType(overrideType);			
-			if ( useGenerics && importType.indexOf( "<" )<0) {
+			if ( useGenerics && !importType.contains("<")) {
 				if ( p.getValue() instanceof Collection ) {
-					String decl = getGenericCollectionDeclaration( (Collection) p.getValue(), true, importContext );
+					String decl = getGenericCollectionDeclaration( (Collection) p.getValue(), importContext );
 					return importType + decl;
 				}
 			}
 			return importType;
 		}
 		else {
-			String rawType = getRawTypeName( p, useGenerics, true, importContext );
+			String rawType = getRawTypeName( p, useGenerics, importContext );
 			if(rawType==null) {
 					throw new IllegalStateException("getJavaTypeName *must* return a value");				
 			}
@@ -209,37 +198,34 @@ public class Cfg2JavaTool {
 				.getRegisteredType(typeName) != null;
 	}
 
-	private String getRawTypeName(Property p, boolean useGenerics, boolean preferRawTypeNames, ImportContext importContext) {
+	private String getRawTypeName(Property p, boolean useGenerics, ImportContext importContext) {
 		Value value = p.getValue();
 		try {			
 			
-			if ( value instanceof Array ) { // array has a string rep.inside.
-				Array a = (Array) value;				
-					
-				if ( a.isPrimitiveArray() ) {
+			if (value instanceof Array a) { // array has a string rep.inside.
+                if ( a.isPrimitiveArray() ) {
 					return toName( value.getType().getReturnedClass() );
 				}
 				else if (a.getElementClassName()!=null){
 					return a.getElementClassName() + "[]";
 				} else {
-					return getJavaTypeName(a.getElement(), preferRawTypeNames) + "[]";
+					return getJavaTypeName(a.getElement()) + "[]";
 				}
 			}
 
-			if ( value instanceof Component ) { // same for component.				
-				Component component = ( (Component) value );
-				if(component.isDynamic()) return "java.util.Map";
+			if (value instanceof Component component) { // same for component.
+                if(component.isDynamic()) return "java.util.Map";
 				return component.getComponentClassName();
 			}
 			
 			if ( useGenerics ) {
 				if ( value instanceof Collection ) {
-					String decl = getGenericCollectionDeclaration( (Collection) value, preferRawTypeNames, importContext );
-					return getJavaTypeName(value, preferRawTypeNames) + decl;
+					String decl = getGenericCollectionDeclaration( (Collection) value, importContext );
+					return getJavaTypeName(value) + decl;
 				}
 			}
 
-			return getJavaTypeName( value, preferRawTypeNames );			
+			return getJavaTypeName( value);
 		}
 		catch (Exception e) {
 			//e.printStackTrace();
@@ -255,37 +241,32 @@ public class Cfg2JavaTool {
 		}
 	}
 
-	public String getGenericCollectionDeclaration(Collection collection, boolean preferRawTypeNames, ImportContext importContext) {
+	public String getGenericCollectionDeclaration(Collection collection, ImportContext importContext) {
 		Value element = collection.getElement();
-		String elementType = importContext.importType(getJavaTypeName(element, preferRawTypeNames));
+		String elementType = importContext.importType(getJavaTypeName(element));
 		String genericDecl = elementType;
 		if(collection.isIndexed()) {
 			IndexedCollection idxCol = (IndexedCollection) collection;
 			if(!idxCol.isList()) {
 				Value idxElement = idxCol.getIndex();
-				String indexType = importContext.importType(getJavaTypeName(idxElement, preferRawTypeNames));
+				String indexType = importContext.importType(getJavaTypeName(idxElement));
 				genericDecl = indexType + "," + elementType;
 			}
-		} 
-		String decl = "<" + genericDecl + ">";
-		return decl;
+		}
+        return "<" + genericDecl + ">";
 	}
 	
-	/**
-	 * @param simpleValue
-	 * @return
-	 */
 	public Properties getFilteredIdentifierGeneratorProperties(SimpleValue simpleValue) {
 		Properties p = ((EnhancedValue)simpleValue).getIdentifierGeneratorProperties();
 		return Cfg2HbmTool.getFilteredIdentifierGeneratorProperties(p, new Properties());
 	}
 
-	private String getJavaTypeName(Value value, boolean preferRawTypeNames) {
+	private String getJavaTypeName(Value value) {
 		return (String) value.accept( new JavaTypeFromValueVisitor() );
 	}
 
 	public String asParameterList(Iterator<?> fields, boolean useGenerics, ImportContext ic) {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		while ( fields.hasNext() ) {
 			Property field = (Property)fields.next();
 			buf.append( getJavaTypeName( field, useGenerics, ic ) )
@@ -305,7 +286,7 @@ public class Cfg2JavaTool {
 	 *         TODO: handle this in a template ?
 	 */
 	public String asArgumentList(Iterator<?> fields) {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		while ( fields.hasNext() ) {
 			Property field = (Property)fields.next();
 			buf.append( keyWordCheck(field.getName()) );
@@ -323,7 +304,7 @@ public class Cfg2JavaTool {
 	 *         TODO: handle this in a template ?
 	 */
 	public String asNaturalIdParameterList(PersistentClass clazz) {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		for (Property field : clazz.getRootClass().getProperties()) {
 			if ( field.isNaturalIdentifier() ) {
 				buf.append( getJavaTypeName( field, false ) ) 
@@ -344,7 +325,7 @@ public class Cfg2JavaTool {
 	}
 	
 	public String asFinderArgumentList(Map<Object,Object> parameterTypes, ImportContext ctx) {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		Iterator<Entry<Object,Object>> iter = parameterTypes.entrySet().iterator();
 		while ( iter.hasNext() ) {
 			Entry<Object,Object> entry = iter.next();
@@ -356,8 +337,7 @@ public class Cfg2JavaTool {
 							.getBasicTypeRegistry()
 							.getRegisteredType((String) entry.getValue());
 				} catch(Throwable t) {
-					type = null;
-					typename = (String) entry.getValue();
+                    typename = (String) entry.getValue();
 				}
 			}
 			

@@ -58,9 +58,12 @@ import org.hibernate.tool.internal.util.SkipBackRefPropertyIterator;
 import org.hibernate.tool.internal.util.ValueUtil;
 import org.hibernate.type.ForeignKeyDirection;
 
+import static org.hibernate.tool.internal.export.java.MetaAttributeConstants.EXTENDS;
+import static org.hibernate.tool.internal.export.java.MetaAttributeConstants.IMPLEMENTS;
+
 public class EntityPOJOClass extends BasicPOJOClass {
 
-	private PersistentClass clazz;
+	private final PersistentClass clazz;
 
 	public EntityPOJOClass(PersistentClass clazz, Cfg2JavaTool cfg) {
 		super(clazz, cfg);
@@ -83,17 +86,14 @@ public class EntityPOJOClass extends BasicPOJOClass {
 				extendz = clazz.getSuperclass().getClassName();
 			}
 			if ( clazz.getMetaAttribute( EXTENDS ) != null ) {
-				if ( !"".equals( extendz ) ) {
+				if ( !extendz.isEmpty() ) {
 					extendz += ",";
 				}
 				extendz += getMetaAsString( EXTENDS, "," );
 			}
 		}
 		else if ( clazz.getSuperclass() != null ) {
-			if ( c2j.getPOJOClass(clazz.getSuperclass()).isInterface() ) {
-				// class cannot extend it's superclass because the superclass is marked as an interface
-			}
-			else {
+			if (!( c2j.getPOJOClass(clazz.getSuperclass()).isInterface() )) {
 				extendz = clazz.getSuperclass().getClassName();
 			}
 		}
@@ -101,7 +101,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 			extendz = getMetaAsString( EXTENDS, "," );
 		}
 
-		return "".equals( extendz ) ? null : extendz;
+		return extendz.isEmpty() ? null : extendz;
 	}
 
 
@@ -122,13 +122,9 @@ public class EntityPOJOClass extends BasicPOJOClass {
 			}
 			interfaces.add( Serializable.class.getName() ); // TODO: is this "nice" ? shouldn't it be a user choice ?
 		}
-		else {
-			// interfaces can't implement suff
-		}
 
-
-		if ( interfaces.size() > 0 ) {
-			StringBuffer sbuf = new StringBuffer();
+		if (!interfaces.isEmpty()) {
+			StringBuilder sbuf = new StringBuilder();
 			for ( Iterator<String> iter = interfaces.iterator(); iter.hasNext() ; ) {
 				//sbuf.append(JavaTool.shortenType(iter.next().toString(), pc.getImports() ) );
 				sbuf.append( iter.next() );
@@ -170,14 +166,9 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		List<Property> pl = pc.getProperties();
 		for(Property element : pl)
 		{
-			if ( element.getValue() instanceof Component
+			if ( element.getValue() instanceof Component component
 					&& element.getPropertyAccessorName().equals( "embedded" )) {
-				Component component = (Component) element.getValue();
-				// need to "explode" property to get proper sequence in java code.
-				List<Property> embeddedProperties = component.getProperties();
-				for(Property p : embeddedProperties) {
-					properties.add(p);
-				}
+               properties.addAll(component.getProperties());
 			} else {
 				properties.add(element);
 			}
@@ -240,11 +231,10 @@ public class EntityPOJOClass extends BasicPOJOClass {
 
 			wholeString.append( AnnotationBuilder.createAnnotation( importType("jakarta.persistence.EmbeddedId") ).getResult());
 		}
-		else if ( identifier instanceof EnhancedBasicValue ) {
-			EnhancedBasicValue enhancedBasicValue = (EnhancedBasicValue) identifier;
-			strategy = enhancedBasicValue.getIdentifierGeneratorStrategy();
+		else if (identifier instanceof EnhancedBasicValue enhancedBasicValue) {
+            strategy = enhancedBasicValue.getIdentifierGeneratorStrategy();
 			properties = c2j.getFilteredIdentifierGeneratorProperties(enhancedBasicValue);
-			StringBuffer idResult = new StringBuffer();
+			StringBuilder idResult = new StringBuilder();
 			AnnotationBuilder builder = AnnotationBuilder.createAnnotation( importType("jakarta.persistence.Id") );
 			idResult.append(builder.getResult());
 			idResult.append(" ");
@@ -259,6 +249,11 @@ public class EntityPOJOClass extends BasicPOJOClass {
 						idResult.append(builder.getResult());
 					}
 					else if ( "sequence".equals( strategy ) ) {
+						String sequenceGeneratorName = null;
+						if (properties != null) {
+							sequenceGeneratorName = properties.getProperty(
+									org.hibernate.id.enhanced.SequenceStyleGenerator.SEQUENCE_PARAM, null );
+						}
 						builder.resetAnnotation( importType("jakarta.persistence.GeneratedValue") )
 							.addAttribute( "strategy", staticImport("jakarta.persistence.GenerationType", "SEQUENCE" ) )
 						    .addQuotedAttribute( "generator", clazz.getClassName()+"IdGenerator" );
@@ -266,7 +261,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 
 						builder.resetAnnotation( importType("jakarta.persistence.SequenceGenerator") )
 							.addQuotedAttribute( "name", clazz.getClassName()+"IdGenerator" ) 
-							.addQuotedAttribute( "sequenceName", properties.getProperty(  org.hibernate.id.enhanced.SequenceStyleGenerator.SEQUENCE_PARAM, null ) );
+							.addQuotedAttribute( "sequenceName", sequenceGeneratorName );
 							//	TODO HA does not support initialValue and allocationSize
 						wholeString.append( builder.getResult() );
 					}
@@ -319,46 +314,49 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		AnnotationBuilder builder = AnnotationBuilder.createAnnotation( importType("jakarta.persistence.TableGenerator") );
 		builder.addQuotedAttribute( "name", clazz.getClassName()+"IdGenerator" );
 		builder.addQuotedAttribute( "table", properties.getProperty( "generatorTableName", "hibernate_sequences" ) );
-		if ( ! isPropertyDefault( PersistentIdentifierGenerator.CATALOG, properties ) ) {
+		if (propertyDoesNotHaveDefaultValue( PersistentIdentifierGenerator.CATALOG, properties ) ) {
 			builder.addQuotedAttribute( "catalog", properties.getProperty( PersistentIdentifierGenerator.CATALOG, "") );
 		}
-		if ( ! isPropertyDefault( PersistentIdentifierGenerator.SCHEMA, properties ) ) {
+		if (propertyDoesNotHaveDefaultValue( PersistentIdentifierGenerator.SCHEMA, properties ) ) {
 			builder.addQuotedAttribute( "schema", properties.getProperty( PersistentIdentifierGenerator.SCHEMA, "") );
 		}
-		if (! isPropertyDefault( TableGenerator.SEGMENT_VALUE_PARAM, properties ) ) {
+		if (propertyDoesNotHaveDefaultValue( TableGenerator.SEGMENT_VALUE_PARAM, properties ) ) {
 			builder.addQuotedAttribute( "pkColumnValue", properties.getProperty( TableGenerator.SEGMENT_VALUE_PARAM, "") );
 		}
-		if ( ! isPropertyDefault( TableGenerator.INCREMENT_PARAM, properties, "50" ) ) {
+		if (propertyDoesNotHaveDefaultValue( TableGenerator.INCREMENT_PARAM, properties, "50" ) ) {
 			builder.addAttribute( "allocationSize", properties.getProperty( TableGenerator.INCREMENT_PARAM, "50" ) );
 		}
-		if (! isPropertyDefault( TableGenerator.SEGMENT_COLUMN_PARAM, properties ) ) {
+		if (propertyDoesNotHaveDefaultValue( TableGenerator.SEGMENT_COLUMN_PARAM, properties ) ) {
 			builder.addQuotedAttribute( "pkColumnName", properties.getProperty( TableGenerator.SEGMENT_COLUMN_PARAM, "") );
 		}
-		if (! isPropertyDefault( TableGenerator.VALUE_COLUMN_PARAM, properties ) ) {
+		if (propertyDoesNotHaveDefaultValue( TableGenerator.VALUE_COLUMN_PARAM, properties) ) {
 			builder.addQuotedAttribute( "valueColumnName", properties.getProperty( TableGenerator.VALUE_COLUMN_PARAM, "") );
 		}
-		wholeString.append( builder.getResult() + "\n    " );
+		wholeString.append(builder.getResult()).append("\n    ");
 	}
 
-	private boolean isPropertyDefault(String property, Properties properties) {
-		return StringHelper.isEmpty( properties.getProperty( property ) );
+	private boolean propertyDoesNotHaveDefaultValue(String property, Properties properties) {
+		return propertyDoesNotHaveDefaultValue(property, properties, null);
 	}
 
-	private boolean isPropertyDefault(String property, Properties properties, String defaultValue) {
-		String propertyValue = properties.getProperty( property );
-		return propertyValue != null && propertyValue.equals( defaultValue );
+	private boolean propertyDoesNotHaveDefaultValue(String property, Properties properties, String defaultValue) {
+		String propertyValue = properties.getProperty(property);
+		if (defaultValue == null) {
+			return StringHelper.isNotEmpty(propertyValue);
+		} else {
+			return !defaultValue.equals(propertyValue);
+		}
 	}
 
 	public String generateJoinColumnsAnnotation(Property property, Metadata md) {
 		boolean insertable = property.isInsertable();
-		boolean updatable = property.isUpdateable();
+		boolean updatable = property.isUpdatable();
 		Value value = property.getValue();
 		int span;
 		Iterator<Selectable> selectablesIterator;
 		Iterator<Selectable> referencedSelectablesIterator = null;
-		if (value != null && value instanceof Collection) {
-			Collection collection = (Collection) value;
-			span = collection.getKey().getColumnSpan();
+		if (value instanceof Collection collection) {
+            span = collection.getKey().getColumnSpan();
 			selectablesIterator = collection.getKey().getSelectables().iterator();
 		}
 		else {
@@ -380,16 +378,18 @@ public class EntityPOJOClass extends BasicPOJOClass {
 				buildJoinColumnAnnotation( selectable, null, annotations, insertable, updatable );
 		}
 		else {
-			Iterator<Selectable> selectables = selectablesIterator;
-			annotations.append("@").append( importType("jakarta.persistence.JoinColumns") ).append("( { " );
-			buildArrayOfJoinColumnAnnotation( selectables, referencedSelectablesIterator, annotations, insertable, updatable );
+            annotations.append("@").append( importType("jakarta.persistence.JoinColumns") ).append("( { " );
+			buildArrayOfJoinColumnAnnotation(selectablesIterator, referencedSelectablesIterator, annotations, insertable, updatable );
 			annotations.append( " } )" );
 		}
 		return annotations.toString();
 	}
 
 	private void buildArrayOfJoinColumnAnnotation(
-			Iterator<Selectable> columns, Iterator<Selectable> referencedColumnsIterator, StringBuffer annotations, boolean insertable,
+			Iterator<Selectable> columns,
+			Iterator<Selectable> referencedColumnsIterator,
+			StringBuffer annotations,
+			boolean insertable,
 			boolean updatable
 	) {
 		while ( columns.hasNext() ) {
@@ -399,11 +399,8 @@ public class EntityPOJOClass extends BasicPOJOClass {
             	referencedColumn = referencedColumnsIterator.next();
             }
 
-			if ( selectable.isFormula() ) {
-				//TODO formula in multicolumns not supported by annotations
-				//annotations.append("/* TODO formula in multicolumns not supported by annotations */");
-			}
-			else {
+			//TODO formula in multicolumns not supported by annotations
+			if (!( selectable.isFormula() )) {
 				annotations.append( "\n        " );
 				buildJoinColumnAnnotation( selectable, referencedColumn, annotations, insertable, updatable );
 				annotations.append( ", " );
@@ -413,12 +410,13 @@ public class EntityPOJOClass extends BasicPOJOClass {
 	}
 
 	private void buildJoinColumnAnnotation(
-			Selectable selectable, Selectable referencedColumn, StringBuffer annotations, boolean insertable, boolean updatable
-	) {
-		if ( selectable.isFormula() ) {
-			//TODO not supported by HA
-		}
-		else {
+			Selectable selectable,
+			Selectable referencedColumn,
+			StringBuffer annotations,
+			boolean insertable,
+			boolean updatable) {
+		//TODO not supported by HA
+		if (!( selectable.isFormula() )) {
 			Column column = (Column) selectable;
 			annotations.append("@").append( importType("jakarta.persistence.JoinColumn") )
 					.append("(name=\"" ).append( column.getName() ).append( "\"" );
@@ -438,32 +436,22 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		List<String> types = new ArrayList<String>();
 		while ( st.hasMoreElements() ) {
 			String element = ( (String) st.nextElement() ).toLowerCase();
-			if ( "persist".equals( element ) ) {
-				types.add(importType( "jakarta.persistence.CascadeType" ) + ".PERSIST");
-			}
-			else if ( "merge".equals( element ) ) {
-				types.add(importType( "jakarta.persistence.CascadeType") + ".MERGE");
-			}
-			else if ( "delete".equals( element ) ) {
-				types.add(importType( "jakarta.persistence.CascadeType") + ".REMOVE");
-			}
-			else if ( "refresh".equals( element ) ) {
-				types.add(importType( "jakarta.persistence.CascadeType") + ".REFRESH");
-			}
-			else if ( "all".equals( element ) ) {
-				types.add(importType( "jakarta.persistence.CascadeType") + ".ALL");
-			}
+            switch (element) {
+                case "persist" -> types.add(importType("jakarta.persistence.CascadeType") + ".PERSIST");
+                case "merge" -> types.add(importType("jakarta.persistence.CascadeType") + ".MERGE");
+                case "delete" -> types.add(importType("jakarta.persistence.CascadeType") + ".REMOVE");
+                case "refresh" -> types.add(importType("jakarta.persistence.CascadeType") + ".REFRESH");
+                case "all" -> types.add(importType("jakarta.persistence.CascadeType") + ".ALL");
+            }
 		}
-		return (String[]) types.toArray( new String[types.size()] );
+		return types.toArray(new String[0]);
 	}
 
 	public String generateManyToOneAnnotation(Property property) {
-		StringBuffer buffer = new StringBuffer(AnnotationBuilder.createAnnotation( importType("jakarta.persistence.ManyToOne") )
-				.addAttribute( "cascade", getCascadeTypes(property))
-				.addAttribute( "fetch", getFetchType(property))
-				.getResult());
-		buffer.append(getHibernateCascadeTypeAnnotation(property));
-		return buffer.toString();
+        return AnnotationBuilder.createAnnotation(importType("jakarta.persistence.ManyToOne"))
+                .addAttribute("cascade", getCascadeTypes(property))
+                .addAttribute("fetch", getFetchType(property))
+                .getResult() + getHibernateCascadeTypeAnnotation(property);
 	}
 
 	public boolean isSharedPkBasedOneToOne(OneToOne oneToOne){
@@ -473,14 +461,13 @@ public class EntityPOJOClass extends BasicPOJOClass {
 			joinSelectables.add( joinSelectablesIt.next() );
 		}
 
-		if ( joinSelectables.size() == 0 )
+		if (joinSelectables.isEmpty())
 			return false;
 
-		Iterator<Selectable> idSelectablesIt = getIdentifierProperty().getSelectables().iterator();
-		while ( idSelectablesIt.hasNext() ) {
-			if (!joinSelectables.contains(idSelectablesIt.next()) )
-				return false;
-		}
+        for (Selectable selectable : getIdentifierProperty().getSelectables()) {
+            if (!joinSelectables.contains(selectable))
+                return false;
+        }
 
 		return true;
 	}
@@ -498,7 +485,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 			ab.addQuotedAttribute("mappedBy", getOneToOneMappedBy(md, oneToOne));
 		}
 
-		StringBuffer buffer = new StringBuffer(ab.getResult());
+		StringBuilder buffer = new StringBuilder(ab.getResult());
 		buffer.append(getHibernateCascadeTypeAnnotation(property));
 
 		if ( pkIsAlsoFk && oneToOne.getForeignKeyType().equals(ForeignKeyDirection.FROM_PARENT) ){
@@ -512,34 +499,36 @@ public class EntityPOJOClass extends BasicPOJOClass {
 	public String getHibernateCascadeTypeAnnotation(Property property) {
 		StringTokenizer st =  new StringTokenizer( property.getCascade(), ", ", false );
 		String cascadeType = null;
-		StringBuffer cascade = new StringBuffer();
+		StringBuilder cascade = new StringBuilder();
 		while ( st.hasMoreElements() ) {
 			String element = ( (String) st.nextElement() ).toLowerCase();
-			if ( "all-delete-orphan".equals( element ) ) {
-				if (cascadeType == null) cascadeType = importType( "org.hibernate.annotations.CascadeType");
-				cascade.append( cascadeType ).append(".ALL").append(", ")
-						.append( cascadeType ).append(".DELETE_ORPHAN").append(", ");
-			}
-			else if ( "delete-orphan".equals( element ) ) {
-				if (cascadeType == null) cascadeType = importType( "org.hibernate.annotations.CascadeType");
-				cascade.append( cascadeType ).append(".DELETE_ORPHAN").append(", ");
-			}
-			else if ( "save-update".equals( element ) ) {
-				if (cascadeType == null) cascadeType = importType( "org.hibernate.annotations.CascadeType");
-				cascade.append( cascadeType ).append(".MERGE").append(", ");
-			}
-			else if ( "replicate".equals( element ) ) {
-				if (cascadeType == null) cascadeType = importType( "org.hibernate.annotations.CascadeType");
-				cascade.append( cascadeType ).append(".REPLICATE").append(", ");
-			}
-			else if ( "lock".equals( element ) ) {
-				if (cascadeType == null) cascadeType = importType( "org.hibernate.annotations.CascadeType");
-				cascade.append( cascadeType ).append(".LOCK").append(", ");
-			}
-			else if ( "evict".equals( element ) ) {
-				if (cascadeType == null) cascadeType = importType( "org.hibernate.annotations.CascadeType");
-				cascade.append( cascadeType ).append(".EVICT").append(", ");
-			}
+            switch (element) {
+                case "all-delete-orphan" -> {
+                    if (cascadeType == null) cascadeType = importType("org.hibernate.annotations.CascadeType");
+                    cascade.append(cascadeType).append(".ALL").append(", ")
+                            .append(cascadeType).append(".DELETE_ORPHAN").append(", ");
+                }
+                case "delete-orphan" -> {
+                    if (cascadeType == null) cascadeType = importType("org.hibernate.annotations.CascadeType");
+                    cascade.append(cascadeType).append(".DELETE_ORPHAN").append(", ");
+                }
+                case "save-update" -> {
+                    if (cascadeType == null) cascadeType = importType("org.hibernate.annotations.CascadeType");
+                    cascade.append(cascadeType).append(".MERGE").append(", ");
+                }
+                case "replicate" -> {
+                    if (cascadeType == null) cascadeType = importType("org.hibernate.annotations.CascadeType");
+                    cascade.append(cascadeType).append(".REPLICATE").append(", ");
+                }
+                case "lock" -> {
+                    if (cascadeType == null) cascadeType = importType("org.hibernate.annotations.CascadeType");
+                    cascade.append(cascadeType).append(".LOCK").append(", ");
+                }
+                case "evict" -> {
+                    if (cascadeType == null) cascadeType = importType("org.hibernate.annotations.CascadeType");
+                    cascade.append(cascadeType).append(".EVICT").append(", ");
+                }
+            }
 		}
 		if ( cascade.length() >= 2 ) {
 			String hibernateCascade = importType("org.hibernate.annotations.Cascade");
@@ -579,9 +568,8 @@ public class EntityPOJOClass extends BasicPOJOClass {
 	public String generateCollectionAnnotation(Property property, Metadata md) {
 		StringBuffer annotation = new StringBuffer();
 		Value value = property.getValue();
-		if ( value != null && value instanceof Collection) {
-			Collection collection = (Collection) value;
-			if ( collection.isOneToMany() ) {
+		if (value instanceof Collection collection) {
+            if ( collection.isOneToMany() ) {
 				String mappedBy = null;
 				AnnotationBuilder ab = AnnotationBuilder.createAnnotation( importType( "jakarta.persistence.OneToMany") );
 				ab.addAttribute( "cascade", getCascadeTypes( property ) );
@@ -621,7 +609,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 						annotation.append(", catalog=\"").append( table.getCatalog() ).append("\"");
 					}
 					String uniqueConstraint = generateAnnTableUniqueConstraint(table);
-					if ( uniqueConstraint.length() > 0 ) {
+					if (!uniqueConstraint.isEmpty()) {
 						annotation.append(", uniqueConstraints=").append(uniqueConstraint);
 					}
 					annotation.append( ", joinColumns = { ");
@@ -630,7 +618,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 							null,
 							annotation,
 							property.isInsertable(),
-							property.isUpdateable()
+							property.isUpdatable()
 					);
 					annotation.append( " }");
 					annotation.append( ", inverseJoinColumns = { ");
@@ -639,7 +627,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 							null,
 							annotation,
 							property.isInsertable(),
-							property.isUpdateable()
+							property.isUpdatable()
 					);
 					annotation.append( " }");
 					annotation.append(")");
@@ -647,7 +635,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 
 			}
 			String hibernateCascade = getHibernateCascadeTypeAnnotation( property );
-			if (hibernateCascade.length() > 0) annotation.append("\n    ").append(hibernateCascade);
+			if (!hibernateCascade.isEmpty()) annotation.append("\n    ").append(hibernateCascade);
 		}
 		return annotation.toString();
 	}
@@ -668,19 +656,16 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		while ( ! isOtherSide && properties.hasNext() ) {
 			Property collectionProperty = properties.next();
 			Value collectionValue = collectionProperty.getValue();
-			if ( collectionValue != null && collectionValue instanceof Collection ) {
-				Collection realCollectionValue = (Collection) collectionValue;
-				if ( ! realCollectionValue.isOneToMany() ) {
+			if (collectionValue instanceof Collection realCollectionValue) {
+                if ( ! realCollectionValue.isOneToMany() ) {
 					if ( joinColumns.size() == realCollectionValue.getElement().getColumnSpan() ) {
 						isOtherSide = true;
-						Iterator<Selectable> it = realCollectionValue.getElement().getSelectables().iterator();
-						while ( it.hasNext() ) {
-							Selectable selectable = it.next();
-							if (! joinColumns.contains( selectable ) ) {
-								isOtherSide = false;
-								break;
-							}
-						}
+                        for (Selectable selectable : realCollectionValue.getElement().getSelectables()) {
+                            if (!joinColumns.contains(selectable)) {
+                                isOtherSide = false;
+                                break;
+                            }
+                        }
 						if (isOtherSide) {
 							mappedBy = collectionProperty.getName();
 						}
@@ -707,17 +692,15 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		while ( ! isOtherSide && properties.hasNext() ) {
 			Property manyProperty = properties.next();
 			Value manyValue = manyProperty.getValue();
-			if ( manyValue != null && manyValue instanceof ManyToOne ) {
+			if (manyValue instanceof ManyToOne) {
 				if ( joinColumns.size() == manyValue.getColumnSpan() ) {
 					isOtherSide = true;
-					Iterator<Selectable> it = manyValue.getSelectables().iterator();
-					while ( it.hasNext() ) {
-						Selectable selectable = it.next();
-						if (! joinColumns.contains( selectable ) ) {
-							isOtherSide = false;
-							break;
-						}
-					}
+                    for (Selectable selectable : manyValue.getSelectables()) {
+                        if (!joinColumns.contains(selectable)) {
+                            isOtherSide = false;
+                            break;
+                        }
+                    }
 					if (isOtherSide) {
 						mappedBy = manyProperty.getName();
 					}
@@ -749,17 +732,15 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		while ( ! isOtherSide && properties.hasNext() ) {
 			Property oneProperty = properties.next();
 			Value manyValue = oneProperty.getValue();
-			if ( manyValue != null && ( manyValue instanceof OneToOne || manyValue instanceof ManyToOne ) ) {
+			if ((manyValue instanceof OneToOne || manyValue instanceof ManyToOne)) {
 				if ( joinSelectables.size() == manyValue.getColumnSpan() ) {
 					isOtherSide = true;
-					Iterator<Selectable> it = manyValue.getSelectables().iterator();
-					while ( it.hasNext() ) {
-						Selectable selectable = it.next();
-						if (! joinSelectables.contains( selectable ) ) {
-							isOtherSide = false;
-							break;
-						}
-					}
+                    for (Selectable selectable : manyValue.getSelectables()) {
+                        if (!joinSelectables.contains(selectable)) {
+                            isOtherSide = false;
+                            break;
+                        }
+                    }
 					if (isOtherSide) {
 						mappedBy = oneProperty.getName();
 					}
@@ -815,15 +796,13 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		boolean foundFormula = false;
 
 		if(value!=null && value.getColumnSpan()>0) {
-			Iterator<Selectable> selectablesIterator = value.getSelectables().iterator();
-			while ( selectablesIterator.hasNext() ) {
-				Selectable element = selectablesIterator.next();
-				if(!(element instanceof Formula)) {
-					return false;
-				} else {
-					foundFormula = true;
-				}
-			}
+            for (Selectable element : value.getSelectables()) {
+                if (!(element instanceof Formula)) {
+                    return false;
+                } else {
+                    foundFormula = true;
+                }
+            }
 		} else {
 			return false;
 		}
@@ -885,16 +864,11 @@ public class EntityPOJOClass extends BasicPOJOClass {
 
 	protected boolean isAssignedIdentifier(PersistentClass pc, Property property) {
 		if(property.equals(pc.getIdentifierProperty())) {
-			if(property.getValue() instanceof EnhancedValue) {
-				EnhancedValue sv = (EnhancedValue) property.getValue();
-				if("assigned".equals(sv.getIdentifierGeneratorStrategy())) {
-					return true;
-				}
+			if(property.getValue() instanceof EnhancedValue sv) {
+                return "assigned".equals(sv.getIdentifierGeneratorStrategy());
 			} else if (property.getValue().isSimpleValue()) {
 				ValueUtil v = new ValueUtil((SimpleValue)property.getValue());
-				if("assigned".equals(v.getIdentifierGeneratorStrategy())) {
-					return true;
-				}
+                return "assigned".equals(v.getIdentifierGeneratorStrategy());
 			}
 		}
 		return false;

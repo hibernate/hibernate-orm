@@ -24,11 +24,15 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.Property;
+
+import static org.hibernate.tool.internal.export.java.MetaAttributeConstants.EXTENDS;
+import static org.hibernate.tool.internal.export.java.MetaAttributeConstants.IMPLEMENTS;
 
 public class ComponentPOJOClass extends BasicPOJOClass {
 
-	private Component clazz;
+	private final Component clazz;
 
 	public ComponentPOJOClass(Component component, Cfg2JavaTool cfg) {
 		super(component, cfg);
@@ -45,44 +49,38 @@ public class ComponentPOJOClass extends BasicPOJOClass {
 
 		if ( isInterface() ) {
 			if ( clazz.getMetaAttribute( EXTENDS ) != null ) {
-				if ( !"".equals( extendz ) ) {
-					extendz += ",";
-				}
-				extendz += getMetaAsString( EXTENDS, "," );
+                extendz += getMetaAsString( EXTENDS, "," );
 			}
 		}
 		else if ( clazz.getMetaAttribute( EXTENDS ) != null ) {
 			extendz = getMetaAsString( EXTENDS, "," );
 		}
 
-		return "".equals( extendz ) ? null : extendz;
+		return extendz.isEmpty() ? null : extendz;
 	}
 	    
 	public String getImplements() {
 		List<String> interfaces = new ArrayList<String>();
 
 		//	implement proxy, but NOT if the proxy is the class it self!
+		// interfaces can't implement stuff
 		if ( !isInterface() ) {
-			if ( clazz.getMetaAttribute( IMPLEMENTS ) != null ) {
-				for (Object value : clazz.getMetaAttribute(IMPLEMENTS).getValues()) {
-					interfaces.add((String)value);
-				}
+			MetaAttribute implementz = clazz.getMetaAttribute( IMPLEMENTS );
+			if ( implementz != null ) {
+                interfaces.addAll(implementz.getValues());
 			}
 			interfaces.add( Serializable.class.getName() ); // TODO: is this "nice" ? shouldn't it be a user choice ?
 		}
-		else {
-			// interfaces can't implement suff
-		}
 
 
-		if ( interfaces.size() > 0 ) {
-			StringBuffer sbuf = new StringBuffer();
+		if (!interfaces.isEmpty()) {
+			StringBuilder sb = new StringBuilder();
 			for ( Iterator<String> iter = interfaces.iterator(); iter.hasNext() ; ) {
-				//sbuf.append(JavaTool.shortenType(iter.next().toString(), pc.getImports() ) );
-				sbuf.append( iter.next() );
-				if ( iter.hasNext() ) sbuf.append( "," );
+				//sb.append(JavaTool.shortenType(iter.next().toString(), pc.getImports() ) );
+				sb.append( iter.next() );
+				if ( iter.hasNext() ) sb.append( "," );
 			}
-			return sbuf.toString();
+			return sb.toString();
 		}
 		else {
 			return null;

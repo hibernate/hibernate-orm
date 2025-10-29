@@ -93,6 +93,13 @@ public final class Template {
 			= Set.of("first", "next");
 	private static final Set<String> CURRENT_BIGRAMS
 			= Set.of("date", "time", "timestamp");
+	// Ordered-set aggregate function names we want to recognize
+	private static final Set<String> ORDERED_SET_AGGREGATES
+			= Set.of("listagg", "percentile_cont", "percentile_disc", "mode");
+	// Soft keywords that are only treated as keywords in the LISTAGG extension immediately
+	// following the argument list and up to and including GROUP
+	private static final Set<String> LISTAGG_EXTENSION_KEYWORDS
+			= Set.of("on", "overflow", "error", "truncate", "without", "count", "within", "with", "group");
 
 	private static final String PUNCTUATION = "=><!+-*/()',|&`";
 
@@ -173,6 +180,12 @@ public final class Template {
 		int inExtractOrTrim = -1;
 		int inCast = -1;
 		int nestingLevel = 0;
+		// State for ordered-set aggregates / LISTAGG extension handling
+		boolean inOrderedSetFunction = false;
+		int orderedSetParenDepth = 0;
+		boolean afterOrderedSetArgs = false;
+		boolean inListaggExtension = false;
+		boolean lastWasListagg = false;
 
 		boolean hasMore = tokens.hasMoreTokens();
 		String nextToken = hasMore ? tokens.nextToken() : null;
@@ -216,8 +229,8 @@ public final class Template {
 					isOpenQuote = false;
 				}
 				if ( isOpenQuote
-						&& !inFromClause // don't want to append alias to tokens inside the FROM clause
-						&& !endsWithDot( previousToken ) ) {
+					 && !inFromClause // don't want to append alias to tokens inside the FROM clause
+					 && !endsWithDot( previousToken ) ) {
 					result.append( alias ).append( '.' );
 				}
 			}
@@ -246,6 +259,9 @@ public final class Template {
 				processedToken = token;
 			}
 			else if ( "(".equals(lcToken) ) {
+				if ( inOrderedSetFunction ) {
+					orderedSetParenDepth++;
+				}
 				nestingLevel ++;
 				processedToken = token;
 			}
@@ -257,6 +273,14 @@ public final class Template {
 				if ( nestingLevel == inCast ) {
 					inCast = -1;
 					afterCastAs = false;
+				}
+				if ( inOrderedSetFunction ) {
+					orderedSetParenDepth--;
+					if ( orderedSetParenDepth == 0 ) {
+						inOrderedSetFunction = false;
+						afterOrderedSetArgs = true;
+						inListaggExtension = lastWasListagg;
+					}
 				}
 				processedToken = token;
 			}
@@ -310,11 +334,31 @@ public final class Template {
 				if ( "cast".equals( lcToken ) ) {
 					inCast = nestingLevel;
 				}
+				if ( ORDERED_SET_AGGREGATES.contains( lcToken ) ) {
+					inOrderedSetFunction = true;
+					orderedSetParenDepth = 0;
+					lastWasListagg = "listagg".equals( lcToken );
+				}
+				processedToken = token;
+			}
+			else if ( afterOrderedSetArgs && (inListaggExtension
+					? ( LISTAGG_EXTENSION_KEYWORDS.contains( lcToken ) )
+					: "within".equals( lcToken )) ) {
+				if ( "group".equals( lcToken ) ) {
+					// end special handling after GROUP (inclusive)
+					afterOrderedSetArgs = false;
+					inListaggExtension = false;
+				}
 				processedToken = token;
 			}
 			else if ( isAliasableIdentifier( token, lcToken, nextToken,
 							sql, symbols, tokens, wasAfterCurrent,
 							dialect, typeConfiguration ) ) {
+				// Any aliasable identifier here cannot be one of the soft keywords allowed in the
+				// ordered-set/LISTAGG post-args region. We've left that region so must end special handling.
+				// (It's irrelevant at this point whether the dialect supports ordered-set/LISTAGG.)
+				afterOrderedSetArgs = false;
+				inListaggExtension = false;
 				processedToken = alias + '.' +  dialect.quote(token);
 			}
 			else {
@@ -325,8 +369,8 @@ public final class Template {
 
 			//Yuck:
 			if ( inFromClause
-					&& KEYWORDS.contains( lcToken ) // "as" is not in KEYWORDS
-					&& !BEFORE_TABLE_KEYWORDS.contains( lcToken ) ) {
+				 && KEYWORDS.contains( lcToken ) // "as" is not in KEYWORDS
+				 && !BEFORE_TABLE_KEYWORDS.contains( lcToken ) ) {
 				inFromClause = false;
 			}
 		}
@@ -340,8 +384,8 @@ public final class Template {
 			boolean wasAfterCurrent,
 			Dialect dialect, TypeConfiguration typeConfiguration) {
 		return isUnqualifiedIdentifier( token )
-			&& !isKeyword( lcToken, wasAfterCurrent, dialect, typeConfiguration )
-			&& !isLiteral( lcToken, nextToken, sql, symbols, tokens );
+			   && !isKeyword( lcToken, wasAfterCurrent, dialect, typeConfiguration )
+			   && !isLiteral( lcToken, nextToken, sql, symbols, tokens );
 	}
 
 	private static boolean isFunctionCall(
@@ -361,13 +405,13 @@ public final class Template {
 			String lcToken, String nextToken,
 			String sql, String symbols, StringTokenizer tokens) {
 		return "current".equals( lcToken )
-			&& nextToken.isBlank()
-			&& lookPastBlankTokens( sql, symbols, tokens, 1, CURRENT_BIGRAMS::contains );
+			   && nextToken.isBlank()
+			   && lookPastBlankTokens( sql, symbols, tokens, 1, CURRENT_BIGRAMS::contains );
 	}
 
 	private static boolean isFetch(Dialect dialect, String lcToken) {
 		return "fetch".equals( lcToken )
-			&& dialect.getKeywords().contains( "fetch" );
+			   && dialect.getKeywords().contains( "fetch" );
 	}
 
 	private static boolean endsWithDot(String token) {
@@ -386,9 +430,9 @@ public final class Template {
 				// to find the first non-blank token
 				return lookPastBlankTokens( sqlWhereString, symbols, tokens, 1,
 						nextToken -> "'".equals(nextToken)
-								|| lcToken.equals("time") && "with".equals(nextToken)
-								|| lcToken.equals("timestamp") && "with".equals(nextToken)
-								|| lcToken.equals("time") && "zone".equals(nextToken) );
+									 || lcToken.equals("time") && "with".equals(nextToken)
+									 || lcToken.equals("timestamp") && "with".equals(nextToken)
+									 || lcToken.equals("time") && "zone".equals(nextToken) );
 			}
 			else {
 				return "'".equals(next);
@@ -480,9 +524,9 @@ public final class Template {
 		}
 		else {
 			return KEYWORDS.contains( lcToken )
-				|| isType( lcToken, typeConfiguration )
-				|| dialect.getKeywords().contains( lcToken )
-				|| FUNCTION_KEYWORDS.contains( lcToken );
+				   || isType( lcToken, typeConfiguration )
+				   || dialect.getKeywords().contains( lcToken )
+				   || FUNCTION_KEYWORDS.contains( lcToken );
 		}
 	}
 
@@ -493,8 +537,8 @@ public final class Template {
 	private static boolean isUnqualifiedIdentifier(String token) {
 		final char initialChar = token.charAt( 0 );
 		return initialChar == '`'             // allow any identifier quoted with backtick
-			|| isLetter( initialChar )        // only recognizes identifiers beginning with a letter
-				&& token.indexOf( '.' ) < 0;  // don't qualify already-qualified identifiers
+			   || isLetter( initialChar )        // only recognizes identifiers beginning with a letter
+				  && token.indexOf( '.' ) < 0;  // don't qualify already-qualified identifiers
 	}
 
 	private static boolean isBoolean(String lcToken) {

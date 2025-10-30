@@ -4,6 +4,9 @@
  */
 package org.hibernate.testing.orm.junit;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 /**
@@ -15,6 +18,12 @@ public @interface SettingConfiguration {
 	Class<? extends Configurer> configurer();
 
 	interface Configurer {
-		void applySettings(StandardServiceRegistryBuilder registryBuilder);
+		default void applySettings(StandardServiceRegistryBuilder registryBuilder) {
+			final Map<String, Object> temp = new HashMap<>();
+			applySettings( temp );
+			registryBuilder.applySettings( temp );
+		}
+
+		default void applySettings(Map<String, Object> configValues) {}
 	}
 }

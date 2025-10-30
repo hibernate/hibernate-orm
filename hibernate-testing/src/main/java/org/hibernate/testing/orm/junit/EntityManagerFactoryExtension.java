@@ -184,6 +184,17 @@ public class EntityManagerFactoryExtension
 				log.error( "Error obtaining setting provider for " + providerImpl.getName(), e );
 			}
 		}
+		for ( SettingConfiguration settingConfiguration : jpa.settingConfigurations() ) {
+			try {
+				final SettingConfiguration.Configurer configurer = settingConfiguration.configurer()
+						.getDeclaredConstructor().newInstance();
+				configurer.applySettings( integrationSettings );
+			}
+			catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+				NoSuchMethodException e) {
+				throw new RuntimeException( e );
+			}
+		}
 		return integrationSettings;
 	}
 

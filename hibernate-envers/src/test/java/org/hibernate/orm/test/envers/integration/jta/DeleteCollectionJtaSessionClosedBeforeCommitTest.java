@@ -7,51 +7,51 @@ package org.hibernate.orm.test.envers.integration.jta;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
+
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.envers.Audited;
+
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.jta.TestingJtaBootstrap;
+import org.hibernate.testing.jta.TestingJtaPlatformImpl;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingConfiguration;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.jta.TestingJtaBootstrap;
-import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Andrea Boriero
  */
 @JiraKey(value = "HHH-11580")
-public class DeleteCollectionJtaSessionClosedBeforeCommitTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {
+		DeleteCollectionJtaSessionClosedBeforeCommitTest.TestEntity.class,
+		DeleteCollectionJtaSessionClosedBeforeCommitTest.OtherTestEntity.class
+},
+		integrationSettings = @Setting(name = AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS, value = "true"),
+		settingConfigurations = @SettingConfiguration(configurer = TestingJtaBootstrap.class)
+)
+public class DeleteCollectionJtaSessionClosedBeforeCommitTest {
 	private static final int ENTITY_ID = 1;
 	private static final int OTHER_ENTITY_ID = 2;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {TestEntity.class, OtherTestEntity.class};
-	}
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		TestingJtaBootstrap.prepare( options );
-		options.put( AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS, "true" );
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() throws Exception {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) throws Exception {
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		EntityManager entityManager = getEntityManager();
+		var entityManager = scope.getEntityManagerFactory().createEntityManager();
 		try {
 			TestEntity entity = new TestEntity( ENTITY_ID, "Fab" );
 			entityManager.persist( entity );
@@ -61,14 +61,14 @@ public class DeleteCollectionJtaSessionClosedBeforeCommitTest extends BaseEnvers
 			entity.addOther( other );
 			entityManager.persist( entity );
 			entityManager.persist( other );
-
+			entityManager.flush();
 		}
 		finally {
 			entityManager.close();
 			TestingJtaPlatformImpl.tryCommit();
 		}
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		entityManager = getEntityManager();
+		entityManager = scope.getEntityManagerFactory().createEntityManager();
 		try {
 			TestEntity entity = entityManager.find( TestEntity.class, ENTITY_ID );
 			OtherTestEntity other = entityManager.find( OtherTestEntity.class, OTHER_ENTITY_ID );
@@ -76,25 +76,25 @@ public class DeleteCollectionJtaSessionClosedBeforeCommitTest extends BaseEnvers
 			entityManager.remove( other );
 		}
 		finally {
-			entityManager.close();
 			TestingJtaPlatformImpl.tryCommit();
+			entityManager.close();
 		}
 	}
 
 	@Test
-	public void testRevisionCounts() {
-		assertEquals(
+	public void testRevisionCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> assertEquals(
 				Arrays.asList( 1, 2 ),
-				getAuditReader().getRevisions( TestEntity.class, ENTITY_ID )
-		);
+				AuditReaderFactory.get( entityManager ).getRevisions( TestEntity.class, ENTITY_ID )
+		) );
 	}
 
 	@Test
-	public void testRevisionHistory() {
-		assertEquals(
+	public void testRevisionHistory(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> assertEquals(
 				new TestEntity( 1, "Fab" ),
-				getAuditReader().find( TestEntity.class, ENTITY_ID, 1 )
-		);
+				AuditReaderFactory.get( entityManager ).find( TestEntity.class, ENTITY_ID, 1 )
+		) );
 	}
 
 	@Audited

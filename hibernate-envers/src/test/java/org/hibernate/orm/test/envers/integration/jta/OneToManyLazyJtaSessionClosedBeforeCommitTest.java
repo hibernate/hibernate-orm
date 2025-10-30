@@ -6,58 +6,57 @@ package org.hibernate.orm.test.envers.integration.jta;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
-import jakarta.persistence.EntityManager;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.orm.test.envers.entities.onetomany.SetRefEdEntity;
 import org.hibernate.orm.test.envers.entities.onetomany.SetRefIngEntity;
+
+import org.hibernate.testing.envers.junit.EnversTest;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingConfiguration;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author VladoKuruc
  */
-@JiraKey( value = "HHH-14061")
-public class OneToManyLazyJtaSessionClosedBeforeCommitTest extends BaseEnversJPAFunctionalTestCase {
-	private Integer parentId;
-	private Integer entityId;
+@JiraKey(value = "HHH-14061")
+@EnversTest
+@Jpa(
+		annotatedClasses = { SetRefIngEntity.class, SetRefEdEntity.class },
+		integrationSettings = @Setting(name = AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS, value = "true"),
+		settingConfigurations = @SettingConfiguration(configurer = TestingJtaBootstrap.class)
+)
+public class OneToManyLazyJtaSessionClosedBeforeCommitTest {
+	private static final Integer PARENT_ID = 2;
+	private static final Integer ENTITY_ID = 1;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {SetRefIngEntity.class, SetRefEdEntity.class};
-	}
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) throws Exception {
+		final var emf = scope.getEntityManagerFactory();
 
-	@Override
-	protected void addConfigOptions(Map options) {
-		TestingJtaBootstrap.prepare( options );
-		options.put( AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS, "true" );
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() throws Exception {
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		EntityManager entityManager = getEntityManager();
+		var entityManager = emf.createEntityManager();
 		try {
 			SetRefIngEntity refIngEntity = new SetRefIngEntity( 3, "ingEntityRef" );
 			entityManager.persist( refIngEntity );
 
-			SetRefEdEntity edEntity = new SetRefEdEntity( 2, "edEntity" );
-			edEntity.setRef(refIngEntity);
+			SetRefEdEntity edEntity = new SetRefEdEntity( PARENT_ID, "edEntity" );
+			edEntity.setRef( refIngEntity );
 			entityManager.persist( edEntity );
-			parentId = edEntity.getId();
 
-			SetRefIngEntity ingEntity = new SetRefIngEntity( 1, "ingEntity" );
+			SetRefIngEntity ingEntity = new SetRefIngEntity( ENTITY_ID, "ingEntity" );
 
 			Set<SetRefIngEntity> sries = new HashSet<>();
 			sries.add( ingEntity );
@@ -65,50 +64,60 @@ public class OneToManyLazyJtaSessionClosedBeforeCommitTest extends BaseEnversJPA
 			edEntity.setReffering( sries );
 
 			entityManager.persist( ingEntity );
-
-			entityId = ingEntity.getId();
+			entityManager.flush();
 		}
 		finally {
-			entityManager.close();
 			TestingJtaPlatformImpl.tryCommit();
+			entityManager.close();
 		}
+
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		entityManager = getEntityManager();
+		entityManager = emf.createEntityManager();
 		try {
-			entityManager.unwrap(Session.class).setHibernateFlushMode(FlushMode.MANUAL);
-			SetRefEdEntity edEntity = entityManager.find(SetRefEdEntity.class, parentId);
+			entityManager.unwrap( Session.class ).setHibernateFlushMode( FlushMode.MANUAL );
+			SetRefEdEntity edEntity = entityManager.find( SetRefEdEntity.class, PARENT_ID );
 			Set<SetRefIngEntity> reffering = edEntity.getReffering();
 			SetRefIngEntity ingEntity = reffering.iterator().next();
-			ingEntity.setReference(null);
-			reffering.remove(ingEntity);
-			entityManager.merge(ingEntity);
+			ingEntity.setReference( null );
+			reffering.remove( ingEntity );
+			entityManager.merge( ingEntity );
 			entityManager.flush();
-			//clear context in transaction
+			// clear context in transaction
 			entityManager.clear();
-			entityManager.merge(edEntity);
+			entityManager.merge( edEntity );
 			entityManager.flush();
 		}
 		finally {
-			entityManager.close();
 			TestingJtaPlatformImpl.tryCommit();
+			entityManager.close();
 		}
 	}
 
 	@Test
-	public void testRevisionCounts() {
-		assertEquals(
-				Arrays.asList(1, 2),
-				getAuditReader().getRevisions( SetRefIngEntity.class, entityId )
-		);
-		assertEquals(
-				Arrays.asList(1, 2),
-				getAuditReader().getRevisions( SetRefEdEntity.class, parentId )
-		);
+	public void testRevisionCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
+			assertEquals(
+					Arrays.asList( 1, 2 ),
+					AuditReaderFactory.get( entityManager ).getRevisions( SetRefIngEntity.class, ENTITY_ID )
+			);
+			assertEquals(
+					Arrays.asList( 1, 2 ),
+					AuditReaderFactory.get( entityManager ).getRevisions( SetRefEdEntity.class, PARENT_ID )
+			);
+		} );
 	}
 
 	@Test
-	public void testRevisionHistory() {
-		assertEquals( Arrays.asList( 1, 2 ), getAuditReader().getRevisions( SetRefIngEntity.class, entityId ) );
-		assertEquals( Arrays.asList( 1, 2 ), getAuditReader().getRevisions( SetRefEdEntity.class, parentId ) );
+	public void testRevisionHistory(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
+			assertEquals(
+					Arrays.asList( 1, 2 ),
+					AuditReaderFactory.get( entityManager ).getRevisions( SetRefIngEntity.class, ENTITY_ID )
+			);
+			assertEquals(
+					Arrays.asList( 1, 2 ),
+					AuditReaderFactory.get( entityManager ).getRevisions( SetRefEdEntity.class, PARENT_ID )
+			);
+		} );
 	}
 }

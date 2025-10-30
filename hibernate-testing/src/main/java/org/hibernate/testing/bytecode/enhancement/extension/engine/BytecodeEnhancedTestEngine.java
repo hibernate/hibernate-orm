@@ -40,6 +40,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.engine.JupiterTestEngine;
 import org.junit.jupiter.engine.config.JupiterConfiguration;
 import org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor;
+import org.junit.jupiter.engine.descriptor.ClassTemplateTestDescriptor;
 import org.junit.jupiter.engine.descriptor.ClassTestDescriptor;
 import org.junit.jupiter.engine.descriptor.JupiterEngineDescriptor;
 import org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor;
@@ -176,17 +177,28 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 			throws NoSuchMethodException {
 		DelegatingJupiterConfiguration configuration = new DelegatingJupiterConfiguration( jc, enhancementContextId );
 
-		ClassTestDescriptor updated = new ClassTestDescriptor(
+		final ClassTestDescriptor updatedClassDescriptor = new ClassTestDescriptor(
 				convertUniqueId( descriptor.getUniqueId(), enhancementContextId ),
 				enhanced,
 				configuration
 		);
 
+		final ClassBasedTestDescriptor updated;
+		if ( descriptor instanceof ClassTemplateTestDescriptor ) {
+			updated = new ClassTemplateTestDescriptor(
+					convertUniqueId( descriptor.getUniqueId(), enhancementContextId ),
+					updatedClassDescriptor
+			);
+		}
+		else {
+			updated = updatedClassDescriptor;
+		}
+
 		for ( TestDescriptor child : children ) {
 			// this needs more cases for parameterized tests, test templates and so on ...
 			// for now it'll only work with simple @Test tests
-			if ( child instanceof TestMethodTestDescriptor ) {
-				Method testMethod = ( (TestMethodTestDescriptor) child ).getTestMethod();
+			if ( child instanceof TestMethodTestDescriptor testMethodDescriptor ) {
+				Method testMethod = testMethodDescriptor.getTestMethod();
 				updated.addChild(
 						new TestMethodTestDescriptor(
 								convertUniqueId( child.getUniqueId(), enhancementContextId ),
@@ -198,8 +210,8 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 				);
 
 			}
-			if ( child instanceof TestTemplateTestDescriptor ) {
-				Method testMethod = ( (TestTemplateTestDescriptor) child ).getTestMethod();
+			if ( child instanceof TestTemplateTestDescriptor testTemplateDescriptor ) {
+				Method testMethod = testTemplateDescriptor.getTestMethod();
 				updated.addChild( new TestTemplateTestDescriptor(
 						convertUniqueId( child.getUniqueId(), enhancementContextId ),
 						updated.getTestClass(),
@@ -225,7 +237,7 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 		return uniqueId;
 	}
 
-	private Method findMethodReplacement(ClassTestDescriptor updated, Method testMethod) throws NoSuchMethodException {
+	private Method findMethodReplacement(ClassBasedTestDescriptor updated, Method testMethod) throws NoSuchMethodException {
 		String name = testMethod.getDeclaringClass().getName();
 
 		Class<?> testClass = updated.getTestClass();

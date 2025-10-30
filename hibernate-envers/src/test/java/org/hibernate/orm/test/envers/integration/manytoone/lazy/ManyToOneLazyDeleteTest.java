@@ -4,19 +4,22 @@
  */
 package org.hibernate.orm.test.envers.integration.manytoone.lazy;
 
-import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.junit.Test;
-
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Map;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import org.hibernate.envers.configuration.EnversSettings;
+
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests that proxies can still be resolved correctly in ToOneIdMapper even the object is already deleted and can't
@@ -26,22 +29,26 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
  * @author Luke Chen
  */
 @JiraKey(value = "HHH-13945")
-@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-public class ManyToOneLazyDeleteTest extends BaseEnversFunctionalTestCase {
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
+@EnversTest
+@DomainModel(annotatedClasses = { Shipment.class, Address.class, AddressVersion.class, User.class, ChildUser.class })
+@ServiceRegistry(settings = @Setting(name = EnversSettings.STORE_DATA_AT_DELETE, value = "true"))
+@SessionFactory
+public class ManyToOneLazyDeleteTest {
 	private Long shipmentId;
-	private User user;
+	private Long userId;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Shipment.class, Address.class, AddressVersion.class, User.class, ChildUser.class };
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-
-		this.shipmentId = doInHibernate( this::sessionFactory, session -> {
-			final Shipment shipment = new Shipment( Instant.now(), "system", Instant.now().plus( Duration.ofDays( 3 ) ), "abcd123", null, null );
+	@BeforeClassTemplate
+	public void initData(SessionFactoryScope scope) {
+		this.shipmentId = scope.fromTransaction( session -> {
+			final Shipment shipment = new Shipment(
+					Instant.now(),
+					"system",
+					Instant.now().plus( Duration.ofDays( 3 ) ),
+					"abcd123",
+					null,
+					null
+			);
 			session.persist( shipment );
 			session.flush();
 
@@ -49,7 +56,7 @@ public class ManyToOneLazyDeleteTest extends BaseEnversFunctionalTestCase {
 			final Address destination = new Address( Instant.now(), "system", "Madrid#3" );
 			final AddressVersion originVersion0 = origin.addInitialVersion( "Poligono Manises" );
 			final AddressVersion destinationVersion0 = destination.addInitialVersion( "Poligono Alcobendas" );
-			user = new ChildUser();
+			User user = new ChildUser();
 			session.persist( origin );
 			session.persist( destination );
 			session.persist( user );
@@ -62,25 +69,24 @@ public class ManyToOneLazyDeleteTest extends BaseEnversFunctionalTestCase {
 			session.merge( shipment );
 			session.flush();
 
+			this.userId = user.getId();
 			return shipment.getId();
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			final Shipment shipment = session.get( Shipment.class, shipmentId );
-			session.remove(shipment);
+			session.remove( shipment );
 			// Cast the User instance to the ChildUser, and delete the child one, so the cache for
 			// the User instance will not be there, and entityNotFound exception will be thrown while envers processing it
-			ChildUser childUser = session.get(ChildUser.class, user.getId());
-			session.remove(childUser);
+			ChildUser childUser = session.get( ChildUser.class, userId );
+			session.remove( childUser );
 
 			session.flush();
 		} );
 	}
 
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		super.addSettings( settings );
-
-		settings.put(EnversSettings.STORE_DATA_AT_DELETE, "true");
+	@Test
+	public void testDeletion(SessionFactoryScope scope) {
+		// Test passes if no exception is thrown during initData
 	}
 }

@@ -9,37 +9,36 @@ import java.time.Instant;
 import java.util.Arrays;
 
 import org.hibernate.Hibernate;
-import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.junit.Test;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests that proxies are resolved correctly by the ToOneIdMapper such that when the values
- * are inserted for the join columns, they're resolved correclty avoiding ClassCastException
+ * are inserted for the join columns, they're resolved correctly avoiding ClassCastException
  *
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-13760")
-@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-public class ManyToOneLazyFetchTest extends BaseEnversFunctionalTestCase {
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
+@EnversTest
+@DomainModel(annotatedClasses = { Shipment.class, Address.class, AddressVersion.class, User.class, ChildUser.class })
+@SessionFactory
+public class ManyToOneLazyFetchTest {
 	private Long shipmentId;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Shipment.class, Address.class, AddressVersion.class, User.class, ChildUser.class };
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		this.shipmentId = doInHibernate( this::sessionFactory, session -> {
+	@BeforeClassTemplate
+	public void initData(SessionFactoryScope scope) {
+		this.shipmentId = scope.fromTransaction( session -> {
 			final Shipment shipment = new Shipment( Instant.now(), "system", Instant.now().plus( Duration.ofDays( 3 ) ), "abcd123", null, null );
 			session.persist( shipment );
 			session.flush();
@@ -60,7 +59,7 @@ public class ManyToOneLazyFetchTest extends BaseEnversFunctionalTestCase {
 			return shipment.getId();
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			final Shipment shipment = session.get( Shipment.class, shipmentId );
 
 			Hibernate.initialize( shipment.getOrigin() );
@@ -73,7 +72,10 @@ public class ManyToOneLazyFetchTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Test
-	public void testRevisionHistory() {
-		assertEquals( Arrays.asList( 1, 2 ), getAuditReader().getRevisions( Shipment.class, shipmentId ) );
+	public void testRevisionHistory(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			final var auditReader = AuditReaderFactory.get( session );
+			assertEquals( Arrays.asList( 1, 2 ), auditReader.getRevisions( Shipment.class, shipmentId ) );
+		} );
 	}
 }

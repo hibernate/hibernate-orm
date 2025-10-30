@@ -6,69 +6,68 @@ package org.hibernate.orm.test.envers.integration.merge;
 
 import java.util.Arrays;
 
-import org.hibernate.Session;
-import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @JiraKey(value = "HHH-6753")
-public class AddDelTest extends BaseEnversFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {StrTestEntity.class, GivenIdStrEntity.class};
-	}
+@EnversTest
+@Jpa(annotatedClasses = {StrTestEntity.class, GivenIdStrEntity.class})
+public class AddDelTest {
 
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1
-		Session session = openSession();
-		session.getTransaction().begin();
-		GivenIdStrEntity entity = new GivenIdStrEntity( 1, "data" );
-		session.persist( entity );
-		session.getTransaction().commit();
+		scope.inTransaction( em -> {
+			GivenIdStrEntity entity = new GivenIdStrEntity( 1, "data" );
+			em.persist( entity );
+		} );
 
 		// Revision 2
-		session.getTransaction().begin();
-		session.persist( new StrTestEntity( "another data" ) ); // Just to create second revision.
-		entity = session.get( GivenIdStrEntity.class, 1 );
-		session.remove( entity ); // First try to remove the entity.
-		session.persist( entity ); // Then save it.
-		session.getTransaction().commit();
+		scope.inTransaction( em -> {
+			em.persist( new StrTestEntity( "another data" ) ); // Just to create second revision.
+			GivenIdStrEntity entity = em.find( GivenIdStrEntity.class, 1 );
+			em.remove( entity ); // First try to remove the entity.
+			em.persist( entity ); // Then save it.
+		} );
 
 		// Revision 3
-		session.getTransaction().begin();
-		entity = session.get( GivenIdStrEntity.class, 1 );
-		session.remove( entity ); // First try to remove the entity.
-		entity.setData( "modified data" ); // Then change it's state.
-		session.persist( entity ); // Finally save it.
-		session.getTransaction().commit();
-
-		session.close();
+		scope.inTransaction( em -> {
+			GivenIdStrEntity entity = em.find( GivenIdStrEntity.class, 1 );
+			em.remove( entity ); // First try to remove the entity.
+			entity.setData( "modified data" ); // Then change it's state.
+			em.persist( entity ); // Finally save it.
+		} );
 	}
 
 	@Test
-	public void testRevisionsCountOfGivenIdStrEntity() {
-		// Revision 2 has not changed entity's state.
-		Assert.assertEquals( Arrays.asList( 1, 3 ), getAuditReader().getRevisions( GivenIdStrEntity.class, 1 ) );
+	public void testRevisionsCountOfGivenIdStrEntity(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			// Revision 2 has not changed entity's state.
+			assertEquals( Arrays.asList( 1, 3 ), AuditReaderFactory.get( em ).getRevisions( GivenIdStrEntity.class, 1 ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfGivenIdStrEntity() {
-		Assert.assertEquals( new GivenIdStrEntity( 1, "data" ), getAuditReader().find( GivenIdStrEntity.class, 1, 1 ) );
-		Assert.assertEquals(
-				new GivenIdStrEntity( 1, "modified data" ), getAuditReader().find(
-				GivenIdStrEntity.class,
-				1,
-				3
-		)
-		);
+	public void testHistoryOfGivenIdStrEntity(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( new GivenIdStrEntity( 1, "data" ), auditReader.find( GivenIdStrEntity.class, 1, 1 ) );
+			assertEquals(
+					new GivenIdStrEntity( 1, "modified data" ),
+					auditReader.find( GivenIdStrEntity.class, 1, 3 )
+			);
+		} );
 	}
 }

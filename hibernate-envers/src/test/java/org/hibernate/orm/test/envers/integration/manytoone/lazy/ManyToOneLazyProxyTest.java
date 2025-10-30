@@ -9,6 +9,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.Audited;
 
+import org.hibernate.testing.envers.junit.EnversTest;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -28,6 +29,7 @@ import jakarta.persistence.Table;
 /**
  * @author Jan Schatteman
  */
+@EnversTest
 @Jpa (
 		annotatedClasses = {
 				ManyToOneLazyProxyTest.OtherEntity.class, ManyToOneLazyProxyTest.MyEntity.class

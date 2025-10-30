@@ -14,15 +14,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.junit.Test;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Test updating a detached audited entity using native Session API
@@ -31,70 +33,72 @@ import static org.junit.Assert.assertEquals;
  * @author Chris Cranford
  */
 @JiraKey("HHH-11859")
-public class DetachedUpdateTest extends BaseEnversFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {DetachedUpdateTest.Bank.class, DetachedUpdateTest.BankContact.class})
+public class DetachedUpdateTest {
 	private Bank bank1;
 	private Bank bank2;
 	private BankContact contact;
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class<?>[] { Bank.class, BankContact.class };
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( em -> {
 			bank1 = new Bank();
 			bank1.setDescription( "Bank of Italy" );
-			session.persist( bank1 );
+			em.persist( bank1 );
 
 			bank2 = new Bank();
 			bank2.setDescription( "Bradesco Bank" );
-			session.persist( bank2 );
+			em.persist( bank2 );
 
 			contact = new BankContact();
 			contact.setBank( bank1 );
 			contact.setPhoneNumber( "1234" );
 			contact.setName( "Test" );
-			session.persist( contact );
+			em.persist( contact );
 		} );
 
 		// Revision 2
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( em -> {
 			contact.setName( "Other" );
 			contact.setBank( bank2 );
-			session.merge( contact );
+			em.merge( contact );
 		} );
 
 		// Revision 3
 		// Test changing the detached entity reference to Bank and delete the prior reference
 		// within the same transaction to make sure the audit history flushes properly.
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( em -> {
 			contact.setBank( bank1 );
-			session.remove( bank2 );
-			session.merge( contact );
+			em.remove( em.merge( bank2 ) );
+			em.merge( contact );
 		} );
 	}
 
 	@Test
-	public void testRevisionCounts() {
-		assertEquals( Collections.singletonList( 1 ), getAuditReader().getRevisions( Bank.class, bank1.getId() ) );
-		assertEquals( Arrays.asList( 1, 3 ), getAuditReader().getRevisions( Bank.class, bank2.getId() ) );
-		assertEquals( Arrays.asList( 1, 2, 3 ), getAuditReader().getRevisions( BankContact.class, contact.getId() ) );
+	public void testRevisionCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Collections.singletonList( 1 ), auditReader.getRevisions( Bank.class, bank1.getId() ) );
+			assertEquals( Arrays.asList( 1, 3 ), auditReader.getRevisions( Bank.class, bank2.getId() ) );
+			assertEquals( Arrays.asList( 1, 2, 3 ), auditReader.getRevisions( BankContact.class, contact.getId() ) );
+		} );
 	}
 
 	@Test
-	public void testRevisionHistory() {
-		final BankContact rev1 = getAuditReader().find( BankContact.class, contact.getId(), 1 );
-		assertEquals( rev1.getBank(), bank1 );
+	public void testRevisionHistory(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			final BankContact rev1 = auditReader.find( BankContact.class, contact.getId(), 1 );
+			assertEquals( rev1.getBank(), bank1 );
 
-		final BankContact rev2 = getAuditReader().find( BankContact.class, contact.getId(), 2 );
-		assertEquals( rev2.getBank(), bank2 );
+			final BankContact rev2 = auditReader.find( BankContact.class, contact.getId(), 2 );
+			assertEquals( rev2.getBank(), bank2 );
 
-		final BankContact rev3 = getAuditReader().find( BankContact.class, contact.getId(), 3 );
-		assertEquals( rev3.getBank(), bank1 );
+			final BankContact rev3 = auditReader.find( BankContact.class, contact.getId(), 3 );
+			assertEquals( rev3.getBank(), bank1 );
+		} );
 	}
 
 	@Entity(name="Bank")

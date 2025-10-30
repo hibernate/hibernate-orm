@@ -21,28 +21,33 @@ import jakarta.persistence.OneToMany;
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.mapping.Table;
-import org.junit.Test;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-11463")
-public class EmbeddedIdManyToOneForeignKeyTest extends BaseEnversJPAFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Customer.class, CustomerAddress.class, Address.class };
-	}
-
+@EnversTest
+@DomainModel(annotatedClasses = {
+		EmbeddedIdManyToOneForeignKeyTest.Customer.class,
+		EmbeddedIdManyToOneForeignKeyTest.CustomerAddress.class,
+		EmbeddedIdManyToOneForeignKeyTest.Address.class
+})
+@SessionFactory
+public class EmbeddedIdManyToOneForeignKeyTest {
 	@Test
-	public void testJoinTableForeignKeyToNonAuditTables() {
+	public void testJoinTableForeignKeyToNonAuditTables(DomainModelScope scope) {
 		// there should only be references to REVINFO and not to the Customer or Address tables
-		for ( Table table : metadata().getDatabase().getDefaultNamespace().getTables() ) {
+		for ( Table table : scope.getDomainModel().getDatabase().getDefaultNamespace().getTables() ) {
 			if ( table.getName().equals( "CustomerAddress_AUD" ) ) {
 				for ( var foreignKey : table.getForeignKeyCollection() ) {
 					assertEquals( "REVINFO", foreignKey.getReferencedTable().getName() );

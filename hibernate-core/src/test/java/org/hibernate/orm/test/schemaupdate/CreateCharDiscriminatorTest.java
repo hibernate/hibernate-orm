@@ -4,13 +4,6 @@
  */
 package org.hibernate.orm.test.schemaupdate;
 
-import java.util.Map;
-
-import org.hibernate.mapping.PersistentClass;
-
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.orm.junit.JiraKey;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
@@ -18,32 +11,28 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.Table;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
 import static jakarta.persistence.DiscriminatorType.CHAR;
 import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey("HHH-16551")
-public class CreateCharDiscriminatorTest extends BaseNonConfigCoreFunctionalTestCase {
+@ServiceRegistry(settings = @Setting(name="jakarta.persistence.validation.mode", value = "ddl"))
+@DomainModel(annotatedClasses = CreateCharDiscriminatorTest.Parent.class)
+public class CreateCharDiscriminatorTest {
 
-	@org.junit.Test
-	@JiraKey("HHH-16551")
-	public void testCreateDiscriminatorCharColumnSize() {
-		PersistentClass classMapping = metadata().getEntityBinding( Parent.class.getName() );
+	@Test
+	public void testCreateDiscriminatorCharColumnSize(DomainModelScope modelScope) {
+		final var classMapping = modelScope.getEntityBinding( Parent.class );
 		final var discriminatorColumn = classMapping.getDiscriminator().getColumns().get( 0 );
-		assertEquals( discriminatorColumn.getLength(), 1L );
-	}
-
-	@Override
-	protected void addSettings(Map<String, Object> settings) {
-		settings.put( "jakarta.persistence.validation.mode", "ddl" );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Parent.class
-		};
+		assertEquals( 1L, discriminatorColumn.getLength() );
 	}
 
 	@Entity

@@ -12,6 +12,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
 import org.hibernate.envers.configuration.Configuration;
+import org.hibernate.envers.configuration.internal.ClassesAuditingData;
 import org.hibernate.envers.configuration.internal.MappingCollector;
 import org.hibernate.envers.configuration.internal.metadata.AuditEntityConfigurationRegistry;
 import org.hibernate.envers.configuration.internal.metadata.AuditEntityNameRegister;
@@ -33,6 +34,7 @@ public class EnversMetadataBuildingContextImpl implements EnversMetadataBuilding
 	private final ObjectNameNormalizer objectNameNormalizer;
 	private final AuditEntityNameRegister auditEntityNameRegistry;
 	private final AuditEntityConfigurationRegistry auditEntityConfigurationRegistry;
+	private final ClassesAuditingData classesAuditingData;
 
 	public EnversMetadataBuildingContextImpl(
 			Configuration configuration,
@@ -45,6 +47,7 @@ public class EnversMetadataBuildingContextImpl implements EnversMetadataBuilding
 		this.mappingCollector = mappingCollector;
 		this.auditEntityNameRegistry = new AuditEntityNameRegister();
 		this.auditEntityConfigurationRegistry = new AuditEntityConfigurationRegistry();
+		this.classesAuditingData = new ClassesAuditingData();
 
 		this.objectNameNormalizer = new ObjectNameNormalizer(this);
 	}
@@ -117,5 +120,10 @@ public class EnversMetadataBuildingContextImpl implements EnversMetadataBuilding
 	@Override
 	public AuditEntityConfigurationRegistry getAuditEntityConfigurationRegistry() {
 		return auditEntityConfigurationRegistry;
+	}
+
+	@Override
+	public ClassesAuditingData getClassesAuditingData() {
+		return classesAuditingData;
 	}
 }

@@ -166,7 +166,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			if ( sqmJoin instanceof SqmSingularJoin<?, ?>
 					&& name.equals( sqmJoin.getReferencedPathSource().getPathName() ) ) {
 				final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
-				if ( attributeJoin.getOn() == null ) {
+				if ( attributeJoin.getJoinPredicate() == null ) {
 					// todo (6.0): to match the expectation of the JPA spec I think we also have to check
 					//  that the join type is INNER or the default join type for the attribute,
 					//  but as far as I understand, in 5.x we expect to ignore this behavior

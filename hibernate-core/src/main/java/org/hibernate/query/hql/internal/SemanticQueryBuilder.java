@@ -2219,10 +2219,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			throw new SemanticException( "The 'from' clause of a subquery has a 'fetch'", query );
 		}
 
-		dotIdentifierConsumerStack.push( new QualifiedJoinPathConsumer( sqmRoot, joinType, fetch, alias, this ) );
+		final HqlParser.JoinRestrictionContext joinRestrictionContext = parserJoin.joinRestriction();
+		// Joins are allowed to be reused if they don't have a join condition
+		final boolean allowReuse = joinRestrictionContext == null;
+		dotIdentifierConsumerStack.push( new QualifiedJoinPathConsumer( sqmRoot, joinType, fetch, alias, allowReuse, this ) );
 		try {
 			final SqmQualifiedJoin<X, ?> join = getJoin( sqmRoot, joinType, qualifiedJoinTargetContext, alias, fetch );
-			final HqlParser.JoinRestrictionContext joinRestrictionContext = parserJoin.joinRestriction();
 			if ( join instanceof SqmEntityJoin<?> || join instanceof SqmDerivedJoin<?> || join instanceof SqmCteJoin<?> ) {
 				sqmRoot.addSqmJoin( join );
 			}
@@ -2338,7 +2340,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final String alias = extractAlias( ctx.variable() );
 		dotIdentifierConsumerStack.push(
 				// According to JPA spec 4.4.6 this is an inner join
-				new QualifiedJoinPathConsumer( sqmRoot, SqmJoinType.INNER, false, alias, this )
+				new QualifiedJoinPathConsumer( sqmRoot, SqmJoinType.INNER, false, alias, true, this )
 		);
 
 		try {

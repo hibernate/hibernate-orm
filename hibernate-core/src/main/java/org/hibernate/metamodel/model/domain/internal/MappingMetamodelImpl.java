@@ -641,7 +641,7 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public <T> BindableType<T> resolveParameterBindType(Class<T> javaType) {
+	public <T> @Nullable BindableType<T> resolveParameterBindType(Class<T> javaType) {
 		final var typeConfiguration = getTypeConfiguration();
 
 		final BasicType<T> basicType = typeConfiguration.getBasicTypeForJavaType( javaType );
@@ -679,7 +679,7 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public <T> BindableType<? super T> resolveParameterBindType(T bindValue) {
+	public <T> @Nullable BindableType<? super T> resolveParameterBindType(@Nullable T bindValue) {
 		if ( bindValue == null ) {
 			// we can't guess
 			return null;

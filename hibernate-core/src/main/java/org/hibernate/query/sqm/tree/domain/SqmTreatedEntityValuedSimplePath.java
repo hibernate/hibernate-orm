@@ -4,13 +4,16 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.query.PathException;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * @author Steve Ebersole
@@ -49,7 +52,7 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 						treatTarget.getHibernateEntityName()
 				),
 				(SqmPathSource<S>) wrappedPath.getReferencedPathSource(),
-				wrappedPath.getLhs(),
+				castNonNull( wrappedPath.getLhs() ),
 				nodeBuilder
 		);
 		this.treatTarget = treatTarget;
@@ -65,7 +68,7 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 		super(
 				navigablePath,
 				(SqmPathSource<S>) wrappedPath.getReferencedPathSource(),
-				wrappedPath.getLhs(),
+				castNonNull( wrappedPath.getLhs() ),
 				nodeBuilder
 		);
 		this.treatTarget = treatTarget;
@@ -103,7 +106,7 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 	}
 
 	@Override
-	public SqmEntityDomainType<S> getNodeType() {
+	public @NonNull SqmEntityDomainType<S> getNodeType() {
 		return treatTarget;
 	}
 
@@ -118,7 +121,7 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 	}
 
 	@Override
-	public <S1 extends S> SqmTreatedEntityValuedSimplePath<S,S1> treatAs(Class<S1> treatJavaType) throws PathException {
+	public <S1 extends S> SqmTreatedEntityValuedSimplePath<S,S1> treatAs(Class<S1> treatJavaType) {
 		return super.treatAs( treatJavaType );
 	}
 
@@ -130,7 +133,8 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
-		return walker.visitTreatedPath( this );
+		// Cast needed for Checker Framework
+		return walker.visitTreatedPath( (SqmTreatedPath<?, @Nullable ?>) this );
 	}
 
 	@Override

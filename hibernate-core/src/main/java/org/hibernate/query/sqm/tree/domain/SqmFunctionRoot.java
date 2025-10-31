@@ -4,10 +4,10 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaFunctionRoot;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -27,7 +27,7 @@ public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E>
 
 	private final SqmSetReturningFunction<E> function;
 
-	public SqmFunctionRoot(SqmSetReturningFunction<E> function, String alias) {
+	public SqmFunctionRoot(SqmSetReturningFunction<E> function, @Nullable String alias) {
 		this(
 				SqmCreationHelper.buildRootNavigablePath( "<<derived>>", alias ),
 				function,
@@ -40,7 +40,7 @@ public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E>
 			NavigablePath navigablePath,
 			SqmSetReturningFunction<E> function,
 			SqmPathSource<E> pathSource,
-			String alias) {
+			@Nullable String alias) {
 		super(
 				navigablePath,
 				pathSource,
@@ -94,13 +94,12 @@ public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E>
 
 	@Override
 	public SqmEntityDomainType<E> getModel() {
-		// Or should we throw an exception instead?
-		return null;
+		throw new UnsupportedOperationException( "Function root does not have an entity type. Use getReferencedPathSource() instead." );
 	}
 
 	@Override
 	public String getEntityName() {
-		return null;
+		throw new UnsupportedOperationException( "Function root does not have an entity type. Use getReferencedPathSource() instead." );
 	}
 
 	@Override
@@ -114,32 +113,7 @@ public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E>
 	}
 
 	@Override
-	public <S extends E> SqmTreatedFrom<E, E, S> treatAs(Class<S> treatJavaType) throws PathException {
-		throw new UnsupportedOperationException( "Function roots can not be treated" );
-	}
-
-	@Override
-	public <S extends E> SqmTreatedFrom<E, E, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		throw new UnsupportedOperationException( "Function roots can not be treated" );
-	}
-
-	@Override
-	public <S extends E> SqmTreatedRoot treatAs(Class<S> treatJavaType, String alias) {
-		throw new UnsupportedOperationException( "Function roots can not be treated" );
-	}
-
-	@Override
-	public <S extends E> SqmTreatedRoot treatAs(EntityDomainType<S> treatTarget, String alias) {
-		throw new UnsupportedOperationException( "Function roots can not be treated" );
-	}
-
-	@Override
-	public <S extends E> SqmTreatedRoot treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
-		throw new UnsupportedOperationException( "Function roots can not be treated" );
-	}
-
-	@Override
-	public <S extends E> SqmTreatedRoot treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
+	public <S extends E> SqmTreatedFrom<E, E, S>  treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
 		throw new UnsupportedOperationException( "Function roots can not be treated" );
 	}
 

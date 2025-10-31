@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.internal;
 
 import java.util.function.Consumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.DiscriminatorSqmPath;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
@@ -62,7 +63,7 @@ public class SqmPathVisitor extends BaseSemanticQueryWalker {
 	}
 
 	@Override
-	public Object visitTreatedPath(SqmTreatedPath<?, ?> path) {
+	public Object visitTreatedPath(SqmTreatedPath<?, @Nullable ?> path) {
 		pathConsumer.accept( path );
 		return path;
 	}

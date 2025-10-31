@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -41,8 +42,10 @@ public class SqmCorrelatedDerivedRootJoin<T> extends SqmCorrelatedRootJoin<T> {
 		return path;
 	}
 
-	@SuppressWarnings("unchecked")
-	public static <X, J extends SqmJoin<X, ?>> SqmCorrelatedDerivedRootJoin<X> create(J correlationParent, J correlatedJoin) {
+	// Need to suppress argument warnings because correlatedJoin which is under initialization is passed to addSqmJoin,
+	// which expects an initialized argument. We know this is safe though because we only store the instance
+	@SuppressWarnings({"unchecked", "argument"})
+	public static <X, J extends SqmJoin<X, ?>> SqmCorrelatedDerivedRootJoin<X> create(J correlationParent, @UnderInitialization J correlatedJoin) {
 		final SqmFrom<?, X> parentPath = (SqmFrom<?, X>) correlationParent.getParentPath();
 		final SqmCorrelatedDerivedRootJoin<X> rootJoin;
 		if ( parentPath == null ) {
@@ -74,13 +77,12 @@ public class SqmCorrelatedDerivedRootJoin<T> extends SqmCorrelatedRootJoin<T> {
 
 	@Override
 	public SqmEntityDomainType<T> getModel() {
-		// Or should we throw an exception instead?
-		return null;
+		throw new UnsupportedOperationException( "Correlated derived root does not have an entity type. Use getReferencedPathSource() instead." );
 	}
 
 	@Override
 	public String getEntityName() {
-		return null;
+		throw new UnsupportedOperationException( "Correlated derived root does not have an entity type. Use getReferencedPathSource() instead." );
 	}
 
 	@Override

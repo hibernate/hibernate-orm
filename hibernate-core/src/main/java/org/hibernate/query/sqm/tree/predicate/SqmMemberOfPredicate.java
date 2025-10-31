@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -15,6 +16,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.query.sqm.internal.TypecheckUtil.areTypesComparable;
 
 /**
@@ -45,7 +47,7 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 			throw new SemanticException(
 					String.format(
 							"Cannot compare left expression of type '%s' with right expression of type '%s'",
-							leftHandExpression.getNodeType().getTypeName(),
+							castNonNull( leftHandExpression.getNodeType() ).getTypeName(),
 							pluralPath.getNodeType().getTypeName()
 					)
 			);
@@ -97,7 +99,7 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmMemberOfPredicate that
 			&& this.isNegated() == that.isNegated()
 			&& leftHandExpression.equals( that.leftHandExpression )

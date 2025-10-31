@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmBindableType;
 
@@ -22,7 +23,7 @@ public abstract class AbstractNegatableSqmPredicate extends AbstractSqmPredicate
 		this( nodeBuilder.getBooleanType(), negated, nodeBuilder );
 	}
 
-	public AbstractNegatableSqmPredicate(SqmBindableType<Boolean> type, boolean negated, NodeBuilder nodeBuilder) {
+	public AbstractNegatableSqmPredicate(@Nullable SqmBindableType<Boolean> type, boolean negated, NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
 		this.negated = negated;
 	}

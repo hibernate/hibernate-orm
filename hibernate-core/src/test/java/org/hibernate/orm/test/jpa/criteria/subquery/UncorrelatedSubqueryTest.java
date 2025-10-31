@@ -108,7 +108,7 @@ public class UncorrelatedSubqueryTest {
 			criteria.where(
 					builder.lessThan(
 							customerRoot.get( Customer_.age ),
-							subCriteria.getSelection().as( Integer.class )
+							subCriteria.as( Integer.class )
 					)
 			);
 			entityManager.createQuery( criteria ).getResultList();

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.update;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -41,7 +42,7 @@ public class SqmAssignment<T> implements SqmCacheable {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmAssignment<?> that
 			&& targetPath.equals( that.targetPath )
 			&& value.equals( that.value );

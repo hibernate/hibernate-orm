@@ -9,6 +9,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryHelper;
@@ -59,7 +61,7 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 		//noinspection unchecked
 		this.listExpressions = (List<SqmExpression<T>>) listExpressions;
 		for ( SqmExpression<T> listExpression : listExpressions ) {
-			implyListElementType( listExpression );
+			implyListElementType( listExpression, testExpression, nodeBuilder );
 		}
 	}
 
@@ -97,7 +99,7 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	}
 
 	@Override
-	public SqmInPredicate<T> value(Object value) {
+	public SqmInPredicate<T> value(@NonNull Object value) {
 		if ( value instanceof Collection ) {
 			//noinspection unchecked
 			for ( T v : ( (Collection<T>) value ) ) {
@@ -137,9 +139,13 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	}
 
 	private void implyListElementType(SqmExpression<?> expression) {
-		assertComparable( getTestExpression(), expression, nodeBuilder() );
+		implyListElementType( expression, getTestExpression(), nodeBuilder() );
+	}
+
+	private static void implyListElementType(SqmExpression<?> expression, SqmExpression<?> testExpression, NodeBuilder nodeBuilder) {
+		assertComparable( testExpression, expression, nodeBuilder );
 		expression.applyInferableType(
-				QueryHelper.highestPrecedenceType2( getTestExpression().getExpressible(), expression.getExpressible() )
+				QueryHelper.highestPrecedenceType2( testExpression.getExpressible(), expression.getExpressible() )
 		);
 	}
 
@@ -164,7 +170,7 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmInListPredicate<?> that
 			&& this.isNegated() == that.isNegated()
 			&& this.testExpression.equals( that.testExpression )

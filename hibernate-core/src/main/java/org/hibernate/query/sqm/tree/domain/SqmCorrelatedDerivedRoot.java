@@ -49,13 +49,12 @@ public class SqmCorrelatedDerivedRoot<T> extends SqmCorrelatedRoot<T> implements
 
 	@Override
 	public SqmEntityDomainType<T> getModel() {
-		// Or should we throw an exception instead?
-		return null;
+		throw new UnsupportedOperationException( "Correlated derived root does not have an entity type. Use getReferencedPathSource() instead." );
 	}
 
 	@Override
 	public String getEntityName() {
-		return null;
+		throw new UnsupportedOperationException( "Correlated derived root does not have an entity type. Use getReferencedPathSource() instead." );
 	}
 
 	@Override

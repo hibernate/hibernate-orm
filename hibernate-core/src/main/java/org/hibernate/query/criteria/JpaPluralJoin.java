@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.criteria;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 
@@ -18,19 +20,19 @@ import jakarta.persistence.criteria.Predicate;
  */
 public interface JpaPluralJoin<O, C, E> extends JpaJoin<O, E>, PluralJoin<O, C, E> {
 	@Override
-	PluralPersistentAttribute<? super O, C, E> getAttribute();
+	@NonNull PluralPersistentAttribute<? super O, C, E> getAttribute();
 
 	@Override
-	JpaPluralJoin<O, ? extends C, E> on(JpaExpression<Boolean> restriction);
+	JpaPluralJoin<O, ? extends C, E> on(@Nullable JpaExpression<Boolean> restriction);
 
 	@Override
-	JpaPluralJoin<O, ? extends C, E> on(Expression<Boolean> restriction);
+	JpaPluralJoin<O, ? extends C, E> on(@Nullable Expression<Boolean> restriction);
 
 	@Override
-	JpaPluralJoin<O, ? extends C, E> on(JpaPredicate... restrictions);
+	JpaPluralJoin<O, ? extends C, E> on(JpaPredicate @Nullable... restrictions);
 
 	@Override
-	JpaPluralJoin<O, ? extends C, E> on(Predicate... restrictions);
+	JpaPluralJoin<O, ? extends C, E> on(Predicate @Nullable... restrictions);
 
 	@Override
 	<S extends E> JpaTreatedJoin<O, E, S> treatAs(Class<S> treatAsType);

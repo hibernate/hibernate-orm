@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.function.Function;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -21,7 +22,7 @@ public class SqmSelfRenderingExpression<T> extends AbstractSqmExpression<T> {
 
 	public SqmSelfRenderingExpression(
 			Function<SemanticQueryWalker<?>, Expression> renderer,
-			SqmBindableType<T> type,
+			@Nullable SqmBindableType<T> type,
 			NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
 		this.renderer = renderer;

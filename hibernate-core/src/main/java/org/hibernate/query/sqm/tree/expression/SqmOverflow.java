@@ -21,7 +21,7 @@ public class SqmOverflow<T> extends AbstractSqmExpression<T> {
 	private final @Nullable SqmExpression<T> fillerExpression;
 	private final boolean withCount;
 
-	public SqmOverflow(SqmExpression<T> separatorExpression, SqmExpression<T> fillerExpression, boolean withCount) {
+	public SqmOverflow(SqmExpression<T> separatorExpression, @Nullable SqmExpression<T> fillerExpression, boolean withCount) {
 		super( separatorExpression.getNodeType(), separatorExpression.nodeBuilder() );
 		this.separatorExpression = separatorExpression;
 		this.fillerExpression = fillerExpression;
@@ -50,7 +50,7 @@ public class SqmOverflow<T> extends AbstractSqmExpression<T> {
 		return separatorExpression;
 	}
 
-	public SqmExpression<T> getFillerExpression() {
+	public @Nullable SqmExpression<T> getFillerExpression() {
 		return fillerExpression;
 	}
 
@@ -83,7 +83,7 @@ public class SqmOverflow<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmOverflow<?> that
 			&& this.withCount == that.withCount
 			&& this.separatorExpression.equals( that.separatorExpression )

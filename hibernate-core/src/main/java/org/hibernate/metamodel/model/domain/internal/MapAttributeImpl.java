@@ -6,6 +6,7 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Map;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -55,7 +56,7 @@ public class MapAttributeImpl<X, K, V>
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name) {
+	public @Nullable SqmPathSource<?> findSubPathSource(String name) {
 		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( name );
 		if ( nature != null ) {
 			switch ( nature ) {
@@ -69,7 +70,7 @@ public class MapAttributeImpl<X, K, V>
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
+	public @Nullable SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
 		return CollectionPart.Nature.INDEX.getName().equals( name )
 				? keyPathSource
 				: super.findSubPathSource( name, includeSubtypes );
@@ -94,7 +95,7 @@ public class MapAttributeImpl<X, K, V>
 
 	@Override
 	public SqmAttributeJoin<X,V> createSqmJoin(
-			SqmFrom<?,X> lhs, SqmJoinType joinType, String alias, boolean fetched, SqmCreationState creationState) {
+			SqmFrom<?,X> lhs, SqmJoinType joinType, @Nullable String alias, boolean fetched, SqmCreationState creationState) {
 		return new SqmMapJoin<>(
 				lhs,
 				this,

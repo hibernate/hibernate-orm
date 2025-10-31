@@ -45,7 +45,7 @@ public class SubqueryInSelectClauseJpaComplianceTest extends AbstractSubqueryInS
 							personCount.select( cb.count( person ) )
 									.where( cb.equal( contacts.get( "id" ), person.get( "id" ) ) );
 
-							query.multiselect( document.get( "id" ), personCount.getSelection() );
+							query.multiselect( document.get( "id" ), personCount );
 
 							entityManager.createQuery( query ).getResultList();
 						} )

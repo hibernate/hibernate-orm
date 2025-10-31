@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCriteriaBase;
 import org.hibernate.query.criteria.JpaPredicate;
@@ -29,7 +30,7 @@ import jakarta.persistence.metamodel.EntityType;
 public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDmlStatement<T>
 		implements JpaCriteriaBase {
 
-	private SqmWhereClause whereClause;
+	private @Nullable SqmWhereClause whereClause;
 
 	/**
 	 * Constructor for HQL statements.
@@ -48,21 +49,19 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 	protected AbstractSqmRestrictedDmlStatement(
 			NodeBuilder builder,
 			SqmQuerySource querySource,
-			Set<SqmParameter<?>> parameters,
+			@Nullable Set<SqmParameter<?>> parameters,
 			Map<String, SqmCteStatement<?>> cteStatements,
 			SqmRoot<T> target) {
 		super( builder, querySource, parameters, cteStatements, target );
 	}
 
-	protected SqmWhereClause copyWhereClause(SqmCopyContext context) {
-		if ( getWhereClause() == null ) {
+	protected @Nullable SqmWhereClause copyWhereClause(SqmCopyContext context) {
+		if ( whereClause == null ) {
 			return null;
 		}
 		else {
-			final SqmWhereClause whereClause = new SqmWhereClause( nodeBuilder() );
-			final SqmPredicate predicate = getWhereClause().getPredicate();
-			whereClause.setPredicate( predicate==null ? null : predicate.copy( context ) );
-			return whereClause;
+			final SqmPredicate predicate = whereClause.getPredicate();
+			return new SqmWhereClause( predicate == null ? null : predicate.copy( context ), nodeBuilder() );
 		}
 	}
 
@@ -89,26 +88,26 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 		return getTarget();
 	}
 
-	public SqmWhereClause getWhereClause() {
+	public @Nullable SqmWhereClause getWhereClause() {
 		return whereClause;
 	}
 
-	public void applyPredicate(SqmPredicate predicate) {
+	public void applyPredicate(@Nullable SqmPredicate predicate) {
 		if ( predicate != null ) {
 			initAndGetWhereClause().applyPredicate( predicate );
 		}
 	}
 
-	public void setWhereClause(SqmWhereClause whereClause) {
+	public void setWhereClause(@Nullable SqmWhereClause whereClause) {
 		this.whereClause = whereClause;
 	}
 
 	@Override
-	public JpaPredicate getRestriction() {
+	public @Nullable JpaPredicate getRestriction() {
 		return whereClause == null ? null : whereClause.getPredicate();
 	}
 
-	protected void setWhere(Expression<Boolean> restriction) {
+	protected void setWhere(@Nullable Expression<Boolean> restriction) {
 		// Replaces the current predicate if one is present
 		initAndGetWhereClause().setPredicate( (SqmPredicate) restriction );
 	}
@@ -120,25 +119,30 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 		return whereClause;
 	}
 
-	protected void setWhere(Predicate... restrictions) {
+	protected void setWhere(Predicate @Nullable ... restrictions) {
 		final SqmWhereClause whereClause = initAndGetWhereClause();
 		// Clear the current predicate if one is present
-		whereClause.setPredicate(null);
-		for ( Predicate restriction : restrictions ) {
-			whereClause.applyPredicate( (SqmPredicate) restriction );
+		whereClause.setPredicate( null );
+		if ( restrictions != null ) {
+			for ( Predicate restriction : restrictions ) {
+				whereClause.applyPredicate( (SqmPredicate) restriction );
+			}
 		}
 	}
 
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
-		if ( whereClause != null && whereClause.getPredicate() != null ) {
-			hql.append( " where " );
-			whereClause.getPredicate().appendHqlString( hql, context );
+		if ( whereClause != null ) {
+			final var predicate = whereClause.getPredicate();
+			if ( predicate != null ) {
+				hql.append( " where " );
+				predicate.appendHqlString( hql, context );
+			}
 		}
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof AbstractSqmRestrictedDmlStatement<?> that
 			&& super.equals( object )
 			&& Objects.equals( getWhereClause(), that.getWhereClause() );

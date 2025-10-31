@@ -6,6 +6,7 @@ package org.hibernate.query.internal;
 
 import java.util.Collection;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -17,7 +18,6 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.QueryParameterBindingValidator;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.tree.expression.NullSqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -38,9 +38,9 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	private boolean isBound;
 	private boolean isMultiValued;
 
-	private BindableType<? super T> bindType;
-	private MappingModelExpressible<T> type;
-	private TemporalType explicitTemporalPrecision;
+	private @Nullable BindableType<? super T> bindType;
+	private @Nullable MappingModelExpressible<T> type;
+	private @Nullable TemporalType explicitTemporalPrecision;
 
 	private Object bindValue;
 	private Collection<? extends T> bindValues;
@@ -71,12 +71,12 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	@Override
-	public BindableType<? super T> getBindType() {
+	public @Nullable BindableType<? super T> getBindType() {
 		return bindType;
 	}
 
 	@Override
-	public TemporalType getExplicitTemporalPrecision() {
+	public @Nullable TemporalType getExplicitTemporalPrecision() {
 		return explicitTemporalPrecision;
 	}
 
@@ -139,7 +139,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		}
 	}
 
-	private boolean handleAsMultiValue(T value, BindableType<T> bindableType) {
+	private boolean handleAsMultiValue(T value, @Nullable BindableType<T> bindableType) {
 		if ( queryParameter.allowsMultiValuedBinding()
 				&& value instanceof Collection
 				&& !( bindableType == null
@@ -167,7 +167,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	@Override
-	public void setBindValue(T value, BindableType<T> clarifiedType) {
+	public void setBindValue(T value, @Nullable BindableType<T> clarifiedType) {
 		if ( !handleAsMultiValue( value, clarifiedType ) ) {
 			if ( clarifiedType != null ) {
 				bindType = clarifiedType;
@@ -258,12 +258,12 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	@Override
-	public MappingModelExpressible<T> getType() {
+	public @Nullable MappingModelExpressible<T> getType() {
 		return type;
 	}
 
 	@Override @SuppressWarnings("unchecked")
-	public boolean setType(MappingModelExpressible<T> type) {
+	public boolean setType(@Nullable MappingModelExpressible<T> type) {
 		this.type = type;
 		// If the bind type is undetermined or the given type is a model part, then we try to apply a new bind type
 		if ( bindType == null || bindType.getJavaType() == Object.class || type instanceof ModelPart ) {
@@ -342,11 +342,10 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	private static boolean canValueBeCoerced(BindableType<?> bindType) {
-		return bindType != null && !( bindType instanceof NullSqmExpressible );
+		return bindType != null;
 	}
 
 	private static boolean canBindValueBeSet(Object value, BindableType<?> bindType) {
-		return value != null
-			&& ( bindType == null || bindType instanceof NullSqmExpressible );
+		return value != null && bindType == null;
 	}
 }

@@ -190,7 +190,7 @@ public class SqmJsonExistsExpression extends AbstractSqmJsonPathExpression<Boole
 	}
 
 	@Override
-	public boolean equals(Object other) {
+	public boolean equals(@Nullable Object other) {
 		return super.equals( other )
 			&& other instanceof SqmJsonExistsExpression that
 			&& errorBehavior == that.errorBehavior;

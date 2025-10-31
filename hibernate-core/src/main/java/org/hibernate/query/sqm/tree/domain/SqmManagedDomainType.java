@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
@@ -18,34 +19,34 @@ public interface SqmManagedDomainType<J> extends ManagedDomainType<J>, SqmDomain
 	}
 
 	@Override
-	SqmPersistentAttribute<? super J, ?> findAttribute(String name);
+	@Nullable SqmPersistentAttribute<? super J, ?> findAttribute(String name);
 
 	@Override @Deprecated(since = "7.0", forRemoval = true)
-	default SqmPersistentAttribute<? super J, ?> findAttributeInSuperTypes(String name) {
+	default @Nullable SqmPersistentAttribute<? super J, ?> findAttributeInSuperTypes(String name) {
 		return findAttribute( name );
 	}
 
 	@Override
-	SqmPersistentAttribute<?, ?> findSubTypesAttribute(String name);
+	@Nullable SqmPersistentAttribute<?, ?> findSubTypesAttribute(String name);
 
 	@Override
-	SqmSingularPersistentAttribute<? super J, ?> findSingularAttribute(String name);
+	@Nullable SqmSingularPersistentAttribute<? super J, ?> findSingularAttribute(String name);
 
 	@Override
-	SqmPluralPersistentAttribute<? super J, ?, ?> findPluralAttribute(String name);
+	@Nullable SqmPluralPersistentAttribute<? super J, ?, ?> findPluralAttribute(String name);
 
 	@Override
-	SqmPersistentAttribute<J, ?> findDeclaredAttribute(String name);
+	@Nullable SqmPersistentAttribute<J, ?> findDeclaredAttribute(String name);
 
 	@Override
-	SqmSingularPersistentAttribute<J, ?> findDeclaredSingularAttribute(String name);
+	@Nullable SqmSingularPersistentAttribute<J, ?> findDeclaredSingularAttribute(String name);
 
 	@Override
-	SqmPluralPersistentAttribute<J, ?, ?> findDeclaredPluralAttribute(String name);
+	@Nullable SqmPluralPersistentAttribute<J, ?, ?> findDeclaredPluralAttribute(String name);
 
 	@Override
-	SqmPersistentAttribute<? super J, ?> findConcreteGenericAttribute(String name);
+	@Nullable SqmPersistentAttribute<? super J, ?> findConcreteGenericAttribute(String name);
 
 	@Override
-	SqmPersistentAttribute<J, ?> findDeclaredConcreteGenericAttribute(String name);
+	@Nullable SqmPersistentAttribute<J, ?> findDeclaredConcreteGenericAttribute(String name);
 }

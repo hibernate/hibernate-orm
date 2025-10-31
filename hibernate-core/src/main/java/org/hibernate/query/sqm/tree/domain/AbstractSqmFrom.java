@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -72,16 +73,16 @@ import static org.hibernate.query.sqm.internal.SqmUtil.findCompatibleFetchJoin;
  * @author Steve Ebersole
  */
 public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements SqmFrom<O,T> {
-	private String alias;
+	private @Nullable String alias;
 
-	private List<SqmJoin<T, ?>> joins;
-	private List<SqmTreatedFrom<?,?,?>> treats;
+	private @Nullable List<SqmJoin<T, ?>> joins;
+	private @Nullable List<SqmTreatedFrom<?,?,@Nullable ?>> treats;
 
 	protected AbstractSqmFrom(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedNavigable,
 			SqmFrom<?, ?> lhs,
-			String alias,
+			@Nullable String alias,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedNavigable, lhs, nodeBuilder );
 
@@ -96,7 +97,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	 */
 	protected AbstractSqmFrom(
 			EntityDomainType<T> entityType,
-			String alias,
+			@Nullable String alias,
 			NodeBuilder nodeBuilder) {
 		super(
 				SqmCreationHelper.buildRootNavigablePath( entityType.getHibernateEntityName(), alias ),
@@ -114,7 +115,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	protected AbstractSqmFrom(
 			NavigablePath navigablePath,
 			SqmPathSource<T> entityType,
-			String alias,
+			@Nullable String alias,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, entityType, null, nodeBuilder );
 
@@ -133,27 +134,31 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	protected void copyTo(AbstractSqmFrom<O, T> target, SqmCopyContext context) {
 		super.copyTo( target, context );
+		final var joins = this.joins;
 		if ( joins != null ) {
-			target.joins = new ArrayList<>( joins.size() );
+			final ArrayList<SqmJoin<T, ?>> newJoins = new ArrayList<>( joins.size() );
 			for ( SqmJoin<T, ?> join : joins ) {
-				target.joins.add( join.copy( context ) );
+				newJoins.add( join.copy( context ) );
 			}
+			target.joins = newJoins;
 		}
+		final var treats = this.treats;
 		if ( treats != null ) {
-			target.treats = new ArrayList<>( treats.size() );
-			for ( SqmTreatedFrom<?,?,?> treat : treats ) {
-				target.treats.add( treat.copy( context ) );
+			final ArrayList<SqmTreatedFrom<?, ?, @Nullable ?>> newTreats = new ArrayList<>( treats.size() );
+			for ( SqmTreatedFrom<?,?,@Nullable ?> treat : treats ) {
+				newTreats.add( treat.copy( context ) );
 			}
+			target.treats = newTreats;
 		}
 	}
 
 	@Override
-	public String getExplicitAlias() {
+	public @Nullable String getExplicitAlias() {
 		return alias;
 	}
 
 	@Override
-	public void setExplicitAlias(String explicitAlias) {
+	public void setExplicitAlias(@Nullable String explicitAlias) {
 		this.alias = explicitAlias;
 	}
 
@@ -228,6 +233,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	@Internal
 	public void removeLeftFetchJoins() {
+		final List<SqmJoin<T, ?>> joins = this.joins;
 		if ( joins != null ) {
 			for ( var join : new ArrayList<>( joins ) ) {
 				if ( join instanceof SqmAttributeJoin<T, ?> attributeJoin ) {
@@ -256,13 +262,13 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	public List<SqmTreatedFrom<?,?,?>> getSqmTreats() {
+	public List<SqmTreatedFrom<?,?,@Nullable ?>> getSqmTreats() {
 		return treats == null ? emptyList() : treats;
 	}
 
-	protected <S extends T, X extends SqmTreatedFrom<O,T,S>> X findTreat(ManagedDomainType<S> targetType, String alias) {
+	protected <S extends T, X extends SqmTreatedFrom<O,T,S>> @Nullable X findTreat(ManagedDomainType<S> targetType, @Nullable String alias) {
 		if ( treats != null ) {
-			for ( var treat : treats ) {
+			for ( SqmTreatedFrom<?, ?, @Nullable ?> treat : treats ) {
 				if ( treat.getModel() == targetType ) {
 					if ( Objects.equals( treat.getExplicitAlias(), alias ) ) {
 						//noinspection unchecked
@@ -274,11 +280,12 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		return null;
 	}
 
-	protected <X extends SqmTreatedFrom<?,?,?>> X addTreat(X treat) {
+	protected <S extends T, X extends SqmTreatedFrom<O,T,S>> X addTreat(X treat) {
 		if ( treats == null ) {
 			treats = new ArrayList<>();
 		}
-		treats.add( treat );
+		// Cast needed for Checker Framework
+		treats.add( (SqmTreatedFrom<?, ?, @Nullable ?>) treat );
 		return treat;
 	}
 
@@ -287,7 +294,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 
 	@Override
-	public JpaPath<?> getParentPath() {
+	public @Nullable JpaPath<?> getParentPath() {
 		return getLhs();
 	}
 
@@ -936,23 +943,18 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	public <S extends T> SqmTreatedFrom<O,T,S> treatAs(Class<S> treatJavaType, String alias) {
+	public <S extends T> SqmTreatedFrom<O,T,S> treatAs(Class<S> treatJavaType, @Nullable String alias) {
 		return (SqmTreatedFrom<O,T,S>) super.treatAs( treatJavaType, alias );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedFrom<O,T,S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+	public <S extends T> SqmTreatedFrom<O,T,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias) {
 		return (SqmTreatedFrom<O,T,S>) super.treatAs( treatTarget, alias );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedFrom<O,T,S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+	public <S extends T> SqmTreatedFrom<O,T,S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
 		return (SqmTreatedFrom<O,T,S>) super.treatAs( treatJavaType, alias, fetch );
-	}
-
-	@Override
-	public <S extends T> SqmTreatedFrom<O,T,S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
-		return (SqmTreatedFrom<O,T,S>) super.treatAs( treatTarget, alias, fetch );
 	}
 
 	@Override

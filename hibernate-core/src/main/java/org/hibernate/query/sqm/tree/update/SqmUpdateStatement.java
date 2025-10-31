@@ -7,7 +7,6 @@ package org.hibernate.query.sqm.tree.update;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -21,7 +20,6 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmRestrictedDmlStatement;
-import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -52,7 +50,7 @@ public class SqmUpdateStatement<T>
 		implements SqmDeleteOrUpdateStatement<T>, JpaCriteriaUpdate<T> {
 
 	private boolean versioned;
-	private SqmSetClause setClause;
+	private SqmSetClause setClause = new SqmSetClause();
 
 	public SqmUpdateStatement(NodeBuilder nodeBuilder) {
 		super( SqmQuerySource.HQL, nodeBuilder );
@@ -90,10 +88,21 @@ public class SqmUpdateStatement<T>
 	public SqmUpdateStatement(
 			NodeBuilder builder,
 			SqmQuerySource querySource,
-			Set<SqmParameter<?>> parameters,
+			@Nullable Set<SqmParameter<?>> parameters,
 			Map<String, SqmCteStatement<?>> cteStatements,
 			SqmRoot<T> target) {
+		this( builder, querySource, parameters, cteStatements, target, false );
+	}
+
+	private SqmUpdateStatement(
+			NodeBuilder builder,
+			SqmQuerySource querySource,
+			@Nullable Set<SqmParameter<?>> parameters,
+			Map<String, SqmCteStatement<?>> cteStatements,
+			SqmRoot<T> target,
+			boolean versioned) {
 		super( builder, querySource, parameters, cteStatements, target );
+		this.versioned = versioned;
 	}
 
 	@Override
@@ -102,34 +111,33 @@ public class SqmUpdateStatement<T>
 		if ( existing != null ) {
 			return existing;
 		}
+		final var newQuerySource = context.getQuerySource();
 		final SqmUpdateStatement<T> statement = context.registerCopy(
 				this,
 				new SqmUpdateStatement<>(
 						nodeBuilder(),
-						context.getQuerySource() == null ? getQuerySource() : context.getQuerySource(),
+						newQuerySource == null ? getQuerySource() : newQuerySource,
 						copyParameters( context ),
 						copyCteStatements( context ),
-						getTarget().copy( context )
+						getTarget().copy( context ),
+						versioned
 				)
 		);
 		statement.setWhereClause( copyWhereClause( context ) );
-		statement.versioned = versioned;
-		if ( setClause != null ) {
-			statement.setClause = setClause.copy( context );
-		}
+		statement.setClause = setClause.copy( context );
 		return statement;
 	}
 
 	@Override
 	public void validate(@Nullable String hql) {
 		verifyImmutableEntityUpdate( hql );
-		if ( getSetClause() == null || getSetClause().getAssignments().isEmpty() ) {
+		if ( getSetClause().getAssignments().isEmpty() ) {
 			throw new IllegalArgumentException( "No assignments specified as part of UPDATE criteria" );
 		}
 		verifyUpdateTypesMatch();
 	}
 
-	private void verifyImmutableEntityUpdate(String hql) {
+	private void verifyImmutableEntityUpdate(@Nullable String hql) {
 		final EntityPersister persister =
 				nodeBuilder().getMappingMetamodel().getEntityDescriptor( getTarget().getEntityName() );
 		if ( !persister.isMutable() ) {
@@ -170,7 +178,7 @@ public class SqmUpdateStatement<T>
 	}
 
 	@Override
-	public <Y, X extends Y> SqmUpdateStatement<T> set(SingularAttribute<? super T, Y> attribute, X value) {
+	public <Y, X extends Y> SqmUpdateStatement<T> set(SingularAttribute<? super T, Y> attribute, @Nullable X value) {
 		final SqmCriteriaNodeBuilder nodeBuilder = (SqmCriteriaNodeBuilder) nodeBuilder();
 		SqmPath<Y> sqmAttribute = getTarget().get( attribute );
 		applyAssignment( sqmAttribute, nodeBuilder.value( value, sqmAttribute) );
@@ -184,7 +192,7 @@ public class SqmUpdateStatement<T>
 	}
 
 	@Override
-	public <Y, X extends Y> SqmUpdateStatement<T> set(Path<Y> attribute, X value) {
+	public <Y, X extends Y> SqmUpdateStatement<T> set(Path<Y> attribute, @Nullable X value) {
 		final SqmCriteriaNodeBuilder nodeBuilder = (SqmCriteriaNodeBuilder) nodeBuilder();
 		final SqmPath<Y> sqmAttribute = (SqmPath<Y>) attribute;
 		applyAssignment( sqmAttribute, nodeBuilder.value( value, sqmAttribute ) );
@@ -198,7 +206,7 @@ public class SqmUpdateStatement<T>
 	}
 
 	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	public SqmUpdateStatement<T> set(String attributeName, Object value) {
+	public SqmUpdateStatement<T> set(String attributeName, @Nullable Object value) {
 		final SqmPath sqmPath = getTarget().get( attributeName );
 		final SqmExpression expression;
 		if ( value instanceof SqmExpression ) {
@@ -243,13 +251,13 @@ public class SqmUpdateStatement<T>
 	}
 
 	@Override
-	public SqmUpdateStatement<T> where(Expression<Boolean> restriction) {
+	public SqmUpdateStatement<T> where(@Nullable Expression<Boolean> restriction) {
 		setWhere( restriction );
 		return this;
 	}
 
 	@Override
-	public SqmUpdateStatement<T> where(Predicate... restrictions) {
+	public SqmUpdateStatement<T> where(Predicate @Nullable... restrictions) {
 		setWhere( restrictions );
 		return this;
 	}
@@ -269,9 +277,6 @@ public class SqmUpdateStatement<T>
 	}
 
 	public <Y> void applyAssignment(SqmAssignment<Y> assignment) {
-		if ( setClause == null ) {
-			setClause = new SqmSetClause();
-		}
 		setClause.addAssignment( assignment );
 	}
 
@@ -292,18 +297,18 @@ public class SqmUpdateStatement<T>
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmUpdateStatement<?> that
 			&& super.equals( that )
 			&& this.versioned == that.versioned
-			&& Objects.equals( setClause, that.setClause );
+			&& setClause.equals( that.setClause );
 	}
 
 	@Override
 	public int hashCode() {
 		int result = getTarget().hashCode();
 		result = 31 * result + Boolean.hashCode( versioned );
-		result = 31 * result + Objects.hashCode( setClause );
+		result = 31 * result + setClause.hashCode();
 		return result;
 	}
 
@@ -312,14 +317,14 @@ public class SqmUpdateStatement<T>
 		return object instanceof SqmUpdateStatement<?> that
 			&& super.isCompatible( that )
 			&& this.versioned == that.versioned
-			&& SqmCacheable.areCompatible( setClause, that.setClause );
+			&& setClause.isCompatible( that.setClause );
 	}
 
 	@Override
 	public int cacheHashCode() {
 		int result = getTarget().cacheHashCode();
 		result = 31 * result + Boolean.hashCode( versioned );
-		result = 31 * result + SqmCacheable.cacheHashCode( setClause );
+		result = 31 * result + setClause.cacheHashCode();
 		return result;
 	}
 }

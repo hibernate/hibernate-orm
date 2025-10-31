@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -22,15 +23,15 @@ import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
  */
 public interface SqmAliasedNode<T> extends SqmTypedNode<T> {
 	SqmSelectableNode<T> getSelectableNode();
-	String getAlias();
+	@Nullable String getAlias();
 
 	@Override
-	default SqmBindableType<T> getNodeType() {
+	default @Nullable SqmBindableType<T> getNodeType() {
 		return getSelectableNode().getNodeType();
 	}
 
 	@Override
-	default SqmBindableType<T> getExpressible() {
+	default @Nullable SqmBindableType<T> getExpressible() {
 		return getSelectableNode().getExpressible();
 	}
 }

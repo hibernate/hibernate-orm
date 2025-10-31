@@ -6,6 +6,7 @@ package org.hibernate.query.hql.spi;
 
 import java.util.function.Function;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -57,14 +58,14 @@ public interface SqmPathRegistry {
 	 *
 	 * @return matching SqmFrom or {@code null}
 	 */
-	<X extends SqmFrom<?, ?>> X findFromByAlias(String identificationVariable, boolean searchParent);
+	<X extends SqmFrom<?, ?>> @Nullable X findFromByAlias(String identificationVariable, boolean searchParent);
 
 	/**
 	 * Find a SqmFrom by its NavigablePath.  Will search any parent contexts as well
 	 *
 	 * @return matching SqmFrom or {@code null}
 	 */
-	<X extends SqmFrom<?, ?>> X findFromByPath(NavigablePath navigablePath);
+	<X extends SqmFrom<?, ?>> @Nullable X findFromByPath(NavigablePath navigablePath);
 
 	/**
 	 * Find a SqmFrom which exposes a Navigable by the given name.  Will search any
@@ -72,7 +73,7 @@ public interface SqmPathRegistry {
 	 *
 	 * @return matching SqmFrom or {@code null}
 	 */
-	<X extends SqmFrom<?, ?>> X findFromExposing(String navigableName);
+	<X extends SqmFrom<?, ?>> @Nullable X findFromExposing(String navigableName);
 
 	/**
 	 * Similar to {@link #findFromByPath}, but accepting a producer to be used
@@ -90,6 +91,13 @@ public interface SqmPathRegistry {
 	 */
 	<X extends SqmFrom<?, ?>> X resolveFrom(SqmPath<?> path);
 
+	/**
+	 * Find a SqmFrom by its NavigablePath.  Will search any parent contexts as well
+	 *
+	 * @return matching SqmFrom
+	 */
+	<X extends SqmFrom<?, ?>> X resolveFromByPath(NavigablePath navigablePath);
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SqmSelection
@@ -105,7 +113,7 @@ public interface SqmPathRegistry {
 	 *
 	 * @return The matching node, or null
 	 */
-	SqmAliasedNode<?> findAliasedNodeByAlias(String alias);
+	@Nullable SqmAliasedNode<?> findAliasedNodeByAlias(String alias);
 
 	/**
 	 * Find the position of a node with the given alias, relative to the
@@ -113,12 +121,12 @@ public interface SqmPathRegistry {
 	 *
 	 * @return The position, or null
 	 */
-	Integer findAliasedNodePosition(String alias);
+	@Nullable Integer findAliasedNodePosition(String alias);
 
 	/**
 	 * Find an SqmSelection by its position in the SqmSelectClause
 	 *
 	 * @return The matching node, or null
 	 */
-	SqmAliasedNode<?> findAliasedNodeByPosition(int position);
+	@Nullable SqmAliasedNode<?> findAliasedNodeByPosition(int position);
 }

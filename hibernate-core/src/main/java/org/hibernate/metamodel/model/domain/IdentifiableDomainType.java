@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import jakarta.persistence.metamodel.IdentifiableType;
 import jakarta.persistence.metamodel.SingularAttribute;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Extension to the JPA {@link IdentifiableType} contract.
@@ -18,7 +19,7 @@ import jakarta.persistence.metamodel.SingularAttribute;
 public interface IdentifiableDomainType<J>
 		extends ManagedDomainType<J>, IdentifiableType<J> {
 
-	PathSource<?> getIdentifierDescriptor();
+	@Nullable PathSource<?> getIdentifierDescriptor();
 
 	@Override
 	<Y> SingularPersistentAttribute<? super J, Y> getId(Class<Y> type);
@@ -39,15 +40,15 @@ public interface IdentifiableDomainType<J>
 	SimpleDomainType<?> getIdType();
 
 	@Override
-	IdentifiableDomainType<? super J> getSupertype();
+	@Nullable IdentifiableDomainType<? super J> getSupertype();
 
 	boolean hasIdClass();
 
-	SingularPersistentAttribute<? super J,?> findIdAttribute();
+	@Nullable SingularPersistentAttribute<? super J,?> findIdAttribute();
 
 	void visitIdClassAttributes(Consumer<SingularPersistentAttribute<? super J,?>> action);
 
-	SingularPersistentAttribute<? super J, ?> findVersionAttribute();
+	@Nullable SingularPersistentAttribute<? super J, ?> findVersionAttribute();
 
-	List<? extends PersistentAttribute<? super J, ?>> findNaturalIdAttributes();
+	@Nullable List<? extends PersistentAttribute<? super J, ?>> findNaturalIdAttributes();
 }

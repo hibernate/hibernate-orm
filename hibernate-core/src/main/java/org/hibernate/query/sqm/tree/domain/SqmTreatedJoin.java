@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaTreatedJoin;
 
@@ -18,8 +19,8 @@ public interface SqmTreatedJoin<L,R,R1 extends R> extends SqmTreatedFrom<L,R,R1>
 	<S extends R1> SqmTreatedJoin<L, R1, S> treatAs(EntityDomainType<S> treatTarget);
 
 	@Override
-	<S extends R1> SqmTreatedJoin<L, R1, S> treatAs(Class<S> treatJavaType, String alias);
+	<S extends R1> SqmTreatedJoin<L, R1, S> treatAs(Class<S> treatJavaType, @Nullable String alias);
 
 	@Override
-	<S extends R1> SqmTreatedJoin<L, R1, S> treatAs(EntityDomainType<S> treatTarget, String alias);
+	<S extends R1> SqmTreatedJoin<L, R1, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias);
 }

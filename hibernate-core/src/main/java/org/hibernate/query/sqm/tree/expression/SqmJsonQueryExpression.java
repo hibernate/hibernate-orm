@@ -293,7 +293,7 @@ public class SqmJsonQueryExpression extends AbstractSqmJsonPathExpression<String
 	}
 
 	@Override
-	public boolean equals(Object other) {
+	public boolean equals(@Nullable Object other) {
 		return super.equals( other )
 			&& other instanceof SqmJsonQueryExpression that
 			&& wrapMode == that.wrapMode

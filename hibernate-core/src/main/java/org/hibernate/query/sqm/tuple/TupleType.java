@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tuple;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.SqmBindableType;
 
@@ -21,5 +22,5 @@ public interface TupleType<J> extends ReturnableType<J> {
 	List<String> getComponentNames();
 
 	SqmBindableType<?> get(int index);
-	SqmBindableType<?> get(String componentName);
+	@Nullable SqmBindableType<?> get(String componentName);
 }

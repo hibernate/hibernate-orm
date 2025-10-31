@@ -105,7 +105,7 @@ public class SqmOver<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmOver<?> sqmOver
 			&& expression.equals( sqmOver.expression )
 			&& window.equals( sqmOver.window );

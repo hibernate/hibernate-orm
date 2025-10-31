@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 
@@ -16,8 +17,8 @@ public class QueryHelper {
 	}
 
 	@SafeVarargs
-	public static <T> SqmBindableType<? extends T> highestPrecedenceType(SqmBindableType<? extends T>... types) {
-		if ( types == null || types.length == 0 ) {
+	public static <T> @Nullable SqmBindableType<? extends T> highestPrecedenceType(@Nullable SqmBindableType<? extends T>... types) {
+		if ( types.length == 0 ) {
 			return null;
 		}
 
@@ -33,9 +34,9 @@ public class QueryHelper {
 		return highest;
 	}
 
-	public static <X> SqmBindableType<? extends X> highestPrecedenceType2(
-			SqmBindableType<? extends X> type1,
-			SqmBindableType<? extends X> type2) {
+	public static <X> @Nullable SqmBindableType<? extends X> highestPrecedenceType2(
+			@Nullable SqmBindableType<? extends X> type1,
+			@Nullable SqmBindableType<? extends X> type2) {
 		if ( type1 == null && type2 == null ) {
 			return null;
 		}

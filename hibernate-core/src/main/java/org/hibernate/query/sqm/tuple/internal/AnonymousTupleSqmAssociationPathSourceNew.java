@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tuple.internal;
 
 import java.lang.reflect.Member;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
@@ -43,7 +44,7 @@ public class AnonymousTupleSqmAssociationPathSourceNew<O, J>
 	public SqmJoin<O, J> createSqmJoin(
 			SqmFrom<?, O> lhs,
 			SqmJoinType joinType,
-			String alias,
+			@Nullable String alias,
 			boolean fetched,
 			SqmCreationState creationState) {
 		return new SqmSingularJoin<>(

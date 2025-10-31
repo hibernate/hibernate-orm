@@ -32,7 +32,7 @@ public class SqmAny<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public Integer getTupleLength() {
+	public @Nullable Integer getTupleLength() {
 		return subquery.getTupleLength();
 	}
 
@@ -69,7 +69,7 @@ public class SqmAny<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmAny<?> sqmAny
 			&& subquery.equals( sqmAny.subquery );
 	}

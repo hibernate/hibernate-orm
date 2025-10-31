@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -31,6 +32,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
@@ -63,7 +65,7 @@ public class BasicTypeRegistry implements Serializable {
 		return typeConfiguration.getJdbcTypeRegistry();
 	}
 
-	public BasicType<?> getRegisteredType(String key) {
+	public @Nullable BasicType<?> getRegisteredType(String key) {
 		var basicType = typesByName.get( key );
 		if ( basicType == null ) {
 			basicType = resolveTypeReference( key );
@@ -71,7 +73,7 @@ public class BasicTypeRegistry implements Serializable {
 		return basicType;
 	}
 
-	private BasicType<?> resolveTypeReference(String name) {
+	private @Nullable BasicType<?> resolveTypeReference(String name) {
 		final var typeReference = typeReferencesByName.get( name );
 		if ( typeReference == null ) {
 			return null;
@@ -113,20 +115,20 @@ public class BasicTypeRegistry implements Serializable {
 		}
 	}
 
-	public BasicType<?> getRegisteredType(java.lang.reflect.Type javaType) {
+	public @Nullable BasicType<?> getRegisteredType(java.lang.reflect.Type javaType) {
 		return getRegisteredType( javaType.getTypeName() );
 	}
 
-	public <J> BasicType<J> getRegisteredType(Class<J> javaType) {
+	public <J> @Nullable BasicType<J> getRegisteredType(Class<J> javaType) {
 		//noinspection unchecked
 		return (BasicType<J>) getRegisteredType( javaType.getTypeName() );
 	}
 
-	public BasicType<?> getRegisteredArrayType(java.lang.reflect.Type javaElementType) {
+	public @Nullable BasicType<?> getRegisteredArrayType(java.lang.reflect.Type javaElementType) {
 		return getRegisteredType( javaElementType.getTypeName() + "[]" );
 	}
 
-	public <J> BasicType<J> resolve(BasicTypeReference<J> basicTypeReference) {
+	public <J> @Nullable BasicType<J> resolve(BasicTypeReference<J> basicTypeReference) {
 		//noinspection unchecked
 		return (BasicType<J>) getRegisteredType( basicTypeReference.getName() );
 	}
@@ -251,7 +253,7 @@ public class BasicTypeRegistry implements Serializable {
 		// and if so, if the jdbc type descriptor matches. Unless it does, we at least reuse the name
 		final var registeredType = getRegisteredType( javaType.getJavaTypeClass() );
 		if ( registeredTypeMatches( javaType, jdbcType, registeredType ) ) {
-			return registeredType;
+			return castNonNull( registeredType );
 		}
 		else {
 			final var createdType = creator.get();

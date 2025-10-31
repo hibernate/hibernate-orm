@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -33,7 +34,7 @@ public class SqmCorrelatedCrossJoin<T> extends SqmCrossJoin<T> implements SqmCor
 
 	private SqmCorrelatedCrossJoin(
 			SqmEntityDomainType<T> joinedEntityDescriptor,
-			String alias,
+			@Nullable String alias,
 			SqmRoot<?> sqmRoot,
 			SqmCorrelatedRootJoin<T> correlatedRootJoin,
 			SqmCrossJoin<T> correlationParent) {
@@ -88,9 +89,9 @@ public class SqmCorrelatedCrossJoin<T> extends SqmCrossJoin<T> implements SqmCor
 		return new SqmCorrelatedCrossJoin<>(
 				getReferencedPathSource(),
 				getExplicitAlias(),
-				pathRegistry.findFromByPath( getRoot().getNavigablePath() ),
-				pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
-				pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
+				pathRegistry.resolveFromByPath( getRoot().getNavigablePath() ),
+				pathRegistry.resolveFromByPath( correlatedRootJoin.getNavigablePath() ),
+				pathRegistry.resolveFromByPath( correlationParent.getNavigablePath() )
 		);
 	}
 

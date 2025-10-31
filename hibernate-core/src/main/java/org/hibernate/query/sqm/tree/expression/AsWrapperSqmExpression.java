@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -11,6 +13,8 @@ import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.type.BasicType;
 
 import java.util.Objects;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 	private final SqmExpression<?> expression;
@@ -41,7 +45,7 @@ public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 
 	@Override
 	public SqmExpression<T> copy(SqmCopyContext context) {
-		return new AsWrapperSqmExpression<>( getExpressible(), expression.copy( context ) );
+		return new AsWrapperSqmExpression<>( getNodeType(), expression.copy( context ) );
 	}
 
 	public SqmExpression<?> getExpression() {
@@ -49,12 +53,12 @@ public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public BasicType<T> getNodeType() {
-		return (BasicType<T>) super.getNodeType();
+	public @NonNull BasicType<T> getNodeType() {
+		return (BasicType<T>) castNonNull( super.getNodeType() );
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof AsWrapperSqmExpression<?> that
 			&& this.expression.equals( that.expression )
 			&& Objects.equals( this.getNodeType(), that.getNodeType() );

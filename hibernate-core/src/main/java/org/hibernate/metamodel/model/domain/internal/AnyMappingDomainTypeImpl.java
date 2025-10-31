@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
@@ -57,7 +58,7 @@ public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T>, Sqm
 	}
 
 	@Override
-	public SqmDomainType<T> getSqmType() {
+	public @Nullable SqmDomainType<T> getSqmType() {
 		return this;
 	}
 

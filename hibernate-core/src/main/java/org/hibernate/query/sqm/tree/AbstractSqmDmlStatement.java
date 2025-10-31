@@ -47,7 +47,7 @@ public abstract class AbstractSqmDmlStatement<E>
 	public AbstractSqmDmlStatement(
 			NodeBuilder builder,
 			SqmQuerySource querySource,
-			Set<SqmParameter<?>> parameters,
+			@Nullable Set<SqmParameter<?>> parameters,
 			Map<String, SqmCteStatement<?>> cteStatements,
 			SqmRoot<E> target) {
 		super( builder, querySource, parameters );
@@ -79,7 +79,7 @@ public abstract class AbstractSqmDmlStatement<E>
 	}
 
 	@Override
-	public SqmCteStatement<?> getCteStatement(String cteLabel) {
+	public @Nullable SqmCteStatement<?> getCteStatement(String cteLabel) {
 		return cteStatements.get( cteLabel );
 	}
 
@@ -89,7 +89,7 @@ public abstract class AbstractSqmDmlStatement<E>
 	}
 
 	@Override
-	public <X> JpaCteCriteria<X> getCteCriteria(String cteName) {
+	public <X> @Nullable JpaCteCriteria<X> getCteCriteria(String cteName) {
 		return (JpaCteCriteria<X>) cteStatements.get( cteName );
 	}
 
@@ -208,7 +208,7 @@ public abstract class AbstractSqmDmlStatement<E>
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof AbstractSqmDmlStatement<?> that
 			&& getClass() == that.getClass()
 			&& getTarget().equals( that.getTarget() )

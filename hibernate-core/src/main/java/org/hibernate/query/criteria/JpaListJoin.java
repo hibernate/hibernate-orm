@@ -6,6 +6,7 @@ package org.hibernate.query.criteria;
 
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 
 import jakarta.persistence.criteria.Expression;
@@ -19,16 +20,16 @@ import jakarta.persistence.criteria.Predicate;
  */
 public interface JpaListJoin<O, T> extends JpaPluralJoin<O, List<T>, T>, ListJoin<O, T> {
 	@Override
-	JpaListJoin<O, T> on(JpaExpression<Boolean> restriction);
+	JpaListJoin<O, T> on(@Nullable JpaExpression<Boolean> restriction);
 
 	@Override
-	JpaListJoin<O, T> on(Expression<Boolean> restriction);
+	JpaListJoin<O, T> on(@Nullable Expression<Boolean> restriction);
 
 	@Override
-	JpaListJoin<O, T> on(JpaPredicate... restrictions);
+	JpaListJoin<O, T> on(JpaPredicate @Nullable... restrictions);
 
 	@Override
-	JpaListJoin<O, T> on(Predicate... restrictions);
+	JpaListJoin<O, T> on(Predicate @Nullable... restrictions);
 
 	@Override
 	<S extends T> JpaTreatedJoin<O,T, S> treatAs(Class<S> treatAsType);

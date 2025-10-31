@@ -4,13 +4,13 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
-import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
@@ -20,15 +20,14 @@ import org.hibernate.query.sqm.tree.domain.AbstractSqmJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
 import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmSingularValuedJoin;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedEntityJoin;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.metamodel.EntityType;
+
 
 /**
  * @author Steve Ebersole
@@ -40,7 +39,7 @@ public class SqmEntityJoin<L,R>
 
 	public SqmEntityJoin(
 			EntityDomainType<R> joinedEntityDescriptor,
-			String alias,
+			@Nullable String alias,
 			SqmJoinType joinType,
 			SqmRoot<L> sqmRoot) {
 		this(
@@ -55,7 +54,7 @@ public class SqmEntityJoin<L,R>
 	protected SqmEntityJoin(
 			NavigablePath navigablePath,
 			EntityDomainType<R> joinedEntityDescriptor,
-			String alias,
+			@Nullable String alias,
 			SqmJoinType joinType,
 			SqmRoot<L> sqmRoot) {
 		super( navigablePath, (SqmEntityDomainType<R>) joinedEntityDescriptor, sqmRoot, alias, joinType, sqmRoot.nodeBuilder() );
@@ -64,7 +63,7 @@ public class SqmEntityJoin<L,R>
 
 	public SqmEntityJoin(
 			EntityType<R> entity,
-			String alias,
+			@Nullable String alias,
 			JoinType joinType,
 			SqmRoot<L> root) {
 		this( (EntityDomainType<R>) entity, alias, SqmJoinType.from( joinType ), root );
@@ -115,20 +114,12 @@ public class SqmEntityJoin<L,R>
 	}
 
 	@Override
-	public SqmPath<?> resolveIndexedAccess(
-			SqmExpression<?> selector,
-			boolean isTerminal,
-			SqmCreationState creationState) {
-		return null;
-	}
-
-	@Override
 	public SqmEntityDomainType<R> getModel() {
 		return (SqmEntityDomainType<R>) super.getModel();
 	}
 
 	@Override
-	public SqmFrom<?,L> getLhs() {
+	public @Nullable SqmFrom<?,L> getLhs() {
 		// An entity-join has no LHS
 		return null;
 	}
@@ -143,22 +134,22 @@ public class SqmEntityJoin<L,R>
 	}
 
 	@Override
-	public SqmEntityJoin<L,R> on(JpaExpression<Boolean> restriction) {
+	public SqmEntityJoin<L,R> on(@Nullable JpaExpression<Boolean> restriction) {
 		return (SqmEntityJoin<L,R>) super.on( restriction );
 	}
 
 	@Override
-	public SqmEntityJoin<L,R> on(Expression<Boolean> restriction) {
+	public SqmEntityJoin<L,R> on(@Nullable Expression<Boolean> restriction) {
 		return (SqmEntityJoin<L,R>) super.on( restriction );
 	}
 
 	@Override
-	public SqmEntityJoin<L,R> on(JpaPredicate... restrictions) {
+	public SqmEntityJoin<L,R> on(JpaPredicate @Nullable... restrictions) {
 		return (SqmEntityJoin<L,R>) super.on( restrictions );
 	}
 
 	@Override
-	public SqmEntityJoin<L,R> on(Predicate... restrictions) {
+	public SqmEntityJoin<L,R> on(Predicate @Nullable... restrictions) {
 		return (SqmEntityJoin<L,R>) super.on( restrictions );
 	}
 
@@ -188,27 +179,27 @@ public class SqmEntityJoin<L,R>
 	}
 
 	@Override
-	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(Class<S> treatJavaType, String alias) {
+	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(Class<S> treatJavaType, @Nullable String alias) {
 		throw new UnsupportedOperationException( "Entity join treats can not be aliased" );
 	}
 
 	@Override
-	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias) {
 		throw new UnsupportedOperationException( "Entity join treats can not be aliased" );
 	}
 
 	@Override
-	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(Class<S> treatJavaType, String alias, boolean fetched) {
+	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetched) {
 		throw new UnsupportedOperationException( "Entity join treats can not be aliased" );
 	}
 
 	@Override
-	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetched) {
+	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetched) {
 		throw new UnsupportedOperationException( "Entity join treats can not be aliased" );
 	}
 
 	@Override
-	public PersistentAttribute<? super L, ?> getAttribute() {
+	public @Nullable PersistentAttribute<? super L, ?> getAttribute() {
 		// there is no attribute
 		return null;
 	}
@@ -224,7 +215,7 @@ public class SqmEntityJoin<L,R>
 				getReferencedPathSource(),
 				getExplicitAlias(),
 				getSqmJoinType(),
-				pathRegistry.findFromByPath( getRoot().getNavigablePath() )
+				pathRegistry.resolveFromByPath( getRoot().getNavigablePath() )
 		);
 	}
 }

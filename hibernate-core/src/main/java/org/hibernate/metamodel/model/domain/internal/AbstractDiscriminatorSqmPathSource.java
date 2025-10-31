@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -40,7 +41,7 @@ public abstract class AbstractDiscriminatorSqmPathSource<D> extends AbstractSqmP
 	}
 
 	@Override
-	public SqmDomainType<D> getSqmType() {
+	public @Nullable SqmDomainType<D> getSqmType() {
 		return this;
 	}
 }

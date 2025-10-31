@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 
 import jakarta.persistence.Tuple;
@@ -36,5 +37,5 @@ public interface JpaCriteriaInsertSelect<T> extends JpaCriteriaInsert<T> {
 	JpaCriteriaInsertSelect<T> select(CriteriaQuery<Tuple> criteriaQuery);
 
 	@Override
-	JpaCriteriaInsertSelect<T> onConflict(JpaConflictClause<T> conflictClause);
+	JpaCriteriaInsertSelect<T> onConflict(@Nullable JpaConflictClause<T> conflictClause);
 }

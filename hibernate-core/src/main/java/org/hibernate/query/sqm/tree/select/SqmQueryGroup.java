@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.SemanticException;
@@ -40,8 +41,14 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 	private final List<SqmQueryPart<T>> queryParts;
 	private SetOperator setOperator;
 
+	@SuppressWarnings("nullness")
+	@Deprecated(forRemoval = true)
 	public SqmQueryGroup(SqmQueryPart<T> queryPart) {
 		this( queryPart.nodeBuilder(), null, listOf( queryPart ) );
+	}
+
+	public SqmQueryGroup(SqmQueryPart<T> queryPart, SetOperator setOperator) {
+		this( queryPart.nodeBuilder(), setOperator, listOf( queryPart ) );
 	}
 
 	public SqmQueryGroup(
@@ -122,13 +129,13 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 	}
 
 	@Override
-	public SqmQueryGroup<T> setOffset(JpaExpression<? extends Number> offset) {
+	public SqmQueryGroup<T> setOffset(@Nullable JpaExpression<? extends Number> offset) {
 		super.setOffset( offset );
 		return this;
 	}
 
 	@Override
-	public SqmQueryGroup<T> setFetch(JpaExpression<? extends Number> fetch) {
+	public SqmQueryGroup<T> setFetch(@Nullable JpaExpression<? extends Number> fetch) {
 		super.setFetch( fetch );
 		return this;
 	}
@@ -215,7 +222,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		}
 	}
 
-	private static SqmAttributeJoin<?, ?> findFirstFetchJoin(Iterator<? extends SqmJoin<?, ?>> joinIter) {
+	private static @Nullable SqmAttributeJoin<?, ?> findFirstFetchJoin(Iterator<? extends SqmJoin<?, ?>> joinIter) {
 		while ( joinIter.hasNext() ) {
 			if ( joinIter.next() instanceof SqmAttributeJoin<?, ?> attrJoin
 					&& attrJoin.isFetched() ) {
@@ -249,7 +256,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmQueryGroup<?> that
 			&& super.equals( that )
 			&& this.setOperator == that.setOperator

@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.internal.AnyDiscriminatorPart;
 import org.hibernate.metamodel.mapping.internal.AnyKeyPart;
@@ -45,7 +46,7 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name) {
+	public @Nullable SqmPathSource<?> findSubPathSource(String name) {
 		return switch ( name ) {
 			case AnyKeyPart.KEY_NAME ->
 				// standard id() function
@@ -65,7 +66,7 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
 	}
 
 	@Override
-	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+	public SqmPath<J> createSqmPath(SqmPath<?> lhs, @Nullable SqmPathSource<?> intermediatePathSource) {
 		return new SqmAnyValuedSimplePath<>(
 				PathHelper.append( lhs, this, intermediatePathSource ),
 				pathModel,

@@ -13,6 +13,7 @@ import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.spi.NavigablePath;
 
@@ -30,7 +31,7 @@ public interface JpaPath<T> extends JpaExpression<T>, Path<T> {
 	/**
 	 * The source (think "left hand side") of this path
 	 */
-	JpaPath<?> getLhs();
+	@Nullable JpaPath<?> getLhs();
 
 	/**
 	 * Support for JPA's explicit (TREAT) down-casting.
@@ -46,7 +47,7 @@ public interface JpaPath<T> extends JpaExpression<T>, Path<T> {
 	// Covariant overrides
 
 	@Override
-	default JpaPath<?> getParentPath() {
+	default @Nullable JpaPath<?> getParentPath() {
 		return getLhs();
 	}
 

@@ -11,6 +11,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.SemanticException;
@@ -191,13 +192,13 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	}
 
 	@Override
-	public <X extends SqmFrom<?, ?>> X findFromByPath(NavigablePath navigablePath) {
+	public <X extends SqmFrom<?, ?>> @Nullable X findFromByPath(NavigablePath navigablePath) {
 		//noinspection unchecked
 		return (X) sqmFromByPath.get( navigablePath );
 	}
 
 	@Override
-	public <X extends SqmFrom<?, ?>> X findFromByAlias(String alias, boolean searchParent) {
+	public <X extends SqmFrom<?, ?>> @Nullable X findFromByAlias(String alias, boolean searchParent) {
 		final String localAlias = handleAliasCaseSensitivity( alias );
 
 		final var registered = sqmFromByAlias.get( localAlias );
@@ -250,7 +251,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	}
 
 	@Override
-	public <X extends SqmFrom<?, ?>> X findFromExposing(String navigableName) {
+	public <X extends SqmFrom<?, ?>> @Nullable X findFromExposing(String navigableName) {
 		// todo (6.0) : atm this checks every from-element every time, the idea being to make sure there
 		//  	is only one such element obviously that scales poorly across larger from-clauses.  Another
 		//  	(configurable?) option would be to simply pick the first one as a perf optimization
@@ -303,6 +304,15 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	}
 
 	@Override
+	public <X extends SqmFrom<?, ?>> X resolveFromByPath(NavigablePath navigablePath) {
+		final X from = findFromByPath( navigablePath );
+		if ( from == null ) {
+			throw new SemanticException( "Cannot resolve find from by navigable path '" + navigablePath + "'" );
+		}
+		return from;
+	}
+
+	@Override
 	public <X extends SqmFrom<?, ?>> X resolveFrom(SqmPath<?> path) {
 		final var navigablePath = path.getNavigablePath();
 		final var existing = sqmFromByPath.get( navigablePath );
@@ -311,9 +321,11 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 			return (X) existing;
 		}
 		else {
-			final var sqmFrom =
-					resolveFrom( path.getLhs() )
-							.join( navigablePath.getLocalName() );
+			final var lhs = path.getLhs();
+			if ( lhs == null ) {
+				throw new SemanticException( "Cannot resolve path '" + path + "'" );
+			}
+			final var sqmFrom = resolveFrom( lhs ).join( path.getNavigablePath().getLocalName() );
 			register( sqmFrom );
 			//noinspection unchecked
 			return (X) sqmFrom;
@@ -326,7 +338,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	}
 
 	@Override
-	public SqmAliasedNode<?> findAliasedNodeByAlias(String alias) {
+	public @Nullable SqmAliasedNode<?> findAliasedNodeByAlias(String alias) {
 		assert alias != null;
 		final String aliasToUse = handleAliasCaseSensitivity( alias );
 		for ( int i = 0; i < simpleSelectionNodes.size(); i++ ) {
@@ -339,7 +351,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	}
 
 	@Override
-	public Integer findAliasedNodePosition(String alias) {
+	public @Nullable Integer findAliasedNodePosition(String alias) {
 		if ( alias != null ) {
 			final String aliasToUse = handleAliasCaseSensitivity( alias );
 			// NOTE: 1-based
@@ -354,7 +366,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	}
 
 	@Override
-	public SqmAliasedNode<?> findAliasedNodeByPosition(int position) {
+	public @Nullable SqmAliasedNode<?> findAliasedNodeByPosition(int position) {
 		// NOTE: 1-based
 		return position > simpleSelectionNodes.size()
 				? null

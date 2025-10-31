@@ -10,6 +10,7 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Commonality between a JPA {@link JpaCriteriaQuery} and {@link JpaSubQuery},
@@ -58,7 +59,7 @@ public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaBase 
 	JpaSelectCriteria<T> distinct(boolean distinct);
 
 	@Override
-	JpaSelection<T> getSelection();
+	@Nullable JpaSelection<T> getSelection();
 
 	@Override
 	<X> JpaRoot<X> from(Class<X> entityClass);
@@ -67,13 +68,13 @@ public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaBase 
 	<X> JpaRoot<X> from(EntityType<X> entity);
 
 	@Override
-	JpaPredicate getRestriction();
+	@Nullable JpaPredicate getRestriction();
 
 	@Override
-	JpaSelectCriteria<T> where(Expression<Boolean> restriction);
+	JpaSelectCriteria<T> where(@Nullable Expression<Boolean> restriction);
 
 	@Override
-	JpaSelectCriteria<T> where(Predicate... restrictions);
+	JpaSelectCriteria<T> where(Predicate @Nullable... restrictions);
 
 	@Override
 	JpaSelectCriteria<T> groupBy(Expression<?>... grouping);
@@ -82,11 +83,11 @@ public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaBase 
 	JpaSelectCriteria<T> groupBy(List<Expression<?>> grouping);
 
 	@Override
-	JpaPredicate getGroupRestriction();
+	@Nullable JpaPredicate getGroupRestriction();
 
 	@Override
-	JpaSelectCriteria<T> having(Expression<Boolean> restriction);
+	JpaSelectCriteria<T> having(@Nullable Expression<Boolean> restriction);
 
 	@Override
-	JpaSelectCriteria<T> having(Predicate... restrictions);
+	JpaSelectCriteria<T> having(Predicate @Nullable... restrictions);
 }

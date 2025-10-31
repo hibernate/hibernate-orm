@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -108,7 +109,7 @@ public class SqmJpaCompoundSelection<T>
 	}
 
 	@Override
-	public String getAlias() {
+	public @Nullable String getAlias() {
 		return null;
 	}
 
@@ -139,7 +140,7 @@ public class SqmJpaCompoundSelection<T>
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		if ( !(object instanceof SqmJpaCompoundSelection<?> that)
 			|| selectableNodes.size() != that.selectableNodes.size() ) {
 			return false;
@@ -184,7 +185,7 @@ public class SqmJpaCompoundSelection<T>
 	}
 
 	@Override
-	public SqmDomainType<T> getSqmType() {
+	public @Nullable SqmDomainType<T> getSqmType() {
 		return null;
 	}
 }

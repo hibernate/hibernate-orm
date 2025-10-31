@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -23,7 +24,7 @@ public class EmbeddedDiscriminatorSqmPathSource<D> extends AbstractDiscriminator
 	}
 
 	@Override
-	public SqmPath<D> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+	public SqmPath<D> createSqmPath(SqmPath<?> lhs, @Nullable SqmPathSource<?> intermediatePathSource) {
 		//noinspection unchecked
 		return new EmbeddedDiscriminatorSqmPath<>(
 				PathHelper.append( lhs, this, intermediatePathSource ),

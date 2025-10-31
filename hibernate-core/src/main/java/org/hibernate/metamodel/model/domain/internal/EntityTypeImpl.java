@@ -12,6 +12,7 @@ import java.util.Locale;
 
 import jakarta.persistence.metamodel.EntityType;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
@@ -25,6 +26,7 @@ import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmManagedDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPersistentAttribute;
@@ -133,7 +135,7 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public SqmEntityDomainType<J> getSqmType() {
+	public @Nullable SqmDomainType<J> getSqmType() {
 		return this;
 	}
 
@@ -148,7 +150,7 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name) {
+	public @Nullable SqmPathSource<?> findSubPathSource(String name) {
 		final PersistentAttribute<? super J,?> attribute = super.findAttribute( name );
 		if ( attribute != null ) {
 			return (SqmPathSource<?>) attribute;
@@ -168,12 +170,12 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public SqmPathSource<?> getIdentifierDescriptor() {
+	public @Nullable SqmPathSource<?> getIdentifierDescriptor() {
 		return super.getIdentifierDescriptor();
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
+	public @Nullable SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
 		final PersistentAttribute<? super J,?> attribute = super.findAttribute( name );
 		if ( attribute != null ) {
 			return (SqmPathSource<?>) attribute;
@@ -222,7 +224,7 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public SqmPersistentAttribute<? super J, ?> findAttribute(String name) {
+	public @Nullable SqmPersistentAttribute<? super J, ?> findAttribute(String name) {
 		final var attribute = super.findAttribute( name );
 		if ( attribute != null ) {
 			return attribute;
@@ -257,7 +259,7 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+	public SqmPath<J> createSqmPath(SqmPath<?> lhs, @Nullable SqmPathSource<?> intermediatePathSource) {
 		throw new UnsupportedMappingException(
 				"EntityType cannot be used to create an SqmPath - that would be an SqmFrom which are created directly"
 		);

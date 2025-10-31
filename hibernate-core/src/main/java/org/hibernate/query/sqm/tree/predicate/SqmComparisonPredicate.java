@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -65,7 +66,7 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 		this.leftHandExpression = affirmativeForm.leftHandExpression;
 		this.rightHandExpression = affirmativeForm.rightHandExpression;
 		this.operator = affirmativeForm.operator;
-		assertComparable( leftHandExpression, rightHandExpression, nodeBuilder() );
+		assertComparable( leftHandExpression, rightHandExpression, affirmativeForm.nodeBuilder() );
 	}
 
 	@Override
@@ -125,7 +126,7 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmComparisonPredicate that
 			&& this.isNegated() == that.isNegated()
 			&& this.operator == that.operator

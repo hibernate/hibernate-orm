@@ -1273,7 +1273,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public TableDetails getMappedTableDetails() {
-		return getTableMapping( getTableMappings().length - 1 );
+		// Subtract the number of secondary tables (tableSpan - coreTableSpan) and get the last table mapping
+		return getTableMapping( getTableMappings().length - ( tableSpan - coreTableSpan ) - 1 );
 	}
 
 	@Override

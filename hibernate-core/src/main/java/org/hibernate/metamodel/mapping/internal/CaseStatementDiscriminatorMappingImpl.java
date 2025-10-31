@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
@@ -88,16 +89,21 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup(
 				fetchParent.getNavigablePath()
 		);
-		// Since the expression is lazy, based on the available table reference joins,
-		// we need to force the initialization in case this is a fetch
-		tableDiscriminatorDetailsMap.forEach(
-				(tableName, tableDiscriminatorDetails) -> tableGroup.getTableReference(
-						fetchablePath,
-						tableName,
-						true
-				)
-		);
+		resolveSubTypeTableReferences( tableGroup, fetchablePath );
 		return super.generateFetch( fetchParent, fetchablePath, fetchTiming, selected, resultVariable, creationState );
+	}
+
+	private void resolveSubTypeTableReferences(TableGroup tableGroup, NavigablePath navigablePath) {
+		final EntityMappingType entityDescriptor = (EntityMappingType) tableGroup.getModelPart().getPartMappingType();
+		// Since the expression is lazy, based on the available table reference joins,
+		// we need to force the initialization in case this is selected
+		for ( EntityMappingType subMappingType : entityDescriptor.getSubMappingTypes() ) {
+			tableGroup.getTableReference(
+					navigablePath,
+					subMappingType.getMappedTableDetails().getTableName(),
+					true
+			);
+		}
 	}
 
 	@Override

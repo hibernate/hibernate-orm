@@ -120,6 +120,17 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 	void postInstantiate() throws MappingException;
 
 	/**
+	 * Prepare loaders associated with the persister.  Distinct "phase"
+	 * in building the persister after {@linkplain InFlightEntityMappingType#prepareMappingModel}
+	 * and {@linkplain #postInstantiate()} have occurred.
+	 * <p/>
+	 * The distinct phase is used to ensure that all {@linkplain org.hibernate.metamodel.mapping.TableDetails}
+	 * are available across the entire model
+	 */
+	default void prepareLoaders() {
+	}
+
+	/**
 	 * Return the {@link org.hibernate.SessionFactory} to which this persister
 	 * belongs.
 	 *

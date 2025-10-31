@@ -3591,6 +3591,10 @@ public abstract class AbstractEntityPersister
 	@Override
 	public final void postInstantiate() throws MappingException {
 		doLateInit();
+	}
+
+	@Override
+	public void prepareLoaders() {
 		prepareLoader( singleIdLoader );
 		prepareLoader( multiIdLoader );
 	}

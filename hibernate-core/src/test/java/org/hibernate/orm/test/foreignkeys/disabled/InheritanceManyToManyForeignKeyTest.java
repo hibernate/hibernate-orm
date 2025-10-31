@@ -4,9 +4,6 @@
  */
 package org.hibernate.orm.test.foreignkeys.disabled;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -16,74 +13,72 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.MappedSuperclass;
-
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.dialect.SybaseDialect;
-
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Vlad Mihalcea
  */
 @JiraKey(value = "HHH-9306")
-public class InheritanceManyToManyForeignKeyTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {InheritanceManyToManyForeignKeyTest.LocalDateEvent.class,
+				InheritanceManyToManyForeignKeyTest.UserEvents.class,
+				InheritanceManyToManyForeignKeyTest.ApplicationEvents.class
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				LocalDateEvent.class,
-				UserEvents.class,
-				ApplicationEvents.class
-		};
-	}
+		}
+)
+@SessionFactory
+public class InheritanceManyToManyForeignKeyTest {
 
 	@Test
-	@SkipForDialect(value = SybaseDialect.class, comment = "Only dates between January 1, 1753 and December 31, 9999 are accepted.")
-	public void testForeignKeyNameUnicity() {
-		Session session = openSession();
-		Transaction transaction = session.beginTransaction();
-
-		LocalDateEvent event1 = new LocalDateEvent();
-		event1.startDate = LocalDate.of(1, 1, 1);
-		session.persist(event1);
-
-		LocalDateEvent event2 = new LocalDateEvent();
-		event2.startDate = LocalDate.of(1, 1, 2);
-		session.persist(event2);
-
-		LocalDateEvent event3 = new LocalDateEvent();
-		event3.startDate = LocalDate.of(1, 1, 3);
-		session.persist(event3);
-
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true,
+			reason = "Only dates between January 1, 1753 and December 31, 9999 are accepted.")
+	public void testForeignKeyNameUnicity(SessionFactoryScope scope) {
 		UserEvents userEvents = new UserEvents();
-		session.persist( userEvents );
-		userEvents.getEvents().add( event1 );
-		session.flush();
-		userEvents.getEvents().add( event2 );
-		session.flush();
-
-
 		ApplicationEvents applicationEvents = new ApplicationEvents();
-		session.persist( applicationEvents );
-		applicationEvents.getEvents().add( event3 );
+		scope.inTransaction(
+				session -> {
+					LocalDateEvent event1 = new LocalDateEvent();
+					event1.startDate = LocalDate.of( 1, 1, 1 );
+					session.persist( event1 );
 
-		transaction.commit();
-		session.close();
+					LocalDateEvent event2 = new LocalDateEvent();
+					event2.startDate = LocalDate.of( 1, 1, 2 );
+					session.persist( event2 );
 
-		session = openSession();
-		transaction = session.beginTransaction();
+					LocalDateEvent event3 = new LocalDateEvent();
+					event3.startDate = LocalDate.of( 1, 1, 3 );
+					session.persist( event3 );
 
-		assertEquals(2, session.get( UserEvents.class, userEvents.id ).getEvents().size());
-		assertEquals(1, session.get( ApplicationEvents.class, applicationEvents.id ).getEvents().size());
 
-		transaction.commit();
-		session.close();
+					session.persist( userEvents );
+					userEvents.getEvents().add( event1 );
+					session.flush();
+					userEvents.getEvents().add( event2 );
+					session.flush();
+
+					session.persist( applicationEvents );
+					applicationEvents.getEvents().add( event3 );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					assertThat( session.get( UserEvents.class, userEvents.id ).getEvents() ).hasSize( 2 );
+					assertThat( session.get( ApplicationEvents.class, applicationEvents.id ).getEvents() ).hasSize( 1 );
+				}
+		);
 	}
 
 	@Entity(name = "LDE")
@@ -100,8 +95,8 @@ public class InheritanceManyToManyForeignKeyTest extends BaseNonConfigCoreFuncti
 	@MappedSuperclass
 	public static abstract class AbstractEventsEntityModel {
 
-		@ManyToMany(fetch = FetchType.LAZY )
-		private List<LocalDateEvent> events = new ArrayList<>(  );
+		@ManyToMany(fetch = FetchType.LAZY)
+		private List<LocalDateEvent> events = new ArrayList<>();
 
 		public List<LocalDateEvent> getEvents() {
 			return events;
@@ -125,6 +120,5 @@ public class InheritanceManyToManyForeignKeyTest extends BaseNonConfigCoreFuncti
 		@Id
 		@GeneratedValue
 		private Long id;
-
 	}
 }

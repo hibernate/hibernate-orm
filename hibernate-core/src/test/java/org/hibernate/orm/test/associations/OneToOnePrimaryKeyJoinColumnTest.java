@@ -8,54 +8,50 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
-
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Vlad Mihalcea
  */
-public class OneToOnePrimaryKeyJoinColumnTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				PersonDetails.class
-		};
-	}
+@Jpa(
+		annotatedClasses = {
+				OneToOnePrimaryKeyJoinColumnTest.Person.class,
+				OneToOnePrimaryKeyJoinColumnTest.PersonDetails.class
+		}
+)
+public class OneToOnePrimaryKeyJoinColumnTest {
 
 	@Test
-	public void testLifecycle() {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
 		//tag::identifiers-derived-primarykeyjoincolumn-persist-example[]
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Person person = new Person("ABC-123");
-			person.setId(1L);
-			entityManager.persist(person);
+		scope.inTransaction( entityManager -> {
+			Person person = new Person( "ABC-123" );
+			person.setId( 1L );
+			entityManager.persist( person );
 
 			PersonDetails personDetails = new PersonDetails();
-			personDetails.setNickName("John Doe");
-			personDetails.setPerson(person);
+			personDetails.setNickName( "John Doe" );
+			personDetails.setPerson( person );
 
-			entityManager.persist(personDetails);
-		});
+			entityManager.persist( personDetails );
+		} );
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			PersonDetails personDetails = entityManager.find(PersonDetails.class, 1L);
+		scope.inTransaction( entityManager -> {
+			PersonDetails personDetails = entityManager.find( PersonDetails.class, 1L );
 
-			assertEquals("John Doe", personDetails.getNickName());
-		});
+			assertThat( personDetails.getNickName() ).isEqualTo( "John Doe" );
+		} );
 		//end::identifiers-derived-primarykeyjoincolumn-persist-example[]
 	}
 
 	//tag::identifiers-derived-primarykeyjoincolumn[]
 	@Entity(name = "Person")
-	public static class Person  {
+	public static class Person {
 
 		@Id
 		private Long id;
@@ -63,7 +59,8 @@ public class OneToOnePrimaryKeyJoinColumnTest extends BaseEntityManagerFunctiona
 		@NaturalId
 		private String registrationNumber;
 
-		public Person() {}
+		public Person() {
+		}
 
 		public Person(String registrationNumber) {
 			this.registrationNumber = registrationNumber;
@@ -83,11 +80,11 @@ public class OneToOnePrimaryKeyJoinColumnTest extends BaseEntityManagerFunctiona
 		public String getRegistrationNumber() {
 			return registrationNumber;
 		}
-	//tag::identifiers-derived-primarykeyjoincolumn[]
+		//tag::identifiers-derived-primarykeyjoincolumn[]
 	}
 
 	@Entity(name = "PersonDetails")
-	public static class PersonDetails  {
+	public static class PersonDetails {
 
 		@Id
 		private Long id;
@@ -126,7 +123,7 @@ public class OneToOnePrimaryKeyJoinColumnTest extends BaseEntityManagerFunctiona
 			return person;
 		}
 
-	//tag::identifiers-derived-primarykeyjoincolumn[]
+		//tag::identifiers-derived-primarykeyjoincolumn[]
 	}
 	//end::identifiers-derived-primarykeyjoincolumn[]
 

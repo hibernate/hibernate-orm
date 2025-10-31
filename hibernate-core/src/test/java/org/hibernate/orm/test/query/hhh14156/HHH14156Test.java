@@ -7,30 +7,33 @@ package org.hibernate.orm.test.query.hhh14156;
 import java.io.Serializable;
 import java.util.Objects;
 
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
 
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Nathan Xu
  * @author Christian Beikov
  */
 @JiraKey( value = "HHH-14156" )
-public class HHH14156Test extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { EntityWithCompositeId.class };
-	}
+@DomainModel(
+		annotatedClasses = {
+				HHH14156Test.EntityWithCompositeId.class
+		}
+)
+@SessionFactory
+public class HHH14156Test{
 
 	@Test
-	public void testNoExceptionThrown() {
-		inTransaction( session ->
+	public void testNoExceptionThrown(SessionFactoryScope scope) {
+		scope.inTransaction( session ->
 			session.createQuery(
 					"from EntityWithCompositeId e where e in (select e2 from EntityWithCompositeId e2)",
 					EntityWithCompositeId.class

@@ -4,11 +4,8 @@
  */
 package org.hibernate.orm.test.annotations.index.jpa;
 
-import java.util.Iterator;
-
-import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Bag;
@@ -21,119 +18,138 @@ import org.hibernate.mapping.Set;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import java.util.Iterator;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 /**
  * @author Strong Liu
  */
-public abstract class AbstractJPAIndexTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
-		super.configureMetadataBuilder( metadataBuilder );
-		metadataBuilder.applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
+@SessionFactory
+@ServiceRegistry(
+		settingProviders = {
+				@SettingProvider(settingName = AvailableSettings.DEFAULT_LIST_SEMANTICS,
+						provider = AbstractJPAIndexTest.ListSemanticProvider.class),
+				@SettingProvider(settingName = AvailableSettings.IMPLICIT_NAMING_STRATEGY,
+						provider = AbstractJPAIndexTest.ImplicitNameSettingProvider.class)}
+)
+public abstract class AbstractJPAIndexTest {
+
+	public static class ImplicitNameSettingProvider implements SettingProvider.Provider<ImplicitNamingStrategy> {
+		@Override
+		public ImplicitNamingStrategy getSetting() {
+			return ImplicitNamingStrategyJpaCompliantImpl.INSTANCE;
+		}
 	}
 
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
+	public static class ListSemanticProvider implements SettingProvider.Provider<CollectionClassification> {
+		@Override
+		public CollectionClassification getSetting() {
+			return CollectionClassification.BAG;
+		}
 	}
 
 	@Test
-	public void testTableIndex() {
-		PersistentClass entity = metadata().getEntityBinding( Car.class.getName() );
-		Iterator itr = entity.getTable().getUniqueKeys().values().iterator();
-		assertTrue( itr.hasNext() );
-		UniqueKey uk = (UniqueKey) itr.next();
-		assertFalse( itr.hasNext() );
-		assertTrue( StringHelper.isNotEmpty( uk.getName() ) );
-		assertEquals( 2, uk.getColumnSpan() );
-		Column column = (Column) uk.getColumns().get( 0 );
-		assertEquals( "brand", column.getName() );
-		column = (Column) uk.getColumns().get( 1 );
-		assertEquals( "producer", column.getName() );
-		assertSame( entity.getTable(), uk.getTable() );
+	public void testTableIndex(SessionFactoryScope scope) {
+		PersistentClass entity = scope.getMetadataImplementor().getEntityBinding( Car.class.getName() );
+		Iterator<UniqueKey> itr = entity.getTable().getUniqueKeys().values().iterator();
+		assertThat( itr.hasNext() ).isTrue();
+		UniqueKey uk = itr.next();
+		assertThat( itr.hasNext() ).isFalse();
+		assertThat( StringHelper.isNotEmpty( uk.getName() ) ).isTrue();
+		assertThat( uk.getColumnSpan() ).isEqualTo( 2 );
+		Column column = uk.getColumns().get( 0 );
+		assertThat( column.getName() ).isEqualTo( "brand" );
+		column = uk.getColumns().get( 1 );
+		assertThat( column.getName() ).isEqualTo( "producer" );
+		assertThat( uk.getTable() ).isSameAs( entity.getTable() );
 
 
-		itr = entity.getTable().getIndexes().values().iterator();
-		assertTrue( itr.hasNext() );
-		Index index = (Index)itr.next();
-		assertFalse( itr.hasNext() );
-		assertEquals( "Car_idx", index.getName() );
-		assertEquals( 1, index.getColumnSpan() );
+		Iterator<Index> indexItr = entity.getTable().getIndexes().values().iterator();
+		assertThat( indexItr.hasNext() ).isTrue();
+		Index index = indexItr.next();
+		assertThat( indexItr.hasNext() ).isFalse();
+		assertThat( index.getName() ).isEqualTo( "Car_idx" );
+		assertThat( index.getColumnSpan() ).isEqualTo( 1 );
 		column = index.getColumns().iterator().next();
-		assertEquals( "since", column.getName() );
-		assertSame( entity.getTable(), index.getTable() );
+		assertThat( column.getName() ).isEqualTo( "since" );
+		assertThat( index.getTable() ).isSameAs( entity.getTable() );
 	}
 
 	@Test
-	public void testSecondaryTableIndex(){
-		PersistentClass entity = metadata().getEntityBinding( Car.class.getName() );
+	public void testSecondaryTableIndex(SessionFactoryScope scope) {
+		PersistentClass entity = scope.getMetadataImplementor().getEntityBinding( Car.class.getName() );
 
 		Join join = entity.getJoins().get( 0 );
 		Iterator<Index> itr = join.getTable().getIndexes().values().iterator();
-		assertTrue( itr.hasNext() );
+		assertThat( itr.hasNext() ).isTrue();
 		Index index = itr.next();
-		assertFalse( itr.hasNext() );
-		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
-		assertEquals( 2, index.getColumnSpan() );
+		assertThat( itr.hasNext() ).isFalse();
+		assertThat( StringHelper.isNotEmpty( index.getName() ) )
+				.describedAs( "index name is not generated" )
+				.isTrue();
+		assertThat( index.getColumnSpan() ).isEqualTo( 2 );
 		Iterator<Column> columnIterator = index.getColumns().iterator();
 		Column column = columnIterator.next();
-		assertEquals( "dealer_name", column.getName() );
+		assertThat( column.getName() ).isEqualTo( "dealer_name" );
 		column = columnIterator.next();
-		assertEquals( "rate", column.getName() );
-		assertSame( join.getTable(), index.getTable() );
+		assertThat( column.getName() ).isEqualTo( "rate" );
+		assertThat( index.getTable() ).isSameAs( join.getTable() );
 
 	}
 
 	@Test
-	public void testCollectionTableIndex(){
-		PersistentClass entity = metadata().getEntityBinding( Car.class.getName() );
+	public void testCollectionTableIndex(SessionFactoryScope scope) {
+		PersistentClass entity = scope.getMetadataImplementor().getEntityBinding( Car.class.getName() );
 		Property property = entity.getProperty( "otherDealers" );
-		Set set = (Set)property.getValue();
+		Set set = (Set) property.getValue();
 		Table collectionTable = set.getCollectionTable();
 
 		Iterator<Index> itr = collectionTable.getIndexes().values().iterator();
-		assertTrue( itr.hasNext() );
+		assertThat( itr.hasNext() ).isTrue();
 		Index index = itr.next();
-		assertFalse( itr.hasNext() );
-		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
-		assertEquals( 1, index.getColumnSpan() );
+		assertThat( itr.hasNext() ).isFalse();
+		assertThat( StringHelper.isNotEmpty( index.getName() ) )
+				.describedAs( "index name is not generated" )
+				.isTrue();
+		assertThat( index.getColumnSpan() ).isEqualTo( 1 );
 		Iterator<Column> columnIterator = index.getColumns().iterator();
 		Column column = columnIterator.next();
-		assertEquals( "name", column.getName() );
-		assertSame( collectionTable, index.getTable() );
+		assertThat( column.getName() ).isEqualTo( "name" );
+		assertThat( index.getTable() ).isSameAs( collectionTable );
 
 	}
 
 	@Test
-	public void testJoinTableIndex(){
-		PersistentClass entity = metadata().getEntityBinding( Importer.class.getName() );
+	public void testJoinTableIndex(SessionFactoryScope scope) {
+		PersistentClass entity = scope.getMetadataImplementor().getEntityBinding( Importer.class.getName() );
 		Property property = entity.getProperty( "cars" );
-		Bag set = (Bag)property.getValue();
+		Bag set = (Bag) property.getValue();
 		Table collectionTable = set.getCollectionTable();
 
 		Iterator<Index> itr = collectionTable.getIndexes().values().iterator();
-		assertTrue( itr.hasNext() );
+		assertThat( itr.hasNext() ).isTrue();
 		Index index = itr.next();
-		assertFalse( itr.hasNext() );
-		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
-		assertEquals( 1, index.getColumnSpan() );
+		assertThat( itr.hasNext() ).isFalse();
+		assertThat( StringHelper.isNotEmpty( index.getName() ) )
+				.describedAs( "index name is not generated" )
+				.isTrue();
+		assertThat( index.getColumnSpan() ).isEqualTo( 1 );
 		Iterator<Column> columnIterator = index.getColumns().iterator();
 		Column column = columnIterator.next();
-		assertEquals( "importers_id", column.getName() );
-		assertSame( collectionTable, index.getTable() );
+		assertThat( column.getName() ).isEqualTo( "importers_id" );
+		assertThat( index.getTable() ).isSameAs( collectionTable );
 	}
 
 	@Test
-	public void testTableGeneratorIndex(){
+	public void testTableGeneratorIndex() {
 		//todo
 	}
 }

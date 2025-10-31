@@ -4,14 +4,6 @@
  */
 package org.hibernate.orm.test.service;
 
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
-
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.service.NullServiceException;
 import org.hibernate.service.Service;
@@ -20,30 +12,33 @@ import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Startable;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ServiceRegistryTest {
 	private ServiceRegistry registry;
 	private final static int NUMBER_OF_THREADS = 100;
 
-	@Before
+	@BeforeEach
 	public void init() {
 		registry = buildRegistry();
 	}
 
-	@After
+	@AfterEach
 	public void destroy() {
 		registry.close();
 	}
@@ -61,40 +56,37 @@ public class ServiceRegistryTest {
 				previousResult = result;
 			}
 			else {
-				assertTrue( "There are more than one instance of the service", result == previousResult );
+				assertThat( previousResult )
+						.describedAs( "There are more than one instance of the service" )
+						.isEqualTo( result );
 			}
-
 		}
 	}
 
 	@Test
 	@JiraKey(value = "HHH-11395")
 	public void testGetService() {
-		assertThat(
-				registry.getService( SlowInitializationService.class ),
-				instanceOf( SlowInitializationService.class )
-		);
+		assertThat( registry.getService( SlowInitializationService.class ) )
+				.isInstanceOf( SlowInitializationService.class );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-11395")
 	public void testGetServiceReturnsNullWhenTheServiceInitiatorInitiateServiceReturnsNull() {
-		assertNull( registry.getService( FakeService.class ) );
+		assertThat( registry.getService( FakeService.class ) ).isNull();
 	}
 
 	@Test
 	@JiraKey(value = "HHH-11395")
 	public void testRequireService() {
-		assertThat(
-				registry.requireService( SlowInitializationService.class ),
-				instanceOf( SlowInitializationService.class )
-		);
+		assertThat( registry.requireService( SlowInitializationService.class ) )
+				.isInstanceOf( SlowInitializationService.class );
 	}
 
-	@Test(expected = NullServiceException.class)
+	@Test
 	@JiraKey(value = "HHH-11395")
 	public void testRequireServiceThrowsAnExceptionWhenTheServiceInitiatorInitiateServiceReturnsNull() {
-		assertNull( registry.requireService( FakeService.class ) );
+		assertThrows( NullServiceException.class, () -> registry.requireService( FakeService.class ) );
 	}
 
 	private ServiceRegistry buildRegistry() {
@@ -103,8 +95,7 @@ public class ServiceRegistryTest {
 				.build();
 	}
 
-	private FutureTask<SlowInitializationService>[] execute()
-			throws InterruptedException, ExecutionException {
+	private FutureTask<SlowInitializationService>[] execute() {
 		FutureTask<SlowInitializationService>[] results = new FutureTask[NUMBER_OF_THREADS];
 		ExecutorService executor = Executors.newFixedThreadPool( NUMBER_OF_THREADS );
 		for ( int i = 0; i < NUMBER_OF_THREADS; i++ ) {
@@ -114,7 +105,7 @@ public class ServiceRegistryTest {
 		return results;
 	}
 
-	public class ServiceCallable implements Callable<SlowInitializationService> {
+	public static class ServiceCallable implements Callable<SlowInitializationService> {
 		private final ServiceRegistry registry;
 
 		public ServiceCallable(ServiceRegistry registry) {
@@ -124,14 +115,21 @@ public class ServiceRegistryTest {
 		@Override
 		public SlowInitializationService call() throws Exception {
 			final SlowInitializationService service = registry.getService( SlowInitializationService.class );
-			assertTrue( "The service is not initialized", service.isInitialized() );
-			assertTrue( "The service is not configured", service.isConfigured() );
-			assertTrue( "The service is not started", service.isStarted() );
+			assertThat( service.isInitialized() )
+					.describedAs( "The service is not initialized" )
+					.isTrue();
+			assertThat( service.isConfigured() )
+					.describedAs( "The service is not configured" )
+					.isTrue();
+			assertThat( service.isStarted() )
+					.describedAs( "The service is not started" )
+					.isTrue();
 			return service;
 		}
 	}
 
-	public class SlowInitializationService implements ServiceRegistryAwareService, Configurable, Startable, Service {
+	public static class SlowInitializationService
+			implements ServiceRegistryAwareService, Configurable, Startable, Service {
 		private final static int TIME_TO_SLEEP = 100;
 		private boolean initialized;
 		private boolean configured;
@@ -191,7 +189,7 @@ public class ServiceRegistryTest {
 		}
 	}
 
-	public class SlowServiceInitiator implements StandardServiceInitiator<SlowInitializationService> {
+	public static class SlowServiceInitiator implements StandardServiceInitiator<SlowInitializationService> {
 
 		@Override
 		public Class<SlowInitializationService> getServiceInitiated() {
@@ -204,7 +202,7 @@ public class ServiceRegistryTest {
 		}
 	}
 
-	public class NullServiceInitiator implements StandardServiceInitiator<FakeService> {
+	public static class NullServiceInitiator implements StandardServiceInitiator<FakeService> {
 
 		@Override
 		public Class<FakeService> getServiceInitiated() {
@@ -217,7 +215,7 @@ public class ServiceRegistryTest {
 		}
 	}
 
-	public class FakeService implements ServiceRegistryAwareService, Configurable, Startable, Service {
+	public static class FakeService implements ServiceRegistryAwareService, Configurable, Startable, Service {
 
 		@Override
 		public void start() {

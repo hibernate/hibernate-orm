@@ -4,19 +4,17 @@
  */
 package org.hibernate.orm.test.namingstrategy.complete;
 
-import java.util.Iterator;
-
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Selectable;
 
+import java.util.Iterator;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole
@@ -29,39 +27,39 @@ public class LegacyJpaNamingWithAnnotationBindingTests extends BaseAnnotationBin
 
 	@Override
 	protected void validateCustomerPrimaryTableName(String name) {
-		assertEquals( "CuStOmEr", name );
+		assertThat( name, equalTo( "CuStOmEr" ) );
 	}
 
 	@Override
 	protected void validateCustomerPrimaryKeyColumn(Column column) {
-		assertEquals( "id", column.getQuotedName() );
+		assertThat( column.getQuotedName(), equalTo( "id" ) );
 	}
 
 	@Override
 	protected void validateCustomerVersionColumn(Column column) {
-		assertEquals( "version", column.getQuotedName() );
+		assertThat( column.getQuotedName(), equalTo( "version" ) );
 	}
 
 	@Override
 	protected void validateCustomerNameColumn(Column column) {
-		assertEquals( "name", column.getQuotedName() );
+		assertThat( column.getQuotedName(), equalTo( "name" ) );
 	}
 
 	@Override
 	protected void validateCustomerHqAddressComponent(Component component) {
-		assertEquals( 3, component.getColumnSpan() );
+		assertThat( component.getColumnSpan(), equalTo( 3 ) );
 		Iterator<Selectable> selectables = component.getSelectables().iterator();
 		int pass = 1;
 		while ( selectables.hasNext() ) {
 			final Column column = assertTyping( Column.class, selectables.next() );
 			if ( pass == 1 ) {
-				assertEquals( "line1", column.getQuotedName() );
+				assertThat( column.getQuotedName(), equalTo( "line1" ) );
 			}
 			else if ( pass == 2 ) {
-				assertEquals( "line2", column.getQuotedName() );
+				assertThat( column.getQuotedName(), equalTo( "line2" ) );
 			}
 			else if ( pass == 3 ) {
-				assertEquals( "zipCode_id", column.getQuotedName() );
+				assertThat( column.getQuotedName(), equalTo( "zipCode_id" ) );
 			}
 			pass++;
 		}
@@ -69,103 +67,103 @@ public class LegacyJpaNamingWithAnnotationBindingTests extends BaseAnnotationBin
 
 	@Override
 	protected void validateOrderPrimaryTableName(String name) {
-		assertThat( name, anyOf( equalTo( "Order"), equalTo( "`Order`") ) );
+		assertThat( name, anyOf( equalTo( "Order" ), equalTo( "`Order`" ) ) );
 	}
 
 	@Override
 	protected void validateOrderPrimaryKeyColumn(Column column) {
-		assertEquals( "id", column.getQuotedName() );
+		assertThat( column.getQuotedName(), equalTo( "id" ) );
 	}
 
 	@Override
 	protected void validateOrderReferenceCodeColumn(Column column) {
-		assertEquals( "referenceCode", column.getQuotedName() );
+		assertThat( column.getQuotedName(), equalTo( "referenceCode" ) );
 	}
 
 	@Override
 	protected void validateOrderFulfilledColumn(Column column) {
-		assertEquals( "fulfilled", column.getQuotedName() );
+		assertThat( column.getQuotedName(), equalTo( "fulfilled" ) );
 	}
 
 	@Override
 	protected void validateOrderPlacedColumn(Column column) {
-		assertEquals( "placed", column.getQuotedName() );
+		assertThat( column.getQuotedName(), equalTo( "placed" ) );
 	}
 
 	@Override
 	protected void validateOrderCustomerColumn(Column column) {
-		assertEquals( "customer_id", column.getQuotedName() );
+		assertThat( column.getQuotedName(), equalTo( "customer_id" ) );
 	}
 
 	@Override
 	protected void validateZipCodePrimaryTableName(String name) {
-		assertEquals( "ZipCode", name );
+		assertThat( name, equalTo( "ZipCode" ) );
 	}
 
 	@Override
 	protected void validateZipCodePrimaryKeyColumn(Column column) {
-		assertEquals( "id", column.getQuotedName() );
+		assertThat( column.getQuotedName(), equalTo( "id" ) );
 	}
 
 	@Override
 	protected void validateZipCodeCodeColumn(Column column) {
-		assertEquals( "code", column.getQuotedName() );
+		assertThat( column.getQuotedName(), equalTo( "code" ) );
 	}
 
 	@Override
 	protected void validateZipCodeCityColumn(Column column) {
-		assertEquals( "city", column.getQuotedName() );
+		assertThat( column.getQuotedName(), equalTo( "city" ) );
 	}
 
 	@Override
 	protected void validateZipCodeStateColumn(Column column) {
-		assertEquals( "state", column.getQuotedName() );
+		assertThat( column.getQuotedName(), equalTo( "state" ) );
 	}
 
 	@Override
 	protected void validateCustomerRegisteredTrademarksTableName(String name) {
 		// CuStOmEr is the Customer entity primary table name (implicitly via jpa entity name)
-		assertEquals( "CuStOmEr_registeredTrademarks", name );
+		assertThat( name, equalTo( "CuStOmEr_registeredTrademarks" ) );
 	}
 
 	@Override
 	protected void validateCustomerRegisteredTrademarksKeyColumn(Column column) {
 		// CuStOmEr is the Customer entity primary table name (implicitly via jpa entity name)
-		assertEquals( "CuStOmEr_id", column.getQuotedName() );
+		assertThat( column.getQuotedName(), equalTo( "CuStOmEr_id" ) );
 	}
 
 	@Override
 	protected void validateCustomerRegisteredTrademarksElementColumn(Column column) {
-		assertEquals( "registeredTrademarks", column.getQuotedName() );
+		assertThat( column.getQuotedName(), equalTo( "registeredTrademarks" ) );
 	}
 
 	@Override
 	protected void validateCustomerAddressesTableName(String name) {
 		// CuStOmEr is the Customer entity primary table name (implicitly via jpa entity name)
-		assertEquals( "CuStOmEr_addresses", name );
+		assertThat( name, equalTo( "CuStOmEr_addresses" ) );
 	}
 
 	@Override
 	protected void validateCustomerAddressesKeyColumn(Column column) {
 		// CuStOmEr is the Customer entity primary table name (implicitly via jpa entity name)
-		assertEquals( "CuStOmEr_id", column.getQuotedName() );
+		assertThat( column.getQuotedName(), equalTo( "CuStOmEr_id" ) );
 	}
 
 	@Override
 	protected void validateCustomerAddressesElementComponent(Component component) {
-		assertEquals( 3, component.getColumnSpan() );
+		assertThat( component.getColumnSpan(), equalTo( 3 ) );
 		Iterator<Selectable> selectables = component.getSelectables().iterator();
 		int pass = 1;
 		while ( selectables.hasNext() ) {
 			final Column column = assertTyping( Column.class, selectables.next() );
 			if ( pass == 1 ) {
-				assertEquals( "line1", column.getQuotedName() );
+				assertThat( column.getQuotedName(), equalTo( "line1" ) );
 			}
 			else if ( pass == 2 ) {
-				assertEquals( "line2", column.getQuotedName() );
+				assertThat( column.getQuotedName(), equalTo( "line2" ) );
 			}
 			else if ( pass == 3 ) {
-				assertEquals( "zipCode_id", column.getQuotedName() );
+				assertThat( column.getQuotedName(), equalTo( "zipCode_id" ) );
 			}
 			pass++;
 		}
@@ -173,32 +171,32 @@ public class LegacyJpaNamingWithAnnotationBindingTests extends BaseAnnotationBin
 
 	@Override
 	protected void validateCustomerOrdersTableName(String name) {
-		assertThat( name, anyOf( equalTo( "Order"), equalTo( "`Order`") ) );
+		assertThat( name, anyOf( equalTo( "Order" ), equalTo( "`Order`" ) ) );
 	}
 
 	@Override
 	protected void validateCustomerOrdersKeyColumn(Column column) {
-		assertEquals( "customer_id", column.getQuotedName() );
+		assertThat( column.getQuotedName(), equalTo( "customer_id" ) );
 	}
 
 	@Override
 	protected void validateCustomerOrdersElementColumn(Column column) {
-		assertEquals( "id", column.getQuotedName() );
+		assertThat( column.getQuotedName(), equalTo( "id" ) );
 	}
 
 	@Override
 	protected void validateCustomerIndustriesTableName(String name) {
 		// CuStOmEr is the Customer entity primary table name (implicitly via jpa entity name)
-		assertEquals( "CuStOmEr_InDuStRy", name );
+		assertThat( name, equalTo( "CuStOmEr_InDuStRy" ) );
 	}
 
 	@Override
 	protected void validateCustomerIndustriesKeyColumn(Column column) {
-		assertEquals( "CuStOmEr_id", column.getQuotedName() );
+		assertThat( column.getQuotedName(), equalTo( "CuStOmEr_id" ) );
 	}
 
 	@Override
 	protected void validateCustomerIndustriesElementColumn(Column column) {
-		assertEquals( "industries_id", column.getQuotedName() );
+		assertThat( column.getQuotedName(), equalTo( "industries_id" ) );
 	}
 }

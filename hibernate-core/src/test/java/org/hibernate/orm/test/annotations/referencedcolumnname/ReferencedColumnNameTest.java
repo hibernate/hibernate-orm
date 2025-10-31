@@ -4,46 +4,78 @@
  */
 package org.hibernate.orm.test.annotations.referencedcolumnname;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
-import java.math.BigDecimal;
-import java.util.Iterator;
-
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import java.math.BigDecimal;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 /**
  * @author Emmanuel Bernard
  */
-public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				House.class,
+				Postman.class,
+				Bag.class,
+				Rambler.class,
+				Luggage.class,
+				Clothes.class,
+				Inhabitant.class,
+				Item.class,
+				ItemCost.class,
+				Vendor.class,
+				WarehouseItem.class,
+				Place.class,
+				HousePlaces.class
+		}
+)
+@SessionFactory
+@ServiceRegistry(
+		settingProviders = @SettingProvider(
+				settingName = AvailableSettings.IMPLICIT_NAMING_STRATEGY,
+				provider = ReferencedColumnNameTest.NamingStrategyProvider.class
+		)
+)
+public class ReferencedColumnNameTest {
+	public static class NamingStrategyProvider implements SettingProvider.Provider<ImplicitNamingStrategy> {
+		@Override
+		public ImplicitNamingStrategy getSetting() {
+			return ImplicitNamingStrategyLegacyJpaImpl.INSTANCE;
+		}
+	}
+
 	@Test
-	public void testManyToOne() {
+	public void testManyToOne(SessionFactoryScope scope) {
 		Postman postman = new Postman( "Bob", "A01" );
 		House house = new House();
 		house.setPostman( postman );
 		house.setAddress( "Rue des pres" );
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					s.persist( postman );
 					s.persist( house );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
-					House h = s.get( House.class, house.getId() );
-					assertNotNull( h.getPostman() );
-					assertEquals( "Bob", h.getPostman().getName() );
+					House h = s.find( House.class, house.getId() );
+					assertThat( h.getPostman() ).isNotNull();
+					assertThat( h.getPostman().getName() ).isEqualTo( "Bob" );
 					Postman pm = h.getPostman();
 					s.remove( h );
 					s.remove( pm );
@@ -52,8 +84,8 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testOneToMany() {
-		inTransaction(
+	public void testOneToMany(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					Rambler rambler = new Rambler( "Emmanuel" );
 					Bag bag = new Bag( "0001", rambler );
@@ -62,16 +94,18 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
-					Bag bag = (Bag) s.createQuery( "select b from Bag b left join fetch b.owner" ).uniqueResult();
-					assertNotNull( bag );
-					assertNotNull( bag.getOwner() );
+					Bag bag = s.createQuery( "select b from Bag b left join fetch b.owner", Bag.class )
+							.uniqueResult();
+					assertThat( bag ).isNotNull();
+					assertThat( bag.getOwner() ).isNotNull();
 
-					Rambler rambler = (Rambler) s.createQuery( "select r from Rambler r left join fetch r.bags" ).uniqueResult();
-					assertNotNull( rambler );
-					assertNotNull( rambler.getBags() );
-					assertEquals( 1, rambler.getBags().size() );
+					Rambler rambler = s.createQuery( "select r from Rambler r left join fetch r.bags", Rambler.class )
+							.uniqueResult();
+					assertThat( rambler ).isNotNull();
+					assertThat( rambler.getBags() ).isNotNull();
+					assertThat( rambler.getBags().size() ).isEqualTo( 1 );
 					s.remove( rambler.getBags().iterator().next() );
 					s.remove( rambler );
 				}
@@ -79,8 +113,8 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testUnidirectionalOneToMany() {
-		inTransaction(
+	public void testUnidirectionalOneToMany(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					Clothes clothes = new Clothes( "underwear", "interesting" );
 					Luggage luggage = new Luggage( "Emmanuel", "Cabin Luggage" );
@@ -89,13 +123,13 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
-					Luggage luggage = (Luggage) s.createQuery( "select l from Luggage l left join fetch l.hasInside" )
+					Luggage luggage = s.createQuery( "select l from Luggage l left join fetch l.hasInside", Luggage.class )
 							.uniqueResult();
-					assertNotNull( luggage );
-					assertNotNull( luggage.getHasInside() );
-					assertEquals( 1, luggage.getHasInside().size() );
+					assertThat( luggage ).isNotNull();
+					assertThat( luggage.getHasInside() ).isNotNull();
+					assertThat( luggage.getHasInside().size() ).isEqualTo( 1 );
 
 					s.remove( luggage.getHasInside().iterator().next() );
 					s.remove( luggage );
@@ -105,60 +139,58 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testManyToMany(){
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
+	public void testManyToMany(SessionFactoryScope scope) {
+		House wh = new House();
+		Inhabitant b = new Inhabitant();
+		scope.inTransaction(
+				session -> {
+					wh.setAddress( "1600 Pennsylvania Avenue, Washington" );
+					b.setName( "Bill Clinton" );
+					Inhabitant george = new Inhabitant();
+					george.setName( "George W Bush" );
+					session.persist( george );
+					session.persist( b );
+					wh.getHasInhabitants().add( b );
+					wh.getHasInhabitants().add( george );
+					//bill.getLivesIn().add( whiteHouse );
+					//george.getLivesIn().add( whiteHouse );
 
-		House whiteHouse = new House();
-		whiteHouse.setAddress( "1600 Pennsylvania Avenue, Washington" );
-		Inhabitant bill = new Inhabitant();
-		bill.setName( "Bill Clinton" );
-		Inhabitant george = new Inhabitant();
-		george.setName( "George W Bush" );
-		s.persist( george );
-		s.persist( bill );
-		whiteHouse.getHasInhabitants().add( bill );
-		whiteHouse.getHasInhabitants().add( george );
-		//bill.getLivesIn().add( whiteHouse );
-		//george.getLivesIn().add( whiteHouse );
+					session.persist( wh );
+				}
+		);
 
-		s.persist( whiteHouse );
-		tx.commit();
-		s = openSession();
-		tx = s.beginTransaction();
+		scope.inTransaction(
+				session -> {
+					House whiteHouse = session.find( House.class, wh.getId() );
+					assertThat( whiteHouse ).isNotNull();
+					assertThat( whiteHouse.getHasInhabitants().size() ).isEqualTo( 2 );
+				}
+		);
 
-		whiteHouse = s.get( House.class, whiteHouse.getId() );
-		assertNotNull( whiteHouse );
-		assertEquals( 2, whiteHouse.getHasInhabitants().size() );
+		scope.inTransaction(
+				session -> {
+					Inhabitant bill = session.find( Inhabitant.class, b.getId() );
+					assertThat( bill ).isNotNull();
+					assertThat( bill.getLivesIn().size() ).isEqualTo( 1 );
+					assertThat( bill.getLivesIn().iterator().next().getAddress() ).isEqualTo( wh.getAddress() );
 
-		tx.commit();
-		s.clear();
-		tx = s.beginTransaction();
-		bill = s.get( Inhabitant.class, bill.getId() );
-		assertNotNull( bill );
-		assertEquals( 1, bill.getLivesIn().size() );
-		assertEquals( whiteHouse.getAddress(), bill.getLivesIn().iterator().next().getAddress() );
-
-		whiteHouse = bill.getLivesIn().iterator().next();
-		s.remove( whiteHouse );
-		Iterator it = whiteHouse.getHasInhabitants().iterator();
-		while ( it.hasNext() ) {
-			s.remove( it.next() );
-		}
-		tx.commit();
-		s.close();
+					House whiteHouse = bill.getLivesIn().iterator().next();
+					session.remove( whiteHouse );
+					for ( Inhabitant inhabitant : whiteHouse.getHasInhabitants() ) {
+						session.remove( inhabitant );
+					}
+				}
+		);
 	}
 
 	@Test
-	public void testManyToOneReferenceManyToOne() {
+	public void testManyToOneReferenceManyToOne(SessionFactoryScope scope) {
 		Item item = new Item();
 		item.setId( 1 );
 		Vendor vendor = new Vendor();
 		vendor.setId( 1 );
 		ItemCost cost = new ItemCost();
-		cost.setCost( new BigDecimal(1) );
+		cost.setCost( new BigDecimal( 1 ) );
 		cost.setId( 1 );
 		cost.setItem( item );
 		cost.setVendor( vendor );
@@ -166,9 +198,9 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 		wItem.setDefaultCost( cost );
 		wItem.setId( 1 );
 		wItem.setItem( item );
-		wItem.setQtyInStock( new BigDecimal(1) );
+		wItem.setQtyInStock( new BigDecimal( 1 ) );
 		wItem.setVendor( vendor );
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					s.persist( item );
 					s.persist( vendor );
@@ -176,14 +208,14 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 					s.persist( wItem );
 					s.flush();
 					s.clear();
-					WarehouseItem warehouseItem = s.get(WarehouseItem.class, wItem.getId() );
-					assertNotNull( warehouseItem.getDefaultCost().getItem() );
+					WarehouseItem warehouseItem = s.find( WarehouseItem.class, wItem.getId() );
+					assertThat( warehouseItem.getDefaultCost().getItem() ).isNotNull();
 				}
 		);
 	}
 
 	@Test
-	public void testManyToOneInsideComponentReferencedColumn() {
+	public void testManyToOneInsideComponentReferencedColumn(SessionFactoryScope scope) {
 		HousePlaces house = new HousePlaces();
 		house.places = new Places();
 
@@ -202,25 +234,27 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 		house.neighbourPlaces.kitchen = new Place();
 		house.neighbourPlaces.kitchen.name = "His Kitchen";
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					s.persist( house );
 					s.flush();
 
-					HousePlaces get = s.get( HousePlaces.class, house.id );
-					assertEquals( house.id, get.id );
+					HousePlaces housePlaces = s.find( HousePlaces.class, house.id );
+					assertThat( housePlaces.id ).isEqualTo( house.id );
 
-					HousePlaces uniqueResult = (HousePlaces) s.createQuery( "from HousePlaces h where h.places.livingRoom.name='First'" )
+					HousePlaces uniqueResult = s.createQuery(
+									"from HousePlaces h where h.places.livingRoom.name='First'", HousePlaces.class )
 							.uniqueResult();
-					assertNotNull( uniqueResult );
-					assertEquals( uniqueResult.places.livingRoom.name, "First" );
-					assertEquals( uniqueResult.places.livingRoom.owner, "mine" );
+					assertThat( uniqueResult ).isNotNull();
+					assertThat( uniqueResult.places.livingRoom.name ).isEqualTo( "First" );
+					assertThat( uniqueResult.places.livingRoom.owner ).isEqualTo( "mine" );
 
-					uniqueResult = (HousePlaces) s.createQuery( "from HousePlaces h where h.places.livingRoom.owner=:owner" )
+					uniqueResult = s.createQuery(
+									"from HousePlaces h where h.places.livingRoom.owner=:owner", HousePlaces.class )
 							.setParameter( "owner", "mine" ).uniqueResult();
-					assertNotNull( uniqueResult );
-					assertEquals( uniqueResult.places.livingRoom.name, "First" );
-					assertEquals( uniqueResult.places.livingRoom.owner, "mine" );
+					assertThat( uniqueResult ).isNotNull();
+					assertThat( uniqueResult.places.livingRoom.name ).isEqualTo( "First" );
+					assertThat( uniqueResult.places.livingRoom.owner ).isEqualTo( "mine" );
 
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					CriteriaQuery<HousePlaces> criteria = criteriaBuilder.createQuery( HousePlaces.class );
@@ -228,30 +262,32 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 					Join<Object, Object> join = root.join( "places" ).join( "livingRoom" );
 					criteria.where( criteriaBuilder.equal( join.get( "owner" ), "mine" ) );
 
-					assertNotNull(s.createQuery( criteria ).uniqueResult());
+					assertThat( s.createQuery( criteria ).uniqueResult() ).isNotNull();
 
 //					assertNotNull( s.createCriteria( HousePlaces.class ).add( Restrictions.eq( "places.livingRoom.owner", "mine" ) )
 //										   .uniqueResult() );
 
 					// override
-					uniqueResult = (HousePlaces) s.createQuery( "from HousePlaces h where h.neighbourPlaces.livingRoom.owner='his'" )
+					uniqueResult = s.createQuery(
+									"from HousePlaces h where h.neighbourPlaces.livingRoom.owner='his'", HousePlaces.class )
 							.uniqueResult();
-					assertNotNull( uniqueResult );
-					assertEquals( uniqueResult.neighbourPlaces.livingRoom.name, "Neighbour" );
-					assertEquals( uniqueResult.neighbourPlaces.livingRoom.owner, "his" );
+					assertThat( uniqueResult ).isNotNull();
+					assertThat( uniqueResult.neighbourPlaces.livingRoom.name ).isEqualTo( "Neighbour" );
+					assertThat( uniqueResult.neighbourPlaces.livingRoom.owner ).isEqualTo( "his" );
 
-					uniqueResult = (HousePlaces) s.createQuery( "from HousePlaces h where h.neighbourPlaces.livingRoom.name=:name" )
+					uniqueResult = s.createQuery(
+									"from HousePlaces h where h.neighbourPlaces.livingRoom.name=:name", HousePlaces.class )
 							.setParameter( "name", "Neighbour" ).uniqueResult();
-					assertNotNull( uniqueResult );
-					assertEquals( uniqueResult.neighbourPlaces.livingRoom.name, "Neighbour" );
-					assertEquals( uniqueResult.neighbourPlaces.livingRoom.owner, "his" );
+					assertThat( uniqueResult ).isNotNull();
+					assertThat( uniqueResult.neighbourPlaces.livingRoom.name ).isEqualTo( "Neighbour" );
+					assertThat( uniqueResult.neighbourPlaces.livingRoom.owner ).isEqualTo( "his" );
 
 					criteria = criteriaBuilder.createQuery( HousePlaces.class );
 					root = criteria.from( HousePlaces.class );
 					join = root.join( "neighbourPlaces" ).join( "livingRoom" );
 					criteria.where( criteriaBuilder.equal( join.get( "owner" ), "his" ) );
 
-					assertNotNull(s.createQuery( criteria ).uniqueResult());
+					assertThat( s.createQuery( criteria ).uniqueResult() ).isNotNull();
 
 //					assertNotNull( s.createCriteria( HousePlaces.class )
 //										   .add( Restrictions.eq( "neighbourPlaces.livingRoom.owner", "his" ) ).uniqueResult() );
@@ -261,28 +297,4 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 		);
 	}
 
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.setImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
-				House.class,
-				Postman.class,
-				Bag.class,
-				Rambler.class,
-				Luggage.class,
-				Clothes.class,
-				Inhabitant.class,
-				Item.class,
-				ItemCost.class,
-				Vendor.class,
-				WarehouseItem.class,
-				Place.class,
-				HousePlaces.class
-		};
-	}
 }

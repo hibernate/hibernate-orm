@@ -4,25 +4,27 @@
  */
 package org.hibernate.orm.test.annotations.onetomany;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Nulls;
 import jakarta.persistence.criteria.Root;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.H2Dialect;
-
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 /**
  * @author Lukasz Antoniak
@@ -30,20 +32,32 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 @JiraKey(value = "HHH-465")
 @RequiresDialect(value = H2Dialect.class,
 		comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression.")
-public class DefaultNullOrderingTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.DEFAULT_NULL_ORDERING, Nulls.LAST );
-	}
+@DomainModel(
+		annotatedClasses = {
+				Monkey.class,
+				Troop.class,
+				Soldier.class
+		}
+)
+@SessionFactory
+@ServiceRegistry(
+		settingProviders = @SettingProvider(
+				settingName = AvailableSettings.DEFAULT_NULL_ORDERING,
+				provider = DefaultNullOrderingTest.NullOrderingProvider.class)
+)
+public class DefaultNullOrderingTest {
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Monkey.class, Troop.class, Soldier.class };
+	public static class NullOrderingProvider implements SettingProvider.Provider<Nulls> {
+
+		@Override
+		public Nulls getSetting() {
+			return Nulls.LAST;
+		}
 	}
 
 	@Test
-	public void testHqlDefaultNullOrdering() {
-		inSession( session -> {
+	public void testHqlDefaultNullOrdering(SessionFactoryScope scope) {
+		scope.inSession( session -> {
 // Populating database with test data.
 			try {
 				session.getTransaction().begin();
@@ -56,9 +70,9 @@ public class DefaultNullOrderingTest extends BaseCoreFunctionalTestCase {
 				session.getTransaction().commit();
 
 				session.getTransaction().begin();
-				List<Zoo> orderedResults = (List<Zoo>) session.createQuery( "from Monkey m order by m.name" )
+				List<Monkey> orderedResults = session.createQuery( "from Monkey m order by m.name", Monkey.class )
 						.list(); // Should order by NULLS LAST.
-				Assert.assertEquals( Arrays.asList( monkey2, monkey1 ), orderedResults );
+				assertThat( orderedResults ).isEqualTo( Arrays.asList( monkey2, monkey1 ) );
 				session.getTransaction().commit();
 
 				session.clear();
@@ -69,18 +83,17 @@ public class DefaultNullOrderingTest extends BaseCoreFunctionalTestCase {
 				session.remove( monkey2 );
 				session.getTransaction().commit();
 			}
-			catch (Exception e) {
+			finally {
 				if ( session.getTransaction().isActive() ) {
 					session.getTransaction().rollback();
 				}
-				throw e;
 			}
 		} );
 	}
 
 	@Test
-	public void testAnnotationsDefaultNullOrdering() {
-		inSession(
+	public void testAnnotationsDefaultNullOrdering(SessionFactoryScope scope) {
+		scope.inSession(
 				session -> {
 					try {
 						// Populating database with test data.
@@ -99,10 +112,10 @@ public class DefaultNullOrderingTest extends BaseCoreFunctionalTestCase {
 						session.clear();
 
 						session.getTransaction().begin();
-						troop = (Troop) session.get( Troop.class, troop.getId() );
+						troop = session.find( Troop.class, troop.getId() );
 						Iterator<Soldier> iterator = troop.getSoldiers().iterator(); // Should order by NULLS LAST.
-						Assert.assertEquals( ranger.getName(), iterator.next().getName() );
-						Assert.assertNull( iterator.next().getName() );
+						assertThat( iterator.next().getName() ).isEqualTo( ranger.getName() );
+						assertThat( iterator.next().getName() ).isNull();
 						session.getTransaction().commit();
 
 						session.clear();
@@ -112,21 +125,20 @@ public class DefaultNullOrderingTest extends BaseCoreFunctionalTestCase {
 						session.remove( troop );
 						session.getTransaction().commit();
 					}
-					catch (Exception e) {
+					finally {
 						if ( session.getTransaction().isActive() ) {
 							session.getTransaction().rollback();
 						}
-						throw e;
 					}
 				}
 		);
 	}
 
 	@Test
-	public void testCriteriaDefaultNullOrdering() {
-		inSession(
+	public void testCriteriaDefaultNullOrdering(SessionFactoryScope scope) {
+		scope.inSession(
 				session -> {
-					try{
+					try {
 						// Populating database with test data.
 						session.getTransaction().begin();
 						Monkey monkey1 = new Monkey();
@@ -143,7 +155,8 @@ public class DefaultNullOrderingTest extends BaseCoreFunctionalTestCase {
 						Root<Monkey> root = criteria.from( Monkey.class );
 						criteria.orderBy( criteriaBuilder.asc( root.get( "name" ) ) );
 
-						Assert.assertEquals( Arrays.asList( monkey2, monkey1 ), session.createQuery( criteria ).list() );
+						assertThat( session.createQuery( criteria ).list() )
+								.isEqualTo( Arrays.asList( monkey2, monkey1 ) );
 
 //						Criteria criteria = session.createCriteria( Monkey.class );
 //						criteria.addOrder( org.hibernate.criterion.Order.asc( "name" ) ); // Should order by NULLS LAST.
@@ -158,11 +171,10 @@ public class DefaultNullOrderingTest extends BaseCoreFunctionalTestCase {
 						session.remove( monkey2 );
 						session.getTransaction().commit();
 					}
-					catch (Exception e) {
+					finally {
 						if ( session.getTransaction().isActive() ) {
 							session.getTransaction().rollback();
 						}
-						throw e;
 					}
 				}
 		);

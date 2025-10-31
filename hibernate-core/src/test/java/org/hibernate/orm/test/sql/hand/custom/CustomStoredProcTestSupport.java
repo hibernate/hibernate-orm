@@ -4,111 +4,92 @@
  */
 package org.hibernate.orm.test.sql.hand.custom;
 
-import java.sql.SQLException;
-import java.util.List;
-
-import org.junit.Test;
-
-import org.hibernate.HibernateException;
-import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.orm.test.sql.hand.Employment;
 import org.hibernate.orm.test.sql.hand.Organization;
 import org.hibernate.orm.test.sql.hand.Person;
+import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
+import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 
 /**
  * Abstract test case defining tests of stored procedure support.
  *
  * @author Gail Badner
  */
-@SuppressWarnings("unused")
 public abstract class CustomStoredProcTestSupport extends CustomSQLTestSupport {
 
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
-	}
-
 	@Test
-	public void testScalarStoredProcedure() throws HibernateException, SQLException {
-		Session s = openSession();
-//		Query namedQuery = s.getNamedQuery( "simpleScalar" );
-		ProcedureCall namedQuery = s.createNamedStoredProcedureQuery( "simpleScalar" );
-		namedQuery.setParameter( "p_number", 43 );
-		List list = namedQuery.getResultList();
-		Object o[] = ( Object[] ) list.get( 0 );
-		assertEquals( o[0], "getAll" );
-		assertEquals( o[1], Long.valueOf( 43 ) );
-		s.close();
-	}
-
-	@Test
-	public void testParameterHandling() throws HibernateException, SQLException {
-		Session s = openSession();
-
-//		Query namedQuery = s.getNamedQuery( "paramhandling" );
-		ProcedureCall namedQuery = s.createNamedStoredProcedureQuery( "paramhandling" );
-		namedQuery.setParameter( 1, 10 );
-		namedQuery.setParameter( 2, 20 );
-		List list = namedQuery.getResultList();
-		Object[] o = ( Object[] ) list.get( 0 );
-		assertEquals( o[0], Long.valueOf( 10 ) );
-		assertEquals( o[1], Long.valueOf( 20 ) );
-		s.close();
-	}
-
-	@Test
-	public void testMixedParameterHandling() throws HibernateException, SQLException {
-		inTransaction(
+	public void testScalarStoredProcedure(SessionFactoryScope scope) {
+		scope.inSession(
 				session -> {
-					try {
-						session.createNamedStoredProcedureQuery( "paramhandling_mixed" );
-						fail( "Expecting an exception" );
-					}
-					catch (IllegalArgumentException expected) {
-						assertEquals(
-								"Cannot mix named parameter with positional parameter registrations",
-								expected.getMessage()
-						);
-					}
-					catch (Exception other) {
-						throw new AssertionError( "Expecting a ParameterRecognitionException, but encountered " + other.getClass().getSimpleName(), other );
-					}
+					ProcedureCall namedQuery = session.createNamedStoredProcedureQuery( "simpleScalar" );
+					namedQuery.setParameter( "p_number", 43 );
+					List list = namedQuery.getResultList();
+					Object[] o = (Object[]) list.get( 0 );
+					assertThat( o[0] ).isEqualTo( "getAll" );
+					assertThat( o[1] ).isEqualTo( 43L );
 				}
 		);
 	}
 
 	@Test
-	public void testEntityStoredProcedure() throws HibernateException, SQLException {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
+	public void testParameterHandling(SessionFactoryScope scope) {
+//		Query namedQuery = s.getNamedQuery( "paramhandling" );
+		scope.inSession(
+				session -> {
+					ProcedureCall namedQuery = session.createNamedStoredProcedureQuery( "paramhandling" );
+					namedQuery.setParameter( 1, 10 );
+					namedQuery.setParameter( 2, 20 );
+					List list = namedQuery.getResultList();
+					Object[] o = (Object[]) list.get( 0 );
+					assertThat( o[0] ).isEqualTo( 10L );
+					assertThat( o[1] ).isEqualTo( 20L );
+				}
+		);
+	}
 
-		Organization ifa = new Organization( "IFA" );
-		Organization jboss = new Organization( "JBoss" );
-		Person gavin = new Person( "Gavin" );
-		Employment emp = new Employment( gavin, jboss, "AU" );
-		s.persist( ifa );
-		s.persist( jboss );
-		s.persist( gavin );
-		s.persist( emp );
-		s.flush();
+	@Test
+	public void testMixedParameterHandling(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					IllegalArgumentException illegalArgumentException =
+							assertThrows( IllegalArgumentException.class, () ->
+									session.createNamedStoredProcedureQuery( "paramhandling_mixed" ) );
+					assertThat( illegalArgumentException.getMessage() )
+							.isEqualTo( "Cannot mix named parameter with positional parameter registrations" );
+				}
+		);
+	}
 
-//		Query namedQuery = s.getNamedQuery( "selectAllEmployments" );
-		ProcedureCall namedQuery = s.createNamedStoredProcedureQuery( "selectAllEmployments" );
-		List list = namedQuery.getResultList();
-		assertTrue( list.get( 0 ) instanceof Employment );
-		s.remove( emp );
-		s.remove( ifa );
-		s.remove( jboss );
-		s.remove( gavin );
+	@Test
+	public void testEntityStoredProcedure(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Organization ifa = new Organization( "IFA" );
+					Organization jboss = new Organization( "JBoss" );
+					Person gavin = new Person( "Gavin" );
+					Employment emp = new Employment( gavin, jboss, "AU" );
+					session.persist( ifa );
+					session.persist( jboss );
+					session.persist( gavin );
+					session.persist( emp );
+					session.flush();
 
-		t.commit();
-		s.close();
+					//		Query namedQuery = s.getNamedQuery( "selectAllEmployments" );
+					ProcedureCall namedQuery = session.createNamedStoredProcedureQuery( "selectAllEmployments" );
+					List list = namedQuery.getResultList();
+					assertThat( list.get( 0 ) ).isInstanceOf( Employment.class );
+					session.remove( emp );
+					session.remove( ifa );
+					session.remove( jboss );
+					session.remove( gavin );
+				}
+		);
 	}
 }

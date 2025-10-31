@@ -9,26 +9,21 @@ import jakarta.persistence.AccessType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Transient;
-
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.internal.util.ReflectHelper;
-
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.endsWith;
-import static org.hamcrest.CoreMatchers.startsWith;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 
 /**
  * Originally written to verify fix for HHH-10172
@@ -38,12 +33,12 @@ import static org.junit.Assert.fail;
 public class GetAndIsVariantGetterTest {
 	private static StandardServiceRegistry ssr;
 
-	@BeforeClass
+	@BeforeAll
 	public static void prepare() {
 		ssr = ServiceRegistryUtil.serviceRegistry();
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void release() {
 		if ( ssr != null ) {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -51,63 +46,57 @@ public class GetAndIsVariantGetterTest {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-10172" )
+	@JiraKey(value = "HHH-10172")
 	public void testHbmXml() {
-		try {
-			new MetadataSources( ssr )
-					.addResource( "org/hibernate/property/TheEntity.hbm.xml" )
-					.buildMetadata();
-			fail( "Expecting a failure" );
-		}
-		catch (MappingException e) {
-			assertThat( e.getMessage(), endsWith( "variants of getter for property 'id'" ) );
-		}
+		MappingException mappingException = assertThrows( MappingException.class, () ->
+				new MetadataSources( ssr )
+						.addResource( "org/hibernate/property/TheEntity.hbm.xml" )
+						.buildMetadata()
+		);
+		assertThat( mappingException.getMessage() ).endsWith( "variants of getter for property 'id'" );
 	}
 
 	@Test
-	@JiraKey( value = "HHH-10172" )
+	@JiraKey(value = "HHH-10172")
 	public void testAnnotations() {
-		try {
-			new MetadataSources( ssr )
-					.addAnnotatedClass( TheEntity.class )
-					.buildMetadata();
-			fail( "Expecting a failure" );
-		}
-		catch (MappingException e) {
-			assertThat( e.getMessage(), startsWith( "Ambiguous persistent property methods" ) );
-		}
+		MappingException mappingException = assertThrows( MappingException.class, () ->
+				new MetadataSources( ssr )
+						.addAnnotatedClass( TheEntity.class )
+						.buildMetadata()
+		);
+		assertThat( mappingException.getMessage() ).startsWith( "Ambiguous persistent property methods" );
 	}
 
 	@Test
-	@JiraKey( value = "HHH-10242" )
+	@JiraKey(value = "HHH-10242")
 	public void testAnnotationsCorrected() {
 		Metadata metadata = new MetadataSources( ssr )
 				.addAnnotatedClass( TheEntity2.class )
 				.buildMetadata();
-		assertNotNull( metadata.getEntityBinding( TheEntity2.class.getName() ).getIdentifier() );
-		assertNotNull( metadata.getEntityBinding( TheEntity2.class.getName() ).getIdentifierProperty() );
+		assertThat( metadata.getEntityBinding( TheEntity2.class.getName() ).getIdentifier() ).isNotNull();
+		assertThat( metadata.getEntityBinding( TheEntity2.class.getName() ).getIdentifierProperty() ).isNotNull();
 	}
 
 	@Test
-	@JiraKey( value = "HHH-10309" )
+	@JiraKey(value = "HHH-10309")
 	public void testAnnotationsFieldAccess() {
 		// this one should be ok because the AccessType is FIELD
 		Metadata metadata = new MetadataSources( ssr )
 				.addAnnotatedClass( AnotherEntity.class )
 				.buildMetadata();
-		assertNotNull( metadata.getEntityBinding( AnotherEntity.class.getName() ).getIdentifier() );
-		assertNotNull( metadata.getEntityBinding( AnotherEntity.class.getName() ).getIdentifierProperty() );
+		assertThat( metadata.getEntityBinding( AnotherEntity.class.getName() ).getIdentifier() ).isNotNull();
+		assertThat( metadata.getEntityBinding( AnotherEntity.class.getName() ).getIdentifierProperty() ).isNotNull();
 	}
 
 	@Test
-	@JiraKey( value = "HHH-12046" )
+	@JiraKey(value = "HHH-12046")
 	public void testInstanceStaticConflict() {
 		Metadata metadata = new MetadataSources( ssr )
 				.addAnnotatedClass( InstanceStaticEntity.class )
 				.buildMetadata();
-		assertNotNull( metadata.getEntityBinding( InstanceStaticEntity.class.getName() ).getIdentifier() );
-		assertNotNull( metadata.getEntityBinding( InstanceStaticEntity.class.getName() ).getIdentifierProperty() );
-		assertTrue( metadata.getEntityBinding( InstanceStaticEntity.class.getName() ).hasProperty("foo") );
+		assertThat( metadata.getEntityBinding( InstanceStaticEntity.class.getName() ).getIdentifier() ).isNotNull();
+		assertThat( metadata.getEntityBinding( InstanceStaticEntity.class.getName() ).getIdentifierProperty() ).isNotNull();
+		assertThat( metadata.getEntityBinding( InstanceStaticEntity.class.getName() ).hasProperty( "foo" ) ).isTrue();
 		ReflectHelper.findGetterMethod( InstanceStaticEntity.class, "foo" );
 	}
 
@@ -178,6 +167,7 @@ public class GetAndIsVariantGetterTest {
 		public Integer getId() {
 			return id;
 		}
+
 		public void setId(Integer id) {
 			this.id = id;
 		}
@@ -185,6 +175,7 @@ public class GetAndIsVariantGetterTest {
 		public boolean isFoo() {
 			return this.foo;
 		}
+
 		public void setFoo(boolean foo) {
 			this.foo = foo;
 		}

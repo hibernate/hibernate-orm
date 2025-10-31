@@ -145,9 +145,7 @@ public class SessionFactoryExtension
 							sessionFactoryBuilder.applyStatementInspector( explicitInspectorClass.getConstructor().newInstance() );
 						}
 						sessionFactoryBuilder.applyCollectionsInDefaultFetchGroup( sessionFactoryConfig.applyCollectionsInDefaultFetchGroup() );
-
 						final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) sessionFactoryBuilder.build();
-
 						if ( sessionFactoryConfig.exportSchema() ) {
 							prepareSchemaExport( sessionFactory, model, sessionFactoryConfig.createSecondarySchemas() );
 						}

@@ -4,22 +4,20 @@
  */
 package org.hibernate.orm.test.annotations.lob;
 
-import org.hibernate.dialect.*;
-import org.junit.Test;
 
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Gail Badner
  */
-public abstract class AbstractLobTest<B extends AbstractBook, C extends AbstractCompiledCode>
-		extends BaseCoreFunctionalTestCase {
+@SessionFactory
+public abstract class AbstractLobTest<B extends AbstractBook, C extends AbstractCompiledCode> {
 
 	protected abstract Class<B> getBookClass();
 
@@ -41,88 +39,89 @@ public abstract class AbstractLobTest<B extends AbstractBook, C extends Abstract
 			return getCompiledCodeClass().newInstance();
 		}
 		catch (Exception ex) {
-			throw new RuntimeException( "Could not create an instance of type " + getCompiledCodeClass().getName(), ex );
+			throw new RuntimeException( "Could not create an instance of type " + getCompiledCodeClass().getName(),
+					ex );
 		}
 	}
 
 	protected abstract Integer getId(C compiledCode);
 
 	@Test
-	public void testSerializableToBlob() throws Exception {
+	public void testSerializableToBlob(SessionFactoryScope scope) {
 		B book = createBook();
 		Editor editor = new Editor();
 		editor.setName( "O'Reilly" );
 		book.setEditor( editor );
-		book.setCode2( new char[] { 'r' } );
+		book.setCode2( new char[] {'r'} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			session.persist( book );
-		} );
+		scope.inTransaction( session ->
+				session.persist( book )
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			B loadedBook = getBookClass().cast( session.get( getBookClass(), getId( book ) ) );
-			assertNotNull( loadedBook.getEditor() );
-			assertEquals( book.getEditor().getName(), loadedBook.getEditor().getName() );
+			assertThat( loadedBook.getEditor() ).isNotNull();
+			assertThat( loadedBook.getEditor().getName() ).isEqualTo( book.getEditor().getName() );
 			loadedBook.setEditor( null );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			B loadedBook = getBookClass().cast( session.get( getBookClass(), getId( book ) ) );
-			assertNull( loadedBook.getEditor() );
+			assertThat( loadedBook.getEditor() ).isNull();
 		} );
 	}
 
 	@Test
-	public void testClob() throws Exception {
+	public void testClob(SessionFactoryScope scope) {
 
 		B book = createBook();
 		book.setShortDescription( "Hibernate Bible" );
 		book.setFullText( "Hibernate in Action aims to..." );
-		book.setCode( new Character[] { 'a', 'b', 'c' } );
-		book.setCode2( new char[] { 'a', 'b', 'c' } );
+		book.setCode( new Character[] {'a', 'b', 'c'} );
+		book.setCode2( new char[] {'a', 'b', 'c'} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			session.persist( book );
-		} );
+		scope.inTransaction( session ->
+				session.persist( book )
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			B b2 = getBookClass().cast( session.get( getBookClass(), getId( book ) ) );
-			assertNotNull( b2 );
-			assertEquals( b2.getFullText(), book.getFullText() );
-			assertEquals( b2.getCode()[1].charValue(), book.getCode()[1].charValue() );
-			assertEquals( b2.getCode2()[2], book.getCode2()[2] );
+			assertThat( b2 ).isNotNull();
+			assertThat( b2.getFullText() ).isEqualTo( book.getFullText() );
+			assertThat( b2.getCode()[1].charValue() ).isEqualTo( book.getCode()[1].charValue() );
+			assertThat( b2.getCode2()[2] ).isEqualTo( book.getCode2()[2] );
 		} );
 	}
 
 	@Test
-	public void testBlob() throws Exception {
+	public void testBlob(SessionFactoryScope scope) {
 
 		C cc = createCompiledCode();
 		Byte[] header = new Byte[2];
-		header[0] = new Byte( ( byte ) 3 );
-		header[1] = new Byte( ( byte ) 0 );
+		header[0] = 3;
+		header[1] = 0;
 		cc.setHeader( header );
 		int codeSize = 5;
 		byte[] full = new byte[codeSize];
 		for ( int i = 0; i < codeSize; i++ ) {
-			full[i] = ( byte ) ( 1 + i );
+			full[i] = (byte) (1 + i);
 		}
 		cc.setFullCode( full );
 
-		doInHibernate( this::sessionFactory, session -> {
-			session.persist( cc );
-		} );
+		scope.inTransaction( session ->
+				session.persist( cc )
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			C recompiled = getCompiledCodeClass().cast( session.get( getCompiledCodeClass(), getId( cc ) ) );
-			assertEquals( recompiled.getHeader()[1], cc.getHeader()[1] );
-			assertEquals( recompiled.getFullCode()[codeSize - 1], cc.getFullCode()[codeSize - 1] );
+			assertThat( recompiled.getHeader()[1] ).isEqualTo( cc.getHeader()[1] );
+			assertThat( recompiled.getFullCode()[codeSize - 1] ).isEqualTo( cc.getFullCode()[codeSize - 1] );
 		} );
 	}
 
 	@Test
-	@SkipForDialect( SybaseDialect.class )
-	public void testBinary() throws Exception {
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
+	public void testBinary(SessionFactoryScope scope) {
 
 		C cc = createCompiledCode();
 		byte[] metadata = new byte[2];
@@ -130,13 +129,13 @@ public abstract class AbstractLobTest<B extends AbstractBook, C extends Abstract
 		metadata[1] = ( byte ) 0;
 		cc.setMetadata( metadata );
 
-		doInHibernate( this::sessionFactory, session -> {
-			session.persist( cc );
-		} );
+		scope.inTransaction( session ->
+				session.persist( cc )
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			C recompiled = getCompiledCodeClass().cast( session.get( getCompiledCodeClass(), getId( cc ) ) );
-			assertEquals( recompiled.getMetadata()[1], cc.getMetadata()[1] );
+			assertThat( recompiled.getMetadata()[1] ).isEqualTo( cc.getMetadata()[1] );
 		} );
 	}
 }

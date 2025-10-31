@@ -45,6 +45,8 @@ public @interface Jpa {
 	 */
 	Setting[] integrationSettings() default {};
 
+	SettingProvider[] integrationSettingProviders() default {};
+
 	// todo : multiple persistence units?
 
 	/**

@@ -4,24 +4,21 @@
  */
 package org.hibernate.orm.test.foreignkeys;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.stream.StreamSupport;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.mapping.Table;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import java.util.stream.StreamSupport;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Yanming Zhou
@@ -40,11 +37,11 @@ public class HHH14230 {
 			Table table = StreamSupport.stream( metadata.getDatabase().getNamespaces().spliterator(), false )
 					.flatMap( namespace -> namespace.getTables().stream() )
 					.filter( t -> t.getName().equals( TABLE_NAME ) ).findFirst().orElse( null );
-			assertNotNull( table );
-			assertEquals( 1, table.getForeignKeyCollection().size() );
+			assertThat( table ).isNotNull();
+			assertThat( table.getForeignKeyCollection() ).hasSize( 1 );
 
 			// ClassCastException before HHH-14230
-			assertTrue( table.getForeignKeys().keySet().iterator().next().toString().contains( JOIN_COLUMN_NAME ) );
+			assertThat( table.getForeignKeys().keySet().iterator().next().toString() ).contains( JOIN_COLUMN_NAME );
 		}
 	}
 

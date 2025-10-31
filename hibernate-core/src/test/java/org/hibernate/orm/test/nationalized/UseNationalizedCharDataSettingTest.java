@@ -4,13 +4,10 @@
  */
 package org.hibernate.orm.test.nationalized;
 
-import java.sql.Types;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -20,18 +17,20 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.CharacterJavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertSame;
+import java.sql.Types;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 /**
  * Test the use of {@value AvailableSettings#USE_NATIONALIZED_CHARACTER_DATA}
@@ -39,7 +38,9 @@ import static org.junit.Assert.assertSame;
  *
  * @author Steve Ebersole
  */
-public class UseNationalizedCharDataSettingTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class UseNationalizedCharDataSettingTest {
+
 	@Test
 	@JiraKey(value = "HHH-10528")
 	public void testSetting() {
@@ -59,7 +60,7 @@ public class UseNationalizedCharDataSettingTest extends BaseUnitTestCase {
 			final Property nameAttribute = pc.getProperty( "name" );
 			final BasicType<?> type = (BasicType<?>) nameAttribute.getType();
 			final Dialect dialect = metadata.getDatabase().getDialect();
-			assertSame( StringJavaType.INSTANCE, type.getJavaTypeDescriptor() );
+			assertThat( type.getJavaTypeDescriptor() ).isSameAs( StringJavaType.INSTANCE );
 			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
 				Assertions.assertSame( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ), type.getJdbcType() );
 			}
@@ -92,7 +93,7 @@ public class UseNationalizedCharDataSettingTest extends BaseUnitTestCase {
 			final Property nameAttribute = pc.getProperty( "flag" );
 			final BasicType<?> type = (BasicType<?>) nameAttribute.getType();
 			final Dialect dialect = metadata.getDatabase().getDialect();
-			assertSame( CharacterJavaType.INSTANCE, type.getJavaTypeDescriptor() );
+			assertThat( type.getJavaTypeDescriptor() ).isSameAs( CharacterJavaType.INSTANCE );
 			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
 				Assertions.assertSame( jdbcTypeRegistry.getDescriptor( Types.CHAR ), type.getJdbcType() );
 			}

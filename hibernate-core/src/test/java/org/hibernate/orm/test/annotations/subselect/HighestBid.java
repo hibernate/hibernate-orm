@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.subselect;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
@@ -25,12 +26,15 @@ public class HighestBid {
 	public String getName() {
 		return name;
 	}
+
 	public void setName(String val) {
 		this.name = val;
 	}
+
 	public double getAmount() {
 		return amount;
 	}
+
 	public void setAmount(double amount) {
 		this.amount = amount;
 	}

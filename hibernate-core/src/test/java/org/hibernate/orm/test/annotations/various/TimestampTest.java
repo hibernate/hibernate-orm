@@ -10,29 +10,28 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.StandardBasicTypes;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.AfterClassOnce;
-import org.hibernate.testing.BeforeClassOnce;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Test for the @Timestamp annotation.
  *
  * @author Hardy Ferentschik
  */
-public class TimestampTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class TimestampTest {
 	private StandardServiceRegistry ssr;
 	private MetadataImplementor metadata;
 
-	@BeforeClassOnce
+	@BeforeAll
 	public void setUp() {
 		ssr = ServiceRegistryUtil.serviceRegistry();
 		metadata = (MetadataImplementor) new MetadataSources( ssr )
@@ -42,7 +41,7 @@ public class TimestampTest extends BaseUnitTestCase {
 				.build();
 	}
 
-	@AfterClassOnce
+	@AfterAll
 	public void tearDown() {
 		if ( ssr != null ) {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -65,9 +64,11 @@ public class TimestampTest extends BaseUnitTestCase {
 
 	private void assertTimestampSource(Class<?> clazz, BasicType<?> basicType) throws Exception {
 		PersistentClass persistentClass = metadata.getEntityBinding( clazz.getName() );
-		assertNotNull( persistentClass );
+		assertThat( persistentClass ).isNotNull();
 		Property versionProperty = persistentClass.getVersion();
-		assertNotNull( versionProperty );
-		assertEquals( "Wrong timestamp type", basicType, versionProperty.getType() );
+		assertThat( versionProperty ).isNotNull();
+		assertThat( versionProperty.getType() )
+				.describedAs( "Wrong timestamp type" )
+				.isEqualTo( basicType );
 	}
 }

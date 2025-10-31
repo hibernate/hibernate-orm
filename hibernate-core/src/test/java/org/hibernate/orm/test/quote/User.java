@@ -32,7 +32,7 @@ public class User implements Serializable {
 	private long id;
 
 	@ManyToMany
-	private Set<Role> roles = new HashSet<Role>();
+	private Set<Role> roles = new HashSet<>();
 
 	// These exist solely for HHH-8464 to ensure that the various forms of quoting are normalized internally
 	// (using backticks), including the join column.  Without normalization, the mapping will throw a

@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.ops.multiload;
 
-import java.util.ArrayList;
-import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -14,131 +12,139 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.OneToMany;
-
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
+import java.util.ArrayList;
+import java.util.List;
 
 import static jakarta.persistence.GenerationType.AUTO;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class MultiLoadEntityGraphTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Parent.class, Child.class, Pet.class };
+@DomainModel(
+		annotatedClasses = {
+				MultiLoadEntityGraphTest.Parent.class,
+				MultiLoadEntityGraphTest.Child.class,
+				MultiLoadEntityGraphTest.Pet.class
+		}
+)
+@SessionFactory
+public class MultiLoadEntityGraphTest {
+
+	@BeforeEach
+	public void before(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					for ( int i = 0; i < 5; i++ ) {
+						Parent p = new Parent( i, "Entity #" + i );
+						for ( int j = 0; j < 5; j++ ) {
+							Child child = new Child();
+							child.setParent( p );
+							p.getChildren().add( child );
+						}
+						for ( int j = 0; j < 5; j++ ) {
+							Pet pet = new Pet();
+							pet.setMaster( p );
+							p.getPets().add( pet );
+						}
+						session.persist( p );
+					}
+				}
+		);
 	}
 
-	@Before
-	public void before() {
-		sessionFactory().getSchemaManager().truncate();
-		Session session = sessionFactory().openSession();
-		session.getTransaction().begin();
-		for ( int i = 0; i < 5; i++ ) {
-			Parent p = new Parent( i, "Entity #" + i );
-			for ( int j = 0; j < 5; j++ ) {
-				Child child = new Child();
-				child.setParent( p );
-				p.getChildren().add( child );
-			}
-			for ( int j = 0; j < 5; j++ ) {
-				Pet pet = new Pet();
-				pet.setMaster( p );
-				p.getPets().add( pet );
-			}
-			session.persist( p );
-		}
-		session.getTransaction().commit();
-		session.close();
+	@AfterEach
+	public void cleanUp(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
-	public void testFetchGraph() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testFetchGraph(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			List<Parent> list = session.byMultipleIds( Parent.class ).multiLoad( 1, 2, 3 );
-			assertEquals( 3, list.size() );
+			assertThat( list ).hasSize( 3 );
 
 			// Collections should be loaded according to their defaults
 			for ( Parent p : list ) {
-				assertFalse( Hibernate.isInitialized( p.children ) );
-				assertTrue( Hibernate.isInitialized( p.pets ) );
+				assertThat( Hibernate.isInitialized( p.children ) ).isFalse();
+				assertThat( Hibernate.isInitialized( p.pets ) ).isTrue();
 			}
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			List<Parent> list = session.byMultipleIds( Parent.class )
 					.with( (RootGraph) session.getEntityGraph( "eager" ), GraphSemantic.FETCH )
 					.multiLoad( 1, 2, 3 );
-			assertEquals( 3, list.size() );
+			assertThat( list ).hasSize( 3 );
 
 			// Collections should be loaded eagerly if mentioned in the graph, or lazily otherwise.
 			// Since the graph contains all collections, all collections should be loaded eagerly.
 			for ( Parent p : list ) {
-				assertTrue( Hibernate.isInitialized( p.children ) );
-				assertTrue( Hibernate.isInitialized( p.pets ) );
+				assertThat( Hibernate.isInitialized( p.children ) ).isTrue();
+				assertThat( Hibernate.isInitialized( p.pets ) ).isTrue();
 			}
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			List<Parent> list = session.byMultipleIds( Parent.class )
 					.with( (RootGraph) session.getEntityGraph( "lazy" ), GraphSemantic.FETCH )
 					.multiLoad( 1, 2, 3 );
-			assertEquals( 3, list.size() );
+			assertThat( list ).hasSize( 3 );
 
 			// Collections should be loaded eagerly if mentioned in the graph, or lazily otherwise.
 			// Since the graph is empty, all collections should be loaded lazily.
 			for ( Parent p : list ) {
-				assertFalse( Hibernate.isInitialized( p.children ) );
-				assertFalse( Hibernate.isInitialized( p.pets ) );
+				assertThat( Hibernate.isInitialized( p.children ) ).isFalse();
+				assertThat( Hibernate.isInitialized( p.pets ) ).isFalse();
 			}
 		} );
 	}
 
 	@Test
-	public void testLoadGraph() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testLoadGraph(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			List<Parent> list = session.byMultipleIds( Parent.class ).multiLoad( 1, 2, 3 );
-			assertEquals( 3, list.size() );
+			assertThat( list ).hasSize( 3 );
 
 			// Collections should be loaded according to their defaults
 			for ( Parent p : list ) {
-				assertFalse( Hibernate.isInitialized( p.children ) );
-				assertTrue( Hibernate.isInitialized( p.pets ) );
+				assertThat( Hibernate.isInitialized( p.children ) ).isFalse();
+				assertThat( Hibernate.isInitialized( p.pets ) ).isTrue();
 			}
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			List<Parent> list = session.byMultipleIds( Parent.class )
 					.with( (RootGraph) session.getEntityGraph( "eager" ), GraphSemantic.LOAD )
 					.multiLoad( 1, 2, 3 );
-			assertEquals( 3, list.size() );
+			assertThat( list ).hasSize( 3 );
 
 			// Collections should be loaded eagerly if mentioned in the graph, or according to their default otherwise.
 			// Since the graph contains all collections, all collections should be loaded eagerly.
 			for ( Parent p : list ) {
-				assertTrue( Hibernate.isInitialized( p.children ) );
-				assertTrue( Hibernate.isInitialized( p.pets ) );
+				assertThat( Hibernate.isInitialized( p.children ) ).isTrue();
+				assertThat( Hibernate.isInitialized( p.pets ) ).isTrue();
 			}
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			List<Parent> list = session.byMultipleIds( Parent.class )
 					.with( (RootGraph) session.getEntityGraph( "lazy" ), GraphSemantic.LOAD )
 					.multiLoad( 1, 2, 3 );
-			assertEquals( 3, list.size() );
+			assertThat( list ).hasSize( 3 );
 
 			// Collections should be loaded eagerly if mentioned in the graph, or according to their default otherwise.
 			// Since the graph is empty, all collections should be loaded according to their default.
 			for ( Parent p : list ) {
-				assertFalse( Hibernate.isInitialized( p.children ) );
-				assertTrue( Hibernate.isInitialized( p.pets ) );
+				assertThat( Hibernate.isInitialized( p.children ) ).isFalse();
+				assertThat( Hibernate.isInitialized( p.pets ) ).isTrue();
 			}
 		} );
 	}

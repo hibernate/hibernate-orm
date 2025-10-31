@@ -4,9 +4,6 @@
  */
 package org.hibernate.orm.test.multitenancy.schema;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.hibernate.SessionBuilder;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -18,32 +15,30 @@ import org.hibernate.engine.jdbc.env.internal.ExtractedDatabaseMetaDataImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
+import org.hibernate.testing.cache.CachingRegionFactory;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.cache.CachingRegionFactory;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-
-import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
-
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernateSessionBuilder;
+import static org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest.doInHibernateSessionBuilder;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantConnectionProvider<String>, C extends ConnectionProvider> extends BaseUnitTestCase {
+public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantConnectionProvider<String>, C extends ConnectionProvider> {
 	protected C acmeProvider;
 	protected C jbossProvider;
 
@@ -55,11 +50,11 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		return sessionFactory;
 	}
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		T multiTenantConnectionProvider = buildMultiTenantConnectionProvider();
 
-		Map<String,Object> settings = new HashMap<>();
+		Map<String, Object> settings = new HashMap<>();
 		settings.put( Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
 		settings.put( Environment.GENERATE_STATISTICS, "true" );
 
@@ -78,7 +73,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		Metadata metadata = ms.buildMetadata();
 		final PersistentClass customerMapping = metadata.getEntityBinding( Customer.class.getName() );
 		customerMapping.setCached( true );
-		( (RootClass) customerMapping ).setCacheConcurrencyStrategy( "read-write" );
+		((RootClass) customerMapping).setCacheConcurrencyStrategy( "read-write" );
 
 		HibernateSchemaManagementTool tool = new HibernateSchemaManagementTool();
 		tool.injectServices( serviceRegistry );
@@ -131,7 +126,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 
 	protected abstract T buildMultiTenantConnectionProvider();
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		if ( sessionFactory != null ) {
 			sessionFactory.close();
@@ -140,18 +135,18 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 			serviceRegistry.destroy();
 		}
 		if ( jbossProvider != null ) {
-			( (Stoppable) jbossProvider ).stop();
+			((Stoppable) jbossProvider).stop();
 		}
 		if ( acmeProvider != null ) {
-			( (Stoppable) acmeProvider ).stop();
+			((Stoppable) acmeProvider).stop();
 		}
 	}
 
 	@Test
 	@JiraKey(value = "HHH-16310")
 	public void testJdbcMetadataAccessible() {
-		assertThat( ( (ExtractedDatabaseMetaDataImpl) sessionFactory.getJdbcServices().getJdbcEnvironment()
-				.getExtractedDatabaseMetaData() ).isJdbcMetadataAccessible() )
+		assertThat( ((ExtractedDatabaseMetaDataImpl) sessionFactory.getJdbcServices().getJdbcEnvironment()
+				.getExtractedDatabaseMetaData()).isJdbcMetadataAccessible() )
 				.isTrue();
 	}
 
@@ -165,7 +160,9 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 
 		doInHibernateSessionBuilder( this::acme, session -> {
 			Customer check = session.get( Customer.class, steve.getId() );
-			Assert.assertNull( "tenancy not properly isolated", check );
+			assertThat( check )
+					.describedAs( "tenancy not properly isolated" )
+					.isNull();
 		} );
 
 		doInHibernateSessionBuilder( this::jboss, session -> {
@@ -195,18 +192,18 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		// first, jboss
 		doInHibernateSessionBuilder( this::jboss, session -> {
 			Customer customer = session.getReference( Customer.class, 1L );
-			Assert.assertEquals( "steve", customer.getName() );
+			assertThat( customer.getName()).isEqualTo("steve");
 			// also, make sure this came from second level
-			Assert.assertEquals( 1, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
+			assertThat( sessionFactory.getStatistics().getSecondLevelCacheHitCount()).isEqualTo(1);
 		} );
 
 		sessionFactory.getStatistics().clear();
 		// then, acme
 		doInHibernateSessionBuilder( this::acme, session -> {
 			Customer customer = session.getReference( Customer.class, 1L );
-			Assert.assertEquals( "john", customer.getName() );
+			assertThat( customer.getName()).isEqualTo("john");
 			// also, make sure this came from second level
-			Assert.assertEquals( 1, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
+			assertThat( sessionFactory.getStatistics().getSecondLevelCacheHitCount()).isEqualTo(1);
 		} );
 
 		// make sure the same works from datastore too
@@ -215,18 +212,18 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		// first jboss
 		doInHibernateSessionBuilder( this::jboss, session -> {
 			Customer customer = session.getReference( Customer.class, 1L );
-			Assert.assertEquals( "steve", customer.getName() );
+			assertThat( customer.getName()).isEqualTo("steve");
 			// also, make sure this came from second level
-			Assert.assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
+			assertThat( sessionFactory.getStatistics().getSecondLevelCacheHitCount()).isEqualTo(0);
 		} );
 
 		sessionFactory.getStatistics().clear();
 		// then, acme
 		doInHibernateSessionBuilder( this::acme, session -> {
 			Customer customer = session.getReference( Customer.class, 1L );
-			Assert.assertEquals( "john", customer.getName() );
+			assertThat( customer.getName()).isEqualTo("john");
 			// also, make sure this came from second level
-			Assert.assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
+			assertThat( sessionFactory.getStatistics().getSecondLevelCacheHitCount()).isEqualTo(0);
 		} );
 
 		doInHibernateSessionBuilder( this::jboss, session -> {
@@ -243,14 +240,14 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		Invoice orderJboss = doInHibernateSessionBuilder( this::jboss, session -> {
 			Invoice _orderJboss = new Invoice();
 			session.persist( _orderJboss );
-			Assert.assertEquals( Long.valueOf( 1 ), _orderJboss.getId() );
+			assertThat( _orderJboss.getId()).isEqualTo(1L);
 			return _orderJboss;
 		} );
 
 		Invoice orderAcme = doInHibernateSessionBuilder( this::acme, session -> {
 			Invoice _orderAcme = new Invoice();
 			session.persist( _orderAcme );
-			Assert.assertEquals( Long.valueOf( 1 ), _orderAcme.getId() );
+			assertThat( _orderAcme.getId()).isEqualTo(1L);
 			return _orderAcme;
 		} );
 
@@ -267,8 +264,8 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 
 	protected SessionBuilder newSession(String tenant) {
 		return sessionFactory
-			.withOptions()
-			.tenantIdentifier( (Object) tenant );
+				.withOptions()
+				.tenantIdentifier( (Object) tenant );
 	}
 
 	private SessionBuilder jboss() {

@@ -4,10 +4,6 @@
  */
 package org.hibernate.orm.test.pc;
 
-import java.sql.Blob;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -15,32 +11,33 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
+import java.sql.Blob;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Vlad Mihalcea
  */
-public class BytecodeEnhancementTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class,
-			Book.class,
-			Customer.class
-		};
-	}
+@Jpa(
+		annotatedClasses = {
+			BytecodeEnhancementTest.Person.class,
+				BytecodeEnhancementTest.Book.class,
+				BytecodeEnhancementTest.Customer.class
+		}
+)
+public class BytecodeEnhancementTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction(  entityManager -> {
 			//tag::BytecodeEnhancement-dirty-tracking-bidirectional-incorrect-usage-example[]
 			Person person = new Person();
 			person.setName("John Doe");
@@ -55,7 +52,7 @@ public class BytecodeEnhancementTest extends BaseEntityManagerFunctionalTestCase
 			}
 			//end::BytecodeEnhancement-dirty-tracking-bidirectional-incorrect-usage-example[]
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction(  entityManager -> {
 			//tag::BytecodeEnhancement-dirty-tracking-bidirectional-correct-usage-example[]
 			Person person = new Person();
 			person.setName("John Doe");

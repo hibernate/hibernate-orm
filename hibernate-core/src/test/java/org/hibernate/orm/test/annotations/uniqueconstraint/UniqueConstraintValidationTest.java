@@ -4,37 +4,43 @@
  */
 package org.hibernate.orm.test.annotations.uniqueconstraint;
 
-import java.io.Serializable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import java.io.Serializable;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Nikolay Shestakov
  *
  */
-public class UniqueConstraintValidationTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class UniqueConstraintValidationTest {
 
-	@Test(expected = AnnotationException.class)
+	@Test
 	@JiraKey(value = "HHH-4084")
 	public void testUniqueConstraintWithEmptyColumnName() {
-		buildSessionFactory(EmptyColumnNameEntity.class);
+		assertThrows( AnnotationException.class, () ->
+				buildSessionFactory( EmptyColumnNameEntity.class )
+		);
 	}
 
-	@Test(expected = AnnotationException.class)
+	@Test
 	public void testUniqueConstraintWithEmptyColumnNameList() {
-		buildSessionFactory(EmptyColumnNameListEntity.class);
+		assertThrows( AnnotationException.class, () ->
+				buildSessionFactory( EmptyColumnNameListEntity.class )
+		);
 	}
 
 	@Test

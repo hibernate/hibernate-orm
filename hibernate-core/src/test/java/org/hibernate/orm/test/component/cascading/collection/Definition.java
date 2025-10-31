@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.component.cascading.collection;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,7 +14,7 @@ import java.util.Set;
  */
 public class Definition {
 	private Long id;
-	private Set values = new HashSet();
+	private Set<Value> values = new HashSet<>();
 
 	public Long getId() {
 		return id;
@@ -23,11 +24,11 @@ public class Definition {
 		this.id = id;
 	}
 
-	public Set getValues() {
+	public Set<Value> getValues() {
 		return values;
 	}
 
-	public void setValues(Set values) {
+	public void setValues(Set<Value> values) {
 		this.values = values;
 	}
 }

@@ -4,14 +4,13 @@
  */
 package org.hibernate.orm.test.property.access.spi;
 
-import java.lang.reflect.Field;
-
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.GetterFieldImpl;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Assert;
-import org.junit.Test;
+import java.lang.reflect.Field;
 
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Vlad Mihalcea
@@ -19,16 +18,16 @@ import org.junit.Test;
 public class GetterFieldImplTest {
 
 	@Test
-	public void testGet() throws Exception {
+	public void testGet() {
 		Target target = new Target();
 
-		Assert.assertEquals( true, getter( "active" ).get( target ) );
-		Assert.assertEquals( (byte) 2, getter( "children" ).get( target ) );
-		Assert.assertEquals( 'M', getter( "gender" ).get( target ) );
-		Assert.assertEquals( Integer.MAX_VALUE, getter( "code" ).get( target ) );
-		Assert.assertEquals( Long.MAX_VALUE, getter( "id" ).get( target ) );
-		Assert.assertEquals( (short) 34, getter( "age" ).get( target ) );
-		Assert.assertEquals( "John Doe", getter( "name" ).get( target ) );
+		assertThat( getter( "active" ).get( target ) ).isEqualTo( true );
+		assertThat( getter( "children" ).get( target ) ).isEqualTo( (byte) 2 );
+		assertThat( getter( "gender" ).get( target ) ).isEqualTo( 'M' );
+		assertThat( getter( "code" ).get( target ) ).isEqualTo( Integer.MAX_VALUE );
+		assertThat( getter( "id" ).get( target ) ).isEqualTo( Long.MAX_VALUE );
+		assertThat( getter( "age" ).get( target ) ).isEqualTo( (short) 34 );
+		assertThat( getter( "name" ).get( target ) ).isEqualTo( "John Doe" );
 	}
 
 	private static class Target {

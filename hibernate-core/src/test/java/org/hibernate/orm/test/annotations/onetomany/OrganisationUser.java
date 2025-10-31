@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetomany;
+
 import java.io.Serializable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -30,7 +31,7 @@ public class OrganisationUser extends Person implements Serializable {
 		this.someText = someText;
 	}
 
-	@Column( name = "some_text", nullable=true,length=1024)
+	@Column( name = "some_text", length=1024)
 	public String getSomeText() {
 		return someText;
 	}

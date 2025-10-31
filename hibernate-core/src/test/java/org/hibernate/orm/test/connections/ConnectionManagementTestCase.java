@@ -9,13 +9,13 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Common test cases relating to session management and how the sessions
@@ -30,17 +30,11 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 
-public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
-	}
-
-	@Override
-	public final String[] getMappings() {
-		return new String[] { "connections/Silly.hbm.xml" };
-	}
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/connections/Silly.hbm.xml"
+)
+@SessionFactory
+public abstract class ConnectionManagementTestCase {
 
 
 	// hooks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -70,7 +64,7 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 	 * @return The session to be used in testing.
 	 * @throws Throwable Indicates problems building a test session fixture.
 	 */
-	protected abstract Session getSessionUnderTest() throws Throwable;
+	protected abstract Session getSessionUnderTest(SessionFactoryScope scope) throws Throwable;
 
 	/**
 	 * Used to release a {@link #getSessionUnderTest fixture session}.
@@ -79,18 +73,18 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 	 *
 	 * @param session The session to be released.
 	 */
-	protected void release(Session session) {
+	protected void release(Session session, SessionFactoryScope scope) {
 		if ( session != null && session.isOpen() ) {
 			try {
 				session.close();
 			}
-			catch( Throwable ignore ) {
+			catch (Throwable ignore) {
 			}
 		}
 	}
 
-	protected void disconnect(Session session) throws Throwable {
-		((SessionImplementor)session).getJdbcCoordinator().getLogicalConnection().manualDisconnect();
+	protected void disconnect(Session session) {
+		((SessionImplementor) session).getJdbcCoordinator().getLogicalConnection().manualDisconnect();
 	}
 
 	/**
@@ -127,12 +121,12 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 	 * be allowed to serialize.
 	 */
 	@Test
-	public final void testConnectedSerialization() throws Throwable {
+	public final void testConnectedSerialization(SessionFactoryScope scope) throws Throwable {
 		prepare();
-		Session sessionUnderTest = getSessionUnderTest();
+		Session sessionUnderTest = getSessionUnderTest( scope );
 
 		// force the connection to be retained
-		try (ScrollableResults sr = sessionUnderTest.createQuery( "from Silly" ).scroll()) {
+		try (ScrollableResults<Silly> sr = sessionUnderTest.createQuery( "from Silly", Silly.class ).scroll()) {
 			sr.next();
 
 			try {
@@ -144,7 +138,7 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 				// expected behaviour
 			}
 			finally {
-				release( sessionUnderTest );
+				release( sessionUnderTest, scope );
 				done();
 			}
 		}
@@ -155,37 +149,43 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 	 * be allowed to serialize.
 	 */
 	@Test
-	public final void testEnabledFilterSerialization() throws Throwable {
+	public final void testEnabledFilterSerialization(SessionFactoryScope scope) throws Throwable {
 		prepare();
-		Session sessionUnderTest = getSessionUnderTest();
+		Session sessionUnderTest = null;
+		Session s2 = null;
+		try {
+			sessionUnderTest = getSessionUnderTest( scope );
 
-		sessionUnderTest.enableFilter( "nameIsNull" );
-		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
-		disconnect( sessionUnderTest );
-		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
+			sessionUnderTest.enableFilter( "nameIsNull" );
+			assertThat( sessionUnderTest.getEnabledFilter( "nameIsNull" ) ).isNotNull();
+			disconnect( sessionUnderTest );
+			assertThat( sessionUnderTest.getEnabledFilter( "nameIsNull" ) ).isNotNull();
 
-		byte[] bytes = SerializationHelper.serialize( sessionUnderTest );
-		checkSerializedState( sessionUnderTest );
-		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
-		reconnect( sessionUnderTest );
-		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
-		disconnect( sessionUnderTest );
-		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
+			byte[] bytes = SerializationHelper.serialize( sessionUnderTest );
+			checkSerializedState( sessionUnderTest );
+			assertThat( sessionUnderTest.getEnabledFilter( "nameIsNull" ) ).isNotNull();
+			reconnect( sessionUnderTest );
+			assertThat( sessionUnderTest.getEnabledFilter( "nameIsNull" ) ).isNotNull();
+			disconnect( sessionUnderTest );
+			assertThat( sessionUnderTest.getEnabledFilter( "nameIsNull" ) ).isNotNull();
 
-		Session s2 = ( Session ) SerializationHelper.deserialize( bytes );
-		checkDeserializedState( s2 );
-		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
-		reconnect( s2 );
-		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
+			s2 = (Session) SerializationHelper.deserialize( bytes );
+			checkDeserializedState( s2 );
+			assertThat( sessionUnderTest.getEnabledFilter( "nameIsNull" ) ).isNotNull();
+			reconnect( s2 );
+			assertThat( sessionUnderTest.getEnabledFilter( "nameIsNull" ) ).isNotNull();
 
-		disconnect( s2 );
-		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
-		reconnect( s2 );
-		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
+			disconnect( s2 );
+			assertThat( sessionUnderTest.getEnabledFilter( "nameIsNull" ) ).isNotNull();
+			reconnect( s2 );
+			assertThat( sessionUnderTest.getEnabledFilter( "nameIsNull" ) ).isNotNull();
 
-		release( sessionUnderTest );
-		release( s2 );
-		done();
+		}
+		finally {
+			release( sessionUnderTest, scope );
+			release( s2, scope );
+			done();
+		}
 	}
 
 	/**
@@ -193,17 +193,21 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 	 * to serialize.
 	 */
 	@Test
-	public final void testManualDisconnectedSerialization() throws Throwable {
+	public final void testManualDisconnectedSerialization(SessionFactoryScope scope) throws Throwable {
 		prepare();
-		Session sessionUnderTest = getSessionUnderTest();
+		Session sessionUnderTest = null;
+		try {
+			sessionUnderTest = getSessionUnderTest( scope );
 
-		disconnect( sessionUnderTest );
+			disconnect( sessionUnderTest );
 
-		SerializationHelper.serialize( sessionUnderTest );
-		checkSerializedState( sessionUnderTest );
-
-		release( sessionUnderTest );
-		done();
+			SerializationHelper.serialize( sessionUnderTest );
+			checkSerializedState( sessionUnderTest );
+		}
+		finally {
+			release( sessionUnderTest, scope );
+			done();
+		}
 	}
 
 	/**
@@ -211,25 +215,31 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 	 * expected in the given environment.
 	 */
 	@Test
-	public final void testManualDisconnectChain() throws Throwable {
+	public final void testManualDisconnectChain(SessionFactoryScope scope) throws Throwable {
 		prepare();
-		Session sessionUnderTest = getSessionUnderTest();
+		Session sessionUnderTest = null;
+		Session s2 = null;
+		try {
+			sessionUnderTest = getSessionUnderTest( scope );
 
-		disconnect( sessionUnderTest );
+			disconnect( sessionUnderTest );
 
-		byte[] bytes = SerializationHelper.serialize( sessionUnderTest );
-		checkSerializedState( sessionUnderTest );
-		Session s2 = ( Session ) SerializationHelper.deserialize( bytes );
-		checkDeserializedState( s2 );
+			byte[] bytes = SerializationHelper.serialize( sessionUnderTest );
+			checkSerializedState( sessionUnderTest );
+			s2 = (Session) SerializationHelper.deserialize( bytes );
+			checkDeserializedState( s2 );
 
-		reconnect( s2 );
+			reconnect( s2 );
 
-		disconnect( s2 );
-		reconnect( s2 );
+			disconnect( s2 );
+			reconnect( s2 );
+		}
+		finally {
+			release( sessionUnderTest, scope );
+			release( s2, scope );
+			done();
+		}
 
-		release( sessionUnderTest );
-		release( s2 );
-		done();
 	}
 
 	/**
@@ -239,25 +249,30 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 	 * prior to disconnecting.
 	 */
 	@Test
-	public final void testManualDisconnectWithOpenResources() throws Throwable {
+	public final void testManualDisconnectWithOpenResources(SessionFactoryScope scope) throws Throwable {
 		prepare();
-		Session sessionUnderTest = getSessionUnderTest();
+		Session sessionUnderTest = null;
+		try {
+			sessionUnderTest = getSessionUnderTest( scope );
 
-		Silly silly = new Silly( "tester" );
-		sessionUnderTest.persist( silly );
-		sessionUnderTest.flush();
-
-		try (ScrollableResults sr = sessionUnderTest.createQuery( "from Silly" ).scroll()) {
-
-			disconnect( sessionUnderTest );
-			SerializationHelper.serialize( sessionUnderTest );
-			checkSerializedState( sessionUnderTest );
-
-			reconnect( sessionUnderTest );
-			sessionUnderTest.remove( silly );
+			Silly silly = new Silly( "tester" );
+			sessionUnderTest.persist( silly );
 			sessionUnderTest.flush();
 
-			release( sessionUnderTest );
+			try (ScrollableResults<Silly> sr = sessionUnderTest.createQuery( "from Silly", Silly.class ).scroll()) {
+
+				disconnect( sessionUnderTest );
+				SerializationHelper.serialize( sessionUnderTest );
+				checkSerializedState( sessionUnderTest );
+
+				reconnect( sessionUnderTest );
+				sessionUnderTest.remove( silly );
+				sessionUnderTest.flush();
+
+			}
+		}
+		finally {
+			release( sessionUnderTest, scope );
 			done();
 		}
 	}
@@ -267,22 +282,22 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 	 * scenarios.
 	 */
 	@Test
-	public void testBasicSessionUsage() throws Throwable {
+	public void testBasicSessionUsage(SessionFactoryScope scope) throws Throwable {
 		prepare();
 		Session s = null;
 		Transaction txn = null;
 		try {
-			s = getSessionUnderTest();
+			s = getSessionUnderTest( scope );
 			txn = s.beginTransaction();
-			s.createQuery( "from Silly" ).list();
+			s.createQuery( "from Silly", Silly.class ).list();
 			txn.commit();
 		}
-		catch( Throwable t ) {
+		catch (Throwable t) {
 			if ( txn != null ) {
 				try {
 					txn.rollback();
 				}
-				catch( Throwable ignore ) {
+				catch (Throwable ignore) {
 				}
 			}
 		}
@@ -291,7 +306,7 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 				try {
 					s.close();
 				}
-				catch( Throwable ignore ) {
+				catch (Throwable ignore) {
 				}
 			}
 		}
@@ -302,15 +317,15 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 	 * Test that session-closed protections work properly in all environments.
 	 */
 	@Test
-	public void testSessionClosedProtections() throws Throwable {
+	public void testSessionClosedProtections(SessionFactoryScope scope) throws Throwable {
 		prepare();
-		Session s = getSessionUnderTest();
-		release( s );
+		Session s = getSessionUnderTest( scope );
+		release( s, scope );
 		done();
-		assertFalse( s.isOpen() );
-		assertFalse( s.isConnected() );
-		assertNotNull( s.getStatistics() );
-		assertNotNull( s.toString() );
+		assertThat( s.isOpen() ).isFalse();
+		assertThat( s.isConnected() ).isFalse();
+		assertThat( s.getStatistics() ).isNotNull();
+		assertThat( s.toString() ).isNotNull();
 
 		try {
 			s.createQuery( "from Silly" ).list();
@@ -325,7 +340,7 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 		// you should be able to access the transaction on a closed EM. that is a change from what we used to do. we changed it
 		// to better align with JPA.
 		Transaction tran = s.getTransaction();
-		assertNotNull( tran );
+		assertThat( tran ).isNotNull();
 
 		// Session implements both AutoCloseable and Closeable
 		// Closable requires an idempotent behaviour, a closed resource must not throw an Exception

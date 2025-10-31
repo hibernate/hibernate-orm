@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.comments;
 
-import java.util.List;
-import java.util.Map;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CompoundSelection;
@@ -13,36 +11,34 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
-
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Before;
-import org.junit.Test;
+import java.util.List;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Andrea Boriero
  */
-public class UseSqlCommentTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				TestEntity.class, TestEntity2.class
+		},
+		properties = {
+				@Setting(name = AvailableSettings.USE_SQL_COMMENTS, value = "true"),
+				@Setting(name = AvailableSettings.FORMAT_SQL, value = "false"),
+		}
+)
+public class UseSqlCommentTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { TestEntity.class, TestEntity2.class };
-	}
-
-	@Override
-	protected void addMappings(Map settings) {
-		settings.put( AvailableSettings.USE_SQL_COMMENTS, "true" );
-		settings.put( AvailableSettings.FORMAT_SQL, "false" );
-	}
-
-	@Before
-	public void setUp() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	@BeforeAll
+	public void setUp(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			TestEntity testEntity = new TestEntity();
 			testEntity.setId( "test1" );
 			testEntity.setValue( "value1" );
@@ -56,22 +52,22 @@ public class UseSqlCommentTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testIt() {
+	public void testIt(EntityManagerFactoryScope scope) {
 		String appendLiteral = "*/select id as col_0_0_,value as col_1_0_ from testEntity2 where 1=1 or id=?--/*";
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 
 			List<TestEntity> result = findUsingQuery( "test1", appendLiteral, entityManager );
 
 			TestEntity test1 = result.get( 0 );
-			assertThat( test1.getValue(), is( appendLiteral ) );
+			assertThat( test1.getValue() ).isEqualTo( appendLiteral );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 
 			List<TestEntity> result = findUsingCriteria( "test1", appendLiteral, entityManager );
 
 			TestEntity test1 = result.get( 0 );
-			assertThat( test1.getValue(), is( appendLiteral ) );
+			assertThat( test1.getValue() ).isEqualTo( appendLiteral );
 		} );
 	}
 
@@ -99,8 +95,8 @@ public class UseSqlCommentTest extends BaseEntityManagerFunctionalTestCase {
 		TypedQuery<TestEntity> query =
 				entityManager.createQuery(
 						"select new " + TestEntity.class.getName() + "(id, '"
-								+ appendLiteral.replace( "'", "''" )
-								+ "') from TestEntity where id=:where_id",
+						+ appendLiteral.replace( "'", "''" )
+						+ "') from TestEntity where id=:where_id",
 						TestEntity.class
 				);
 		query.setParameter( "where_id", id );

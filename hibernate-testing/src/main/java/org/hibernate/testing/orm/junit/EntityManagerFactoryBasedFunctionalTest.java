@@ -27,6 +27,7 @@ import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMu
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 
 import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 
 import jakarta.persistence.EntityManager;
@@ -111,6 +112,19 @@ public class EntityManagerFactoryBasedFunctionalTest
 
 		return settings;
 	}
+
+	@AfterAll
+	public void afterAll() {
+		if ( entityManagerFactoryScope != null ) {
+			try {
+				entityManagerFactoryScope.close();
+			}
+			catch (Exception e) {
+				throw new RuntimeException( e );
+			}
+		}
+	}
+
 
 	protected Map<Object, Object> getConfig() {
 		Map<Object, Object> config = Environment.getProperties();

@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.batch;
 
-import java.util.ArrayList;
-import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,59 +17,60 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
-
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Vlad Mihalcea
  */
-@JiraKey( value = "HHH-12470" )
-public class BatchingInheritanceDeleteTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{
-				Foo.class,
-				Bar.class,
-				Baz.class
-		};
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, 25 );
-	}
+@JiraKey(value = "HHH-12470")
+@DomainModel(
+		annotatedClasses = {
+				BatchingInheritanceDeleteTest.Foo.class,
+				BatchingInheritanceDeleteTest.Bar.class,
+				BatchingInheritanceDeleteTest.Baz.class
+		}
+)
+@SessionFactory
+@ServiceRegistry(
+		settings = {
+				@Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "25")
+		}
+)
+public class BatchingInheritanceDeleteTest {
 
 	@Test
 	//@FailureExpected( jiraKey = "HHH-12470" )
-	public void testDelete() {
-		doInHibernate( this::sessionFactory, s -> {
-			Bar bar = new Bar("bar");
+	public void testDelete(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Bar bar = new Bar( "bar" );
 
-			Foo foo = new Foo("foo");
-			foo.setBar(bar);
+			Foo foo = new Foo( "foo" );
+			foo.setBar( bar );
 
-			s.persist(foo);
-			s.persist(bar);
-
-			s.flush();
-
-			s.remove(foo);
-			s.remove(bar);
+			s.persist( foo );
+			s.persist( bar );
 
 			s.flush();
 
-			assertThat(s.find(Foo.class, foo.getId()), nullValue());
-			assertThat(s.find(Bar.class, bar.getId()), nullValue());
+			s.remove( foo );
+			s.remove( bar );
+
+			s.flush();
+
+			assertThat( s.find( Foo.class, foo.getId() ) ).isNull();
+			assertThat( s.find( Bar.class, bar.getId() ) ).isNull();
 		} );
 	}
 
@@ -112,7 +111,7 @@ public class BatchingInheritanceDeleteTest extends BaseCoreFunctionalTestCase {
 		@Override
 		public String toString() {
 			final StringBuilder builder = new StringBuilder();
-			builder.append("Bar [name=").append(name).append("]");
+			builder.append( "Bar [name=" ).append( name ).append( "]" );
 			return builder.toString();
 		}
 	}
@@ -155,7 +154,7 @@ public class BatchingInheritanceDeleteTest extends BaseCoreFunctionalTestCase {
 		@Override
 		public String toString() {
 			final StringBuilder builder = new StringBuilder();
-			builder.append("Bar [name=").append(name).append("]");
+			builder.append( "Bar [name=" ).append( name ).append( "]" );
 			return builder.toString();
 		}
 	}

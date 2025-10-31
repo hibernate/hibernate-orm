@@ -8,53 +8,49 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-
 import org.hibernate.annotations.OnDelete;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.junit.jupiter.api.Test;
 
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.annotations.OnDeleteAction.CASCADE;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialectFeature(DialectChecks.SupportsCascadeDeleteCheck.class)
-public class CascadeOnDeleteTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class,
-			Phone.class
-		};
-	}
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCascadeDeleteCheck.class)
+@Jpa(
+		annotatedClasses = {
+				CascadeOnDeleteTest.Person.class,
+				CascadeOnDeleteTest.Phone.class
+		}
+)
+public class CascadeOnDeleteTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Person person = new Person();
-			person.setId(1L);
-			person.setName("John Doe");
-			entityManager.persist(person);
+			person.setId( 1L );
+			person.setName( "John Doe" );
+			entityManager.persist( person );
 
 			Phone phone = new Phone();
-			phone.setId(1L);
-			phone.setNumber("123-456-7890");
-			phone.setOwner(person);
-			entityManager.persist(phone);
-		});
+			phone.setId( 1L );
+			phone.setNumber( "123-456-7890" );
+			phone.setOwner( person );
+			entityManager.persist( phone );
+		} );
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::pc-cascade-on-delete-example[]
-			Person person = entityManager.find(Person.class, 1L);
-			entityManager.remove(person);
+			Person person = entityManager.find( Person.class, 1L );
+			entityManager.remove( person );
 			//end::pc-cascade-on-delete-example[]
-		});
+		} );
 	}
 
 	//tag::pc-cascade-on-delete-mapping-Person-example[]
@@ -68,7 +64,7 @@ public class CascadeOnDeleteTest extends BaseEntityManagerFunctionalTestCase {
 
 		//Getters and setters are omitted for brevity
 
-	//end::pc-cascade-on-delete-mapping-Person-example[]
+		//end::pc-cascade-on-delete-mapping-Person-example[]
 
 		public Long getId() {
 			return id;
@@ -85,7 +81,7 @@ public class CascadeOnDeleteTest extends BaseEntityManagerFunctionalTestCase {
 		public void setName(String name) {
 			this.name = name;
 		}
-	//tag::pc-cascade-on-delete-mapping-Person-example[]
+		//tag::pc-cascade-on-delete-mapping-Person-example[]
 	}
 	//end::pc-cascade-on-delete-mapping-Person-example[]
 
@@ -105,7 +101,7 @@ public class CascadeOnDeleteTest extends BaseEntityManagerFunctionalTestCase {
 
 		//Getters and setters are omitted for brevity
 
-	//end::pc-cascade-on-delete-mapping-Phone-example[]
+		//end::pc-cascade-on-delete-mapping-Phone-example[]
 
 		public Long getId() {
 			return id;
@@ -130,7 +126,7 @@ public class CascadeOnDeleteTest extends BaseEntityManagerFunctionalTestCase {
 		public void setOwner(Person owner) {
 			this.owner = owner;
 		}
-	//tag::pc-cascade-on-delete-mapping-Phone-example[]
+		//tag::pc-cascade-on-delete-mapping-Phone-example[]
 	}
 	//end::pc-cascade-on-delete-mapping-Phone-example[]
 }

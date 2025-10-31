@@ -12,27 +12,26 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
-
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class OneToOneBidirectionalLazyTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Phone.class,
-				PhoneDetails.class,
-		};
-	}
+@Jpa(
+		annotatedClasses = {
+				OneToOneBidirectionalLazyTest.Phone.class,
+				OneToOneBidirectionalLazyTest.PhoneDetails.class,
+		}
+)
+public class OneToOneBidirectionalLazyTest {
 
 	@Test
-	public void testLifecycle() {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 
+		} );
 	}
 
 	//tag::associations-one-to-one-bidirectional-lazy-example[]
@@ -47,16 +46,16 @@ public class OneToOneBidirectionalLazyTest extends BaseEntityManagerFunctionalTe
 		private String number;
 
 		@OneToOne(
-			mappedBy = "phone",
-			cascade = CascadeType.ALL,
-			orphanRemoval = true,
-			fetch = FetchType.LAZY
+				mappedBy = "phone",
+				cascade = CascadeType.ALL,
+				orphanRemoval = true,
+				fetch = FetchType.LAZY
 		)
 		private PhoneDetails details;
 
 		//Getters and setters are omitted for brevity
 
-	//end::associations-one-to-one-bidirectional-lazy-example[]
+		//end::associations-one-to-one-bidirectional-lazy-example[]
 
 		public Phone() {
 		}
@@ -77,15 +76,15 @@ public class OneToOneBidirectionalLazyTest extends BaseEntityManagerFunctionalTe
 			return details;
 		}
 
-	//tag::associations-one-to-one-bidirectional-lazy-example[]
+		//tag::associations-one-to-one-bidirectional-lazy-example[]
 		public void addDetails(PhoneDetails details) {
-			details.setPhone(this);
+			details.setPhone( this );
 			this.details = details;
 		}
 
 		public void removeDetails() {
-			if (details != null) {
-				details.setPhone(null);
+			if ( details != null ) {
+				details.setPhone( null );
 				this.details = null;
 			}
 		}
@@ -108,7 +107,7 @@ public class OneToOneBidirectionalLazyTest extends BaseEntityManagerFunctionalTe
 
 		//Getters and setters are omitted for brevity
 
-	//end::associations-one-to-one-bidirectional-lazy-example[]
+		//end::associations-one-to-one-bidirectional-lazy-example[]
 
 		public PhoneDetails() {
 		}
@@ -138,7 +137,7 @@ public class OneToOneBidirectionalLazyTest extends BaseEntityManagerFunctionalTe
 		public void setPhone(Phone phone) {
 			this.phone = phone;
 		}
-	//tag::associations-one-to-one-bidirectional-lazy-example[]
+		//tag::associations-one-to-one-bidirectional-lazy-example[]
 	}
 	//end::associations-one-to-one-bidirectional-lazy-example[]
 }

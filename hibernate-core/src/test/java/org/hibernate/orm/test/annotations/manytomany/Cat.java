@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.manytomany;
+
 import java.util.Set;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -52,9 +53,7 @@ public class Cat {
 
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
-		if ( !( o instanceof Cat ) ) return false;
-
-		final Cat cat = (Cat) o;
+		if ( !(o instanceof Cat cat) ) return false;
 
 		if ( !id.equals( cat.id ) ) return false;
 

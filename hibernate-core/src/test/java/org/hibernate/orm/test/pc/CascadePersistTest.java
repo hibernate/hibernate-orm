@@ -4,28 +4,25 @@
  */
 package org.hibernate.orm.test.pc;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Fábio Takeo Ueno
  */
-public class CascadePersistTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class,
-			Phone.class
-		};
-	}
+@Jpa(
+		annotatedClasses = {
+				Person.class,
+				Phone.class
+		}
+)
+public class CascadePersistTest {
 
 	@Test
-	public void persistTest() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void persistTest(EntityManagerFactoryScope scope) {
+		scope.inTransaction(  entityManager -> {
 			//tag::pc-cascade-persist-example[]
 			Person person = new Person();
 			person.setId(1L);

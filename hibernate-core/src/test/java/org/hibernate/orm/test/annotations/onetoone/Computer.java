@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetoone;
+
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.CascadeType;
@@ -36,13 +37,9 @@ public class Computer {
 
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
-		if ( !( o instanceof Computer ) ) return false;
+		if ( !(o instanceof Computer computer) ) return false;
 
-		final Computer computer = (Computer) o;
-
-		if ( !id.equals( computer.id ) ) return false;
-
-		return true;
+		return id.equals( computer.id );
 	}
 
 	public int hashCode() {

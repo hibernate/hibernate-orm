@@ -15,19 +15,18 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.service.ServiceRegistry;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class BaseNamingTests extends BaseUnitTestCase {
+@BaseUnitTest
+public abstract class BaseNamingTests {
 
 	@Test
 	public void doTest() {
@@ -50,7 +49,7 @@ public abstract class BaseNamingTests extends BaseUnitTestCase {
 		}
 		finally {
 			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
-			if(metaServiceRegistry instanceof BootstrapServiceRegistry ) {
+			if ( metaServiceRegistry instanceof BootstrapServiceRegistry ) {
 				BootstrapServiceRegistryBuilder.destroy( metaServiceRegistry );
 			}
 		}
@@ -62,25 +61,25 @@ public abstract class BaseNamingTests extends BaseUnitTestCase {
 
 	protected void validateCustomer(Metadata metadata) {
 		final PersistentClass customerBinding = metadata.getEntityBinding( Customer.class.getName() );
-		assertNotNull( customerBinding );
+		assertThat( customerBinding ).isNotNull();
 
 		validateCustomerPrimaryTableName( customerBinding.getTable().getQuotedName() );
 
-		assertEquals( 1, customerBinding.getIdentifier().getColumnSpan() );
+		assertThat( customerBinding.getIdentifier().getColumnSpan() ).isEqualTo( 1 );
 		validateCustomerPrimaryKeyColumn( (Column) customerBinding.getIdentifier().getSelectables().get( 0 ) );
 
-		assertNotNull( customerBinding.getVersion() );
-		assertEquals( 1, customerBinding.getVersion().getColumnSpan() );
+		assertThat( customerBinding.getVersion() ).isNotNull();
+		assertThat( customerBinding.getVersion().getColumnSpan() ).isEqualTo( 1 );
 		validateCustomerVersionColumn( (Column) customerBinding.getVersion().getSelectables().get( 0 ) );
 
 		final Property nameBinding = customerBinding.getProperty( "name" );
-		assertNotNull( nameBinding );
-		assertEquals( 1, nameBinding.getColumnSpan() );
+		assertThat( nameBinding ).isNotNull();
+		assertThat( nameBinding.getColumnSpan() ).isEqualTo( 1 );
 		validateCustomerNameColumn( (Column) nameBinding.getSelectables().get( 0 ) );
 
 		final Property hqAddressBinding = customerBinding.getProperty( "hqAddress" );
-		assertNotNull( hqAddressBinding );
-		assertEquals( 3, hqAddressBinding.getColumnSpan() );
+		assertThat( hqAddressBinding ).isNotNull();
+		assertThat( hqAddressBinding.getColumnSpan() ).isEqualTo( 3 );
 		validateCustomerHqAddressComponent( assertTyping( Component.class, hqAddressBinding.getValue() ) );
 	}
 
@@ -97,31 +96,31 @@ public abstract class BaseNamingTests extends BaseUnitTestCase {
 
 	protected void validateOrder(Metadata metadata) {
 		final PersistentClass orderBinding = metadata.getEntityBinding( Order.class.getName() );
-		assertNotNull( orderBinding );
+		assertThat( orderBinding ).isNotNull();
 
 		validateOrderPrimaryTableName( orderBinding.getTable().getQuotedName() );
 
-		assertEquals( 1, orderBinding.getIdentifier().getColumnSpan() );
+		assertThat( orderBinding.getIdentifier().getColumnSpan() ).isEqualTo( 1 );
 		validateOrderPrimaryKeyColumn( (Column) orderBinding.getIdentifier().getSelectables().get( 0 ) );
 
 		final Property referenceCodeBinding = orderBinding.getProperty( "referenceCode" );
-		assertNotNull( referenceCodeBinding );
-		assertEquals( 1, referenceCodeBinding.getColumnSpan() );
+		assertThat( referenceCodeBinding ).isNotNull();
+		assertThat( referenceCodeBinding.getColumnSpan() ).isEqualTo( 1 );
 		validateOrderReferenceCodeColumn( (Column) referenceCodeBinding.getSelectables().get( 0 ) );
 
 		final Property placedBinding = orderBinding.getProperty( "placed" );
-		assertNotNull( placedBinding );
-		assertEquals( 1, placedBinding.getColumnSpan() );
+		assertThat( placedBinding ).isNotNull();
+		assertThat( placedBinding.getColumnSpan() ).isEqualTo( 1 );
 		validateOrderPlacedColumn( (Column) placedBinding.getSelectables().get( 0 ) );
 
 		final Property fulfilledBinding = orderBinding.getProperty( "fulfilled" );
-		assertNotNull( fulfilledBinding );
-		assertEquals( 1, fulfilledBinding.getColumnSpan() );
+		assertThat( fulfilledBinding ).isNotNull();
+		assertThat( fulfilledBinding.getColumnSpan() ).isEqualTo( 1 );
 		validateOrderFulfilledColumn( (Column) fulfilledBinding.getSelectables().get( 0 ) );
 
 		final Property customerBinding = orderBinding.getProperty( "customer" );
-		assertNotNull( customerBinding );
-		assertEquals( 1, customerBinding.getColumnSpan() );
+		assertThat( customerBinding ).isNotNull();
+		assertThat( customerBinding.getColumnSpan() ).isEqualTo( 1 );
 		validateOrderCustomerColumn( (Column) customerBinding.getSelectables().get( 0 ) );
 	}
 
@@ -138,29 +137,28 @@ public abstract class BaseNamingTests extends BaseUnitTestCase {
 	protected abstract void validateOrderCustomerColumn(Column column);
 
 
-
 	protected void validateZipCode(Metadata metadata) {
 		final PersistentClass zipCodeBinding = metadata.getEntityBinding( ZipCode.class.getName() );
-		assertNotNull( zipCodeBinding );
+		assertThat( zipCodeBinding ).isNotNull();
 
 		validateZipCodePrimaryTableName( zipCodeBinding.getTable().getQuotedName() );
 
-		assertEquals( 1, zipCodeBinding.getIdentifier().getColumnSpan() );
+		assertThat( zipCodeBinding.getIdentifier().getColumnSpan() ).isEqualTo( 1 );
 		validateZipCodePrimaryKeyColumn( (Column) zipCodeBinding.getIdentifier().getSelectables().get( 0 ) );
 
 		final Property codeBinding = zipCodeBinding.getProperty( "code" );
-		assertNotNull( codeBinding );
-		assertEquals( 1, codeBinding.getColumnSpan() );
+		assertThat( codeBinding ).isNotNull();
+		assertThat( codeBinding.getColumnSpan() ).isEqualTo( 1 );
 		validateZipCodeCodeColumn( (Column) codeBinding.getSelectables().get( 0 ) );
 
 		final Property cityBinding = zipCodeBinding.getProperty( "city" );
-		assertNotNull( cityBinding );
-		assertEquals( 1, cityBinding.getColumnSpan() );
+		assertThat( cityBinding ).isNotNull();
+		assertThat( cityBinding.getColumnSpan() ).isEqualTo( 1 );
 		validateZipCodeCityColumn( (Column) cityBinding.getSelectables().get( 0 ) );
 
 		final Property stateBinding = zipCodeBinding.getProperty( "state" );
-		assertNotNull( stateBinding );
-		assertEquals( 1, stateBinding.getColumnSpan() );
+		assertThat( stateBinding ).isNotNull();
+		assertThat( stateBinding.getColumnSpan() ).isEqualTo( 1 );
 		validateZipCodeStateColumn( (Column) stateBinding.getSelectables().get( 0 ) );
 	}
 
@@ -176,15 +174,16 @@ public abstract class BaseNamingTests extends BaseUnitTestCase {
 
 
 	protected void validateCustomerRegisteredTrademarks(Metadata metadata) {
-		final Collection collectionBinding = metadata.getCollectionBinding( Customer.class.getName() + ".registeredTrademarks" );
-		assertNotNull( collectionBinding );
+		final Collection collectionBinding = metadata.getCollectionBinding(
+				Customer.class.getName() + ".registeredTrademarks" );
+		assertThat( collectionBinding ).isNotNull();
 
 		validateCustomerRegisteredTrademarksTableName( collectionBinding.getCollectionTable().getQuotedName() );
 
-		assertEquals( 1, collectionBinding.getKey().getColumnSpan() );
+		assertThat( collectionBinding.getKey().getColumnSpan() ).isEqualTo( 1 );
 		validateCustomerRegisteredTrademarksKeyColumn( (Column) collectionBinding.getKey().getSelectables().get( 0 ) );
 
-		assertEquals( 1, collectionBinding.getElement().getColumnSpan() );
+		assertThat( collectionBinding.getElement().getColumnSpan() ).isEqualTo( 1 );
 		validateCustomerRegisteredTrademarksElementColumn(
 				(Column) collectionBinding.getElement()
 						.getSelectables()
@@ -201,14 +200,14 @@ public abstract class BaseNamingTests extends BaseUnitTestCase {
 
 	protected void validateCustomerAddresses(Metadata metadata) {
 		final Collection collectionBinding = metadata.getCollectionBinding( Customer.class.getName() + ".addresses" );
-		assertNotNull( collectionBinding );
+		assertThat( collectionBinding ).isNotNull();
 
 		validateCustomerAddressesTableName( collectionBinding.getCollectionTable().getQuotedName() );
 
-		assertEquals( 1, collectionBinding.getKey().getColumnSpan() );
+		assertThat( collectionBinding.getKey().getColumnSpan() ).isEqualTo( 1 );
 		validateCustomerAddressesKeyColumn( (Column) collectionBinding.getKey().getSelectables().get( 0 ) );
 
-		assertEquals( 3, collectionBinding.getElement().getColumnSpan() );
+		assertThat( collectionBinding.getElement().getColumnSpan() ).isEqualTo( 3 );
 		validateCustomerAddressesElementComponent( assertTyping( Component.class, collectionBinding.getElement() ) );
 	}
 
@@ -221,14 +220,14 @@ public abstract class BaseNamingTests extends BaseUnitTestCase {
 
 	protected void validateCustomerOrders(Metadata metadata) {
 		final Collection collectionBinding = metadata.getCollectionBinding( Customer.class.getName() + ".orders" );
-		assertNotNull( collectionBinding );
+		assertThat( collectionBinding ).isNotNull();
 
 		validateCustomerOrdersTableName( collectionBinding.getCollectionTable().getQuotedName() );
 
-		assertEquals( 1, collectionBinding.getKey().getColumnSpan() );
+		assertThat( collectionBinding.getKey().getColumnSpan() ).isEqualTo( 1 );
 		validateCustomerOrdersKeyColumn( (Column) collectionBinding.getKey().getSelectables().get( 0 ) );
 
-		assertEquals( 1, collectionBinding.getElement().getColumnSpan() );
+		assertThat( collectionBinding.getElement().getColumnSpan() ).isEqualTo( 1 );
 		validateCustomerOrdersElementColumn( (Column) collectionBinding.getElement().getSelectables().get( 0 ) );
 	}
 
@@ -240,15 +239,28 @@ public abstract class BaseNamingTests extends BaseUnitTestCase {
 
 	protected void validateCustomerIndustries(Metadata metadata) {
 		final Collection collectionBinding = metadata.getCollectionBinding( Customer.class.getName() + ".industries" );
-		assertNotNull( collectionBinding );
+		assertThat( collectionBinding ).isNotNull();
 
 		validateCustomerIndustriesTableName( collectionBinding.getCollectionTable().getQuotedName() );
 
-		assertEquals( 1, collectionBinding.getKey().getColumnSpan() );
+		assertThat( collectionBinding.getKey().getColumnSpan() ).isEqualTo( 1 );
 		validateCustomerIndustriesKeyColumn( (Column) collectionBinding.getKey().getSelectables().get( 0 ) );
 
-		assertEquals( 1, collectionBinding.getElement().getColumnSpan() );
+		assertThat( collectionBinding.getElement().getColumnSpan() ).isEqualTo( 1 );
 		validateCustomerIndustriesElementColumn( (Column) collectionBinding.getElement().getSelectables().get( 0 ) );
+	}
+
+	public static <T> T assertTyping(Class<T> expectedType, Object value) {
+		if ( !expectedType.isInstance( value ) ) {
+			fail(
+					String.format(
+							"Expecting value of type [%s], but found [%s]",
+							expectedType.getName(),
+							value == null ? "<null>" : value
+					)
+			);
+		}
+		return (T) value;
 	}
 
 	protected abstract void validateCustomerIndustriesTableName(String name);

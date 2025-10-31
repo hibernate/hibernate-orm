@@ -22,10 +22,10 @@ import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Artem V. Navrotskiy
@@ -46,13 +46,14 @@ public class ClassLoaderServiceImplTest {
 		TestClassLoader anotherLoader = new TestClassLoader();
 		anotherLoader.overrideClass(testClass);
 		Class<?> anotherClass = anotherLoader.loadClass(testClass.getName());
-		Assert.assertNotSame( testClass, anotherClass );
+		assertThat( anotherClass ).isNotSameAs(testClass);
 
 		// Check ClassLoaderServiceImpl().classForName() returns correct class (not from current ClassLoader).
 		ClassLoaderServiceImpl loaderService = new ClassLoaderServiceImpl(anotherLoader);
 		Class<Object> objectClass = loaderService.classForName(testClass.getName());
-		Assert.assertSame("Should not return class loaded from the parent classloader of ClassLoaderServiceImpl",
-				objectClass, anotherClass);
+		assertThat( anotherClass)
+				.describedAs( "Should not return class loaded from the parent classloader of ClassLoaderServiceImpl" )
+		.isSameAs( objectClass );
 	}
 
 	/**
@@ -78,14 +79,10 @@ public class ClassLoaderServiceImplTest {
 
 		StandardServiceRegistryBuilder.destroy( serviceRegistry );
 
-		try {
-			getTypeContributorServices( serviceRegistry );
-			Assert.fail("Should have thrown an HibernateException -- the ClassLoaderService instance was closed.");
-		}
-		catch (HibernateException e) {
-			Assert.assertEquals( "The ClassLoaderService cannot be reused (this instance was stopped already)",
-					e.getMessage() );
-		}
+		HibernateException hibernateException = assertThrows( HibernateException.class,
+				() -> getTypeContributorServices( serviceRegistry ) );
+		assertThat( hibernateException.getMessage() )
+				.isEqualTo( "The ClassLoaderService cannot be reused (this instance was stopped already)" );
 	}
 
 	private TypeContributor getTypeContributorServices(ServiceRegistry serviceRegistry) {
@@ -106,7 +103,7 @@ public class ClassLoaderServiceImplTest {
 			if (name.equals( "META-INF/services/org.hibernate.boot.model.TypeContributor" )) {
 				final URL serviceUrl = ConfigHelper.findAsResource(
 						"org/hibernate/orm/test/service/org.hibernate.boot.model.TypeContributor" );
-				return new Enumeration<URL>() {
+				return new Enumeration<>() {
 					boolean hasMore = true;
 
 					@Override
@@ -122,7 +119,7 @@ public class ClassLoaderServiceImplTest {
 				};
 			}
 			else {
-				return java.util.Collections.enumeration( java.util.Collections.<URL>emptyList() );
+				return java.util.Collections.enumeration( java.util.Collections.emptyList() );
 			}
 		}
 
@@ -134,13 +131,11 @@ public class ClassLoaderServiceImplTest {
 		 */
 		public void overrideClass(final Class<?> originalClass) throws IOException {
 			String originalPath = "/" + originalClass.getName().replaceAll("\\.", "/") + ".class";
-			InputStream inputStream = originalClass.getResourceAsStream(originalPath);
-			Assert.assertNotNull(inputStream);
-			try {
+			try (InputStream inputStream = originalClass.getResourceAsStream( originalPath )) {
+				assertThat( inputStream ).isNotNull();
+
 				byte[] data = toByteArray( inputStream );
-				defineClass(originalClass.getName(), data, 0, data.length);
-			} finally {
-				inputStream.close();
+				defineClass( originalClass.getName(), data, 0, data.length );
 			}
 		}
 

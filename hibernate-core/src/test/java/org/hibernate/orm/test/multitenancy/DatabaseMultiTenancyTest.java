@@ -5,8 +5,7 @@
 package org.hibernate.orm.test.multitenancy;
 
 import org.hibernate.dialect.H2Dialect;
-
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 
 /**
  * @author Vlad Mihalcea
@@ -16,6 +15,6 @@ public class DatabaseMultiTenancyTest extends AbstractMultiTenancyTest {
 
 	@Override
 	protected String tenantUrl(String originalUrl, String tenantIdentifier) {
-		return originalUrl.replace("db1", tenantIdentifier);
+		return originalUrl.replace( "db1", tenantIdentifier );
 	}
 }

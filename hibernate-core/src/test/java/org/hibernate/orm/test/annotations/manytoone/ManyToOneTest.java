@@ -20,6 +20,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.hibernate.cfg.MappingSettings.IMPLICIT_NAMING_STRATEGY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -128,7 +129,7 @@ public class ManyToOneTest {
 			var discount = new Discount();
 			discount.setDiscount( 20.12 );
 			var customer = new Customer();
-			var discounts = new ArrayList<>();
+			List<Discount> discounts = new ArrayList<>();
 			discounts.add( discount );
 			customer.setName( "Quentin Tarantino" );
 			discount.setOwner( customer );
@@ -144,7 +145,7 @@ public class ManyToOneTest {
 			var customer = new Customer();
 			customer.setName( "Clooney" );
 			discount.setOwner( customer );
-			var discounts = new ArrayList<>();
+			List<Discount> discounts = new ArrayList<>();
 			discounts.add( discount );
 			customer.setDiscountTickets( discounts );
 		} );
@@ -163,7 +164,7 @@ public class ManyToOneTest {
 			var discount = new Discount();
 			discount.setDiscount( 20 );
 			var customer = new Customer();
-			var discounts = new ArrayList<>();
+			List<Discount> discounts = new ArrayList<>();
 			discounts.add( discount );
 			customer.setName( "Quentin Tarantino" );
 			discount.setOwner( customer );

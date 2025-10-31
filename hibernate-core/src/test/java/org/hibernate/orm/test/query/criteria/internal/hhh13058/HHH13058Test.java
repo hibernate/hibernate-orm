@@ -4,33 +4,40 @@
  */
 package org.hibernate.orm.test.query.criteria.internal.hhh13058;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
-
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
+import org.hibernate.SessionFactory;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertThat;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Archie Cobbs
  * @author Nathan Xu
  */
-@JiraKey( value = "HHH-13058" )
-public class HHH13058Test extends BaseEntityManagerFunctionalTestCase {
+@JiraKey(value = "HHH-13058")
+@Jpa(
+		annotatedClasses = {
+				Task.class,
+				Patient.class,
+				Site.class
+		}
+)
+public class HHH13058Test {
 
 	private Set<Site> validSites;
 
@@ -41,18 +48,9 @@ public class HHH13058Test extends BaseEntityManagerFunctionalTestCase {
 	private Task taskWithPatient3WithValidSite2;
 	private Task taskWithPatientWithInvalidSite;
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Task.class,
-				Patient.class,
-				Site.class
-		};
-	}
-
-	@Before
-	public void setUp() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	@BeforeEach
+	public void setUp(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			final Site validSite1 = new Site();
 			final Site validSite2 = new Site();
 			final Site invalidSite = new Site();
@@ -102,9 +100,14 @@ public class HHH13058Test extends BaseEntityManagerFunctionalTestCase {
 		} );
 	}
 
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().unwrap( SessionFactory.class ).getSchemaManager().truncateMappedObjects();
+	}
+
 	@Test
-	public void testCorrelateSubQueryLeftJoin() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testCorrelateSubQueryLeftJoin(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 			final CriteriaQuery<Task> outerQuery = builder.createQuery( Task.class );
 			final Root<Task> outerTask = outerQuery.from( Task.class );
@@ -118,19 +121,20 @@ public class HHH13058Test extends BaseEntityManagerFunctionalTestCase {
 							subquery.select( subtask )
 									.where(
 											builder.or(
-												patient.isNull(),
-												site.in( validSites )
+													patient.isNull(),
+													site.in( validSites )
 											)
 									)
 					)
 			);
 			final List<Task> tasks = entityManager.createQuery( outerQuery ).getResultList();
-			assertThat( new HashSet<>( tasks ), is( new HashSet<>( Arrays.asList(
-					taskWithoutPatient,
-					taskWithPatient1WithValidSite1,
-					taskWithPatient2WithValidSite1,
-					taskWithPatient3WithValidSite2
-			) ) ) );
+			assertThat( new HashSet<>( tasks ) )
+					.isEqualTo( new HashSet<>( Arrays.asList(
+							taskWithoutPatient,
+							taskWithPatient1WithValidSite1,
+							taskWithPatient2WithValidSite1,
+							taskWithPatient3WithValidSite2
+					) ) );
 
 		} );
 	}

@@ -10,32 +10,36 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
-
 import org.hibernate.annotations.SQLRestriction;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Ganesh Tiwari
  * @author Nathan Xu
  */
 @JiraKey(value = "HHH-14112")
-public class HHH14112Test extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				HHH14112Test.Super.class,
+				HHH14112Test.SubObject.class
+		}
+)
+@SessionFactory
+public class HHH14112Test {
 
 	@Test
-	public void testCountSubObjectNotThrownExceptionBecauseOfWhere() {
-		doInJPA(this::sessionFactory, em -> {
-			em.createQuery( "SELECT count(*) FROM SubObject", Long.class).getSingleResult();
-		});
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Super.class, SubObject.class };
+	public void testCountSubObjectNotThrownExceptionBecauseOfWhere(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+					Long result = session.createQuery( "SELECT count(*) FROM SubObject", Long.class ).getSingleResult();
+					assertThat( result ).isEqualTo( 0L );
+				}
+		);
 	}
 
 	@Entity(name = "Super")

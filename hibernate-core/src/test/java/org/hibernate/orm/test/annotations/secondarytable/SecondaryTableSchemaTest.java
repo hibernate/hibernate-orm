@@ -4,68 +4,64 @@
  */
 package org.hibernate.orm.test.annotations.secondarytable;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
-
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Test;
+import java.util.List;
+import java.util.Map;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+
 
 /**
  * @author Vlad Mihalcea
  */
 @RequiresDialect(value = H2Dialect.class)
-public class SecondaryTableSchemaTest
-		extends BaseEntityManagerFunctionalTestCase {
+public class SecondaryTableSchemaTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Cluster.class,
-		};
+		return new Class[] {Cluster.class};
 	}
 
 	protected void addConfigOptions(Map options) {
 		options.put(
-			AvailableSettings.URL,
-			options.get( AvailableSettings.URL ) + ";INIT=CREATE SCHEMA IF NOT EXISTS schema1\\;CREATE SCHEMA IF NOT EXISTS schema2;"
+				AvailableSettings.URL,
+				options.get( AvailableSettings.URL )
+				+ ";INIT=CREATE SCHEMA IF NOT EXISTS schema1\\;CREATE SCHEMA IF NOT EXISTS schema2;"
 		);
 	}
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			List<Cluster> clusters = entityManager.createQuery( "select c from Cluster c" ).getResultList();
+		inTransaction( entityManager -> {
+			List<Cluster> clusters = entityManager.createQuery( "select c from Cluster c", Cluster.class )
+					.getResultList();
 
-			assertTrue(clusters.isEmpty());
+			assertThat( clusters.isEmpty() ).isTrue();
 		} );
 	}
 
 	@Entity(name = "Cluster")
 	@Table(name = "cluster", schema = "schema1")
-	@SecondaryTable(name = "Cluster", schema="schema2", pkJoinColumns = { @PrimaryKeyJoinColumn(name = "clusterid") })
+	@SecondaryTable(name = "Cluster", schema = "schema2", pkJoinColumns = {@PrimaryKeyJoinColumn(name = "clusterid")})
 	@SecondaryRow(table = "Cluster", optional = false)
 	@OptimisticLocking(type = OptimisticLockType.DIRTY)
 	@DynamicUpdate
-	public static class Cluster implements Serializable {
-		private static final long serialVersionUID = 3965099001305947412L;
+	public static class Cluster {
 
 		@Id
 		@Column(name = "objid")

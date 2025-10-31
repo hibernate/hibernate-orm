@@ -48,9 +48,9 @@ public class UserTypeMappingTest {
 	public void testFirstTypeThenEntity() {
 		cfg.addResource( "org/hibernate/orm/test/mapping/usertypes/TestEnumType.hbm.xml" )
 				.addResource( "org/hibernate/orm/test/mapping/usertypes/TestEntity.hbm.xml" );
-		SessionFactory sessions = cfg.buildSessionFactory( serviceRegistry );
-		assertNotNull( sessions );
-		sessions.close();
+		try (SessionFactory sessions = cfg.buildSessionFactory( serviceRegistry )) {
+			assertNotNull( sessions );
+		}
 	}
 
 	@Test
@@ -58,9 +58,9 @@ public class UserTypeMappingTest {
 		cfg.addResource( "org/hibernate/orm/test/mapping/usertypes/TestEntity.hbm.xml" )
 				.addResource( "org/hibernate/orm/test/mapping/usertypes/TestEnumType.hbm.xml" );
 
-		SessionFactory sessions = cfg.buildSessionFactory( serviceRegistry );
-		assertNotNull( sessions );
-		sessions.close();
+		try (SessionFactory sessions = cfg.buildSessionFactory( serviceRegistry )) {
+			assertNotNull( sessions );
+		}
 	}
 
 }

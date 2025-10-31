@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.proxy;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -15,7 +16,7 @@ public class Container implements Serializable {
 	private String name;
 	private Owner owner;
 	private Info info;
-	private Set dataPoints = new HashSet();
+	private Set<DataPoint> dataPoints = new HashSet<>();
 
 	public Container() {
 	}
@@ -56,11 +57,11 @@ public class Container implements Serializable {
 		this.info = info;
 	}
 
-	public Set getDataPoints() {
+	public Set<DataPoint> getDataPoints() {
 		return dataPoints;
 	}
 
-	public void setDataPoints(Set dataPoints) {
+	public void setDataPoints(Set<DataPoint> dataPoints) {
 		this.dataPoints = dataPoints;
 	}
 }

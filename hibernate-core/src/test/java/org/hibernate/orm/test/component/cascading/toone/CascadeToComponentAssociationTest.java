@@ -4,72 +4,62 @@
  */
 package org.hibernate.orm.test.component.cascading.toone;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.Session;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Steve Ebersole
  */
-public class CascadeToComponentAssociationTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
-	}
-
-	@Override
-	public String[] getMappings() {
-		return new String[] { "component/cascading/toone/Mappings.hbm.xml" };
-	}
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/component/cascading/toone/Mappings.hbm.xml/"
+)
+@SessionFactory
+public class CascadeToComponentAssociationTest {
 
 	@Test
-	public void testMerging() {
+	public void testMerging(SessionFactoryScope scope) {
 		// step1, we create a document with owner
-		Session session = openSession();
-		session.beginTransaction();
-		User user = new User();
-		Document document = new Document();
-		document.setOwner( user );
-		session.persist( document );
-		session.getTransaction().commit();
-		session.close();
+		Document doc = new Document();
+		scope.inTransaction( session -> {
+					User user = new User();
+					doc.setOwner( user );
+					session.persist( doc );
+				}
+		);
 
 		// step2, we verify that the document has owner and that owner has no personal-info; then we detach
-		session = openSession();
-		session.beginTransaction();
-		document = ( Document ) session.get( Document.class, document.getId() );
-		assertNotNull( document.getOwner() );
-		assertNull( document.getOwner().getPersonalInfo() );
-		session.getTransaction().commit();
-		session.close();
+		Document d = scope.fromTransaction( session -> {
+					Document document = session.find( Document.class, doc.getId() );
+					assertThat( document.getOwner() ).isNotNull();
+					assertThat( document.getOwner().getPersonalInfo() ).isNull();
+					return document;
+				}
+		);
 
 		// step3, try to specify the personal-info during detachment
 		Address addr = new Address();
 		addr.setStreet1( "123 6th St" );
 		addr.setCity( "Austin" );
 		addr.setState( "TX" );
-		document.getOwner().setPersonalInfo( new PersonalInfo( addr ) );
+		d.getOwner().setPersonalInfo( new PersonalInfo( addr ) );
 
 		// step4 we merge the document
-		session = openSession();
-		session.beginTransaction();
-		session.merge( document );
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction( session ->
+				session.merge( d )
+		);
 
 		// step5, final test
-		session = openSession();
-		session.beginTransaction();
-		document = ( Document ) session.get( Document.class, document.getId() );
-		assertNotNull( document.getOwner() );
-		assertNotNull( document.getOwner().getPersonalInfo() );
-		assertNotNull( document.getOwner().getPersonalInfo().getHomeAddress() );
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction(
+				session -> {
+					Document document = session.find( Document.class, d.getId() );
+					assertThat( document.getOwner() ).isNotNull();
+					assertThat( document.getOwner().getPersonalInfo() ).isNotNull();
+					assertThat( document.getOwner().getPersonalInfo().getHomeAddress() ).isNotNull();
+				}
+		);
 	}
 }

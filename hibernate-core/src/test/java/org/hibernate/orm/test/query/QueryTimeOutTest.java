@@ -4,71 +4,70 @@
  */
 package org.hibernate.orm.test.query;
 
-import java.sql.Statement;
-import java.sql.Types;
-import java.util.List;
-import java.util.Map;
-
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.MutationQuery;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.Query;
+import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
+import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
-import org.hibernate.testing.orm.junit.DialectContext;
-import org.junit.Before;
-import org.junit.Test;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import java.sql.Statement;
+import java.sql.Types;
+import java.util.List;
 
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Gail Badner
  */
-@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
-public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJdbcDriverProxying.class)
+public class QueryTimeOutTest extends BaseSessionFactoryFunctionalTest {
 
-	private static final PreparedStatementSpyConnectionProvider CONNECTION_PROVIDER = new PreparedStatementSpyConnectionProvider(
-	);
+	private static final PreparedStatementSpyConnectionProvider CONNECTION_PROVIDER =
+			new PreparedStatementSpyConnectionProvider();
 	private static final String QUERY = "update AnEntity set name='abc'";
-
 	private String expectedSqlQuery;
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[] { AnEntity.class };
+		return new Class[] {AnEntity.class};
 	}
 
 	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		if ( settings.containsKey( AvailableSettings.CONNECTION_PROVIDER ) ) {
-			CONNECTION_PROVIDER.setConnectionProvider( (ConnectionProvider) settings.get( AvailableSettings.CONNECTION_PROVIDER ) );
-		}
-		settings.put( AvailableSettings.CONNECTION_PROVIDER, CONNECTION_PROVIDER );
+	protected void applySettings(StandardServiceRegistryBuilder builer) {
+		ConnectionProvider connectionProvider = (ConnectionProvider) builer.getSettings()
+				.get( AvailableSettings.CONNECTION_PROVIDER );
+		CONNECTION_PROVIDER.setConnectionProvider( connectionProvider );
+		builer.applySetting( AvailableSettings.CONNECTION_PROVIDER, CONNECTION_PROVIDER );
 	}
 
-	@Before
+	@BeforeEach
 	public void before() {
 		CONNECTION_PROVIDER.clear();
-		final JdbcType jdbcType = sessionFactory().getTypeConfiguration().getJdbcTypeRegistry().getDescriptor(
-				Types.VARCHAR
-		);
+		SessionFactoryImplementor sessionFactoryImplementor = sessionFactory();
+		final JdbcType jdbcType = sessionFactoryImplementor.getTypeConfiguration().getJdbcTypeRegistry()
+				.getDescriptor(
+						Types.VARCHAR
+				);
 		final String baseQuery;
 		if ( DialectContext.getDialect() instanceof OracleDialect ) {
 			baseQuery = "update AnEntity ae1_0 set ae1_0.name=?";
@@ -79,7 +78,8 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 		else if ( DialectContext.getDialect() instanceof AbstractTransactSQLDialect ) {
 			baseQuery = "update ae1_0 set name=? from AnEntity ae1_0";
 		}
-		else if ( DialectContext.getDialect().getDmlTargetColumnQualifierSupport() == DmlTargetColumnQualifierSupport.NONE ) {
+		else if ( DialectContext.getDialect()
+						.getDmlTargetColumnQualifierSupport() == DmlTargetColumnQualifierSupport.NONE ) {
 			baseQuery = "update AnEntity set name=?";
 		}
 		else {
@@ -90,8 +90,8 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 				jdbcType.getJdbcLiteralFormatter( StringJavaType.INSTANCE )
 						.toJdbcLiteral(
 								"abc",
-								sessionFactory().getJdbcServices().getDialect(),
-								sessionFactory().getWrapperOptions()
+								sessionFactoryImplementor.getJdbcServices().getDialect(),
+								sessionFactoryImplementor.getWrapperOptions()
 						)
 		);
 	}
@@ -99,9 +99,8 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	@JiraKey(value = "HHH-12075")
 	public void testCreateQuerySetTimeout() {
-		doInHibernate(
-				this::sessionFactory, session -> {
-					Query query = session.createQuery( QUERY );
+		inTransaction( session -> {
+					MutationQuery query = session.createMutationQuery( QUERY );
 					query.setTimeout( 123 );
 					query.executeUpdate();
 
@@ -115,7 +114,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 						assertEquals( 0, setQueryTimeoutCalls.get( 1 )[0] );
 					}
 					catch (Exception ex) {
-						fail( "should not have thrown exception" );
+						fail( "should not have thrown exceptioinTransaction( session -> {n" );
 					}
 				}
 		);
@@ -124,9 +123,8 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	@JiraKey(value = "HHH-12075")
 	public void testCreateQuerySetTimeoutHint() {
-		doInHibernate(
-				this::sessionFactory, session -> {
-					Query query = session.createQuery( QUERY );
+		inTransaction( session -> {
+					MutationQuery query = session.createMutationQuery( QUERY );
 					query.setHint( HINT_SPEC_QUERY_TIMEOUT, 123000 );
 					query.executeUpdate();
 
@@ -149,8 +147,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	@JiraKey(value = "HHH-12075")
 	public void testCreateNativeQuerySetTimeout() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction( session -> {
 					NativeQuery query = session.createNativeQuery( QUERY );
 					query.setTimeout( 123 );
 					query.executeUpdate();
@@ -174,8 +171,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	@JiraKey(value = "HHH-12075")
 	public void testCreateNativeQuerySetTimeoutHint() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction( session -> {
 					NativeQuery query = session.createNativeQuery( QUERY );
 					query.setHint( HINT_SPEC_QUERY_TIMEOUT, 123000 );
 					query.executeUpdate();
@@ -199,8 +195,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	@JiraKey(value = "HHH-12075")
 	public void testCreateSQLQuerySetTimeout() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction( session -> {
 					NativeQuery query = session.createNativeQuery( QUERY );
 					query.setTimeout( 123 );
 					query.executeUpdate();
@@ -224,8 +219,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	@JiraKey(value = "HHH-12075")
 	public void testCreateSQLQuerySetTimeoutHint() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction( session -> {
 					NativeQuery query = session.createNativeQuery( QUERY );
 					query.setHint( HINT_SPEC_QUERY_TIMEOUT, 123000 );
 					query.executeUpdate();

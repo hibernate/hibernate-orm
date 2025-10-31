@@ -7,45 +7,40 @@ package org.hibernate.orm.test.pc;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class DynamicUpdateTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Product.class,
-		};
-	}
+@Jpa(
+		annotatedClasses = {
+				DynamicUpdateTest.Product.class
+		}
+)
+public class DynamicUpdateTest {
 
 	@Test
-	public void testLifecycle() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 
 			Product book = new Product();
-			book.setId(1L);
-			book.setName("High-Performance Java Persistence");
-			book.setDescription("get the most out of your persistence layer");
-			book.setPriceCents(29_99);
-			book.setQuantity(10_000);
+			book.setId( 1L );
+			book.setName( "High-Performance Java Persistence" );
+			book.setDescription( "get the most out of your persistence layer" );
+			book.setPriceCents( 29_99 );
+			book.setQuantity( 10_000 );
 
-			entityManager.persist(book);
-		});
+			entityManager.persist( book );
+		} );
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 
-			Product book = entityManager.find(Product.class, 1L);
-			book.setPriceCents(24_99);
-		});
+			Product book = entityManager.find( Product.class, 1L );
+			book.setPriceCents( 24_99 );
+		} );
 	}
 
 	//tag::pc-managed-state-dynamic-update-mapping-example[]
@@ -70,7 +65,7 @@ public class DynamicUpdateTest extends BaseEntityManagerFunctionalTestCase {
 
 		//Getters and setters are omitted for brevity
 
-	//end::pc-managed-state-dynamic-update-mapping-example[]
+		//end::pc-managed-state-dynamic-update-mapping-example[]
 
 		public Long getId() {
 			return id;
@@ -111,7 +106,7 @@ public class DynamicUpdateTest extends BaseEntityManagerFunctionalTestCase {
 		public void setQuantity(Integer quantity) {
 			this.quantity = quantity;
 		}
-	//tag::pc-managed-state-dynamic-update-mapping-example[]
+		//tag::pc-managed-state-dynamic-update-mapping-example[]
 	}
 	//end::pc-managed-state-dynamic-update-mapping-example[]
 }

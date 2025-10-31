@@ -5,21 +5,17 @@
 package org.hibernate.orm.test.sql.check;
 
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 
-import org.hibernate.testing.RequiresDialect;
 
 /**
  * @author Steve Ebersole
  */
-@RequiresDialect( value = OracleDialect.class )
+@RequiresDialect(value = OracleDialect.class)
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/sql/check/oracle-mappings.hbm.xml",
+		overrideCacheStrategy = false
+)
 public class OracleCheckStyleTest extends ResultCheckStyleTest {
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
-	}
-
-	@Override
-	public String[] getMappings() {
-		return new String[] { "sql/check/oracle-mappings.hbm.xml" };
-	}
 }

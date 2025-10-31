@@ -18,7 +18,7 @@ import org.hibernate.testing.jdbc.SQLStatementInspector;
 /**
  * @author Steve Ebersole
  */
-public interface EntityManagerFactoryScope {
+public interface EntityManagerFactoryScope extends AutoCloseable {
 	EntityManagerFactory getEntityManagerFactory();
 	void releaseEntityManagerFactory();
 

@@ -7,9 +7,11 @@ package org.hibernate.orm.test.customstructures;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 
 /**
  * Unit tests for JdbcParametersList
@@ -27,7 +29,7 @@ public class JdbcParameterListTest {
 		final JdbcParameterImpl element = makeJdbcParameterElement();
 		final JdbcParametersList singleton = JdbcParametersList.singleton( element );
 		expectsSize( 1, singleton );
-		Assert.assertSame( element, singleton.get( 0 ) );
+		assertThat( singleton.get( 0 ) ).isSameAs( element );
 	}
 
 	@Test
@@ -55,7 +57,7 @@ public class JdbcParameterListTest {
 		builder.add( element );
 		final JdbcParametersList built = builder.build();
 		expectsSize( 1, built );
-		Assert.assertSame( element, built.get( 0 ) );
+		assertThat( element ).isSameAs( built.get( 0 ) );
 	}
 
 	@Test
@@ -95,7 +97,7 @@ public class JdbcParameterListTest {
 		final JdbcParametersList built = builder.build();
 		expectsSize( size, built );
 		for ( int i = 0; i < size; i++ ) {
-			Assert.assertSame( elements[i], built.get( i ) );
+			assertThat( built.get( i ) ).isSameAs( elements[i] );
 		}
 	}
 
@@ -104,17 +106,17 @@ public class JdbcParameterListTest {
 	}
 
 	private static void expectsSize(int size, JdbcParametersList list) {
-		Assert.assertEquals( size, list.size() );
+		assertThat( list.size() ).isEqualTo( size );
 		for ( int i = 0; i < size; i++ ) {
-			Assert.assertNotNull( list.get( i ) );
+			assertThat( list.get( i ) ).isNotNull();
 		}
 		if ( size == 0 ) {
-			Assert.assertSame( JdbcParametersList.empty(), list );
+			assertThat( list ).isSameAs( JdbcParametersList.empty() );
 		}
 		else if ( size == 1 ) {
-			Assert.assertTrue( list instanceof JdbcParametersList.JdbcParametersListSingleton );
+			assertThat( list ).isInstanceOf( JdbcParametersList.JdbcParametersListSingleton.class );
 		}
-		Assert.assertThrows( ArrayIndexOutOfBoundsException.class, () -> list.get( size ) );
+		assertThrows( ArrayIndexOutOfBoundsException.class, () -> list.get( size ) );
 	}
 
 	private static JdbcParameterImpl makeJdbcParameterElement() {

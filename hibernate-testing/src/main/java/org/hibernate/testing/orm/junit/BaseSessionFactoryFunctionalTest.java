@@ -349,4 +349,53 @@ public abstract class BaseSessionFactoryFunctionalTest
 		}
 	}
 
+	/**
+	 * Execute function in a Hibernate transaction without return value
+	 *
+	 * @param sessionBuilderSupplier SessionFactory supplier
+	 * @param function function
+	 */
+	public static <T> T doInHibernateSessionBuilder(
+			Supplier<SessionBuilder> sessionBuilderSupplier,
+			TransactionUtil.HibernateTransactionFunction<T> function) {
+		Session session = null;
+		Transaction txn = null;
+		try {
+			session = sessionBuilderSupplier.get().openSession();
+			function.beforeTransactionCompletion();
+			txn = session.beginTransaction();
+
+			T result = function.apply( session );
+			if ( !txn.getRollbackOnly() ) {
+				txn.commit();
+			}
+			else {
+				try {
+					txn.rollback();
+				}
+				catch (Exception e) {
+					log.error( "Rollback failure", e );
+				}
+			}
+			return result;
+		}
+		catch ( Throwable t ) {
+			if ( txn != null && txn.isActive() ) {
+				try {
+					txn.rollback();
+				}
+				catch (Exception e) {
+					log.error( "Rollback failure", e );
+				}
+			}
+			throw t;
+		}
+		finally {
+			function.afterTransactionCompletion();
+			if ( session != null ) {
+				session.close();
+			}
+		}
+	}
+
 }

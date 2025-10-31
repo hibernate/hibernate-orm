@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.hand;
+
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -12,11 +13,11 @@ import java.util.HashSet;
 public class Organization {
 	private long id;
 	private String name;
-	private Collection employments;
+	private Collection<Employment> employments;
 
 	public Organization(String name) {
 		this.name = name;
-		employments = new HashSet();
+		employments = new HashSet<>();
 	}
 
 	public Organization() {}
@@ -24,13 +25,13 @@ public class Organization {
 	/**
 	 * @return Returns the employments.
 	 */
-	public Collection getEmployments() {
+	public Collection<Employment> getEmployments() {
 		return employments;
 	}
 	/**
 	 * @param employments The employments to set.
 	 */
-	public void setEmployments(Collection employments) {
+	public void setEmployments(Collection<Employment> employments) {
 		this.employments = employments;
 	}
 	/**

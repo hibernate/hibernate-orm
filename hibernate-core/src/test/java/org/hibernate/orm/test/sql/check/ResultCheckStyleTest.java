@@ -4,137 +4,118 @@
  */
 package org.hibernate.orm.test.sql.check;
 
-import org.hibernate.Session;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Steve Ebersole
  */
 @SuppressWarnings("unused")
-public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
+@SessionFactory
+public abstract class ResultCheckStyleTest {
 	public String getCacheConcurrencyStrategy() {
 		return null;
 	}
 
-	@Test
-	public void testInsertionFailureWithExceptionChecking() {
-		Session s = openSession();
-		s.beginTransaction();
-		ExceptionCheckingEntity e = new ExceptionCheckingEntity();
-		e.setName( "dummy" );
-		s.persist( e );
-		try {
-			s.flush();
-			fail( "expection flush failure!" );
-		}
-		catch( Exception ex ) {
-			// these should specifically be JDBCExceptions...
-		}
-		s.clear();
-		s.getTransaction().rollback();
-		s.close();
+	@AfterEach
+	public void cleanUp(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
 	@Test
-	public void testInsertionFailureWithParamChecking() {
-		Session s = openSession();
-		s.beginTransaction();
-		ParamCheckingEntity e = new ParamCheckingEntity();
-		e.setName( "dummy" );
-		s.persist( e );
-		try {
-			s.flush();
-			fail( "expection flush failure!" );
-		}
-		catch( Exception ex ) {
-			// these should specifically be HibernateExceptions...
-		}
-		s.clear();
-		s.getTransaction().rollback();
-		s.close();
+	public void testInsertionFailureWithExceptionChecking(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					ExceptionCheckingEntity e = new ExceptionCheckingEntity();
+					e.setName( "dummy" );
+					session.persist( e );
+					// these should specifically be JDBCExceptions...
+					Exception exception = assertThrows( Exception.class, session::flush );
+
+					session.clear();
+				}
+		);
 	}
 
 	@Test
-	public void testMergeFailureWithExceptionChecking() {
-		Session s = openSession();
-		s.beginTransaction();
-		ExceptionCheckingEntity e = new ExceptionCheckingEntity();
-		e.setId( Long.valueOf( 1 ) );
-		e.setName( "dummy" );
-		try {
-			s.merge( e );
-			s.flush();
-			fail( "expection flush failure!" );
-		}
-		catch( Exception ex ) {
-			// these should specifically be JDBCExceptions...
-		}
-		s.clear();
-		s.getTransaction().rollback();
-		s.close();
+	public void testInsertionFailureWithParamChecking(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					ParamCheckingEntity e = new ParamCheckingEntity();
+					e.setName( "dummy" );
+					session.persist( e );
+					// these should specifically be HibernateExceptions...
+					assertThrows( Exception.class, session::flush );
+					session.clear();
+				}
+		);
 	}
 
 	@Test
-	public void testUpdateFailureWithParamChecking() {
-		Session s = openSession();
-		s.beginTransaction();
-		ParamCheckingEntity e = new ParamCheckingEntity();
-		e.setId( Long.valueOf( 1 ) );
-		e.setName( "dummy" );
-		try {
-			s.merge( e );
-			s.flush();
-			fail( "expection flush failure!" );
-		}
-		catch( Exception ex ) {
-			// these should specifically be HibernateExceptions...
-		}
-		s.clear();
-		s.getTransaction().rollback();
-		s.close();
+	public void testMergeFailureWithExceptionChecking(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					ExceptionCheckingEntity e = new ExceptionCheckingEntity();
+					e.setId( 1L );
+					e.setName( "dummy" );
+					// these should specifically be JDBCExceptions...
+					assertThrows( Exception.class, () -> {
+						session.merge( e );
+						session.flush();
+					} );
+					session.clear();
+				}
+		);
 	}
 
 	@Test
-	public void testDeleteWithExceptionChecking() {
-		Session s = openSession();
-		s.beginTransaction();
-		ExceptionCheckingEntity e = new ExceptionCheckingEntity();
-		e.setId( Long.valueOf( 1 ) );
-		e.setName( "dummy" );
-		s.remove( e );
-		try {
-			s.flush();
-			fail( "expection flush failure!" );
-		}
-		catch( Exception ex ) {
-			// these should specifically be JDBCExceptions...
-		}
-		s.clear();
-		s.getTransaction().rollback();
-		s.close();
+	public void testUpdateFailureWithParamChecking(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					ParamCheckingEntity e = new ParamCheckingEntity();
+					e.setId( 1L );
+					e.setName( "dummy" );
+					// these should specifically be HibernateExceptions...
+					assertThrows( Exception.class, () -> {
+						session.merge( e );
+						session.flush();
+					} );
+					session.clear();
+				}
+		);
 	}
 
 	@Test
-	public void testDeleteWithParamChecking() {
-		Session s = openSession();
-		s.beginTransaction();
-		ParamCheckingEntity e = new ParamCheckingEntity();
-		e.setId( Long.valueOf( 1 ) );
-		e.setName( "dummy" );
-		s.remove( e );
-		try {
-			s.flush();
-			fail( "expection flush failure!" );
-		}
-		catch( Exception ex ) {
-			// these should specifically be HibernateExceptions...
-		}
-		s.clear();
-		s.getTransaction().rollback();
-		s.close();
+	public void testDeleteWithExceptionChecking(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					ExceptionCheckingEntity e = new ExceptionCheckingEntity();
+					e.setId( Long.valueOf( 1 ) );
+					e.setName( "dummy" );
+					session.remove( e );
+					// these should specifically be JDBCExceptions...
+					assertThrows( Exception.class, session::flush );
+					session.clear();
+				}
+		);
+	}
+
+	@Test
+	public void testDeleteWithParamChecking(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					ParamCheckingEntity e = new ParamCheckingEntity();
+					e.setId( Long.valueOf( 1 ) );
+					e.setName( "dummy" );
+					session.remove( e );
+					// these should specifically be HibernateExceptions...
+					assertThrows( Exception.class, session::flush );
+					session.clear();
+				}
+		);
 	}
 }

@@ -25,7 +25,7 @@ public class GeneratedTest {
 		scope.inTransaction(
 				session -> {
 					Antenna antenna = new Antenna();
-					antenna.id = new Integer( 1 );
+					antenna.id = 1;
 					session.persist( antenna );
 					assertNull( antenna.latitude );
 					assertNull( antenna.longitude );

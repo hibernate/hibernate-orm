@@ -4,129 +4,122 @@
  */
 package org.hibernate.orm.test.annotations.immutable;
 
-import java.util.Map;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PersistenceException;
-
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Immutable;
-
 import org.hibernate.query.Query;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Fail.fail;
 
 /**
  * @author Vlad Mihalcea
  */
-@JiraKey( value = "HHH-12387" )
-public class ImmutableEntityUpdateQueryHandlingModeExceptionTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Country.class, State.class, Photo.class,
-		ImmutableEntity.class, MutableEntity.class};
-	}
-
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-//		settings.put( AvailableSettings.IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE, "exception" );
-	}
+@JiraKey(value = "HHH-12387")
+@DomainModel(
+		annotatedClasses = {
+				Country.class,
+				State.class,
+				Photo.class,
+				ImmutableEntityUpdateQueryHandlingModeExceptionTest.ImmutableEntity.class,
+				ImmutableEntityUpdateQueryHandlingModeExceptionTest.MutableEntity.class
+		}
+)
+@SessionFactory
+public class ImmutableEntityUpdateQueryHandlingModeExceptionTest {
 
 	@Test
-	public void testBulkUpdate(){
-		Country _country = doInHibernate( this::sessionFactory, session -> {
+	public void testBulkUpdate(SessionFactoryScope scope) {
+		Country _country = scope.fromTransaction( session -> {
 			Country country = new Country();
-			country.setName("Germany");
-			session.persist(country);
-
+			country.setName( "Germany" );
+			session.persist( country );
 			return country;
 		} );
 
 		try {
-			doInHibernate( this::sessionFactory, session -> {
-				session.createQuery("update Country set name = :name" );
-			} );
-			fail("Should throw PersistenceException");
+			scope.inTransaction( session ->
+					session.createQuery( "update Country set name = :name" )
+			);
+			fail( "Should throw PersistenceException" );
 		}
 		catch (PersistenceException e) {
-			assertTrue( e instanceof HibernateException );
-			assertEquals(
-					"Error interpreting query [The query attempts to update an immutable entity: [Country] (set 'hibernate.query.immutable_entity_update_query_handling_mode' to suppress)] [update Country set name = :name]",
-					e.getMessage()
-			);
+			assertThat( e ).isInstanceOf( HibernateException.class );
+			assertThat( e.getMessage() )
+					.isEqualTo(
+							"Error interpreting query [The query attempts to update an immutable entity: [Country] (set 'hibernate.query.immutable_entity_update_query_handling_mode' to suppress)] [update Country set name = :name]" );
 		}
 
-		doInHibernate( this::sessionFactory, session -> {
-			Country country = session.find(Country.class, _country.getId());
-			assertEquals( "Germany", country.getName() );
+		scope.inTransaction( session -> {
+			Country country = session.find( Country.class, _country.getId() );
+			assertThat( country.getName() ).isEqualTo( "Germany" );
 		} );
 	}
 
 	@Test
-	@JiraKey( value = "HHH-12927" )
-	public void testUpdateMutableWithImmutableSubSelect() {
-		doInHibernate(this::sessionFactory, session -> {
+	@JiraKey(value = "HHH-12927")
+	public void testUpdateMutableWithImmutableSubSelect(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			String selector = "foo";
-			ImmutableEntity trouble = new ImmutableEntity(selector);
-			session.persist(trouble);
+			ImmutableEntity trouble = new ImmutableEntity( selector );
+			session.persist( trouble );
 
-			MutableEntity entity = new MutableEntity(trouble, "start");
-			session.persist(entity);
+			MutableEntity entity = new MutableEntity( trouble, "start" );
+			session.persist( entity );
 
 			// Change a mutable value via selection based on an immutable property
 			String statement = "Update MutableEntity e set e.changeable = :changeable where e.trouble.id in " +
-					"(select i.id from ImmutableEntity i where i.selector = :selector)";
+							"(select i.id from ImmutableEntity i where i.selector = :selector)";
 
-			Query query = session.createQuery(statement);
-			query.setParameter("changeable", "end");
-			query.setParameter("selector", "foo");
+			Query query = session.createQuery( statement );
+			query.setParameter( "changeable", "end" );
+			query.setParameter( "selector", "foo" );
 			query.executeUpdate();
 
-			session.refresh(entity);
+			session.refresh( entity );
 
 			// Assert that the value was changed. If HHH-12927 has not been fixed an exception will be thrown
 			// before we get here.
-			assertEquals("end", entity.getChangeable());
-		});
+			assertThat( entity.getChangeable() ).isEqualTo( "end" );
+		} );
 	}
 
 	@Test
-	@JiraKey( value = "HHH-12927" )
-	public void testUpdateImmutableWithMutableSubSelect() {
-		doInHibernate(this::sessionFactory, session -> {
+	@JiraKey(value = "HHH-12927")
+	public void testUpdateImmutableWithMutableSubSelect(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			String selector = "foo";
-			ImmutableEntity trouble = new ImmutableEntity(selector);
-			session.persist(trouble);
+			ImmutableEntity trouble = new ImmutableEntity( selector );
+			session.persist( trouble );
 
-			MutableEntity entity = new MutableEntity(trouble, "start");
-			session.persist(entity);
+			MutableEntity entity = new MutableEntity( trouble, "start" );
+			session.persist( entity );
 
 			// Change a mutable value via selection based on an immutable property
 			String statement = "Update ImmutableEntity e set e.selector = :changeable where e.id in " +
-					"(select i.id from MutableEntity i where i.changeable = :selector)";
+							"(select i.id from MutableEntity i where i.changeable = :selector)";
 
 			try {
-				session.createQuery(statement);
+				session.createQuery( statement );
 
-				fail("Should have throw exception");
+				fail( "Should have throw exception" );
 			}
 			catch (Exception expected) {
 			}
-		});
+		} );
 	}
 
 	@Entity(name = "MutableEntity")
-	public static class MutableEntity{
+	public static class MutableEntity {
 
 		@Id
 		@GeneratedValue

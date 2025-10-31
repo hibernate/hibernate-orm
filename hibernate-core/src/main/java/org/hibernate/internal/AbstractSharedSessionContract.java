@@ -41,6 +41,7 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ExceptionConverter;
+import org.hibernate.engine.spi.ExtensionStorage;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -111,12 +112,15 @@ import java.io.ObjectOutputStream;
 import java.io.Serial;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static java.lang.Boolean.TRUE;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
@@ -185,6 +189,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	//Lazily initialized
 	private transient ExceptionConverter exceptionConverter;
 	private transient SessionAssociationMarkers sessionAssociationMarkers;
+
+	private transient Map<Class<?>, Object> extensionStorages;
 
 	public AbstractSharedSessionContract(SessionFactoryImpl factory, SessionCreationOptions options) {
 		this.factory = factory;
@@ -1702,6 +1708,20 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			sessionAssociationMarkers = new SessionAssociationMarkers( this );
 		}
 		return sessionAssociationMarkers;
+	}
+
+	@Override
+	public <T extends ExtensionStorage> T getExtensionStorage(Class<T> extension, Supplier<T> createIfMissing) {
+		if ( extensionStorages == null ) {
+			extensionStorages = new HashMap<>();
+		}
+		Object storage = extensionStorages.get( extension );
+		if ( storage == null ) {
+			storage = createIfMissing.get();
+			extensionStorages.put( extension, storage );
+		}
+
+		return extension.cast( storage );
 	}
 
 	@Serial

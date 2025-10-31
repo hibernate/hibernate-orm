@@ -4,14 +4,13 @@
  */
 package org.hibernate.orm.test.caching.mocked;
 
-import org.junit.Test;
-
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.UnknownAccessTypeException;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Gail Badner

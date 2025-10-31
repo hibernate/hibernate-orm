@@ -4,43 +4,47 @@
  */
 package org.hibernate.orm.test.cache;
 
-import org.hibernate.Session;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Immutable;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.persister.entity.EntityPersister;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.cfg.Environment;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 /**
  * @author Steve Ebersole
  */
-public class ReferenceCacheTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES, true );
-		configuration.setProperty( AvailableSettings.USE_QUERY_CACHE, true );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { MyReferenceData.class };
-	}
+@DomainModel(
+		annotatedClasses = {
+				ReferenceCacheTest.MyReferenceData.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting(name = Environment.USE_DIRECT_REFERENCE_CACHE_ENTRIES, value = "true"),
+				@Setting(name = Environment.USE_QUERY_CACHE, value = "true"),
+		}
+)
+@SessionFactory
+public class ReferenceCacheTest {
 
 	@Test
-	public void testUseOfDirectReferencesInCache() throws Exception {
-		EntityPersister persister = sessionFactory().getMappingMetamodel().getEntityDescriptor( MyReferenceData.class );
+	public void testUseOfDirectReferencesInCache(SessionFactoryScope scope) throws Exception {
+		EntityPersister persister = scope.getSessionFactory().getMappingMetamodel()
+				.getEntityDescriptor( MyReferenceData.class );
 		assertFalse( persister.isMutable() );
 		assertTrue( persister.buildCacheEntry( null, null, null, null ).isReferenceEntry() );
 		assertFalse( persister.hasProxy() );
@@ -48,45 +52,37 @@ public class ReferenceCacheTest extends BaseCoreFunctionalTestCase {
 		final MyReferenceData myReferenceData = new MyReferenceData( 1, "first item", "abc" );
 
 		// save a reference in one session
-		Session s = openSession();
-		s.beginTransaction();
-		s.persist( myReferenceData );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction( s -> {
+			s.persist( myReferenceData );
+		} );
 
 		// now load it in another
-		s = openSession();
-		s.beginTransaction();
-//		MyReferenceData loaded = (MyReferenceData) s.get( MyReferenceData.class, 1 );
-		MyReferenceData loaded = (MyReferenceData) s.getReference( MyReferenceData.class, 1 );
-		s.getTransaction().commit();
-		s.close();
+		MyReferenceData loaded = scope.fromTransaction( s -> {
+			return  (MyReferenceData) s.getReference( MyReferenceData.class, 1 );
+		} );
 
 		// the 2 instances should be the same (==)
-		assertTrue( "The two instances were different references", myReferenceData == loaded );
+		assertSame( myReferenceData, loaded, "The two instances were different references" );
 
 		// now try query caching
-		s = openSession();
-		s.beginTransaction();
-		MyReferenceData queried = (MyReferenceData) s.createQuery( "from MyReferenceData" ).setCacheable( true ).list().get( 0 );
-		s.getTransaction().commit();
-		s.close();
+		MyReferenceData queried = scope.fromTransaction( s -> {
+			return (MyReferenceData) s.createQuery( "from MyReferenceData" ).setCacheable( true )
+					.list().get( 0 );
+		} );
 
 		// the 2 instances should be the same (==)
-		assertTrue( "The two instances were different references", myReferenceData == queried );
+		assertSame( myReferenceData, queried, "The two instances were different references" );
 
 		// cleanup
-		s = openSession();
-		s.beginTransaction();
-		s.remove( myReferenceData );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction( s -> {
+			s.remove( myReferenceData );
+		} );
 	}
 
-	@Entity( name="MyReferenceData" )
+	@Entity(name = "MyReferenceData")
 	@Immutable
 	@Cacheable
-	@Cache( usage = CacheConcurrencyStrategy.READ_ONLY )
+	@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 	@SuppressWarnings("unused")
 	public static class MyReferenceData {
 		@Id

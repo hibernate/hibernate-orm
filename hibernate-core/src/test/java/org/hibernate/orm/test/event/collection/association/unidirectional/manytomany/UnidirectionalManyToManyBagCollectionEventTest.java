@@ -12,15 +12,13 @@ import org.hibernate.orm.test.event.collection.ChildEntity;
 import org.hibernate.orm.test.event.collection.ParentWithCollection;
 import org.hibernate.orm.test.event.collection.association.AbstractAssociationCollectionEventTest;
 import org.hibernate.orm.test.event.collection.association.unidirectional.ParentWithCollectionOfEntities;
+import org.hibernate.testing.orm.junit.DomainModel;
 
 /**
  * @author Gail Badner
  */
+@DomainModel(xmlMappings = "org/hibernate/orm/test/event/collection/association/unidirectional/manytomany/UnidirectionalManyToManyBagMapping.hbm.xml")
 public class UnidirectionalManyToManyBagCollectionEventTest extends AbstractAssociationCollectionEventTest {
-	@Override
-	public String[] getMappings() {
-		return new String[] { "event/collection/association/unidirectional/manytomany/UnidirectionalManyToManyBagMapping.hbm.xml" };
-	}
 
 	@Override
 	public ParentWithCollection createParent(String name) {

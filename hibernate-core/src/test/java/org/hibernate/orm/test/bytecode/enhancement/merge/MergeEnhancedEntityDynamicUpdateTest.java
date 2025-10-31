@@ -10,13 +10,9 @@ import java.util.List;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -26,47 +22,56 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Luis Barreiro
  */
-@JiraKey( value = "HHH-11459" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class MergeEnhancedEntityDynamicUpdateTest extends BaseCoreFunctionalTestCase {
+@JiraKey(value = "HHH-11459")
+@DomainModel(
+		annotatedClasses = {
+				MergeEnhancedEntityDynamicUpdateTest.Person.class,
+				MergeEnhancedEntityDynamicUpdateTest.PersonAddress.class,
+				MergeEnhancedEntityDynamicUpdateTest.NullablePerson.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class MergeEnhancedEntityDynamicUpdateTest {
 	private Person person;
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{Person.class, PersonAddress.class, NullablePerson.class};
-	}
 
-	@Before
-	public void prepare() {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
 		person = new Person( 1L, "Sam" );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			s.persist( person );
 		} );
 	}
 
 	@Test
-	public void testMerge() {
-		doInHibernate( this::sessionFactory, s -> {
+	public void testMerge(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Person entity = s.find( Person.class, 1L );
 			entity.name = "John";
 			try {
 				s.merge( entity );
-			} catch ( RuntimeException e ) {
+			}
+			catch (RuntimeException e) {
 				fail( "Enhanced entity can't be merged: " + e.getMessage() );
 			}
 		} );
 	}
 
 	@Test
-	public void testRefresh() {
-		doInHibernate( this::sessionFactory, s -> {
+	public void testRefresh(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Person entity = s.find( Person.class, 1L );
 			entity.name = "John";
 
@@ -81,65 +86,60 @@ public class MergeEnhancedEntityDynamicUpdateTest extends BaseCoreFunctionalTest
 	}
 
 	@Test
-	public void testMergeWithNullValues() {
-		doInHibernate( this::sessionFactory, em -> {
+	public void testMergeWithNullValues(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			NullablePerson nullablePerson = new NullablePerson( 1L, "Sam", 100 );
-			em.persist( nullablePerson );
+			s.persist( nullablePerson );
 		} );
-		doInHibernate( this::sessionFactory, em -> {
+		scope.inTransaction( em -> {
 			NullablePerson updated = em.find( NullablePerson.class, 1L );
 			assertThat( updated.name ).isEqualTo( "Sam" );
 			assertThat( updated.number ).isEqualTo( 100 );
 		} );
 
 		// only some properties are null
-		doInHibernate( this::sessionFactory, em -> {
+		scope.inTransaction( em -> {
 			NullablePerson nullablePerson = new NullablePerson( 1L, "Joe", null );
 			em.merge( nullablePerson );
 		} );
-		doInHibernate( this::sessionFactory, em -> {
+		scope.inTransaction( em -> {
 			NullablePerson updated = em.find( NullablePerson.class, 1L );
 			assertThat( updated.name ).isEqualTo( "Joe" );
 			assertThat( updated.number ).isNull();
 		} );
 
 		// all properties are null:
-		doInHibernate( this::sessionFactory, em -> {
+		scope.inTransaction( em -> {
 			NullablePerson nullablePerson = new NullablePerson( 1L, null, null );
 			em.merge( nullablePerson );
 		} );
-		doInHibernate( this::sessionFactory, em -> {
+		scope.inTransaction( em -> {
 			NullablePerson updated = em.find( NullablePerson.class, 1L );
 			assertThat( updated.name ).isNull();
 			assertThat( updated.number ).isNull();
 		} );
 	}
 
-	@After
-	public void cleanup() {
-		doInHibernate( this::sessionFactory, s -> {
-			s.remove( person );
-		} );
-		doInHibernate( this::sessionFactory, s -> {
-			s.createQuery( "delete from NullablePerson" );
-		} );
+	@AfterEach
+	public void cleanup(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
 	// --- //
 
 	@Entity
-	@Table( name = "PERSON" )
+	@Table(name = "PERSON")
 	@DynamicUpdate
 	@DynamicInsert
-	private static class Person {
+	static class Person {
 
 		@Id
 		Long id;
 
-		@Column( name = "name", length = 10, nullable = false )
+		@Column(name = "name", length = 10, nullable = false)
 		String name;
 
-		@OneToMany( fetch = FetchType.LAZY, mappedBy = "parent", orphanRemoval = true, cascade = CascadeType.ALL )
+		@OneToMany(fetch = FetchType.LAZY, mappedBy = "parent", orphanRemoval = true, cascade = CascadeType.ALL)
 		List<PersonAddress> details = new ArrayList<>();
 
 		Person() {
@@ -152,15 +152,15 @@ public class MergeEnhancedEntityDynamicUpdateTest extends BaseCoreFunctionalTest
 	}
 
 	@Entity
-	@Table( name = "PERSON_ADDRESS" )
+	@Table(name = "PERSON_ADDRESS")
 	@DynamicUpdate
 	@DynamicInsert
-	private static class PersonAddress {
+	static class PersonAddress {
 
 		@Id
 		Long id;
 
-		@ManyToOne( optional = false, fetch = FetchType.LAZY )
+		@ManyToOne(optional = false, fetch = FetchType.LAZY)
 		Person parent;
 	}
 
@@ -168,7 +168,7 @@ public class MergeEnhancedEntityDynamicUpdateTest extends BaseCoreFunctionalTest
 	@Table(name = "NULLABLE_PERSON")
 	@DynamicUpdate
 	@DynamicInsert
-	private static class NullablePerson {
+	static class NullablePerson {
 
 		@Id
 		Long id;

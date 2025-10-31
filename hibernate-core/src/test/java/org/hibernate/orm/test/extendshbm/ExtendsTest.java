@@ -10,26 +10,25 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.AssertionsKt.assertNotNull;
 
 /**
  * @author Gavin King
  */
-public class ExtendsTest extends BaseUnitTestCase {
+public class ExtendsTest {
 	private StandardServiceRegistryImpl serviceRegistry;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry();
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		ServiceRegistryBuilder.destroy( serviceRegistry );
 	}

@@ -7,40 +7,56 @@ package org.hibernate.orm.test.cache;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.CacheRegionStatistics;
 import org.hibernate.stat.Statistics;
 
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.cache.CachingRegionFactory;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Christian Beikov
  */
-public class CacheRegionStatisticsTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				CacheRegionStatisticsTest.Dog.class
+		}
+)
+@SessionFactory(generateStatistics = true)
+@ServiceRegistry(
+		settings = {
+				@Setting(name = AvailableSettings.FORMAT_SQL, value = "false"),
+				@Setting(name = AvailableSettings.AUTO_EVICT_COLLECTION_CACHE, value = "true"),
+				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true"),
+				@Setting(name = AvailableSettings.USE_QUERY_CACHE, value = "true"),
+				@Setting(name = AvailableSettings.CACHE_REGION_FACTORY,
+						value = "org.hibernate.testing.cache.CachingRegionFactory"),
+		}
+)
+public class CacheRegionStatisticsTest {
 
 	@Test
-	@JiraKey( value = "HHH-15105")
-	public void testAccessDefaultQueryRegionStatistics() {
-		final Statistics statistics = sessionFactory().getStatistics();
+	@JiraKey(value = "HHH-15105")
+	public void testAccessDefaultQueryRegionStatistics(SessionFactoryScope scope) {
+		final Statistics statistics = scope.getSessionFactory().getStatistics();
 		final CacheRegionStatistics queryRegionStatistics = statistics.getQueryRegionStatistics(
 				"default-query-results-region"
 		);
-		doInHibernate(
-				this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 					List<Dog> resultList = session.createQuery( "from Dog", Dog.class )
 							.setCacheable( true )
 							.getResultList();
@@ -50,25 +66,9 @@ public class CacheRegionStatisticsTest extends BaseNonConfigCoreFunctionalTestCa
 		);
 	}
 
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, true );
-		ssrb.applySetting( AvailableSettings.USE_QUERY_CACHE, true );
-		ssrb.applySetting( AvailableSettings.CACHE_REGION_FACTORY, new CachingRegionFactory() );
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( Dog.class );
-	}
-
-	@Before
-	public void setupData() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+	@BeforeEach
+	public void setupData(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 					Dog yogi = new Dog( "Yogi" );
 					yogi.nickNames.add( "The Yog" );
 					yogi.nickNames.add( "Little Boy" );
@@ -82,16 +82,9 @@ public class CacheRegionStatisticsTest extends BaseNonConfigCoreFunctionalTestCa
 		);
 	}
 
-	@After
-	public void cleanupData() {
-		doInHibernate(
-				this::sessionFactory, session -> {
-					List<Dog> dogs = session.createQuery( "from Dog", Dog.class ).getResultList();
-					for ( Dog dog : dogs ) {
-						session.remove( dog );
-					}
-				}
-		);
+	@AfterEach
+	public void cleanupData(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
 	@Entity(name = "Dog")

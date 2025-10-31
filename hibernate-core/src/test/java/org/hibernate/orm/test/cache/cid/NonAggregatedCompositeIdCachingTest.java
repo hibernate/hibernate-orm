@@ -12,14 +12,13 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Steve Ebersole
  */
-public class NonAggregatedCompositeIdCachingTest extends BaseUnitTestCase {
+public class NonAggregatedCompositeIdCachingTest {
 
 	@Test
 	@JiraKey( value = "HHH-9913" )

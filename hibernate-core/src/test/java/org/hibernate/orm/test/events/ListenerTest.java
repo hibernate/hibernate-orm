@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EntityManagerFactory;
@@ -26,57 +27,70 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.*;
+
 
 /**
  * @author Vlad Mihalcea
  */
-public class ListenerTest extends BaseEntityManagerFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				ListenerTest.Person.class,
+				ListenerTest.Customer.class
+		}
+)
+@SessionFactory
+public class ListenerTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class,
-			Customer.class
-		};
+	@AfterEach
+	public void afterEach(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
-	@Test(expected = SecurityException.class)
-	public void testLoadListener() {
+	@BeforeEach
+	public void testLoadListener(SessionFactoryScope scope) {
 		Serializable customerId = 1L;
+		assertThatThrownBy( () ->
+				scope.inTransaction( entityManager -> {
+					//tag::events-interceptors-load-listener-example-part1[]
+					EntityManagerFactory entityManagerFactory = /* ... */
+							//end::events-interceptors-load-listener-example-part1[]
+							entityManager.getEntityManagerFactory();
+					//tag::events-interceptors-load-listener-example-part1[]
+					entityManagerFactory.unwrap( SessionFactoryImplementor.class ).getEventListenerRegistry()
+							.prependListeners( EventType.LOAD, new SecuredLoadEntityListener() );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			//tag::events-interceptors-load-listener-example-part1[]
-			EntityManagerFactory entityManagerFactory = entityManagerFactory();
-			entityManagerFactory.unwrap( SessionFactoryImplementor.class ).getEventListenerRegistry()
-				.prependListeners( EventType.LOAD, new SecuredLoadEntityListener() );
-
-			Customer customer = entityManager.find( Customer.class, customerId );
-			//end::events-interceptors-load-listener-example-part1[]
-		} );
+					Customer customer = entityManager.find( Customer.class, customerId );
+					//end::events-interceptors-load-listener-example-part1[]
+				} ) ).isInstanceOf( SecurityException.class );
 	}
 
 	@Test
-	public void testJPACallback() {
+	public void testJPACallback(SessionFactoryScope scope) {
 		Long personId = 1L;
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Person person = new Person();
 			person.id = personId;
 			person.name = "John Doe";
-			person.dateOfBirth = Timestamp.valueOf(LocalDateTime.of( 2000, 1, 1, 0, 0, 0 ));
+			person.dateOfBirth = Timestamp.valueOf( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 ) );
 			entityManager.persist( person );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Person person = entityManager.find( Person.class, personId );
-			assertTrue(person.age > 0);
-		} );
+		assertThatThrownBy( () ->
+				scope.inTransaction( entityManager -> {
+					Person person = entityManager.find( Person.class, personId );
+					assertTrue( person.age > 0 );
+				} ) ).isInstanceOf( SecurityException.class );
 	}
 
 	@Entity(name = "Customer")
@@ -110,7 +124,7 @@ public class ListenerTest extends BaseEntityManagerFunctionalTestCase {
 
 	//tag::events-jpa-callbacks-example[]
 	@Entity(name = "Person")
-	@EntityListeners( LastUpdateListener.class )
+	@EntityListeners(LastUpdateListener.class)
 	public static class Person {
 
 		@Id
@@ -136,8 +150,8 @@ public class ListenerTest extends BaseEntityManagerFunctionalTestCase {
 		@PostLoad
 		public void calculateAge() {
 			age = ChronoUnit.YEARS.between( LocalDateTime.ofInstant(
-					Instant.ofEpochMilli( dateOfBirth.getTime()), ZoneOffset.UTC),
-				LocalDateTime.now()
+							Instant.ofEpochMilli( dateOfBirth.getTime() ), ZoneOffset.UTC ),
+					LocalDateTime.now()
 			);
 		}
 	}
@@ -146,7 +160,7 @@ public class ListenerTest extends BaseEntityManagerFunctionalTestCase {
 
 		@PreUpdate
 		@PrePersist
-		public void setLastUpdate( Person p ) {
+		public void setLastUpdate(Person p) {
 			p.setLastUpdate( new Date() );
 		}
 	}

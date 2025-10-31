@@ -5,15 +5,13 @@
 package org.hibernate.orm.test.event.collection.association.bidirectional.onetomany;
 
 import org.hibernate.orm.test.event.collection.ParentWithCollection;
+import org.hibernate.testing.orm.junit.DomainModel;
 
 /**
  * @author Gail Badner
  */
+@DomainModel(xmlMappings = "org/hibernate/orm/test/event/collection/association/bidirectional/onetomany/BidirectionalOneToManyBagSubclassMapping.hbm.xml")
 public class BidirectionalOneToManyBagSubclassCollectionEventTest extends BidirectionalOneToManyBagCollectionEventTest {
-	@Override
-	public String[] getMappings() {
-		return new String[] { "event/collection/association/bidirectional/onetomany/BidirectionalOneToManyBagSubclassMapping.hbm.xml" };
-	}
 
 	@Override
 	public ParentWithCollection createParent(String name) {

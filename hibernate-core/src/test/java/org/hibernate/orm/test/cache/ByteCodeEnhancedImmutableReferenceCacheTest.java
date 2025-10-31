@@ -4,53 +4,56 @@
  */
 package org.hibernate.orm.test.cache;
 
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Transient;
 import org.hibernate.Session;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.Cacheable;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Transient;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author John O'Hara
  */
-public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES, true );
-		configuration.setProperty( AvailableSettings.USE_QUERY_CACHE, true );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{MyEnhancedReferenceData.class};
-	}
+@DomainModel(
+		annotatedClasses = {
+				ByteCodeEnhancedImmutableReferenceCacheTest.MyEnhancedReferenceData.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting(name = Environment.USE_DIRECT_REFERENCE_CACHE_ENTRIES, value = "true"),
+				@Setting(name = Environment.USE_QUERY_CACHE, value = "true"),
+		}
+)
+@SessionFactory
+public class ByteCodeEnhancedImmutableReferenceCacheTest {
 
 	@Test
-	public void testUseOfDirectReferencesInCache() {
-		EntityPersister persister = sessionFactory().getMappingMetamodel().getEntityDescriptor( MyEnhancedReferenceData.class );
+	public void testUseOfDirectReferencesInCache(SessionFactoryScope scope) {
+		EntityPersister persister = scope.getSessionFactory().getMappingMetamodel()
+				.getEntityDescriptor( MyEnhancedReferenceData.class );
 		assertFalse( persister.isMutable() );
 		assertTrue( persister.buildCacheEntry( null, null, null, null ).isReferenceEntry() );
 		assertFalse( persister.hasProxy() );
@@ -58,7 +61,7 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		final MyEnhancedReferenceData myReferenceData = new MyEnhancedReferenceData( 1, "first item", "abc" );
 
 		// save a reference in one session
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.persist( myReferenceData );
 		s.getTransaction().commit();
@@ -67,7 +70,7 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		assertNotNull( myReferenceData.$$_hibernate_getEntityEntry() );
 
 		// now load it in another
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		//		MyEnhancedReferenceData loaded = (MyEnhancedReferenceData) s.get( MyEnhancedReferenceData.class, 1 );
 		MyEnhancedReferenceData loaded = s.getReference( MyEnhancedReferenceData.class, 1 );
@@ -75,10 +78,10 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		s.close();
 
 		// the 2 instances should be the same (==)
-		assertSame( "The two instances were different references", myReferenceData, loaded );
+		assertSame( myReferenceData, loaded, "The two instances were different references" );
 
 		// now try query caching
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		MyEnhancedReferenceData queried = (MyEnhancedReferenceData)
 				s.createQuery( "from MyEnhancedReferenceData" )
@@ -88,10 +91,10 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		s.close();
 
 		// the 2 instances should be the same (==)
-		assertSame( "The two instances were different references", myReferenceData, queried );
+		assertSame( myReferenceData, queried, "The two instances were different references" );
 
 		// cleanup
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.remove( myReferenceData );
 		s.getTransaction().commit();
@@ -99,13 +102,13 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 	}
 
 	@Test
-	@JiraKey( value = "HHH-10795")
-	public void testAssociatedWithMultiplePersistenceContexts() {
+	@JiraKey(value = "HHH-10795")
+	public void testAssociatedWithMultiplePersistenceContexts(SessionFactoryScope scope) {
 		MyEnhancedReferenceData myReferenceData = new MyEnhancedReferenceData( 1, "first item", "abc" );
 		MyEnhancedReferenceData myOtherReferenceData = new MyEnhancedReferenceData( 2, "second item", "def" );
 
 		// save a reference in one session
-		Session s1 = openSession();
+		Session s1 = scope.getSessionFactory().openSession();
 		s1.beginTransaction();
 		s1.persist( myReferenceData );
 		s1.persist( myOtherReferenceData );
@@ -116,7 +119,7 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		assertNotNull( myOtherReferenceData.$$_hibernate_getEntityEntry() );
 
 		// now associate myReferenceData with 2 sessions
-		s1 = openSession();
+		s1 = scope.getSessionFactory().openSession();
 		s1.beginTransaction();
 		myReferenceData = s1.get( MyEnhancedReferenceData.class, myReferenceData.getId() );
 		myOtherReferenceData = s1.get( MyEnhancedReferenceData.class, myOtherReferenceData.getId() );
@@ -130,22 +133,22 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 
 		assertSame(
 				myReferenceData.$$_hibernate_getEntityEntry(),
-				( (SharedSessionContractImplementor) s1 ).getPersistenceContext().getEntry( myReferenceData )
+				((SharedSessionContractImplementor) s1).getPersistenceContext().getEntry( myReferenceData )
 		);
 		assertSame(
 				myOtherReferenceData.$$_hibernate_getEntityEntry(),
-				( (SharedSessionContractImplementor) s1 ).getPersistenceContext().getEntry( myOtherReferenceData )
+				((SharedSessionContractImplementor) s1).getPersistenceContext().getEntry( myOtherReferenceData )
 		);
 
-		Session s2 = openSession();
+		Session s2 = scope.getSessionFactory().openSession();
 		s2.beginTransaction();
 
 		// s2 should contains no entities
 		assertFalse( s2.contains( myReferenceData ) );
 		assertFalse( s2.contains( myOtherReferenceData ) );
 
-		assertNull( ( (SharedSessionContractImplementor) s2 ).getPersistenceContext().getEntry( myReferenceData ) );
-		assertNull( ( (SharedSessionContractImplementor) s2 ).getPersistenceContext().getEntry( myOtherReferenceData ) );
+		assertNull( ((SharedSessionContractImplementor) s2).getPersistenceContext().getEntry( myReferenceData ) );
+		assertNull( ((SharedSessionContractImplementor) s2).getPersistenceContext().getEntry( myOtherReferenceData ) );
 
 		// evict should do nothing, since p is not associated with s2
 		s2.evict( myReferenceData );
@@ -186,12 +189,12 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		assertNotNull( myOtherReferenceData.$$_hibernate_getEntityEntry() );
 
 		// load them into 2 sessions
-		s1 = openSession();
+		s1 = scope.getSessionFactory().openSession();
 		s1.getTransaction().begin();
 		assertSame( myReferenceData, s1.get( MyEnhancedReferenceData.class, myReferenceData.getId() ) );
 		assertSame( myOtherReferenceData, s1.get( MyEnhancedReferenceData.class, myOtherReferenceData.getId() ) );
 
-		s2 = openSession();
+		s2 = scope.getSessionFactory().openSession();
 		s2.getTransaction().begin();
 		assertSame( myReferenceData, s2.get( MyEnhancedReferenceData.class, myReferenceData.getId() ) );
 		assertSame( myOtherReferenceData, s2.get( MyEnhancedReferenceData.class, myOtherReferenceData.getId() ) );

@@ -73,42 +73,50 @@ public class StoredProcedureResultSetMappingTest {
 
 	@BeforeEach
 	protected void setup(EntityManagerFactoryScope scope) {
-		Session s = scope.getEntityManagerFactory().unwrap( SessionFactory.class ).openSession();
-		s.doWork(
-				connection -> connection.createStatement().execute(
-						"""
-								CREATE ALIAS allEmployeeNames AS $$
-									import org.h2.tools.SimpleResultSet;
-									import java.sql.*;
-									@CODE
-									ResultSet allEmployeeNames() {
-										SimpleResultSet rs = new SimpleResultSet();
-										rs.addColumn("ID", Types.INTEGER, 10, 0);
-										rs.addColumn("FIRSTNAME", Types.VARCHAR, 255, 0);
-										rs.addColumn("LASTNAME", Types.VARCHAR, 255, 0);
-										rs.addRow(1, "Steve", "Ebersole");
-										rs.addRow(1, "Jane", "Doe");
-										rs.addRow(1, "John", "Doe");
-										return rs;
-									}
-								$$"""
-				)
+		scope.inEntityManager(
+				entityManager -> {
+					Session s = scope.getEntityManagerFactory().unwrap( SessionFactory.class ).openSession();
+					s.doWork(
+							connection -> connection.createStatement().execute(
+									"""
+											CREATE ALIAS allEmployeeNames AS $$
+												import org.h2.tools.SimpleResultSet;
+												import java.sql.*;
+												@CODE
+												ResultSet allEmployeeNames() {
+													SimpleResultSet rs = new SimpleResultSet();
+													rs.addColumn("ID", Types.INTEGER, 10, 0);
+													rs.addColumn("FIRSTNAME", Types.VARCHAR, 255, 0);
+													rs.addColumn("LASTNAME", Types.VARCHAR, 255, 0);
+													rs.addRow(1, "Steve", "Ebersole");
+													rs.addRow(1, "Jane", "Doe");
+													rs.addRow(1, "John", "Doe");
+													return rs;
+												}
+											$$"""
+							)
+					);
+					s.close();
+				}
 		);
 	}
 
 	@AfterEach
 	public void cleanup(EntityManagerFactoryScope scope) {
-		Session s = scope.getEntityManagerFactory().unwrap( SessionFactory.class ).openSession();
-		s.doWork(
-				connection -> connection.createStatement().execute( "DROP ALIAS allEmployeeNames IF EXISTS" )
-		);
+		scope.inEntityManager(entityManager -> {
+			Session s = scope.getEntityManagerFactory().unwrap( SessionFactory.class ).openSession();
+			s.doWork(
+					connection -> connection.createStatement().execute( "DROP ALIAS allEmployeeNames IF EXISTS" )
+			);
+			s.close();
+		});
 	}
 
 	@Test
 	public void testPartialResults(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
 			StoredProcedureQuery query = em.createStoredProcedureQuery( "allEmployeeNames", "id-fname-lname" );
-			List results = query.getResultList();
+			List<?> results = query.getResultList();
 			assertEquals( 3, results.size() );
 		} );
 	}

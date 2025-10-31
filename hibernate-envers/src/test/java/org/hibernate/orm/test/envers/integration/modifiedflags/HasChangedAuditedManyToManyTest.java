@@ -29,6 +29,7 @@ import static org.hibernate.orm.test.envers.tools.TestTools.makeList;
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 @RequiresDialect(H2Dialect.class)
+// todo (envers-junit): migrate this after AbstractModifiedFlagsOneSessionTest
 public class HasChangedAuditedManyToManyTest extends AbstractModifiedFlagsOneSessionTest {
 
 	private long id_car1;

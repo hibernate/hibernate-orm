@@ -13,6 +13,7 @@ import org.hibernate.orm.test.envers.AbstractOneSessionTest;
  *
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
+// todo (envers-junit): migrate this after AbstractOneSessionTest
 public abstract class AbstractModifiedFlagsOneSessionTest extends
 														AbstractOneSessionTest {
 

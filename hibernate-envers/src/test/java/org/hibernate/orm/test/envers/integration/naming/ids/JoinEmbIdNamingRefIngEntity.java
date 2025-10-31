@@ -83,10 +83,10 @@ public class JoinEmbIdNamingRefIngEntity {
 
 		JoinEmbIdNamingRefIngEntity that = (JoinEmbIdNamingRefIngEntity) o;
 
-		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
+		if ( data != null ? !data.equals( that.getData() ) : that.getData() != null ) {
 			return false;
 		}
-		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+		if ( id != null ? !id.equals( that.getId() ) : that.getId() != null ) {
 			return false;
 		}
 

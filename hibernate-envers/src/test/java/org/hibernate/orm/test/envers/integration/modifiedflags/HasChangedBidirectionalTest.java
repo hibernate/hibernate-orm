@@ -14,94 +14,116 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.configuration.EnversSettings;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.orm.test.envers.tools.TestTools.extractRevisionNumbers;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-7949")
+@Jpa(integrationSettings = @Setting(name = EnversSettings.GLOBAL_WITH_MODIFIED_FLAG, value = "true"),
+		annotatedClasses = {HasChangedBidirectionalTest.Ticket.class, HasChangedBidirectionalTest.Comment.class})
 public class HasChangedBidirectionalTest extends AbstractModifiedFlagsEntityTest {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Ticket.class, Comment.class };
-	}
 
-	@Test
-	@Priority(10)
-	public void initData() throws Exception {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1 | Create ticket with comments
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inEntityManager( entityManager -> {
+			entityManager.getTransaction().begin();
 			final Ticket ticket = new Ticket( 1, "data-t1" );
 			final Comment comment = new Comment( 1, "Initial comment-t1" );
 			ticket.addComment( comment );
 			entityManager.persist( comment );
 			entityManager.persist( ticket );
+			entityManager.getTransaction().commit();
 		} );
 
 		// Revision 2 | Create ticket without comments
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inEntityManager( entityManager -> {
+			entityManager.getTransaction().begin();
 			final Ticket ticket = new Ticket( 2, "data-t2" );
 			entityManager.persist( ticket );
+			entityManager.getTransaction().commit();
 		} );
 
 		// Revision 3 | Update ticket with comments
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inEntityManager( entityManager -> {
+			entityManager.getTransaction().begin();
 			final Ticket ticket = entityManager.find( Ticket.class, 1 );
 			ticket.setData( "data-changed-t1" );
 			entityManager.merge( ticket );
+			entityManager.getTransaction().commit();
 		} );
 
 		// Revision 4 | Update ticket without comments
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inEntityManager( entityManager -> {
+			entityManager.getTransaction().begin();
 			final Ticket ticket = entityManager.find( Ticket.class, 2 );
 			ticket.setData( "data-changed-t2" );
 			entityManager.merge( ticket );
+			entityManager.getTransaction().commit();
 		} );
 
 		// Revision 5 | Update ticket and comment
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inEntityManager( entityManager -> {
+			entityManager.getTransaction().begin();
 			final Ticket ticket = entityManager.find( Ticket.class, 1 );
 			ticket.setData( "data-changed-twice" );
 			ticket.getComments().get( 0 ).setText( "comment-modified" );
 			ticket.getComments().forEach( entityManager::merge );
 			entityManager.merge( ticket );
+			entityManager.getTransaction().commit();
 		} );
 
 		// Revision 6 | Update ticket and comment collection
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inEntityManager( entityManager -> {
+			entityManager.getTransaction().begin();
 			final Ticket ticket = entityManager.find( Ticket.class, 1 );
 			final Comment comment = new Comment( 2, "Comment2" );
 			ticket.addComment( comment );
 			entityManager.merge( comment );
 			entityManager.merge( ticket );
+			entityManager.getTransaction().commit();
 		} );
 	}
 
 	@Test
-	public void testRevisionCounts() {
-		assertEquals( Arrays.asList( 1, 3, 5, 6 ), getAuditReader().getRevisions( Ticket.class, 1 ) );
-		assertEquals( Arrays.asList( 2, 4 ), getAuditReader().getRevisions( Ticket.class, 2 ) );
-		assertEquals( Arrays.asList( 1, 5 ), getAuditReader().getRevisions( Comment.class, 1 ) );
-		assertEquals( Arrays.asList( 6 ), getAuditReader().getRevisions( Comment.class, 2 ) );
+	public void testRevisionCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1, 3, 5, 6 ), auditReader.getRevisions( Ticket.class, 1 ) );
+			assertEquals( Arrays.asList( 2, 4 ), auditReader.getRevisions( Ticket.class, 2 ) );
+			assertEquals( Arrays.asList( 1, 5 ), auditReader.getRevisions( Comment.class, 1 ) );
+			assertEquals( Arrays.asList( 6 ), auditReader.getRevisions( Comment.class, 2 ) );
+		} );
 	}
 
 	@Test
-	public void testHasChanged() {
-		assertEquals( Arrays.asList( 1, 6 ), extractRevisionNumbers( queryForPropertyHasChanged( Ticket.class, 1, "comments" ) ) );
-		assertEquals( Arrays.asList( 2 ), extractRevisionNumbers( queryForPropertyHasChanged( Ticket.class, 2, "comments" ) ) );
+	public void testHasChanged(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1, 6 ), extractRevisionNumbers( queryForPropertyHasChanged( auditReader, Ticket.class, 1, "comments" ) ) );
+			assertEquals( Arrays.asList( 2 ), extractRevisionNumbers( queryForPropertyHasChanged( auditReader, Ticket.class, 2, "comments" ) ) );
+		} );
 	}
 
 	@Test
-	public void testHasNotChanged() {
-		assertEquals( Arrays.asList( 3, 5 ), extractRevisionNumbers( queryForPropertyHasNotChanged( Ticket.class, 1, "comments" ) ) );
-		assertEquals( Arrays.asList( 4 ), extractRevisionNumbers( queryForPropertyHasNotChanged( Ticket.class, 2, "comments" ) ) );
+	public void testHasNotChanged(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 3, 5 ), extractRevisionNumbers( queryForPropertyHasNotChanged( auditReader, Ticket.class, 1, "comments" ) ) );
+			assertEquals( Arrays.asList( 4 ), extractRevisionNumbers( queryForPropertyHasNotChanged( auditReader, Ticket.class, 2, "comments" ) ) );
+		} );
 	}
 
 	@Entity(name = "Ticket")

@@ -53,18 +53,18 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	/**
 	 * Retrieve the explicit alias, if one.  May return null
 	 */
-	String getExplicitAlias();
+	@Nullable String getExplicitAlias();
 
 	/**
 	 * Set the explicit alias for this path
 	 */
-	void setExplicitAlias(String explicitAlias);
+	void setExplicitAlias(@Nullable String explicitAlias);
 
 	/**
 	 * Get the left-hand side of this path - may be null, indicating a
 	 * root, cross-join or entity-join
 	 */
-	SqmPath<?> getLhs();
+	@Nullable SqmPath<?> getLhs();
 
 	/**
 	 * Returns an immutable List of reusable paths
@@ -81,7 +81,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	 */
 	void registerReusablePath(SqmPath<?> path);
 
-	SqmPath<?> getReusablePath(String name);
+	@Nullable SqmPath<?> getReusablePath(String name);
 
 	/**
 	 * This node's type is its "referenced path source"
@@ -105,13 +105,13 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	@Override
 	<S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget);
 
-	<S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType, String alias);
+	<S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType, @Nullable String alias);
 
-	<S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget, String alias);
+	<S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias);
 
-	<S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType, String alias, boolean fetch);
+	<S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetch);
 
-	<S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch);
+	<S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch);
 
 	default SqmRoot<?> findRoot() {
 		final SqmPath<?> lhs = getLhs();

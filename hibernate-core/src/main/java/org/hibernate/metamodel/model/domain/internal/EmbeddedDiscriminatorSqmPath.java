@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.query.sqm.DiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -13,6 +14,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.spi.NavigablePath;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * {@link SqmPath} specialization for an embeddable discriminator
@@ -37,7 +40,12 @@ public class EmbeddedDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implemen
 	}
 
 	@Override
-	public EmbeddedDiscriminatorSqmPathSource<T> getExpressible() {
+	public @NonNull SqmPath<?> getLhs() {
+		return castNonNull( super.getLhs() );
+	}
+
+	@Override
+	public @NonNull EmbeddedDiscriminatorSqmPathSource<T> getExpressible() {
 //		return (EmbeddedDiscriminatorSqmPathSource<T>) getNodeType();
 		return (EmbeddedDiscriminatorSqmPathSource<T>) getReferencedPathSource();
 	}

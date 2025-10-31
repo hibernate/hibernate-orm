@@ -611,7 +611,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override @SuppressWarnings("unchecked")
 	public <T extends HibernateCriteriaBuilder> T unwrap(Class<T> clazz) {
-		return (T) extensions.get( clazz );
+		final T result = (T) extensions.get( clazz );
+		if ( result == null ) {
+			throw new IllegalArgumentException( "Unable to unwrap to " + clazz.getName() );
+		}
+		return result;
 	}
 
 	@Override
@@ -1539,7 +1543,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return ( (SqmExpression<?>) character ).asString();
 	}
 
-	public <T> SqmLiteral<T> literal(T value, SqmExpression<? extends T> typeInferenceSource) {
+	public <T> SqmLiteral<T> literal(@Nullable T value, @Nullable SqmExpression<? extends T> typeInferenceSource) {
 		return value == null
 				? new SqmLiteralNull<>( this )
 				: createLiteral( value, resolveInferredType( value, typeInferenceSource ) );
@@ -1562,7 +1566,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	private <T> SqmBindableType<? extends T> resolveInferredType(
-			T value, SqmExpression<? extends T> typeInferenceSource) {
+			@Nullable T value, @Nullable SqmExpression<? extends T> typeInferenceSource) {
 		if ( typeInferenceSource != null ) {
 			return typeInferenceSource.getNodeType();
 		}
@@ -1593,7 +1597,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public <T> SqmLiteral<T> literal(T value) {
+	public <T> SqmLiteral<T> literal(@Nullable T value) {
 		if ( value == null ) {
 			if ( jpaCompliance.isJpaQueryComplianceEnabled() ) {
 				throw new IllegalArgumentException( "literal value cannot be null" );
@@ -1676,7 +1680,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 
 		@Override
-		public SqmDomainType<T> getSqmType() {
+		public @Nullable SqmDomainType<T> getSqmType() {
 			return null;
 		}
 	}
@@ -1687,7 +1691,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public <T> JpaCriteriaParameter<T> parameter(Class<T> paramClass, String name) {
+	public <T> JpaCriteriaParameter<T> parameter(Class<T> paramClass, @Nullable String name) {
 		final BasicType<T> basicType = getTypeConfiguration().getBasicTypeForJavaType( paramClass );
 		boolean notBasic = basicType == null;
 		final BindableType<T> parameterType =
@@ -1704,7 +1708,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public <T> JpaParameterExpression<List<T>> listParameter(Class<T> paramClass, String name) {
+	public <T> JpaParameterExpression<List<T>> listParameter(Class<T> paramClass, @Nullable String name) {
 		final BindableType<List<T>> parameterType = new MultiValueParameterType<>( (Class<List<T>>) (Class) List.class );
 		return new JpaCriteriaParameter<>( name, parameterType, true, this );
 	}
@@ -1819,8 +1823,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	private SqmFunction<String> createTrimNode(
-			TrimSpec trimSpecification,
-			SqmExpression<Character> trimCharacter,
+			@Nullable TrimSpec trimSpecification,
+			@Nullable SqmExpression<Character> trimCharacter,
 			SqmExpression<String> source) {
 		if ( trimSpecification == null ) {
 			trimSpecification = TrimSpec.BOTH;
@@ -1908,7 +1912,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	private SqmFunction<Integer> createLocateFunctionNode(
 			SqmExpression<String> source,
 			SqmExpression<String> pattern,
-			SqmExpression<Integer> startPosition) {
+			@Nullable SqmExpression<Integer> startPosition) {
 		final List<SqmTypedNode<?>> arguments;
 		if ( startPosition == null ) {
 			arguments = asList(
@@ -2111,7 +2115,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	/**
 	 * Creates an expression for the value with the given "type inference" information
 	 */
-	public <T> SqmExpression<T> value(T value, SqmExpression<? extends T> typeInferenceSource) {
+	public <T> SqmExpression<T> value(@Nullable T value, @Nullable SqmExpression<? extends T> typeInferenceSource) {
 		if ( value instanceof SqmExpression<?> ) {
 			//noinspection unchecked
 			return (SqmExpression<T>) value;
@@ -2128,7 +2132,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public <T> SqmExpression<T> value(T value) {
+	public <T> SqmExpression<T> value(@Nullable T value) {
 		if ( value instanceof Duration duration ) {
 			final JpaExpression<Duration> expression = duration.getNano() == 0
 					? duration( duration.getSeconds(), TemporalUnit.SECOND )
@@ -2158,9 +2162,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
-	private static <X, T extends X> BindableType<? extends X> resolveInferredParameterType(
-			X value,
-			SqmExpression<T> typeInferenceSource,
+	private static <X, T extends X> @Nullable BindableType<? extends X> resolveInferredParameterType(
+			@Nullable X value,
+			@Nullable SqmExpression<T> typeInferenceSource,
 			TypeConfiguration typeConfiguration) {
 
 		if ( typeInferenceSource != null ) {
@@ -2184,7 +2188,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
-	private <T> ValueBindJpaCriteriaParameter<T> valueParameter(T value, SqmExpression<? extends T> typeInferenceSource) {
+	private <T> ValueBindJpaCriteriaParameter<T> valueParameter(@Nullable T value, @Nullable SqmExpression<? extends T> typeInferenceSource) {
 		final var bindableType = resolveInferredParameterType( value, typeInferenceSource, getTypeConfiguration() );
 		if ( bindableType == null || isInstance( bindableType, value) ) {
 			@SuppressWarnings("unchecked") // safe, we just checked
@@ -2227,7 +2231,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return new ValueBindJpaCriteriaParameter<>( getParameterBindType( value ), value, this );
 	}
 
-	private <T> BindableType<? super T> getParameterBindType(T value) {
+	private <T> @Nullable BindableType<? super T> getParameterBindType(@Nullable T value) {
 		return getMappingMetamodel().resolveParameterBindType( value );
 	}
 
@@ -2283,12 +2287,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	private <Y> SqmExpression<Y> createNullifFunctionNode(SqmExpression<Y> first, SqmExpression<Y> second) {
-		final DomainType<? extends Y> type =
-				highestPrecedenceType( first.getExpressible(), second.getExpressible() )
-						.getSqmType();
+		final SqmBindableType<? extends Y> bindableType =
+				highestPrecedenceType( first.getExpressible(), second.getExpressible() );
 		@SuppressWarnings("unchecked")
-		final ReturnableType<Y> resultType = (ReturnableType<Y>) type;
-		return getFunctionDescriptor("nullif").generateSqmExpression(
+		final ReturnableType<Y> resultType =
+				bindableType == null ? null : (ReturnableType<Y>) bindableType.getSqmType();
+		return getFunctionDescriptor( "nullif" ).generateSqmExpression(
 				asList( first, second ),
 				resultType,
 				getQueryEngine()
@@ -3125,7 +3129,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public SqmFunction<String> format(Expression<? extends TemporalAccessor> datetime, String pattern) {
-		final SqmFormat sqmFormat = new SqmFormat( pattern, null, this );
+		final SqmFormat sqmFormat = new SqmFormat( pattern, getStringType(), this );
 		return getFunctionDescriptor( "format" ).generateSqmExpression(
 				asList( (SqmExpression<?>) datetime, sqmFormat ),
 				null,
@@ -3325,7 +3329,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			Expression<String> string,
 			Expression<String> replacement,
 			Expression<Integer> start,
-			Expression<Integer> length) {
+			@Nullable Expression<Integer> length) {
 		SqmExpression<String> sqmString = (SqmExpression<String>) string;
 		SqmExpression<String> sqmReplacement = (SqmExpression<String>) replacement;
 		SqmExpression<Integer> sqmStart = (SqmExpression<Integer>) start;
@@ -3395,10 +3399,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public SqmFunction<String> pad(
-			Trimspec ts,
+			@Nullable Trimspec ts,
 			Expression<String> x,
 			Expression<Integer> length,
-			Expression<Character> padChar) {
+			@Nullable Expression<Character> padChar) {
 		SqmExpression<String> source = (SqmExpression<String>) x;
 		SqmExpression<Integer> sqmLength = (SqmExpression<Integer>) length;
 		SqmTrimSpecification padSpec = new SqmTrimSpecification(
@@ -3495,7 +3499,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public SqmFunction<String> collate(Expression<String> x, String collation) {
-		SqmCollation sqmCollation = new SqmCollation( collation, null, this );
+		final SqmCollation sqmCollation = new SqmCollation( collation, null, this );
 		return getFunctionDescriptor( "collate" ).generateSqmExpression(
 				asList( (SqmExpression<String>) x, sqmCollation ),
 				null,
@@ -3876,9 +3880,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	public <T> SqmExpression<T> functionWithinGroup(
 			String name,
 			Class<T> type,
-			JpaOrder order,
-			JpaPredicate filter,
-			JpaWindow window,
+			@Nullable JpaOrder order,
+			@Nullable JpaPredicate filter,
+			@Nullable JpaWindow window,
 			Expression<?>... args) {
 		SqmOrderByClause withinGroupClause = new SqmOrderByClause();
 		if ( order != null ) {
@@ -3949,8 +3953,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public SqmExpression<String> listagg(
 			JpaOrder order,
-			JpaPredicate filter,
-			JpaWindow window,
+			@Nullable JpaPredicate filter,
+			@Nullable JpaWindow window,
 			Expression<String> argument,
 			String separator) {
 		return listagg( order, filter, window, argument, literal( separator ) );
@@ -3959,8 +3963,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public SqmExpression<String> listagg(
 			JpaOrder order,
-			JpaPredicate filter,
-			JpaWindow window,
+			@Nullable JpaPredicate filter,
+			@Nullable JpaWindow window,
 			Expression<String> argument,
 			Expression<String> separator) {
 		return functionWithinGroup( "listagg", String.class, order, filter, window, argument, separator );
@@ -3992,8 +3996,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> SqmExpression<T> mode(
-			JpaPredicate filter,
-			JpaWindow window,
+			@Nullable JpaPredicate filter,
+			@Nullable JpaWindow window,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
 			Nulls nullPrecedence) {
@@ -4039,8 +4043,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@SuppressWarnings("unchecked")
 	public <T> SqmExpression<T> percentileCont(
 			Expression<? extends Number> argument,
-			JpaPredicate filter,
-			JpaWindow window,
+			@Nullable JpaPredicate filter,
+			@Nullable JpaWindow window,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
 			Nulls nullPrecedence) {
@@ -4087,8 +4091,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@SuppressWarnings("unchecked")
 	public <T> SqmExpression<T> percentileDisc(
 			Expression<? extends Number> argument,
-			JpaPredicate filter,
-			JpaWindow window,
+			@Nullable JpaPredicate filter,
+			@Nullable JpaWindow window,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
 			Nulls nullPrecedence) {
@@ -4140,8 +4144,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public SqmExpression<Double> percentRank(
 			JpaOrder order,
-			JpaPredicate filter,
-			JpaWindow window,
+			@Nullable JpaPredicate filter,
+			@Nullable JpaWindow window,
 			Expression<?>... arguments) {
 		return functionWithinGroup( "percent_rank", Double.class, order, filter, window, arguments );
 	}
@@ -4164,8 +4168,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public <T> SqmExpression<T[]> arrayAgg(
 			JpaOrder order,
-			JpaPredicate filter,
-			JpaWindow window,
+			@Nullable JpaPredicate filter,
+			@Nullable JpaWindow window,
 			Expression<? extends T> argument) {
 		return functionWithinGroup( "array_agg", null, order, filter, window, argument );
 	}
@@ -5481,7 +5485,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	public <T> SqmJsonValueExpression<T> jsonValue(
 			Expression<?> jsonDocument,
 			Expression<String> jsonPath,
-			Class<T> returningType) {
+			@Nullable Class<T> returningType) {
 		if ( returningType == null ) {
 			return (SqmJsonValueExpression<T>) getFunctionDescriptor( "json_value" ).generateSqmExpression(
 					asList( (SqmTypedNode<?>) jsonDocument, (SqmTypedNode<?>) jsonPath ),
@@ -5964,7 +5968,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public SqmExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, JpaWindow window, Expression<?> argument) {
+	public SqmExpression<String> xmlagg(JpaOrder order, @Nullable JpaPredicate filter, @Nullable JpaWindow window, Expression<?> argument) {
 		return functionWithinGroup( "xmlagg", String.class, order, filter, window, argument );
 	}
 

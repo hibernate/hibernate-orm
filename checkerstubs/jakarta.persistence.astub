@@ -3,6 +3,7 @@
 package jakarta.persistence;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 public interface AttributeConverter<X,Y> {
 	public @Nullable Y convertToDatabaseColumn(@Nullable X attribute);
@@ -20,9 +21,10 @@ public interface EntityManagerFactory extends AutoCloseable {
 public interface EntityTransaction {
 	@Nullable Integer getTimeout();
 }
-public interface Parameter {
-	public @Nullable String getName();
-	public @Nullable Integer getPosition();
+public interface Parameter<T> {
+	@Nullable String getName();
+	@Nullable Integer getPosition();
+	@Nullable Class<T> getParameterType();
 }
 public interface PersistenceUnitUtil extends PersistenceUtil {
 	public @Nullable Object getIdentifier(Object entity);
@@ -86,9 +88,9 @@ public interface CommonAbstractCriteria {
 }
 public interface AbstractQuery<T> extends CommonAbstractCriteria {
 	AbstractQuery<T> where(@Nullable Expression<Boolean> restriction);
-    AbstractQuery<T> where(@Nullable Predicate... restrictions);
+    AbstractQuery<T> where(Predicate @Nullable... restrictions);
     AbstractQuery<T> having(@Nullable Expression<Boolean> restriction);
-    AbstractQuery<T> having(@Nullable Predicate... restrictions);
+    AbstractQuery<T> having(Predicate @Nullable... restrictions);
 	@Nullable Selection<T> getSelection();
 	@Nullable Predicate getGroupRestriction();
 }
@@ -99,12 +101,18 @@ public interface CriteriaUpdate<T> extends CommonAbstractCriteria {
 }
 public interface Subquery<T> extends AbstractQuery<T>, Expression<T> {
 	Subquery<T> where(@Nullable Expression<Boolean> restriction);
-    Subquery<T> where(@Nullable Predicate... restrictions);
+    Subquery<T> where(Predicate @Nullable... restrictions);
     Subquery<T> having(@Nullable Expression<Boolean> restriction);
-    Subquery<T> having(@Nullable Predicate... restrictions);
+    Subquery<T> having(Predicate @Nullable... restrictions);
 	@Nullable Expression<T> getSelection();
 }
 public interface CriteriaBuilder {
+    interface In<T> extends Predicate {
+        In<T> value(@NonNull T value);
+    }
+    interface Coalesce<T> extends Expression<T> {
+        Coalesce<T> value(@Nullable T value);
+    }
 	public static interface SimpleCase<C,R> extends Expression<R> {
 		SimpleCase<C, R> when(C condition, @Nullable R result);
 		SimpleCase<C, R> when(Expression<? extends C> condition, @Nullable R result);
@@ -117,26 +125,28 @@ public interface CriteriaBuilder {
 }
 public interface Join<Z, X> extends From<Z, X> {
 	Join<Z, X> on(@Nullable Expression<Boolean> restriction);
-    Join<Z, X> on(@Nullable Predicate... restrictions);
+    Join<Z, X> on(Predicate @Nullable... restrictions);
     @Nullable Predicate getOn();
+    @Nullable From<?, Z> getParent();
+    @Nullable Attribute<? super Z, ?> getAttribute();
 }
 public interface SetJoin<Z,E> extends PluralJoin<Z, Set<E>, E> {
 	SetJoin<Z, E> on(@Nullable Expression<Boolean> restriction);
-    SetJoin<Z, E> on(@Nullable Predicate... restrictions);
+    SetJoin<Z, E> on(Predicate @Nullable... restrictions);
 }
 public interface ListJoin<Z,E> extends PluralJoin<Z, List<E>, E> {
 	ListJoin<Z, E> on(@Nullable Expression<Boolean> restriction);
-    ListJoin<Z, E> on(@Nullable Predicate... restrictions);
+    ListJoin<Z, E> on(Predicate @Nullable... restrictions);
 }
 public interface MapJoin<Z,K,V> extends PluralJoin<Z, Map<K,V>, V> {
 	MapJoin<Z,K,V> on(@Nullable Expression<Boolean> restriction);
-    MapJoin<Z,K,V> on(@Nullable Predicate... restrictions);
+    MapJoin<Z,K,V> on(Predicate @Nullable... restrictions);
 }
 public interface Path<X> extends Expression<X> {
 	// CteRoot etc.
 	@Nullable Bindable<X> getModel();
 	@Nullable Path<?> getParentPath();
-    MapJoin<Z,K,V> on(@Nullable Predicate... restrictions);
+    MapJoin<Z,K,V> on(Predicate @Nullable... restrictions);
 }
 
 package jakarta.persistence.metamodel;

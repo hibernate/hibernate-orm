@@ -6,6 +6,7 @@ package org.hibernate.type;
 
 import jakarta.persistence.metamodel.Type;
 
+import org.checkerframework.checker.nullness.qual.PolyNull;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -43,7 +44,7 @@ public interface BindingContext {
 	 *
 	 * @since 7.0
 	 */
-	default <J> SqmBindableType<J> resolveExpressible(Type<J> bindableType) {
+	default <J> @PolyNull SqmBindableType<J> resolveExpressible(@PolyNull Type<J> bindableType) {
 		if ( bindableType == null ) {
 			return null;
 		}

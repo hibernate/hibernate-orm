@@ -4,6 +4,7 @@
  */
 package org.hibernate.type;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -116,7 +117,7 @@ public interface BasicType<T>
 	}
 
 	@Override
-	default SqmDomainType<T> getSqmType() {
+	default @Nullable SqmDomainType<T> getSqmType() {
 		return this;
 	}
 

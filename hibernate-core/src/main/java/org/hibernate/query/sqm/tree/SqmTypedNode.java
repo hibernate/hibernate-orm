@@ -29,8 +29,7 @@ public interface SqmTypedNode<T> extends SqmNode, SqmExpressibleAccessor<T>, Sqm
 		return getNodeType();
 	}
 
-	@Nullable
-	SqmBindableType<T> getNodeType();
+	@Nullable SqmBindableType<T> getNodeType();
 
 	@Override
 	SqmTypedNode<T> copy(SqmCopyContext context);

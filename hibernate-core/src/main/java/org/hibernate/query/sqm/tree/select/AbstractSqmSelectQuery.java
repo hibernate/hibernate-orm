@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCteCriteria;
@@ -109,7 +110,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public SqmCteStatement<?> getCteStatement(String cteLabel) {
+	public @Nullable SqmCteStatement<?> getCteStatement(String cteLabel) {
 		return cteStatements.get( cteLabel );
 	}
 
@@ -119,7 +120,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	@Override @SuppressWarnings("unchecked")
-	public <X> JpaCteCriteria<X> getCteCriteria(String cteName) {
+	public <X> @Nullable JpaCteCriteria<X> getCteCriteria(String cteName) {
 		return (JpaCteCriteria<X>) cteStatements.get( cteName );
 	}
 
@@ -353,8 +354,14 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public JpaSelection<T> getSelection() {
-		return getQuerySpec().getSelection();
+	public @Nullable JpaSelection<T> getSelection() {
+		final SqmSelectClause selectClause = getQuerySpec().getSelectClause();
+		final List<SqmSelection<?>> selections = selectClause.getSelections();
+		return (JpaSelection<T>) switch ( selections.size() ) {
+			case 0 -> null;
+			case 1 -> selections.get( 0 ).getSelectableNode();
+			default -> selectClause;
+		};
 	}
 
 
@@ -362,18 +369,18 @@ public abstract class AbstractSqmSelectQuery<T>
 	// Restriction
 
 	@Override
-	public SqmPredicate getRestriction() {
+	public @Nullable SqmPredicate getRestriction() {
 		return getQuerySpec().getRestriction();
 	}
 
 	@Override
-	public SqmSelectQuery<T> where(Expression<Boolean> restriction) {
+	public SqmSelectQuery<T> where(@Nullable Expression<Boolean> restriction) {
 		getQuerySpec().setRestriction( restriction );
 		return this;
 	}
 
 	@Override
-	public SqmSelectQuery<T> where(Predicate... restrictions) {
+	public SqmSelectQuery<T> where(Predicate @Nullable... restrictions) {
 		getQuerySpec().setRestriction( restrictions );
 		return this;
 	}
@@ -406,18 +413,18 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public SqmPredicate getGroupRestriction() {
+	public @Nullable SqmPredicate getGroupRestriction() {
 		return getQuerySpec().getGroupRestriction();
 	}
 
 	@Override
-	public SqmSelectQuery<T> having(Expression<Boolean> booleanExpression) {
+	public SqmSelectQuery<T> having(@Nullable Expression<Boolean> booleanExpression) {
 		getQuerySpec().setGroupRestriction( booleanExpression );
 		return this;
 	}
 
 	@Override
-	public SqmSelectQuery<T> having(Predicate... predicates) {
+	public SqmSelectQuery<T> having(Predicate @Nullable... predicates) {
 		getQuerySpec().setGroupRestriction( predicates );
 		return this;
 	}
@@ -441,7 +448,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof AbstractSqmSelectQuery<?> that
 			&& Objects.equals( this.resultType, that.resultType ) // for performance!
 			&& this.sqmQueryPart.equals( that.sqmQueryPart )
@@ -473,7 +480,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	@SuppressWarnings("unchecked")
 	protected Selection<? extends T> getResultSelection(Selection<?>[] selections) {
 		final Class<T> resultType = getResultType();
-		if ( resultType == null || resultType == Object.class ) {
+		if ( resultType == Object.class ) {
 			return switch ( selections.length ) {
 				case 0 -> throw new IllegalArgumentException( "Empty selections passed to criteria query typed as Object" );
 				case 1 -> (Selection<? extends T>) selections[0];

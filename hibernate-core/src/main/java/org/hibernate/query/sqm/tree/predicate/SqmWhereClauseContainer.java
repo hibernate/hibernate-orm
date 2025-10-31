@@ -4,13 +4,15 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Unified contract for things that can contain a SqmWhereClause.
  *
  * @author Steve Ebersole
  */
 public interface SqmWhereClauseContainer {
-	SqmWhereClause getWhereClause();
+	@Nullable SqmWhereClause getWhereClause();
 
 	void applyPredicate(SqmPredicate accept);
 }

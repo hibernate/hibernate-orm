@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -92,7 +94,7 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 	}
 
 	@Override
-	public SqmInPredicate<T> value(Object value) {
+	public SqmInPredicate<T> value(@NonNull Object value) {
 		throw new UnsupportedOperationException(  );
 	}
 
@@ -127,7 +129,7 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmInSubQueryPredicate<?> that
 			&& this.isNegated() == that.isNegated()
 			&& this.testExpression.equals( that.testExpression )

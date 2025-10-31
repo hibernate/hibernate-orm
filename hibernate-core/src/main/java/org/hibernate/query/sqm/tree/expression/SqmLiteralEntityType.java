@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.hql.HqlInterpretationException;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -58,7 +59,7 @@ public class SqmLiteralEntityType<T>
 	}
 
 	@Override
-	public void internalApplyInferableType(SqmBindableType<?> type) {
+	public void internalApplyInferableType(@Nullable SqmBindableType<?> type) {
 	}
 
 	@Override
@@ -102,7 +103,7 @@ public class SqmLiteralEntityType<T>
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmLiteralEntityType<?> that
 			&& Objects.equals( this.entityType.getName(), that.entityType.getName() );
 	}

@@ -4,9 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaDerivedRoot;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
@@ -29,7 +29,7 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 
 	public SqmDerivedRoot(
 			SqmSubQuery<T> subQuery,
-			String alias) {
+			@Nullable String alias) {
 		this(
 				SqmCreationHelper.buildRootNavigablePath( "<<derived>>", alias ),
 				subQuery,
@@ -42,7 +42,7 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 			NavigablePath navigablePath,
 			SqmSubQuery<T> subQuery,
 			SqmPathSource<T> pathSource,
-			String alias) {
+			@Nullable String alias) {
 		super(
 				navigablePath,
 				pathSource,
@@ -88,12 +88,12 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 	@Override
 	public SqmEntityDomainType<T> getModel() {
 		// Or should we throw an exception instead?
-		return null;
+		throw new UnsupportedOperationException( "Derived root does not have an entity type. Use getReferencedPathSource() instead." );
 	}
 
 	@Override
 	public String getEntityName() {
-		return null;
+		throw new UnsupportedOperationException( "Derived root does not have an entity type. Use getReferencedPathSource() instead." );
 	}
 
 	@Override
@@ -107,22 +107,7 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 	}
 
 	@Override
-	public <S extends T> SqmTreatedFrom<T, T, S> treatAs(Class<S> treatJavaType) throws PathException {
-		throw new UnsupportedOperationException( "Derived roots can not be treated" );
-	}
-
-	@Override
-	public <S extends T> SqmTreatedFrom<T, T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		throw new UnsupportedOperationException( "Derived roots can not be treated" );
-	}
-
-	@Override
-	public <S extends T> SqmTreatedRoot treatAs(Class<S> treatJavaType, String alias) {
-		throw new UnsupportedOperationException( "Derived roots can not be treated" );
-	}
-
-	@Override
-	public <S extends T> SqmTreatedRoot treatAs(EntityDomainType<S> treatTarget, String alias) {
+	public <S extends T> SqmTreatedFrom<T, T, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
 		throw new UnsupportedOperationException( "Derived roots can not be treated" );
 	}
 

@@ -4,11 +4,16 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 
 /**
@@ -56,7 +61,12 @@ public class SqmToDuration<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public @NonNull SqmBindableType<T> getNodeType() {
+		return castNonNull( super.getNodeType() );
+	}
+
+	@Override
+	public <R> R accept(SemanticQueryWalker<R> walker) {
 		return walker.visitToDuration( this );
 	}
 
@@ -73,7 +83,7 @@ public class SqmToDuration<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmToDuration<?> that
 			&& magnitude.equals( that.magnitude )
 			&& unit.equals( that.unit );

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 
 import jakarta.persistence.criteria.Expression;
@@ -23,15 +24,15 @@ public interface JpaDerivedJoin<T> extends JpaDerivedFrom<T>, JpaJoin<T,T> {
 	boolean isLateral();
 
 	@Override
-	JpaDerivedJoin<T> on(JpaExpression<Boolean> restriction);
+	JpaDerivedJoin<T> on(@Nullable JpaExpression<Boolean> restriction);
 
 	@Override
-	JpaDerivedJoin<T> on(Expression<Boolean> restriction);
+	JpaDerivedJoin<T> on(@Nullable Expression<Boolean> restriction);
 
 	@Override
-	JpaDerivedJoin<T> on(JpaPredicate... restrictions);
+	JpaDerivedJoin<T> on(JpaPredicate @Nullable... restrictions);
 
 	@Override
-	JpaDerivedJoin<T> on(Predicate... restrictions);
+	JpaDerivedJoin<T> on(Predicate @Nullable... restrictions);
 
 }

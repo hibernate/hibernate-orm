@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.function.Consumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -32,7 +33,7 @@ public class SqmJpaCriteriaParameterWrapper<T>
 	private final int unnamedParameterId;
 
 	public SqmJpaCriteriaParameterWrapper(
-			BindableType<T> type,
+			@Nullable BindableType<T> type,
 			JpaCriteriaParameter<T> jpaCriteriaParameter,
 			int criteriaParameterId,
 			int unnamedParameterId,
@@ -62,12 +63,12 @@ public class SqmJpaCriteriaParameterWrapper<T>
 	}
 
 	@Override
-	public String getName() {
+	public @Nullable String getName() {
 		return jpaCriteriaParameter.getName();
 	}
 
 	@Override
-	public Integer getPosition() {
+	public @Nullable Integer getPosition() {
 		// for criteria anyway, these cannot be positional
 		return null;
 	}
@@ -98,7 +99,7 @@ public class SqmJpaCriteriaParameterWrapper<T>
 	}
 
 	@Override
-	public Class<T> getParameterType() {
+	public @Nullable Class<T> getParameterType() {
 		return jpaCriteriaParameter.getParameterType();
 	}
 
@@ -108,7 +109,7 @@ public class SqmJpaCriteriaParameterWrapper<T>
 	}
 
 	@Override
-	public BindableType<T> getAnticipatedType() {
+	public @Nullable BindableType<T> getAnticipatedType() {
 		return getNodeType();
 	}
 
@@ -160,7 +161,7 @@ public class SqmJpaCriteriaParameterWrapper<T>
 	}
 
 	@Override
-	public final boolean equals(Object o) {
+	public final boolean equals(@Nullable Object o) {
 		return o instanceof SqmJpaCriteriaParameterWrapper<?> that
 			&& criteriaParameterId == that.criteriaParameterId;
 	}

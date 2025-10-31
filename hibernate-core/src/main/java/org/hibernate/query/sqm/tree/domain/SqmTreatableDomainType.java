@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -12,7 +13,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 public interface SqmTreatableDomainType<T>
 		extends TreatableDomainType<T>, SqmPathSource<T>, SqmManagedDomainType<T> {
 	@Override
-	SqmDomainType<T> getSqmType();
+	@Nullable SqmDomainType<T> getSqmType();
 
 	@Override
 	String getTypeName();

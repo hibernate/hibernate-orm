@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -49,7 +50,7 @@ public class SqmTrimSpecification extends AbstractSqmNode implements SqmTypedNod
 	}
 
 	@Override
-	public SqmBindableType<Void> getNodeType() {
+	public @Nullable SqmBindableType<Void> getNodeType() {
 		return null;
 	}
 
@@ -59,7 +60,7 @@ public class SqmTrimSpecification extends AbstractSqmNode implements SqmTypedNod
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmTrimSpecification that
 			&& specification == that.specification;
 	}

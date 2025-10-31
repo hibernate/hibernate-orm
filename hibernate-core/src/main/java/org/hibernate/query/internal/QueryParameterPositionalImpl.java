@@ -6,6 +6,7 @@ package org.hibernate.query.internal;
 
 import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.spi.AbstractQueryParameter;
 import org.hibernate.query.named.NamedQueryMemento;
@@ -49,7 +50,7 @@ public class QueryParameterPositionalImpl<T> extends AbstractQueryParameter<T> {
 	public QueryParameterPositionalImpl(
 			Integer position,
 			boolean allowMultiValuedBinding,
-			BindableType<T> anticipatedType) {
+			@Nullable BindableType<T> anticipatedType) {
 		super( allowMultiValuedBinding, anticipatedType );
 		this.position = position;
 	}

@@ -6,6 +6,7 @@ package org.hibernate.query.criteria;
 
 import java.util.Collection;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 
 import jakarta.persistence.criteria.CollectionJoin;
@@ -20,16 +21,16 @@ import jakarta.persistence.criteria.Predicate;
 public interface JpaCollectionJoin<O, T> extends JpaPluralJoin<O, Collection<T>, T>, CollectionJoin<O, T> {
 
 	@Override
-	JpaCollectionJoin<O, T> on(JpaExpression<Boolean> restriction);
+	JpaCollectionJoin<O, T> on(@Nullable JpaExpression<Boolean> restriction);
 
 	@Override
-	JpaCollectionJoin<O, T> on(Expression<Boolean> restriction);
+	JpaCollectionJoin<O, T> on(@Nullable Expression<Boolean> restriction);
 
 	@Override
-	JpaCollectionJoin<O, T> on(JpaPredicate... restrictions);
+	JpaCollectionJoin<O, T> on(JpaPredicate @Nullable... restrictions);
 
 	@Override
-	JpaCollectionJoin<O, T> on(Predicate... restrictions);
+	JpaCollectionJoin<O, T> on(Predicate @Nullable... restrictions);
 
 	@Override
 	<S extends T> JpaTreatedJoin<O,T, S> treatAs(Class<S> treatAsType);

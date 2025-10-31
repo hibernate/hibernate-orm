@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -47,7 +48,7 @@ public class SqmParameterizedEntityType<T> extends AbstractSqmExpression<T> impl
 	}
 
 	@Override
-	public void internalApplyInferableType(SqmBindableType<?> type) {
+	public void internalApplyInferableType(@Nullable SqmBindableType<?> type) {
 		setExpressibleType( type );
 		discriminatorSource.applyInferableType( type );
 	}
@@ -65,7 +66,7 @@ public class SqmParameterizedEntityType<T> extends AbstractSqmExpression<T> impl
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmParameterizedEntityType<?> that
 			&& discriminatorSource.equals( that.discriminatorSource );
 	}

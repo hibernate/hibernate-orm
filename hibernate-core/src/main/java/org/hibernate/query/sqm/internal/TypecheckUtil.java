@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.internal;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.metamodel.EntityType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -103,8 +104,8 @@ public class TypecheckUtil {
 	 * @see #isTypeAssignable(SqmBindableType, SqmBindableType, BindingContext)
 	 */
 	public static boolean areTypesComparable(
-			SqmBindableType<?> lhsType,
-			SqmBindableType<?> rhsType,
+			@Nullable SqmBindableType<?> lhsType,
+			@Nullable SqmBindableType<?> rhsType,
 			BindingContext bindingContext) {
 		if ( lhsType == null || rhsType == null || lhsType == rhsType ) {
 			return true;
@@ -477,7 +478,7 @@ public class TypecheckUtil {
 	 * @see TypecheckUtil#assertComparable(Expression, Expression, BindingContext)
 	 */
 	public static void assertAssignable(
-			String hqlString,
+			@Nullable String hqlString,
 			SqmPath<?> targetPath, SqmTypedNode<?> expression,
 			BindingContext bindingContext) {
 		// allow assigning literal null to things
@@ -613,7 +614,7 @@ public class TypecheckUtil {
 		}
 	}
 
-	public static boolean isNumberArray(SqmExpressible<?> expressible) {
+	public static boolean isNumberArray(@Nullable SqmExpressible<?> expressible) {
 		if ( expressible != null ) {
 			final var domainType = expressible.getSqmType();
 			if ( domainType != null ) {

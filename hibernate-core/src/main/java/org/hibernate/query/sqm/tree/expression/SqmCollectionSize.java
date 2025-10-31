@@ -4,12 +4,16 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 
 /**
@@ -53,6 +57,11 @@ public class SqmCollectionSize extends AbstractSqmExpression<Integer> {
 	}
 
 	@Override
+	public @NonNull SqmBindableType<Integer> getNodeType() {
+		return castNonNull( super.getNodeType() );
+	}
+
+	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitPluralAttributeSizeFunction( this );
 	}
@@ -70,7 +79,7 @@ public class SqmCollectionSize extends AbstractSqmExpression<Integer> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmCollectionSize that
 			&& this.pluralPath.equals( that.pluralPath );
 	}

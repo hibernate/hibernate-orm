@@ -4,12 +4,15 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * @author Steve Ebersole
@@ -24,27 +27,37 @@ public abstract class AbstractSqmSimplePath<T> extends AbstractSqmPath<T> implem
 		this( navigablePath, referencedPathSource, lhs, null, nodeBuilder );
 	}
 
+	// The call to setExplicitAlias() is safe, so ignore the uninitialized error
+	@SuppressWarnings({"uninitialized", "method.invocation"})
 	public AbstractSqmSimplePath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
 			SqmPath<?> lhs,
-			String explicitAlias,
+			@Nullable String explicitAlias,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 		setExplicitAlias( explicitAlias );
 	}
 
 	@Override
+	public @NonNull SqmPath<?> getLhs() {
+		return castNonNull( super.getLhs() );
+	}
+
+	protected @NonNull NavigablePath getParentNavigablePath() {
+		// Since the LHS is non-null, we know that the navigable path must have a parent
+		return castNonNull( getNavigablePath().getParent() );
+	}
+
+	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
-		if ( getLhs() != null ) {
-			getLhs().appendHqlString( hql, context );
-			hql.append( '.' );
-		}
+		getLhs().appendHqlString( hql, context );
+		hql.append( '.' );
 		hql.append( getReferencedPathSource().getPathName() );
 	}
 
 	@Override
-	public SqmBindableType<T> getNodeType() {
+	public @NonNull SqmBindableType<T> getNodeType() {
 		return getReferencedPathSource().getExpressible();
 	}
 

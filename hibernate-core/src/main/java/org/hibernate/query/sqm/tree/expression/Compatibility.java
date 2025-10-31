@@ -7,6 +7,8 @@ package org.hibernate.query.sqm.tree.expression;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * @author Steve Ebersole
  */
@@ -40,12 +42,12 @@ public class Compatibility {
 
 	public static Class<?> primitiveEquivalent(Class<?> potentialWrapper) {
 		assert isWrapper( potentialWrapper );
-		return wrapperToPrimitive.get( potentialWrapper );
+		return castNonNull( wrapperToPrimitive.get( potentialWrapper ) );
 	}
 
 	public static Class<?> wrapperEquivalent(Class<?> primitive) {
 		assert primitive.isPrimitive();
-		return primitiveToWrapper.get( primitive );
+		return castNonNull( primitiveToWrapper.get( primitive ) );
 	}
 
 	public static boolean areAssignmentCompatible(Class<?> to, Class<?> from) {

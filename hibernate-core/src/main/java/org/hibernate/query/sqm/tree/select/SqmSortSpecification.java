@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.select;
 
 import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.JpaExpression;
@@ -142,7 +143,7 @@ public class SqmSortSpecification implements JpaOrder, SqmCacheable {
 	}
 
 	@Override
-	public boolean equals(Object other) {
+	public boolean equals(@Nullable Object other) {
 		return other instanceof SqmSortSpecification that
 			&& sortExpression.equals( that.sortExpression )
 			&& this.sortOrder == that.sortOrder

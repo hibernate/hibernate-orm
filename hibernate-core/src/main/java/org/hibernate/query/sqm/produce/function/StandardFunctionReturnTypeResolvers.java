@@ -15,7 +15,6 @@ import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.expression.NullSqmExpressible;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.BasicType;
@@ -196,7 +195,7 @@ public class StandardFunctionReturnTypeResolvers {
 	public static ReturnableType<?> extractArgumentType(List<? extends SqmTypedNode<?>> arguments, int position) {
 		final SqmTypedNode<?> specifiedArgument = arguments.get( position - 1 );
 		final SqmExpressible<?> specifiedArgType = getArgumentExpressible( specifiedArgument );
-		if ( specifiedArgType == null || specifiedArgType instanceof NullSqmExpressible ) {
+		if ( specifiedArgType == null ) {
 			return null;
 		}
 		else if ( specifiedArgType instanceof ReturnableType<?> returnableType ) {

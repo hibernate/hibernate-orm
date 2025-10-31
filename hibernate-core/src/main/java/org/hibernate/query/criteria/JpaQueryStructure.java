@@ -9,6 +9,7 @@ import java.util.Set;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.common.FetchClauseType;
 
 /**
@@ -52,11 +53,11 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Where clause
 
-	JpaPredicate getRestriction();
+	@Nullable JpaPredicate getRestriction();
 
-	JpaQueryStructure<T> setRestriction(JpaPredicate restriction);
+	JpaQueryStructure<T> setRestriction(@Nullable JpaPredicate restriction);
 
-	JpaQueryStructure<T> setRestriction(Expression<Boolean> restriction);
+	JpaQueryStructure<T> setRestriction(@Nullable Expression<Boolean> restriction);
 
 	JpaQueryStructure<T> setRestriction(Predicate... restrictions);
 
@@ -72,11 +73,11 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 
 	JpaQueryStructure<T> setGroupingExpressions(Expression<?>... grouping);
 
-	JpaPredicate getGroupRestriction();
+	@Nullable JpaPredicate getGroupRestriction();
 
-	JpaQueryStructure<T> setGroupRestriction(JpaPredicate restrictions);
+	JpaQueryStructure<T> setGroupRestriction(@Nullable JpaPredicate restrictions);
 
-	JpaQueryStructure<T> setGroupRestriction(Expression<Boolean> restriction);
+	JpaQueryStructure<T> setGroupRestriction(@Nullable Expression<Boolean> restriction);
 
 	JpaQueryStructure<T> setGroupRestriction(Predicate... restrictions);
 
@@ -89,10 +90,10 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 	JpaQueryStructure<T> setSortSpecifications(List<? extends JpaOrder> sortSpecifications);
 
 	@Override
-	JpaQueryStructure<T> setOffset(JpaExpression<? extends Number> offset);
+	JpaQueryStructure<T> setOffset(@Nullable JpaExpression<? extends Number> offset);
 
 	@Override
-	JpaQueryStructure<T> setFetch(JpaExpression<? extends Number> fetch);
+	JpaQueryStructure<T> setFetch(@Nullable JpaExpression<? extends Number> fetch);
 
 	@Override
 	JpaQueryStructure<T> setFetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);

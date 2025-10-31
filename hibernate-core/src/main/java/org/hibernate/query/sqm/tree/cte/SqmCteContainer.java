@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.cte;
 
 import java.util.Collection;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaCteContainer;
 import org.hibernate.query.sqm.tree.SqmNode;
 
@@ -16,6 +17,6 @@ public interface SqmCteContainer extends SqmNode, JpaCteContainer {
 
 	Collection<SqmCteStatement<?>> getCteStatements();
 
-	SqmCteStatement<?> getCteStatement(String cteLabel);
+	@Nullable SqmCteStatement<?> getCteStatement(String cteLabel);
 
 }

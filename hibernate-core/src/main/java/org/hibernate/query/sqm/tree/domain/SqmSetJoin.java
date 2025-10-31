@@ -6,6 +6,8 @@ package org.hibernate.query.sqm.tree.domain;
 
 import java.util.Set;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
@@ -31,7 +33,7 @@ public class SqmSetJoin<O, E>
 	public SqmSetJoin(
 			SqmFrom<?,O> lhs,
 			SqmSetPersistentAttribute<? super O, E> pluralValuedNavigable,
-			String alias,
+			@Nullable String alias,
 			SqmJoinType sqmJoinType,
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
@@ -42,7 +44,8 @@ public class SqmSetJoin<O, E>
 			SqmFrom<?, O> lhs,
 			NavigablePath navigablePath,
 			SqmSetPersistentAttribute<O, E> pluralValuedNavigable,
-			String alias, SqmJoinType joinType,
+			@Nullable String alias,
+			SqmJoinType joinType,
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
 		super( lhs, navigablePath, pluralValuedNavigable, alias, joinType, fetched, nodeBuilder );
@@ -83,27 +86,27 @@ public class SqmSetJoin<O, E>
 	}
 
 	@Override
-	public SqmSetPersistentAttribute<O, E> getAttribute() {
+	public @NonNull SqmSetPersistentAttribute<O, E> getAttribute() {
 		return getModel();
 	}
 
 	@Override
-	public SqmSetJoin<O, E> on(JpaExpression<Boolean> restriction) {
+	public SqmSetJoin<O, E> on(@Nullable JpaExpression<Boolean> restriction) {
 		return (SqmSetJoin<O, E>) super.on( restriction );
 	}
 
 	@Override
-	public SqmSetJoin<O, E> on(Expression<Boolean> restriction) {
+	public SqmSetJoin<O, E> on(@Nullable Expression<Boolean> restriction) {
 		return (SqmSetJoin<O, E>) super.on( restriction );
 	}
 
 	@Override
-	public SqmSetJoin<O, E> on(JpaPredicate... restrictions) {
+	public SqmSetJoin<O, E> on(JpaPredicate @Nullable... restrictions) {
 		return (SqmSetJoin<O, E>) super.on( restrictions );
 	}
 
 	@Override
-	public SqmSetJoin<O, E> on(Predicate... restrictions) {
+	public SqmSetJoin<O, E> on(Predicate @Nullable... restrictions) {
 		return (SqmSetJoin<O, E>) super.on( restrictions );
 	}
 
@@ -123,17 +126,17 @@ public class SqmSetJoin<O, E>
 	}
 
 	@Override
-	public <S extends E> SqmTreatedSetJoin<O,E,S> treatAs(Class<S> treatJavaType, String alias) {
+	public <S extends E> SqmTreatedSetJoin<O,E,S> treatAs(Class<S> treatJavaType, @Nullable String alias) {
 		return treatAs( treatJavaType, alias, false );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedSetJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+	public <S extends E> SqmTreatedSetJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias) {
 		return treatAs( treatTarget, alias, false );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedSetJoin<O, E, S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+	public <S extends E> SqmTreatedSetJoin<O, E, S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
 		final ManagedDomainType<S> treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
 		final SqmTreatedSetJoin<O, E, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
@@ -148,7 +151,7 @@ public class SqmSetJoin<O, E>
 	}
 
 	@Override
-	public <S extends E> SqmTreatedSetJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
+	public <S extends E> SqmTreatedSetJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
 		final SqmTreatedSetJoin<O, E, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
 			return addTreat( new SqmTreatedSetJoin<>( this, (SqmEntityDomainType<S>) treatTarget, alias, fetch ) );

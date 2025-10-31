@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -60,7 +61,7 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 			BinaryArithmeticOperator operator,
 			SqmExpression<?> lhsOperand,
 			SqmExpression<?> rhsOperand,
-			SqmBindableType<T> expressibleType,
+			@Nullable SqmBindableType<T> expressibleType,
 			NodeBuilder nodeBuilder) {
 		super( expressibleType, nodeBuilder );
 
@@ -68,8 +69,6 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 
 		this.lhsOperand = lhsOperand;
 		this.rhsOperand = rhsOperand;
-
-		applyInferableType( expressibleType );
 	}
 
 	@Override
@@ -125,7 +124,7 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 	}
 
 	@Override
-	protected void internalApplyInferableType(SqmBindableType<?> type) {
+	protected void internalApplyInferableType(@Nullable SqmBindableType<?> type) {
 		rhsOperand.applyInferableType( type );
 		lhsOperand.applyInferableType( type );
 
@@ -147,7 +146,7 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmBinaryArithmetic<?> that
 			&& this.operator == that.operator
 			&& this.lhsOperand.equals( that.lhsOperand )

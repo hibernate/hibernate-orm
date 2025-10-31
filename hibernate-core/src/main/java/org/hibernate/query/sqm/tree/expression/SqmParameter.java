@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.criteria.JpaParameterExpression;
@@ -45,7 +46,7 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 	 *
 	 * @return The parameter name, or {@code null} if not a named parameter
 	 */
-	String getName();
+	@Nullable String getName();
 
 	/**
 	 * If this represents a positional parameter, return that parameter position;
@@ -53,7 +54,7 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 	 *
 	 * @return The parameter position
 	 */
-	Integer getPosition();
+	@Nullable Integer getPosition();
 
 	/**
 	 * Can a collection/array of values be bound to this parameter?
@@ -78,7 +79,7 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 	 *
 	 * @return The anticipated Type.
 	 */
-	BindableType<T> getAnticipatedType();
+	@Nullable BindableType<T> getAnticipatedType();
 
 	/**
 	 * Make a copy

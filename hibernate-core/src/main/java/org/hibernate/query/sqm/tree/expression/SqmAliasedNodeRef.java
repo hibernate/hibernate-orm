@@ -62,7 +62,7 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 		return position;
 	}
 
-	public NavigablePath getNavigablePath() {
+	public @Nullable NavigablePath getNavigablePath() {
 		return navigablePath;
 	}
 
@@ -84,7 +84,7 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmAliasedNodeRef that
 			&& position == that.position
 			&& Objects.equals( navigablePath == null ? null : navigablePath.getLocalName(),

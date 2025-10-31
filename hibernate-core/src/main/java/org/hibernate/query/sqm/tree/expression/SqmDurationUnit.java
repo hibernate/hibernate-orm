@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -38,7 +39,7 @@ public class SqmDurationUnit<T> extends AbstractSqmNode implements SqmTypedNode<
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <R> R accept(SemanticQueryWalker<R> walker) {
 		return walker.visitDurationUnit( this );
 	}
 
@@ -47,7 +48,7 @@ public class SqmDurationUnit<T> extends AbstractSqmNode implements SqmTypedNode<
 	}
 
 	@Override
-	public SqmBindableType<T> getNodeType() {
+	public @Nullable SqmBindableType<T> getNodeType() {
 		return nodeBuilder().resolveExpressible( type );
 	}
 
@@ -57,7 +58,7 @@ public class SqmDurationUnit<T> extends AbstractSqmNode implements SqmTypedNode<
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmDurationUnit<?> that
 			&& this.unit == that.unit;
 	}

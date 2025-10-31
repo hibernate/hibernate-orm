@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.util.Collection;
 
 /**
@@ -12,9 +14,9 @@ import java.util.Collection;
  * @author Steve Ebersole
  */
 public interface SqmPredicateCollection {
-	SqmPredicate getPredicate();
+	@Nullable SqmPredicate getPredicate();
 
-	void setPredicate(SqmPredicate predicate);
+	void setPredicate(@Nullable SqmPredicate predicate);
 
 	void applyPredicate(SqmPredicate predicate);
 

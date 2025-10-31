@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 
 import jakarta.persistence.criteria.Expression;
@@ -25,7 +26,7 @@ public interface JpaConflictUpdateAction<T> {
 	 * @param value  new value
 	 * @return  the modified update query
 	 */
-	<Y, X extends Y> JpaConflictUpdateAction<T> set(SingularAttribute<? super T, Y> attribute, X value);
+	<Y, X extends Y> JpaConflictUpdateAction<T> set(SingularAttribute<? super T, Y> attribute, @Nullable X value);
 
 	/**
 	 * Update the value of the specified attribute.
@@ -41,7 +42,7 @@ public interface JpaConflictUpdateAction<T> {
 	 * @param value  new value
 	 * @return  the modified update query
 	 */
-	<Y, X extends Y> JpaConflictUpdateAction<T> set(Path<Y> attribute, X value);
+	<Y, X extends Y> JpaConflictUpdateAction<T> set(Path<Y> attribute, @Nullable X value);
 
 	/**
 	 * Update the value of the specified attribute.
@@ -57,7 +58,7 @@ public interface JpaConflictUpdateAction<T> {
 	 * @param value  new value
 	 * @return  the modified update query
 	 */
-	JpaConflictUpdateAction<T> set(String attributeName, Object value);
+	JpaConflictUpdateAction<T> set(String attributeName, @Nullable Object value);
 
 	/**
 	 * Modify the update query to restrict the target of the update
@@ -66,7 +67,7 @@ public interface JpaConflictUpdateAction<T> {
 	 * @param restriction  a simple or compound boolean expression
 	 * @return the modified update query
 	 */
-	JpaConflictUpdateAction<T> where(Expression<Boolean> restriction);
+	JpaConflictUpdateAction<T> where(@Nullable Expression<Boolean> restriction);
 
 	/**
 	 * Modify the update query to restrict the target of the update
@@ -78,7 +79,7 @@ public interface JpaConflictUpdateAction<T> {
 	 * @param restrictions  zero or more restriction predicates
 	 * @return the modified update query
 	 */
-	JpaConflictUpdateAction<T> where(Predicate... restrictions);
+	JpaConflictUpdateAction<T> where(Predicate @Nullable... restrictions);
 
 	/**
 	 * Return the predicate that corresponds to the where clause
@@ -86,5 +87,5 @@ public interface JpaConflictUpdateAction<T> {
 	 * specified.
 	 * @return where clause predicate
 	 */
-	JpaPredicate getRestriction();
+	@Nullable JpaPredicate getRestriction();
 }

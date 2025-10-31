@@ -22,7 +22,7 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 
 	public AbstractSqmParameter(
 			boolean canBeMultiValued,
-			SqmBindableType<T> inherentType,
+			@Nullable SqmBindableType<T> inherentType,
 			NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.canBeMultiValued = canBeMultiValued;
@@ -41,12 +41,12 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 	}
 
 	@Override
-	public String getName() {
+	public @Nullable String getName() {
 		return null;
 	}
 
 	@Override
-	public Integer getPosition() {
+	public @Nullable Integer getPosition() {
 		return null;
 	}
 
@@ -60,18 +60,18 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 	}
 
 	@Override
-	public BindableType<T> getAnticipatedType() {
+	public @Nullable BindableType<T> getAnticipatedType() {
 		return getNodeType();
 	}
 
 	@Override
-	public Class<T> getParameterType() {
+	public @Nullable Class<T> getParameterType() {
 		final SqmExpressible<T> nodeType = getNodeType();
 		return nodeType == null ? null : nodeType.getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override
-	public Integer getTupleLength() {
+	public @Nullable Integer getTupleLength() {
 		return null;
 	}
 }

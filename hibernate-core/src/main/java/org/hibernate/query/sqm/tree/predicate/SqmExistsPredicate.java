@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -72,7 +73,7 @@ public class SqmExistsPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmExistsPredicate that
 			&& this.isNegated() == that.isNegated()
 			&& this.expression.equals( that.expression );

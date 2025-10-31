@@ -11,4 +11,14 @@ public interface BasicLogger {
 public interface Logger {
     void tracev(String format, @Nullable Object param1);
     void tracef(String format, @Nullable Object param1);
+    void tracev(String format, @Nullable Object param1, @Nullable Object param2);
+    void tracef(String format, @Nullable Object param1, @Nullable Object param2);
+    void warnv(String format, @Nullable Object param1);
+    void warnf(String format, @Nullable Object param1);
+    void warnv(String format, @Nullable Object param1, @Nullable Object param2);
+    void warnf(String format, @Nullable Object param1, @Nullable Object param2);
+    void debugv(String format, @Nullable Object param1);
+    void debugf(String format, @Nullable Object param1);
+    void debugv(String format, @Nullable Object param1, @Nullable Object param2);
+    void debugf(String format, @Nullable Object param1, @Nullable Object param2);
 }

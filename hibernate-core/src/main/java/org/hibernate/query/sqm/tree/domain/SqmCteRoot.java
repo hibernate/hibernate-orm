@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -27,7 +28,7 @@ public class SqmCteRoot<T> extends SqmRoot<T> implements JpaRoot<T> {
 
 	public SqmCteRoot(
 			SqmCteStatement<T> cte,
-			String alias) {
+			@Nullable String alias) {
 		this(
 				SqmCreationHelper.buildRootNavigablePath( "<<cte>>", alias ),
 				cte,
@@ -40,7 +41,7 @@ public class SqmCteRoot<T> extends SqmRoot<T> implements JpaRoot<T> {
 			NavigablePath navigablePath,
 			SqmCteStatement<T> cte,
 			SqmPathSource<T> pathSource,
-			String alias) {
+			@Nullable String alias) {
 		super(
 				navigablePath,
 				pathSource,
@@ -84,13 +85,12 @@ public class SqmCteRoot<T> extends SqmRoot<T> implements JpaRoot<T> {
 
 	@Override
 	public SqmEntityDomainType<T> getModel() {
-		// Or should we throw an exception instead?
-		return null;
+		throw new UnsupportedOperationException( "Cte root does not have an entity type. Use getReferencedPathSource() instead." );
 	}
 
 	@Override
 	public String getEntityName() {
-		return null;
+		throw new UnsupportedOperationException( "Cte root does not have an entity type. Use getReferencedPathSource() instead." );
 	}
 
 	@Override

@@ -4,16 +4,19 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
-import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 
 /**
@@ -24,7 +27,7 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 
 	public SqmIndexedCollectionAccessPath(
 			NavigablePath navigablePath,
-			SqmJoin<?, ?> pluralDomainPath,
+			SqmAttributeJoin<?, ?> pluralDomainPath,
 			SqmExpression<?> selectorExpression) {
 		//noinspection unchecked
 		super(
@@ -38,13 +41,18 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 	}
 
 	@Override
+	public @NonNull SqmAttributeJoin<?, ?> getLhs() {
+		return (SqmAttributeJoin<?, ?>) castNonNull( super.getLhs() );
+	}
+
+	@Override
 	public SqmIndexedCollectionAccessPath<T> copy(SqmCopyContext context) {
 		final SqmIndexedCollectionAccessPath<T> existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 
-		final SqmJoin<?, ?> lhsCopy = (SqmJoin<?, ?>) getLhs().copy( context );
+		final SqmAttributeJoin<?, ?> lhsCopy = getLhs().copy( context );
 		final SqmIndexedCollectionAccessPath<T> path = context.registerCopy(
 				this,
 				new SqmIndexedCollectionAccessPath<T>(
@@ -62,6 +70,7 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 	}
 
 	public PluralPersistentAttribute<?, ?, T> getPluralAttribute() {
+		//noinspection unchecked
 		return (PluralPersistentAttribute<?, ?, T>) getLhs().getReferencedPathSource();
 	}
 

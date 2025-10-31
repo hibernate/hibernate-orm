@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.TreatException;
 import org.hibernate.spi.NavigablePath;
@@ -67,22 +68,22 @@ public class NonAggregatedCompositeSimplePath<T> extends SqmEntityValuedSimplePa
 	}
 
 	@Override
-	public <S extends T> SqmTreatedSimplePath<T, S> treatAs(Class<S> treatJavaType, String alias) {
+	public <S extends T> SqmTreatedSimplePath<T, S> treatAs(Class<S> treatJavaType, @Nullable String alias) {
 		throw new TreatException( "Non-aggregate composite paths cannot be TREAT-ed" );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedSimplePath<T, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+	public <S extends T> SqmTreatedSimplePath<T, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias) {
 		throw new TreatException( "Non-aggregate composite paths cannot be TREAT-ed" );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
 		throw new TreatException( "Non-aggregate composite paths cannot be TREAT-ed" );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
+	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
 		throw new TreatException( "Non-aggregate composite paths cannot be TREAT-ed" );
 	}
 

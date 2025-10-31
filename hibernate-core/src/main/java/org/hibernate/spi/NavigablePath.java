@@ -151,7 +151,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		return new NavigablePath( this, property );
 	}
 
-	public NavigablePath append(String property, String alias) {
+	public NavigablePath append(String property, @Nullable String alias) {
 		return new NavigablePath( this, property, alias );
 	}
 
@@ -159,7 +159,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		return new TreatedNavigablePath( this, entityName );
 	}
 
-	public NavigablePath treatAs(String entityName, String alias) {
+	public NavigablePath treatAs(String entityName, @Nullable String alias) {
 		return new TreatedNavigablePath( this, entityName, alias );
 	}
 

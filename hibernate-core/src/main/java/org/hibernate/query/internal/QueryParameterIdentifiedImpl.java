@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.AbstractQueryParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
@@ -33,7 +34,7 @@ public class QueryParameterIdentifiedImpl<T> extends AbstractQueryParameter<T> {
 
 	private final int unnamedParameterId;
 
-	private QueryParameterIdentifiedImpl(int unnamedParameterId, boolean allowMultiValuedBinding, BindableType<T> anticipatedType) {
+	private QueryParameterIdentifiedImpl(int unnamedParameterId, boolean allowMultiValuedBinding, @Nullable BindableType<T> anticipatedType) {
 		super( allowMultiValuedBinding, anticipatedType );
 		this.unnamedParameterId = unnamedParameterId;
 	}

@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.query.spi;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
@@ -19,39 +20,38 @@ import org.hibernate.type.BindableType;
 public abstract class AbstractParameterDescriptor<T> implements QueryParameter<T> {
 	private final int[] sourceLocations;
 
-	private BindableType<T> expectedType;
+	private @Nullable BindableType<T> expectedType;
 
-	public AbstractParameterDescriptor(int[] sourceLocations, BindableType<T> expectedType) {
+	public AbstractParameterDescriptor(int[] sourceLocations, @Nullable BindableType<T> expectedType) {
 		this.sourceLocations = sourceLocations;
 		this.expectedType = expectedType;
 	}
 
 	@Override
-	public String getName() {
+	public @Nullable String getName() {
 		return null;
 	}
 
 	@Override
-	public Integer getPosition() {
+	public @Nullable Integer getPosition() {
 		return null;
 	}
 
 	@Override
-	public Class<T> getParameterType() {
+	public @Nullable Class<T> getParameterType() {
 		return expectedType == null ? null : expectedType.getJavaType();
 	}
 
 	@Override
-	public BindableType<T> getHibernateType() {
+	public @Nullable BindableType<T> getHibernateType() {
 		return getExpectedType();
 	}
 
-
-	public BindableType<T> getExpectedType() {
+	public @Nullable BindableType<T> getExpectedType() {
 		return expectedType;
 	}
 
-	public void resetExpectedType(BindableType<T> expectedType) {
+	public void resetExpectedType(@Nullable BindableType<T> expectedType) {
 		this.expectedType = expectedType;
 	}
 

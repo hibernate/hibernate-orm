@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
@@ -40,7 +42,7 @@ public class SqmEmbeddedValuedSimplePath<T>
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
 			SqmPath<?> lhs,
-			String explicitAlias,
+			@Nullable String explicitAlias,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );
 		assert referencedPathSource.getPathType() instanceof EmbeddableDomainType;
@@ -69,7 +71,7 @@ public class SqmEmbeddedValuedSimplePath<T>
 	}
 
 	@Override
-	public SqmBindableType<T> getExpressible() {
+	public @NonNull SqmBindableType<T> getExpressible() {
 		return this;
 	}
 
@@ -79,7 +81,7 @@ public class SqmEmbeddedValuedSimplePath<T>
 	}
 
 	@Override
-	public SqmDomainType<T> getSqmType() {
+	public @Nullable SqmDomainType<T> getSqmType() {
 		return getResolvedModel().getSqmType();
 	}
 
@@ -112,7 +114,7 @@ public class SqmEmbeddedValuedSimplePath<T>
 	}
 
 	@Override
-	public Class<T> getJavaType() {
+	public @NonNull Class<T> getJavaType() {
 		return getJavaTypeDescriptor().getJavaTypeClass();
 	}
 

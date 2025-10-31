@@ -7,6 +7,7 @@ package org.hibernate.metamodel.model.domain;
 import java.util.Collection;
 import java.util.function.Consumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.metamodel.RepresentationMode;
 
@@ -54,7 +55,7 @@ public interface ManagedDomainType<J> extends DomainType<J>, ManagedType<J> {
 	/**
 	 * The descriptor of the supertype of this type.
 	 */
-	ManagedDomainType<? super J> getSuperType();
+	@Nullable ManagedDomainType<? super J> getSuperType();
 
 	/**
 	 * The descriptors of all known managed subtypes of this type.
@@ -73,24 +74,24 @@ public interface ManagedDomainType<J> extends DomainType<J>, ManagedType<J> {
 	@Override
 	PersistentAttribute<J,?> getDeclaredAttribute(String name);
 
-	PersistentAttribute<? super J,?> findAttribute(String name);
+	@Nullable PersistentAttribute<? super J,?> findAttribute(String name);
 
-	PersistentAttribute<?, ?> findSubTypesAttribute(String name);
+	@Nullable PersistentAttribute<?, ?> findSubTypesAttribute(String name);
 
 	/**
 	 * @deprecated Use {@link #findAttribute(String)}
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
-	default PersistentAttribute<? super J, ?> findAttributeInSuperTypes(String name) {
+	default @Nullable PersistentAttribute<? super J, ?> findAttributeInSuperTypes(String name) {
 		return findAttribute( name );
 	}
 
-	SingularPersistentAttribute<? super J,?> findSingularAttribute(String name);
-	PluralPersistentAttribute<? super J, ?,?> findPluralAttribute(String name);
-	PersistentAttribute<? super J, ?> findConcreteGenericAttribute(String name);
+	@Nullable SingularPersistentAttribute<? super J,?> findSingularAttribute(String name);
+	@Nullable PluralPersistentAttribute<? super J, ?,?> findPluralAttribute(String name);
+	@Nullable PersistentAttribute<? super J, ?> findConcreteGenericAttribute(String name);
 
-	PersistentAttribute<J,?> findDeclaredAttribute(String name);
-	SingularPersistentAttribute<J, ?> findDeclaredSingularAttribute(String name);
-	PluralPersistentAttribute<J, ?, ?> findDeclaredPluralAttribute(String name);
-	PersistentAttribute<J, ?> findDeclaredConcreteGenericAttribute(String name);
+	@Nullable PersistentAttribute<J,?> findDeclaredAttribute(String name);
+	@Nullable SingularPersistentAttribute<J, ?> findDeclaredSingularAttribute(String name);
+	@Nullable PluralPersistentAttribute<J, ?, ?> findDeclaredPluralAttribute(String name);
+	@Nullable PersistentAttribute<J, ?> findDeclaredConcreteGenericAttribute(String name);
 }

@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -38,7 +39,7 @@ public class EntityDiscriminatorSqmPathSource<D> extends AbstractDiscriminatorSq
 	}
 
 	@Override
-	public SqmPath<D> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+	public SqmPath<D> createSqmPath(SqmPath<?> lhs, @Nullable SqmPathSource<?> intermediatePathSource) {
 		return new EntityDiscriminatorSqmPath<>(
 				PathHelper.append( lhs, this, intermediatePathSource ),
 				pathModel,

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
@@ -23,6 +24,8 @@ import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.type.BasicType;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * @author Steve Ebersole
  * @author Christian Beikov
@@ -32,16 +35,19 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 	private final SqmCteStatement<T> cteStatement;
 	private final List<SqmCteTableColumn> columns;
 
+	// Need to suppress some Checker Framework errors, because passing the `this` reference is unsafe,
+	// though we make it safe by not calling any methods on it until initialization finishes
+	@SuppressWarnings({"uninitialized", "method.invocation", "argument"})
 	private SqmCteTable(
 			String name,
 			SqmCteStatement<T> cteStatement,
 			SqmSelectQuery<T> selectStatement) {
-		super(selectStatement);
+		super( selectStatement );
 		this.name = name;
 		this.cteStatement = cteStatement;
 		final List<SqmCteTableColumn> columns = new ArrayList<>( componentCount() );
 		for ( int i = 0; i < componentCount(); i++ ) {
-			columns.add( new SqmCteTableColumn( this, getComponentName(i), get(i) ) );
+			columns.add( new SqmCteTableColumn( this, getComponentName( i ), get( i ) ) );
 		}
 		this.columns = columns;
 	}
@@ -86,7 +92,7 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 	}
 
 	@Override
-	public String getName() {
+	public @Nullable String getName() {
 		// TODO: this is extremely fragile!
 		//       better to distinguish between generated and explicit aliases
 		return name.charAt( 0 ) == '_'
@@ -106,13 +112,13 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 	}
 
 	@Override
-	public JpaCteCriteriaAttribute getAttribute(String name) {
+	public @Nullable JpaCteCriteriaAttribute getAttribute(String name) {
 		final Integer index = getIndex( name );
 		return index == null ? null : columns.get( index );
 	}
 
 	@Override
-	public SqmBindableType<?> get(String componentName) {
+	public @Nullable SqmBindableType<?> get(String componentName) {
 		final SqmBindableType<?> sqmExpressible = super.get( componentName );
 		if ( sqmExpressible != null ) {
 			return sqmExpressible;
@@ -121,7 +127,7 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name) {
+	public @Nullable SqmPathSource<?> findSubPathSource(String name) {
 		final SqmPathSource<?> subPathSource = super.findSubPathSource( name );
 		if ( subPathSource != null ) {
 			return subPathSource;
@@ -137,7 +143,7 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 		);
 	}
 
-	private BasicType<?> determineRecursiveCteAttributeType(String name) {
+	private @Nullable BasicType<?> determineRecursiveCteAttributeType(String name) {
 		if ( name.equals( cteStatement.getSearchAttributeName() ) ) {
 			return cteStatement.nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( String.class );
 		}
@@ -145,13 +151,13 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 			return cteStatement.nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( String.class );
 		}
 		if ( name.equals( cteStatement.getCycleMarkAttributeName() ) ) {
-			return (BasicType<?>) cteStatement.getCycleLiteral().getNodeType();
+			return (BasicType<?>) castNonNull( cteStatement.getCycleLiteral() ).getNodeType();
 		}
 		return null;
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 		return o instanceof SqmCteTable<?> that
 			&& Objects.equals( name, that.name )
 			&& Objects.equals( columns, that.columns );

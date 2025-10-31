@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.jpa;
 
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.hibernate.query.criteria.JpaTupleElement;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -50,7 +51,10 @@ public abstract class AbstractJpaTupleElement<T>
 		return expressibleType;
 	}
 
-	protected final void setExpressibleType(@Nullable SqmBindableType<?> expressibleType) {
+	protected final void setExpressibleType(
+			// This is fine, since this method is final
+			@UnknownInitialization AbstractJpaTupleElement<T> this,
+			@Nullable SqmBindableType<?> expressibleType) {
 		//noinspection unchecked
 		this.expressibleType = (SqmBindableType<T>) expressibleType;
 	}

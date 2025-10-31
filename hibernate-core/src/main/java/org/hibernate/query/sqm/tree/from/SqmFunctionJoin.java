@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -27,6 +29,8 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 
 /**
  * @author Christian Beikov
@@ -38,7 +42,7 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 
 	public SqmFunctionJoin(
 			SqmSetReturningFunction<E> function,
-			String alias,
+			@Nullable String alias,
 			SqmJoinType joinType,
 			boolean lateral,
 			SqmRoot<Object> sqmRoot) {
@@ -58,7 +62,7 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 			SqmSetReturningFunction<E> function,
 			boolean lateral,
 			SqmPathSource<E> pathSource,
-			String alias,
+			@Nullable String alias,
 			SqmJoinType joinType,
 			SqmRoot<Object> sqmRoot) {
 		super(
@@ -115,7 +119,7 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 	}
 
 	public SqmRoot<?> getRoot() {
-		return (SqmRoot<?>) (SqmFrom<?, ?>) super.getLhs();
+		return (SqmRoot<?>) (SqmFrom<?, ?>) castNonNull( super.getLhs() );
 	}
 
 	@Override
@@ -141,28 +145,28 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 	}
 
 	@Override
-	public SqmFrom<?, Object> getLhs() {
+	public @Nullable SqmFrom<?, Object> getLhs() {
 		// A derived-join has no LHS
 		return null;
 	}
 
 	@Override
-	public SqmFunctionJoin<E> on(JpaExpression<Boolean> restriction) {
+	public SqmFunctionJoin<E> on(@Nullable JpaExpression<Boolean> restriction) {
 		return (SqmFunctionJoin<E>) super.on( restriction );
 	}
 
 	@Override
-	public SqmFunctionJoin<E> on(Expression<Boolean> restriction) {
+	public SqmFunctionJoin<E> on(@Nullable Expression<Boolean> restriction) {
 		return (SqmFunctionJoin<E>) super.on( restriction );
 	}
 
 	@Override
-	public SqmFunctionJoin<E> on(JpaPredicate... restrictions) {
+	public SqmFunctionJoin<E> on(JpaPredicate @Nullable... restrictions) {
 		return (SqmFunctionJoin<E>) super.on( restrictions );
 	}
 
 	@Override
-	public SqmFunctionJoin<E> on(Predicate... restrictions) {
+	public SqmFunctionJoin<E> on(Predicate @Nullable... restrictions) {
 		return (SqmFunctionJoin<E>) super.on( restrictions );
 	}
 
@@ -190,37 +194,38 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 	}
 
 	@Override
-	public <S extends E> SqmTreatedJoin<Object, E, S> treatAs(Class<S> treatJavaType, String alias) {
+	public <S extends E> SqmTreatedJoin<Object, E, S> treatAs(Class<S> treatJavaType, @Nullable String alias) {
 		throw new UnsupportedOperationException( "Function joins can not be treated" );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedJoin<Object, E, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+	public <S extends E> SqmTreatedJoin<Object, E, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias) {
 		throw new UnsupportedOperationException( "Function joins can not be treated" );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedJoin<Object, E, S> treatAs(Class<S> treatJavaType, String alias, boolean fetched) {
+	public <S extends E> SqmTreatedJoin<Object, E, S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetched) {
 		throw new UnsupportedOperationException( "Function joins can not be treated" );
 	}
 
 	@Override
 	public <S extends E> SqmTreatedJoin<Object, E, S> treatAs(
 			EntityDomainType<S> treatTarget,
-			String alias,
+			@Nullable String alias,
 			boolean fetched) {
 		throw new UnsupportedOperationException( "Function joins can not be treated" );
 	}
 
 	@Override
-	public PersistentAttribute<? super Object, ?> getAttribute() {
+	public @Nullable PersistentAttribute<? super @Nullable Object, ?> getAttribute() {
 		// none
 		return null;
 	}
 
 	@Override
-	public SqmFrom<?, Object> getParent() {
-		return super.getLhs();
+	public @NonNull SqmFrom<?, Object> getParent() {
+		//noinspection unchecked
+		return (SqmFrom<?, Object>) (SqmFrom<?, ?>) getRoot();
 	}
 
 	@Override

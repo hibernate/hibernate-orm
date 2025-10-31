@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -43,7 +44,7 @@ public class SqmModifiedSubQueryExpression<T> extends AbstractSqmExpression<T> {
 	public SqmModifiedSubQueryExpression(
 			SqmSubQuery<T> subQuery,
 			Modifier modifier,
-			SqmBindableType<T> resultType,
+			@Nullable SqmBindableType<T> resultType,
 			NodeBuilder builder) {
 		super( resultType, builder );
 		this.subQuery = subQuery;
@@ -91,7 +92,7 @@ public class SqmModifiedSubQueryExpression<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmModifiedSubQueryExpression<?> that
 			&& modifier == that.modifier
 			&& subQuery.equals( that.subQuery );

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.spi;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.type.BindableType;
@@ -21,8 +22,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 @Incubating
 public interface QueryParameterBindingTypeResolver {
-	<T> BindableType<? super T> resolveParameterBindType(T bindValue);
-	<T> BindableType<T> resolveParameterBindType(Class<T> clazz);
+	<T> @Nullable BindableType<? super T> resolveParameterBindType(@Nullable T bindValue);
+	<T> @Nullable BindableType<T> resolveParameterBindType(Class<T> clazz);
 
 	@Deprecated(since = "7.0", forRemoval = true)
 	TypeConfiguration getTypeConfiguration();

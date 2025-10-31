@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.criteria.JpaWindowFrame;
@@ -26,6 +27,7 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Order;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.query.common.FrameExclusion.NO_OTHERS;
 import static org.hibernate.query.common.FrameKind.CURRENT_ROW;
 import static org.hibernate.query.common.FrameKind.UNBOUNDED_PRECEDING;
@@ -42,9 +44,9 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 	private final List<SqmSortSpecification> orderList;
 	private FrameMode mode;
 	private FrameKind startKind;
-	private SqmExpression<?> startExpression;
+	private @Nullable SqmExpression<?> startExpression;
 	private FrameKind endKind;
-	private SqmExpression<?> endExpression;
+	private @Nullable SqmExpression<?> endExpression;
 	private FrameExclusion exclusion;
 
 	public SqmWindow(NodeBuilder nodeBuilder) {
@@ -67,9 +69,9 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 			List<SqmSortSpecification> orderList,
 			FrameMode mode,
 			FrameKind startKind,
-			SqmExpression<?> startExpression,
+			@Nullable SqmExpression<?> startExpression,
 			FrameKind endKind,
-			SqmExpression<?> endExpression,
+			@Nullable SqmExpression<?> endExpression,
 			FrameExclusion exclusion) {
 		super( nodeBuilder );
 		this.partitions = partitions;
@@ -90,11 +92,11 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 		return orderList;
 	}
 
-	public SqmExpression<?> getStartExpression() {
+	public @Nullable SqmExpression<?> getStartExpression() {
 		return startExpression;
 	}
 
-	public SqmExpression<?> getEndExpression() {
+	public @Nullable SqmExpression<?> getEndExpression() {
 		return endExpression;
 	}
 
@@ -122,13 +124,11 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 	@Override
 	public JpaWindow frameRange(JpaWindowFrame startFrame, JpaWindowFrame endFrame) {
 		return this.setFrames( RANGE, startFrame, endFrame );
-
 	}
 
 	@Override
 	public JpaWindow frameGroups(JpaWindowFrame startFrame, JpaWindowFrame endFrame) {
 		return this.setFrames( GROUPS, startFrame, endFrame );
-
 	}
 
 	private SqmWindow setFrames(FrameMode frameMode, JpaWindowFrame startFrame, JpaWindowFrame endFrame) {
@@ -265,7 +265,7 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 		}
 	}
 
-	private static void renderFrameKind(StringBuilder sb, FrameKind kind, SqmExpression<?> expression, SqmRenderContext context) {
+	private static void renderFrameKind(StringBuilder sb, FrameKind kind, @Nullable SqmExpression<?> expression, SqmRenderContext context) {
 		switch ( kind ) {
 			case CURRENT_ROW:
 				sb.append( "current row" );
@@ -277,11 +277,11 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 				sb.append( "unbounded following" );
 				break;
 			case OFFSET_PRECEDING:
-				expression.appendHqlString( sb, context );
+				castNonNull( expression ).appendHqlString( sb, context );
 				sb.append( " preceding" );
 				break;
 			case OFFSET_FOLLOWING:
-				expression.appendHqlString( sb, context );
+				castNonNull( expression ).appendHqlString( sb, context );
 				sb.append( " following" );
 				break;
 			default:
@@ -290,7 +290,7 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmWindow sqmWindow
 			&& Objects.equals( partitions, sqmWindow.partitions )
 			&& Objects.equals( orderList, sqmWindow.orderList )

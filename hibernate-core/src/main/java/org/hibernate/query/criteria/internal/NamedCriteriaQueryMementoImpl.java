@@ -69,7 +69,7 @@ public class NamedCriteriaQueryMementoImpl<E> extends AbstractNamedQueryMemento<
 
 	private static <T> void checkResultType(Class<T> resultType, SqmSelectStatement<?> selectStatement) {
 		final Class<?> expectedResultType = selectStatement.getResultType();
-		if ( expectedResultType != null
+		if ( expectedResultType != Object.class
 				&& !resultType.isAssignableFrom( expectedResultType ) ) {
 			throw new QueryTypeMismatchException(
 					String.format(

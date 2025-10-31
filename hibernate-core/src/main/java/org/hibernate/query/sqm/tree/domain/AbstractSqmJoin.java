@@ -4,9 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.criteria.JpaExpression;
-import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCacheable;
@@ -18,25 +17,24 @@ import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.spi.NavigablePath;
 
-import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Predicate;
 
 import java.util.Objects;
 
+import static org.hibernate.query.sqm.spi.SqmCreationHelper.combinePredicates;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implements SqmJoin<L, R> {
 	private final SqmJoinType joinType;
-	private SqmPredicate onClausePredicate;
+	private @Nullable SqmPredicate onClausePredicate;
 
 	public AbstractSqmJoin(
 			NavigablePath navigablePath,
 			SqmPathSource<R> referencedNavigable,
 			SqmFrom<?, L> lhs,
-			String alias,
+			@Nullable String alias,
 			SqmJoinType joinType,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedNavigable, lhs, alias, nodeBuilder );
@@ -49,17 +47,17 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 	}
 
 	@Override
-	public SqmPredicate getJoinPredicate() {
+	public @Nullable SqmPredicate getJoinPredicate() {
 		return onClausePredicate;
 	}
 
 	@Override
-	public void setJoinPredicate(SqmPredicate predicate) {
+	public void setJoinPredicate(@Nullable SqmPredicate predicate) {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(
 					"Setting join predicate [%s] (was [%s])",
-					predicate.toString(),
-					this.onClausePredicate == null ? "<null>" : this.onClausePredicate.toString()
+					predicate,
+					this.onClausePredicate == null ? "<null>" : this.onClausePredicate
 			);
 		}
 
@@ -71,7 +69,7 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 			this.onClausePredicate = restriction;
 		}
 		else {
-			this.onClausePredicate = nodeBuilder().and( onClausePredicate, restriction );
+			this.onClausePredicate = combinePredicates( onClausePredicate, restriction );
 		}
 	}
 
@@ -91,25 +89,25 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 	}
 
 	@Override
-	public abstract <S extends R> SqmTreatedJoin<L, R, S> treatAs(Class<S> treatJavaType, String alias);
+	public abstract <S extends R> SqmTreatedJoin<L, R, S> treatAs(Class<S> treatJavaType, @Nullable String alias);
 
 	@Override
-	public abstract <S extends R> SqmTreatedJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget, String alias);
+	public abstract <S extends R> SqmTreatedJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias);
 
 	@Override
-	public abstract <S extends R> SqmTreatedJoin<L, R, S> treatAs(Class<S> treatJavaType, String alias, boolean fetched);
+	public abstract <S extends R> SqmTreatedJoin<L, R, S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetched);
 
 	@Override
-	public abstract <S extends R> SqmTreatedJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetched);
+	public abstract <S extends R> SqmTreatedJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetched);
 
 	@Override
-	public SqmFrom<?, L> getLhs() {
+	public @Nullable SqmFrom<?, L> getLhs() {
 		//noinspection unchecked
 		return (SqmFrom<?, L>) super.getLhs();
 	}
 
 	@Override
-	public SqmFrom<?, L> getParent() {
+	public @Nullable SqmFrom<?, L> getParent() {
 		return getLhs();
 	}
 
@@ -117,33 +115,10 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 	public JoinType getJoinType() {
 		return joinType.getCorrespondingJpaJoinType();
 	}
+
 	@Override
-	public SqmPredicate getOn() {
+	public @Nullable SqmPredicate getOn() {
 		return getJoinPredicate();
-	}
-
-	@Override
-	public SqmJoin<L, R> on(JpaExpression<Boolean> restriction) {
-		applyRestriction( nodeBuilder().wrap( restriction ) );
-		return this;
-	}
-
-	@Override
-	public SqmJoin<L, R> on(Expression<Boolean> restriction) {
-		applyRestriction( nodeBuilder().wrap( restriction ) );
-		return this;
-	}
-
-	@Override
-	public SqmJoin<L, R> on(JpaPredicate... restrictions) {
-		applyRestriction( nodeBuilder().wrap( restrictions ) );
-		return this;
-	}
-
-	@Override
-	public SqmJoin<L, R> on(Predicate... restrictions) {
-		applyRestriction( nodeBuilder().wrap( restrictions ) );
-		return this;
 	}
 
 	@Override

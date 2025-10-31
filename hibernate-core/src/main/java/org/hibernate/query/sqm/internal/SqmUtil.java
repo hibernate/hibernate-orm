@@ -29,6 +29,7 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
@@ -86,6 +87,7 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.type.BindableType;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -741,7 +743,7 @@ public class SqmUtil {
 				: bindValue;
 	}
 
-	private static Bindable parameterType(
+	private static @Nullable Bindable parameterType(
 			QueryParameterBinding<?> domainParamBinding, Bindable parameterType) {
 		if ( parameterType instanceof PluralAttributeMapping pluralAttributeMapping ) {
 			// Default to the collection element
@@ -761,7 +763,7 @@ public class SqmUtil {
 					: association.getForeignKeyDescriptor();
 		}
 		else if ( parameterType instanceof JavaObjectType ) {
-			return domainParamBinding.getType();
+			return castNonNull( domainParamBinding.getType() );
 		}
 		else {
 			return parameterType;
@@ -788,9 +790,9 @@ public class SqmUtil {
 				return tryTwo;
 			}
 		}
-
-		if ( binding.getType() != null ) {
-			return binding.getType();
+		final MappingModelExpressible<?> bindingType = binding.getType();
+		if ( bindingType != null ) {
+			return bindingType;
 		}
 
 		for ( int i = 0; i < sqmParameters.size(); i++ ) {
@@ -928,12 +930,9 @@ public class SqmUtil {
 			return true;
 		}
 		else if ( selection != null && selection.getSelectableNode() instanceof SqmParameter<?> sqmParameter ) {
-			final var anticipatedClass =
-					sqmParameter.getAnticipatedType() != null
-							? sqmParameter.getAnticipatedType().getJavaType()
-							: null;
-			return anticipatedClass != null
-				&& expectedResultType.isAssignableFrom( anticipatedClass );
+			final BindableType<?> anticipatedType = sqmParameter.getAnticipatedType();
+			final var anticipatedClass = anticipatedType != null ? anticipatedType.getJavaType() : null;
+			return anticipatedClass != null && expectedResultType.isAssignableFrom( anticipatedClass );
 		}
 		else if ( selection == null
 				|| !isHqlTuple( selection ) && selection.getSelectableNode().isCompoundSelection() ) {

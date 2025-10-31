@@ -9,6 +9,7 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 import jakarta.persistence.metamodel.EntityType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.SessionFactory;
 import org.hibernate.SharedSessionContract;
@@ -248,7 +249,7 @@ public abstract class CriteriaDefinition<R>
 	}
 
 	@Override
-	public JpaCriteriaQuery<R> where(Expression<Boolean> restriction) {
+	public JpaCriteriaQuery<R> where(@Nullable Expression<Boolean> restriction) {
 		return query.where(restriction);
 	}
 
@@ -348,7 +349,7 @@ public abstract class CriteriaDefinition<R>
 	}
 
 	@Override
-	public JpaPredicate getRestriction() {
+	public @Nullable JpaPredicate getRestriction() {
 		return query.getRestriction();
 	}
 
@@ -433,7 +434,7 @@ public abstract class CriteriaDefinition<R>
 	}
 
 	@Override
-	public <T> JpaCteCriteria<T> getCteCriteria(String cteName) {
+	public <T> @Nullable JpaCteCriteria<T> getCteCriteria(String cteName) {
 		return query.getCteCriteria(cteName);
 	}
 

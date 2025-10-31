@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -38,7 +39,7 @@ public class SqmCorrelatedCteJoin<T> extends SqmCteJoin<T> implements SqmCorrela
 			NavigablePath navigablePath,
 			SqmCteStatement<T> cte,
 			SqmPathSource<T> pathSource,
-			String alias,
+			@Nullable String alias,
 			SqmJoinType joinType,
 			SqmRoot<T> sqmRoot,
 			SqmCorrelatedRootJoin<T> correlatedRootJoin,

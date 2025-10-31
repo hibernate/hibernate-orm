@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.function;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -96,7 +97,7 @@ public interface SqmFunctionDescriptor {
 	 */
 	<T> SelfRenderingSqmFunction<T> generateSqmExpression(
 			List<? extends SqmTypedNode<?>> arguments,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine);
 
 	/**
@@ -108,7 +109,7 @@ public interface SqmFunctionDescriptor {
 	default <T> SelfRenderingSqmFunction<T> generateAggregateSqmExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		throw new UnsupportedOperationException( "Not an aggregate function" );
 	}
@@ -123,7 +124,7 @@ public interface SqmFunctionDescriptor {
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		throw new UnsupportedOperationException( "Not an ordered set aggregate function" );
 	}
@@ -139,7 +140,7 @@ public interface SqmFunctionDescriptor {
 			SqmPredicate filter,
 			Boolean respectNulls,
 			Boolean fromFirst,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		throw new UnsupportedOperationException( "Not a window function" );
 	}
@@ -149,7 +150,7 @@ public interface SqmFunctionDescriptor {
 	 */
 	default <T> SelfRenderingSqmFunction<T> generateSqmExpression(
 			SqmTypedNode<?> argument,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		return generateSqmExpression(
 				singletonList(argument),
@@ -162,7 +163,7 @@ public interface SqmFunctionDescriptor {
 	 * Convenience for no arguments.
 	 */
 	default <T> SelfRenderingSqmFunction<T> generateSqmExpression(
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		return generateSqmExpression(
 				emptyList(),

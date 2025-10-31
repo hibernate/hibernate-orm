@@ -5,6 +5,7 @@
 package org.hibernate.query.sqm.tree.cte;
 
 import jakarta.persistence.criteria.Nulls;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaSearchOrder;
@@ -75,7 +76,7 @@ public class SqmSearchClauseSpecification implements JpaSearchOrder, SqmCacheabl
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 		return o instanceof SqmSearchClauseSpecification that
 			&& cteColumn.equals( that.cteColumn )
 			&& sortOrder == that.sortOrder

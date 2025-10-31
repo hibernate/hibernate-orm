@@ -78,9 +78,9 @@ public class SqmJsonValueExpression<T> extends AbstractSqmJsonPathExpression<T> 
 			String name,
 			@Nullable Map<String, SqmExpression<?>> passingExpressions,
 			ErrorBehavior errorBehavior,
-			SqmExpression<T> errorDefaultExpression,
+			@Nullable SqmExpression<T> errorDefaultExpression,
 			EmptyBehavior emptyBehavior,
-			SqmExpression<T> emptyDefaultExpression) {
+			@Nullable SqmExpression<T> emptyDefaultExpression) {
 		super(
 				descriptor,
 				renderer,
@@ -264,9 +264,8 @@ public class SqmJsonValueExpression<T> extends AbstractSqmJsonPathExpression<T> 
 			case NULL -> hql.append( " null on error" );
 			case ERROR -> hql.append( " error on error" );
 			case DEFAULT -> {
-				assert errorDefaultExpression != null;
 				hql.append( " default " );
-				errorDefaultExpression.appendHqlString( hql, context );
+				castNonNull( errorDefaultExpression ).appendHqlString( hql, context );
 				hql.append( " on error" );
 			}
 		}
@@ -274,9 +273,8 @@ public class SqmJsonValueExpression<T> extends AbstractSqmJsonPathExpression<T> 
 			case NULL -> hql.append( " null on empty" );
 			case ERROR -> hql.append( " error on empty" );
 			case DEFAULT -> {
-				assert emptyDefaultExpression != null;
 				hql.append( " default " );
-				emptyDefaultExpression.appendHqlString( hql, context );
+				castNonNull( emptyDefaultExpression ).appendHqlString( hql, context );
 				hql.append( " on empty" );
 			}
 		}
@@ -284,7 +282,7 @@ public class SqmJsonValueExpression<T> extends AbstractSqmJsonPathExpression<T> 
 	}
 
 	@Override
-	public boolean equals(Object other) {
+	public boolean equals(@Nullable Object other) {
 		return super.equals( other )
 			&& other instanceof SqmJsonValueExpression<?> that
 			&& errorBehavior == that.errorBehavior

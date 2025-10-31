@@ -7,6 +7,7 @@ package org.hibernate.query.criteria;
 import java.util.List;
 import java.util.Set;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.query.common.FetchClauseType;
 
@@ -46,19 +47,19 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Limit/Offset/Fetch clause
 
-	JpaExpression<Number> getOffset();
+	@Nullable JpaExpression<Number> getOffset();
 
-	JpaCriteriaQuery<T> offset(JpaExpression<? extends Number> offset);
+	JpaCriteriaQuery<T> offset(@Nullable JpaExpression<? extends Number> offset);
 
-	JpaCriteriaQuery<T> offset(Number offset);
+	JpaCriteriaQuery<T> offset(@Nullable Number offset);
 
-	JpaExpression<Number> getFetch();
+	@Nullable JpaExpression<Number> getFetch();
 
-	JpaCriteriaQuery<T> fetch(JpaExpression<? extends Number> fetch);
+	JpaCriteriaQuery<T> fetch(@Nullable JpaExpression<? extends Number> fetch);
 
 	JpaCriteriaQuery<T> fetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
 
-	JpaCriteriaQuery<T> fetch(Number fetch);
+	JpaCriteriaQuery<T> fetch(@Nullable Number fetch);
 
 	JpaCriteriaQuery<T> fetch(Number fetch, FetchClauseType fetchClauseType);
 
@@ -130,10 +131,10 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	JpaCriteriaQuery<T> multiselect(List<Selection<?>> selectionList);
 
 	@Override
-	JpaCriteriaQuery<T> where(Expression<Boolean> restriction);
+	JpaCriteriaQuery<T> where(@Nullable Expression<Boolean> restriction);
 
 	@Override
-	JpaCriteriaQuery<T> where(Predicate... restrictions);
+	JpaCriteriaQuery<T> where(Predicate @Nullable... restrictions);
 
 	@Override
 	JpaCriteriaQuery<T> where(List<Predicate> restrictions);
@@ -145,10 +146,10 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	JpaCriteriaQuery<T> groupBy(List<Expression<?>> grouping);
 
 	@Override
-	JpaCriteriaQuery<T> having(Expression<Boolean> restriction);
+	JpaCriteriaQuery<T> having(@Nullable Expression<Boolean> restriction);
 
 	@Override
-	JpaCriteriaQuery<T> having(Predicate... restrictions);
+	JpaCriteriaQuery<T> having(Predicate @Nullable... restrictions);
 
 	@Override
 	JpaCriteriaQuery<T> having(List<Predicate> restrictions);

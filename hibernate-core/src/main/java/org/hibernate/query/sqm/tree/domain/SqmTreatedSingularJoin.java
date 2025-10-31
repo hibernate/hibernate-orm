@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.criteria.JpaExpression;
@@ -30,14 +32,14 @@ public class SqmTreatedSingularJoin<O,T, S extends T>
 	public SqmTreatedSingularJoin(
 			SqmSingularJoin<O,T> wrappedPath,
 			SqmTreatableDomainType<S> treatTarget,
-			String alias) {
+			@Nullable String alias) {
 		this( wrappedPath, treatTarget, alias, false );
 	}
 
 	public SqmTreatedSingularJoin(
 			SqmSingularJoin<O,T> wrappedPath,
 			SqmTreatableDomainType<S> treatTarget,
-			String alias,
+			@Nullable String alias,
 			boolean fetched) {
 		//noinspection unchecked
 		super(
@@ -59,7 +61,7 @@ public class SqmTreatedSingularJoin<O,T, S extends T>
 			NavigablePath navigablePath,
 			SqmSingularJoin<O,T> wrappedPath,
 			SqmTreatableDomainType<S> treatTarget,
-			String alias,
+			@Nullable String alias,
 			boolean fetched) {
 		//noinspection unchecked
 		super(
@@ -107,7 +109,7 @@ public class SqmTreatedSingularJoin<O,T, S extends T>
 	}
 
 	@Override
-	public SqmBindableType<S> getNodeType() {
+	public @NonNull SqmBindableType<S> getNodeType() {
 		return treatTarget;
 	}
 
@@ -131,42 +133,34 @@ public class SqmTreatedSingularJoin<O,T, S extends T>
 	}
 
 	@Override
-	public <S1 extends S> SqmTreatedSingularJoin<O, S, S1> treatAs(Class<S1> treatJavaType) {
-		return (SqmTreatedSingularJoin<O, S, S1>) super.treatAs( treatJavaType );
+	public <S1 extends S> SqmTreatedSingularJoin<O, S, S1> treatAs(EntityDomainType<S1> treatTarget, @Nullable String alias, boolean fetch) {
+		//noinspection unchecked
+		return (SqmTreatedSingularJoin<O, S, S1>) wrappedPath.treatAs( treatTarget, alias, fetch );
 	}
 
 	@Override
-	public <S1 extends S> SqmTreatedSingularJoin<O, S, S1> treatAs(EntityDomainType<S1> treatTarget) {
-		return (SqmTreatedSingularJoin<O, S, S1>) super.treatAs( treatTarget );
+	public <S1 extends S> SqmTreatedSingularJoin<O, S, S1> treatAs(Class<S1> treatJavaType, @Nullable String alias, boolean fetch) {
+		//noinspection unchecked
+		return (SqmTreatedSingularJoin<O, S, S1>) wrappedPath.treatAs( treatJavaType, alias, fetch );
 	}
 
 	@Override
-	public <S1 extends S> SqmTreatedSingularJoin<O, S, S1> treatAs(Class<S1> treatJavaType, String alias) {
-		return (SqmTreatedSingularJoin<O, S, S1>) super.treatAs( treatJavaType, alias );
-	}
-
-	@Override
-	public <S1 extends S> SqmTreatedSingularJoin<O, S, S1> treatAs(EntityDomainType<S1> treatTarget, String alias) {
-		return (SqmTreatedSingularJoin<O, S, S1>) super.treatAs( treatTarget, alias );
-	}
-
-	@Override
-	public SqmTreatedSingularJoin<O,T,S> on(JpaExpression<Boolean> restriction) {
+	public SqmTreatedSingularJoin<O,T,S> on(@Nullable JpaExpression<Boolean> restriction) {
 		return (SqmTreatedSingularJoin<O, T, S>) super.on( restriction );
 	}
 
 	@Override
-	public SqmTreatedSingularJoin<O,T,S> on(JpaPredicate... restrictions) {
+	public SqmTreatedSingularJoin<O,T,S> on(JpaPredicate @Nullable... restrictions) {
 		return (SqmTreatedSingularJoin<O, T, S>) super.on( restrictions );
 	}
 
 	@Override
-	public SqmTreatedSingularJoin<O,T,S> on(Expression<Boolean> restriction) {
+	public SqmTreatedSingularJoin<O,T,S> on(@Nullable Expression<Boolean> restriction) {
 		return (SqmTreatedSingularJoin<O, T, S>) super.on( restriction );
 	}
 
 	@Override
-	public SqmTreatedSingularJoin<O,T,S> on(Predicate... restrictions) {
+	public SqmTreatedSingularJoin<O,T,S> on(Predicate @Nullable... restrictions) {
 		return (SqmTreatedSingularJoin<O, T, S>) super.on( restrictions );
 	}
 }

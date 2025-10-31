@@ -4,16 +4,17 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
 import org.hibernate.spi.NavigablePath;
 
@@ -30,14 +31,14 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	public SqmTreatedListJoin(
 			SqmListJoin<O, T> wrappedPath,
 			SqmTreatableDomainType<S> treatTarget,
-			String alias) {
+			@Nullable String alias) {
 		this( wrappedPath, treatTarget, alias, false );
 	}
 
 	public SqmTreatedListJoin(
 			SqmListJoin<O, T> wrappedPath,
 			SqmTreatableDomainType<S> treatTarget,
-			String alias,
+			@Nullable String alias,
 			boolean fetched) {
 		//noinspection unchecked
 		super(
@@ -59,7 +60,7 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 			NavigablePath navigablePath,
 			SqmListJoin<O, T> wrappedPath,
 			SqmTreatableDomainType<S> treatTarget,
-			String alias,
+			@Nullable String alias,
 			boolean fetched) {
 		//noinspection unchecked
 		super(
@@ -106,7 +107,7 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	}
 
 	@Override
-	public SqmBindableType<S> getNodeType() {
+	public @NonNull SqmBindableType<S> getNodeType() {
 		return treatTarget;
 	}
 
@@ -121,30 +122,34 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	}
 
 	@Override
-	public SqmPath<?> resolveIndexedAccess(
-			SqmExpression<?> selector,
-			boolean isTerminal,
-			SqmCreationState creationState) {
-		return getWrappedPath().resolveIndexedAccess( selector, isTerminal, creationState );
+	public <S1 extends S> SqmTreatedListJoin<O, S, S1> treatAs(Class<S1> treatJavaType, @Nullable String alias, boolean fetch) {
+		//noinspection unchecked
+		return (SqmTreatedListJoin<O, S, S1>) wrappedPath.treatAs( treatJavaType, alias, fetch );
 	}
 
 	@Override
-	public SqmTreatedListJoin<O,T,S> on(JpaExpression<Boolean> restriction) {
+	public <S1 extends S> SqmTreatedListJoin<O, S, S1> treatAs(EntityDomainType<S1> treatTarget, @Nullable String alias, boolean fetch) {
+		//noinspection unchecked
+		return (SqmTreatedListJoin<O, S, S1>) wrappedPath.treatAs( treatTarget, alias, fetch );
+	}
+
+	@Override
+	public SqmTreatedListJoin<O,T,S> on(@Nullable JpaExpression<Boolean> restriction) {
 		return (SqmTreatedListJoin<O,T,S>) super.on( restriction );
 	}
 
 	@Override
-	public SqmTreatedListJoin<O,T,S> on(Expression<Boolean> restriction) {
+	public SqmTreatedListJoin<O,T,S> on(@Nullable Expression<Boolean> restriction) {
 		return (SqmTreatedListJoin<O, T, S>) super.on( restriction );
 	}
 
 	@Override
-	public SqmTreatedListJoin<O,T,S> on(JpaPredicate... restrictions) {
+	public SqmTreatedListJoin<O,T,S> on(JpaPredicate @Nullable... restrictions) {
 		return (SqmTreatedListJoin<O, T, S>) super.on( restrictions );
 	}
 
 	@Override
-	public SqmTreatedListJoin<O,T,S> on(Predicate... restrictions) {
+	public SqmTreatedListJoin<O,T,S> on(Predicate @Nullable... restrictions) {
 		return (SqmTreatedListJoin<O, T, S>) super.on( restrictions );
 	}
 

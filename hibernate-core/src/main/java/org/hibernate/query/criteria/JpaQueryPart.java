@@ -6,6 +6,7 @@ package org.hibernate.query.criteria;
 
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.common.FetchClauseType;
 
 /**
@@ -31,13 +32,13 @@ public interface JpaQueryPart<T> extends JpaCriteriaNode {
 
 	//TODO: these operations should only accept integer literals or parameters
 
-	JpaExpression<? extends Number> getOffset();
+	@Nullable JpaExpression<? extends Number> getOffset();
 
-	JpaQueryPart<T> setOffset(JpaExpression<? extends Number> offset);
+	JpaQueryPart<T> setOffset(@Nullable JpaExpression<? extends Number> offset);
 
-	JpaExpression<? extends Number> getFetch();
+	@Nullable JpaExpression<? extends Number> getFetch();
 
-	JpaQueryPart<T> setFetch(JpaExpression<? extends Number> fetch);
+	JpaQueryPart<T> setFetch(@Nullable JpaExpression<? extends Number> fetch);
 
 	JpaQueryPart<T> setFetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
 

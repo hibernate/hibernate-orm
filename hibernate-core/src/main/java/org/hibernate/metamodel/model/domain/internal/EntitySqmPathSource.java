@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -38,12 +39,12 @@ public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> implements 
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name) {
+	public @Nullable SqmPathSource<?> findSubPathSource(String name) {
 		return getPathType().findSubPathSource( name );
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
+	public @Nullable SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
 		return getPathType().findSubPathSource( name, includeSubtypes );
 	}
 
@@ -53,7 +54,7 @@ public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> implements 
 	}
 
 	@Override
-	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+	public SqmPath<J> createSqmPath(SqmPath<?> lhs, @Nullable SqmPathSource<?> intermediatePathSource) {
 		return new SqmEntityValuedSimplePath<>(
 				PathHelper.append( lhs, this, intermediatePathSource ),
 				pathModel,
@@ -66,7 +67,7 @@ public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> implements 
 	public SqmPluralPartJoin<Object, J> createSqmJoin(
 			SqmFrom<?, Object> lhs,
 			SqmJoinType joinType,
-			String alias,
+			@Nullable String alias,
 			boolean fetched,
 			SqmCreationState creationState) {
 		return new SqmPluralPartJoin<>(

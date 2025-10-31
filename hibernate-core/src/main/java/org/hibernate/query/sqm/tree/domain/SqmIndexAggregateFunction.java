@@ -6,28 +6,33 @@ package org.hibernate.query.sqm.tree.domain;
 
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartPath<T> {
 	private final String functionName;
-	private final ReturnableType<T> returnableType;
+	private final @Nullable ReturnableType<T> returnableType;
 
-	public SqmIndexAggregateFunction(SqmPath<?> pluralDomainPath, String functionName) {
+	public SqmIndexAggregateFunction(SqmPluralValuedSimplePath<?> pluralDomainPath, String functionName) {
 		//noinspection unchecked
 		super(
-				pluralDomainPath.getNavigablePath().getParent()
+				pluralDomainPath.getParentNavigablePath()
 						.append( pluralDomainPath.getNavigablePath().getLocalName(), "{" + functionName + "-index}" ),
 				pluralDomainPath,
 				(SqmPluralPersistentAttribute<?, ?, ?>)
@@ -37,25 +42,26 @@ public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartP
 								.getIndexPathSource()
 		);
 		this.functionName = functionName;
+		final SqmCriteriaNodeBuilder nodeBuilder = pluralDomainPath.nodeBuilder();
 		switch ( functionName ) {
 			case "sum":
 				//noinspection unchecked
-				this.returnableType = (ReturnableType<T>) nodeBuilder().getSumReturnTypeResolver()
+				this.returnableType = (ReturnableType<T>) nodeBuilder.getSumReturnTypeResolver()
 						.resolveFunctionReturnType(
 								null,
 								(SqmToSqlAstConverter) null,
 								List.of( pluralDomainPath.get( CollectionPart.Nature.INDEX.getName() ) ),
-								nodeBuilder().getTypeConfiguration()
+								nodeBuilder.getTypeConfiguration()
 						);
 				break;
 			case "avg":
 				//noinspection unchecked
-				this.returnableType = (ReturnableType<T>) nodeBuilder().getAvgReturnTypeResolver()
+				this.returnableType = (ReturnableType<T>) nodeBuilder.getAvgReturnTypeResolver()
 						.resolveFunctionReturnType(
 								null,
 								(SqmToSqlAstConverter) null,
 								List.of( pluralDomainPath.get( CollectionPart.Nature.INDEX.getName() ) ),
-								nodeBuilder().getTypeConfiguration()
+								nodeBuilder.getTypeConfiguration()
 						);
 				break;
 			default:
@@ -65,21 +71,21 @@ public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartP
 	}
 
 	@Override
-	public SqmBindableType<T> getExpressible() {
+	public @NonNull SqmBindableType<T> getExpressible() {
 		return returnableType == null
 				? super.getExpressible()
-				: nodeBuilder().resolveExpressible( returnableType );
+				: castNonNull( nodeBuilder().resolveExpressible( returnableType ) );
 	}
 
 	@Override
-	public JavaType<T> getJavaTypeDescriptor() {
+	public @NonNull JavaType<T> getJavaTypeDescriptor() {
 		return returnableType == null
 				? super.getJavaTypeDescriptor()
 				: returnableType.getExpressibleJavaType();
 	}
 
 	@Override
-	public JavaType<T> getNodeJavaType() {
+	public @NonNull JavaType<T> getNodeJavaType() {
 		return returnableType == null ? super.getNodeJavaType() : returnableType.getExpressibleJavaType();
 	}
 
@@ -93,7 +99,7 @@ public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartP
 		final SqmIndexAggregateFunction<T> path = context.registerCopy(
 				this,
 				new SqmIndexAggregateFunction<>(
-						getLhs().copy( context ),
+						getPluralDomainPath().copy( context ),
 						functionName
 				)
 		);

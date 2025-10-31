@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Locale;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -21,6 +23,7 @@ import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 
 import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * Specialized SQM literal defined by an enum reference.  E.g.
@@ -40,7 +43,6 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 		super( null, enumValue, nodeBuilder );
 		this.referencedEnumTypeDescriptor = referencedEnumTypeDescriptor;
 		this.enumValueName = enumValueName;
-		setExpressibleType( this );
 	}
 
 	@Override
@@ -68,17 +70,22 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 	}
 
 	@Override
+	public @NonNull SqmBindableType<E> getNodeType() {
+		return this;
+	}
+
+	@Override
 	public PersistenceType getPersistenceType() {
 		return BASIC;
 	}
 
 	@Override
-	public SqmDomainType<E> getSqmType() {
+	public @Nullable SqmDomainType<E> getSqmType() {
 		return null;
 	}
 
 	public E getEnumValue() {
-		return getLiteralValue();
+		return castNonNull( getLiteralValue() );
 	}
 
 	@Override
@@ -88,7 +95,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 
 	@Override
 	public Class<E> getJavaType() {
-		return getJavaTypeDescriptor().getJavaTypeClass();
+		return referencedEnumTypeDescriptor.getJavaTypeClass();
 	}
 
 

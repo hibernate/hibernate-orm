@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.query.hql.HqlInterpretationException;
 import org.hibernate.query.hql.spi.SemanticPathPart;
@@ -56,7 +57,7 @@ public class SqmLiteralEmbeddableType<T>
 	}
 
 	@Override
-	public void internalApplyInferableType(SqmBindableType<?> type) {
+	public void internalApplyInferableType(@Nullable SqmBindableType<?> type) {
 	}
 
 	@Override
@@ -91,7 +92,7 @@ public class SqmLiteralEmbeddableType<T>
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmLiteralEmbeddableType<?> that
 			&& Objects.equals( embeddableDomainType.getTypeName(), that.embeddableDomainType.getTypeName() );
 	}

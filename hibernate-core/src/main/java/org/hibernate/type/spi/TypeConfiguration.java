@@ -31,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
@@ -81,6 +82,7 @@ import org.hibernate.type.internal.ParameterizedTypeImpl;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.id.uuid.LocalObjectUuidHelper.generateLocalObjectUuid;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.query.sqm.internal.TypecheckUtil.isNumberArray;
 
 /**
@@ -657,7 +659,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			else {
 				components[i] = sqmExpressible != null
 						? sqmExpressible
-						: getBasicTypeForJavaType( Object.class );
+						: castNonNull( getBasicTypeForJavaType( Object.class ) );
 			}
 		}
 		return arrayTuples.computeIfAbsent( new ArrayCacheKey( components ),
@@ -686,9 +688,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	/**
 	 * @see QueryHelper#highestPrecedenceType2
 	 */
-	public SqmBindableType<?> resolveArithmeticType(
-			SqmBindableType<?> firstType,
-			SqmBindableType<?> secondType,
+	public @Nullable SqmBindableType<?> resolveArithmeticType(
+			@Nullable SqmBindableType<?> firstType,
+			@Nullable SqmBindableType<?> secondType,
 			BinaryArithmeticOperator operator) {
 		return resolveArithmeticType( firstType, secondType );
 	}
@@ -699,9 +701,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 *
 	 * @see QueryHelper#highestPrecedenceType2
 	 */
-	public SqmBindableType<?> resolveArithmeticType(
-			SqmBindableType<?> firstType,
-			SqmBindableType<?> secondType) {
+	public @Nullable SqmBindableType<?> resolveArithmeticType(
+			@Nullable SqmBindableType<?> firstType,
+			@Nullable SqmBindableType<?> secondType) {
 
 		if ( getSqlTemporalType( firstType ) != null ) {
 			if ( secondType==null || getSqlTemporalType( secondType ) != null ) {
@@ -743,7 +745,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * Determine the result type of a unary arithmetic operation,
 	 * taking converters into account.
 	 */
-	public SqmBindableType<?> resolveArithmeticType(SqmBindableType<?> expressible) {
+	public @Nullable SqmBindableType<?> resolveArithmeticType(SqmBindableType<?> expressible) {
 		return isNumberArray( expressible )
 				? expressible.getSqmType()
 				// Use the relational java type to account for possible converters
@@ -758,17 +760,17 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	private final ConcurrentHashMap<Type, BasicType<?>> basicTypeByJavaType = new ConcurrentHashMap<>();
 
-	public <J> BasicType<J> getBasicTypeForGenericJavaType(Class<? super J> javaType, Type... typeArguments) {
+	public <J> @Nullable BasicType<J> getBasicTypeForGenericJavaType(Class<? super J> javaType, Type... typeArguments) {
 		//noinspection unchecked
 		return (BasicType<J>) getBasicTypeForJavaType( new ParameterizedTypeImpl( javaType, typeArguments, null ) );
 	}
 
-	public <J> BasicType<J> getBasicTypeForJavaType(Class<J> javaType) {
+	public <J> @Nullable BasicType<J> getBasicTypeForJavaType(Class<J> javaType) {
 		//noinspection unchecked
 		return (BasicType<J>) getBasicTypeForJavaType( (Type) javaType );
 	}
 
-	public BasicType<?> getBasicTypeForJavaType(Type javaType) {
+	public @Nullable BasicType<?> getBasicTypeForJavaType(Type javaType) {
 		final var existing = basicTypeByJavaType.get( javaType );
 		if ( existing != null ) {
 			return existing;
@@ -847,7 +849,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	@SuppressWarnings("deprecation")
-	public TemporalType getSqlTemporalType(SqmExpressible<?> type) {
+	public @Nullable TemporalType getSqlTemporalType(@Nullable SqmExpressible<?> type) {
 		return type == null ? null
 			: getSqlTemporalType( type.getRelationalJavaType()
 					.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) );
@@ -855,18 +857,18 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	@SuppressWarnings("deprecation")
-	public static TemporalType getSqlTemporalType(JdbcMapping jdbcMapping) {
+	public static @Nullable TemporalType getSqlTemporalType(JdbcMapping jdbcMapping) {
 		return getSqlTemporalType( jdbcMapping.getJdbcType() );
 	}
 
 	@SuppressWarnings("deprecation")
-	public static TemporalType getSqlTemporalType(JdbcMappingContainer jdbcMappings) {
+	public static @Nullable TemporalType getSqlTemporalType(JdbcMappingContainer jdbcMappings) {
 		assert jdbcMappings.getJdbcTypeCount() == 1;
 		return getSqlTemporalType( jdbcMappings.getSingleJdbcMapping().getJdbcType() );
 	}
 
 	@SuppressWarnings("deprecation")
-	public static TemporalType getSqlTemporalType(MappingModelExpressible<?> type) {
+	public static @Nullable TemporalType getSqlTemporalType(MappingModelExpressible<?> type) {
 		if ( type instanceof BasicValuedMapping basicValuedMapping ) {
 			return getSqlTemporalType( basicValuedMapping.getJdbcMapping().getJdbcType() );
 		}
@@ -890,12 +892,12 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	@SuppressWarnings("deprecation")
-	public static TemporalType getSqlTemporalType(JdbcType descriptor) {
+	public static @Nullable TemporalType getSqlTemporalType(JdbcType descriptor) {
 		return getSqlTemporalType( descriptor.getDefaultSqlTypeCode() );
 	}
 
 	@SuppressWarnings("deprecation")
-	protected static TemporalType getSqlTemporalType(int jdbcTypeCode) {
+	protected static @Nullable TemporalType getSqlTemporalType(int jdbcTypeCode) {
 		return switch ( jdbcTypeCode ) {
 			case SqlTypes.TIMESTAMP, SqlTypes.TIMESTAMP_WITH_TIMEZONE, SqlTypes.TIMESTAMP_UTC
 					-> TemporalType.TIMESTAMP;
@@ -907,24 +909,24 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		};
 	}
 
-	public static IntervalType getSqlIntervalType(JdbcMappingContainer jdbcMappings) {
+	public static @Nullable IntervalType getSqlIntervalType(JdbcMappingContainer jdbcMappings) {
 		assert jdbcMappings.getJdbcTypeCount() == 1;
 		return getSqlIntervalType( jdbcMappings.getSingleJdbcMapping().getJdbcType() );
 	}
 
-	public static IntervalType getSqlIntervalType(JdbcType descriptor) {
+	public static @Nullable IntervalType getSqlIntervalType(JdbcType descriptor) {
 		return getSqlIntervalType( descriptor.getDefaultSqlTypeCode() );
 	}
 
-	protected static IntervalType getSqlIntervalType(int jdbcTypeCode) {
+	protected static @Nullable IntervalType getSqlIntervalType(int jdbcTypeCode) {
 		return jdbcTypeCode == SqlTypes.INTERVAL_SECOND ? IntervalType.SECOND : null;
 	}
 
-	public static boolean isJdbcTemporalType(SqmExpressible<?> type) {
+	public static boolean isJdbcTemporalType(@Nullable SqmExpressible<?> type) {
 		return matchesJavaType( type, Date.class );
 	}
 
-	public static boolean isDuration(SqmExpressible<?> type) {
+	public static boolean isDuration(@Nullable SqmExpressible<?> type) {
 		return matchesJavaType( type, Duration.class );
 	}
 

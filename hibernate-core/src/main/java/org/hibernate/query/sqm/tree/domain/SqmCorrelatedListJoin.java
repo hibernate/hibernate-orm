@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -36,7 +37,7 @@ public class SqmCorrelatedListJoin<O, T> extends SqmListJoin<O, T> implements Sq
 	private SqmCorrelatedListJoin(
 			SqmFrom<?, O> lhs,
 			SqmListPersistentAttribute<O, T> attribute,
-			String alias,
+			@Nullable String alias,
 			SqmJoinType sqmJoinType,
 			boolean fetched,
 			NodeBuilder nodeBuilder,

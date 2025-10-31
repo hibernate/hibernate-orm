@@ -9,12 +9,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
+import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
+import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
+import org.hibernate.query.sqm.tree.domain.SqmFunctionRoot;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedFrom;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
@@ -105,7 +110,18 @@ public class SqmFromClause implements Serializable, SqmCacheable {
 				}
 			}
 			else {
-				sb.append( root.getEntityName() );
+				if ( root instanceof SqmDerivedRoot<?> derivedRoot ) {
+					derivedRoot.getQueryPart().appendHqlString( sb, context );
+				}
+				else if ( root instanceof SqmCteRoot<?> cteRoot ) {
+					sb.append( cteRoot.getCte().getCteTable().getCteName() );
+				}
+				else if ( root instanceof SqmFunctionRoot<?> functionRoot ) {
+					functionRoot.getFunction().appendHqlString( sb, context );
+				}
+				else {
+					sb.append( root.getEntityName() );
+				}
 				sb.append( ' ' ).append( root.resolveAlias( context ) );
 				appendJoins( root, sb, context );
 				appendTreatJoins( root, sb, context );
@@ -115,8 +131,9 @@ public class SqmFromClause implements Serializable, SqmCacheable {
 	}
 
 	public static void appendJoins(SqmFrom<?, ?> sqmFrom, StringBuilder sb, SqmRenderContext context) {
-		if ( sqmFrom instanceof SqmRoot<?> root && root.getOrderedJoins() != null ) {
-			appendJoins( sqmFrom, root.getOrderedJoins(), sb, false, context );
+		final List<SqmJoin<?, ?>> orderedJoins;
+		if ( sqmFrom instanceof SqmRoot<?> root && ( orderedJoins = root.getOrderedJoins() ) != null ) {
+			appendJoins( sqmFrom, orderedJoins, sb, false, context );
 		}
 		else {
 			appendJoins( sqmFrom, sqmFrom.getSqmJoins(), sb, true, context );
@@ -127,7 +144,7 @@ public class SqmFromClause implements Serializable, SqmCacheable {
 		for ( SqmJoin<?, ?> sqmJoin : joins ) {
 			appendJoinType( sb, sqmJoin.getSqmJoinType() );
 			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> attributeJoin ) {
-				final List<SqmTreatedFrom<?, ?, ?>> sqmTreats = attributeJoin.getSqmTreats();
+				final List<SqmTreatedFrom<?, ?, @Nullable?>> sqmTreats = attributeJoin.getSqmTreats();
 				if ( attributeJoin.isImplicitJoin() && !sqmTreats.isEmpty() ) {
 					for ( int i = 0; i < sqmTreats.size(); i++ ) {
 						final var treatJoin = (SqmTreatedAttributeJoin<?, ?, ?>) sqmTreats.get( i );
@@ -162,25 +179,37 @@ public class SqmFromClause implements Serializable, SqmCacheable {
 					appendTreatJoins( sqmJoin, sb, context );
 				}
 			}
-			else if ( sqmJoin instanceof SqmEntityJoin<?, ?> sqmEntityJoin ) {
-				sb.append( sqmEntityJoin.getEntityName() );
-				appendJoinAliasAndOnClause( sb, context, sqmEntityJoin );
+			else {
+				if ( sqmJoin instanceof SqmEntityJoin<?, ?> sqmEntityJoin ) {
+					sb.append( sqmEntityJoin.getEntityName() );
+				}
+				else if ( sqmJoin instanceof SqmDerivedJoin<?> derivedJoin ) {
+					derivedJoin.getQueryPart().appendHqlString( sb, context );
+				}
+				else if ( sqmJoin instanceof SqmCteJoin<?> cteJoin ) {
+					sb.append( cteJoin.getCte().getCteTable().getCteName() );
+				}
+				else if ( sqmJoin instanceof SqmFunctionJoin<?> functionJoin ) {
+					functionJoin.getFunction().appendHqlString( sb, context );
+				}
+				else {
+					throw new UnsupportedOperationException( "Unsupported join: " + sqmJoin );
+				}
+				appendJoinAliasAndOnClause( sb, context, sqmJoin );
 				if ( transitive ) {
 					appendJoins( sqmJoin, sb, context );
 					appendTreatJoins( sqmJoin, sb, context );
 				}
-			}
-			else {
-				throw new UnsupportedOperationException( "Unsupported join: " + sqmJoin );
 			}
 		}
 	}
 
 	private static void appendJoinAliasAndOnClause(StringBuilder sb, SqmRenderContext context, SqmJoin<?, ?> join) {
 		sb.append( ' ' ).append( join.resolveAlias( context ) );
-		if ( join.getJoinPredicate() != null ) {
+		final SqmPredicate joinPredicate = join.getJoinPredicate();
+		if ( joinPredicate != null ) {
 			sb.append( " on " );
-			join.getJoinPredicate().appendHqlString( sb, context );
+			joinPredicate.appendHqlString( sb, context );
 		}
 	}
 
@@ -227,7 +256,7 @@ public class SqmFromClause implements Serializable, SqmCacheable {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmFromClause that
 			&& SqmFrom.areDeepEqual( getRoots(), that.getRoots() );
 	}

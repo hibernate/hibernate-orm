@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaSelection;
@@ -47,7 +48,7 @@ public class SqmTuple<T>
 		this( groupedExpressions, null, nodeBuilder );
 	}
 
-	public SqmTuple(List<SqmExpression<?>> groupedExpressions, SqmBindableType<T> type, NodeBuilder nodeBuilder) {
+	public SqmTuple(List<SqmExpression<?>> groupedExpressions, @Nullable SqmBindableType<T> type, NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
 		if ( groupedExpressions.isEmpty() ) {
 			throw new SemanticException( "Tuple constructor must have at least one element" );
@@ -97,7 +98,7 @@ public class SqmTuple<T>
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmTuple<?> that
 			&& Objects.equals( this.groupedExpressions, that.groupedExpressions );
 	}
@@ -134,7 +135,7 @@ public class SqmTuple<T>
 	}
 
 	@Override
-	public Integer getTupleLength() {
+	public @Nullable Integer getTupleLength() {
 		return groupedExpressions.size();
 	}
 }

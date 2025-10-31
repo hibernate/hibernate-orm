@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -38,7 +39,7 @@ public class SqmJunctionPredicate extends AbstractSqmPredicate {
 			SqmPredicate leftHandPredicate,
 			SqmPredicate rightHandPredicate,
 			NodeBuilder nodeBuilder) {
-		super( leftHandPredicate.getExpressible(), nodeBuilder );
+		super( nodeBuilder.getBooleanType(), nodeBuilder );
 		this.booleanOperator = booleanOperator;
 		this.predicates = new ArrayList<>( 2 );
 		this.predicates.add( leftHandPredicate );
@@ -49,7 +50,7 @@ public class SqmJunctionPredicate extends AbstractSqmPredicate {
 			BooleanOperator booleanOperator,
 			List<SqmPredicate> predicates,
 			NodeBuilder nodeBuilder) {
-		super( predicates.get( 0 ).getNodeType(), nodeBuilder );
+		super( nodeBuilder.getBooleanType(), nodeBuilder );
 		this.booleanOperator = booleanOperator;
 		this.predicates = predicates;
 	}
@@ -138,7 +139,7 @@ public class SqmJunctionPredicate extends AbstractSqmPredicate {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmJunctionPredicate that
 			&& booleanOperator == that.booleanOperator
 			&& Objects.equals( predicates, that.predicates );

@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
@@ -635,7 +636,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaExpression<String> toString(Expression<Character> character);
 
 	@Override
-	<T> JpaExpression<T> literal(T value);
+	<T> JpaExpression<T> literal(@Nullable T value);
 
 	<T> List<? extends JpaExpression<T>> literals(T... values);
 
@@ -765,7 +766,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	<K, L extends List<?>> JpaExpression<Set<K>> indexes(L list);
 
-	<T> JpaExpression<T> value(T value);
+	<T> JpaExpression<T> value(@Nullable T value);
 
 	@Override
 	<V, M extends Map<?, V>> Expression<Collection<V>> values(M map);

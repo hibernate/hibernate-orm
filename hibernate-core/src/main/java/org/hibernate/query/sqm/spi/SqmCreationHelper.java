@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.spi;
 
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
@@ -40,12 +41,12 @@ public class SqmCreationHelper {
 
 	private static final AtomicLong UNIQUE_ID_COUNTER = new AtomicLong();
 
-	public static NavigablePath buildRootNavigablePath(String base, String alias) {
+	public static NavigablePath buildRootNavigablePath(String base, @Nullable String alias) {
 		// call to determineAlias() currently prevents caching certain plans
 		return new NavigablePath( base, determineAlias( alias ) );
 	}
 
-	public static NavigablePath buildSubNavigablePath(NavigablePath lhs, String base, String alias) {
+	public static NavigablePath buildSubNavigablePath(NavigablePath lhs, String base, @Nullable String alias) {
 		// call to determineAlias() currently prevents caching certain plans
 		return lhs.append( base, determineAlias( alias ) );
 	}
@@ -73,7 +74,7 @@ public class SqmCreationHelper {
 	 * query interpretation cache.
 	 */
 	@Deprecated(since = "7")
-	public static String determineAlias(String alias) {
+	public static @Nullable String determineAlias(@Nullable String alias) {
 		// Make sure we always create a unique alias, otherwise we might use a wrong table group for the same join
 		if ( alias == null ) {
 			return acquireUniqueAlias();
@@ -84,7 +85,7 @@ public class SqmCreationHelper {
 		return alias;
 	}
 
-	public static NavigablePath buildSubNavigablePath(SqmPath<?> lhs, String subNavigable, String alias) {
+	public static NavigablePath buildSubNavigablePath(SqmPath<?> lhs, String subNavigable, @Nullable String alias) {
 		if ( lhs == null ) {
 			throw new IllegalArgumentException(
 					"`lhs` cannot be null for a sub-navigable reference - " + subNavigable

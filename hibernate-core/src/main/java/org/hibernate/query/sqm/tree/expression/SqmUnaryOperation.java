@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -11,6 +12,8 @@ import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * @author Steve Ebersole
@@ -29,7 +32,7 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 				operand,
 				(SqmBindableType<T>) // TODO: this cast is unsound
 						nodeBuilder.getTypeConfiguration()
-								.resolveArithmeticType( operand.getExpressible() ),
+								.resolveArithmeticType( castNonNull( operand.getExpressible() ) ),
 				nodeBuilder
 		);
 	}
@@ -37,7 +40,7 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 	public SqmUnaryOperation(
 			UnaryArithmeticOperator operation,
 			SqmExpression<T> operand,
-			SqmBindableType<T> inherentType,
+			@Nullable SqmBindableType<T> inherentType,
 			NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.operation = operation;
@@ -87,7 +90,7 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmUnaryOperation<?> that
 			&& operation == that.getOperation()
 			&& operand.equals( that.getOperand() );

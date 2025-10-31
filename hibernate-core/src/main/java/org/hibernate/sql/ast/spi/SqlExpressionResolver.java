@@ -6,6 +6,7 @@ package org.hibernate.sql.ast.spi;
 
 import java.util.function.Function;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -125,7 +126,7 @@ public interface SqlExpressionResolver {
 	SqlSelection resolveSqlSelection(
 			Expression expression,
 			JavaType<?> javaType,
-			FetchParent fetchParent,
+			@Nullable FetchParent fetchParent,
 			TypeConfiguration typeConfiguration);
 
 	final class ColumnReferenceKey {

@@ -4,109 +4,115 @@
  */
 package org.hibernate.orm.test.jpa.criteria.subquery;
 
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 
-import org.hibernate.orm.test.jpa.metamodel.AbstractMetamodelSpecificTest;
+import org.hibernate.orm.test.jpa.metamodel.Address;
+import org.hibernate.orm.test.jpa.metamodel.Alias;
+import org.hibernate.orm.test.jpa.metamodel.Country;
+import org.hibernate.orm.test.jpa.metamodel.CreditCard;
 import org.hibernate.orm.test.jpa.metamodel.Customer;
 import org.hibernate.orm.test.jpa.metamodel.Customer_;
+import org.hibernate.orm.test.jpa.metamodel.Info;
+import org.hibernate.orm.test.jpa.metamodel.LineItem;
 import org.hibernate.orm.test.jpa.metamodel.Order;
 import org.hibernate.orm.test.jpa.metamodel.Order_;
 
+import org.hibernate.orm.test.jpa.metamodel.Phone;
+import org.hibernate.orm.test.jpa.metamodel.Product;
+import org.hibernate.orm.test.jpa.metamodel.ShelfLife;
+import org.hibernate.orm.test.jpa.metamodel.Spouse;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Steve Ebersole
  */
-public class UncorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
+@Jpa(annotatedClasses = {
+		Address.class, Alias.class, Country.class, CreditCard.class, Customer.class,
+		Info.class, LineItem.class, Order.class, Phone.class, Product.class,
+		ShelfLife.class, Spouse.class
+})
+public class UncorrelatedSubqueryTest {
 	@Test
-	public void testGetCorrelatedParentIllegalStateException() {
-		// test that attempting to call getCorrelatedParent on a uncorrelated query/subquery
+	public void testGetCorrelatedParentIllegalStateException(EntityManagerFactoryScope scope) {
+		// test that attempting to call getCorrelatedParent on an uncorrelated query/subquery
 		// throws ISE
 
-		CriteriaBuilder builder = entityManagerFactory().getCriteriaBuilder();
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+		CriteriaBuilder builder = scope.getEntityManagerFactory().getCriteriaBuilder();
+		scope.inTransaction( entityManager -> {
 
-		CriteriaQuery<Customer> criteria = builder.createQuery( Customer.class );
-		Root<Customer> customerRoot = criteria.from( Customer.class );
-		Join<Customer, Order> orderJoin = customerRoot.join( Customer_.orders );
-		criteria.select( customerRoot );
-		Subquery<Double> subCriteria = criteria.subquery( Double.class );
-		Root<Order> subqueryOrderRoot = subCriteria.from( Order.class );
-		subCriteria.select( builder.min( subqueryOrderRoot.get( Order_.totalPrice ) ) );
-		criteria.where( builder.equal( orderJoin.get( "totalPrice" ), builder.all( subCriteria ) ) );
+			CriteriaQuery<Customer> criteria = builder.createQuery( Customer.class );
+			Root<Customer> customerRoot = criteria.from( Customer.class );
+			Join<Customer, Order> orderJoin = customerRoot.join( Customer_.orders );
+			criteria.select( customerRoot );
+			Subquery<Double> subCriteria = criteria.subquery( Double.class );
+			Root<Order> subqueryOrderRoot = subCriteria.from( Order.class );
+			subCriteria.select( builder.min( subqueryOrderRoot.get( Order_.totalPrice ) ) );
+			criteria.where( builder.equal( orderJoin.get( "totalPrice" ), builder.all( subCriteria ) ) );
 
-		assertFalse( customerRoot.isCorrelated() );
-		assertFalse( subqueryOrderRoot.isCorrelated() );
+			assertFalse( customerRoot.isCorrelated() );
+			assertFalse( subqueryOrderRoot.isCorrelated() );
 
-		try {
-			customerRoot.getCorrelationParent();
-			fail( "Should have resulted in IllegalStateException" );
-		}
-		catch (IllegalStateException expected) {
-		}
+			assertThrows(
+					IllegalStateException.class,
+					customerRoot::getCorrelationParent,
+					"Should have resulted in IllegalStateException"
+			);
 
-		try {
-			subqueryOrderRoot.getCorrelationParent();
-			fail( "Should have resulted in IllegalStateException" );
-		}
-		catch (IllegalStateException expected) {
-		}
-
-		em.getTransaction().commit();
-		em.close();
+			assertThrows(
+					IllegalStateException.class,
+					subqueryOrderRoot::getCorrelationParent,
+					"Should have resulted in IllegalStateException"
+			);
+		} );
 	}
 
 	@Test
-	public void testEqualAll() {
-		CriteriaBuilder builder = entityManagerFactory().getCriteriaBuilder();
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+	public void testEqualAll(EntityManagerFactoryScope scope) {
+		CriteriaBuilder builder = scope.getEntityManagerFactory().getCriteriaBuilder();
+		scope.inTransaction( entityManager -> {
 
-		CriteriaQuery<Customer> criteria = builder.createQuery( Customer.class );
-		Root<Customer> customerRoot = criteria.from( Customer.class );
-		Join<Customer, Order> orderJoin = customerRoot.join( Customer_.orders );
-		criteria.select( customerRoot );
-		Subquery<Double> subCriteria = criteria.subquery( Double.class );
-		Root<Order> subqueryOrderRoot = subCriteria.from( Order.class );
-		subCriteria.select( builder.min( subqueryOrderRoot.get( Order_.totalPrice ) ) );
-		criteria.where( builder.equal( orderJoin.get( "totalPrice" ), builder.all( subCriteria ) ) );
-		em.createQuery( criteria ).getResultList();
+			CriteriaQuery<Customer> criteria = builder.createQuery( Customer.class );
+			Root<Customer> customerRoot = criteria.from( Customer.class );
+			Join<Customer, Order> orderJoin = customerRoot.join( Customer_.orders );
+			criteria.select( customerRoot );
+			Subquery<Double> subCriteria = criteria.subquery( Double.class );
+			Root<Order> subqueryOrderRoot = subCriteria.from( Order.class );
+			subCriteria.select( builder.min( subqueryOrderRoot.get( Order_.totalPrice ) ) );
+			criteria.where( builder.equal( orderJoin.get( "totalPrice" ), builder.all( subCriteria ) ) );
+			entityManager.createQuery( criteria ).getResultList();
 
-		em.getTransaction().commit();
-		em.close();
+		} );
 	}
 
 	@Test
-	public void testLessThan() {
-		CriteriaBuilder builder = entityManagerFactory().getCriteriaBuilder();
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+	public void testLessThan(EntityManagerFactoryScope scope) {
+		CriteriaBuilder builder = scope.getEntityManagerFactory().getCriteriaBuilder();
+		scope.inTransaction( entityManager -> {
 
-		CriteriaQuery<Customer> criteria = builder.createQuery( Customer.class );
-		Root<Customer> customerRoot = criteria.from( Customer.class );
+			CriteriaQuery<Customer> criteria = builder.createQuery( Customer.class );
+			Root<Customer> customerRoot = criteria.from( Customer.class );
 
-		Subquery<Double> subCriteria = criteria.subquery( Double.class );
-		Root<Customer> subQueryCustomerRoot = subCriteria.from( Customer.class );
-		subCriteria.select( builder.avg( subQueryCustomerRoot.get( Customer_.age ) ) );
+			Subquery<Double> subCriteria = criteria.subquery( Double.class );
+			Root<Customer> subQueryCustomerRoot = subCriteria.from( Customer.class );
+			subCriteria.select( builder.avg( subQueryCustomerRoot.get( Customer_.age ) ) );
 
-		criteria.where(
-				builder.lessThan(
-						customerRoot.get( Customer_.age ),
-						subCriteria.getSelection().as( Integer.class )
-				)
-		);
-		em.createQuery( criteria ).getResultList();
+			criteria.where(
+					builder.lessThan(
+							customerRoot.get( Customer_.age ),
+							subCriteria.getSelection().as( Integer.class )
+					)
+			);
+			entityManager.createQuery( criteria ).getResultList();
 
-		em.getTransaction().commit();
-		em.close();
+		} );
 	}
 }

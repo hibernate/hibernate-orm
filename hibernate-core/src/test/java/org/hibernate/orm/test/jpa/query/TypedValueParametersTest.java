@@ -198,7 +198,6 @@ public class TypedValueParametersTest {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public List<String> deepCopy(final List<String> o) throws HibernateException {
 			return o == null ? null : new ArrayList<>( o );
 		}

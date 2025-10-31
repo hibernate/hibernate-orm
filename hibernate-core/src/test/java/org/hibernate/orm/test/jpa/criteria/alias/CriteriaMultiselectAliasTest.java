@@ -4,51 +4,51 @@
  */
 package org.hibernate.orm.test.jpa.criteria.alias;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.Query;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.transform.Transformers;
-import org.junit.Before;
-import org.junit.Test;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class CriteriaMultiselectAliasTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(annotatedClasses = {CriteriaMultiselectAliasTest.Book.class})
+public class CriteriaMultiselectAliasTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-			Book.class
-		};
-	}
-
-	@Before
-	public void init() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	@BeforeEach
+	public void init(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Book book = new Book();
 			book.id = 1;
 			book.name = bookName();
-
 			entityManager.persist( book );
 		} );
 	}
 
+	@AfterEach
+	public void cleanup(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
+	}
+
 	@Test
 	@JiraKey(value = "HHH-13140")
-	public void testAlias() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testAlias(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
 			final CriteriaQuery<Object[]> query = cb.createQuery( Object[].class );
@@ -73,8 +73,8 @@ public class CriteriaMultiselectAliasTest extends BaseEntityManagerFunctionalTes
 
 	@Test
 	@JiraKey(value = "HHH-13192")
-	public void testNoAliasInWhereClause() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testNoAliasInWhereClause(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
 			final CriteriaQuery<Object[]> query = cb.createQuery( Object[].class );
@@ -101,8 +101,8 @@ public class CriteriaMultiselectAliasTest extends BaseEntityManagerFunctionalTes
 
 	@Test
 	@JiraKey(value = "HHH-13192")
-	public void testNoAliasInWhereClauseSimplified() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testNoAliasInWhereClauseSimplified(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Object> criteriaQuery = cb.createQuery();
 			Root<Book> root = criteriaQuery.from( Book.class );

@@ -94,7 +94,7 @@ public class TransactionRollbackTest {
 	}
 
 	@Entity(name = "Shipment")
-	public class Shipment {
+	public static class Shipment {
 
 		@Id
 		private String id;
@@ -138,7 +138,7 @@ public class TransactionRollbackTest {
 
 	}
 
-	private class OperationCollectorObserver implements TransactionObserver {
+	private static class OperationCollectorObserver implements TransactionObserver {
 		int unSuccessfulAfterCompletion;
 
 		@Override

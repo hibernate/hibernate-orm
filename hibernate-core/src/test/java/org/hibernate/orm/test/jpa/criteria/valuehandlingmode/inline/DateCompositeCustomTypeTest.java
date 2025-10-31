@@ -30,8 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 @Jpa(
-		annotatedClasses = DateCompositeCustomTypeTest.Payment.class
-		, properties = @Setting(name = AvailableSettings.CRITERIA_VALUE_HANDLING_MODE, value = "inline")
+		annotatedClasses = DateCompositeCustomTypeTest.Payment.class,
+		properties = @Setting(name = AvailableSettings.CRITERIA_VALUE_HANDLING_MODE, value = "inline")
 )
 public class DateCompositeCustomTypeTest {
 
@@ -60,7 +60,7 @@ public class DateCompositeCustomTypeTest {
 
 	@Entity
 	@Table(name = "crit_basic_payment")
-	public class Payment {
+	public static class Payment {
 
 		private Long id;
 		private BigDecimal amount;

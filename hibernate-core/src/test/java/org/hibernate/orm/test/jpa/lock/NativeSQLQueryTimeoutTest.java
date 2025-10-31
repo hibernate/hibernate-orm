@@ -4,38 +4,37 @@
  */
 package org.hibernate.orm.test.jpa.lock;
 
-import java.util.Map;
 
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ExceptionUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Vlad Mihalcea
  */
 @RequiresDialect(PostgreSQLDialect.class)
-@SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/41335")
+@SkipForDialect(dialectClass = CockroachDialect.class, reason = "https://github.com/cockroachdb/cockroach/issues/41335")
 @JiraKey( value = "HHH-13493")
-public class NativeSQLQueryTimeoutTest extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	protected void addConfigOptions(Map options) {
-		options.put( HINT_SPEC_QUERY_TIMEOUT, "500" );
-	}
+@Jpa(
+		integrationSettings = {@Setting(name = HINT_SPEC_QUERY_TIMEOUT, value = "500")}
+)
+public class NativeSQLQueryTimeoutTest {
 
 	@Test
-	public void test(){
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope){
+		scope.inTransaction( entityManager -> {
 			try {
 				entityManager.createNativeQuery(
 					"select 1 " +
@@ -51,11 +50,5 @@ public class NativeSQLQueryTimeoutTest extends BaseEntityManagerFunctionalTestCa
 				);
 			}
 		} );
-	}
-
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] {
-		};
 	}
 }

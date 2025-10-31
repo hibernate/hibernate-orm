@@ -6,19 +6,19 @@ package org.hibernate.orm.test.jpa.criteria.enumcollection;
 
 import java.util.List;
 import java.util.Set;
-import jakarta.persistence.EntityManager;
+
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Mote that these are simply performing syntax checking (can the criteria query
@@ -26,47 +26,37 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Steve Ebersole
  */
-public class EnumIsMemberTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {User.class};
-	}
+@Jpa(annotatedClasses = {User.class})
+public class EnumIsMemberTest {
 
 	@Test
 	@JiraKey(value = "HHH-9605")
-	public void testQueryEnumCollection() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+	public void testQueryEnumCollection(EntityManagerFactoryScope scope) {
+		final User user = new User();
+		scope.inTransaction( entityManager -> {
+			user.setId( 1L );
+			user.getRoles().add( User.Role.Admin );
+			entityManager.persist( user );
+		} );
 
-		User user = new User();
-		user.setId( 1l );
-		user.getRoles().add( User.Role.Admin );
-		em.persist( user );
-		em.getTransaction().commit();
-		em.getTransaction().begin();
+		scope.inTransaction( entityManager -> {
 
-		CriteriaBuilder builder = em.getCriteriaBuilder();
+			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+			CriteriaQuery<User> query = builder.createQuery( User.class );
+			Root<User> root = query.from( User.class );
+			Expression<Set<User.Role>> roles = root.get( User_.roles );
+			// Using the correct collection of enums and an enum parameter
+			query.where( builder.isMember( User.Role.Admin, roles ) );
+			TypedQuery<User> typedQuery = entityManager.createQuery( query );
 
-		CriteriaQuery<User> query = builder.createQuery( User.class );
-		Root<User> root = query.from( User.class );
+			List<User> users = typedQuery.getResultList();
+			assertEquals( 1, users.size() );
+		} );
 
-		Expression<Set<User.Role>> roles = root.get( User_.roles );
-
-		// Using the correct collection of enums and an enum parameter
-		query.where( builder.isMember( User.Role.Admin, roles ) );
-
-		TypedQuery<User> typedQuery = em.createQuery( query );
-		List<User> users = typedQuery.getResultList();
-		assertEquals( 1, users.size() );
-
-		em.getTransaction().commit();
-		em.getTransaction().begin();
-		// delete
-		em.remove( user );
-		em.getTransaction().commit();
-
+		scope.inTransaction( entityManager -> {
+			// delete
+			entityManager.remove( entityManager.find(User.class, 1L ) );
+		} );
 	}
-
 
 }

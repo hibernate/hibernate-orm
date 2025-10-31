@@ -6,108 +6,84 @@ package org.hibernate.orm.test.jpa.query;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.io.Serializable;
 import java.util.List;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import org.hibernate.testing.orm.junit.JiraKey;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Andrea Boriero
  */
-public class QueryWithLiteralsInSelectExpressionTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(annotatedClasses = {QueryWithLiteralsInSelectExpressionTest.MyEntity.class})
+public class QueryWithLiteralsInSelectExpressionTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {MyEntity.class};
+	@BeforeEach
+	public void init(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> entityManager.persist( new MyEntity( "Fab", "A" ) ) );
 	}
 
-	@Before
-	public void init() {
-		final EntityManager entityManager = getOrCreateEntityManager();
-		try {
-			entityManager.getTransaction().begin();
-			entityManager.persist( new MyEntity( "Fab", "A" ) );
-			entityManager.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( entityManager.getTransaction().isActive() ) {
-				entityManager.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			entityManager.close();
-		}
+	@AfterEach
+	public void cleanup(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test
 	@JiraKey(value = "HHH-10230")
-	public void testSelectLiterals() {
-		final EntityManager entityManager = getOrCreateEntityManager();
-		try {
+	public void testSelectLiterals(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
 			final List<Object[]> elements = entityManager.createQuery(
 					"SELECT true, false, e.name FROM MyEntity e",
 					Object[].class
 			).getResultList();
-			Assert.assertEquals( 1, elements.size() );
-			Assert.assertEquals( 3, elements.get( 0 ).length );
-			Assert.assertEquals( true, elements.get( 0 )[0] );
-			Assert.assertEquals( false, elements.get( 0 )[1] );
-			Assert.assertEquals( "Fab", elements.get( 0 )[2] );
-		}
-		finally {
-			entityManager.close();
-		}
+			assertEquals( 1, elements.size() );
+			assertEquals( 3, elements.get( 0 ).length );
+			assertEquals( true, elements.get( 0 )[0] );
+			assertEquals( false, elements.get( 0 )[1] );
+			assertEquals( "Fab", elements.get( 0 )[2] );
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-10230")
-	public void testSelectNonNullLiteralsCastToBoolean() {
-		final EntityManager entityManager = getOrCreateEntityManager();
-		try {
+	public void testSelectNonNullLiteralsCastToBoolean(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
 			final List<Object[]> elements = entityManager.createQuery(
 					"SELECT cast( true as boolean ), cast( false as boolean ), e.name FROM MyEntity e",
 					Object[].class
 			).getResultList();
-			Assert.assertEquals( 1, elements.size() );
-			Assert.assertEquals( 3, elements.get( 0 ).length );
-			Assert.assertEquals( true, elements.get( 0 )[ 0 ] );
-			Assert.assertEquals( false, elements.get( 0 )[ 1 ] );
-			Assert.assertEquals( "Fab", elements.get( 0 )[ 2 ] );
-		}
-		finally {
-			entityManager.close();
-		}
+			assertEquals( 1, elements.size() );
+			assertEquals( 3, elements.get( 0 ).length );
+			assertEquals( true, elements.get( 0 )[ 0 ] );
+			assertEquals( false, elements.get( 0 )[ 1 ] );
+			assertEquals( "Fab", elements.get( 0 )[ 2 ] );
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-10230")
-	public void testSelectNullLiterals() {
-		final EntityManager entityManager = getOrCreateEntityManager();
-		try {
+	public void testSelectNullLiterals(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
 			final List<Object[]> elements = entityManager.createQuery(
 					"SELECT cast(null as boolean), false, e.name FROM MyEntity e",
 					Object[].class
 			).getResultList();
-			Assert.assertEquals( 1, elements.size() );
-			Assert.assertEquals( 3, elements.get( 0 ).length );
-			Assert.assertEquals( null, elements.get( 0 )[ 0 ] );
-			Assert.assertEquals( false, elements.get( 0 )[ 1 ] );
-			Assert.assertEquals( "Fab", elements.get( 0 )[ 2 ] );
-		}
-		finally {
-			entityManager.close();
-		}
+			assertEquals( 1, elements.size() );
+			assertEquals( 3, elements.get( 0 ).length );
+			assertNull( elements.get( 0 )[0] );
+			assertEquals( false, elements.get( 0 )[ 1 ] );
+			assertEquals( "Fab", elements.get( 0 )[ 2 ] );
+		} );
 	}
 
 	@Entity(name = "MyEntity")

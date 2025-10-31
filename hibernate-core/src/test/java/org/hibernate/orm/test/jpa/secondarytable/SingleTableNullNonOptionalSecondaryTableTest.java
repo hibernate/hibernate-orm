@@ -11,25 +11,18 @@ import jakarta.persistence.SecondaryTable;
 
 import org.hibernate.annotations.SecondaryRow;
 
-import org.hibernate.testing.junit4.CustomParameterized;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Gail Badner
  */
-@RunWith(CustomParameterized.class)
 public class SingleTableNullNonOptionalSecondaryTableTest extends AbstractNonOptionalSecondaryTableTest {
-
-	public SingleTableNullNonOptionalSecondaryTableTest(JpaComplianceCachingSetting jpaComplianceCachingSetting) {
-		super( jpaComplianceCachingSetting );
-	}
 
 	@Test
 	public void testRowAddedForNullValue() {
@@ -122,7 +115,7 @@ public class SingleTableNullNonOptionalSecondaryTableTest extends AbstractNonOpt
 		);
 	}
 
-	@After
+	@AfterEach
 	public void cleanupData() {
 		doInJPA(
 				this::entityManagerFactory, entityManager -> {

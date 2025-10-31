@@ -33,16 +33,12 @@ public class EntityManagerUnwrapTest extends EntityManagerFactoryBasedFunctional
 	@Test
 	public void testUnwrapSession() {
 		final EntityManagerFactory entityManagerFactory = entityManagerFactoryScope().getEntityManagerFactory();
-		final EntityManager entityManager = entityManagerFactory.createEntityManager();
-		try {
+		try (EntityManager entityManager = entityManagerFactory.createEntityManager()) {
 			entityManager.unwrap( Session.class );
 			entityManager.unwrap( SessionImplementor.class );
 			entityManager.unwrap( SharedSessionContractImplementor.class );
 
 			entityManager.unwrap( PersistenceContext.class );
-		}
-		finally {
-			entityManager.close();
 		}
 	}
 

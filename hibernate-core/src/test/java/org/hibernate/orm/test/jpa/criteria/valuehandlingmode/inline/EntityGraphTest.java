@@ -36,13 +36,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				EntityGraphTest.Bar.class,
 				EntityGraphTest.Baz.class,
 				EntityGraphTest.Foo.class
-		}
-		, properties = @Setting(name = AvailableSettings.CRITERIA_VALUE_HANDLING_MODE, value = "inline")
+		},
+		properties = @Setting(name = AvailableSettings.CRITERIA_VALUE_HANDLING_MODE, value = "inline")
 )
 public class EntityGraphTest {
 
 	@Test
-	public void loadIsMemeberQueriedCollection(EntityManagerFactoryScope scope) {
+	public void loadIsMemberQueriedCollection(EntityManagerFactoryScope scope) {
 
 		Integer id = scope.fromTransaction(
 				entityManager -> {

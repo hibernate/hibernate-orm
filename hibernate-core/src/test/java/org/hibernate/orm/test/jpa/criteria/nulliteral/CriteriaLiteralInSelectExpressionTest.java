@@ -86,7 +86,7 @@ public class CriteriaLiteralInSelectExpressionTest {
 				entityManager -> {
 					final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 					final CriteriaQuery<MyEntityDTO> query = criteriaBuilder.createQuery( MyEntityDTO.class );
-					final Root<MyEntity> entity = query.from( MyEntity.class );
+					query.from( MyEntity.class );
 
 					query.multiselect( criteriaBuilder.literal( false ), criteriaBuilder.nullLiteral( String.class ) );
 

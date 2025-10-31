@@ -4,23 +4,23 @@
  */
 package org.hibernate.orm.test.jpa.query;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.Table;
 
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for selecting scalar value from native queries.
@@ -28,7 +28,8 @@ import org.junit.Test;
  * @author Gunnar Morling
  */
 @RequiresDialect(H2Dialect.class)
-public class ScalarResultNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(annotatedClasses = {ScalarResultNativeQueryTest.Person.class})
+public class ScalarResultNativeQueryTest {
 
 	@Entity(name="Person")
 	@Table(name="person")
@@ -52,31 +53,16 @@ public class ScalarResultNativeQueryTest extends BaseEntityManagerFunctionalTest
 		}
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Person.class };
-	}
-
 	@Test
-	public void shouldApplyConfiguredTypeForProjectionOfScalarValue() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		em.persist( new Person( 1, 29 ) );
-		em.getTransaction().commit();
-		em.close();
+	public void shouldApplyConfiguredTypeForProjectionOfScalarValue(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> entityManager.persist( new Person( 1, 29 ) ) );
 
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		List<String> results = em.createNamedQuery( "personAge", String.class ).getResultList();
-		assertEquals( 1, results.size() );
-		assertEquals( "29", results.get( 0 ) );
-		em.getTransaction().commit();
-		em.close();
+		scope.inTransaction( entityManager -> {
+			List<String> results = entityManager.createNamedQuery( "personAge", String.class ).getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( "29", results.get( 0 ) );
+		} );
 
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		em.createQuery( "delete from Person" ).executeUpdate();
-		em.getTransaction().commit();
-		em.close();
+		scope.inTransaction( entityManager -> entityManager.createQuery( "delete from Person" ).executeUpdate() );
 	}
 }

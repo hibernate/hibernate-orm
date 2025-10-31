@@ -4,53 +4,55 @@
  */
 package org.hibernate.orm.test.jpa.criteria.mapjoin;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-import java.util.Map;
-
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.MapJoin;
 import jakarta.persistence.criteria.Root;
-
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
 
-public class MapJoinEntryTest extends BaseEntityManagerFunctionalTestCase {
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[]{ Customer.class, CustomerOrder.class };
-	}
+import java.util.List;
+import java.util.Map;
 
-	@Before
-	public void setup() {
-		doInJPA( this::entityManagerFactory, em -> {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+@Jpa(annotatedClasses = {Customer.class, CustomerOrder.class})
+public class MapJoinEntryTest {
+
+	@BeforeEach
+	public void setup(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Customer customer = new Customer();
 			customer.setName( "Morgan Philips" );
 			customer.addOrder( "online", "AA Glass Cleaner", 3 );
 
-			em.persist( customer );
+			entityManager.persist( customer );
 		} );
+	}
+
+	@AfterEach
+	public void cleanupTestData(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test
 	@JiraKey(value = "HHH-12945")
-	public void testMapJoinEntryCriteria() {
-		doInJPA( this::entityManagerFactory, em -> {
-			CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+	public void testMapJoinEntryCriteria(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 
 			CriteriaQuery<Map.Entry> query = criteriaBuilder.createQuery( Map.Entry.class );
 			Root<Customer> customer = query.from( Customer.class );
 			MapJoin<Customer, String, CustomerOrder> orderMap = customer.join( Customer_.orderMap );
 			query.select( orderMap.entry() );
 
-			TypedQuery<Map.Entry> typedQuery = em.createQuery( query );
+			TypedQuery<Map.Entry> typedQuery = entityManager.createQuery( query );
 			List<Map.Entry> resultList = typedQuery.getResultList();
 
 			assertEquals( 1, resultList.size() );
@@ -60,9 +62,9 @@ public class MapJoinEntryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testMapJoinEntryJPQL() {
-		doInJPA( this::entityManagerFactory, em -> {
-			TypedQuery<Map.Entry> query = em.createQuery( "SELECT ENTRY(mp) FROM Customer c JOIN c.orderMap mp",
+	public void testMapJoinEntryJPQL(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			TypedQuery<Map.Entry> query = entityManager.createQuery( "SELECT ENTRY(mp) FROM Customer c JOIN c.orderMap mp",
 					Map.Entry.class );
 			List<Map.Entry> resultList = query.getResultList();
 

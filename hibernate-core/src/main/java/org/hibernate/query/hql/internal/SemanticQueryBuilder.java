@@ -2180,44 +2180,21 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			throw new SemanticException( "fetch not allowed in subquery from-elements" );
 		}
 
+		final HqlParser.JoinRestrictionContext joinRestrictionContext = parserJoin.joinRestriction();
+		// Joins are allowed to be reused if they don't have a join condition
+		final boolean allowReuse = joinRestrictionContext == null;
 		dotIdentifierConsumerStack.push(
 				new QualifiedJoinPathConsumer(
 						sqmRoot,
 						joinType,
 						fetch,
 						alias,
+						allowReuse,
 						this
 				)
 		);
 		try {
-			final SqmQualifiedJoin<X, ?> join;
-			if ( qualifiedJoinTargetContext instanceof HqlParser.JoinPathContext ) {
-				//noinspection unchecked
-				join = (SqmQualifiedJoin<X, ?>) qualifiedJoinTargetContext.getChild( 0 ).accept( this );
-			}
-			else {
-				if ( fetch ) {
-					throw new SemanticException( "fetch not allowed for subquery join" );
-				}
-				if ( getCreationOptions().useStrictJpaCompliance() ) {
-					throw new StrictJpaComplianceViolation(
-							"The JPA specification does not support subqueries in the from clause. " +
-									"Please disable the JPA query compliance if you want to use this feature.",
-							StrictJpaComplianceViolation.Type.FROM_SUBQUERY
-					);
-				}
-				final TerminalNode terminalNode = (TerminalNode) qualifiedJoinTargetContext.getChild( 0 );
-				final boolean lateral = terminalNode.getSymbol().getType() == HqlParser.LATERAL;
-				final int subqueryIndex = lateral ? 2 : 1;
-				final DotIdentifierConsumer identifierConsumer = dotIdentifierConsumerStack.pop();
-				final SqmSubQuery<?> subQuery = (SqmSubQuery<?>) qualifiedJoinTargetContext.getChild( subqueryIndex ).accept( this );
-				dotIdentifierConsumerStack.push( identifierConsumer );
-				//noinspection unchecked,rawtypes
-				join = new SqmDerivedJoin( subQuery, alias, joinType, lateral, sqmRoot );
-				processingStateStack.getCurrent().getPathRegistry().register( join );
-			}
-
-			final HqlParser.JoinRestrictionContext qualifiedJoinRestrictionContext = parserJoin.joinRestriction();
+			final SqmQualifiedJoin<X, ?> join = getJoin( sqmRoot, joinType, qualifiedJoinTargetContext, alias, fetch );
 			if ( join instanceof SqmEntityJoin<?> || join instanceof SqmDerivedJoin<?> || join instanceof SqmCteJoin<?> ) {
 				sqmRoot.addSqmJoin( join );
 			}
@@ -2233,15 +2210,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						}
 					}
 				}
-				if ( qualifiedJoinRestrictionContext != null && attributeJoin.isFetched() ) {
+				if ( joinRestrictionContext != null && attributeJoin.isFetched() ) {
 					throw new SemanticException( "with-clause not allowed on fetched associations; use filters" );
 				}
 			}
 
-			if ( qualifiedJoinRestrictionContext != null ) {
+			if ( joinRestrictionContext != null ) {
 				dotIdentifierConsumerStack.push( new QualifiedJoinPredicatePathConsumer( join, this ) );
 				try {
-					join.setJoinPredicate( (SqmPredicate) qualifiedJoinRestrictionContext.getChild( 1 ).accept( this ) );
+					join.setJoinPredicate( (SqmPredicate) joinRestrictionContext.getChild( 1 ).accept( this ) );
 				}
 				finally {
 					dotIdentifierConsumerStack.pop();
@@ -2250,6 +2227,43 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		finally {
 			dotIdentifierConsumerStack.pop();
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private <X> SqmQualifiedJoin<X, ?> getJoin(
+			SqmRoot<X> sqmRoot,
+			SqmJoinType joinType,
+			HqlParser.JoinTargetContext joinTargetContext,
+			String alias,
+			boolean fetch) {
+		if ( joinTargetContext instanceof HqlParser.JoinPathContext ) {
+			final HqlParser.JoinPathContext joinPathContext = (HqlParser.JoinPathContext) joinTargetContext;
+			return (SqmQualifiedJoin<X, ?>) joinPathContext.path().accept( this );
+		}
+		else if ( joinTargetContext instanceof HqlParser.JoinSubqueryContext ) {
+			if ( fetch ) {
+				throw new SemanticException( "The 'from' clause of a subquery has a 'fetch' join" );
+			}
+			if ( getCreationOptions().useStrictJpaCompliance() ) {
+				throw new StrictJpaComplianceViolation(
+						"The JPA specification does not support subqueries in the from clause. " +
+						"Please disable the JPA query compliance if you want to use this feature.",
+						StrictJpaComplianceViolation.Type.FROM_SUBQUERY
+				);
+			}
+
+			final HqlParser.JoinSubqueryContext joinSubqueryContext = (HqlParser.JoinSubqueryContext) joinTargetContext;
+			final boolean lateral = joinSubqueryContext.LATERAL() != null;
+			final DotIdentifierConsumer identifierConsumer = dotIdentifierConsumerStack.pop();
+			final SqmSubQuery<X> subQuery = (SqmSubQuery<X>) joinSubqueryContext.subquery().accept( this );
+			dotIdentifierConsumerStack.push( identifierConsumer );
+			final SqmQualifiedJoin<X, ?> join = new SqmDerivedJoin<>( subQuery, alias, joinType, lateral, sqmRoot );
+			processingStateStack.getCurrent().getPathRegistry().register( join );
+			return join;
+		}
+		else {
+			throw new ParsingException( "unexpected join type" );
 		}
 	}
 
@@ -2276,7 +2290,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						SqmJoinType.INNER,
 						false,
 						alias,
-						this
+						true,this
 				)
 		);
 

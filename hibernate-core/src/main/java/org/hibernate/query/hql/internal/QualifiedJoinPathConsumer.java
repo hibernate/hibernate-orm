@@ -18,16 +18,19 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
-import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.query.sqm.internal.SqmUtil.findCompatibleFetchJoin;
 
 /**
  * Specialized "intermediate" SemanticPathPart for processing domain model paths.
@@ -43,6 +46,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 	private final SqmJoinType joinType;
 	private final boolean fetch;
 	private final String alias;
+	private final boolean allowReuse;
 
 	private ConsumerDelegate delegate;
 	private boolean nested;
@@ -52,11 +56,13 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			SqmJoinType joinType,
 			boolean fetch,
 			String alias,
+			boolean allowReuse,
 			SqmCreationState creationState) {
 		this.sqmRoot = sqmRoot;
 		this.joinType = joinType;
 		this.fetch = fetch;
 		this.alias = alias;
+		this.allowReuse = allowReuse;
 		this.creationState = creationState;
 	}
 
@@ -70,6 +76,8 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		this.joinType = joinType;
 		this.fetch = fetch;
 		this.alias = alias;
+		// This constructor is only used for entity names, so no need for join reuse
+		this.allowReuse = false;
 		this.creationState = creationState;
 		this.delegate = new AttributeJoinDelegate(
 				sqmFrom,
@@ -100,7 +108,13 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		}
 		else {
 			assert delegate != null;
-			delegate.consumeIdentifier( identifier, !nested && isTerminal, !( nested && isTerminal ) );
+			delegate.consumeIdentifier(
+					identifier,
+					!nested && isTerminal,
+					// Non-nested joins shall allow reuse, but nested ones (i.e. in treat)
+					// only allow join reuse for non-terminal parts
+					allowReuse && (!nested || !isTerminal)
+			);
 		}
 	}
 
@@ -179,11 +193,28 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			boolean allowReuse,
 			SqmCreationState creationState) {
 		final SqmPathSource<?> subPathSource = lhs.getResolvedModel().getSubPathSource( name );
-		if ( allowReuse && !isTerminal ) {
-			for ( SqmJoin<?, ?> sqmJoin : lhs.getSqmJoins() ) {
-				if ( sqmJoin.getAlias() == null && sqmJoin.getReferencedPathSource() == subPathSource ) {
+		if ( allowReuse ) {
+			if ( !isTerminal ) {
+				for ( SqmJoin<?, ?> sqmJoin : lhs.getSqmJoins() ) {
+					// In order for an HQL join to be reusable, is must have the same path source,
+					if ( sqmJoin.getModel() == subPathSource
+						// must not have a join condition
+						&& ( (SqmQualifiedJoin<?, ?>) sqmJoin ).getJoinPredicate() == null
+						// and the same join type
+						&& sqmJoin.getSqmJoinType() == joinType ) {
+						//noinspection unchecked
+						return (SqmFrom<?, Object>) sqmJoin;
+					}
+				}
+			}
+			else if ( fetch ) {
+				final SqmAttributeJoin<?, ?> compatibleFetchJoin = findCompatibleFetchJoin( lhs, subPathSource, joinType );
+				if ( compatibleFetchJoin != null ) {
+					if ( alias != null ) {
+						throw new IllegalStateException( "Cannot fetch the same association twice with a different alias" );
+					}
 					//noinspection unchecked
-					return (SqmFrom<?, Object>) sqmJoin;
+					return (SqmFrom<?, Object>) compatibleFetchJoin;
 				}
 			}
 		}

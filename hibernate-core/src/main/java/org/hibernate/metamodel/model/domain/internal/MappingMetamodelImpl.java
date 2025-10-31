@@ -205,6 +205,10 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 			registerEntityNameResolvers( persister, entityNameResolvers );
 		}
 
+		for ( EntityPersister persister : entityPersisterMap.values() ) {
+			persister.prepareLoaders();
+		}
+
 		collectionPersisterMap.values().forEach( CollectionPersister::postInstantiate );
 
 		registerEmbeddableMappingType( bootModel );

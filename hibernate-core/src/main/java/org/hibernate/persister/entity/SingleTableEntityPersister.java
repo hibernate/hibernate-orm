@@ -8,7 +8,6 @@ package org.hibernate.persister.entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +22,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Column;
@@ -40,8 +38,6 @@ import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.sql.InFragment;
-import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
@@ -693,66 +689,10 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			return;
 		}
 
-		final InFragment frag = new InFragment();
-		if ( isDiscriminatorFormula() ) {
-			frag.setFormula( "t", getDiscriminatorFormulaTemplate() );
-		}
-		else {
-			frag.setColumn( "t", getDiscriminatorColumnName() );
-		}
-		boolean containsNotNull = false;
-		for ( Map.Entry<String, EntityNameUse> entry : entityNameUses.entrySet() ) {
-			final EntityNameUse.UseKind useKind = entry.getValue().getKind();
-			if ( useKind == EntityNameUse.UseKind.PROJECTION || useKind == EntityNameUse.UseKind.EXPRESSION ) {
-				// We only care about treat and filter uses which allow to reduce the amount of rows to select
-				continue;
-			}
-			final EntityPersister persister = mappingMetamodel.getEntityDescriptor( entry.getKey() );
-			// Filtering for abstract entities makes no sense, so ignore that
-			// Also, it makes no sense to filter for any of the super types,
-			// as the query will contain a filter for that already anyway
-			if ( !persister.isAbstract() && ( this == persister || !isTypeOrSuperType( persister ) ) ) {
-				containsNotNull = containsNotNull || InFragment.NOT_NULL.equals( persister.getDiscriminatorSQLValue() );
-				frag.addValue( persister.getDiscriminatorSQLValue() );
-			}
-		}
-		final List<String> discriminatorSQLValues = Arrays.asList( ( (SingleTableEntityPersister) getRootEntityDescriptor() ).fullDiscriminatorSQLValues );
-		if ( frag.getValues().size() == discriminatorSQLValues.size() ) {
-			// Nothing to prune if we filter for all subtypes
-			return;
-		}
-
-		final NamedTableReference tableReference = (NamedTableReference) tableGroup.getPrimaryTableReference();
-		if ( containsNotNull ) {
-			final String lhs;
-			if ( isDiscriminatorFormula() ) {
-				lhs = StringHelper.replace( getDiscriminatorFormulaTemplate(), Template.TEMPLATE, "t" );
-			}
-			else {
-				lhs = "t." + getDiscriminatorColumnName();
-			}
-			final List<String> actualDiscriminatorSQLValues = new ArrayList<>( discriminatorSQLValues.size() );
-			for ( String value : discriminatorSQLValues ) {
-				if ( !frag.getValues().contains( value ) && !InFragment.NULL.equals( value ) ) {
-					actualDiscriminatorSQLValues.add( value );
-				}
-			}
-			final StringBuilder sb = new StringBuilder( 70 + actualDiscriminatorSQLValues.size() * 10 ).append( " or " );
-			if ( !actualDiscriminatorSQLValues.isEmpty() ) {
-				sb.append( lhs ).append( " is not in (" );
-				sb.append( String.join( ",", actualDiscriminatorSQLValues ) );
-				sb.append( ") and " );
-			}
-			sb.append( lhs ).append( " is not null" );
-			frag.getValues().remove( InFragment.NOT_NULL );
-			tableReference.setPrunedTableExpression(
-					"(select * from " + getTableName() + " t where " + frag.toFragmentString() + sb + ")"
-			);
-		}
-		else {
-			tableReference.setPrunedTableExpression(
-					"(select * from " + getTableName() + " t where " + frag.toFragmentString() + ")"
-			);
+		final String discriminatorPredicate = getPrunedDiscriminatorPredicate( entityNameUses, mappingMetamodel, "t" );
+		if ( discriminatorPredicate != null ) {
+			final NamedTableReference tableReference = (NamedTableReference) tableGroup.getPrimaryTableReference();
+			tableReference.setPrunedTableExpression( "(select * from " + getTableName() + " t where " + discriminatorPredicate + ")" );
 		}
 	}
 

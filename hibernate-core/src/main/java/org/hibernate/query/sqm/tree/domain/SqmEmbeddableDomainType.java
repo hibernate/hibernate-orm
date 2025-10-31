@@ -4,13 +4,14 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 
 @Incubating
 public interface SqmEmbeddableDomainType<E> extends EmbeddableDomainType<E>, SqmTreatableDomainType<E> {
 	@Override
-	default SqmEmbeddableDomainType<E> getSqmType() {
+	default @Nullable SqmDomainType<E> getSqmType() {
 		return this;
 	}
 

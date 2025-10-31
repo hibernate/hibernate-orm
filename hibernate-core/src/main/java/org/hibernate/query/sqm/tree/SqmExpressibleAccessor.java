@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -17,10 +18,10 @@ public interface SqmExpressibleAccessor<T> {
 	/**
 	 * The Java type descriptor for this node.
 	 */
-	default JavaType<T> getNodeJavaType() {
+	default @Nullable JavaType<T> getNodeJavaType() {
 		final SqmExpressible<T> nodeType = getExpressible();
 		return nodeType == null ? null : nodeType.getExpressibleJavaType();
 	}
 
-	SqmBindableType<T> getExpressible();
+	@Nullable SqmBindableType<T> getExpressible();
 }

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.QueryException;
 
 /**
@@ -29,15 +30,15 @@ public class SemanticException extends QueryException {
 	 *             about the query which caused the failure
 	 */
 	@Deprecated(since = "6.3")
-	public SemanticException(String message, Exception cause) {
+	public SemanticException(String message, @Nullable Exception cause) {
 		super( message, cause );
 	}
 
-	public SemanticException(String message, String queryString) {
+	public SemanticException(String message, @Nullable String queryString) {
 		super( message, queryString );
 	}
 
-	public SemanticException(String message, String queryString, Exception cause) {
+	public SemanticException(String message, @Nullable String queryString, @Nullable Exception cause) {
 		super( message, queryString, cause );
 	}
 }

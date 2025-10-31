@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -34,15 +35,15 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 		this( null, nodeBuilder );
 	}
 
-	public SqmCoalesce(SqmBindableType<T> type, NodeBuilder nodeBuilder) {
+	public SqmCoalesce(@Nullable SqmBindableType<T> type, NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
-		functionDescriptor = nodeBuilder.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "coalesce" );
+		functionDescriptor = nodeBuilder.getQueryEngine().getSqmFunctionRegistry().getFunctionDescriptor( "coalesce" );
 		this.arguments = new ArrayList<>();
 	}
 
-	public SqmCoalesce(SqmBindableType<T> type, int numberOfArguments, NodeBuilder nodeBuilder) {
+	public SqmCoalesce(@Nullable SqmBindableType<T> type, int numberOfArguments, NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
-		functionDescriptor = nodeBuilder.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "coalesce" );
+		functionDescriptor = nodeBuilder.getQueryEngine().getSqmFunctionRegistry().getFunctionDescriptor( "coalesce" );
 		this.arguments = new ArrayList<>( numberOfArguments );
 	}
 
@@ -101,7 +102,7 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmCoalesce<?> that
 			&& Objects.equals( this.arguments, that.arguments );
 	}
@@ -126,12 +127,12 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 	// JPA
 
 	@Override
-	public SqmCoalesce<T> value(T value) {
+	public SqmCoalesce<T> value(@Nullable T value) {
 		value( nodeBuilder().value( value, firstOrNull() ) );
 		return this;
 	}
 
-	private SqmExpression<T> firstOrNull() {
+	private @Nullable SqmExpression<T> firstOrNull() {
 		if ( isEmpty( arguments ) ) {
 			return null;
 		}

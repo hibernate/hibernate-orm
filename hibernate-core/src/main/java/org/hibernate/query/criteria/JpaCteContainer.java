@@ -7,6 +7,7 @@ package org.hibernate.query.criteria;
 import java.util.Collection;
 import java.util.function.Function;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 
 import jakarta.persistence.criteria.AbstractQuery;
@@ -26,7 +27,7 @@ public interface JpaCteContainer extends JpaCriteriaNode {
 	/**
 	 * Returns a CTE that is registered by the given name on this container, or any of its parents.
 	 */
-	<T> JpaCteCriteria<T> getCteCriteria(String cteName);
+	<T> @Nullable JpaCteCriteria<T> getCteCriteria(String cteName);
 
 	/**
 	 * Registers the given {@link CriteriaQuery} and returns a {@link JpaCteCriteria},

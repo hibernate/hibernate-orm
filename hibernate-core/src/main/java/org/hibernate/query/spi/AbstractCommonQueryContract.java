@@ -39,7 +39,6 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.query.sqm.tree.expression.NullSqmExpressible;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -816,9 +815,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	private boolean multipleBinding(QueryParameter<Object> parameter, Object value){
 		if ( parameter.allowsMultiValuedBinding() ) {
 			final var hibernateType = parameter.getHibernateType();
-			if ( hibernateType == null
-				|| hibernateType instanceof NullSqmExpressible
-				|| isInstance( hibernateType, value ) ) {
+			if ( hibernateType == null || isInstance( hibernateType, value ) ) {
 				return true;
 			}
 		}

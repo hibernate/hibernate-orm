@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.spi.NavigablePath;
 
 /**
@@ -36,7 +37,7 @@ public interface PathSource<J> {
 	 * @return null if the subPathSource is not found
 	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
 	 */
-	PathSource<?> findSubPathSource(String name);
+	@Nullable PathSource<?> findSubPathSource(String name);
 
 	/**
 	 * Find a {@link PathSource} by name relative to this source. If {@code includeSubtypes} is set
@@ -47,5 +48,5 @@ public interface PathSource<J> {
 	 * @return null if the subPathSource is not found
 	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
 	 */
-	PathSource<?> findSubPathSource(String name, boolean includeSubtypes);
+	@Nullable PathSource<?> findSubPathSource(String name, boolean includeSubtypes);
 }

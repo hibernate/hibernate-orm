@@ -33,7 +33,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 	private final SqmInsertStatement<T> insertStatement;
 	private final SqmRoot<T> excludedRoot;
 	private @Nullable String constraintName;
-	private List<SqmPath<?>> constraintPaths;
+	private @Nullable List<SqmPath<?>> constraintPaths;
 	private @Nullable SqmConflictUpdateAction<T> updateAction;
 
 	public SqmConflictClause(SqmInsertStatement<T> insertStatement) {
@@ -50,7 +50,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 			SqmInsertStatement<T> insertStatement,
 			SqmRoot<T> excludedRoot,
 			@Nullable String constraintName,
-			List<SqmPath<?>> constraintPaths,
+			@Nullable List<SqmPath<?>> constraintPaths,
 			@Nullable SqmConflictUpdateAction<T> updateAction) {
 		this.insertStatement = insertStatement;
 		this.excludedRoot = excludedRoot;
@@ -129,7 +129,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 	}
 
 	@Override
-	public JpaConflictClause<T> onConflictDo(JpaConflictUpdateAction<T> action) {
+	public JpaConflictClause<T> onConflictDo(@Nullable JpaConflictUpdateAction<T> action) {
 		this.updateAction = (SqmConflictUpdateAction<T>) action;
 		return this;
 	}
@@ -182,6 +182,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( " on conflict" );
+		final List<SqmPath<?>> constraintPaths = getConstraintPaths();
 		if ( constraintName != null ) {
 			hql.append( " on constraint " );
 			hql.append( constraintName );
@@ -204,19 +205,20 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 	}
 
 	private static void appendUnqualifiedPath(StringBuilder sb, SqmPath<?> path) {
-		if ( path.getLhs() == null ) {
+		final SqmPath<?> lhs = path.getLhs();
+		if ( lhs == null ) {
 			// Skip rendering the root
 			return;
 		}
-		appendUnqualifiedPath( sb, path.getLhs() );
-		if ( path.getLhs().getLhs() != null ) {
+		appendUnqualifiedPath( sb, lhs );
+		if ( lhs.getLhs() != null ) {
 			sb.append( '.' );
 		}
 		sb.append( path.getReferencedPathSource().getPathName() );
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmConflictClause<?> that
 			&& excludedRoot.equals( that.excludedRoot )
 			&& Objects.equals( constraintName, that.constraintName )

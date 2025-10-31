@@ -361,7 +361,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			SqmQuerySpec<?> sqmQuerySpec,
 			boolean isTopLevel) {
 		// If the table group is not initialized, i.e. not selected, no need to check selections
-		if ( !tableGroup.isInitialized() || sqmQuerySpec.getSelectClause() == null ) {
+		if ( !tableGroup.isInitialized() || sqmQuerySpec.getSelectClause().getSelections().isEmpty() ) {
 			return false;
 		}
 		final NavigablePath tableGroupPath = isTopLevel ? null : tableGroup.getNavigablePath();

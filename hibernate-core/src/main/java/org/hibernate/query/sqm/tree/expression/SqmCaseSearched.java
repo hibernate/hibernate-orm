@@ -34,7 +34,7 @@ public class SqmCaseSearched<R>
 		this( null, nodeBuilder );
 	}
 
-	public SqmCaseSearched(SqmBindableType<R> inherentType, NodeBuilder nodeBuilder) {
+	public SqmCaseSearched(@Nullable SqmBindableType<R> inherentType, NodeBuilder nodeBuilder) {
 		this( inherentType, 10, nodeBuilder );
 	}
 
@@ -42,7 +42,7 @@ public class SqmCaseSearched<R>
 		this( null, estimatedWhenSize, nodeBuilder );
 	}
 
-	private SqmCaseSearched(SqmBindableType<R> inherentType, int estimatedWhenSize, NodeBuilder nodeBuilder) {
+	private SqmCaseSearched(@Nullable SqmBindableType<R> inherentType, int estimatedWhenSize, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.whenFragments = new ArrayList<>( estimatedWhenSize );
 	}
@@ -76,7 +76,7 @@ public class SqmCaseSearched<R>
 		return whenFragments;
 	}
 
-	public SqmExpression<? extends R> getOtherwise() {
+	public @Nullable SqmExpression<? extends R> getOtherwise() {
 		return otherwise;
 	}
 
@@ -92,7 +92,7 @@ public class SqmCaseSearched<R>
 		return this;
 	}
 
-	private void applyInferableResultType(SqmBindableType<?> type) {
+	private void applyInferableResultType(@Nullable SqmBindableType<?> type) {
 		if ( type != null ) {
 			final SqmBindableType<?> oldType = getExpressible();
 			final SqmBindableType<?> newType = QueryHelper.highestPrecedenceType2( oldType, type );
@@ -103,7 +103,7 @@ public class SqmCaseSearched<R>
 	}
 
 	@Override
-	protected void internalApplyInferableType(SqmBindableType<?> newType) {
+	protected void internalApplyInferableType(@Nullable SqmBindableType<?> newType) {
 		super.internalApplyInferableType( newType );
 
 		if ( otherwise != null ) {
@@ -143,7 +143,7 @@ public class SqmCaseSearched<R>
 		}
 
 		@Override
-		public boolean equals(Object object) {
+		public boolean equals(@Nullable Object object) {
 			return object instanceof WhenFragment<?> that
 				&& predicate.equals( that.predicate )
 				&& result.equals( that.result );
@@ -181,6 +181,7 @@ public class SqmCaseSearched<R>
 			whenFragment.result.appendHqlString( hql, context );
 		}
 
+		final SqmExpression<? extends R> otherwise = this.otherwise;
 		if ( otherwise != null ) {
 			hql.append( " else " );
 			otherwise.appendHqlString( hql, context );
@@ -189,7 +190,7 @@ public class SqmCaseSearched<R>
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmCaseSearched<?> that
 			&& Objects.equals( this.whenFragments, that.whenFragments )
 			&& Objects.equals( this.otherwise, that.otherwise );
@@ -220,7 +221,7 @@ public class SqmCaseSearched<R>
 	// JPA
 
 	@Override
-	public SqmCaseSearched<R> when(Expression<Boolean> condition, R result) {
+	public SqmCaseSearched<R> when(Expression<Boolean> condition, @Nullable R result) {
 		when( nodeBuilder().wrap( condition ), nodeBuilder().value( result, otherwise ) );
 		return this;
 	}
@@ -232,7 +233,7 @@ public class SqmCaseSearched<R>
 	}
 
 	@Override
-	public SqmExpression<R> otherwise(R result) {
+	public SqmExpression<R> otherwise(@Nullable R result) {
 		otherwise( nodeBuilder().value( result ) );
 		return this;
 	}

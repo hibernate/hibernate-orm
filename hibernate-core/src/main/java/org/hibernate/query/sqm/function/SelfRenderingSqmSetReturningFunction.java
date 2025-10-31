@@ -118,19 +118,22 @@ public class SelfRenderingSqmSetReturningFunction<T> extends SqmSetReturningFunc
 	}
 
 	protected List<SqlAstNode> resolveSqlAstArguments(List<? extends SqmTypedNode<?>> sqmArguments, SqmToSqlAstConverter walker) {
-		if ( sqmArguments.isEmpty() ) {
+		return resolveSqlAstArguments( sqmArguments, 0, sqmArguments.size(), walker );
+	}
+
+	protected List<SqlAstNode> resolveSqlAstArguments(List<? extends SqmTypedNode<?>> sqmArguments, int start, int end, SqmToSqlAstConverter walker) {
+		if ( start == end ) {
 			return emptyList();
 		}
 		final FunctionArgumentTypeResolver argumentTypeResolver =
 				getFunctionDescriptor() instanceof AbstractSqmSetReturningFunctionDescriptor setReturningFunctionDescriptor
 						? setReturningFunctionDescriptor.getArgumentTypeResolver()
 						: null;
+		final ArrayList<SqlAstNode> sqlAstArguments = new ArrayList<>( end - start );
 		if ( argumentTypeResolver == null ) {
-			final ArrayList<SqlAstNode> sqlAstArguments = new ArrayList<>( sqmArguments.size() );
-			for ( int i = 0; i < sqmArguments.size(); i++ ) {
+			for ( int i = start; i < end; i++ ) {
 				sqlAstArguments.add( (SqlAstNode) sqmArguments.get( i ).accept( walker ) );
 			}
-			return sqlAstArguments;
 		}
 		else {
 			final FunctionArgumentTypeResolverTypeAccess typeAccess = new FunctionArgumentTypeResolverTypeAccess(
@@ -138,15 +141,14 @@ public class SelfRenderingSqmSetReturningFunction<T> extends SqmSetReturningFunc
 					this,
 					argumentTypeResolver
 			);
-			final ArrayList<SqlAstNode> sqlAstArguments = new ArrayList<>( sqmArguments.size() );
-			for ( int i = 0; i < sqmArguments.size(); i++ ) {
+			for ( int i = start; i < end; i++ ) {
 				typeAccess.argumentIndex = i;
 				sqlAstArguments.add(
 						(SqlAstNode) walker.visitWithInferredType( sqmArguments.get( i ), typeAccess )
 				);
 			}
-			return sqlAstArguments;
 		}
+		return sqlAstArguments;
 	}
 
 	private static class FunctionArgumentTypeResolverTypeAccess implements Supplier<MappingModelExpressible<?>> {

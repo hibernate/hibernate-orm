@@ -7,6 +7,7 @@ package org.hibernate.query.spi;
 import java.util.Collection;
 import jakarta.persistence.TemporalType;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.QueryParameter;
@@ -39,13 +40,13 @@ public interface QueryParameterBinding<T> {
 	 *
 	 * @return The currently associated Type
 	 */
-	BindableType<? super T> getBindType();
+	@Nullable BindableType<? super T> getBindType();
 
 	/**
 	 * If the parameter represents a temporal type, return the explicitly
 	 * specified precision - if one.
 	 */
-	TemporalType getExplicitTemporalPrecision();
+	@Nullable TemporalType getExplicitTemporalPrecision();
 
 	/**
 	 * Sets the parameter binding value.  The inherent parameter type (if known) is assumed
@@ -65,7 +66,7 @@ public interface QueryParameterBinding<T> {
 	 * @param value The bind value
 	 * @param clarifiedType The explicit Type to use
 	 */
-	void setBindValue(T value, BindableType<T> clarifiedType);
+	void setBindValue(T value, @Nullable BindableType<T> clarifiedType);
 
 	/**
 	 * Sets the parameter binding value using the explicit TemporalType.
@@ -115,7 +116,7 @@ public interface QueryParameterBinding<T> {
 	 *
 	 * @return the inferred mapping model expressible or <code>null</code>
 	 */
-	MappingModelExpressible<T> getType();
+	@Nullable MappingModelExpressible<T> getType();
 
 	/**
 	 * Sets the mapping model expressible for this parameter.
@@ -123,5 +124,5 @@ public interface QueryParameterBinding<T> {
 	 * @param type The mapping model expressible
 	 * @return Whether the bind type was changed
 	 */
-	boolean setType(MappingModelExpressible<T> type);
+	boolean setType(@Nullable MappingModelExpressible<T> type);
 }

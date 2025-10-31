@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.common.JoinType;
 import org.hibernate.sql.ast.SqlAstJoinType;
 
@@ -71,7 +72,7 @@ public enum SqmJoinType {
 			case RIGHT -> jakarta.persistence.criteria.JoinType.RIGHT;
 			case LEFT -> jakarta.persistence.criteria.JoinType.LEFT;
 			case INNER -> jakarta.persistence.criteria.JoinType.INNER;
-			default -> null;
+			default -> throw new IllegalArgumentException( "Join type has no JPA join type mapping: " + this );
 		};
 	}
 

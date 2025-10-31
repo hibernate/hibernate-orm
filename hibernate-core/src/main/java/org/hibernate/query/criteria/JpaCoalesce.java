@@ -6,13 +6,14 @@ package org.hibernate.query.criteria;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Steve Ebersole
  */
 public interface JpaCoalesce<T> extends JpaExpression<T>, CriteriaBuilder.Coalesce<T> {
 	@Override
-	JpaCoalesce<T> value(T value);
+	JpaCoalesce<T> value(@Nullable T value);
 
 	@Override
 	JpaCoalesce<T> value(Expression<? extends T> value);

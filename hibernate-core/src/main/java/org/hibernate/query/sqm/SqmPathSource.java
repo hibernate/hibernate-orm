@@ -8,6 +8,8 @@ import java.util.Locale;
 
 import jakarta.persistence.metamodel.Bindable;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.PathSource;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
@@ -39,7 +41,7 @@ public interface SqmPathSource<J>
 	 * @return null if the subPathSource is not found
 	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
 	 */
-	SqmPathSource<?> findSubPathSource(String name);
+	@Nullable SqmPathSource<?> findSubPathSource(String name);
 
 	/**
 	 * Find a {@link SqmPathSource} by name relative to this source. If {@code includeSubtypes} is set
@@ -50,7 +52,7 @@ public interface SqmPathSource<J>
 	 * @return null if the subPathSource is not found
 	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
 	 */
-	default SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
+	default @Nullable SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
 		return findSubPathSource( name );
 	}
 
@@ -104,22 +106,22 @@ public interface SqmPathSource<J>
 	 * Returns the intermediate {@link SqmPathSource} for a path source
 	 * previously acquired via {@link #findSubPathSource(String)}.
 	 */
-	default SqmPathSource<?> getIntermediatePathSource(SqmPathSource<?> pathSource) {
+	default @Nullable SqmPathSource<?> getIntermediatePathSource(SqmPathSource<?> pathSource) {
 		return null;
 	}
 
 	/**
 	 * Create an SQM path for this source relative to the given left hand side
 	 */
-	SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource);
+	SqmPath<J> createSqmPath(SqmPath<?> lhs, @Nullable SqmPathSource<?> intermediatePathSource);
 
 	@Override
-	default SqmBindableType<J> getExpressible() {
+	default @NonNull SqmBindableType<J> getExpressible() {
 		return getPathType();
 	}
 
 	@Override
-	default SqmDomainType<J> getSqmType() {
+	default @Nullable SqmDomainType<J> getSqmType() {
 		return getPathType();
 	}
 

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
@@ -1137,7 +1138,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	SqmExpression<String> toString(Expression<Character> character);
 
 	@Override
-	<T> SqmExpression<T> literal(T value);
+	<T> SqmExpression<T> literal(@Nullable T value);
 
 	@Override
 	<T> List<? extends SqmExpression<T>> literals(T[] values);

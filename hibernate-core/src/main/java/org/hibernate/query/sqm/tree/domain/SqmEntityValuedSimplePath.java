@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.spi.NavigablePath;
@@ -63,7 +64,7 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	}
 
 	@Override
-	public SqmBindableType<T> getNodeType() {
+	public @NonNull SqmBindableType<T> getNodeType() {
 		return getReferencedPathSource().getPathType();
 	}
 // We can't expose that the type is a EntityDomainType because it could also be a MappedSuperclass

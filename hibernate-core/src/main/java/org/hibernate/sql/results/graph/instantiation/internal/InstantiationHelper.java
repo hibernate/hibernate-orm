@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.results.graph.instantiation.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
@@ -58,7 +59,7 @@ public class InstantiationHelper {
 		return findMatchingConstructor( javaClass, argTypes, typeConfiguration ) != null;
 	}
 
-	public static <T> Constructor<T> findMatchingConstructor(
+	public static <T> @Nullable Constructor<T> findMatchingConstructor(
 			Class<T> type,
 			List<Class<?>> argumentTypes,
 			TypeConfiguration typeConfiguration) {

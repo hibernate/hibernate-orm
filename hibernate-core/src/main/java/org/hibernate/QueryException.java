@@ -4,6 +4,8 @@
  */
 package org.hibernate;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * A problem occurred translating a Hibernate query to SQL due to illegal query
  * syntax, an operation which is not well-typed, an unresolvable reference to
@@ -23,7 +25,7 @@ package org.hibernate;
  * @see org.hibernate.query.SyntaxException
  */
 public class QueryException extends HibernateException {
-	private final String queryString;
+	private final @Nullable String queryString;
 
 	/**
 	 * Constructs a {@code QueryException} using the specified exception message.
@@ -58,7 +60,7 @@ public class QueryException extends HibernateException {
 	 * @param message A message explaining the exception condition
 	 * @param queryString The query being evaluated when the exception occurred
 	 */
-	public QueryException(String message, String queryString) {
+	public QueryException(String message, @Nullable String queryString) {
 		this( message, queryString, null );
 	}
 
@@ -69,7 +71,7 @@ public class QueryException extends HibernateException {
 	 * @param queryString The query being evaluated when the exception occurred
 	 * @param cause The underlying cause
 	 */
-	public QueryException(String message, String queryString, Exception cause) {
+	public QueryException(String message, @Nullable String queryString, Exception cause) {
 		super( message, cause );
 		this.queryString = queryString;
 	}
@@ -93,7 +95,7 @@ public class QueryException extends HibernateException {
 	 *
 	 * @return The query string
 	 */
-	public String getQueryString() {
+	public @Nullable String getQueryString() {
 		return queryString;
 	}
 

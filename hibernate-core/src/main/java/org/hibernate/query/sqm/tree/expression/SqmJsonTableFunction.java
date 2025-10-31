@@ -81,7 +81,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		this(
 				descriptor,
 				renderer,
-				jsonPath == null ? Arrays.asList( document, null ) : Arrays.asList( document, jsonPath, null ),
+				createArgumentsList( document, jsonPath ),
 				argumentsValidator,
 				setReturningTypeResolver,
 				nodeBuilder,
@@ -90,6 +90,9 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		);
 	}
 
+	// Need to suppress some Checker Framework errors, because passing the `this` reference is unsafe,
+	// though we make it safe by not calling any methods on it until initialization finishes
+	@SuppressWarnings({"uninitialized", "assignment", "argument"})
 	private SqmJsonTableFunction(
 			SqmSetReturningFunctionDescriptor descriptor,
 			SetReturningFunctionRenderer renderer,
@@ -104,6 +107,17 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		this.passingExpressions = passingExpressions;
 		this.errorBehavior = errorBehavior;
 		arguments.set( arguments.size() - 1, this.columns );
+	}
+
+	private static List<SqmTypedNode<?>> createArgumentsList(SqmExpression<?> document, @Nullable SqmExpression<String> jsonPath) {
+		// Since the last argument is the Columns object, though that needs the `this` reference,
+		// we need to construct an array with a null slot at the end, where the Columns instance is put into.
+		// Suppress nullness checks as this will eventually turn non-nullable
+		@SuppressWarnings("nullness")
+		final SqmTypedNode<?>[] array = jsonPath == null
+				? new SqmTypedNode[] {document, null}
+				: new SqmTypedNode[] {document, jsonPath, null};
+		return Arrays.asList( array );
 	}
 
 	public Map<String, SqmExpression<?>> getPassingExpressions() {
@@ -164,9 +178,8 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 
 	@Override
 	protected List<SqlAstNode> resolveSqlAstArguments(List<? extends SqmTypedNode<?>> sqmArguments, SqmToSqlAstConverter walker) {
-		final List<SqlAstNode> sqlAstNodes = super.resolveSqlAstArguments( sqmArguments, walker );
 		// The last argument is the SqmJsonTableFunction.Columns which will convert to null, so remove that
-		sqlAstNodes.remove( sqlAstNodes.size() - 1 );
+		final List<SqlAstNode> sqlAstNodes = super.resolveSqlAstArguments( sqmArguments, 0, sqmArguments.size() - 1, walker );
 
 		final JsonPathPassingClause jsonPathPassingClause = createJsonPathPassingClause( walker );
 		if ( jsonPathPassingClause != null ) {
@@ -249,7 +262,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 	}
 
 	@Override
-	public <X> JpaJsonValueNode<X> valueColumn(String columnName, Class<X> type, String jsonPath) {
+	public <X> JpaJsonValueNode<X> valueColumn(String columnName, Class<X> type, @Nullable String jsonPath) {
 		return columns.valueColumn( columnName, type, jsonPath );
 	}
 
@@ -289,7 +302,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmJsonTableFunction<?> that
 			&& super.equals( object )
 			&& columns.equals( that.columns )
@@ -428,7 +441,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		}
 
 		@Override
-		public boolean equals(Object object) {
+		public boolean equals(@Nullable Object object) {
 			return object instanceof ExistsColumnDefinition that
 				&& name.equals( that.name )
 				&& type.equals( that.type )
@@ -647,7 +660,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		}
 
 		@Override
-		public boolean equals(Object object) {
+		public boolean equals(@Nullable Object object) {
 			return object instanceof QueryColumnDefinition that
 				&& name.equals( that.name )
 				&& type.equals( that.type )
@@ -764,9 +777,8 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 				case NULL -> sb.append( " null on error" );
 				case ERROR -> sb.append( " error on error" );
 				case DEFAULT -> {
-					assert errorDefaultExpression != null;
 					sb.append( " default " );
-					errorDefaultExpression.appendHqlString( sb, context );
+					castNonNull( errorDefaultExpression ).appendHqlString( sb, context );
 					sb.append( " on error" );
 				}
 			}
@@ -774,9 +786,8 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 				case NULL -> sb.append( " null on empty" );
 				case ERROR -> sb.append( " error on empty" );
 				case DEFAULT -> {
-					assert emptyDefaultExpression != null;
 					sb.append( " default " );
-					emptyDefaultExpression.appendHqlString( sb, context );
+					castNonNull( emptyDefaultExpression ).appendHqlString( sb, context );
 					sb.append( " on empty" );
 				}
 			}
@@ -785,7 +796,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		@Override
 		public int populateTupleType(int offset, String[] componentNames, SqmExpressible<?>[] componentTypes) {
 			componentNames[offset] = name;
-			componentTypes[offset] = type.getNodeType();
+			componentTypes[offset] = castNonNull( type.getNodeType() );
 			return 1;
 		}
 
@@ -868,7 +879,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		}
 
 		@Override
-		public boolean equals(Object object) {
+		public boolean equals(@Nullable Object object) {
 			return object instanceof ValueColumnDefinition<?> that
 				&& name.equals( that.name )
 				&& type.equals( that.type )
@@ -981,7 +992,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			for ( ColumnDefinition columnDefinition : columnDefinitions ) {
 				definitions.add( columnDefinition.copy( context ) );
 			}
-			return new NestedColumns( jsonPath, context.getCopy( table ), definitions );
+			return new NestedColumns( jsonPath, castNonNull( context.getCopy( table ) ), definitions );
 		}
 
 		@Override
@@ -1046,7 +1057,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		}
 
 		@Override
-		public <X> JpaJsonValueNode<X> valueColumn(String columnName, Class<X> type, String jsonPath) {
+		public <X> JpaJsonValueNode<X> valueColumn(String columnName, Class<X> type, @Nullable String jsonPath) {
 			return valueColumn( columnName, table.nodeBuilder().castTarget( type ), jsonPath );
 		}
 
@@ -1056,7 +1067,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		}
 
 		@Override
-		public <X> JpaJsonValueNode<X> valueColumn(String columnName, JpaCastTarget<X> type, String jsonPath) {
+		public <X> JpaJsonValueNode<X> valueColumn(String columnName, JpaCastTarget<X> type, @Nullable String jsonPath) {
 			final SqmCastTarget<?> sqmCastTarget = (SqmCastTarget<?>) type;
 			table.addColumn( columnName );
 			final ValueColumnDefinition<X> valueColumnDefinition = new ValueColumnDefinition<>(
@@ -1099,12 +1110,14 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 				}
 			}
 
-			// No-op since this object is going to be visible as function argument
-			return null;
+			// This is fine since this object is going to be visible as function argument only for logging purposes
+
+			//noinspection unchecked
+			return (X) this;
 		}
 
 		@Override
-		public boolean equals(Object object) {
+		public boolean equals(@Nullable Object object) {
 			return object instanceof NestedColumns that
 				&& jsonPath.equals( that.jsonPath )
 				&& Objects.equals( columnDefinitions, that.columnDefinitions );
@@ -1162,7 +1175,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			for ( ColumnDefinition columnDefinition : columnDefinitions ) {
 				definitions.add( columnDefinition.copy( context ) );
 			}
-			return new Columns( context.getCopy( table ), definitions );
+			return new Columns( castNonNull( context.getCopy( table ) ), definitions );
 		}
 
 		@Override

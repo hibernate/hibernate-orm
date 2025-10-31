@@ -4,6 +4,7 @@
  */
 package org.hibernate.query;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.type.BindableType;
 
@@ -55,5 +56,5 @@ public interface QueryParameter<T> extends jakarta.persistence.Parameter<T> {
 	 *
 	 * @return The associated Hibernate Type, may be {@code null}.
 	 */
-	BindableType<T> getHibernateType();
+	@Nullable BindableType<T> getHibernateType();
 }

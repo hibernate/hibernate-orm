@@ -4,11 +4,14 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * @author Christian Beikov
@@ -30,6 +33,16 @@ public class SqmCollation extends SqmLiteral<String> {
 		);
 		copyTo( expression, context );
 		return expression;
+	}
+
+	@Override
+	public @NonNull String getLiteralValue() {
+		return castNonNull( super.getLiteralValue() );
+	}
+
+	@Override
+	public @NonNull SqmBindableType<String> getNodeType() {
+		return castNonNull( super.getNodeType() );
 	}
 
 	@Override

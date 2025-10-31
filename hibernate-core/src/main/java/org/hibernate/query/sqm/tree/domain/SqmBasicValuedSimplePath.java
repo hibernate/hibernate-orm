@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
@@ -46,7 +48,7 @@ public class SqmBasicValuedSimplePath<T>
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
 			SqmPath<?> lhs,
-			String explicitAlias,
+			@Nullable String explicitAlias,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );
 	}
@@ -74,7 +76,7 @@ public class SqmBasicValuedSimplePath<T>
 	}
 
 	@Override
-	public SqmBindableType<T> getExpressible() {
+	public @NonNull SqmBindableType<T> getExpressible() {
 		return this;
 	}
 
@@ -108,8 +110,7 @@ public class SqmBasicValuedSimplePath<T>
 				creationState.getCurrentProcessingState().getPathRegistry();
 		final String alias = selector.toHqlString();
 		final NavigablePath navigablePath =
-				getNavigablePath().getParent()
-						.append( CollectionPart.Nature.ELEMENT.getName(), alias );
+				getParentNavigablePath().append( CollectionPart.Nature.ELEMENT.getName(), alias );
 		final SqmFrom<?, ?> indexedPath = pathRegistry.findFromByPath( navigablePath );
 		if ( indexedPath != null ) {
 			return indexedPath;
@@ -133,7 +134,7 @@ public class SqmBasicValuedSimplePath<T>
 			SqmExpression<?> selector, SqmDomainType<T> sqmPathType, QueryEngine queryEngine) {
 		final SqmFunctionRegistry registry = queryEngine.getSqmFunctionRegistry();
 		if ( sqmPathType instanceof BasicPluralType<?, ?> ) {
-			return registry.findFunctionDescriptor( "array_get" )
+			return registry.getFunctionDescriptor( "array_get" )
 					.generateSqmExpression(
 							asList( this, selector ),
 							null,
@@ -141,7 +142,7 @@ public class SqmBasicValuedSimplePath<T>
 					);
 		}
 		else if ( getJavaTypeClass( sqmPathType ) == String.class ) {
-			return registry.findFunctionDescriptor( "substring" )
+			return registry.getFunctionDescriptor( "substring" )
 					.generateSqmExpression(
 							asList( this, selector, nodeBuilder().literal( 1 ) ),
 							nodeBuilder().getCharacterType(),
@@ -153,10 +154,9 @@ public class SqmBasicValuedSimplePath<T>
 		}
 	}
 
-	private Class<?> getJavaTypeClass(SqmDomainType<T> sqmPathType) {
-		return nodeBuilder().resolveExpressible( sqmPathType )
-				.getRelationalJavaType()
-				.getJavaTypeClass();
+	private @Nullable Class<?> getJavaTypeClass(SqmDomainType<T> sqmPathType) {
+		final SqmBindableType<T> expressible = nodeBuilder().resolveExpressible( sqmPathType );
+		return expressible == null ? null : expressible.getRelationalJavaType().getJavaTypeClass();
 	}
 
 
@@ -164,7 +164,7 @@ public class SqmBasicValuedSimplePath<T>
 	// SqmPath
 
 	@Override
-	public BasicJavaType<T> getJavaTypeDescriptor() {
+	public @NonNull BasicJavaType<T> getJavaTypeDescriptor() {
 		return (BasicJavaType<T>) super.getJavaTypeDescriptor();
 	}
 
@@ -179,7 +179,27 @@ public class SqmBasicValuedSimplePath<T>
 	}
 
 	@Override
-	public Class<T> getJavaType() {
+	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType, @Nullable String alias) {
+		throw new UnsupportedOperationException( "Basic-value cannot be treated (downcast)" );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias) {
+		throw new UnsupportedOperationException( "Basic-value cannot be treated (downcast)" );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
+		throw new UnsupportedOperationException( "Basic-value cannot be treated (downcast)" );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
+		throw new UnsupportedOperationException( "Basic-value cannot be treated (downcast)" );
+	}
+
+	@Override
+	public @NonNull Class<T> getJavaType() {
 		return getJavaTypeDescriptor().getJavaTypeClass();
 	}
 
@@ -189,7 +209,7 @@ public class SqmBasicValuedSimplePath<T>
 	}
 
 	@Override
-	public SqmDomainType<T> getSqmType() {
+	public @Nullable SqmDomainType<T> getSqmType() {
 		return getResolvedModel().getSqmType();
 	}
 

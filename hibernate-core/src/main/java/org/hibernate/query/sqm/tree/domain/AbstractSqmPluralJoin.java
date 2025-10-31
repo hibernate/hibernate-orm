@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.domain;
 
 import jakarta.persistence.criteria.PluralJoin;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.spi.NavigablePath;
@@ -30,7 +31,7 @@ public abstract class AbstractSqmPluralJoin<L,C,E>
 	public AbstractSqmPluralJoin(
 			SqmFrom<?, L> lhs,
 			SqmPluralPersistentAttribute<? super L,C,E> joinedNavigable,
-			String alias,
+			@Nullable String alias,
 			SqmJoinType joinType,
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
@@ -49,7 +50,7 @@ public abstract class AbstractSqmPluralJoin<L,C,E>
 			SqmFrom<?, L> lhs,
 			NavigablePath navigablePath,
 			PluralPersistentAttribute<L,C,E> joinedNavigable,
-			String alias,
+			@Nullable String alias,
 			SqmJoinType joinType,
 			boolean fetched,
 			NodeBuilder nodeBuilder) {

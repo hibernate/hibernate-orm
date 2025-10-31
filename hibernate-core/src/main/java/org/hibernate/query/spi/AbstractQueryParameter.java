@@ -5,6 +5,7 @@
 package org.hibernate.query.spi;
 
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.type.BindableType;
 
@@ -23,9 +24,9 @@ import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
 public abstract class AbstractQueryParameter<T> implements QueryParameterImplementor<T> {
 
 	private boolean allowMultiValuedBinding;
-	private BindableType<T> anticipatedType;
+	private @Nullable BindableType<T> anticipatedType;
 
-	public AbstractQueryParameter(boolean allowMultiValuedBinding, BindableType<T> anticipatedType) {
+	public AbstractQueryParameter(boolean allowMultiValuedBinding, @Nullable BindableType<T> anticipatedType) {
 		this.allowMultiValuedBinding = allowMultiValuedBinding;
 		this.anticipatedType = anticipatedType;
 	}
@@ -42,7 +43,7 @@ public abstract class AbstractQueryParameter<T> implements QueryParameterImpleme
 	}
 
 	@Override
-	public BindableType<T> getHibernateType() {
+	public @Nullable BindableType<T> getHibernateType() {
 		return anticipatedType;
 	}
 

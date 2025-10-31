@@ -18,6 +18,8 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.internal.EmbeddableCompositeUserTypeInstantiator;
 import org.hibernate.metamodel.internal.EmbeddableInstantiatorPojoIndirecting;
+import org.hibernate.metamodel.internal.EmbeddableInstantiatorRecordIndirecting;
+import org.hibernate.metamodel.internal.EmbeddableInstantiatorRecordStandard;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.usertype.CompositeUserType;
@@ -83,6 +85,18 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 					propComponent.getInstantiator(),
 					propComponent.getInstantiatorPropertyNames()
 			);
+		}
+		else if ( propComponent.getComponentClass() != null &&
+					propComponent.getComponentClass().isRecord() ) {
+			if ( propComponent.sortProperties() == null ) {
+				instantiator = new EmbeddableInstantiatorRecordStandard( propComponent.getComponentClass() );
+			}
+			else {
+				instantiator = EmbeddableInstantiatorRecordIndirecting.of(
+						propComponent.getComponentClass(),
+						propComponent.getPropertyNames()
+				);
+			}
 		}
 		else {
 			instantiator = null;

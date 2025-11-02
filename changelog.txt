@@ -3,6 +3,15 @@ Hibernate 7 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.1.6.Final (November 02, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/35783
+
+** Bug
+    * [HHH-19883] - JOIN TREAT ignores predicates
+
+
 Changes in 7.1.5.Final (October 27, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

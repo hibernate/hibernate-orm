@@ -126,6 +126,9 @@ stage('Build') {
 								case "db2_11_5":
 									sh "./docker_db.sh db2_11_5"
 									state[buildEnv.tag]['containerName'] = "db2"
+									// The tenant feature was only added in DB2 12, so disable parallel testing
+									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
+										" -Ptest.threads=1"
 									break;
 								case "mssql_2017":
 									sh "./docker_db.sh mssql_2017"

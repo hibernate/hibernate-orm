@@ -16,6 +16,7 @@ import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +33,11 @@ public class HANAFunctionsTest {
 			product.setPrice( new BigDecimal( "1.298" ) );
 			session.persist( product );
 		} );
+	}
+
+	@AfterEach
+	public void cleanupData(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
 	@Test

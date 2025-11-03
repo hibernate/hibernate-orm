@@ -66,7 +66,14 @@ tasks.withType( Test.class ).each { test ->
         // Most systems have multi-threading and maxing out a core on both threads will hurt performance
         // Also, as soon as we hit 16+ threads, the returns are diminishing, so divide by 4
         def threadCount = Runtime.runtime.availableProcessors()
-        test.maxParallelForks = threadCount >= 16 ? threadCount.intdiv( 4 ) : (threadCount.intdiv( 2 ) ?: 1)
+        def testThreads = project.getProperties().get( "test.threads" )
+        if ( testThreads == null ) {
+            testThreads = threadCount >= 16 ? threadCount.intdiv( 4 ) : (threadCount.intdiv( 2 ) ?: 1)
+        }
+        else {
+            testThreads = Integer.parseInt( testThreads.toString() )
+        }
+        test.maxParallelForks = testThreads
         test.systemProperty 'maxParallelForks', test.maxParallelForks
     }
     else if ( project.db == "oracle_test_pilot_database" ) {

@@ -38,7 +38,7 @@ public class EntitiesConfigurator {
 		final Iterator<PersistentClass> classes = GraphTopologicalSort.sort( new PersistentClassGraphDefiner( metadata ) )
 				.iterator();
 
-		final ClassesAuditingData classesAuditingData = new ClassesAuditingData();
+		final ClassesAuditingData classesAuditingData = metadataBuildingContext.getClassesAuditingData();
 
 		// Reading metadata from annotations
 		final AnnotationsMetadataReader reader = new AnnotationsMetadataReader( metadataBuildingContext );

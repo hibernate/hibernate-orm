@@ -11,7 +11,6 @@ import java.util.Objects;
 
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.NotAudited;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 
@@ -256,7 +255,6 @@ public class ListHashcodeChangeTest extends BaseEnversJPAFunctionalTestCase {
 		@JoinTable(name = "author_book",
 				joinColumns = @JoinColumn(name = "book_id"),
 				inverseJoinColumns = @JoinColumn(name="author_id",nullable = false))
-		@NotAudited
 		private Author author;
 
 		public Integer getId() {

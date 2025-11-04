@@ -6,7 +6,7 @@ description = "Library providing functionality to perform reverse engineering Hi
 
 dependencies {
     implementation project( ':hibernate-core' )
-    implementation project( ':hibernate-ant' )
+//    implementation project( ':hibernate-ant' )
     implementation "org.apache.commons:commons-collections4:4.5.0"
     implementation "com.google.googlejavaformat:google-java-format:1.27.0"
     implementation "org.freemarker:freemarker:2.3.34"

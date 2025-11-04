@@ -6,24 +6,18 @@
  */
 package org.hibernate.community.dialect.pagination;
 
+import org.hibernate.dialect.pagination.AbstractSimpleLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
 
 /**
  * A {@link LimitHandler} for TimesTen, which uses {@code ROWS n},
  * but at the start of the query instead of at the end.
  */
-public class TimesTenLimitHandler extends AbstractLimitHandler {
+public class TimesTenLimitHandler extends AbstractSimpleLimitHandler {
 
 	public static final TimesTenLimitHandler INSTANCE = new TimesTenLimitHandler();
 
 	public TimesTenLimitHandler(){
-	}
-
-	@Override
-	public boolean supportsLimit() {
-		return true;
 	}
 
 	@Override
@@ -34,14 +28,6 @@ public class TimesTenLimitHandler extends AbstractLimitHandler {
 	@Override
 	public boolean supportsLimitOffset() { 
 		return true;
-	}
-
-	@Override
-	public boolean supportsVariableLimit() {
- 		// a limit string using literals instead of parameters is
-		// required to translate from Hibernate's 0 based row numbers
-		// to TimesTen 1 based row numbers
-		return false;
 	}
 
 	@Override
@@ -60,6 +46,7 @@ public class TimesTenLimitHandler extends AbstractLimitHandler {
 		return true;
 	}
 
+	@Override
 	protected String limitClause(boolean hasFirstRow) {
 		return hasFirstRow ? " rows ? to ?" : " first ?";
 	}

@@ -351,10 +351,9 @@ public class TimesTenDialect extends Dialect {
 		return RowLockStrategy.COLUMN;
 	}
 
-  
 	@Override
-	public String getForUpdateString() {
-		return " for update";
+	public String getForUpdateString(String aliases) {
+		return " for update of " + aliases;
 	}
 
 	@Override

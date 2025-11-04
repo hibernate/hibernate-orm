@@ -49,7 +49,15 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 	public SqmPathRegistryImpl(SqmCreationProcessingState associatedProcessingState) {
 		this.associatedProcessingState = associatedProcessingState;
-		this.jpaCompliance = associatedProcessingState.getCreationState().getCreationContext().getNodeBuilder().getJpaCompliance();
+		this.jpaCompliance =
+				associatedProcessingState.getCreationState().getCreationContext()
+						.getNodeBuilder().getJpaCompliance();
+	}
+
+	private String handleAliasCaseSensitivity(String alias) {
+		return jpaCompliance.isJpaQueryComplianceEnabled()
+				? alias.toLowerCase( Locale.getDefault() )
+				: alias;
 	}
 
 	@Override
@@ -63,19 +71,18 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 		// Regarding part #1 (add to the path-by-path map), it is ok for a SqmFrom to replace a
 		// 		non-SqmFrom.  This should equate to, e.g., an implicit join.
 
+		final var navigablePath = sqmPath.getNavigablePath();
+
 		if ( sqmPath instanceof SqmFrom<?, ?> sqmFrom ) {
-
 			registerByAliasOnly( sqmFrom );
-
-			final SqmFrom<?, ?> previousFromByPath = sqmFromByPath.put( sqmPath.getNavigablePath(), sqmFrom );
-
+			final var previousFromByPath = sqmFromByPath.put( navigablePath, sqmFrom );
 			if ( previousFromByPath != null ) {
 				// this should never happen
 				throw new ParsingException(
 						String.format(
 								Locale.ROOT,
 								"Registration for SqmFrom [%s] overrode previous registration: %s -> %s",
-								sqmPath.getNavigablePath(),
+								navigablePath,
 								previousFromByPath,
 								sqmFrom
 						)
@@ -83,15 +90,14 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 			}
 		}
 
-		final SqmPath<?> previousPath = sqmPathByPath.put( sqmPath.getNavigablePath(), sqmPath );
-
+		final var previousPath = sqmPathByPath.put( navigablePath, sqmPath );
 		if ( previousPath instanceof SqmFrom ) {
 			// this should never happen
 			throw new ParsingException(
 					String.format(
 							Locale.ROOT,
 							"Registration for path [%s] overrode previous registration: %s -> %s",
-							sqmPath.getNavigablePath(),
+							navigablePath,
 							previousPath,
 							sqmPath
 					)
@@ -101,8 +107,6 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 	private static String fromPath(SqmFrom<?, ?> sqmFrom, boolean first) {
 		//TODO: the qualified path, but not using getFullPath() which has cruft
-		final String path = sqmFrom.getNavigablePath().getLocalName();
-		final String alias = sqmFrom.getExplicitAlias();
 		final String keyword;
 		if ( sqmFrom instanceof SqmRoot && first ) {
 			keyword = "from ";
@@ -113,6 +117,8 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 		else {
 			keyword = first ? "" : ", ";
 		}
+		final String path = sqmFrom.getNavigablePath().getLocalName();
+		final String alias = sqmFrom.getExplicitAlias();
 		return keyword + (alias == null ? path : path + " as " + alias);
 	}
 
@@ -120,12 +126,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	public void registerByAliasOnly(SqmFrom<?, ?> sqmFrom) {
 		final String alias = sqmFrom.getExplicitAlias();
 		if ( alias != null ) {
-			final String aliasToUse = jpaCompliance.isJpaQueryComplianceEnabled()
-					? alias.toLowerCase( Locale.getDefault() )
-					: alias;
-
-			final SqmFrom<?, ?> previousFrom = sqmFromByAlias.put( aliasToUse, sqmFrom );
-
+			final var previousFrom = sqmFromByAlias.put( handleAliasCaseSensitivity( alias ), sqmFrom );
 			if ( previousFrom != null ) {
 				throw new AliasCollisionException(
 						String.format(
@@ -144,11 +145,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	public <E> void replace(SqmEntityJoin<?,E> sqmJoin, SqmRoot<E> sqmRoot) {
 		final String alias = sqmJoin.getExplicitAlias();
 		if ( alias != null ) {
-			final String aliasToUse = jpaCompliance.isJpaQueryComplianceEnabled()
-					? alias.toLowerCase( Locale.getDefault() )
-					: alias;
-
-			final SqmFrom<?, ?> previousFrom = sqmFromByAlias.put( aliasToUse, sqmJoin );
+			final var previousFrom = sqmFromByAlias.put( handleAliasCaseSensitivity( alias ), sqmJoin );
 			if ( previousFrom != null && !( previousFrom instanceof SqmRoot ) ) {
 				throw new AliasCollisionException(
 						String.format(
@@ -162,28 +159,30 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 			}
 		}
 
-		final SqmFrom<?, ?> previousFromByPath = sqmFromByPath.put( sqmJoin.getNavigablePath(), sqmJoin );
+		final var navigablePath = sqmJoin.getNavigablePath();
+
+		final var previousFromByPath = sqmFromByPath.put( navigablePath, sqmJoin );
 		if ( previousFromByPath != null && !( previousFromByPath instanceof SqmRoot ) ) {
 			// this should never happen
 			throw new ParsingException(
 					String.format(
 							Locale.ROOT,
 							"Registration for SqmFrom [%s] overrode previous registration: %s -> %s",
-							sqmJoin.getNavigablePath(),
+							navigablePath,
 							previousFromByPath,
 							sqmJoin
 					)
 			);
 		}
 
-		final SqmPath<?> previousPath = sqmPathByPath.put( sqmJoin.getNavigablePath(), sqmJoin );
+		final var previousPath = sqmPathByPath.put( navigablePath, sqmJoin );
 		if ( previousPath instanceof SqmFrom && !( previousPath instanceof SqmRoot ) ) {
 			// this should never happen
 			throw new ParsingException(
 					String.format(
 							Locale.ROOT,
 							"Registration for path [%s] overrode previous registration: %s -> %s",
-							sqmJoin.getNavigablePath(),
+							navigablePath,
 							previousPath,
 							sqmJoin
 					)
@@ -199,40 +198,27 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 	@Override
 	public <X extends SqmFrom<?, ?>> X findFromByAlias(String alias, boolean searchParent) {
-		final String localAlias = jpaCompliance.isJpaQueryComplianceEnabled()
-				? alias.toLowerCase( Locale.getDefault() )
-				: alias;
+		final String localAlias = handleAliasCaseSensitivity( alias );
 
-		final SqmFrom<?, ?> registered = sqmFromByAlias.get( localAlias );
-
+		final var registered = sqmFromByAlias.get( localAlias );
 		if ( registered != null ) {
 			//noinspection unchecked
 			return (X) registered;
 		}
 
-		SqmCreationProcessingState parentProcessingState = associatedProcessingState.getParentProcessingState();
+		var parentProcessingState = associatedProcessingState.getParentProcessingState();
 		if ( searchParent && parentProcessingState != null ) {
 			X parentRegistered;
 			do {
-				parentRegistered = parentProcessingState.getPathRegistry().findFromByAlias(
-						alias,
-						false
-				);
+				parentRegistered =
+						parentProcessingState.getPathRegistry()
+								.findFromByAlias( alias, false );
 				parentProcessingState = parentProcessingState.getParentProcessingState();
-			} while (parentProcessingState != null && parentRegistered == null);
+			}
+			while (parentProcessingState != null && parentRegistered == null);
 			if ( parentRegistered != null ) {
 				// If a parent query contains the alias, we need to create a correlation on the subquery
-				final SqmSubQuery<?> selectQuery = ( SqmSubQuery<?> ) associatedProcessingState.getProcessingQuery();
-				final SqmFrom<?, ?> correlated;
-				if ( parentRegistered instanceof Root<?> root ) {
-					correlated = selectQuery.correlate( root );
-				}
-				else if ( parentRegistered instanceof Join<?, ?> join ) {
-					correlated = selectQuery.correlate( join );
-				}
-				else {
-					throw new UnsupportedOperationException( "Can't correlate from node: " + parentRegistered );
-				}
+				final var correlated = correlate( parentRegistered );
 				register( correlated );
 				//noinspection unchecked
 				return (X) correlated;
@@ -241,14 +227,26 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 		final boolean onlyOneFrom = sqmFromByPath.size() == 1;
 		if ( onlyOneFrom && localAlias.equalsIgnoreCase( "this" ) ) {
-			final SqmRoot<?> root = (SqmRoot<?>) sqmFromByPath.entrySet().iterator().next().getValue();
+			final var root = (SqmRoot<?>) sqmFromByPath.entrySet().iterator().next().getValue();
 			if (  root.getAlias() == null ) {
 				//noinspection unchecked
 				return (X) root;
 			}
 		}
-
 		return null;
+	}
+
+	private <X extends SqmFrom<?, ?>> SqmFrom<?, ?> correlate(X parentRegistered) {
+		final var selectQuery = (SqmSubQuery<?>) associatedProcessingState.getProcessingQuery();
+		if ( parentRegistered instanceof Root<?> root ) {
+			return selectQuery.correlate( root );
+		}
+		else if ( parentRegistered instanceof Join<?, ?> join ) {
+			return selectQuery.correlate( join );
+		}
+		else {
+			throw new UnsupportedOperationException( "Can't correlate from node: " + parentRegistered );
+		}
 	}
 
 	@Override
@@ -259,7 +257,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 		SqmFrom<?, ?> found = null;
 		for ( var entry : sqmFromByPath.entrySet() ) {
-			final SqmFrom<?, ?> fromElement = entry.getValue();
+			final var fromElement = entry.getValue();
 			if ( definesAttribute( fromElement.getReferencedPathSource(), navigableName ) ) {
 				if ( found != null ) {
 					throw new SemanticException( "Ambiguous unqualified attribute reference '" + navigableName +
@@ -270,12 +268,13 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 		}
 
 		if ( found == null ) {
-			if ( associatedProcessingState.getParentProcessingState() != null ) {
+			final var processingState = associatedProcessingState.getParentProcessingState();
+			if ( processingState != null ) {
 //				QUERY_LOGGER.tracef(
 //						"Unable to resolve unqualified attribute [%s] in local from-clause; checking parent ",
 //						navigableName
 //				);
-				found = associatedProcessingState.getParentProcessingState().getPathRegistry().findFromExposing( navigableName );
+				found = processingState.getPathRegistry().findFromExposing( navigableName );
 			}
 		}
 
@@ -290,83 +289,76 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 	@Override
 	public <X extends SqmFrom<?, ?>> X resolveFrom(NavigablePath navigablePath, Function<NavigablePath, SqmFrom<?, ?>> creator) {
-		final SqmFrom<?, ?> existing = sqmFromByPath.get( navigablePath );
+		final var existing = sqmFromByPath.get( navigablePath );
 		if ( existing != null ) {
 			//noinspection unchecked
 			return (X) existing;
 		}
-
-		final SqmFrom<?, ?> sqmFrom = creator.apply( navigablePath );
-		register( sqmFrom );
-		//noinspection unchecked
-		return (X) sqmFrom;
+		else {
+			final var sqmFrom = creator.apply( navigablePath );
+			register( sqmFrom );
+			//noinspection unchecked
+			return (X) sqmFrom;
+		}
 	}
 
 	@Override
 	public <X extends SqmFrom<?, ?>> X resolveFrom(SqmPath<?> path) {
-		final SqmFrom<?, ?> existing = sqmFromByPath.get( path.getNavigablePath() );
+		final var navigablePath = path.getNavigablePath();
+		final var existing = sqmFromByPath.get( navigablePath );
 		if ( existing != null ) {
 			//noinspection unchecked
 			return (X) existing;
 		}
-
-		final SqmFrom<?, ?> sqmFrom = resolveFrom( path.getLhs() ).join( path.getNavigablePath().getLocalName() );
-		register( sqmFrom );
-		//noinspection unchecked
-		return (X) sqmFrom;
+		else {
+			final var sqmFrom =
+					resolveFrom( path.getLhs() )
+							.join( navigablePath.getLocalName() );
+			register( sqmFrom );
+			//noinspection unchecked
+			return (X) sqmFrom;
+		}
 	}
 
 	private boolean definesAttribute(SqmPathSource<?> containerType, String name) {
 		return !( containerType.getSqmType() instanceof BasicDomainType )
-				&& containerType.findSubPathSource( name, true ) != null;
+			&& containerType.findSubPathSource( name, true ) != null;
 	}
 
 	@Override
 	public SqmAliasedNode<?> findAliasedNodeByAlias(String alias) {
 		assert alias != null;
-
-		final String aliasToUse = jpaCompliance.isJpaQueryComplianceEnabled()
-				? alias.toLowerCase( Locale.getDefault() )
-				: alias;
-
+		final String aliasToUse = handleAliasCaseSensitivity( alias );
 		for ( int i = 0; i < simpleSelectionNodes.size(); i++ ) {
-			final SqmAliasedNode<?> node = simpleSelectionNodes.get( i );
+			final var node = simpleSelectionNodes.get( i );
 			if ( aliasToUse.equals( node.getAlias() ) ) {
 				return node;
 			}
 		}
-
 		return null;
 	}
 
 	@Override
 	public Integer findAliasedNodePosition(String alias) {
-		if ( alias == null ) {
-			return null;
-		}
-
-		final String aliasToUse = jpaCompliance.isJpaQueryComplianceEnabled()
-				? alias.toLowerCase( Locale.getDefault() )
-				: alias;
-
-		// NOTE : 1-based
-
-		for ( int i = 0; i < simpleSelectionNodes.size(); i++ ) {
-			final SqmAliasedNode<?> node = simpleSelectionNodes.get( i );
-			if ( aliasToUse.equals( node.getAlias() ) ) {
-				return i + 1;
+		if ( alias != null ) {
+			final String aliasToUse = handleAliasCaseSensitivity( alias );
+			// NOTE: 1-based
+			for ( int i = 0; i < simpleSelectionNodes.size(); i++ ) {
+				final var node = simpleSelectionNodes.get( i );
+				if ( aliasToUse.equals( node.getAlias() ) ) {
+					return i + 1;
+				}
 			}
 		}
-
 		return null;
 	}
 
 	@Override
 	public SqmAliasedNode<?> findAliasedNodeByPosition(int position) {
-		// NOTE : 1-based
+		// NOTE: 1-based
 		return position > simpleSelectionNodes.size()
 				? null
-				: simpleSelectionNodes.get(position - 1);
+				: simpleSelectionNodes.get( position - 1 );
 	}
 
 	@Override
@@ -377,20 +369,18 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 	private void checkResultVariable(SqmAliasedNode<?> selection) {
 		final String alias = selection.getAlias();
-		if ( alias == null ) {
-			return;
-		}
-
-		final Integer position = findAliasedNodePosition( alias );
-		if ( position != null ) {
-			throw new AliasCollisionException(
-					String.format(
-							Locale.ENGLISH,
-							"Duplicate alias '%s' at position %s in 'select' clause",
-							alias,
-							position
-					)
-			);
+		if ( alias != null ) {
+			final Integer position = findAliasedNodePosition( alias );
+			if ( position != null ) {
+				throw new AliasCollisionException(
+						String.format(
+								Locale.ENGLISH,
+								"Duplicate alias '%s' at position %s in 'select' clause",
+								alias,
+								position
+						)
+				);
+			}
 		}
 	}
 }

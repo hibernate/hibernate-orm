@@ -17,13 +17,6 @@ public final class TimesTenSequenceSupport implements SequenceSupport {
 
 	public static final SequenceSupport INSTANCE = new TimesTenSequenceSupport();
 
-
-
-	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
 	@Override
 	public boolean supportsPooledSequences() {
 		return true;

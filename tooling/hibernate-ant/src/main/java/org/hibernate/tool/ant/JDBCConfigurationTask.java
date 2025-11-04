@@ -18,15 +18,11 @@
 package org.hibernate.tool.ant;
 
 import java.io.File;
-import java.lang.reflect.Constructor;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.Path;
 import org.hibernate.boot.cfgxml.internal.ConfigLoader;
-import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
@@ -34,7 +30,6 @@ import org.hibernate.tool.api.metadata.MetadataConstants;
 import org.hibernate.tool.api.reveng.RevengSettings;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.RevengStrategyFactory;
-import org.hibernate.tool.util.ReflectionUtil;
 
 
 /**
@@ -42,16 +37,16 @@ import org.hibernate.tool.util.ReflectionUtil;
  * @author <a href='mailto:the_mindstorm@evolva.ro'>Alexandru Popescu</a>
  */
 public class JDBCConfigurationTask extends ConfigurationTask {
-	//not expfosed here.
-    private boolean preferBasicCompositeIds = true;
-    
-    private String reverseEngineeringStrategyClass;
-    private String packageName;
-	private Path revengFiles;
 
-	private boolean detectOneToOne = true;
-	private boolean detectManyToMany = true;
-	private boolean detectOptimisticLock = true;
+	boolean preferBasicCompositeIds = true;
+    
+	String reverseEngineeringStrategyClass;
+	String packageName;
+	Path revengFiles;
+
+	boolean detectOneToOne = true;
+	boolean detectManyToMany = true;
+	boolean detectOptimisticLock = true;
     
 	public JDBCConfigurationTask() {
 		setDescription("JDBC Configuration (for reverse engineering)");
@@ -135,5 +130,17 @@ public class JDBCConfigurationTask extends ConfigurationTask {
 			result.putAll(loadCfgXmlFile());
 		}
 		return result;
+	}
+
+	public Object clone() throws CloneNotSupportedException {
+		JDBCConfigurationTask jct = (JDBCConfigurationTask) super.clone();
+		jct.preferBasicCompositeIds = this.preferBasicCompositeIds;
+		jct.reverseEngineeringStrategyClass = this.reverseEngineeringStrategyClass;
+		jct.packageName = this.packageName;
+		jct.revengFiles = this.revengFiles;
+		jct.detectOneToOne = this.detectOneToOne;
+		jct.detectManyToMany = this.detectManyToMany;
+		jct.detectOptimisticLock = this.detectOptimisticLock;
+		return jct;
 	}
 }

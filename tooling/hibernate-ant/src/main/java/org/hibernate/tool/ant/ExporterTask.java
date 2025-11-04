@@ -72,9 +72,6 @@ public abstract class ExporterTask {
 		templatePath = path;
 	}
 	
-	public void setTemplatePrefix(String s) {
-	}
-	
 	public void validateParameters() {
 		if(getDestdir()==null) {
 			throw new BuildException("destdir must be set, either locally or on <hibernatetool>");

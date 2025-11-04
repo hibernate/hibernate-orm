@@ -27,7 +27,7 @@ import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 
 public class JPAConfigurationTask extends ConfigurationTask {
 	
-	private String persistenceUnit = null;
+	String persistenceUnit = null;
 
 	public JPAConfigurationTask() {
 		setDescription("JPA Configuration");
@@ -47,7 +47,8 @@ public class JPAConfigurationTask extends ConfigurationTask {
 			Throwable cause = t.getCause();
 			if (cause != null) {
 				throw new BuildException(cause);
-			} else {
+			}
+			else {
 				throw new BuildException("Problems in creating a configuration for JPA. Have you remembered to add hibernate EntityManager jars to the classpath ?",t);	
 			}
 		}
@@ -63,11 +64,17 @@ public class JPAConfigurationTask extends ConfigurationTask {
 	}
 	
 	public void setConfigurationFile(File configurationFile) {
-		complain("configurationfile");
+		complain();
 	}
 
-	private void complain(String param) {
-		throw new BuildException("<" + getTaskName() + "> currently only support autodiscovery from META-INF/persistence.xml. Thus setting the " + param + " attribute is not allowed");
+	private void complain() {
+		throw new BuildException("<" + getTaskName() + "> currently only support autodiscovery from META-INF/persistence.xml. Thus setting the configurationfile attribute is not allowed");
+	}
+
+	public Object clone() throws CloneNotSupportedException {
+		JPAConfigurationTask jct = (JPAConfigurationTask) super.clone();
+		jct.persistenceUnit = this.persistenceUnit;
+		return jct;
 	}
 	
 	

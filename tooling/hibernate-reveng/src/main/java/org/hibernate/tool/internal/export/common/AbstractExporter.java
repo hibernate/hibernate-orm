@@ -113,7 +113,6 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 			iterator = getProperties().entrySet().iterator();
 			while ( iterator.hasNext() ) {
 				Entry<Object, Object> element = iterator.next();
-				Object value = transformValue(element.getValue());
 				String key = element.getKey().toString();
 				if(key.startsWith(ExporterSettings.PREFIX_KEY)) {
 					getTemplateHelper().removeFromContext(key.substring(ExporterSettings.PREFIX_KEY.length()));

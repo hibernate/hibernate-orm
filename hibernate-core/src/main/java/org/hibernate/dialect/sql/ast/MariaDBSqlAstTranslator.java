@@ -25,7 +25,6 @@ import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.DerivedTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
@@ -118,9 +117,7 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 		final Stack<Clause> clauseStack = getClauseStack();
 		try {
 			clauseStack.push( Clause.DELETE );
-			if ( supportsDeleteTableVariable() ) {
-				renderTableReferenceIdentificationVariable( statement.getTargetTable() );
-			}
+			renderTableReferenceIdentificationVariable( statement.getTargetTable() );
 			if ( statement.getFromClause().getRoots().isEmpty() ) {
 				appendSql( " from " );
 				renderDmlTargetTableExpression( statement.getTargetTable() );
@@ -148,26 +145,9 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		final Clause currentClause = getClauseStack().getCurrent();
-		if ( getClauseStack().getCurrent() != Clause.INSERT
-			&& (currentClause != Clause.DELETE || supportsDeleteTableVariable()) ) {
+		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
-	}
-
-	@Override
-	protected void renderTableReferenceIdentificationVariable(TableReference tableReference) {
-		final Stack<Clause> clauseStack = getCurrentClauseStack();
-		if ( clauseStack.getCurrent() == Clause.FROM && clauseStack.depth() > 1
-			&& clauseStack.peek( 1 ) == Clause.DELETE && !supportsDeleteTableVariable() ) {
-			return;
-		}
-		super.renderTableReferenceIdentificationVariable( tableReference );
-	}
-
-	private boolean supportsDeleteTableVariable() {
-		// Until 11.6, a DELETE statement doesn't support aliasing tables
-		return getDialect().getVersion().isSameOrAfter( 11, 6 );
 	}
 
 	@Override
@@ -198,10 +178,7 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 				|| !( getCurrentDmlStatement() instanceof InsertSelectStatement insertSelectStatement )
 				|| ( dmlAlias = insertSelectStatement.getTargetTable().getIdentificationVariable() ) == null
 				|| !dmlAlias.equals( columnReference.getQualifier() ) ) {
-			return !supportsDeleteTableVariable() && getCurrentDmlStatement() instanceof DeleteStatement statement
-				&& statement.getTargetTable().getIdentificationVariable().equals( columnReference.getQualifier() )
-					? getCurrentDmlStatement().getTargetTable().getTableExpression()
-					: columnReference.getQualifier();
+			return columnReference.getQualifier();
 		}
 		// Qualify the column reference with the table expression also when in subqueries
 		else if ( qualifierSupport != DmlTargetColumnQualifierSupport.NONE || !getQueryPartStack().isEmpty() ) {

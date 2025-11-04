@@ -33,7 +33,7 @@ public class DeleteWithSubqueryTest {
 
 	@Test
 	@JiraKey( value = "HHH-8318" )
-	@SkipForDialect(dialectClass = MySQLDialect.class,
+	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true,
 			reason = "Cannot use Attrvalue in the delete and from clauses simultaneously." )
 	public void testDeleteMemberOf(SessionFactoryScope factoryScope) {
 		final String qry = """

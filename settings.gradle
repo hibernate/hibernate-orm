@@ -76,24 +76,24 @@ dependencyResolutionManagement {
             def antlrVersion = version "antlr", "4.13.2"
             // WARNING: When upgrading to a version of bytebuddy that supports a new bytecode version,
             // make sure to remove the now unnecessary net.bytebuddy.experimental=true in relevant CI jobs (Jenkinsfile).
-            def byteBuddyVersion = version "byteBuddy", "1.17.6"
-            def checkerFrameworkVersion = version "checkerFramework", "3.49.5"
-            def classmateVersion = version "classmate", "1.7.0"
+            def byteBuddyVersion = version "byteBuddy", "1.17.7"
+            def checkerFrameworkVersion = version "checkerFramework", "3.51.0"
+            def classmateVersion = version "classmate", "1.7.1"
             def geolatteVersion = version "geolatte", "1.10"
             def hibernateModelsVersion = version "hibernateModels", "1.0.1"
-            def jandexVersion = version "jandex", "3.3.1"
-            def jacksonVersion = version "jackson", "2.19.1"
+            def jandexVersion = version "jandex", "3.5.0"
+            def jacksonVersion = version "jackson", "2.20.0"
             def jbossLoggingVersion = version "jbossLogging", "3.6.1.Final"
             def jbossLoggingToolVersion = version "jbossLoggingTool", "3.0.4.Final"
 
-            def agroalVersion = version "agroal", "2.7.1"
+            def agroalVersion = version "agroal", "2.8"
             def c3poVersion = version "c3p0", "0.11.2"
-            def hikaricpVersion = version "hikaricp", "6.3.0"
+            def hikaricpVersion = version "hikaricp", "6.3.3"
 
             def jcacheVersion = version "jcache", "1.1.1"
-            def ehcache3Version = version "ehcache3", "3.10.8"
+            def ehcache3Version = version "ehcache3", "3.11.1"
 
-            def micrometerVersion = version "micrometer", "1.15.1"
+            def micrometerVersion = version "micrometer", "1.15.4"
 
             def antVersion = version "ant", "1.10.15"
 
@@ -143,8 +143,8 @@ dependencyResolutionManagement {
             def interceptorsVersion = version "interceptors", "2.2.0"
             def dataVersion = version "data", "1.0.1"
             def jaccVersion = version "jacc", "3.0.0"
-            def jaxbApiVersion = version "jaxbApi", "4.0.2"
-            def jaxbRuntimeVersion = version "jaxbRuntime", "4.0.5"
+            def jaxbApiVersion = version "jaxbApi", "4.0.4"
+            def jaxbRuntimeVersion = version "jaxbRuntime", "4.0.6"
             def jsonbApiVersion = version "jsonbApi", "3.0.1"
             def jsonbRuntimeVersion = version "jsonbRuntime", "3.0.4"
             def jtaVersion = version "jta", "2.0.1"

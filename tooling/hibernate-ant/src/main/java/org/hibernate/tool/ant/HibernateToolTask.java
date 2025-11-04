@@ -40,16 +40,17 @@ import org.hibernate.tool.util.StringUtil;
  */
 public class HibernateToolTask extends Task {
 
+	ConfigurationTask configurationTask;
+	File destDir;
+	List<ExporterTask> generators = new ArrayList<ExporterTask>();
+	Path classPath;
+	Path templatePath;
+	Properties properties = new Properties();
+
 	public HibernateToolTask() {
 		super();
 	}
-	ConfigurationTask configurationTask;
-	private File destDir;
-	private List<ExporterTask> generators = new ArrayList<ExporterTask>();
-	private Path classPath;
-	private Path templatePath;
-	private Properties properties = new Properties(); 	
-	
+
 	private void checkConfiguration() {
 		if(configurationTask!=null) {
 			throw new BuildException("Only a single configuration is allowed.");
@@ -59,110 +60,110 @@ public class HibernateToolTask extends Task {
 	public ConfigurationTask createConfiguration() {
 		checkConfiguration();
 		configurationTask = new ConfigurationTask();
-		return configurationTask;			
+		return configurationTask;
 	}
-	
+
 
 	public JDBCConfigurationTask createJDBCConfiguration() {
 		checkConfiguration();
 		configurationTask = new JDBCConfigurationTask();
-		return (JDBCConfigurationTask) configurationTask;			
+		return (JDBCConfigurationTask) configurationTask;
 	}
-	
+
 	public JPAConfigurationTask createJpaConfiguration() {
 		checkConfiguration();
 		configurationTask = new JPAConfigurationTask();
-		return (JPAConfigurationTask) configurationTask;			
-	}	
-	
+		return (JPAConfigurationTask) configurationTask;
+	}
+
 	public ExporterTask createHbm2DDL() {
 		ExporterTask generator = new Hbm2DDLExporterTask(this);
 		addGenerator( generator );
 		return generator;
 	}
-	
+
 	public ExporterTask createHbmTemplate() {
 		ExporterTask generator = new GenericExporterTask(this);
 		addGenerator( generator );
 		return generator;
 	}
-	
+
 	public ExporterTask createHbm2CfgXml() {
 		ExporterTask generator = new Hbm2CfgXmlExporterTask(this);
 		addGenerator( generator );
-		
+
 		return generator;
 	}
 
-	protected boolean addGenerator(ExporterTask generator) {
-		return generators.add(generator);
+	protected void addGenerator(ExporterTask generator) {
+		generators.add(generator);
 	}
-	
+
 	public ExporterTask createHbm2Java() {
 		ExporterTask generator = new Hbm2JavaExporterTask(this);
 		addGenerator( generator );
 		return generator;
 	}
-	
-    public ExporterTask createHbm2HbmXml() {
-        ExporterTask generator= new Hbm2HbmXmlExporterTask(this);
-        addGenerator( generator );
-        return generator;
-    }
-    
-	public ExporterTask createHbm2Doc() {
-        ExporterTask generator= new Hbm2DocExporterTask(this);
-        addGenerator( generator );
-        return generator;
-    }
-	
-	/*public ExporterTask createHbm2Jsf(){
-        ExporterTask generator= new Hbm2JsfGeneratorTask(this);
-        generators.add(generator);
-        return generator;
-	}*/
-	
-	public ExporterTask createHbm2DAO(){
-        ExporterTask generator= new Hbm2DAOExporterTask(this);
-        addGenerator( generator );
-        return generator;
+
+	public ExporterTask createHbm2HbmXml() {
+		ExporterTask generator= new Hbm2HbmXmlExporterTask(this);
+		addGenerator( generator );
+		return generator;
 	}
-	
-	
+
+	public ExporterTask createHbm2Doc() {
+		ExporterTask generator= new Hbm2DocExporterTask(this);
+		addGenerator( generator );
+		return generator;
+	}
+
+	/*public ExporterTask createHbm2Jsf(){
+		ExporterTask generator= new Hbm2JsfGeneratorTask(this);
+		generators.add(generator);
+		return generator;
+	}*/
+
+	public ExporterTask createHbm2DAO(){
+		ExporterTask generator= new Hbm2DAOExporterTask(this);
+		addGenerator( generator );
+		return generator;
+	}
+
+
 	public QueryExporterTask createQuery() {
 		QueryExporterTask generator = new QueryExporterTask(this);
 		generators.add(generator);
 		return generator;
 	}
-	
+
 	public HbmLintExporterTask createHbmLint() {
 		HbmLintExporterTask generator = new HbmLintExporterTask(this);
 		generators.add(generator);
 		return generator;
 	}
-	
-	
+
+
 	/**
-     * Set the classpath to be used when running the Java class
-     *
-     * @param s an Ant Path object containing the classpath.
-     */
-    public void setClasspath(Path s) {
+	 * Set the classpath to be used when running the Java class
+	 *
+	 * @param s an Ant Path object containing the classpath.
+	 */
+	public void setClasspath(Path s) {
 		classPath = s;
-    }
-    
-    
-    /**
-     * Adds a path to the classpath.
-     *
-     * @return created classpath
-     */
-    public Path createClasspath() {
+	}
+
+
+	/**
+	 * Adds a path to the classpath.
+	 *
+	 * @return created classpath
+	 */
+	public Path createClasspath() {
 		classPath = new Path(getProject() );
 		return classPath;
-    }
+	}
 
-	
+
 	public void execute() {
 		if(configurationTask==null) {
 			throw new BuildException("No configuration specified. <" + getTaskName() + "> must have one of the following: <configuration>, <jpaconfiguration>, <annotationconfiguration> or <jdbcconfiguration>");
@@ -170,59 +171,62 @@ public class HibernateToolTask extends Task {
 		log("Executing Hibernate Tool with a " + configurationTask.getDescription() );
 		validateParameters();
 		Iterator<ExporterTask> iterator = generators.iterator();
-		
+
 		AntClassLoader loader = getProject().createClassLoader(classPath);
-		
+
 		ExporterTask generatorTask = null;
 		int count = 1;
 		try {
 			ClassLoader classLoader = this.getClass().getClassLoader();
 			loader.setParent(classLoader ); // if this is not set, classes from the taskdef cannot be found - which is crucial for e.g. annotations.
 			loader.setThreadContextLoader();
-			
-			while (iterator.hasNext() ) {				
+
+			while (iterator.hasNext() ) {
 				generatorTask = iterator.next();
 				log(count++ + ". task: " + generatorTask.getName() );
-				generatorTask.execute();			
+				generatorTask.execute();
 			}
-		} catch (RuntimeException re) {
+		}
+		catch (RuntimeException re) {
 			reportException(re, count, generatorTask);
-		} 
+		}
 		finally {
 			if (loader != null) {
 				loader.resetThreadContextLoader();
 				loader.cleanup();
-			}            
+			}
 		}
 	}
 
 	private void reportException(Throwable re, int count, ExporterTask generatorTask) {
-		log("An exception occurred while running exporter #" + count + ":" + generatorTask.getName(), Project.MSG_ERR);
+		log("An exception occurred while running exporter #" + count + ":" + generatorTask, Project.MSG_ERR);
 		log("To get the full stack trace run ant with -verbose", Project.MSG_ERR);
-		
+
 		log(re.toString(), Project.MSG_ERR);
-		String ex = new String();
+		StringBuilder ex = new StringBuilder();
 		Throwable cause = re.getCause();
 		while(cause!=null) {
-			ex += cause.toString() + "\n";
+			ex.append(cause.toString()).append("\n");
 			if(cause==cause.getCause()) {
 				break; // we reached the top.
-			} else {
+			}
+			else {
 				cause=cause.getCause();
 			}
 		}
-		if(!StringUtil.isEmptyOrNull(ex)) {
-			log(ex, Project.MSG_ERR);
+		if(!StringUtil.isEmptyOrNull(ex.toString())) {
+			log(ex.toString(), Project.MSG_ERR);
 		}
 
 		String newbieMessage = ExceptionUtil.getProblemSolutionOrCause(re);
 		if(newbieMessage!=null) {
 			log(newbieMessage);
-		} 		
-		
+		}
+
 		if(re instanceof BuildException) {
 			throw (BuildException)re;
-		} else {
+		}
+		else {
 			throw new BuildException(re, getLocation());
 		}
 	}
@@ -230,38 +234,30 @@ public class HibernateToolTask extends Task {
 	private void validateParameters() {
 		if(generators.isEmpty()) {
 			throw new BuildException("No exporters specified in <hibernatetool>. There has to be at least one specified. An exporter is e.g. <hbm2java> or <hbmtemplate>. See documentation for details.", getLocation());
-		} else {
-			Iterator<ExporterTask> iterator = generators.iterator();
-			
-			while (iterator.hasNext() ) {
-				ExporterTask generatorTask = iterator.next();
-				generatorTask.validateParameters();			
+		}
+		else {
+			for (ExporterTask generatorTask : generators) {
+				generatorTask.validateParameters();
 			}
 		}
 	}
 
-	/**
-	 * @return
-	 */
 	public File getDestDir() {
 		return destDir;
 	}
-	
+
 	public void setDestDir(File file) {
 		destDir = file;
 	}
 
-	/**
-	 * @return
-	 */
 	public MetadataDescriptor getMetadataDescriptor() {
 		return configurationTask.getMetadataDescriptor();
 	}
-	
+
 	public void setTemplatePath(Path path) {
 		templatePath = path;
 	}
-	
+
 	public Path getTemplatePath() {
 		if(templatePath==null) {
 			templatePath = new Path(getProject()); // empty path
@@ -275,11 +271,11 @@ public class HibernateToolTask extends Task {
 		p.putAll(properties);
 		return p;
 	}
-	
+
 	public void addConfiguredPropertySet(PropertySet ps) {
 		properties.putAll(ps.getProperties());
 	}
-	
+
 	public void addConfiguredProperty(Environment.Variable property) {
 		String key = property.getKey();
 		String value = property.getValue();
@@ -293,6 +289,18 @@ public class HibernateToolTask extends Task {
 			return;
 		}
 		properties.put( key, value );
-	}	
-	
+	}
+
+	@Override
+	public Object clone() throws CloneNotSupportedException {
+		HibernateToolTask htt = (HibernateToolTask) super.clone();
+		htt.configurationTask = this.configurationTask;
+		htt.destDir = this.destDir;
+		htt.generators.addAll(this.generators);
+		htt.classPath = this.classPath;
+		htt.templatePath = this.templatePath;
+		htt.properties.putAll(this.properties);
+		return htt;
+	}
+
 }

@@ -22,7 +22,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -40,107 +39,108 @@ import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
  */
 public class ConfigurationTask extends Task {
 
-	private List<FileSet> fileSets = new ArrayList<FileSet>();
-	private MetadataDescriptor metadataDescriptor;
-	private File configurationFile;
-	private File propertyFile;
+	List<FileSet> fileSets = new ArrayList<FileSet>();
+	MetadataDescriptor metadataDescriptor;
+	File configurationFile;
+	File propertyFile;
 	protected String entityResolver;
-	
+
 	public ConfigurationTask() {
-		setDescription("Standard Configuration");
-	}
-	
-	public void addConfiguredFileSet(FileSet fileSet) {
-		fileSets.add(fileSet);	 	
+		setDescription( "Standard Configuration" );
 	}
 
-	/**
-	 * @return
-	 */
+	public void addConfiguredFileSet(FileSet fileSet) {
+		fileSets.add( fileSet );
+	}
+
 	public final MetadataDescriptor getMetadataDescriptor() {
-		if (metadataDescriptor == null) {
+		if ( metadataDescriptor == null ) {
 			metadataDescriptor = createMetadataDescriptor();
 		}
 		return metadataDescriptor;
 	}
-	
+
 	protected MetadataDescriptor createMetadataDescriptor() {
 		return MetadataDescriptorFactory
 				.createNativeDescriptor(
-						configurationFile, 
-						getFiles(), 
-						loadPropertiesFile());
+						configurationFile,
+						getFiles(),
+						loadPropertiesFile() );
 	}
-	
+
 	protected Properties loadPropertiesFile() {
-		if (propertyFile!=null) { 
+		if ( propertyFile != null ) {
 			Properties properties = new Properties(); // TODO: should we "inherit" from the ant projects properties ?
-			FileInputStream is = null;
-			try {
-				is = new FileInputStream(propertyFile);
-				properties.load(is);
+			try (FileInputStream is = new FileInputStream( propertyFile )) {
+				properties.load( is );
 				return properties;
-			} 
+			}
 			catch (FileNotFoundException e) {
-				throw new BuildException(propertyFile + " not found.",e);					
-			} 
+				throw new BuildException( propertyFile + " not found.", e );
+			}
 			catch (IOException e) {
-				throw new BuildException("Problem while loading " + propertyFile,e);				
+				throw new BuildException( "Problem while loading " + propertyFile, e );
 			}
-			finally {
-				if (is != null) {
-					try {
-						is.close();
-					} catch (IOException e) {
-					}
-				}
-			}
-		} else {
+		}
+		else {
 			return null;
 		}
 	}
-	
-	
+
+
 	protected File[] getFiles() {
 
 		List<File> files = new LinkedList<File>();
-		for ( Iterator<FileSet> i = fileSets.iterator(); i.hasNext(); ) {
+		for ( FileSet fs : fileSets ) {
 
-			FileSet fs = i.next();
 			DirectoryScanner ds = fs.getDirectoryScanner( getProject() );
 
 			String[] dsFiles = ds.getIncludedFiles();
-			for (int j = 0; j < dsFiles.length; j++) {
-				File f = new File(dsFiles[j]);
+			for ( String dsFile : dsFiles ) {
+				File f = new File( dsFile );
 				if ( !f.isFile() ) {
-					f = new File( ds.getBasedir(), dsFiles[j] );
+					f = new File( ds.getBasedir(), dsFile );
 				}
 
 				files.add( f );
 			}
 		}
 
-		return (File[]) files.toArray(new File[files.size()]);
+		return files.toArray( new File[0] );
 	}
 
-	
+
 	public File getConfigurationFile() {
 		return configurationFile;
 	}
+
 	public void setConfigurationFile(File configurationFile) {
 		this.configurationFile = configurationFile;
 	}
+
 	public File getPropertyFile() {
 		return propertyFile;
 	}
+
 	public void setPropertyFile(File propertyFile) {
 		this.propertyFile = propertyFile;
 	}
-	
+
 	public void setEntityResolver(String entityResolverName) {
 		this.entityResolver = entityResolverName;
 	}
-	
+
 	public void setNamingStrategy(String namingStrategy) {
 	}
+
+	@Override
+	public Object clone() throws CloneNotSupportedException {
+		ConfigurationTask ct = (ConfigurationTask) super.clone();
+		ct.fileSets.addAll( this.fileSets );
+		ct.metadataDescriptor = this.metadataDescriptor;
+		ct.propertyFile = this.propertyFile;
+		ct.entityResolver = this.entityResolver;
+		return ct;
+	}
+
 }

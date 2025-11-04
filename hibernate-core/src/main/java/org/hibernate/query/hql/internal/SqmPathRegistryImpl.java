@@ -240,7 +240,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 		}
 
 		final boolean onlyOneFrom = sqmFromByPath.size() == 1;
-		if ( onlyOneFrom && localAlias.equals( "this" ) ) {
+		if ( onlyOneFrom && localAlias.equalsIgnoreCase( "this" ) ) {
 			final SqmRoot<?> root = (SqmRoot<?>) sqmFromByPath.entrySet().iterator().next().getValue();
 			if (  root.getAlias() == null ) {
 				//noinspection unchecked

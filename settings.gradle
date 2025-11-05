@@ -77,7 +77,7 @@ dependencyResolutionManagement {
             // WARNING: When upgrading to a version of bytebuddy that supports a new bytecode version,
             // make sure to remove the now unnecessary net.bytebuddy.experimental=true in relevant CI jobs (Jenkinsfile).
             def byteBuddyVersion = version "byteBuddy", "1.17.6"
-            def checkerFrameworkVersion = version "checkerFramework", "3.49.5"
+            def checkerFrameworkVersion = version "checkerFramework", "3.52.0"
             def classmateVersion = version "classmate", "1.7.0"
             def geolatteVersion = version "geolatte", "1.10"
             def hibernateModelsVersion = version "hibernateModels", "1.0.1"

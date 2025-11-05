@@ -185,6 +185,19 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
+	public void movePropertyToJoin(Property property, Join join, MemberDetails memberDetails, ClassDetails declaringClass) {
+		if ( property.getValue() instanceof Component ) {
+			//TODO handle quote and non quote table comparison
+			final String tableName = property.getValue().getTable().getName();
+			if ( getJoinsPerRealTableName().get( tableName ) == join ) {
+				// Skip moving the property, since it was already added to the join
+				return;
+			}
+		}
+		persistentClass.movePropertyToJoin( property, join );
+	}
+
+	@Override
 	public Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation) {
 		final Join join = entityBinder.addJoinTable( joinTableAnn, this, noDelayInPkColumnCreation );
 		joins = entityBinder.getSecondaryTables();

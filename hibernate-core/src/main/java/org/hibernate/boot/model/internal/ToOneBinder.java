@@ -14,6 +14,7 @@ import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchProfileOverride;
+import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDelete;
@@ -24,6 +25,7 @@ import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.models.spi.ClassDetails;
@@ -56,6 +58,8 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.type.ForeignKeyDirection.FROM_PARENT;
+import static org.hibernate.type.ForeignKeyDirection.TO_PARENT;
 
 /**
  * Responsible for interpreting {@link ManyToOne} and {@link OneToOne} associations
@@ -523,20 +527,56 @@ public class ToOneBinder {
 			MetadataBuildingContext context) {
 		//is a true one-to-one
 		//FIXME referencedColumnName ignored => ordering may fail.
-		final MemberDetails property = inferredData.getAttributeMember();
-		final ClassDetails targetEntity = getTargetEntity( inferredData, context );
-		final NotFoundAction notFoundAction = notFoundAction( propertyHolder, property, fetchMode );
+		final MemberDetails memberDetails = inferredData.getAttributeMember();
+		final ClassDetails targetEntityClassDetails = getTargetEntity( inferredData, context );
+		final NotFoundAction notFoundAction = notFoundAction( propertyHolder, memberDetails, fetchMode );
+		final boolean optional = !isMandatory( explicitlyOptional, memberDetails, notFoundAction );
+
+		final org.hibernate.mapping.OneToOne oneToOne =
+				new org.hibernate.mapping.OneToOne( context, propertyHolder.getTable(),
+						propertyHolder.getPersistentClass() );
+		final String propertyName = inferredData.getPropertyName();
+		oneToOne.setPropertyName( propertyName );
+		oneToOne.setReferencedEntityName( getReferenceEntityName( inferredData, targetEntityClassDetails ) );
+		defineFetchingStrategy( oneToOne, memberDetails, inferredData, propertyHolder );
+		//value.setFetchMode( fetchMode );
+		oneToOne.setOnDeleteAction( onDeleteAction( memberDetails ) );
+		//value.setLazy( fetchMode != FetchMode.JOIN );
+
+		oneToOne.setConstrained( !optional );
+		oneToOne.setForeignKeyType( mappedBy == null ? FROM_PARENT : TO_PARENT );
+		bindForeignKeyNameAndDefinition( oneToOne, memberDetails,
+				memberDetails.getDirectAnnotationUsage( ForeignKey.class ),
+				context );
+
+		final PropertyBinder binder = new PropertyBinder();
+		binder.setName( inferredData.getPropertyName() );
+		binder.setMemberDetails( memberDetails );
+		binder.setValue( oneToOne );
+		binder.setCascade( cascadeStrategy );
+		binder.setAccessType( inferredData.getDefaultAccess() );
+		binder.setBuildingContext( context );
+		binder.setHolder( propertyHolder );
+
+		final LazyGroup lazyGroupAnnotation = memberDetails.getDirectAnnotationUsage( LazyGroup.class );
+		if ( lazyGroupAnnotation != null ) {
+			binder.setLazyGroup( lazyGroupAnnotation.value() );
+		}
+
+		final Property property = binder.makeProperty();
+		property.setOptional( optional );
+		propertyHolder.addProperty( property, inferredData.getAttributeMember(), inferredData.getDeclaringClass() );
+
 		final OneToOneSecondPass secondPass = new OneToOneSecondPass(
+				binder,
+				property,
+				oneToOne,
 				mappedBy,
 				propertyHolder.getEntityName(),
 				propertyHolder,
 				inferredData,
-				getReferenceEntityName( inferredData, targetEntity ),
-				isTargetAnnotatedEntity( targetEntity, property ),
+				isTargetAnnotatedEntity( targetEntityClassDetails, memberDetails ),
 				notFoundAction,
-				onDeleteAction( property ),
-				!isMandatory( explicitlyOptional, property, notFoundAction ),
-				cascadeStrategy,
 				joinColumns,
 				context
 		);

@@ -1178,6 +1178,7 @@ ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 300;
 quit
 EOF
 "
+  cockroachdb_setup
   echo "Cockroachdb successfully started"
 }
 
@@ -1215,6 +1216,7 @@ ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 300;
 quit
 EOF
 "
+  cockroachdb_setup
   echo "Cockroachdb successfully started"
 }
 
@@ -1256,8 +1258,27 @@ ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 300;
 quit
 EOF
 "
+  cockroachdb_setup
   echo "Cockroachdb successfully started"
 
+}
+
+cockroachdb_setup() {
+  databases=()
+  for n in $(seq 1 $DB_COUNT)
+  do
+    databases+=("hibernate_orm_test_${n}")
+  done
+  create_cmd=
+  for i in "${!databases[@]}";do
+    create_cmd+="create database ${databases[i]};"
+  done
+  $CONTAINER_CLI exec cockroach bash -c "cat <<EOF | ./cockroach sql --insecure
+$create_cmd
+
+quit
+EOF
+"
 }
 
 tidb() {

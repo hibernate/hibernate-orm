@@ -109,7 +109,7 @@ public class HQLAnalyzer {
 
     public boolean shouldShowEntityNames(char[] chars, int cursorPosition) {
         SimpleHQLLexer lexer = getLexer( chars);
-        int tokenId = -1;
+        int tokenId;
         boolean show = false;
         while ((tokenId = lexer.nextTokenId()) != HqlLexer.EOF) {
             if ((tokenId == HqlLexer.FROM ||
@@ -117,7 +117,8 @@ public class HQLAnalyzer {
                     tokenId == HqlLexer.UPDATE) &&
                     (lexer.getTokenOffset() + lexer.getTokenLength()) < cursorPosition) {
                 show = true;
-            } else if (tokenId != HqlLexer.DOT && tokenId != HqlLexer.AS && tokenId != HqlLexer.COMMA && tokenId != HqlLexer.IDENTIFIER && tokenId != HqlLexer.WS) {
+            }
+            else if (tokenId != HqlLexer.DOT && tokenId != HqlLexer.AS && tokenId != HqlLexer.COMMA && tokenId != HqlLexer.IDENTIFIER && tokenId != HqlLexer.WS) {
                 show = false;
             }
         }
@@ -126,7 +127,7 @@ public class HQLAnalyzer {
 
     public List<SubQuery> getVisibleSubQueries(char[] chars, int position) {
         SubQueryList sqList = getSubQueries(chars, position);
-        List<SubQuery> visible = new ArrayList<SubQuery>();
+        List<SubQuery> visible = new ArrayList<>();
         for (SubQuery sq : sqList.subQueries) {
             if (sqList.caretDepth >= sq.depth && (sq.startOffset <= position || sq.endOffset >= position)) {
                 visible.add(sq);
@@ -137,7 +138,7 @@ public class HQLAnalyzer {
 
     public List<EntityNameReference> getVisibleEntityNames(char[] chars, int position) {
         List<SubQuery> sqs = getVisibleSubQueries(chars, position);
-        List<EntityNameReference> entityReferences = new ArrayList<EntityNameReference>();
+        List<EntityNameReference> entityReferences = new ArrayList<>();
         for (SubQuery sq : sqs) {
             entityReferences.addAll(sq.getEntityNames());
         }
@@ -146,11 +147,11 @@ public class HQLAnalyzer {
 
     public SubQueryList getSubQueries(char[] query, int position) {
         SimpleHQLLexer syntax = getLexer( query );
-        int numericId = -1;
-        List<SubQuery> subQueries = new ArrayList<SubQuery>();
+        int numericId;
+        List<SubQuery> subQueries = new ArrayList<>();
         int depth = 0;
         int caretDepth = 0;
-        Map<Integer, SubQuery> level2SubQuery = new HashMap<Integer, SubQuery>();
+        Map<Integer, SubQuery> level2SubQuery = new HashMap<>();
         SubQuery current = null;
         while ((numericId = syntax.nextTokenId()) != HqlLexer.EOF) {
             boolean tokenAdded = false;
@@ -159,7 +160,8 @@ public class HQLAnalyzer {
                 if (position > syntax.getTokenOffset()) {
                     caretDepth = depth;
                 }
-            } else if (numericId == HqlLexer.RIGHT_PAREN) {
+            }
+            else if (numericId == HqlLexer.RIGHT_PAREN) {
                 SubQuery currentDepthQuery = level2SubQuery.get(depth);
                 // We check if we have a query on the current depth.
                 // If yes, we'll have to close it
@@ -226,7 +228,8 @@ public class HQLAnalyzer {
             char c = chars[i];
             if (c == '.' || Character.isJavaIdentifierPart(c)) {
                 buff.insert(0, c);
-            } else {
+            }
+            else {
                 break;
             }
         }

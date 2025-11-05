@@ -38,9 +38,9 @@ public class SubQuery implements Comparable<SubQuery> {
         return startOffset;
     }
 
-    List<Integer> tokenIds = new ArrayList<Integer>();
+    List<Integer> tokenIds = new ArrayList<>();
 
-    List<String> tokenText = new ArrayList<String>();
+    List<String> tokenText = new ArrayList<>();
 
     int startOffset;
 
@@ -57,7 +57,7 @@ public class SubQuery implements Comparable<SubQuery> {
     }
 
     public String getTokenText(int i) {
-        return (String) tokenText.get(i);
+        return tokenText.get(i);
     }
 
     public List<EntityNameReference> getEntityNames() {
@@ -142,7 +142,7 @@ public class SubQuery implements Comparable<SubQuery> {
             i++;
             lastToken = type;
         }
-        List<EntityNameReference> tables = new ArrayList<EntityNameReference>();
+        List<EntityNameReference> tables = new ArrayList<>();
         addEntityReferences(tables, tableNames);
         addEntityReferences(tables, joins);
         return tables;
@@ -154,7 +154,8 @@ public class SubQuery implements Comparable<SubQuery> {
             String table = tableTokenizer.nextToken().trim();
             if (table.indexOf(' ') == -1 && !table.isEmpty() ) {
                 tables.add(new EntityNameReference(table, table));
-            } else {
+            }
+            else {
                 StringTokenizer aliasTokenizer = new StringTokenizer(table, " ");
                 if (aliasTokenizer.countTokens() >= 2) {
                     String type = aliasTokenizer.nextToken().trim();

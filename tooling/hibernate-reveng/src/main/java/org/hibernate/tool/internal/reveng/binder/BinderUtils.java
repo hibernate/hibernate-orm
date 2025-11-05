@@ -37,15 +37,15 @@ import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 
 public class BinderUtils {
-	
-	public static Logger LOGGER = Logger.getLogger(BinderUtils.class.getName());
+
+    public static Logger LOGGER = Logger.getLogger(BinderUtils.class.getName());
 
     public static String makeUnique(
-    		Iterator<Property> props, 
-    		String originalPropertyName) {
+            Iterator<Property> props,
+            String originalPropertyName) {
         int cnt = 0;
         String propertyName = originalPropertyName;
-        Set<String> uniqueNames = new HashSet<String>();
+        Set<String> uniqueNames = new HashSet<>();
         while ( props.hasNext() ) {
             Property element = props.next();
             uniqueNames.add( element.getName() );
@@ -58,51 +58,52 @@ public class BinderUtils {
     }
 
     public static String makeUnique(PersistentClass clazz, String propertyName) {
-        List<Property> list = new ArrayList<Property>();
+        List<Property> list = new ArrayList<>();
         if( clazz.hasIdentifierProperty() ) {
             list.add( clazz.getIdentifierProperty() );
         }
         if( clazz.isVersioned() ) {
             list.add( clazz.getVersion() );
         }
-       JoinedList<Property> joinedList = 
-        		new JoinedList<Property>( 
-        				list, 
-        				clazz.getProperties());
+        JoinedList<Property> joinedList =
+                new JoinedList<>(
+                        list,
+                        clazz.getProperties() );
         return BinderUtils.makeUnique(joinedList.iterator(), propertyName);
     }
- 
-	public static String makeUnique(Component clazz, String propertyName) {
+
+    public static String makeUnique(Component clazz, String propertyName) {
         return BinderUtils.makeUnique(clazz.getProperties().iterator(), propertyName);
     }
-    
-	public static void checkColumnForMultipleBinding(Column column) {
-		if(column.getValue()!=null) {
-			LOGGER.log(Level.WARNING, "Binding column twice should not happen. " + column);
+
+    public static void checkColumnForMultipleBinding(Column column) {
+        if(column.getValue()!=null) {
+            LOGGER.log(Level.WARNING, "Binding column twice should not happen. " + column);
 // TODO enable this next line and investigate why the tests fail
 //			throw new RuntimeException("Binding column twice should not happen. " + column);
-		}
-	}
-	
+        }
+    }
+
     static void updateFetchMode(Fetchable value, String fetchMode) {
         if(FetchMode.JOIN.toString().equalsIgnoreCase(fetchMode)) {
-        	value.setFetchMode(FetchMode.JOIN);
+            value.setFetchMode(FetchMode.JOIN);
         }
         else {
-        	value.setFetchMode(FetchMode.SELECT);
-        }    	
+            value.setFetchMode(FetchMode.SELECT);
+        }
     }
 
 
     static AssociationInfo getAssociationInfo(
-    		RevengStrategy revengStrategy,
-    		ForeignKey foreignKey, 
-    		boolean inverseProperty) {
-    	if (inverseProperty) {
-    		return revengStrategy.foreignKeyToInverseAssociationInfo(foreignKey);
-    	} else {
-    		return revengStrategy.foreignKeyToAssociationInfo(foreignKey);
-    	}
+            RevengStrategy revengStrategy,
+            ForeignKey foreignKey,
+            boolean inverseProperty) {
+        if (inverseProperty) {
+            return revengStrategy.foreignKeyToInverseAssociationInfo(foreignKey);
+        }
+        else {
+            return revengStrategy.foreignKeyToAssociationInfo(foreignKey);
+        }
     }
-    
+
 }

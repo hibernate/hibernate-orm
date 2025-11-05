@@ -31,101 +31,103 @@ import org.hibernate.tool.internal.util.TableNameQualifier;
 import org.hibernate.type.Type;
 
 public class TypeUtils {
-	
-	private static final Logger LOGGER = Logger.getLogger(TypeUtils.class.getName());
 
-	public static final int DEFAULT_COLUMN_LENGTH = 255;
-	public static final int DEFAULT_COLUMN_PRECISION = 19;
-	public static final int DEFAULT_COLUMN_SCALE = 2;
+    private static final Logger LOGGER = Logger.getLogger(TypeUtils.class.getName());
 
-	public static String determinePreferredType(
-			InFlightMetadataCollector metadataCollector,
-			RevengStrategy revengStrategy,
-			Table table, 
-			Column column, 
-			boolean generatedIdentifier) {
+    public static final int DEFAULT_COLUMN_LENGTH = 255;
+    public static final int DEFAULT_COLUMN_PRECISION = 19;
+    public static final int DEFAULT_COLUMN_SCALE = 2;
 
-		String location = 
-				"Table: " + 
-				TableNameQualifier.qualify(
-						table.getCatalog(), 
-						table.getSchema(), 
-						table.getQuotedName() ) + 
-				" column: " + 
-				column.getQuotedName();
+    public static String determinePreferredType(
+            InFlightMetadataCollector metadataCollector,
+            RevengStrategy revengStrategy,
+            Table table,
+            Column column,
+            boolean generatedIdentifier) {
 
-		Integer sqlTypeCode = column.getSqlTypeCode();
-		if(sqlTypeCode==null) {
-			throw new RuntimeException("sqltype is null for " + location);
-		}
+        String location =
+                "Table: " +
+                        TableNameQualifier.qualify(
+                                table.getCatalog(),
+                                table.getSchema(),
+                                table.getQuotedName() ) +
+                        " column: " +
+                        column.getQuotedName();
 
-		String preferredHibernateType = revengStrategy.columnToHibernateTypeName(
-				TableIdentifier.create(table),
-				column.getName(),
-				sqlTypeCode.intValue(),
-				column.getLength() != null ? column.getLength().intValue() : DEFAULT_COLUMN_LENGTH, 
-				column.getPrecision() != null ? column.getPrecision().intValue() : DEFAULT_COLUMN_PRECISION, 
-				column.getScale() != null ? column.getScale().intValue() : DEFAULT_COLUMN_SCALE,
-				column.isNullable(), 
-				generatedIdentifier
-		);
+        Integer sqlTypeCode = column.getSqlTypeCode();
+        if(sqlTypeCode==null) {
+            throw new RuntimeException("sqltype is null for " + location);
+        }
 
-		Type wantedType = metadataCollector
-				.getTypeConfiguration()
-				.getBasicTypeRegistry()
-				.getRegisteredType(preferredHibernateType);
+        String preferredHibernateType = revengStrategy.columnToHibernateTypeName(
+                TableIdentifier.create(table),
+                column.getName(),
+                sqlTypeCode,
+                column.getLength() != null ? column.getLength().intValue() : DEFAULT_COLUMN_LENGTH,
+                column.getPrecision() != null ? column.getPrecision() : DEFAULT_COLUMN_PRECISION,
+                column.getScale() != null ? column.getScale() : DEFAULT_COLUMN_SCALE,
+                column.isNullable(),
+                generatedIdentifier
+        );
 
-		if(wantedType!=null) {
+        Type wantedType = metadataCollector
+                .getTypeConfiguration()
+                .getBasicTypeRegistry()
+                .getRegisteredType(preferredHibernateType);
 
-			int[] wantedSqlTypes = wantedType.getSqlTypeCodes(metadataCollector);
+        if(wantedType!=null) {
 
-			if(wantedSqlTypes.length>1) {
-				throw new RuntimeException("The type " + preferredHibernateType + " found on " + location + " spans multiple columns. Only single column types allowed.");
-			}
+            int[] wantedSqlTypes = wantedType.getSqlTypeCodes(metadataCollector);
 
-			int wantedSqlType = wantedSqlTypes[0];
-			if(wantedSqlType!=sqlTypeCode.intValue() ) {
-				LOGGER.log(
-						Level.INFO,
-						"Sql type mismatch for " + location + " between DB and wanted hibernate type. Sql type set to " + typeCodeName( sqlTypeCode.intValue() ) + " instead of " + typeCodeName(wantedSqlType) );
-				forceSqlTypeCode(column, wantedSqlType);
-			}
-			
-		}
-		
-		else {
-			
-			LOGGER.log(
-					Level.INFO, 
-					"No Hibernate type found for " + preferredHibernateType + ". Most likely cause is a missing UserType class.");
+            if(wantedSqlTypes.length>1) {
+                throw new RuntimeException("The type " + preferredHibernateType + " found on " + location + " spans multiple columns. Only single column types allowed.");
+            }
 
-		}
+            int wantedSqlType = wantedSqlTypes[0];
+            if( wantedSqlType != sqlTypeCode ) {
+                LOGGER.log(
+                        Level.INFO,
+                        "Sql type mismatch for " + location + " between DB and wanted hibernate type. Sql type set to " + typeCodeName(
+                                sqlTypeCode ) + " instead of " + typeCodeName(wantedSqlType) );
+                forceSqlTypeCode(column, wantedSqlType);
+            }
+
+        }
+
+        else {
+
+            LOGGER.log(
+                    Level.INFO,
+                    "No Hibernate type found for " + preferredHibernateType + ". Most likely cause is a missing UserType class.");
+
+        }
 
 
 
-		if(preferredHibernateType==null) {
-			throw new RuntimeException("Could not find javatype for " + typeCodeName(sqlTypeCode.intValue()));
-		}
+        if(preferredHibernateType==null) {
+            throw new RuntimeException("Could not find javatype for " + typeCodeName( sqlTypeCode ));
+        }
 
-		return preferredHibernateType;
-	}
-	
-	private static String typeCodeName(int sqlTypeCode) {
-		return sqlTypeCode + "(" + JdbcToHibernateTypeHelper.getJDBCTypeName(sqlTypeCode) + ")";
-	}
-	
-	private static void forceSqlTypeCode(Column column, int sqlCode) {
-		try {
-			Field sqlCodeField = Column.class.getDeclaredField("sqlTypeCode");
-			sqlCodeField.setAccessible(true);
-			sqlCodeField.set(column, Integer.valueOf(sqlCode));
-		} catch (NoSuchFieldException |
-				 SecurityException | 
-				 IllegalArgumentException | 
-				 IllegalAccessException e) {
-			throw new RuntimeException(e);
-		}
-	}
+        return preferredHibernateType;
+    }
+
+    private static String typeCodeName(int sqlTypeCode) {
+        return sqlTypeCode + "(" + JdbcToHibernateTypeHelper.getJDBCTypeName(sqlTypeCode) + ")";
+    }
+
+    private static void forceSqlTypeCode(Column column, int sqlCode) {
+        try {
+            Field sqlCodeField = Column.class.getDeclaredField("sqlTypeCode");
+            sqlCodeField.setAccessible(true);
+            sqlCodeField.set(column, sqlCode );
+        }
+        catch (NoSuchFieldException |
+               SecurityException |
+               IllegalArgumentException |
+               IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 
 }

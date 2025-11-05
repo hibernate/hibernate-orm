@@ -27,6 +27,7 @@ import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SortableValue;
+import org.hibernate.mapping.Value;
 import org.hibernate.type.ForeignKeyDirection;
 
 import jakarta.persistence.ForeignKey;
@@ -34,11 +35,7 @@ import jakarta.persistence.ForeignKey;
 import static org.hibernate.boot.model.internal.BinderHelper.checkMappedByType;
 import static org.hibernate.boot.model.internal.BinderHelper.findPropertyByName;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
-import static org.hibernate.boot.model.internal.ToOneBinder.bindForeignKeyNameAndDefinition;
-import static org.hibernate.boot.model.internal.ToOneBinder.defineFetchingStrategy;
 import static org.hibernate.internal.util.StringHelper.qualify;
-import static org.hibernate.type.ForeignKeyDirection.FROM_PARENT;
-import static org.hibernate.type.ForeignKeyDirection.TO_PARENT;
 
 /**
  * We have to handle {@link jakarta.persistence.OneToOne} associations
@@ -46,96 +43,55 @@ import static org.hibernate.type.ForeignKeyDirection.TO_PARENT;
  */
 public class OneToOneSecondPass implements SecondPass {
 	private final MetadataBuildingContext buildingContext;
+	private final OneToOne oneToOne;
+	private final PropertyBinder binder;
+	private final Property property;
 	private final String mappedBy;
 	private final String ownerEntity;
 	private final PropertyHolder propertyHolder;
-	private final NotFoundAction notFoundAction;
 	private final PropertyData inferredData;
-	private final OnDeleteAction onDeleteAction;
-	private final boolean optional;
-	private final String cascadeStrategy;
+	private final NotFoundAction notFoundAction;
 	private final AnnotatedJoinColumns joinColumns;
-	private final String referencedEntityName;
 	private final boolean annotatedEntity;
 
 	public OneToOneSecondPass(
+			PropertyBinder binder,
+			Property property,
+			OneToOne oneToOne,
 			String mappedBy,
 			String ownerEntity,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
-			String referencedEntityName,
 			boolean annotatedEntity,
 			NotFoundAction notFoundAction,
-			OnDeleteAction onDeleteAction,
-			boolean optional,
-			String cascadeStrategy,
 			AnnotatedJoinColumns columns,
 			MetadataBuildingContext buildingContext) {
+		this.binder = binder;
+		this.property = property;
+		this.oneToOne = oneToOne;
 		this.ownerEntity = ownerEntity;
 		this.mappedBy = mappedBy;
 		this.propertyHolder = propertyHolder;
-		this.referencedEntityName = referencedEntityName;
 		this.buildingContext = buildingContext;
 		this.notFoundAction = notFoundAction;
 		this.inferredData = inferredData;
 		this.annotatedEntity = annotatedEntity;
-		this.onDeleteAction = onDeleteAction;
-		this.optional = optional;
-		this.cascadeStrategy = cascadeStrategy;
 		this.joinColumns = columns;
 	}
 
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
-		final OneToOne value = new OneToOne(
-				buildingContext,
-				propertyHolder.getTable(),
-				propertyHolder.getPersistentClass()
-		);
-		final String propertyName = inferredData.getPropertyName();
-		value.setPropertyName( propertyName );
-		value.setReferencedEntityName( referencedEntityName );
-		XProperty property = inferredData.getProperty();
-		defineFetchingStrategy( value, property, inferredData, propertyHolder );
-		//value.setFetchMode( fetchMode );
-		value.setOnDeleteAction( onDeleteAction );
-		//value.setLazy( fetchMode != FetchMode.JOIN );
-
-		value.setConstrained( !optional );
-		value.setForeignKeyType( getForeignKeyDirection() );
-		bindForeignKeyNameAndDefinition( value, property, property.getAnnotation( ForeignKey.class ), buildingContext );
-
-		final PropertyBinder binder = new PropertyBinder();
-		binder.setName( propertyName );
-		binder.setProperty( property );
-		binder.setValue( value );
-		binder.setCascade( cascadeStrategy );
-		binder.setAccessType( inferredData.getDefaultAccess() );
-		binder.setBuildingContext( buildingContext );
-		binder.setHolder( propertyHolder );
-
-		final LazyGroup lazyGroupAnnotation = property.getAnnotation( LazyGroup.class );
-		if ( lazyGroupAnnotation != null ) {
-			binder.setLazyGroup( lazyGroupAnnotation.value() );
-		}
-
-		final Property result = binder.makeProperty();
-		result.setOptional( optional );
 		if ( mappedBy == null ) {
-			bindOwned( persistentClasses, value, propertyName, result );
+			bindOwned( persistentClasses, oneToOne, inferredData.getPropertyName() );
 		}
 		else {
-			bindUnowned( persistentClasses, value, result );
+			bindUnowned( persistentClasses, oneToOne );
 		}
-		binder.callAttributeBindersInSecondPass( result );
-		value.sortProperties();
+		binder.callAttributeBindersInSecondPass( property );
+		oneToOne.sortProperties();
 	}
 
-	private ForeignKeyDirection getForeignKeyDirection() {
-		return mappedBy == null ? FROM_PARENT : TO_PARENT;
-	}
-
-	private void bindUnowned(Map<String, PersistentClass> persistentClasses, OneToOne oneToOne, Property property) {
+	private void bindUnowned(Map<String, PersistentClass> persistentClasses, OneToOne oneToOne) {
 		oneToOne.setMappedByProperty( mappedBy );
 		final String targetEntityName = oneToOne.getReferencedEntityName();
 		final PersistentClass targetEntity = persistentClasses.get( targetEntityName );
@@ -147,13 +103,11 @@ public class OneToOneSecondPass implements SecondPass {
 					+ "' targets the type '" + targetEntityName + "'" + problem );
 		}
 		final Property targetProperty = targetProperty( oneToOne, targetEntity );
-		if ( targetProperty.getValue() instanceof OneToOne ) {
-			propertyHolder.addProperty( property, inferredData.getDeclaringClass() );
+		final Value targetPropertyValue = targetProperty.getValue();
+		if ( targetPropertyValue instanceof ManyToOne ) {
+			bindTargetManyToOne( persistentClasses, oneToOne, targetEntity, targetProperty );
 		}
-		else if ( targetProperty.getValue() instanceof ManyToOne ) {
-			bindTargetManyToOne( persistentClasses, oneToOne, property, targetEntity, targetProperty );
-		}
-		else {
+		else if ( !(targetPropertyValue instanceof OneToOne) ) {
 			throw new AnnotationException( "Association '" + getPath( propertyHolder, inferredData )
 					+ "' is 'mappedBy' a property named '" + mappedBy
 					+ "' of the target entity type '" + targetEntityName
@@ -171,7 +125,6 @@ public class OneToOneSecondPass implements SecondPass {
 	private void bindTargetManyToOne(
 			Map<String, PersistentClass> persistentClasses,
 			OneToOne oneToOne,
-			Property property,
 			PersistentClass targetEntity,
 			Property targetProperty) {
 		Join otherSideJoin = null;
@@ -201,10 +154,9 @@ public class OneToOneSecondPass implements SecondPass {
 				copy.setValue( manyToOne );
 				manyToOne.addColumn( copy );
 			}
-			mappedByJoin.addProperty( property );
-		}
-		else {
-			propertyHolder.addProperty( property, inferredData.getDeclaringClass() );
+			// The property was added to the propertyHolder eagerly to have knowledge about this property,
+			// in order for de-duplication to kick in, but we move it to a join if necessary
+			propertyHolder.movePropertyToJoin( property, mappedByJoin, inferredData.getDeclaringClass() );
 		}
 
 		oneToOne.setReferencedPropertyName( mappedBy );
@@ -243,8 +195,7 @@ public class OneToOneSecondPass implements SecondPass {
 	private void bindOwned(
 			Map<String, PersistentClass> persistentClasses,
 			OneToOne oneToOne,
-			String propertyName,
-			Property property) {
+			String propertyName) {
 		final ToOneFkSecondPass secondPass = new ToOneFkSecondPass(
 				oneToOne,
 				joinColumns,
@@ -256,7 +207,6 @@ public class OneToOneSecondPass implements SecondPass {
 		);
 		secondPass.doSecondPass(persistentClasses);
 		//no column associated since it's a one to one
-		propertyHolder.addProperty( property, inferredData.getDeclaringClass() );
 	}
 
 	/**

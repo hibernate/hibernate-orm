@@ -20,6 +20,7 @@ import org.hibernate.annotations.FetchProfileOverride;
 import org.hibernate.annotations.FetchProfileOverrides;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
+import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDelete;
@@ -33,6 +34,7 @@ import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 
@@ -61,6 +63,8 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.type.ForeignKeyDirection.FROM_PARENT;
+import static org.hibernate.type.ForeignKeyDirection.TO_PARENT;
 
 /**
  * Responsible for interpreting {@link ManyToOne} and {@link OneToOne} associations
@@ -527,30 +531,21 @@ public class ToOneBinder {
 		//column.getTable() => persistentClass.getTable()
 		final String propertyName = inferredData.getPropertyName();
 		LOG.tracev( "Fetching {0} with {1}", propertyName, fetchMode );
-		if ( isMapToPK( joinColumns, propertyHolder, trueOneToOne )
-				|| mappedBy != null ) {
-			//is a true one-to-one
-			//FIXME referencedColumnName ignored => ordering may fail.
-			final OneToOneSecondPass secondPass = new OneToOneSecondPass(
-					mappedBy,
-					propertyHolder.getEntityName(),
-					propertyHolder,
-					inferredData,
-					getReferenceEntityName( inferredData, targetEntity, context ),
-					isTargetAnnotatedEntity( targetEntity, annotatedProperty, context ),
-					notFoundAction,
-					cascadeOnDelete,
-					optional,
+		if ( mappedBy != null || isMapToPK( joinColumns, propertyHolder, trueOneToOne ) ) {
+			bindTrueOneToOne(
 					cascadeStrategy,
 					joinColumns,
+					optional,
+					notFoundAction,
+					cascadeOnDelete,
+					targetEntity,
+					annotatedProperty,
+					propertyHolder,
+					inferredData,
+					mappedBy,
+					inSecondPass,
 					context
 			);
-			if ( inSecondPass ) {
-				secondPass.doSecondPass( context.getMetadataCollector().getEntityBindingMap() );
-			}
-			else {
-				context.getMetadataCollector().addSecondPass( secondPass, mappedBy == null );
-			}
 		}
 		else {
 			//has a FK on the table
@@ -569,6 +564,77 @@ public class ToOneBinder {
 					propertyBinder,
 					context
 			);
+		}
+	}
+
+	private static void bindTrueOneToOne(
+			String cascadeStrategy,
+			AnnotatedJoinColumns joinColumns,
+			boolean optional,
+			NotFoundAction notFoundAction,
+			OnDeleteAction cascadeOnDelete,
+			XClass targetEntity,
+			XProperty annotatedProperty,
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			String mappedBy,
+			boolean inSecondPass,
+			MetadataBuildingContext context) {
+		//is a true one-to-one
+		//FIXME referencedColumnName ignored => ordering may fail.
+		final org.hibernate.mapping.OneToOne oneToOne =
+				new org.hibernate.mapping.OneToOne( context, propertyHolder.getTable(),
+						propertyHolder.getPersistentClass() );
+		final String propertyName = inferredData.getPropertyName();
+		oneToOne.setPropertyName( propertyName );
+		oneToOne.setReferencedEntityName( getReferenceEntityName( inferredData, targetEntity, context ) );
+		defineFetchingStrategy( oneToOne, annotatedProperty, inferredData, propertyHolder );
+		//value.setFetchMode( fetchMode );
+		oneToOne.setOnDeleteAction( cascadeOnDelete );
+		//value.setLazy( fetchMode != FetchMode.JOIN );
+
+		oneToOne.setConstrained( !optional );
+		oneToOne.setForeignKeyType( mappedBy == null ? FROM_PARENT : TO_PARENT );
+		bindForeignKeyNameAndDefinition( oneToOne, annotatedProperty,
+				annotatedProperty.getAnnotation( ForeignKey.class ),
+				context );
+
+		final PropertyBinder binder = new PropertyBinder();
+		binder.setName( inferredData.getPropertyName() );
+		binder.setProperty( annotatedProperty );
+		binder.setValue( oneToOne );
+		binder.setCascade( cascadeStrategy );
+		binder.setAccessType( inferredData.getDefaultAccess() );
+		binder.setBuildingContext( context );
+		binder.setHolder( propertyHolder );
+
+		final LazyGroup lazyGroupAnnotation = annotatedProperty.getAnnotation( LazyGroup.class );
+		if ( lazyGroupAnnotation != null ) {
+			binder.setLazyGroup( lazyGroupAnnotation.value() );
+		}
+
+		final Property property = binder.makeProperty();
+		property.setOptional( optional );
+		propertyHolder.addProperty( property, joinColumns, inferredData.getDeclaringClass() );
+
+		final OneToOneSecondPass secondPass = new OneToOneSecondPass(
+				binder,
+				property,
+				oneToOne,
+				mappedBy,
+				propertyHolder.getEntityName(),
+				propertyHolder,
+				inferredData,
+				isTargetAnnotatedEntity( targetEntity, annotatedProperty, context ),
+				notFoundAction,
+				joinColumns,
+				context
+		);
+		if ( inSecondPass ) {
+			secondPass.doSecondPass( context.getMetadataCollector().getEntityBindingMap() );
+		}
+		else {
+			context.getMetadataCollector().addSecondPass( secondPass, mappedBy == null );
 		}
 	}
 

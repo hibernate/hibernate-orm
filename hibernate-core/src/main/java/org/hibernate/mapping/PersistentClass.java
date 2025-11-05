@@ -287,6 +287,20 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		property.setPersistentClass( this );
 	}
 
+	@Internal
+	public void movePropertyToJoin(Property property, Join join) {
+		assert joins.contains( join );
+		assert property.getPersistentClass() == this;
+		properties.remove( property );
+		declaredProperties.remove( property );
+		join.addProperty( property );
+	}
+
+	@Internal
+	protected void moveSubclassPropertyToJoin(Property property) {
+		subclassProperties.remove( property );
+	}
+
 	@Override
 	public boolean contains(Property property) {
 		return properties.contains( property );

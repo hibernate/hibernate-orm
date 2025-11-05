@@ -307,6 +307,16 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
+	public void movePropertyToJoin(Property prop, Join join, XClass declaringClass) {
+		// or maybe only throw if component.getTable() != join.getTable()
+		throw new AnnotationException(
+				"Embeddable class '" + component.getComponentClassName()
+				+ "' has an unowned @OneToOne property " + prop.getName()
+				+ "mapped to a join table which is unsupported"
+		);
+	}
+
+	@Override
 	public KeyValue getIdentifier() {
 		return component.getOwner().getIdentifier();
 	}

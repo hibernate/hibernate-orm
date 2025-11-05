@@ -37,6 +37,8 @@ public interface PropertyHolder {
 
 	void addProperty(Property prop, AnnotatedColumns columns, XClass declaringClass);
 
+	void movePropertyToJoin(Property prop, Join join, XClass declaringClass);
+
 	KeyValue getIdentifier();
 
 	/**

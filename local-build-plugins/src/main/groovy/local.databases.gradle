@@ -329,6 +329,16 @@ ext {
 //                        'jdbc.datasource' : 'com.informix.jdbcx.IfxDataSource',
                     'connection.init_sql' : ''
             ],
+            db2_old_ci : [
+                    'db.dialect' : 'org.hibernate.dialect.DB2Dialect',
+                    'jdbc.driver': 'com.ibm.db2.jcc.DB2Driver',
+                    'jdbc.user'  : 'orm_test',
+                    'jdbc.pass'  : 'orm_test',
+                    'jdbc.url'   : 'jdbc:db2://' + dbHost + ':50000/orm_test',
+                    'jdbc.datasource' : 'com.ibm.db2.jcc.DB2Driver',
+//                        'jdbc.datasource' : 'com.ibm.db2.jcc.DB2SimpleDataSource',
+                    'connection.init_sql' : ''
+            ],
             db2_ci : [
                     'db.dialect' : 'org.hibernate.dialect.DB2Dialect',
                     'jdbc.driver': 'com.ibm.db2.jcc.DB2Driver',

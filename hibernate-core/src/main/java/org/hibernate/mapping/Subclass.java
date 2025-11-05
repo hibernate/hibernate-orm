@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import org.hibernate.Internal;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.FilterConfiguration;
@@ -105,6 +106,20 @@ public sealed class Subclass extends PersistentClass
 	public void addProperty(Property property) {
 		super.addProperty( property );
 		getSuperclass().addSubclassProperty( property );
+	}
+
+	@Internal
+	@Override
+	public void movePropertyToJoin(Property property, Join join) {
+		super.movePropertyToJoin( property, join );
+		getSuperclass().moveSubclassPropertyToJoin( property );
+	}
+
+	@Internal
+	@Override
+	protected void moveSubclassPropertyToJoin(Property property) {
+		super.moveSubclassPropertyToJoin( property );
+		getSuperclass().moveSubclassPropertyToJoin( property );
 	}
 
 	@Override

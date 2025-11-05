@@ -328,12 +328,12 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "The query [%s] updates an immutable entity: %s",
 			id = 487)
-	void immutableEntityUpdateQuery(String sourceQuery, String querySpaces);
+	void immutableEntityUpdateQuery(@Nullable String sourceQuery, String querySpaces);
 
 	@LogMessage(level = DEBUG)
 	@Message(value = "The query [%s] updates an immutable entity: %s",
 			id = 488)
-	void immutableEntityUpdateQueryAllowed(String sourceQuery, String querySpaces);
+	void immutableEntityUpdateQueryAllowed(@Nullable String sourceQuery, String querySpaces);
 
 	@LogMessage(level = INFO)
 	@Message(value = "No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)", id = 489)

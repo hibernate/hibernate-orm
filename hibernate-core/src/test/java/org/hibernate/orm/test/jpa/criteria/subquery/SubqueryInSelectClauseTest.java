@@ -35,7 +35,7 @@ public class SubqueryInSelectClauseTest extends AbstractSubqueryInSelectClauseTe
 			Root<Person> person = personCount.from( Person.class );
 			personCount.select( cb.count( person ) ).where( cb.equal( personCount.correlate( contacts ).get( "id" ), person.get( "id" ) ) );
 
-			query.multiselect( document.get( "id" ), personCount.getSelection() );
+			query.multiselect( document.get( "id" ), personCount );
 
 			List<?> l = em.createQuery( query ).getResultList();
 			assertEquals( 2, l.size() );

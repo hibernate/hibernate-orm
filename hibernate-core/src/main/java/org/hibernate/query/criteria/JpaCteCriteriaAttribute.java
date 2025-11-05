@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 
 /**
@@ -25,5 +26,5 @@ public interface JpaCteCriteriaAttribute extends JpaCriteriaNode {
 	/**
 	 * The java type of the attribute.
 	 */
-	Class<?> getJavaType();
+	@Nullable Class<?> getJavaType();
 }

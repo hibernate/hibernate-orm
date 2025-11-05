@@ -5,6 +5,7 @@
 package org.hibernate.query.sqm.function;
 
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Stream;
@@ -96,6 +97,19 @@ public class SqmFunctionRegistry {
 	}
 
 	/**
+	 * Find a {@link SqmFunctionDescriptor} by name.
+	 *
+	 * @throws NoSuchElementException if no such function is found
+	 */
+	public SqmFunctionDescriptor getFunctionDescriptor(String functionName) {
+		final SqmFunctionDescriptor functionDescriptor = findFunctionDescriptor( functionName );
+		if ( functionDescriptor == null ) {
+			throw new NoSuchElementException( functionName );
+		}
+		return functionDescriptor;
+	}
+
+	/**
 	 * Find a {@link SqmSetReturningFunctionDescriptor} by name.
 	 * Returns {@code null} if no such function is found.
 	 */
@@ -112,6 +126,19 @@ public class SqmFunctionRegistry {
 		}
 
 		return found;
+	}
+
+	/**
+	 * Find a {@link SqmSetReturningFunctionDescriptor} by name.
+	 *
+	 * @throws NoSuchElementException if no such function is found
+	 */
+	public SqmSetReturningFunctionDescriptor getSetReturningFunctionDescriptor(String functionName) {
+		final SqmSetReturningFunctionDescriptor functionDescriptor = findSetReturningFunctionDescriptor( functionName );
+		if ( functionDescriptor == null ) {
+			throw new NoSuchElementException( functionName );
+		}
+		return functionDescriptor;
 	}
 
 	/**

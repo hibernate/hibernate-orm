@@ -3115,7 +3115,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			AnnotationValue value,
 			SqmSelectStatement<?> statement) {
 		if ( returnType != null ) {
-			final JpaSelection<?> selection = statement.getSelection();
+			// HQL based queries are ensured to have a select clause by SemanticQueryBuilder
+			final JpaSelection<?> selection = castNonNull( statement.getSelection() );
 			boolean returnTypeCorrect;
 			if ( selection.isCompoundSelection() ) {
 				switch ( returnType.getKind() ) {
@@ -3332,7 +3333,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void checkOrdinalParameter(
 			SqmParameter<?> param, List<String> paramNames, List<String> paramTypes, ExecutableElement method,
 			AnnotationMirror mirror, AnnotationValue value, String queryParamType) {
-		int position = param.getPosition();
+		int position = castNonNull( param.getPosition() );
 		if ( position > paramNames.size() ) {
 			message(method, mirror, value,
 					"missing method parameter for query parameter ?" + position
@@ -3363,7 +3364,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void checkNamedParameter(
 			SqmParameter<?> param, List<String> paramNames, List<String> paramTypes, ExecutableElement method,
 			AnnotationMirror mirror, AnnotationValue value, String queryParamType) {
-		final String name = param.getName();
+		final String name = castNonNull( param.getName() );
 		int index = paramNames.indexOf( name );
 		if ( index < 0 ) {
 			message(method, mirror, value,

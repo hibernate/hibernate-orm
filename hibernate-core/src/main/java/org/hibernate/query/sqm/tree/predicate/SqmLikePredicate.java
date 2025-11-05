@@ -146,7 +146,7 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmLikePredicate that
 			&& this.isNegated() == that.isNegated()
 			&& isCaseSensitive == that.isCaseSensitive

@@ -18,6 +18,7 @@ import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.common.FetchClauseType;
 
 /**
@@ -36,19 +37,19 @@ public interface JpaSubQuery<T> extends Subquery<T>, JpaSelectCriteria<T>, JpaCr
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Limit/Offset/Fetch clause
 
-	JpaExpression<Number> getOffset();
+	@Nullable JpaExpression<Number> getOffset();
 
-	JpaSubQuery<T> offset(JpaExpression<? extends Number> offset);
+	JpaSubQuery<T> offset(@Nullable JpaExpression<? extends Number> offset);
 
-	JpaSubQuery<T> offset(Number offset);
+	JpaSubQuery<T> offset(@Nullable Number offset);
 
-	JpaExpression<Number> getFetch();
+	@Nullable JpaExpression<Number> getFetch();
 
-	JpaSubQuery<T> fetch(JpaExpression<? extends Number> fetch);
+	JpaSubQuery<T> fetch(@Nullable JpaExpression<? extends Number> fetch);
 
 	JpaSubQuery<T> fetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
 
-	JpaSubQuery<T> fetch(Number fetch);
+	JpaSubQuery<T> fetch(@Nullable Number fetch);
 
 	JpaSubQuery<T> fetch(Number fetch, FetchClauseType fetchClauseType);
 
@@ -70,7 +71,7 @@ public interface JpaSubQuery<T> extends Subquery<T>, JpaSelectCriteria<T>, JpaCr
 	JpaSubQuery<T> distinct(boolean distinct);
 
 	@Override
-	JpaExpression<T> getSelection();
+	@Nullable JpaExpression<T> getSelection();
 
 	@Override
 	JpaSubQuery<T> select(Expression<T> expression);

@@ -39,7 +39,7 @@ public class TreatedNavigablePath extends NavigablePath {
 	}
 
 	@Override
-	public NavigablePath treatAs(String entityName, String alias) {
+	public NavigablePath treatAs(String entityName, @Nullable String alias) {
 		return new TreatedNavigablePath( castNonNull( getRealParent() ), entityName, alias );
 	}
 

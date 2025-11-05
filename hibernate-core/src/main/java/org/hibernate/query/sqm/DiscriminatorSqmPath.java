@@ -4,9 +4,9 @@
  */
 package org.hibernate.query.sqm;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -32,37 +32,37 @@ public interface DiscriminatorSqmPath<T> extends SqmPath<T> {
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	default SqmTreatedPath treatAs(Class treatJavaType) throws PathException {
+	default SqmTreatedPath treatAs(Class treatJavaType) {
 		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	default SqmTreatedPath treatAs(EntityDomainType treatTarget) throws PathException {
+	default SqmTreatedPath treatAs(EntityDomainType treatTarget) {
 		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	default SqmTreatedPath treatAs(Class treatJavaType, String alias) throws PathException {
+	default SqmTreatedPath treatAs(Class treatJavaType, @Nullable String alias) {
 		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	default SqmTreatedPath treatAs(EntityDomainType treatTarget, String alias) throws PathException {
+	default SqmTreatedPath treatAs(EntityDomainType treatTarget, @Nullable String alias) {
 		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	default SqmTreatedPath treatAs(Class treatJavaType, String alias, boolean fetch) throws PathException {
+	default SqmTreatedPath treatAs(Class treatJavaType, @Nullable String alias, boolean fetch) {
 		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	default SqmTreatedPath treatAs(EntityDomainType treatTarget, String alias, boolean fetch) throws PathException {
+	default SqmTreatedPath treatAs(EntityDomainType treatTarget, @Nullable String alias, boolean fetch) {
 		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
 	}
 }

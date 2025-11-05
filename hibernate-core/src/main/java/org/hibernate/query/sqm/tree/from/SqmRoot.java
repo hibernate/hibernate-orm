@@ -16,7 +16,6 @@ import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedFrom;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -38,7 +37,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 
 	public SqmRoot(
 			EntityDomainType<E> entityType,
-			String alias,
+			@Nullable String alias,
 			boolean allowJoins,
 			NodeBuilder nodeBuilder) {
 		super( entityType, alias, nodeBuilder );
@@ -56,7 +55,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	public SqmRoot(
 			NavigablePath navigablePath,
 			EntityDomainType<E> entityType,
-			String alias,
+			@Nullable String alias,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, (SqmEntityDomainType<E>) entityType, alias, nodeBuilder );
 		this.allowJoins = true;
@@ -65,7 +64,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	protected SqmRoot(
 			NavigablePath navigablePath,
 			SqmPathSource<E> referencedNavigable,
-			String alias,
+			@Nullable String alias,
 			boolean allowJoins,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedNavigable, alias, nodeBuilder );
@@ -104,7 +103,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	}
 
 	@Override
-	public SqmPath<?> getLhs() {
+	public @Nullable SqmPath<?> getLhs() {
 		// a root has no LHS
 		return null;
 	}
@@ -206,42 +205,43 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	}
 
 	@Override
-	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(Class<S> treatJavaType) throws PathException {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(Class<S> treatJavaType) {
+		return treatAs( treatJavaType, null, false );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(EntityDomainType<S> treatTarget) {
+		return treatAs( treatTarget, null, false );
+	}
+
+	@Override
+	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(Class<S> treatJavaType, @Nullable String alias) {
+		return treatAs( treatJavaType, alias, false );
+	}
+
+	@Override
+	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias) {
+		return treatAs( treatTarget, alias, false );
+	}
+
+	@Override
+	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias, fetch );
+	}
+
+	@Override
+	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
+		if ( alias != null ) {
+			throw new TreatException( "Root path treats can not be aliased - " + getNavigablePath().getFullPath() );
+		}
+		if ( fetch ) {
+			throw new TreatException( "Root path treats can not be fetched - " + getNavigablePath().getFullPath() );
+		}
 		final SqmTreatedFrom<E,E,S> treat = findTreat( treatTarget, null );
 		if ( treat == null ) {
-			//noinspection rawtypes,unchecked
-			return addTreat( (SqmTreatedFrom) new SqmTreatedRoot( this, (SqmEntityDomainType) treatTarget ) );
+			return addTreat( new SqmTreatedRoot( this, (SqmEntityDomainType<S>) treatTarget ) );
 		}
 		return treat;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public <S extends E> SqmTreatedRoot treatAs(Class<S> treatJavaType, String alias) {
-		throw new UnsupportedOperationException( "Root treats can not be aliased" );
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public <S extends E> SqmTreatedRoot treatAs(EntityDomainType<S> treatTarget, String alias) {
-		throw new UnsupportedOperationException( "Root treats can not be aliased" );
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public <S extends E> SqmTreatedRoot treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
-		throw new TreatException( "Root paths cannot be aliased, nor fetched - " + getNavigablePath().getFullPath() );
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public <S extends E> SqmTreatedRoot treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
-		throw new TreatException( "Root paths cannot be aliased, nor fetched - " + getNavigablePath().getFullPath() );
 	}
 
 }

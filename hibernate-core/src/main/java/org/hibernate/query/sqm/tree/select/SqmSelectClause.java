@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
@@ -128,7 +129,7 @@ public class SqmSelectClause extends AbstractSqmNode
 
 	@Override
 	public JpaSelection<Object> alias(String name) {
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -137,17 +138,17 @@ public class SqmSelectClause extends AbstractSqmNode
 	}
 
 	@Override
-	public JavaType<Object> getJavaTypeDescriptor() {
+	public @Nullable JavaType<Object> getJavaTypeDescriptor() {
 		return null;
 	}
 
 	@Override
-	public String getAlias() {
+	public @Nullable String getAlias() {
 		return null;
 	}
 
 	@Override
-	public boolean equals(Object other) {
+	public boolean equals(@Nullable Object other) {
 		return other instanceof SqmSelectClause that
 			&& distinct == that.distinct
 			&& Objects.equals( this.selections, that.selections );

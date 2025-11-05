@@ -2210,7 +2210,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		currentClauseStack.push( Clause.SELECT );
 		try {
 			final SelectClause sqlSelectClause = currentQuerySpec().getSelectClause();
-			if ( selectClause == null ) {
+			if ( selectClause.getSelections().isEmpty() ) {
 				final SqmFrom<?, ?> implicitSelection = determineImplicitSelection( (SqmQuerySpec<?>) getCurrentSqmQueryPart() );
 				visitSelection( 0, new SqmSelection<>( implicitSelection, implicitSelection.nodeBuilder() ) );
 			}
@@ -2485,7 +2485,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public Predicate visitWhereClause(SqmWhereClause whereClause) {
+	public Predicate visitWhereClause(@Nullable SqmWhereClause whereClause) {
 		if ( whereClause == null ) {
 			return null;
 		}
@@ -4671,7 +4671,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public Expression visitTreatedPath(SqmTreatedPath<?, ?> sqmTreatedPath) {
+	public Expression visitTreatedPath(SqmTreatedPath<?, @Nullable ?> sqmTreatedPath) {
 		prepareReusablePath( sqmTreatedPath, () -> null );
 		final TableGroup resolved = getFromClauseAccess().findTableGroup( sqmTreatedPath.getNavigablePath() );
 		if ( resolved != null ) {
@@ -6115,7 +6115,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private MappingModelExpressible<?> determineValueMapping
-			(SqmParameter<?> sqmParameter, BindableType<?> paramType, boolean bindingTypeExplicit) {
+			(SqmParameter<?> sqmParameter, @Nullable BindableType<?> paramType, boolean bindingTypeExplicit) {
 		if ( paramType == null ) {
 			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
 			return inferredValueMapping != null

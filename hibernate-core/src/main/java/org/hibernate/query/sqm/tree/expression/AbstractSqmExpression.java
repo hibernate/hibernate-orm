@@ -4,8 +4,6 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.Collection;
 
 import org.hibernate.query.sqm.NodeBuilder;
@@ -48,45 +46,6 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 //		);
 
 		setExpressibleType( highestPrecedenceType2( newType, getExpressible() ) );
-	}
-
-	private <B> SqmExpression<B> castToBasicType(Class<B> javaType) {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( javaType ) );
-	}
-
-	@Override
-	public SqmExpression<Long> asLong() {
-		return castToBasicType( Long.class );
-	}
-
-	@Override
-	public SqmExpression<Integer> asInteger() {
-		return castToBasicType( Integer.class );
-	}
-
-	@Override
-	public SqmExpression<Float> asFloat() {
-		return castToBasicType( Float.class );
-	}
-
-	@Override
-	public SqmExpression<Double> asDouble() {
-		return castToBasicType( Double.class );
-	}
-
-	@Override
-	public SqmExpression<BigDecimal> asBigDecimal() {
-		return castToBasicType( BigDecimal.class );
-	}
-
-	@Override
-	public SqmExpression<BigInteger> asBigInteger() {
-		return castToBasicType( BigInteger.class );
-	}
-
-	@Override
-	public SqmExpression<String> asString() {
-		return castToBasicType( String.class );
 	}
 
 	@Override

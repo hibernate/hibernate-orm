@@ -4,6 +4,7 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 
@@ -27,11 +28,11 @@ public class JavaTypeHelper {
 		);
 	}
 
-	public static boolean isTemporal(JavaType<?> javaType) {
+	public static boolean isTemporal(@Nullable JavaType<?> javaType) {
 		return javaType != null && javaType.isTemporalType();
 	}
 
-	public static boolean isUnknown(JavaType<?> javaType) {
+	public static boolean isUnknown(@Nullable JavaType<?> javaType) {
 		return javaType == null
 			|| javaType.getClass() == UnknownBasicJavaType.class;
 	}

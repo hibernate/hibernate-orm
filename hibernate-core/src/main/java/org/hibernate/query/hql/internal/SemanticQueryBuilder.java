@@ -1017,15 +1017,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( withClauseContext != null ) {
 			withClauseContext.accept( this );
 		}
+		final var orderedQueryContexts = ctx.orderedQuery();
+		final var setOperatorContexts = ctx.setOperator();
 		final SqmQueryPart<?> firstQueryPart =
-				(SqmQueryPart<?>) ctx.orderedQuery(0).accept( this );
+				(SqmQueryPart<?>) orderedQueryContexts.get( 0 ).accept( this );
 		SqmQueryGroup<?> queryGroup =
 				firstQueryPart instanceof SqmQueryGroup<?> sqmQueryGroup
 						? sqmQueryGroup
-						: new SqmQueryGroup<>( firstQueryPart );
+						: new SqmQueryGroup<>( firstQueryPart, visitSetOperator( setOperatorContexts.get( 0 ) ) );
 		setCurrentQueryPart( queryGroup );
-		final var orderedQueryContexts = ctx.orderedQuery();
-		final var setOperatorContexts = ctx.setOperator();
 		final SqmCreationProcessingState firstProcessingState = processingStateStack.pop();
 		for ( int i = 0; i < setOperatorContexts.size(); i++ ) {
 			queryGroup = getSqmQueryGroup(
@@ -3243,7 +3243,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 											? asList( expression, pattern )
 											: asList( expression, pattern,
 													new SqmLiteral<>( "i",
-															resolveExpressibleTypeBasic( String.class ),
+															nodeBuilder().getStringType(),
 															nodeBuilder()
 													)
 											),
@@ -3618,7 +3618,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmExpressible<?> lhsExpressible = lhs.getExpressible();
 		final SqmExpressible<?> rhsExpressible = rhs.getExpressible();
 		if ( lhsExpressible != null && lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?> ) {
-			if ( rhsExpressible == null || rhsExpressible.getSqmType() instanceof BasicPluralType<?, ?> ) {
+			// Assume that appending null means appending a null element
+			if ( rhsExpressible == null && !(rhs instanceof SqmLiteralNull<?>)
+				|| rhsExpressible != null && rhsExpressible.getSqmType() instanceof BasicPluralType<?, ?> ) {
 				// Both sides are array, so use array_concat
 				return getFunctionDescriptor( "array_concat" ).generateSqmExpression(
 						asList( lhs, rhs ),
@@ -3636,7 +3638,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 		}
 		else if ( rhsExpressible != null && rhsExpressible.getSqmType() instanceof BasicPluralType<?, ?> ) {
-			if ( lhsExpressible == null ) {
+			// Assume that prepending null means prepending a null element
+			if ( lhsExpressible == null && !(lhs instanceof SqmLiteralNull<?>) ) {
 				// The RHS is an array and the LHS doesn't have a clear type, so use array_concat
 				return getFunctionDescriptor( "array_concat" ).generateSqmExpression(
 						asList( lhs, rhs ),
@@ -3756,7 +3759,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private SqmDurationUnit<Long> toDurationUnit(SqmExtractUnit<?> extractUnit) {
 		return new SqmDurationUnit<>(
 				extractUnit.getUnit(),
-				resolveExpressibleTypeBasic( Long.class ),
+				nodeBuilder().getLongType(),
 				nodeBuilder()
 		);
 	}
@@ -3768,7 +3771,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmByUnit(
 				toDurationUnit( (SqmExtractUnit<?>) ctx.datetimeField().accept( this ) ),
 				expression,
-				resolveExpressibleTypeBasic( Long.class ),
+				nodeBuilder().getLongType(),
 				nodeBuilder()
 		);
 	}
@@ -4356,7 +4359,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private SqmLiteral<Boolean> booleanLiteral(boolean value) {
 		return new SqmLiteral<>(
 				value,
-				resolveExpressibleTypeBasic( Boolean.class ),
+				nodeBuilder().getBooleanType(),
 				nodeBuilder()
 		);
 	}
@@ -4364,7 +4367,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private SqmLiteral<String> stringLiteral(String text) {
 		return new SqmLiteral<>(
 				unquoteStringLiteral( text ),
-				resolveExpressibleTypeBasic( String.class ),
+				nodeBuilder().getStringType(),
 				nodeBuilder()
 		);
 	}
@@ -4372,7 +4375,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private SqmLiteral<String> javaStringLiteral(String text) {
 		return new SqmLiteral<>(
 				unquoteJavaStringLiteral( text ),
-				resolveExpressibleTypeBasic( String.class ),
+				nodeBuilder().getStringType(),
 				nodeBuilder()
 		);
 	}
@@ -4417,7 +4420,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		assert text.endsWith( "l" ) || text.endsWith( "L" );
 		return new SqmHqlNumericLiteral<>(
 				text.substring( 0, text.length() - 1 ).replace( "_", "" ),
-				resolveExpressibleTypeBasic( Long.class ),
+				nodeBuilder().getLongType(),
 				nodeBuilder()
 		);
 	}
@@ -4836,7 +4839,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					// The SQL standard says the default is three periods `...`
 					fillerExpression = new SqmLiteral<>(
 							"...",
-							resolveExpressibleTypeBasic( String.class ),
+							nodeBuilder().getStringType(),
 							secondArgument.nodeBuilder()
 					);
 				}
@@ -4911,27 +4914,27 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return switch ( symbol.getType() ) {
 			case HqlParser.DAY -> new SqmExtractUnit<>(
 					TemporalUnit.DAY,
-					resolveExpressibleTypeBasic( Integer.class ),
+					nodeBuilder().getIntegerType(),
 					nodeBuilder
 			);
 			case HqlParser.MONTH -> new SqmExtractUnit<>(
 					TemporalUnit.MONTH,
-					resolveExpressibleTypeBasic( Integer.class ),
+					nodeBuilder().getIntegerType(),
 					nodeBuilder
 			);
 			case HqlParser.YEAR -> new SqmExtractUnit<>(
 					TemporalUnit.YEAR,
-					resolveExpressibleTypeBasic( Integer.class ),
+					nodeBuilder().getIntegerType(),
 					nodeBuilder
 			);
 			case HqlParser.HOUR -> new SqmExtractUnit<>(
 					TemporalUnit.HOUR,
-					resolveExpressibleTypeBasic( Integer.class ),
+					nodeBuilder().getIntegerType(),
 					nodeBuilder
 			);
 			case HqlParser.MINUTE -> new SqmExtractUnit<>(
 					TemporalUnit.MINUTE,
-					resolveExpressibleTypeBasic( Integer.class ),
+					nodeBuilder().getIntegerType(),
 					nodeBuilder
 			);
 			case HqlParser.SECOND -> new SqmExtractUnit<>(
@@ -4941,22 +4944,22 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			);
 			case HqlParser.NANOSECOND -> new SqmExtractUnit<>(
 					NANOSECOND,
-					resolveExpressibleTypeBasic( Long.class ),
+					nodeBuilder().getLongType(),
 					nodeBuilder
 			);
 			case HqlParser.WEEK -> new SqmExtractUnit<>(
 					TemporalUnit.WEEK,
-					resolveExpressibleTypeBasic( Integer.class ),
+					nodeBuilder().getIntegerType(),
 					nodeBuilder
 			);
 			case HqlParser.QUARTER -> new SqmExtractUnit<>(
 					TemporalUnit.QUARTER,
-					resolveExpressibleTypeBasic( Integer.class ),
+					nodeBuilder().getIntegerType(),
 					nodeBuilder
 			);
 			case HqlParser.EPOCH -> new SqmExtractUnit<>(
 					TemporalUnit.EPOCH,
-					resolveExpressibleTypeBasic( Long.class ),
+					nodeBuilder().getLongType(),
 					nodeBuilder
 			);
 			default -> throw new ParsingException( "Unsupported datetime field [" + ctx.getText() + "]" );
@@ -4969,11 +4972,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final Token symbol = ((TerminalNode) ctx.getChild( 2 )).getSymbol();
 		return switch ( symbol.getType() ) {
 			case HqlParser.MONTH ->
-					new SqmExtractUnit<>( DAY_OF_MONTH, resolveExpressibleTypeBasic( Integer.class ), nodeBuilder );
+					new SqmExtractUnit<>( DAY_OF_MONTH, nodeBuilder().getIntegerType(), nodeBuilder );
 			case HqlParser.WEEK ->
-					new SqmExtractUnit<>( DAY_OF_WEEK, resolveExpressibleTypeBasic( Integer.class ), nodeBuilder );
+					new SqmExtractUnit<>( DAY_OF_WEEK, nodeBuilder().getIntegerType(), nodeBuilder );
 			case HqlParser.YEAR ->
-					new SqmExtractUnit<>( DAY_OF_YEAR, resolveExpressibleTypeBasic( Integer.class ), nodeBuilder );
+					new SqmExtractUnit<>( DAY_OF_YEAR, nodeBuilder().getIntegerType(), nodeBuilder );
 			default -> throw new ParsingException( "Unsupported day field [" + ctx.getText() + "]" );
 		};
 	}
@@ -4985,10 +4988,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return switch ( symbol.getType() ) {
 			case HqlParser.MONTH ->
 				//this is computed from DAY_OF_MONTH/7
-					new SqmExtractUnit<>( WEEK_OF_MONTH, resolveExpressibleTypeBasic( Integer.class ), nodeBuilder );
+					new SqmExtractUnit<>( WEEK_OF_MONTH, nodeBuilder().getIntegerType(), nodeBuilder );
 			case HqlParser.YEAR ->
 				//this is computed from DAY_OF_YEAR/7
-					new SqmExtractUnit<>( WEEK_OF_YEAR, resolveExpressibleTypeBasic( Integer.class ), nodeBuilder );
+					new SqmExtractUnit<>( WEEK_OF_YEAR, nodeBuilder().getIntegerType(), nodeBuilder );
 			default -> throw new ParsingException( "Unsupported week field [" + ctx.getText() + "]" );
 		};
 	}
@@ -5015,9 +5018,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		// should never happen
 		return switch ( symbol.getType() ) {
 			case HqlParser.TIMEZONE_HOUR, HqlParser.HOUR ->
-					new SqmExtractUnit<>( TIMEZONE_HOUR, resolveExpressibleTypeBasic( Integer.class ), nodeBuilder );
+					new SqmExtractUnit<>( TIMEZONE_HOUR, nodeBuilder().getIntegerType(), nodeBuilder );
 			case HqlParser.TIMEZONE_MINUTE, HqlParser.MINUTE ->
-					new SqmExtractUnit<>( TIMEZONE_MINUTE, resolveExpressibleTypeBasic( Integer.class ), nodeBuilder );
+					new SqmExtractUnit<>( TIMEZONE_MINUTE, nodeBuilder().getIntegerType(), nodeBuilder );
 			case HqlParser.OFFSET ->
 					new SqmExtractUnit<>( OFFSET, resolveExpressibleTypeBasic( ZoneOffset.class ), nodeBuilder );
 			default -> throw new ParsingException( "Unsupported time zone field [" + ctx.getText() + "]" );
@@ -5084,7 +5087,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final String format = unquoteStringLiteral( ctx.STRING_LITERAL().getText() );
 		return new SqmFormat(
 				format,
-				resolveExpressibleTypeBasic( String.class ),
+				nodeBuilder().getStringType(),
 				nodeBuilder()
 		);
 	}
@@ -5191,7 +5194,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					getFunctionDescriptor( "every" ).generateAggregateSqmExpression(
 							singletonList( argument ),
 							getFilterExpression( ctx ),
-							resolveExpressibleTypeBasic( Boolean.class ),
+							nodeBuilder().getBooleanType(),
 							queryEngine()
 					)
 			);
@@ -5226,7 +5229,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					getFunctionDescriptor( "any" ).generateAggregateSqmExpression(
 							singletonList( argument ),
 							getFilterExpression( ctx ),
-							resolveExpressibleTypeBasic( Boolean.class ),
+							nodeBuilder().getBooleanType(),
 							queryEngine()
 					)
 			);
@@ -5488,7 +5491,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		return new SqmLiteral<>(
 				padCharText.charAt( 1 ),
-				resolveExpressibleTypeBasic( Character.class ),
+				nodeBuilder().getCharacterType(),
 				nodeBuilder()
 		);
 	}
@@ -5550,7 +5553,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		return new SqmLiteral<>(
 				trimCharText.charAt( 0 ),
-				resolveExpressibleTypeBasic( Character.class ),
+				nodeBuilder().getCharacterType(),
 				nodeBuilder()
 		);
 	}
@@ -5559,7 +5562,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmCollectionSize visitCollectionSizeFunction(HqlParser.CollectionSizeFunctionContext ctx) {
 		return new SqmCollectionSize(
 				consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) ),
-				resolveExpressibleTypeBasic( Integer.class ),
+				nodeBuilder().getIntegerType(),
 				nodeBuilder()
 		);
 	}
@@ -5612,17 +5615,17 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		// the actual function name might be 'minelement' or 'maxelement', so trim it
 		final String functionName = ctx.getChild(0).getText().substring(0, 3);
 
-		final SqmPath<?> pluralPath = consumePluralAttributeReference( ctx.path() );
-		if ( pluralPath instanceof SqmPluralValuedSimplePath ) {
+		final SqmPath<?> path = consumePluralAttributeReference( ctx.path() );
+		if ( path instanceof SqmPluralValuedSimplePath<?> pluralPath ) {
 			return new SqmElementAggregateFunction<>( pluralPath, functionName );
 		}
 		else {
 			// elements() and values() and only apply to compound paths
-			if ( pluralPath instanceof SqmMapJoin ) {
+			if ( path instanceof SqmMapJoin ) {
 				throw new FunctionArgumentException( "Path '" + ctx.path().getText()
 						+ "' resolved to a joined map instead of a compound path" );
 			}
-			else if ( pluralPath instanceof SqmListJoin ) {
+			else if ( path instanceof SqmListJoin ) {
 				throw new FunctionArgumentException( "Path '" + ctx.path().getText()
 						+ "' resolved to a joined list instead of a compound path" );
 			}
@@ -5642,8 +5645,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		// the actual function name might be 'minindex' or 'maxindex', so trim it
 		final String functionName = ctx.getChild(0).getText().substring(0, 3);
 
-		final SqmPath<?> pluralPath = consumePluralAttributeReference( ctx.path() );
-		if ( pluralPath instanceof SqmPluralValuedSimplePath ) {
+		final SqmPath<?> path = consumePluralAttributeReference( ctx.path() );
+		if ( path instanceof SqmPluralValuedSimplePath<?> pluralPath ) {
 			if ( isIndexedPluralAttribute( pluralPath ) ) {
 				return new SqmIndexAggregateFunction<>( pluralPath, functionName );
 			}
@@ -5656,11 +5659,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		else {
 			// indices() and keys() only apply to compound paths
-			if ( pluralPath instanceof SqmMapJoin ) {
+			if ( path instanceof SqmMapJoin ) {
 				throw new FunctionArgumentException( "Path '" + ctx.path().getText()
 						+ "' resolved to a joined map instead of a compound path" );
 			}
-			else if ( pluralPath instanceof SqmListJoin ) {
+			else if ( path instanceof SqmListJoin ) {
 				throw new FunctionArgumentException( "Path '" + ctx.path().getText()
 						+ "' resolved to a joined list instead of a compound path" );
 			}

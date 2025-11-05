@@ -7,6 +7,7 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.io.Serializable;
 import java.util.Collection;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -87,7 +88,7 @@ public class EmbeddableTypeImpl<J>
 //	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name) {
+	public @Nullable SqmPathSource<?> findSubPathSource(String name) {
 		final var attribute = getPathType().findAttribute( name );
 		if ( attribute != null ) {
 			return (SqmPathSource<?>) attribute;
@@ -106,7 +107,7 @@ public class EmbeddableTypeImpl<J>
 	}
 
 	@Override
-	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+	public SqmPath<J> createSqmPath(SqmPath<?> lhs, @Nullable SqmPathSource<?> intermediatePathSource) {
 		throw new UnsupportedMappingException( "EmbeddableType cannot be used to create an SqmPath" );
 	}
 

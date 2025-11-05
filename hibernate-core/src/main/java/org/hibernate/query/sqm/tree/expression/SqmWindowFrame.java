@@ -4,12 +4,16 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaWindowFrame;
 import org.hibernate.query.common.FrameKind;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+
+import java.util.Objects;
 
 /**
  * @author Marco Belladelli
@@ -17,13 +21,13 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 @Incubating
 public class SqmWindowFrame extends AbstractSqmNode implements JpaWindowFrame {
 	private final FrameKind kind;
-	private final SqmExpression<?> expression;
+	private final @Nullable SqmExpression<?> expression;
 
 	public SqmWindowFrame(NodeBuilder nodeBuilder, FrameKind kind) {
 		this( nodeBuilder, kind, null );
 	}
 
-	public SqmWindowFrame(NodeBuilder nodeBuilder, FrameKind kind, SqmExpression<?> expression) {
+	public SqmWindowFrame(NodeBuilder nodeBuilder, FrameKind kind, @Nullable SqmExpression<?> expression) {
 		super( nodeBuilder );
 		this.kind = kind;
 		this.expression = expression;
@@ -35,7 +39,7 @@ public class SqmWindowFrame extends AbstractSqmNode implements JpaWindowFrame {
 	}
 
 	@Override
-	public SqmExpression<?> getExpression() {
+	public @Nullable SqmExpression<?> getExpression() {
 		return expression;
 	}
 
@@ -56,16 +60,16 @@ public class SqmWindowFrame extends AbstractSqmNode implements JpaWindowFrame {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmWindowFrame that
 			&& kind == that.kind
-			&& expression.equals( that.expression );
+			&& Objects.equals( expression, that.expression );
 	}
 
 	@Override
 	public int hashCode() {
 		int result = kind.hashCode();
-		result = 31 * result + expression.hashCode();
+		result = 31 * result + Objects.hashCode( expression );
 		return result;
 	}
 
@@ -73,13 +77,13 @@ public class SqmWindowFrame extends AbstractSqmNode implements JpaWindowFrame {
 	public boolean isCompatible(Object object) {
 		return object instanceof SqmWindowFrame that
 				&& kind == that.kind
-				&& expression.isCompatible( that.expression );
+				&& SqmCacheable.areCompatible( expression, that.expression );
 	}
 
 	@Override
 	public int cacheHashCode() {
 		int result = kind.hashCode();
-		result = 31 * result + expression.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( expression );
 		return result;
 	}
 }

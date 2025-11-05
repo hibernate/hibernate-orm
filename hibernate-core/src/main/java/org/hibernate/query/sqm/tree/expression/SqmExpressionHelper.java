@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.type.BindableType;
 import org.hibernate.type.BindingContext;
@@ -21,16 +22,18 @@ import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
 import java.time.Duration;
 import java.time.OffsetTime;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * @author Steve Ebersole
  */
 public class SqmExpressionHelper {
-	public static <T> SqmExpressible<T> toSqmType(BindableType<T> parameterType, SqmCreationState creationState) {
+	public static <T> @Nullable SqmExpressible<T> toSqmType(@Nullable BindableType<T> parameterType, SqmCreationState creationState) {
 		return toSqmType( parameterType, creationState.getCreationContext() );
 	}
 
-	public static <T> SqmBindableType<T> toSqmType(
-			BindableType<T> anticipatedType, BindingContext bindingContext) {
+	public static <T> @Nullable SqmBindableType<T> toSqmType(
+			@Nullable BindableType<T> anticipatedType, BindingContext bindingContext) {
 		if ( anticipatedType == null ) {
 			return null;
 		}
@@ -101,7 +104,7 @@ public class SqmExpressionHelper {
 	public static SqmExpression<?> getActualExpression(SqmExpression<?> expression) {
 		if ( isCompositeTemporal( expression ) ) {
 			final SqmPath<?> path = (SqmPath<?>) expression;
-			return expression.getJavaTypeDescriptor().getJavaTypeClass() == OffsetTime.class
+			return castNonNull( expression.getJavaTypeDescriptor() ).getJavaTypeClass() == OffsetTime.class
 					? path.get( OffsetTimeCompositeUserType.LOCAL_TIME_NAME )
 					: path.get( AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME );
 		}
@@ -114,7 +117,7 @@ public class SqmExpressionHelper {
 		if ( isCompositeTemporal( expression ) ) {
 			final SqmPath<?> compositePath = (SqmPath<?>) expression;
 			final SqmPath<Object> temporalPath =
-					expression.getJavaTypeDescriptor().getJavaTypeClass() == OffsetTime.class
+					castNonNull( expression.getJavaTypeDescriptor() ).getJavaTypeClass() == OffsetTime.class
 							? compositePath.get( OffsetTimeCompositeUserType.LOCAL_TIME_NAME )
 							: compositePath.get( AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME );
 			final NodeBuilder nodeBuilder = temporalPath.nodeBuilder();
@@ -124,7 +127,7 @@ public class SqmExpressionHelper {
 					new SqmToDuration<>(
 							compositePath.get( AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME ),
 							new SqmDurationUnit<>( TemporalUnit.SECOND, nodeBuilder.getIntegerType(), nodeBuilder ),
-							nodeBuilder.getTypeConfiguration().getBasicTypeForJavaType( Duration.class ),
+							castNonNull( nodeBuilder.getTypeConfiguration().getBasicTypeForJavaType( Duration.class ) ),
 							nodeBuilder
 					),
 					temporalPath.getNodeType(),

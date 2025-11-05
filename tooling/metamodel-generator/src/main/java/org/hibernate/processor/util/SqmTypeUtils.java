@@ -10,13 +10,16 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
+import static org.hibernate.processor.util.NullnessUtil.castNonNull;
+
 
 public final class SqmTypeUtils {
 	private SqmTypeUtils() {
 	}
 
 	public static String resultType(SqmSelectStatement<?> selectStatement) {
-		final JpaSelection<?> selection = selectStatement.getSelection();
+		// HQL based queries are ensured to have a select clause by SemanticQueryBuilder
+		final JpaSelection<?> selection = castNonNull( selectStatement.getSelection() );
 		if (selection instanceof SqmSelectClause from) {
 			return from.getSelectionItems().size() > 1
 					? "Object[]"

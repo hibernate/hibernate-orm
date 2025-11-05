@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -60,12 +61,12 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 	}
 
 	@Override
-	public String getExplicitAlias() {
+	public @Nullable String getExplicitAlias() {
 		return correlationParent.getExplicitAlias();
 	}
 
 	@Override
-	public void setExplicitAlias(String explicitAlias) {
+	public void setExplicitAlias(@Nullable String explicitAlias) {
 		throw new UnsupportedOperationException( "Can't set alias on a correlated root" );
 	}
 

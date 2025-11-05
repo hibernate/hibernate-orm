@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
@@ -20,7 +21,7 @@ public abstract class AbstractSqmPathSource<J> implements SqmPathSource<J> {
 
 	public AbstractSqmPathSource(
 			String localPathName,
-			SqmPathSource<J> pathModel,
+			@Nullable SqmPathSource<J> pathModel,
 			DomainType<J> domainType,
 			BindableType jpaBindableType) {
 		this.localPathName = localPathName;

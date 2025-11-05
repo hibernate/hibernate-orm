@@ -6,6 +6,8 @@ package org.hibernate.query.sqm.tree.domain;
 
 import java.util.Locale;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -18,6 +20,8 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.spi.NavigablePath;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * @author Christian Beikov
  */
@@ -26,7 +30,7 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 	public SqmPluralPartJoin(
 			SqmFrom<?,O> lhs,
 			SqmPathSource<T> joinedNavigable,
-			String alias,
+			@Nullable String alias,
 			SqmJoinType joinType,
 			NodeBuilder nodeBuilder) {
 		super(
@@ -43,7 +47,7 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 			SqmFrom<?, O> lhs,
 			NavigablePath navigablePath,
 			SqmPathSource<T> joinedNavigable,
-			String alias,
+			@Nullable String alias,
 			SqmJoinType joinType,
 			NodeBuilder nodeBuilder) {
 		super(
@@ -84,12 +88,17 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 	}
 
 	@Override
-	public SqmPredicate getJoinPredicate() {
+	public @NonNull SqmFrom<?, O> getLhs() {
+		return castNonNull( super.getLhs() );
+	}
+
+	@Override
+	public @Nullable SqmPredicate getJoinPredicate() {
 		return null;
 	}
 
 	@Override
-	public void setJoinPredicate(SqmPredicate predicate) {
+	public void setJoinPredicate(@Nullable SqmPredicate predicate) {
 		throw new UnsupportedOperationException( "Setting a predicate for a plural part join is unsupported" );
 	}
 
@@ -112,13 +121,13 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <S extends T> SqmTreatedPluralPartJoin treatAs(Class<S> treatJavaType, String alias) {
+	public <S extends T> SqmTreatedPluralPartJoin treatAs(Class<S> treatJavaType, @Nullable String alias) {
 		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias );
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <S extends T> SqmTreatedPluralPartJoin treatAs(EntityDomainType<S> treatTarget, String alias) {
+	public <S extends T> SqmTreatedPluralPartJoin treatAs(EntityDomainType<S> treatTarget, @Nullable String alias) {
 		final SqmTreatedPluralPartJoin treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
 			return addTreat( new SqmTreatedPluralPartJoin( this, (SqmEntityDomainType<?>) treatTarget, alias ) );
@@ -128,13 +137,13 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <S extends T> SqmTreatedPluralPartJoin treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+	public <S extends T> SqmTreatedPluralPartJoin treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
 		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias, fetch );
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <S extends T> SqmTreatedPluralPartJoin treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
+	public <S extends T> SqmTreatedPluralPartJoin treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
 		final SqmTreatedPluralPartJoin treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
 			return addTreat( new SqmTreatedPluralPartJoin( this, (SqmEntityDomainType<?>) treatTarget, alias ) );
@@ -142,9 +151,8 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 		return treat;
 	}
 
-
 	@Override
-	public PersistentAttribute<? super O, ?> getAttribute() {
+	public @Nullable PersistentAttribute<? super O, ?> getAttribute() {
 		return null;
 	}
 

@@ -11,6 +11,7 @@ import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SetAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
@@ -26,6 +27,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -46,6 +48,9 @@ import static java.util.Comparator.comparing;
  */
 public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 
+	private static final Comparator<EntityDomainType<?>> ENTITY_DOMAIN_TYPE_NAME_COMPARATOR
+			= comparing( EntityDomainType::getTypeName );
+
 	private final Set<EntityDomainType<? extends T>> implementors;
 	private final Map<String, SqmPersistentAttribute<? super T,?>> commonAttributes;
 
@@ -58,7 +63,7 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 			JpaMetamodel jpaMetamodel) {
 		this.polymorphicJavaType = polymorphicJavaType;
 		this.jpaMetamodel = jpaMetamodel;
-		this.implementors = new TreeSet<>( comparing(EntityDomainType::getTypeName) );
+		this.implementors = new TreeSet<>( ENTITY_DOMAIN_TYPE_NAME_COMPARATOR );
 		this.implementors.addAll( implementors );
 		this.commonAttributes = unmodifiableMap( inferCommonAttributes( implementors ) );
 	}
@@ -72,9 +77,9 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 	 * The attributes of a "polymorphic" root are the attributes which are
 	 * common to all subtypes of the root type.
 	 */
-	private Map<String, SqmPersistentAttribute<? super T, ?>> inferCommonAttributes(Set<EntityDomainType<? extends T>> implementors) {
+	private static <T> Map<String, SqmPersistentAttribute<? super T, ?>> inferCommonAttributes(Set<EntityDomainType<? extends T>> implementors) {
 		final Map<String, SqmPersistentAttribute<? super T,?>> workMap = new HashMap<>();
-		final ArrayList<EntityDomainType<?>> implementorsList = new ArrayList<>(implementors);
+		final ArrayList<EntityDomainType<?>> implementorsList = new ArrayList<>( implementors );
 		final EntityDomainType<?> firstImplementor = implementorsList.get( 0 );
 		if ( implementorsList.size() == 1 ) {
 			firstImplementor.visitAttributes( attribute -> workMap.put( attribute.getName(), promote( attribute ) ) );
@@ -104,7 +109,7 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 	 * type cast is actually perfectly correct.
 	 */
 	@SuppressWarnings("unchecked")
-	private SqmPersistentAttribute<? super T, ?> promote(PersistentAttribute<?, ?> attribute) {
+	private static <T> SqmPersistentAttribute<? super T, ?> promote(PersistentAttribute<?, ?> attribute) {
 		return (SqmPersistentAttribute<? super T, ?>) attribute;
 	}
 
@@ -178,12 +183,12 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 	// Attribute handling
 
 	@Override
-	public SqmPersistentAttribute<? super T, ?> findAttribute(String name) {
+	public @Nullable SqmPersistentAttribute<? super T, ?> findAttribute(String name) {
 		return commonAttributes.get( name );
 	}
 
 	@Override
-	public SqmPersistentAttribute<?, ?> findSubTypesAttribute(String name) {
+	public @Nullable SqmPersistentAttribute<?, ?> findSubTypesAttribute(String name) {
 		return commonAttributes.get( name );
 	}
 
@@ -212,37 +217,37 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 	}
 
 	@Override
-	public SqmSingularPersistentAttribute<? super T, ?> findSingularAttribute(String name) {
+	public @Nullable SqmSingularPersistentAttribute<? super T, ?> findSingularAttribute(String name) {
 		return (SqmSingularPersistentAttribute<? super T, ?>) findAttribute( name );
 	}
 
 	@Override
-	public SqmPluralPersistentAttribute<? super T, ?, ?> findPluralAttribute(String name) {
+	public @Nullable SqmPluralPersistentAttribute<? super T, ?, ?> findPluralAttribute(String name) {
 		return (SqmPluralPersistentAttribute<? super T, ?, ?>) findAttribute( name );
 	}
 
 	@Override
-	public SqmPersistentAttribute<? super T, ?> findConcreteGenericAttribute(String name) {
+	public @Nullable SqmPersistentAttribute<? super T, ?> findConcreteGenericAttribute(String name) {
 		return null;
 	}
 
 	@Override
-	public SqmPersistentAttribute<T, ?> findDeclaredAttribute(String name) {
+	public @Nullable SqmPersistentAttribute<T, ?> findDeclaredAttribute(String name) {
 		return null;
 	}
 
 	@Override
-	public SqmSingularPersistentAttribute<T, ?> findDeclaredSingularAttribute(String name) {
+	public @Nullable SqmSingularPersistentAttribute<T, ?> findDeclaredSingularAttribute(String name) {
 		return null;
 	}
 
 	@Override
-	public SqmPluralPersistentAttribute<T, ?, ?> findDeclaredPluralAttribute(String name) {
+	public @Nullable SqmPluralPersistentAttribute<T, ?, ?> findDeclaredPluralAttribute(String name) {
 		return null;
 	}
 
 	@Override
-	public SqmPersistentAttribute<T, ?> findDeclaredConcreteGenericAttribute(String name) {
+	public @Nullable SqmPersistentAttribute<T, ?> findDeclaredConcreteGenericAttribute(String name) {
 		return null;
 	}
 
@@ -399,12 +404,12 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name) {
+	public @Nullable SqmPathSource<?> findSubPathSource(String name) {
 		return (SqmPathSource<?>) findAttribute( name );
 	}
 
 	@Override
-	public SqmPath<T> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+	public SqmPath<T> createSqmPath(SqmPath<?> lhs, @Nullable SqmPathSource<?> intermediatePathSource) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -418,7 +423,7 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 	}
 
 	@Override
-	public SqmPathSource<?> getIdentifierDescriptor() {
+	public @Nullable SqmPathSource<?> getIdentifierDescriptor() {
 		return null;
 	}
 
@@ -453,7 +458,7 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 	}
 
 	@Override
-	public IdentifiableDomainType<? super T> getSupertype() {
+	public @Nullable IdentifiableDomainType<? super T> getSupertype() {
 		throw new UnsupportedOperationException(  );
 	}
 
@@ -463,7 +468,7 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 	}
 
 	@Override
-	public SingularPersistentAttribute<? super T, ?> findIdAttribute() {
+	public @Nullable SingularPersistentAttribute<? super T, ?> findIdAttribute() {
 		throw new UnsupportedOperationException(  );
 	}
 
@@ -472,12 +477,12 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 	}
 
 	@Override
-	public SingularPersistentAttribute<? super T, ?> findVersionAttribute() {
+	public @Nullable SingularPersistentAttribute<? super T, ?> findVersionAttribute() {
 		throw new UnsupportedOperationException(  );
 	}
 
 	@Override
-	public List<? extends SingularPersistentAttribute<? super T, ?>> findNaturalIdAttributes() {
+	public @Nullable List<? extends SingularPersistentAttribute<? super T, ?>> findNaturalIdAttributes() {
 		throw new UnsupportedOperationException(  );
 	}
 
@@ -492,7 +497,7 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 	}
 
 	@Override
-	public ManagedDomainType<? super T> getSuperType() {
+	public @Nullable ManagedDomainType<? super T> getSuperType() {
 		throw new UnsupportedOperationException(  );
 	}
 

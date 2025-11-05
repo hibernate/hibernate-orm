@@ -94,7 +94,7 @@ public abstract class AbstractSqmJsonPathExpression<T> extends SelfRenderingSqmF
 		passingExpressions.put( identifier, expression );
 	}
 
-	protected Map<String, SqmExpression<?>> copyPassingExpressions(SqmCopyContext context) {
+	protected @Nullable Map<String, SqmExpression<?>> copyPassingExpressions(SqmCopyContext context) {
 		if ( passingExpressions == null ) {
 			return null;
 		}
@@ -117,6 +117,7 @@ public abstract class AbstractSqmJsonPathExpression<T> extends SelfRenderingSqmF
 	}
 
 	protected void appendPassingExpressionHqlString(StringBuilder sb, SqmRenderContext context) {
+		final var passingExpressions = this.passingExpressions;
 		if ( passingExpressions != null && !passingExpressions.isEmpty() ) {
 			sb.append( " passing " );
 			for ( Map.Entry<String, SqmExpression<?>> entry : passingExpressions.entrySet() ) {
@@ -128,7 +129,7 @@ public abstract class AbstractSqmJsonPathExpression<T> extends SelfRenderingSqmF
 	}
 
 	@Override
-	public boolean equals(Object other) {
+	public boolean equals(@Nullable Object other) {
 		return super.equals( other )
 			&& other instanceof AbstractSqmJsonPathExpression<?> that
 			&& Objects.equals( passingExpressions, that.passingExpressions );

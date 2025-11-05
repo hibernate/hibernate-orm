@@ -15,6 +15,7 @@ import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.SetAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.criteria.JpaCteCriteria;
@@ -33,7 +34,6 @@ import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedJoin;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
-import static org.hibernate.query.sqm.spi.SqmCreationHelper.combinePredicates;
 
 /**
  * @author Steve Ebersole
@@ -54,14 +54,14 @@ public interface SqmJoin<L, R> extends SqmFrom<L, R>, JpaJoin<L,R> {
 	 *
 	 * @return The join predicate
 	 */
-	SqmPredicate getJoinPredicate();
+	@Nullable SqmPredicate getJoinPredicate();
 
 	/**
 	 * Inject the join predicate
 	 *
 	 * @param predicate The join predicate
 	 */
-	void setJoinPredicate(SqmPredicate predicate);
+	void setJoinPredicate(@Nullable SqmPredicate predicate);
 
 	@Override
 	<X, Y> SqmAttributeJoin<X, Y> join(String attributeName);
@@ -79,49 +79,37 @@ public interface SqmJoin<L, R> extends SqmFrom<L, R>, JpaJoin<L,R> {
 	<S extends R> SqmTreatedJoin<L,R,S> treatAs(EntityDomainType<S> treatAsType);
 
 	@Override
-	<S extends R> SqmTreatedJoin<L,R,S> treatAs(Class<S> treatJavaType, String alias);
+	<S extends R> SqmTreatedJoin<L,R,S> treatAs(Class<S> treatJavaType, @Nullable String alias);
 
 	@Override
-	<S extends R> SqmTreatedJoin<L,R,S> treatAs(EntityDomainType<S> treatTarget, String alias);
+	<S extends R> SqmTreatedJoin<L,R,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias);
 
 	@Override
-	default SqmPredicate getOn() {
+	default @Nullable SqmPredicate getOn() {
 		return getJoinPredicate();
 	}
 
 	@Override
-	default SqmJoin<L, R> on(JpaExpression<Boolean> restriction) {
-		setJoinPredicate( combinePredicates(
-				getJoinPredicate(),
-				getJoinPredicate().nodeBuilder().wrap( restriction )
-		) );
+	default SqmJoin<L, R> on(@Nullable JpaExpression<Boolean> restriction) {
+		setJoinPredicate( restriction == null ? null : nodeBuilder().wrap( restriction ) );
 		return this;
 	}
 
 	@Override
-	default SqmJoin<L, R> on(Expression<Boolean> restriction) {
-		setJoinPredicate( combinePredicates(
-				getJoinPredicate(),
-				getJoinPredicate().nodeBuilder().wrap( restriction )
-		) );
+	default SqmJoin<L, R> on(@Nullable Expression<Boolean> restriction) {
+		setJoinPredicate( restriction == null ? null : nodeBuilder().wrap( restriction ) );
 		return this;
 	}
 
 	@Override
-	default SqmJoin<L, R> on(JpaPredicate... restrictions) {
-		setJoinPredicate( combinePredicates(
-				getJoinPredicate(),
-				restrictions
-		) );
+	default SqmJoin<L, R> on(JpaPredicate @Nullable... restrictions) {
+		setJoinPredicate( restrictions == null ? null : nodeBuilder().wrap( restrictions ) );
 		return this;
 	}
 
 	@Override
-	default SqmJoin<L, R> on(Predicate... restrictions) {
-		setJoinPredicate( combinePredicates(
-				getJoinPredicate(),
-				restrictions
-		) );
+	default SqmJoin<L, R> on(Predicate @Nullable... restrictions) {
+		setJoinPredicate( restrictions == null ? null : nodeBuilder().wrap( restrictions ) );
 		return this;
 	}
 

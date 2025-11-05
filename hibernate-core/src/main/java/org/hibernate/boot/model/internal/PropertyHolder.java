@@ -36,6 +36,8 @@ public interface PropertyHolder {
 
 	void addProperty(Property prop, MemberDetails memberDetails, @Nullable AnnotatedColumns columns, ClassDetails declaringClass);
 
+	void movePropertyToJoin(Property prop, Join join, MemberDetails memberDetails, ClassDetails declaringClass);
+
 	KeyValue getIdentifier();
 
 	/**

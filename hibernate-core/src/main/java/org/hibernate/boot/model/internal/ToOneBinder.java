@@ -14,6 +14,7 @@ import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchProfileOverride;
+import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDelete;
@@ -22,6 +23,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.models.spi.ClassDetails;
@@ -52,6 +54,8 @@ import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.type.ForeignKeyDirection.FROM_PARENT;
+import static org.hibernate.type.ForeignKeyDirection.TO_PARENT;
 
 /**
  * Responsible for interpreting {@link ManyToOne} and {@link OneToOne} associations
@@ -521,17 +525,53 @@ public class ToOneBinder {
 		final var memberDetails = inferredData.getAttributeMember();
 		final var targetEntityClassDetails = getTargetEntity( inferredData, context );
 		final var notFoundAction = notFoundAction( propertyHolder, memberDetails, fetchMode );
+		final var optional = !isMandatory( explicitlyOptional, memberDetails, notFoundAction );
+
+		final var oneToOne =
+				new org.hibernate.mapping.OneToOne( context, propertyHolder.getTable(),
+						propertyHolder.getPersistentClass() );
+		final String propertyName = inferredData.getPropertyName();
+		oneToOne.setPropertyName( propertyName );
+		oneToOne.setReferencedEntityName( getReferenceEntityName( inferredData, targetEntityClassDetails ) );
+		defineFetchingStrategy( oneToOne, memberDetails, inferredData, propertyHolder );
+		//value.setFetchMode( fetchMode );
+		oneToOne.setOnDeleteAction( onDeleteAction( memberDetails ) );
+		//value.setLazy( fetchMode != FetchMode.JOIN );
+
+		oneToOne.setConstrained( !optional );
+		oneToOne.setForeignKeyType( mappedBy == null ? FROM_PARENT : TO_PARENT );
+		bindForeignKeyNameAndDefinition( oneToOne, memberDetails,
+				memberDetails.getDirectAnnotationUsage( ForeignKey.class ),
+				context );
+
+		final var binder = new PropertyBinder();
+		binder.setName( inferredData.getPropertyName() );
+		binder.setMemberDetails( memberDetails );
+		binder.setValue( oneToOne );
+		binder.setCascade( cascadeStrategy );
+		binder.setAccessType( inferredData.getDefaultAccess() );
+		binder.setBuildingContext( context );
+		binder.setHolder( propertyHolder );
+
+		final var lazyGroupAnnotation = memberDetails.getDirectAnnotationUsage( LazyGroup.class );
+		if ( lazyGroupAnnotation != null ) {
+			binder.setLazyGroup( lazyGroupAnnotation.value() );
+		}
+
+		final Property property = binder.makeProperty();
+		property.setOptional( optional );
+		propertyHolder.addProperty( property, inferredData.getAttributeMember(), inferredData.getDeclaringClass() );
+
 		final var secondPass = new OneToOneSecondPass(
+				binder,
+				property,
+				oneToOne,
 				mappedBy,
 				propertyHolder.getEntityName(),
 				propertyHolder,
 				inferredData,
-				getReferenceEntityName( inferredData, targetEntityClassDetails ),
 				isTargetAnnotatedEntity( targetEntityClassDetails, memberDetails ),
 				notFoundAction,
-				onDeleteAction( memberDetails ),
-				!isMandatory( explicitlyOptional, memberDetails, notFoundAction ),
-				cascadeStrategy,
 				joinColumns,
 				context
 		);

@@ -267,6 +267,11 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
+	public void movePropertyToJoin(Property prop, Join join, MemberDetails memberDetails, ClassDetails declaringClass) {
+		throw new AssertionFailure( "Cannot add property to a collection" );
+	}
+
+	@Override
 	public KeyValue getIdentifier() {
 		throw new AssertionFailure( "Identifier collection not yet managed" );
 	}

@@ -46,7 +46,8 @@ public class DOM3LSPrettyPrinterStrategy extends AbstractXMLPrettyPrinterStrateg
         final DOMImplementation domImplementation = document.getImplementation();
         if (domImplementation.hasFeature("LS", "3.0") && domImplementation.hasFeature("Core", "2.0")) {
             return (DOMImplementationLS) domImplementation.getFeature("LS", "3.0");
-        } else {
+        }
+        else {
             throw new RuntimeException("DOM 3.0 LS and/or DOM 2.0 Core not supported.");
         }
     }
@@ -60,7 +61,8 @@ public class DOM3LSPrettyPrinterStrategy extends AbstractXMLPrettyPrinterStrateg
                 lsSerializer.getDomConfig().setParameter("comments", isOutputComments());
             }
             return lsSerializer;
-        } else {
+        }
+        else {
             throw new RuntimeException("DOMConfiguration 'format-pretty-print' parameter isn't settable.");
         }
     }

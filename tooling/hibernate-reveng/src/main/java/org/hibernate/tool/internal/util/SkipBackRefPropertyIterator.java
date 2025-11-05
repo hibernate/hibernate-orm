@@ -30,48 +30,49 @@ import org.hibernate.mapping.Property;
  */
 public class SkipBackRefPropertyIterator implements Iterator<Property> {
 
-	private Iterator<?> delegate;
+    private final Iterator<?> delegate;
 
-	private Property backLog;
+    private Property backLog;
 
-	public SkipBackRefPropertyIterator(Iterator<?> iterator) {
-		delegate = iterator;
-	}
+    public SkipBackRefPropertyIterator(Iterator<?> iterator) {
+        delegate = iterator;
+    }
 
-	public boolean hasNext() {
-		if ( backLog!=null ) {
-			return true;
-		} else if ( delegate.hasNext() ) {
-			Property nextProperty = (Property) delegate.next();
-			while ( nextProperty.isBackRef() && delegate.hasNext() ) {
-				nextProperty = (Property) delegate.next();
-			}
-			if ( !nextProperty.isBackRef() ) {
-				backLog = nextProperty;
-				return true;
-			}
-		}
-		return false;
-	}
+    public boolean hasNext() {
+        if ( backLog!=null ) {
+            return true;
+        }
+        else if ( delegate.hasNext() ) {
+            Property nextProperty = (Property) delegate.next();
+            while ( nextProperty.isBackRef() && delegate.hasNext() ) {
+                nextProperty = (Property) delegate.next();
+            }
+            if ( !nextProperty.isBackRef() ) {
+                backLog = nextProperty;
+                return true;
+            }
+        }
+        return false;
+    }
 
-	public Property next() {
-		if ( backLog != null ) {
-			Property p = backLog;
-			backLog = null;
-			return p;
-		}
-		Property nextProperty = (Property) delegate.next();
-		while ( nextProperty.isBackRef() && delegate.hasNext() ) {
-			nextProperty = (Property) delegate.next();
-		}
-		if ( nextProperty.isBackRef() ) {
-			throw new NoSuchElementException();
-		}
-		return nextProperty;
-	}
+    public Property next() {
+        if ( backLog != null ) {
+            Property p = backLog;
+            backLog = null;
+            return p;
+        }
+        Property nextProperty = (Property) delegate.next();
+        while ( nextProperty.isBackRef() && delegate.hasNext() ) {
+            nextProperty = (Property) delegate.next();
+        }
+        if ( nextProperty.isBackRef() ) {
+            throw new NoSuchElementException();
+        }
+        return nextProperty;
+    }
 
-	public void remove() {
-		throw new UnsupportedOperationException( "remove() not allowed" );
-	}
+    public void remove() {
+        throw new UnsupportedOperationException( "remove() not allowed" );
+    }
 
 }

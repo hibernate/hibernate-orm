@@ -41,9 +41,10 @@ public final class XMLPrettyPrinterStrategyFactory {
         if (strategyClass != null) {
             try {
                 Class<XMLPrettyPrinterStrategy> clazz = (Class<XMLPrettyPrinterStrategy>) Class.forName(strategyClass);
-                Constructor<XMLPrettyPrinterStrategy> constructor = clazz.getConstructor(new Class[] {});
+                Constructor<XMLPrettyPrinterStrategy> constructor = clazz.getConstructor();
                 return constructor.newInstance();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }

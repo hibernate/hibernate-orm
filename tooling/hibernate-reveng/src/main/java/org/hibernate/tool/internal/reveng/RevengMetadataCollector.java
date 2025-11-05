@@ -32,85 +32,86 @@ import org.hibernate.tool.internal.util.TableNameQualifier;
 
 public class RevengMetadataCollector {
 
-	private MetadataBuildingContext metadataBuildingContext = null;
-	private final Map<TableIdentifier, Table> tables;
-	private Map<String, List<ForeignKey>> oneToManyCandidates;
-	private final Map<TableIdentifier, String> suggestedIdentifierStrategies;
+    private MetadataBuildingContext metadataBuildingContext = null;
+    private final Map<TableIdentifier, Table> tables;
+    private Map<String, List<ForeignKey>> oneToManyCandidates;
+    private final Map<TableIdentifier, String> suggestedIdentifierStrategies;
 
-	public RevengMetadataCollector(MetadataBuildingContext metadataBuildingContext) {
-		this();
-		this.metadataBuildingContext = metadataBuildingContext;
-	}
-	
-	public RevengMetadataCollector() {
-		this.tables = new HashMap<TableIdentifier, Table>();
-		this.suggestedIdentifierStrategies = new HashMap<TableIdentifier, String>();
-	}
+    public RevengMetadataCollector(MetadataBuildingContext metadataBuildingContext) {
+        this();
+        this.metadataBuildingContext = metadataBuildingContext;
+    }
 
-	public Iterator<Table> iterateTables() {
-		return tables.values().iterator();
-	}
-	
-	// TableIdentifier's catalog, schema and name should be quoted
-	public Table addTable(TableIdentifier tableIdentifier) {
-		Table result = null;
-		String catalog = tableIdentifier.getCatalog();
-		String schema = tableIdentifier.getSchema();
-		String name = tableIdentifier.getName();
-		InFlightMetadataCollector metadataCollector = getMetadataCollector();
-		if (metadataCollector != null) {
-			result = metadataCollector.addTable(schema, catalog, name, null, false, metadataBuildingContext);
-		} else {
-			result = createTable(catalog, schema, name);			
-		}
-		if (tables.containsKey(tableIdentifier)) {
-			throw new RuntimeException(
-					"Attempt to add a double entry for table: " + 
-					TableNameQualifier.qualify(catalog, schema, name));
-		}
-		tables.put(tableIdentifier, result);
-		return result;
-	}
-	
-	public Table getTable(TableIdentifier tableIdentifier) {
-		return tables.get(tableIdentifier);
-	}
+    public RevengMetadataCollector() {
+        this.tables = new HashMap<>();
+        this.suggestedIdentifierStrategies = new HashMap<>();
+    }
 
-	public Collection<Table> getTables() {
-		return tables.values();
-	}
-	
-	public void setOneToManyCandidates(Map<String, List<ForeignKey>> oneToManyCandidates) {
-		this.oneToManyCandidates = oneToManyCandidates;
-	}
+    public Iterator<Table> iterateTables() {
+        return tables.values().iterator();
+    }
 
-	public Map<String, List<ForeignKey>> getOneToManyCandidates() {
-		return oneToManyCandidates;
-	}
+    // TableIdentifier's catalog, schema and name should be quoted
+    public Table addTable(TableIdentifier tableIdentifier) {
+        Table result;
+        String catalog = tableIdentifier.getCatalog();
+        String schema = tableIdentifier.getSchema();
+        String name = tableIdentifier.getName();
+        InFlightMetadataCollector metadataCollector = getMetadataCollector();
+        if (metadataCollector != null) {
+            result = metadataCollector.addTable(schema, catalog, name, null, false, metadataBuildingContext);
+        }
+        else {
+            result = createTable(catalog, schema, name);
+        }
+        if (tables.containsKey(tableIdentifier)) {
+            throw new RuntimeException(
+                    "Attempt to add a double entry for table: " +
+                            TableNameQualifier.qualify(catalog, schema, name));
+        }
+        tables.put(tableIdentifier, result);
+        return result;
+    }
 
-	public String getSuggestedIdentifierStrategy(String catalog, String schema, String name) {
-		return (String) suggestedIdentifierStrategies.get(TableIdentifier.create(catalog, schema, name));
-	}
+    public Table getTable(TableIdentifier tableIdentifier) {
+        return tables.get(tableIdentifier);
+    }
 
-	public void addSuggestedIdentifierStrategy(String catalog, String schema, String name, String idstrategy) {
-		suggestedIdentifierStrategies.put(TableIdentifier.create(catalog, schema, name), idstrategy);
-	}
-	
-	private Table createTable(String catalog, String schema, String name) {
-		Table table = new Table("Hibernate Tools");
-		table.setAbstract(false);
-		table.setName(name);
-		table.setSchema(schema);
-		table.setCatalog(catalog);	
-		return table;
-	}
-	
-	private InFlightMetadataCollector getMetadataCollector() {
-		InFlightMetadataCollector result = null;
-		if (metadataBuildingContext != null) {
-			result = metadataBuildingContext.getMetadataCollector();
-		}
-		return result;
-	}
-	
+    public Collection<Table> getTables() {
+        return tables.values();
+    }
+
+    public void setOneToManyCandidates(Map<String, List<ForeignKey>> oneToManyCandidates) {
+        this.oneToManyCandidates = oneToManyCandidates;
+    }
+
+    public Map<String, List<ForeignKey>> getOneToManyCandidates() {
+        return oneToManyCandidates;
+    }
+
+    public String getSuggestedIdentifierStrategy(String catalog, String schema, String name) {
+        return suggestedIdentifierStrategies.get(TableIdentifier.create(catalog, schema, name));
+    }
+
+    public void addSuggestedIdentifierStrategy(String catalog, String schema, String name, String idstrategy) {
+        suggestedIdentifierStrategies.put(TableIdentifier.create(catalog, schema, name), idstrategy);
+    }
+
+    private Table createTable(String catalog, String schema, String name) {
+        Table table = new Table("Hibernate Tools");
+        table.setAbstract(false);
+        table.setName(name);
+        table.setSchema(schema);
+        table.setCatalog(catalog);
+        return table;
+    }
+
+    private InFlightMetadataCollector getMetadataCollector() {
+        InFlightMetadataCollector result = null;
+        if (metadataBuildingContext != null) {
+            result = metadataBuildingContext.getMetadataCollector();
+        }
+        return result;
+    }
+
 }

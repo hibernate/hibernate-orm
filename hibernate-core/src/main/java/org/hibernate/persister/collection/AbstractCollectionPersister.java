@@ -98,7 +98,6 @@ import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.AliasedExpression;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -109,7 +108,6 @@ import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.TableMapping.MutationDetails;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.ColumnValueParameterList;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.model.ast.MutatingTableReference;
@@ -134,6 +132,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -1753,7 +1752,7 @@ public abstract class AbstractCollectionPersister
 		final ColumnValueParameterList parameterBinders =
 				new ColumnValueParameterList( tableReference, ParameterUsage.RESTRICT, keyColumnCount );
 		final java.util.List<ColumnValueBinding> restrictionBindings = arrayList( keyColumnCount );
-		applyKeyRestrictions( tableReference, parameterBinders, restrictionBindings );
+		applyKeyRestrictions( parameterBinders, restrictionBindings );
 
 		//noinspection unchecked,rawtypes
 		return (RestrictedTableMutation) new TableDeleteStandard(
@@ -1768,27 +1767,24 @@ public abstract class AbstractCollectionPersister
 	}
 
 	protected void applyKeyRestrictions(
-			MutatingTableReference tableReference,
 			ColumnValueParameterList parameterList,
-			java.util.List<ColumnValueBinding> restrictionBindings) {
-
-		final ForeignKeyDescriptor fkDescriptor = getAttributeMapping().getKeyDescriptor();
-		assert fkDescriptor != null;
-
-		fkDescriptor.getKeyPart().forEachSelectable( parameterList );
-		for ( ColumnValueParameter columnValueParameter : parameterList ) {
-			final ColumnReference columnReference = columnValueParameter.getColumnReference();
+			List<ColumnValueBinding> restrictionBindings) {
+		final var foreignKeyDescriptor = getAttributeMapping().getKeyDescriptor();
+		assert foreignKeyDescriptor != null;
+		foreignKeyDescriptor.getKeyPart().forEachSelectable( (selectionIndex, selectableMapping) -> {
+			final var columnValueParameter = parameterList.addColumValueParameter( selectableMapping );
+			final var columnReference = columnValueParameter.getColumnReference();
 			restrictionBindings.add(
 					new ColumnValueBinding(
 							columnReference,
 							new ColumnWriteFragment(
 									"?",
 									columnValueParameter,
-									columnReference.getJdbcMapping()
+									selectableMapping
 							)
 					)
 			);
-		}
+		});
 	}
 
 

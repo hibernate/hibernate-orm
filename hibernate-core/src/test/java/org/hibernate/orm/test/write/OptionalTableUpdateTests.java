@@ -4,9 +4,11 @@
  */
 package org.hibernate.orm.test.write;
 
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.type.SqlTypes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -16,6 +18,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
+
+import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -102,6 +106,13 @@ public class OptionalTableUpdateTests {
 		@Basic
 		@Column( table = "supplements" )
 		private String details;
+		// Used to provoke https://hibernate.atlassian.net/browse/HHH-19749
+		@Column( precision = 6, scale = 2, table = "supplements" )
+		private BigDecimal theBigDecimal;
+		// Used to provoke https://hibernate.atlassian.net/browse/HHH-18860
+		@JdbcTypeCode( SqlTypes.NUMERIC )
+		@Column( precision = 6, scale = 2, table = "supplements" )
+		private Double theDoubleDecimal;
 
 		private TheEntity() {
 			// for use by Hibernate
@@ -131,6 +142,22 @@ public class OptionalTableUpdateTests {
 
 		public void setDetails(String details) {
 			this.details = details;
+		}
+
+		public BigDecimal getTheBigDecimal() {
+			return theBigDecimal;
+		}
+
+		public void setTheBigDecimal(BigDecimal discount) {
+			this.theBigDecimal = discount;
+		}
+
+		public Double getTheDoubleDecimal() {
+			return theDoubleDecimal;
+		}
+
+		public void setTheDoubleDecimal(Double theDoubleDecimal) {
+			this.theDoubleDecimal = theDoubleDecimal;
 		}
 	}
 }

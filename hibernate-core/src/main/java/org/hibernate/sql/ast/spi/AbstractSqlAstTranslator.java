@@ -135,7 +135,6 @@ import org.hibernate.sql.exec.ExecutionException;
 import org.hibernate.sql.exec.internal.AbstractJdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
-import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcLockStrategy;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -5595,10 +5594,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final List<SqlAstNode> arguments = new ArrayList<>( 2 );
 		arguments.add( expression );
 		final CastTarget castTarget;
-		if ( expression instanceof SqlTypedMappingJdbcParameter parameter ) {
-			final SqlTypedMapping sqlTypedMapping = parameter.getSqlTypedMapping();
+		if ( expression instanceof SqlTypedExpression sqlTypedExpression ) {
+			final SqlTypedMapping sqlTypedMapping = sqlTypedExpression.getSqlTypedMapping();
 			castTarget = new CastTarget(
-					parameter.getJdbcMapping(),
+					sqlTypedMapping.getJdbcMapping(),
 					sqlTypedMapping.getColumnDefinition(),
 					sqlTypedMapping.getLength(),
 					sqlTypedMapping.getTemporalPrecision() != null

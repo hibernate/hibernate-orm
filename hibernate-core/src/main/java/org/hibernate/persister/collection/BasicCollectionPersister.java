@@ -217,7 +217,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				keyColumnCount
 		);
 		final java.util.List<ColumnValueBinding> restrictionBindings = arrayList( keyColumnCount );
-		applyKeyRestrictions( tableReference, parameterBinders, restrictionBindings );
+		applyKeyRestrictions( parameterBinders, restrictionBindings );
 
 		final ColumnReference softDeleteColumn = new ColumnReference( tableReference, softDeleteMapping );
 		final ColumnValueBinding nonDeletedBinding = softDeleteMapping.createNonDeletedValueBinding( softDeleteColumn );

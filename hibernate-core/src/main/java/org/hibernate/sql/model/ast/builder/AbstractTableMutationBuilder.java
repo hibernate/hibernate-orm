@@ -10,7 +10,7 @@ import java.util.List;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
@@ -76,39 +76,25 @@ public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> i
 	}
 
 	protected void addColumn(
-			String columnName,
 			String columnWriteFragment,
-			JdbcMapping jdbcMapping,
+			SelectableMapping selectableMapping,
 			List<ColumnValueBinding> list) {
-		final ColumnValueBinding valueBinding = createValueBinding( columnName, columnWriteFragment, jdbcMapping );
-		list.add( valueBinding );
-	}
-
-	protected void addColumn(
-			String columnName,
-			String columnWriteFragment,
-			JdbcMapping jdbcMapping,
-			ParameterUsage parameterUsage,
-			List<ColumnValueBinding> list) {
-		final ColumnValueBinding valueBinding = createValueBinding( columnName, columnWriteFragment, jdbcMapping, parameterUsage );
+		final ColumnValueBinding valueBinding = createValueBinding( columnWriteFragment, selectableMapping );
 		list.add( valueBinding );
 	}
 
 	protected ColumnValueBinding createValueBinding(
-			String columnName,
 			String columnWriteFragment,
-			JdbcMapping jdbcMapping) {
-		return createValueBinding( columnName, columnWriteFragment, jdbcMapping, ParameterUsage.SET );
+			SelectableMapping selectableMapping) {
+		return createValueBinding( columnWriteFragment, selectableMapping, ParameterUsage.SET );
 	}
 	protected ColumnValueBinding createValueBinding(
-			String columnName,
 			String customWriteExpression,
-			JdbcMapping jdbcMapping,
+			SelectableMapping selectableMapping,
 			ParameterUsage parameterUsage) {
 		return ColumnValueBindingBuilder.createValueBinding(
-				columnName,
 				customWriteExpression,
-				jdbcMapping,
+				selectableMapping,
 				getMutatingTable(),
 				parameterUsage,
 				parameters::apply

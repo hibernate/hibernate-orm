@@ -11,8 +11,10 @@ import java.util.Locale;
 
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.SqlTypedExpression;
 
 /**
  * Models a column's value expression within the SQL AST. Used to model:<ul>
@@ -24,24 +26,24 @@ import org.hibernate.sql.ast.tree.expression.Expression;
  *
  * @author Steve Ebersole
  */
-public class ColumnWriteFragment implements Expression {
+public class ColumnWriteFragment implements SqlTypedExpression {
 	private final String fragment;
 	private final List<ColumnValueParameter> parameters;
-	private final JdbcMapping jdbcMapping;
+	private final SelectableMapping selectableMapping;
 
-	public ColumnWriteFragment(String fragment, JdbcMapping jdbcMapping) {
-		this( fragment, Collections.emptyList(), jdbcMapping );
+	public ColumnWriteFragment(String fragment, SelectableMapping selectableMapping) {
+		this( fragment, Collections.emptyList(), selectableMapping );
 	}
 
-	public ColumnWriteFragment(String fragment, ColumnValueParameter parameter, JdbcMapping jdbcMapping) {
-		this( fragment, Collections.singletonList( parameter ), jdbcMapping );
+	public ColumnWriteFragment(String fragment, ColumnValueParameter parameter, SelectableMapping selectableMapping) {
+		this( fragment, Collections.singletonList( parameter ), selectableMapping );
 		assert !fragment.contains( "?" ) || parameter != null;
 	}
 
-	public ColumnWriteFragment(String fragment, List<ColumnValueParameter> parameters, JdbcMapping jdbcMapping) {
+	public ColumnWriteFragment(String fragment, List<ColumnValueParameter> parameters, SelectableMapping selectableMapping) {
 		this.fragment = fragment;
 		this.parameters = parameters;
-		this.jdbcMapping = jdbcMapping;
+		this.selectableMapping = selectableMapping;
 	}
 
 	public String getFragment() {
@@ -53,8 +55,13 @@ public class ColumnWriteFragment implements Expression {
 	}
 
 	@Override
+	public SqlTypedMapping getSqlTypedMapping() {
+		return selectableMapping;
+	}
+
+	@Override
 	public JdbcMapping getExpressionType() {
-		return jdbcMapping;
+		return selectableMapping.getJdbcMapping();
 	}
 
 	@Override

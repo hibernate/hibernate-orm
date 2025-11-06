@@ -4,7 +4,6 @@
  */
 package org.hibernate.sql.model.ast.builder;
 
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueBindingList;
@@ -38,7 +37,7 @@ public class TableUpdateBuilderSkipped implements TableUpdateBuilder {
 	}
 
 	@Override
-	public void addKeyRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
+	public void addKeyRestrictionBinding(SelectableMapping selectableMapping) {
 		// nothing to do
 	}
 
@@ -48,12 +47,8 @@ public class TableUpdateBuilderSkipped implements TableUpdateBuilder {
 	}
 
 	@Override
-	public void addOptimisticLockRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
+	public void addOptimisticLockRestriction(SelectableMapping selectableMapping) {
 		// nothing to do
-	}
-
-	@Override
-	public void addLiteralRestriction(String columnName, String sqlLiteralText, JdbcMapping jdbcMapping) {
 	}
 
 	@Override
@@ -72,7 +67,7 @@ public class TableUpdateBuilderSkipped implements TableUpdateBuilder {
 	}
 
 	@Override
-	public void addValueColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping, boolean isLob) {
+	public void addValueColumn(String columnWriteFragment, SelectableMapping selectableMapping) {
 		// nothing to do
 	}
 
@@ -82,7 +77,7 @@ public class TableUpdateBuilderSkipped implements TableUpdateBuilder {
 	}
 
 	@Override
-	public void addKeyColumn(String columnName, String valueExpression, JdbcMapping jdbcMapping) {
+	public void addKeyColumn(String valueExpression, SelectableMapping selectableMapping) {
 		// nothing to do
 	}
 

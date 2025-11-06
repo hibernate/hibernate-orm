@@ -12,12 +12,12 @@ import java.util.function.Consumer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
 
@@ -302,113 +302,33 @@ public class EntityTableMapping implements TableMapping {
 		}
 	}
 
-	public static class KeyColumn implements TableDetails.KeyColumn {
-		private final String tableName;
-		private final String columnName;
-		private final String writeExpression;
+	public static class KeyColumn extends SelectableMappingImpl implements TableDetails.KeyColumn {
 
-		private final boolean formula;
-
-		private final JdbcMapping jdbcMapping;
-
-		public KeyColumn(
-				String tableName,
-				String columnName,
-				String writeExpression,
-				boolean formula,
-				JdbcMapping jdbcMapping) {
-			this.tableName = tableName;
-			this.columnName = columnName;
-			this.writeExpression = writeExpression;
-			this.formula = formula;
-			this.jdbcMapping = jdbcMapping;
+		public KeyColumn(String tableName, SelectableMapping originalMapping) {
+			super(
+					tableName,
+					originalMapping.getSelectionExpression(),
+					null, // Leads to construction of a fresh path based on selection expression
+					originalMapping.getCustomReadExpression(),
+					originalMapping.getCustomWriteExpression(),
+					originalMapping.getColumnDefinition(),
+					originalMapping.getLength(),
+					originalMapping.getPrecision(),
+					originalMapping.getScale(),
+					originalMapping.getTemporalPrecision(),
+					originalMapping.isLob(),
+					originalMapping.isNullable(),
+					originalMapping.isInsertable(),
+					originalMapping.isUpdateable(),
+					originalMapping.isPartitioned(),
+					originalMapping.isFormula(),
+					originalMapping.getJdbcMapping()
+			);
 		}
 
+		@Override
 		public String getColumnName() {
-			return columnName;
-		}
-
-		@Override
-		public String getContainingTableExpression() {
-			return tableName;
-		}
-
-		@Override
-		public String getWriteExpression() {
-			return writeExpression;
-		}
-
-		@Override
-		public String getSelectionExpression() {
-			return columnName;
-		}
-
-		@Override
-		public JdbcMapping getJdbcMapping() {
-			return jdbcMapping;
-		}
-
-		@Override
-		public boolean isFormula() {
-			return formula;
-		}
-
-		@Override
-		public boolean isNullable() {
-			// keys are never nullable
-			return false;
-		}
-
-		@Override
-		public boolean isInsertable() {
-			// keys are always insertable, unless this "column" is a formula
-			return !formula;
-		}
-
-		@Override
-		public boolean isUpdateable() {
-			// keys are never updateable
-			return false;
-		}
-
-		@Override
-		public boolean isPartitioned() {
-			return false;
-		}
-
-		@Override
-		public String getColumnDefinition() {
-			return null;
-		}
-
-		@Override
-		public Long getLength() {
-			return null;
-		}
-
-		@Override
-		public Integer getPrecision() {
-			return null;
-		}
-
-		@Override
-		public Integer getScale() {
-			return null;
-		}
-
-		@Override
-		public Integer getTemporalPrecision() {
-			return null;
-		}
-
-		@Override
-		public String getCustomReadExpression() {
-			return null;
-		}
-
-		@Override
-		public String getCustomWriteExpression() {
-			return null;
+			return getSelectionExpression();
 		}
 	}
 }

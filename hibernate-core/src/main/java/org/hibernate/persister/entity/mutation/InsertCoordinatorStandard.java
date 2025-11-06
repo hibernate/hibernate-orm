@@ -26,8 +26,8 @@ import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
-import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
@@ -431,19 +431,16 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				assert entityPersister().getInsertDelegate() != null;
 				final OnExecutionGenerator generator = (OnExecutionGenerator) entityPersister().getGenerator();
 				if ( generator.referenceColumnsInSql( dialect ) ) {
-					final BasicEntityIdentifierMapping identifierMapping = (BasicEntityIdentifierMapping) entityPersister().getIdentifierMapping();
 					final String[] columnValues = generator.getReferencedColumnValues( dialect );
 					if ( columnValues != null ) {
-						tableMapping.getKeyMapping().forEachKeyColumn( (i, column) -> tableInsertBuilder.addKeyColumn(
-								column.getColumnName(),
-								columnValues[i],
-								identifierMapping.getJdbcMapping()
-						) );
+						assert columnValues.length == 1;
+						assert tableMapping.getKeyMapping().getColumnCount() == 1;
+						tableInsertBuilder.addKeyColumn( columnValues[0], tableMapping.getKeyMapping().getKeyColumn( 0 ) );
 					}
 				}
 			}
 			else {
-				tableMapping.getKeyMapping().forEachKeyColumn( tableInsertBuilder::addKeyColumn );
+				tableMapping.getKeyMapping().forEachKeyColumn( (TableDetails.KeyColumnConsumer) tableInsertBuilder::addKeyColumn );
 			}
 		} );
 	}

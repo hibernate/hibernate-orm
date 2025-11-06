@@ -6,7 +6,6 @@ package org.hibernate.sql.model.ast.builder;
 
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
@@ -66,8 +65,8 @@ public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationO
 	}
 
 	@Override
-	public void addKeyRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
-		keyRestrictionBindings.addRestriction( columnName, columnWriteFragment, jdbcMapping );
+	public void addKeyRestrictionBinding(SelectableMapping selectableMapping) {
+		keyRestrictionBindings.addRestriction( selectableMapping );
 	}
 
 	@Override
@@ -76,13 +75,8 @@ public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationO
 	}
 
 	@Override
-	public void addOptimisticLockRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
-		optimisticLockBindings.addRestriction( columnName, columnWriteFragment, jdbcMapping );
-	}
-
-	@Override
-	public void addLiteralRestriction(String columnName, String sqlLiteralText, JdbcMapping jdbcMapping) {
-		keyRestrictionBindings.addRestriction( columnName, sqlLiteralText, jdbcMapping );
+	public void addOptimisticLockRestriction(SelectableMapping selectableMapping) {
+		optimisticLockBindings.addRestriction( selectableMapping );
 	}
 
 	@Override

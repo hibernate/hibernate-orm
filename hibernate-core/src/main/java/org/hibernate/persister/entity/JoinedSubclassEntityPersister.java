@@ -680,8 +680,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					tableName,
 					tableIndex,
 					() -> (columnConsumer) -> columnConsumer.accept(
-							tableName,
 							getIdentifierMapping(),
+							tableName,
 							naturalOrderTableKeyColumns[tableIndex]
 					)
 			);
@@ -749,21 +749,22 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	public void addDiscriminatorToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
 		if ( explicitDiscriminatorColumnName != null ) {
 			final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.getTableDetailsBuilder( getRootTableName() );
-			final String discriminatorValueToUse;
-			if ( discriminatorValue == NULL_DISCRIMINATOR ) {
-				discriminatorValueToUse = "null";
-			}
-			else if ( discriminatorValue == NOT_NULL_DISCRIMINATOR ) {
-				discriminatorValueToUse = "not null";
-			}
-			else {
-				discriminatorValueToUse = discriminatorSQLString;
-			}
 			tableInsertBuilder.addValueColumn(
-					explicitDiscriminatorColumnName,
-					discriminatorValueToUse,
-					getDiscriminatorMapping().getJdbcMapping()
+					getDiscriminatorValueString(),
+					getDiscriminatorMapping()
 			);
+		}
+	}
+
+	private String getDiscriminatorValueString() {
+		if ( discriminatorValue == NULL_DISCRIMINATOR ) {
+			return "null";
+		}
+		else if ( discriminatorValue == NOT_NULL_DISCRIMINATOR ) {
+			return "not null";
+		}
+		else {
+			return discriminatorSQLString;
 		}
 	}
 

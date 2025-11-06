@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.engine.jdbc.Size;
+
 import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
 
@@ -25,7 +28,7 @@ public interface SelectableConsumer {
 
 	/**
 	 * Simple form of visitation over a number of columns by name, using
-	 * a separate {@link SelectableMappings} as a base for additional details.
+	 * a separate {@link JdbcMappingContainer} as a base for additional details.
 	 * <p>
 	 * Intended for use in visiting table keys, where we know JdbcMappings, etc.
 	 * from the identifier.
@@ -44,6 +47,144 @@ public interface SelectableConsumer {
 		mutableSelectableMapping.forEach( this::accept );
 	}
 
+	/**
+	 * Simple form of visitation over a number of columns by name, using
+	 * a separate {@link SelectableMappings} as a base for additional details.
+	 * <p>
+	 * Intended for use in visiting table keys, where we know JdbcMappings, etc.
+	 * from the identifier.
+	 * <p>
+	 * The expectation here is for the following details to be available:<ul>
+	 *     <li>{@link SelectableMapping#getContainingTableExpression()}</li>
+	 *     <li>{@link SelectableMapping#getSelectionExpression()} (the column name)</li>
+	 *     <li>{@link SelectableMapping#getWriteExpression()}</li>
+	 *     <li>{@link SelectableMapping#getJdbcMapping()}</li>
+	 * </ul>
+	 */
+	default void accept(SelectableMappings base, String tableName, String[] columnNames) {
+		class SelectableMappingIterator implements SelectableMapping {
+			private final String tableName;
+			private final SelectableMappings delegate;
+			private final String[] columnNames;
+
+			private int index;
+
+			public SelectableMappingIterator(String tableName, SelectableMappings delegate, String[] columnNames) {
+				this.tableName = tableName;
+				this.delegate = delegate;
+				this.columnNames = columnNames;
+				assert delegate.getJdbcTypeCount() == columnNames.length;
+			}
+
+			private void forEach(BiConsumer<Integer,SelectableMapping> consumer) {
+				for ( index = 0; index < columnNames.length; index++ ) {
+					consumer.accept( index, this );
+				}
+			}
+
+			@Override
+			public String getContainingTableExpression() {
+				return tableName;
+			}
+
+			@Override
+			public String getSelectionExpression() {
+				return columnNames[index];
+			}
+
+			@Override
+			public @Nullable String getCustomReadExpression() {
+				return null;
+			}
+
+			@Override
+			public @Nullable String getCustomWriteExpression() {
+				return null;
+			}
+
+			private SelectableMapping getDelegate() {
+				return delegate.getSelectable( index );
+			}
+
+			@Override
+			public String getSelectableName() {
+				return getDelegate().getSelectableName();
+			}
+
+			@Override
+			public SelectablePath getSelectablePath() {
+				return getDelegate().getSelectablePath();
+			}
+
+			@Override
+			public boolean isFormula() {
+				return getDelegate().isFormula();
+			}
+
+			@Override
+			public boolean isNullable() {
+				return getDelegate().isNullable();
+			}
+
+			@Override
+			public boolean isInsertable() {
+				return getDelegate().isInsertable();
+			}
+
+			@Override
+			public boolean isUpdateable() {
+				return getDelegate().isUpdateable();
+			}
+
+			@Override
+			public boolean isPartitioned() {
+				return getDelegate().isPartitioned();
+			}
+
+			@Override
+			public @Nullable String getColumnDefinition() {
+				return getDelegate().getColumnDefinition();
+			}
+
+			@Override
+			public @Nullable Long getLength() {
+				return getDelegate().getLength();
+			}
+
+			@Override
+			public @Nullable Integer getPrecision() {
+				return getDelegate().getPrecision();
+			}
+
+			@Override
+			public @Nullable Integer getScale() {
+				return getDelegate().getScale();
+			}
+
+			@Override
+			public @Nullable Integer getTemporalPrecision() {
+				return getDelegate().getTemporalPrecision();
+			}
+
+			@Override
+			public boolean isLob() {
+				return getDelegate().isLob();
+			}
+
+			@Override
+			public JdbcMapping getJdbcMapping() {
+				return getDelegate().getJdbcMapping();
+			}
+
+			@Override
+			public Size toSize() {
+				return getDelegate().toSize();
+			}
+		}
+
+		final SelectableMappingIterator mutableSelectableMapping = new SelectableMappingIterator( tableName, base, columnNames );
+		mutableSelectableMapping.forEach( this::accept );
+	}
 
 	class MutableSelectableMapping implements SelectableMapping {
 		private final String tableName;

@@ -6,7 +6,6 @@ package org.hibernate.sql.model.ast.builder;
 
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.sql.model.MutationOperation;
@@ -80,17 +79,13 @@ public interface RestrictedTableMutationBuilder<O extends MutationOperation, M e
 		if ( selectableMapping.isFormula() ) {
 			return;
 		}
-		addKeyRestriction(
-				selectableMapping.getSelectionExpression(),
-				selectableMapping.getWriteExpression(),
-				selectableMapping.getJdbcMapping()
-		);
+		addKeyRestrictionBinding( selectableMapping );
 	}
 
 	/**
-	 * Add restriction based on the column in the table's key
+	 * Add a restriction as long as the selectable is not a formula and is not nullable
 	 */
-	void addKeyRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping);
+	void addKeyRestrictionBinding(SelectableMapping selectableMapping);
 
 	void addNullOptimisticLockRestriction(SelectableMapping column);
 
@@ -101,20 +96,7 @@ public interface RestrictedTableMutationBuilder<O extends MutationOperation, M e
 	/**
 	 * Add restriction based on non-version optimistically-locked column
 	 */
-	default void addOptimisticLockRestriction(SelectableMapping selectableMapping) {
-		addOptimisticLockRestriction(
-				selectableMapping.getSelectionExpression(),
-				selectableMapping.getWriteExpression(),
-				selectableMapping.getJdbcMapping()
-		);
-	}
-
-	/**
-	 * Add restriction based on non-version optimistically-locked column
-	 */
-	void addOptimisticLockRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping);
-
-	void addLiteralRestriction(String columnName, String sqlLiteralText, JdbcMapping jdbcMapping);
+	void addOptimisticLockRestriction(SelectableMapping selectableMapping);
 
 	ColumnValueBindingList getKeyRestrictionBindings();
 

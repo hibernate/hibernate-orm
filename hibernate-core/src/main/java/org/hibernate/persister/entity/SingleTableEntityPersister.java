@@ -480,9 +480,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		if ( discriminatorInsertable ) {
 			final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.getTableDetailsBuilder( getRootTableName() );
 			tableInsertBuilder.addValueColumn(
-					discriminatorColumnName,
 					discriminatorValue == NULL_DISCRIMINATOR ? NULL : discriminatorSQLValue,
-					getDiscriminatorMapping().getJdbcMapping()
+					getDiscriminatorMapping()
 			);
 		}
 	}
@@ -620,8 +619,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 					tableName,
 					tableIndex,
 					() -> columnConsumer -> columnConsumer.accept(
-							tableName,
 							getIdentifierMapping(),
+							tableName,
 							keyColumnNames[tableIndex]
 					)
 			);

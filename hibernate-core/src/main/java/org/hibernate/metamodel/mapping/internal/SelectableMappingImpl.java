@@ -25,8 +25,8 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 	private final String containingTableExpression;
 	private final String selectionExpression;
 	private final SelectablePath selectablePath;
-	private final String customReadExpression;
-	private final String customWriteExpression;
+	private final @Nullable String customReadExpression;
+	private final @Nullable String customWriteExpression;
 	private final boolean isLob;
 	private final boolean nullable;
 	private final boolean insertable;
@@ -37,14 +37,14 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 	public SelectableMappingImpl(
 			String containingTableExpression,
 			String selectionExpression,
-			SelectablePath selectablePath,
-			String customReadExpression,
-			String customWriteExpression,
-			String columnDefinition,
-			Long length,
-			Integer precision,
-			Integer scale,
-			Integer temporalPrecision,
+			@Nullable SelectablePath selectablePath,
+			@Nullable String customReadExpression,
+			@Nullable String customWriteExpression,
+			@Nullable String columnDefinition,
+			@Nullable Long length,
+			@Nullable Integer precision,
+			@Nullable Integer scale,
+			@Nullable Integer temporalPrecision,
 			boolean isLob,
 			boolean nullable,
 			boolean insertable,
@@ -55,7 +55,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		super( columnDefinition, length, precision, scale, temporalPrecision, jdbcMapping );
 		assert selectionExpression != null;
 		// Save memory by using interned strings. Probability is high that we have multiple duplicate strings
-		this.containingTableExpression = containingTableExpression == null ? null : containingTableExpression.intern();
+		this.containingTableExpression = containingTableExpression.intern();
 		this.selectionExpression = selectionExpression.intern();
 		this.selectablePath = selectablePath == null ? new SelectablePath( selectionExpression ) : selectablePath;
 		this.customReadExpression = customReadExpression == null ? null : customReadExpression.intern();
@@ -241,7 +241,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 
 	@Override
 	public String getSelectableName() {
-		return selectablePath == null ? null : selectablePath.getSelectableName();
+		return selectablePath.getSelectableName();
 	}
 
 	@Override
@@ -250,17 +250,12 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 	}
 
 	@Override
-	public String getCustomReadExpression() {
+	public @Nullable String getCustomReadExpression() {
 		return customReadExpression;
 	}
 
 	@Override
-	public String getCustomWriteExpression() {
-		return customWriteExpression;
-	}
-
-	@Override
-	public String getWriteExpression() {
+	public @Nullable String getCustomWriteExpression() {
 		return customWriteExpression;
 	}
 

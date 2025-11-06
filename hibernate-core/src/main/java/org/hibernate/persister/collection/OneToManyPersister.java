@@ -61,7 +61,6 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.ColumnValueParameterList;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.model.ast.MutatingTableReference;
@@ -307,26 +306,26 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		);
 		final List<ColumnValueBinding> keyRestrictionBindings = arrayList( keyColumnCount );
 		final List<ColumnValueBinding> valueBindings = arrayList( valuesCount );
-		fkDescriptor.getKeyPart().forEachSelectable( parameterBinders );
-		for ( ColumnValueParameter columnValueParameter : parameterBinders ) {
-			final ColumnReference columnReference = columnValueParameter.getColumnReference();
+		fkDescriptor.getKeyPart().forEachSelectable( (selectionIndex, selectableMapping) -> {
+			final var columnValueParameter = parameterBinders.addColumValueParameter( selectableMapping );
+			final var columnReference = columnValueParameter.getColumnReference();
 			keyRestrictionBindings.add(
 					new ColumnValueBinding(
 							columnReference,
 							new ColumnWriteFragment(
 									"?",
 									columnValueParameter,
-									columnReference.getJdbcMapping()
+									selectableMapping
 							)
 					)
 			);
 			valueBindings.add(
 					new ColumnValueBinding(
 							columnReference,
-							new ColumnWriteFragment( "null", columnReference.getJdbcMapping() )
+							new ColumnWriteFragment( "null", selectableMapping )
 					)
 			);
-		}
+		} );
 
 		if ( hasIndex() && !indexContainsFormula ) {
 			getAttributeMapping().getIndexDescriptor().forEachSelectable( (selectionIndex, selectableMapping) -> {
@@ -335,7 +334,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				}
 				valueBindings.add(
 						new ColumnValueBinding( new ColumnReference( tableReference, selectableMapping ),
-						new ColumnWriteFragment( "null", selectableMapping.getJdbcMapping() )
+						new ColumnWriteFragment( "null", selectableMapping )
 				) );
 			} );
 		}
@@ -494,10 +493,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				if ( selectable.isUpdateable() ) {
 					// set null
 					updateBuilder.addValueColumn(
-							selectable.getSelectionExpression(),
 							NULL,
-							selectable.getJdbcMapping(),
-							selectable.isLob()
+							selectable
 					);
 				}
 				// restrict
@@ -514,10 +511,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				final SelectableMapping selectable = indexDescriptor.getSelectable( i );
 				if ( selectable.isUpdateable() ) {
 					updateBuilder.addValueColumn(
-							selectable.getSelectionExpression(),
 							NULL,
-							selectable.getJdbcMapping(),
-							selectable.isLob()
+							selectable
 					);
 				}
 			}

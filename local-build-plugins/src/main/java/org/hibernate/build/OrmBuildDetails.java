@@ -16,7 +16,6 @@ import static org.hibernate.build.HibernateVersion.fromVersionFile;
  * @author Steve Ebersole
  */
 public abstract class OrmBuildDetails {
-	private final ReleaseDetails releaseDetails;
 	private final Provider<File> versionFileAccess;
 	private final HibernateVersion hibernateVersion;
 
@@ -26,12 +25,9 @@ public abstract class OrmBuildDetails {
 
 	@Inject
 	public OrmBuildDetails(Project project) {
-		releaseDetails = new ReleaseDetails( project );
 		versionFileAccess = project.provider( () -> new File( project.getRootDir(), HibernateVersion.RELATIVE_FILE ) );
 
-		hibernateVersion = releaseDetails.getReleaseVersion() != null
-				? releaseDetails.getReleaseVersion()
-				: fromVersionFile( versionFileAccess.get() );
+		hibernateVersion = fromVersionFile( versionFileAccess.get() );
 		project.setVersion( hibernateVersion.getFullName() );
 
 		jpaVersion = JpaVersion.from( project );
@@ -57,10 +53,6 @@ public abstract class OrmBuildDetails {
 
 	public String getHibernateVersionNameOsgi() {
 		return getHibernateVersion().getOsgiVersion();
-	}
-
-	public ReleaseDetails getReleaseDetails() {
-		return releaseDetails;
 	}
 
 	public JpaVersion getJpaVersion() {

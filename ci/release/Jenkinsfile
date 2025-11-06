@@ -222,7 +222,15 @@ pipeline {
 								withEnv([
 										"DISABLE_REMOTE_GRADLE_CACHE=true"
 								]) {
-									sh ".release/scripts/publish.sh -j ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION} ${env.GIT_BRANCH}"
+                                    def notesFiles = findFiles(glob: 'release_notes.md')
+                                    if ( notesFiles.length < 1 ) {
+                                        throw new IllegalStateException( "Could not locate `release_notes.md`" )
+                                    }
+                                    if ( notesFiles.length > 1 ) {
+                                        throw new IllegalStateException( "Located more than 1 `release_notes.md`" )
+                                    }
+
+									sh ".release/scripts/publish.sh -j --notes=${notesFiles[0].path} ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION} ${env.GIT_BRANCH} "
 								}
 							}
 						}
@@ -267,25 +275,6 @@ pipeline {
 								}
 							}
 						}
-					}
-				}
-			}
-		}
-		stage('Create GitHub release') {
-			steps {
-				script {
-					checkoutReleaseScripts()
-
-                    def notesFiles = findFiles(glob: 'release_notes.md')
-                    if ( notesFiles.length < 1 ) {
-                        throw new IllegalStateException( "Could not locate `release_notes.md`" )
-                    }
-                    if ( notesFiles.length > 1 ) {
-                        throw new IllegalStateException( "Located more than 1 `release_notes.md`" )
-                    }
-
-					withCredentials([string(credentialsId: 'Hibernate-CI.github.com', variable: 'GITHUB_API_TOKEN')]) {
-						sh ".release/scripts/github-release.sh ${env.SCRIPT_OPTIONS} --notes=${notesFiles[0].path} ${env.PROJECT} ${env.RELEASE_VERSION}"
 					}
 				}
 			}

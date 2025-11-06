@@ -47,14 +47,6 @@ tasks.register( 'releasePrepare' ) {
 	// See `:release:releasePrepare` which does a lot of heavy lifting here
 }
 
-tasks.register( 'releasePerform' ) {
-	group "release-perform"
-	description "Scripted release 'Release Perform' stage.  " +
-			"Generally this entails publishing artifacts to various servers.  " +
-			"Sub-projects register their own `releasePerform` to hook into this stage."
-	// See `:release:releasePerform` which does a lot of heavy lifting here
-}
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // CI Build Task
 

@@ -50,6 +50,9 @@ def releasePrepareTask = tasks.register("releasePrepare") {
     dependsOn tasks.check
     dependsOn tasks.generateMetadataFileForPublishedArtifactsPublication
     dependsOn tasks.generatePomFileForPublishedArtifactsPublication
+    // we depend on publishAllPublicationsToStagingRepository to make sure that the artifacts are "published" to a local staging directory
+    // used by JReleaser during the release process
+    dependsOn tasks.publishAllPublicationsToStagingRepository
 }
 
 // used from the h2 CI job

@@ -15,7 +15,6 @@ import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -27,6 +26,7 @@ import org.hibernate.type.format.JsonDocumentWriter;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.util.Collection;
 
 import static org.hibernate.type.descriptor.jdbc.StructHelper.getSubPart;
 
@@ -37,7 +37,8 @@ public class JsonGeneratingVisitor {
 
 	public static final JsonGeneratingVisitor INSTANCE = new JsonGeneratingVisitor();
 
-	protected JsonGeneratingVisitor() {}
+	protected JsonGeneratingVisitor() {
+	}
 
 	/**
 	 * Serializes an array of values into JSON object/array
@@ -56,40 +57,82 @@ public class JsonGeneratingVisitor {
 		}
 
 		if ( elementJdbcType instanceof JsonJdbcType jsonElementJdbcType ) {
-			final EmbeddableMappingType embeddableMappingType = jsonElementJdbcType.getEmbeddableMappingType();
-			for ( Object value : values ) {
+			visitPluralAggregateValues( jsonElementJdbcType, values, options, writer );
+		}
+		else {
+			assert !(elementJdbcType instanceof AggregateJdbcType);
+			visitBasicPluralValues( elementJavaType, elementJdbcType, values, options, writer );
+		}
+		writer.endArray();
+	}
+
+	private void visitPluralAggregateValues(
+			AggregateJdbcType elementJdbcType,
+			Object values,
+			WrapperOptions options,
+			JsonDocumentWriter writer) {
+		final EmbeddableMappingType embeddableMappingType = elementJdbcType.getEmbeddableMappingType();
+		if ( values.getClass().isArray() ) {
+			final var length = Array.getLength( values );
+			for ( int j = 0; j < length; j++ ) {
 				try {
-					visit( embeddableMappingType, value, options, writer );
+					visit( embeddableMappingType, Array.get( values, j ), options, writer );
 				}
 				catch (IOException e) {
-					throw new IllegalArgumentException( "Could not serialize JSON array value", e );
+					throw new IllegalArgumentException( "Could not serialize array element", e );
+				}
+			}
+		}
+		else if ( values instanceof Collection<?> collection ) {
+			for ( final var item : collection ) {
+				try {
+					visit( embeddableMappingType, item, options, writer );
+				}
+				catch (IOException e) {
+					throw new IllegalArgumentException( "Could not serialize array element", e );
 				}
 			}
 		}
 		else {
-			assert !(elementJdbcType instanceof AggregateJdbcType);
-			for ( Object value : values ) {
-				if ( value == null ) {
+			throw new IllegalArgumentException(
+					"Expected array or collection value, but got: " + values.getClass().getName()
+			);
+		}
+	}
+
+	private void visitBasicPluralValues(
+			JavaType<?> elementJavaType,
+			JdbcType elementJdbcType,
+			Object values,
+			WrapperOptions options,
+			JsonDocumentWriter writer) {
+		if ( values.getClass().isArray() ) {
+			final var length = Array.getLength( values );
+			for ( int j = 0; j < length; j++ ) {
+				final var item = Array.get( values, j );
+				if ( item == null ) {
 					writer.nullValue();
 				}
 				else {
-					writer.serializeJsonValue( value, (JavaType<?>) elementJavaType, elementJdbcType, options );
+					writer.serializeJsonValue( item, elementJavaType, elementJdbcType, options );
 				}
 			}
 		}
-
-		writer.endArray();
-	}
-
-	/**
-	 * Checks that a <code>JDBCType</code> is assignable to an array
-	 *
-	 * @param type the jdbc type
-	 * @return <code>true</code> if types is of array kind <code>false</code> otherwise.
-	 */
-	private static boolean isArrayType(JdbcType type) {
-		return (type.getDefaultSqlTypeCode() == SqlTypes.ARRAY ||
-				type.getDefaultSqlTypeCode() == SqlTypes.JSON_ARRAY);
+		else if ( values instanceof Collection<?> collection ) {
+			for ( final var item : collection ) {
+				if ( item == null ) {
+					writer.nullValue();
+				}
+				else {
+					writer.serializeJsonValue( item, elementJavaType, elementJdbcType, options );
+				}
+			}
+		}
+		else {
+			throw new IllegalArgumentException(
+					"Expected array or collection value, but got: " + values.getClass().getName()
+			);
+		}
 	}
 
 	public void visit(MappingType mappedType, Object value, WrapperOptions options, JsonDocumentWriter writer)
@@ -106,17 +149,26 @@ public class JsonGeneratingVisitor {
 			serializeObject( managedMappingType, value, options, writer );
 		}
 		else if ( mappedType instanceof BasicType<?> basicType ) {
-			if ( isArrayType( basicType.getJdbcType() ) ) {
-				final int length = Array.getLength( value );
+			if ( basicType.getJdbcType() instanceof ArrayJdbcType arrayJdbcType ) {
+				final var domainValue = basicType.convertToRelationalValue( value );
+				final var elementJdbcType = arrayJdbcType.getElementJdbcType();
 				writer.startArray();
-				if ( length != 0 ) {
-					//noinspection unchecked
-					final JavaType<Object> elementJavaType = ((BasicPluralJavaType<Object>) basicType.getJdbcJavaType()).getElementJavaType();
-					final var elementJdbcType = ((ArrayJdbcType) basicType.getJdbcType()).getElementJdbcType();
-					final Object domainArray = basicType.convertToRelationalValue( value );
-					for ( int j = 0; j < length; j++ ) {
-						writer.serializeJsonValue( Array.get( domainArray, j ), elementJavaType, elementJdbcType, options );
-					}
+				if ( elementJdbcType instanceof AggregateJdbcType aggregateJdbcType ) {
+					visitPluralAggregateValues(
+							aggregateJdbcType,
+							domainValue,
+							options,
+							writer
+					);
+				}
+				else {
+					visitBasicPluralValues(
+							((BasicPluralJavaType<?>) basicType.getJdbcJavaType()).getElementJavaType(),
+							elementJdbcType,
+							domainValue,
+							options,
+							writer
+					);
 				}
 				writer.endArray();
 			}

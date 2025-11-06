@@ -16,8 +16,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.OrderingMode;
 import org.hibernate.RemovalsMode;
-import org.hibernate.engine.spi.EffectiveEntityGraph;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -121,12 +119,12 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 			}
 		}
 
-		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
+		final var loadQueryInfluencers = session.getLoadQueryInfluencers();
 
 		try {
-			final EffectiveEntityGraph effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
-			final GraphSemantic initialGraphSemantic = effectiveEntityGraph.getSemantic();
-			final RootGraphImplementor<?> initialGraph = effectiveEntityGraph.getGraph();
+			final var effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
+			final var initialGraphSemantic = effectiveEntityGraph.getSemantic();
+			final var initialGraph = effectiveEntityGraph.getGraph();
 			final boolean hadInitialGraph = initialGraphSemantic != null;
 
 			if ( graphSemantic != null ) {
@@ -137,7 +135,9 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 			}
 
 			try {
-				return (List<T>) entityDescriptor.getMultiNaturalIdLoader().multiLoad( ids, this, session );
+				return (List<T>)
+						entityDescriptor.getMultiNaturalIdLoader()
+								.multiLoad( ids, this, session );
 			}
 			finally {
 				if ( graphSemantic != null ) {

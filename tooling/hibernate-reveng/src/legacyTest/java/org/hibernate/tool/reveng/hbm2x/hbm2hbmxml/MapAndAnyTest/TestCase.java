@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.MapAndAnyTest;
 
@@ -48,7 +35,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Properties;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Dmitry Geraskov
@@ -66,19 +56,19 @@ public class TestCase {
 	@TempDir
 	public File outputFolder = new File("output");
 
-    private File srcDir = null;
-    private Metadata metadata = null;
+	private File srcDir = null;
+	private Metadata metadata = null;
 
 	@BeforeEach
 	public void setUp() throws Exception {
 		srcDir = new File(outputFolder, "src");
 		assertTrue(srcDir.mkdir());
-        File resourcesDir = new File(outputFolder, "resources");
+		File resourcesDir = new File(outputFolder, "resources");
 		assertTrue(resourcesDir.mkdir());
 		MetadataDescriptor metadataDescriptor = HibernateUtil
 				.initializeMetadataDescriptor(this, HBM_XML_FILES, resourcesDir);
 		metadata = metadataDescriptor.createMetadata();
-        Exporter hbmexporter = new HbmExporter();
+		Exporter hbmexporter = new HbmExporter();
 		hbmexporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		hbmexporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, srcDir);
 		hbmexporter.start();
@@ -108,8 +98,8 @@ public class TestCase {
 		properties.put(AvailableSettings.CONNECTION_PROVIDER, ConnectionProvider.class.getName());
 		MetadataDescriptor metadataDescriptor = MetadataDescriptorFactory
 				.createNativeDescriptor(null, files.toArray(new File[4]), properties);
-        assertNotNull(metadataDescriptor.createMetadata());
-    }
+		assertNotNull(metadataDescriptor.createMetadata());
+	}
 
 	private @NonNull ArrayList<File> getFiles() {
 		ArrayList<File> files = new ArrayList<>(4);
@@ -171,9 +161,9 @@ public class TestCase {
 		assertNotNull(pc);
 		Property prop = pc.getProperty("data");
 		assertNotNull(prop);
-        assertInstanceOf(Any.class, prop.getValue());
+		assertInstanceOf(Any.class, prop.getValue());
 		Any any = (Any) prop.getValue();
-        assertNotNull(any.getMetaValues(), "Expected to get one meta-value element");
+		assertNotNull(any.getMetaValues(), "Expected to get one meta-value element");
 		assertEquals(1, any.getMetaValues().size(), "Expected to get one meta-value element");
 	}
 

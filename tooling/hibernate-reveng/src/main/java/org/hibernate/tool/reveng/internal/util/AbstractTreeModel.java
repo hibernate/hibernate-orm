@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.util;
 
@@ -33,143 +20,143 @@ import javax.swing.tree.TreePath;
 
 public abstract class AbstractTreeModel implements TreeModel {
 
-    private EventListenerList listenerList = new EventListenerList();
+	private EventListenerList listenerList = new EventListenerList();
 
-    /**
-     * Adds a listener for the TreeModelEvent posted after the tree changes.
-     *
-     * @see     #removeTreeModelListener
-     * @param   l       the listener to add
-     */
-    public void addTreeModelListener(TreeModelListener l) {
-        listenerList.add(TreeModelListener.class, l);
-    }
+	/**
+	 * Adds a listener for the TreeModelEvent posted after the tree changes.
+	 *
+	 * @see     #removeTreeModelListener
+	 * @param   l       the listener to add
+	 */
+	public void addTreeModelListener(TreeModelListener l) {
+		listenerList.add(TreeModelListener.class, l);
+	}
 
-    /**
-     * Removes a listener previously added with <B>addTreeModelListener()</B>.
-     *
-     * @see     #addTreeModelListener
-     * @param   l       the listener to remove
-     */  
-    public void removeTreeModelListener(TreeModelListener l) {
-        listenerList.remove(TreeModelListener.class, l);
-    }
+	/**
+	 * Removes a listener previously added with <B>addTreeModelListener()</B>.
+	 *
+	 * @see     #addTreeModelListener
+	 * @param   l       the listener to remove
+	 */
+	public void removeTreeModelListener(TreeModelListener l) {
+		listenerList.remove(TreeModelListener.class, l);
+	}
 
-    /**
-      * Messaged when the user has altered the value for the item identified
-      * by <I>path</I> to <I>newValue</I>.  If <I>newValue</I> signifies
-      * a truly new value the model should post a treeNodesChanged
-      * event.
-      *
-      * @param path path to the node that the user has altered.
-      * @param newValue the new value from the TreeCellEditor.
-      */
-    public void valueForPathChanged(TreePath path, Object newValue) {
-        throw new RuntimeException("AbstractTreeModel.valueForPathChanged: you MUST override this when using a TreeCellEditor!");
-    }
+	/**
+	* Messaged when the user has altered the value for the item identified
+	* by <I>path</I> to <I>newValue</I>.  If <I>newValue</I> signifies
+	* a truly new value the model should post a treeNodesChanged
+	* event.
+	*
+	* @param path path to the node that the user has altered.
+	* @param newValue the new value from the TreeCellEditor.
+	*/
+	public void valueForPathChanged(TreePath path, Object newValue) {
+		throw new RuntimeException("AbstractTreeModel.valueForPathChanged: you MUST override this when using a TreeCellEditor!");
+	}
 
-    /*
-     * Notify all listeners that have registered interest for
-     * notification on this event type.  The event instance 
-     * is lazily created using the parameters passed into 
-     * the fire method.
-     * @see EventListenerList
-     */
-    protected void fireTreeNodesChanged(Object source, Object[] path, 
-                                        int[] childIndices, 
-                                        Object[] children) {
-        // Guaranteed to return a non-null array
-        Object[] listeners = listenerList.getListenerList();
-        TreeModelEvent e = null;
-        // Process the listeners last to first, notifying
-        // those that are interested in this event
-        for (int i = listeners.length-2; i>=0; i-=2) {
-            if (listeners[i]==TreeModelListener.class) {
-                // Lazily create the event:
-                if (e == null)
-                    e = new TreeModelEvent(source, path, 
-                                           childIndices, children);
-                ((TreeModelListener)listeners[i+1]).treeNodesChanged(e);
-            }          
-        }
-    }
+	/*
+	 * Notify all listeners that have registered interest for
+	 * notification on this event type.  The event instance
+	 * is lazily created using the parameters passed into
+	 * the fire method.
+	 * @see EventListenerList
+	 */
+	protected void fireTreeNodesChanged(Object source, Object[] path,
+										int[] childIndices,
+										Object[] children) {
+		// Guaranteed to return a non-null array
+		Object[] listeners = listenerList.getListenerList();
+		TreeModelEvent e = null;
+		// Process the listeners last to first, notifying
+		// those that are interested in this event
+		for (int i = listeners.length-2; i>=0; i-=2) {
+			if (listeners[i]==TreeModelListener.class) {
+				// Lazily create the event:
+				if (e == null)
+					e = new TreeModelEvent(source, path,
+										childIndices, children);
+				((TreeModelListener)listeners[i+1]).treeNodesChanged(e);
+			}
+		}
+	}
 
-    /*
-     * Notify all listeners that have registered interest for
-     * notification on this event type.  The event instance 
-     * is lazily created using the parameters passed into 
-     * the fire method.
-     * @see EventListenerList
-     */
-    protected void fireTreeNodesInserted(Object source, Object[] path, 
-                                        int[] childIndices, 
-                                        Object[] children) {
-        // Guaranteed to return a non-null array
-        Object[] listeners = listenerList.getListenerList();
-        TreeModelEvent e = null;
-        // Process the listeners last to first, notifying
-        // those that are interested in this event
-        for (int i = listeners.length-2; i>=0; i-=2) {
-            if (listeners[i]==TreeModelListener.class) {
-                // Lazily create the event:
-                if (e == null)
-                    e = new TreeModelEvent(source, path, 
-                                           childIndices, children);
-                ((TreeModelListener)listeners[i+1]).treeNodesInserted(e);
-            }          
-        }
-    }
+	/*
+	 * Notify all listeners that have registered interest for
+	 * notification on this event type.  The event instance
+	 * is lazily created using the parameters passed into
+	 * the fire method.
+	 * @see EventListenerList
+	 */
+	protected void fireTreeNodesInserted(Object source, Object[] path,
+										int[] childIndices,
+										Object[] children) {
+		// Guaranteed to return a non-null array
+		Object[] listeners = listenerList.getListenerList();
+		TreeModelEvent e = null;
+		// Process the listeners last to first, notifying
+		// those that are interested in this event
+		for (int i = listeners.length-2; i>=0; i-=2) {
+			if (listeners[i]==TreeModelListener.class) {
+				// Lazily create the event:
+				if (e == null)
+					e = new TreeModelEvent(source, path,
+										childIndices, children);
+				((TreeModelListener)listeners[i+1]).treeNodesInserted(e);
+			}
+		}
+	}
 
-    /*
-     * Notify all listeners that have registered interest for
-     * notification on this event type.  The event instance 
-     * is lazily created using the parameters passed into 
-     * the fire method.
-     * @see EventListenerList
-     */
-    protected void fireTreeNodesRemoved(Object source, Object[] path, 
-                                        int[] childIndices, 
-                                        Object[] children) {
-        // Guaranteed to return a non-null array
-        Object[] listeners = listenerList.getListenerList();
-        TreeModelEvent e = null;
-        // Process the listeners last to first, notifying
-        // those that are interested in this event
-        for (int i = listeners.length-2; i>=0; i-=2) {
-            if (listeners[i]==TreeModelListener.class) {
-                // Lazily create the event:
-                if (e == null)
-                    e = new TreeModelEvent(source, path, 
-                                           childIndices, children);
-                ((TreeModelListener)listeners[i+1]).treeNodesRemoved(e);
-            }          
-        }
-    }
+	/*
+	 * Notify all listeners that have registered interest for
+	 * notification on this event type.  The event instance
+	 * is lazily created using the parameters passed into
+	 * the fire method.
+	 * @see EventListenerList
+	 */
+	protected void fireTreeNodesRemoved(Object source, Object[] path,
+										int[] childIndices,
+										Object[] children) {
+		// Guaranteed to return a non-null array
+		Object[] listeners = listenerList.getListenerList();
+		TreeModelEvent e = null;
+		// Process the listeners last to first, notifying
+		// those that are interested in this event
+		for (int i = listeners.length-2; i>=0; i-=2) {
+			if (listeners[i]==TreeModelListener.class) {
+				// Lazily create the event:
+				if (e == null)
+					e = new TreeModelEvent(source, path,
+										childIndices, children);
+				((TreeModelListener)listeners[i+1]).treeNodesRemoved(e);
+			}
+		}
+	}
 
-    /*
-     * Notify all listeners that have registered interest for
-     * notification on this event type.  The event instance 
-     * is lazily created using the parameters passed into 
-     * the fire method.
-     * @see EventListenerList
-     */
-    protected void fireTreeStructureChanged(Object source, Object[] path, 
-                                            int[] childIndices, 
-                                            Object[] children) {
-        // Guaranteed to return a non-null array
-        Object[] listeners = listenerList.getListenerList();
-        TreeModelEvent e = null;
-        // Process the listeners last to first, notifying
-        // those that are interested in this event
-        for (int i = listeners.length-2; i>=0; i-=2) {
-            if (listeners[i]==TreeModelListener.class) {
-                // Lazily create the event:
-                if (e == null)
-                    e = new TreeModelEvent(source, path, 
-                                           childIndices, children);
-                ((TreeModelListener)listeners[i+1]).treeStructureChanged(e);
-            }          
-        }
-    }
-    
+	/*
+	 * Notify all listeners that have registered interest for
+	 * notification on this event type.  The event instance
+	 * is lazily created using the parameters passed into
+	 * the fire method.
+	 * @see EventListenerList
+	 */
+	protected void fireTreeStructureChanged(Object source, Object[] path,
+											int[] childIndices,
+											Object[] children) {
+		// Guaranteed to return a non-null array
+		Object[] listeners = listenerList.getListenerList();
+		TreeModelEvent e = null;
+		// Process the listeners last to first, notifying
+		// those that are interested in this event
+		for (int i = listeners.length-2; i>=0; i-=2) {
+			if (listeners[i]==TreeModelListener.class) {
+				// Lazily create the event:
+				if (e == null)
+					e = new TreeModelEvent(source, path,
+										childIndices, children);
+				((TreeModelListener)listeners[i+1]).treeStructureChanged(e);
+			}
+		}
+	}
+
 }

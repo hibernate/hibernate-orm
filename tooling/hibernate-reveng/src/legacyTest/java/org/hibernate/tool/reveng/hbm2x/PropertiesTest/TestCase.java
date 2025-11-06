@@ -1,21 +1,7 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.tool.reveng.hbm2x.PropertiesTest;
 
 import org.hibernate.tool.reveng.api.export.Exporter;
@@ -46,7 +32,10 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.Objects;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Josh Moore josh.moore@gmx.de
@@ -55,23 +44,23 @@ import static org.junit.jupiter.api.Assertions.*;
 //TODO Reenable this test and make it pass (See HBX-2884)
 @Disabled
 public class TestCase {
-	
+
 	private static final String[] HBM_XML_FILES = new String[] {
 			"Properties.hbm.xml"
 	};
-	
+
 	@TempDir
 	public File outputFolder = new File("output");
-	
+
 	private DefaultArtifactCollector artifactCollector;
 	private File outputDir = null;
 
-    @BeforeEach
+	@BeforeEach
 	public void setUp() throws Exception {
 		artifactCollector = new DefaultArtifactCollector();
 		outputDir = new File(outputFolder, "src");
 		assertTrue(outputDir.mkdir());
-        File resourcesDir = new File(outputFolder, "resources");
+		File resourcesDir = new File(outputFolder, "resources");
 		assertTrue(resourcesDir.mkdir());
 		MetadataDescriptor metadataDescriptor = HibernateUtil
 				.initializeMetadataDescriptor(this, HBM_XML_FILES, resourcesDir);
@@ -85,14 +74,14 @@ public class TestCase {
 		hbmexporter.getProperties().put(ExporterConstants.ARTIFACT_COLLECTOR, artifactCollector);
 		exporter.start();
 		hbmexporter.start();
-	}	
-	
+	}
+
 	@Test
 	public void testNoGenerationOfEmbeddedPropertiesComponent() {
 		assertEquals(2, artifactCollector.getFileCount("java"));
 		assertEquals(2, artifactCollector.getFileCount("hbm.xml"));
 	}
-	
+
 	@Test
 	public void testGenerationOfEmbeddedProperties() throws Exception {
 		File outputXml = new File(outputDir,  "properties/PPerson.hbm.xml");
@@ -109,15 +98,15 @@ public class TestCase {
 		assertEquals("emergencyContact", element.getAttribute( "name" ));
 		assertNotNull(
 				FileUtil.findFirstString(
-						"name", 
+						"name",
 						new File(outputDir, "properties/PPerson.java" )));
 		assertNull(
 				FileUtil.findFirstString(
-						"emergencyContact", 
+						"emergencyContact",
 						new File(outputDir, "properties/PPerson.java" )),
-				"Embedded component/properties should not show up in .java");		
+				"Embedded component/properties should not show up in .java");
 	}
-	
+
 	@Test
 	public void testCompilable() throws Exception {
 		String propertiesUsageResourcePath = "/org/hibernate/tool/hbm2x/PropertiesTest/PropertiesUsage.java_";

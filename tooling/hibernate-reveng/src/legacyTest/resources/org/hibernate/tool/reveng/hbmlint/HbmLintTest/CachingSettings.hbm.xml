@@ -18,7 +18,7 @@
 	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.hibernate.tool.hbmlint.HbmLintTest">
+<hibernate-mapping package="org.hibernate.tool.reveng.hbmlint.HbmLintTest">
 
     <!--  category has caching for collection but its target is not cached -->
     <class name="Category">

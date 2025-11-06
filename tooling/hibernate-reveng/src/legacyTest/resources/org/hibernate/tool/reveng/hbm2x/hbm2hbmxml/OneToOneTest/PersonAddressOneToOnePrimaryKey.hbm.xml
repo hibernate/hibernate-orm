@@ -20,14 +20,14 @@
 
 <hibernate-mapping 
 	package="org.hibernate.tool.hbm2x.hbm2hbmxml.OneToOneTest">
-<class name="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.OneToOneTest.Person">
+<class name="Person">
     <id name="id" column="personId">
         <generator class="native"/>
     </id>
     <one-to-one name="address"/>
 </class>
 
-<class name="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.OneToOneTest.Address">
+<class name="Address">
     <id name="id" column="personId">
         <generator class="foreign">
             <param name="property">person</param>

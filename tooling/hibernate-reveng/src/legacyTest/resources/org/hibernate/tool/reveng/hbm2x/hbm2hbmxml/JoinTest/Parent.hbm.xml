@@ -30,7 +30,7 @@
 <hibernate-mapping 
 	package="org.hibernate.tool.hbm2x.hbm2hbmxml.JoinTest">
 
-	<class name="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.JoinTest.Parent">
+	<class name="Parent">
 		<id name="id" 
 			column="parent_id">
 			<generator class="increment"/>
@@ -42,11 +42,11 @@
 			inverse="true">
 			<key column="parent_id"/>
 			<many-to-many column="child_id" 
-				class="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.JoinTest.Child"/>
+				class="Child"/>
 		</set>
 	</class>
 	
-	<class name="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.JoinTest.Child">
+	<class name="Child">
 		<id name="id" 
 			column="child_id">
 			<generator class="increment"/>

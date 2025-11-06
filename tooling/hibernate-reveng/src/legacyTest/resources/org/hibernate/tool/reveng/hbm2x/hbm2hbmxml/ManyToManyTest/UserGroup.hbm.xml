@@ -27,9 +27,9 @@
 -->
 
 <hibernate-mapping
-	package="org.hibernate.tool.hbm2x.hbm2hbmxml.ManyToManyTest">
+	package="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.ManyToManyTest">
 
-	<class name="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.ManyToManyTest.User" table="`User`">
+	<class name="User" table="`User`">
 		<composite-id>
 			<key-property name="name"/>
 			<key-property name="org"/>
@@ -39,14 +39,14 @@
 				<column name="userName"/>
 				<column name="org"/>
 			</key>
-			<many-to-many class="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.ManyToManyTest.Group">
+			<many-to-many class="Group">
 				<column name="groupName"/>
 				<formula>org</formula>
 			</many-to-many>
 		</set>
 	</class>
 
-	<class name="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.ManyToManyTest.Group" table="`Group`">
+	<class name="Group" table="`Group`">
 		<composite-id>
 			<key-property name="name"/>
 			<key-property name="org"/>
@@ -57,7 +57,7 @@
 				<column name="groupName"/>
 				<column name="org"/>
 			</key>
-			<many-to-many class="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.ManyToManyTest.User">
+			<many-to-many class="User">
 				<column name="userName"/>
 				<formula>org</formula>
 			</many-to-many>

@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.hbmlint.SchemaAnalyzer;
 
@@ -60,33 +47,33 @@ public class TestCase {
 				AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY,
 				SequenceMismatchStrategy.NONE);
 		MetadataSources metadataSources = new MetadataSources(ssrb.build());
-		metadataSources.addResource("org/hibernate/tool/hbmlint/SchemaAnalyzer/SchemaIssues.hbm.xml");
+		metadataSources.addResource("org/hibernate/tool/reveng/hbmlint/SchemaAnalyzer/SchemaIssues.hbm.xml");
 		Metadata metadata = metadataSources.buildMetadata();
 		SchemaByMetaDataDetector analyzer = new SchemaByMetaDataDetector();
 		analyzer.initialize( metadata );
 
 
-        for (Table table : metadata.collectTableMappings()) {
-            MockCollector mc = new MockCollector();
+		for (Table table : metadata.collectTableMappings()) {
+			MockCollector mc = new MockCollector();
 
-            if (table.getName().equalsIgnoreCase("MISSING_TABLE")) {
-                analyzer.visit(table, mc);
-                assertEquals(1, mc.problems.size());
-                Issue ap = mc.problems.get(0);
-                assertTrue(ap.getDescription().contains("Missing table"));
-            } else if (table.getName().equalsIgnoreCase("CATEGORY")) {
-                analyzer.visit(table, mc);
-                assertEquals(1, mc.problems.size());
-                Issue ap = mc.problems.get(0);
-                assertTrue(ap.getDescription().contains("missing column: name"));
-            } else if (table.getName().equalsIgnoreCase("BAD_TYPE")) {
-                analyzer.visit(table, mc);
-                assertEquals(1, mc.problems.size());
-                Issue ap = mc.problems.get(0);
-                assertTrue(ap.getDescription().contains("wrong column type for name"));
-            }
-        }
-		
+			if (table.getName().equalsIgnoreCase("MISSING_TABLE")) {
+				analyzer.visit(table, mc);
+				assertEquals(1, mc.problems.size());
+				Issue ap = mc.problems.get(0);
+				assertTrue(ap.getDescription().contains("Missing table"));
+			} else if (table.getName().equalsIgnoreCase("CATEGORY")) {
+				analyzer.visit(table, mc);
+				assertEquals(1, mc.problems.size());
+				Issue ap = mc.problems.get(0);
+				assertTrue(ap.getDescription().contains("missing column: name"));
+			} else if (table.getName().equalsIgnoreCase("BAD_TYPE")) {
+				analyzer.visit(table, mc);
+				assertEquals(1, mc.problems.size());
+				Issue ap = mc.problems.get(0);
+				assertTrue(ap.getDescription().contains("wrong column type for name"));
+			}
+		}
+
 		MockCollector mc = new MockCollector();
 		analyzer.visitGenerators(mc);
 		assertEquals(1,mc.problems.size());
@@ -94,12 +81,12 @@ public class TestCase {
 		assertTrue(issue.getDescription().contains("does_not_exist"));
 
 	}
-			
+
 	static class MockCollector implements IssueCollector {
 		List<Issue> problems = new ArrayList<>();
-		public void reportIssue(Issue analyze) {			
+		public void reportIssue(Issue analyze) {
 			problems.add(analyze);
-		}		
-	}		
+		}
+	}
 
 }

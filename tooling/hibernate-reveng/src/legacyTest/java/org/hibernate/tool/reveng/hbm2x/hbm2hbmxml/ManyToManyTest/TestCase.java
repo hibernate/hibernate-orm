@@ -1,21 +1,7 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.ManyToManyTest;
 
 import org.hibernate.cfg.AvailableSettings;
@@ -26,6 +12,7 @@ import org.hibernate.tool.reveng.internal.export.hbm.HbmExporter;
 import org.hibernate.tool.reveng.test.utils.ConnectionProvider;
 import org.hibernate.tool.reveng.test.utils.HibernateUtil;
 import org.hibernate.tool.reveng.test.utils.JUnitUtil;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -42,25 +29,38 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Properties;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestCase {
 
 	private static final String[] HBM_XML_FILES = new String[] {
 			"UserGroup.hbm.xml"
 	};
-	
+
+	private static DocumentBuilderFactory DOCUMENT_BUILDER_FACTORY;
+
 	@TempDir
 	public File outputFolder = new File("output");
-	
+
 	private HbmExporter hbmexporter = null;
 	private File srcDir = null;
 
-    @BeforeEach
+	@BeforeAll
+	public static void beforeAll() throws Exception {
+		DOCUMENT_BUILDER_FACTORY = DocumentBuilderFactory.newInstance(
+				"com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl",
+				null);
+		DOCUMENT_BUILDER_FACTORY.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+	}
+
+	@BeforeEach
 	public void setUp() throws Exception {
 		srcDir = new File(outputFolder, "output");
 		assertTrue(srcDir.mkdir());
-        File resourcesDir = new File(outputFolder, "resources");
+		File resourcesDir = new File(outputFolder, "resources");
 		assertTrue(resourcesDir.mkdir());
 		MetadataDescriptor metadataDescriptor = HibernateUtil
 				.initializeMetadataDescriptor(this, HBM_XML_FILES, resourcesDir);
@@ -78,10 +78,10 @@ public class TestCase {
 			.exists() );
 		JUnitUtil.assertIsNonEmptyFile(new File(
 				srcDir,
-				"org/hibernate/tool/hbm2x/hbm2hbmxml/ManyToManyTest/User.hbm.xml") );
+				"org/hibernate/tool/reveng/hbm2x/hbm2hbmxml/ManyToManyTest/User.hbm.xml") );
 		JUnitUtil.assertIsNonEmptyFile(new File(
 				srcDir,
-				"org/hibernate/tool/hbm2x/hbm2hbmxml/ManyToManyTest/Group.hbm.xml") );
+				"org/hibernate/tool/reveng/hbm2x/hbm2hbmxml/ManyToManyTest/Group.hbm.xml") );
 	}
 
 	@Test
@@ -93,29 +93,28 @@ public class TestCase {
 
 	@Test
 	public void testReadable() {
-        ArrayList<File> files = new ArrayList<>(4);
-        files.add(new File(
-        		srcDir, 
-        		"org/hibernate/tool/hbm2x/hbm2hbmxml/ManyToManyTest/User.hbm.xml"));
-        files.add(new File(
-        		srcDir, 
-        		"org/hibernate/tool/hbm2x/hbm2hbmxml/ManyToManyTest/Group.hbm.xml"));
+		ArrayList<File> files = new ArrayList<>(4);
+		files.add(new File(
+				srcDir,
+				"org/hibernate/tool/reveng/hbm2x/hbm2hbmxml/ManyToManyTest/User.hbm.xml"));
+		files.add(new File(
+				srcDir,
+				"org/hibernate/tool/reveng/hbm2x/hbm2hbmxml/ManyToManyTest/Group.hbm.xml"));
 		Properties properties = new Properties();
 		properties.put(AvailableSettings.DIALECT, HibernateUtil.Dialect.class.getName());
 		properties.put(AvailableSettings.CONNECTION_PROVIDER, ConnectionProvider.class.getName());
 		MetadataDescriptor metadataDescriptor = MetadataDescriptorFactory
 				.createNativeDescriptor(null, files.toArray(new File[2]), properties);
-        assertNotNull(metadataDescriptor.createMetadata());
-    }
+		assertNotNull(metadataDescriptor.createMetadata());
+	}
 
 	@Test
 	public void testManyToMany() throws Exception {
 		File outputXml = new File(
-				srcDir,  
-				"org/hibernate/tool/hbm2x/hbm2hbmxml/ManyToManyTest/User.hbm.xml");
+				srcDir,
+				"org/hibernate/tool/reveng/hbm2x/hbm2hbmxml/ManyToManyTest/User.hbm.xml");
 		JUnitUtil.assertIsNonEmptyFile(outputXml);
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		DocumentBuilder db = dbf.newDocumentBuilder();
+		DocumentBuilder db = DOCUMENT_BUILDER_FACTORY.newDocumentBuilder();
 		Document document = db.parse(outputXml);
 		XPath xpath = XPathFactory.newInstance().newXPath();
 		NodeList nodeList = (NodeList)xpath
@@ -123,7 +122,7 @@ public class TestCase {
 				.evaluate(document, XPathConstants.NODESET);
 		assertEquals(1, nodeList.getLength(), "Expected to get one many-to-many element");
 		Element node = (Element) nodeList.item(0);
-		assertEquals("org.hibernate.tool.hbm2x.hbm2hbmxml.ManyToManyTest.Group", node.getAttribute( "entity-name" ));
+		assertEquals("org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.ManyToManyTest.Group", node.getAttribute( "entity-name" ));
 		nodeList = (NodeList)xpath
 				.compile("//hibernate-mapping/class/set")
 				.evaluate(document, XPathConstants.NODESET);
@@ -135,11 +134,10 @@ public class TestCase {
 	@Test
 	public void testCompositeId() throws Exception {
 		File outputXml = new File(
-				srcDir, 
-				"org/hibernate/tool/hbm2x/hbm2hbmxml/ManyToManyTest/Group.hbm.xml");
+				srcDir,
+				"org/hibernate/tool/reveng/hbm2x/hbm2hbmxml/ManyToManyTest/Group.hbm.xml");
 		JUnitUtil.assertIsNonEmptyFile(outputXml);
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		DocumentBuilder db = dbf.newDocumentBuilder();
+		DocumentBuilder db = DOCUMENT_BUILDER_FACTORY.newDocumentBuilder();
 		Document document = db.parse(outputXml);
 		XPath xpath = XPathFactory.newInstance().newXPath();
 		NodeList nodeList = (NodeList)xpath
@@ -165,11 +163,10 @@ public class TestCase {
 	@Test
 	public void testSetAttributes() throws Exception {
 		File outputXml = new File(
-				srcDir, 
-				"org/hibernate/tool/hbm2x/hbm2hbmxml/ManyToManyTest/Group.hbm.xml");
+				srcDir,
+				"org/hibernate/tool/reveng/hbm2x/hbm2hbmxml/ManyToManyTest/Group.hbm.xml");
 		JUnitUtil.assertIsNonEmptyFile(outputXml);
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		DocumentBuilder db = dbf.newDocumentBuilder();
+		DocumentBuilder db = DOCUMENT_BUILDER_FACTORY.newDocumentBuilder();
 		Document document = db.parse(outputXml);
 		XPath xpath = XPathFactory.newInstance().newXPath();
 		NodeList nodeList = (NodeList)xpath

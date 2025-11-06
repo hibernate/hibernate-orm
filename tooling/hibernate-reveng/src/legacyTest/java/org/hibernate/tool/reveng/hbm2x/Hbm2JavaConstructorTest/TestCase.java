@@ -1,21 +1,7 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.tool.reveng.hbm2x.Hbm2JavaConstructorTest;
 
 import org.hibernate.boot.Metadata;
@@ -44,7 +30,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author max
@@ -57,19 +46,19 @@ public class TestCase {
 	private static final String[] HBM_XML_FILES = new String[] {
 			"Constructors.hbm.xml"
 	};
-	
+
 	@TempDir
 	public File outputFolder = new File("output");
-	
+
 	private File srcDir = null;
 
-    private Metadata metadata = null;
-	
+	private Metadata metadata = null;
+
 	@BeforeEach
 	public void setUp() throws Exception {
 		srcDir = new File(outputFolder, "src");
 		assertTrue(srcDir.mkdir());
-        File resourcesDir = new File(outputFolder, "resources");
+		File resourcesDir = new File(outputFolder, "resources");
 		assertTrue(resourcesDir.mkdir());
 		MetadataDescriptor metadataDescriptor = HibernateUtil
 				.initializeMetadataDescriptor(this, HBM_XML_FILES, resourcesDir);
@@ -78,8 +67,8 @@ public class TestCase {
 		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, srcDir);
 		exporter.start();
-	}	
-	
+	}
+
 	@Test
 	public void testCompilable() throws Exception {
 		String constructorUsageResourcePath = "/org/hibernate/tool/hbm2x/Hbm2JavaConstructorTest/ConstructorUsage.java_";
@@ -97,21 +86,21 @@ public class TestCase {
 
 	@Test
 	public void testNoVelocityLeftOvers() {
-		assertNull(FileUtil.findFirstString(
-				"$", 
+		assertNull( FileUtil.findFirstString(
+				"$",
 				new File(srcDir, "Company.java" ) ) );
 		assertNull(FileUtil.findFirstString(
-				"$", 
+				"$",
 				new File(srcDir,"BigCompany.java" ) ) );
 		assertNull(FileUtil.findFirstString(
-				"$", 
+				"$",
 				new File(srcDir,"EntityAddress.java" ) ) );
 	}
 
 	@Test
 	public void testEntityConstructorLogic() {
 		Cfg2JavaTool c2j = new Cfg2JavaTool();
-		POJOClass company = c2j.getPOJOClass(metadata.getEntityBinding("Company"));	
+		POJOClass company = c2j.getPOJOClass(metadata.getEntityBinding("Company"));
 		List<Property> all = company.getPropertyClosureForFullConstructor();
 		assertNoDuplicates(all);
 		assertEquals(3, all.size());
@@ -138,29 +127,29 @@ public class TestCase {
 		assertFalse(propertiesForMinimalConstructor.contains(classMapping.getIdentifierProperty()));
 		List<Property> propertiesForFullConstructor = person.getPropertiesForFullConstructor();
 		assertEquals(2,propertiesForFullConstructor.size());
-		assertFalse(propertiesForFullConstructor.contains(classMapping.getIdentifierProperty()));	
+		assertFalse(propertiesForFullConstructor.contains(classMapping.getIdentifierProperty()));
 	}
 
 	@Test
 	public void testMinimal() {
 		POJOClass bp = new EntityPOJOClass(
-				metadata.getEntityBinding("BrandProduct"), 
+				metadata.getEntityBinding("BrandProduct"),
 				new Cfg2JavaTool());
 		List<Property> propertiesForMinimalConstructor = bp.getPropertiesForMinimalConstructor();
 		assertEquals(1,propertiesForMinimalConstructor.size());
 		List<Property> propertiesForFullConstructor = bp.getPropertiesForFullConstructor();
-		assertEquals(2, propertiesForFullConstructor.size());		
+		assertEquals(2, propertiesForFullConstructor.size());
 	}
-	
+
 	private void assertNoDuplicates(List<?> bigall) {
-        Set<Object> set = new HashSet<>(bigall);
-		assertEquals(set.size(),bigall.size(), "list had duplicates!");	
+		Set<Object> set = new HashSet<>(bigall);
+		assertEquals(set.size(),bigall.size(), "list had duplicates!");
 	}
 
 	private void assertNoOverlap(List<?> first, List<?> second) {
 		Set<Object> set = new HashSet<>();
 		set.addAll(first);
-		set.addAll(second);	
+		set.addAll(second);
 		assertEquals(set.size(),first.size()+second.size());
 	}
 

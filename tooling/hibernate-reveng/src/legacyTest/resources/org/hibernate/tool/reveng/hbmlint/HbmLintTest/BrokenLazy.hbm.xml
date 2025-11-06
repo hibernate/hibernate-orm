@@ -18,10 +18,10 @@
 	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.hibernate.tool.hbmlint.HbmLintTest">
+<hibernate-mapping package="org.hibernate.tool.reveng.hbmlint.HbmLintTest">
 
     <!--  category has caching for collection but its target is not cached -->
-    <class name="org.hibernate.tool.reveng.hbmlint.HbmLintTest.BrokenLazy" lazy="true">
+    <class name="BrokenLazy" lazy="true">
     
     	<id name="id" type="long">
     		<generator class="native"/>
@@ -29,7 +29,7 @@
 		
 	</class>
 	
-	<class name="org.hibernate.tool.reveng.hbmlint.HbmLintTest.BrokenNonLazy" lazy="false">
+	<class name="BrokenNonLazy" lazy="false">
 	<id name="id" type="long">
 		<generator class="native" />
 	</id>

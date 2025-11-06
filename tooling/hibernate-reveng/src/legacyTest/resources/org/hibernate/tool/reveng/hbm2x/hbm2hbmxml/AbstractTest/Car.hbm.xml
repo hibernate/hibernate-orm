@@ -20,18 +20,18 @@
 	
 <hibernate-mapping package="org.hibernate.tool.hbm2x.hbm2hbmxml.AbstractTest">
 
-	<class name="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.AbstractTest.Car" lazy="false" node="car">
+	<class name="Car" lazy="false" node="car">
 		<id name="id" node="@id" type="long">
 			<generator class="increment"/>
 		</id>
 		<property name="model"  type="string" node="model"/>
 		<set name="carParts" node="." cascade="all">
 			<key column="car" not-null="true"/>
-			<one-to-many class="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.AbstractTest.CarPart" node="carPart"/>
+			<one-to-many class="CarPart" node="carPart"/>
 		</set>
 	</class>
 	
-	<class name="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.AbstractTest.CarPart" node="carPart" abstract="true">
+	<class name="CarPart" node="carPart" abstract="true">
 		<id name="id" node="@id" type="long">
 			<generator class="increment"/>
 		</id>

@@ -20,7 +20,7 @@
 
 <hibernate-mapping package="org.hibernate.tool.hbm2x.hbm2hbmxml.MapAndAnyTest">
 
-    <class name="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.MapAndAnyTest.Person" table="T_ANY_PERSON">
+    <class name="Person" table="T_ANY_PERSON">
         <id name="id" column="ID_">
             <generator class="increment" />
         </id>
@@ -32,7 +32,7 @@
         </any>
     </class>
 
-    <class name="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.MapAndAnyTest.Address" table="T_ANY_ADDRESS">
+    <class name="Address" table="T_ANY_ADDRESS">
         <id name="id" column="ID_">
             <generator class="increment" />
         </id>

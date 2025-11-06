@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.tool.gradle;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -10,9 +14,6 @@ import org.junit.jupiter.api.Test;
 
 import org.hibernate.tool.it.gradle.TestTemplate;
 
-import org.gradle.testkit.runner.BuildResult;
-import org.gradle.testkit.runner.GradleRunner;
-
 public class TutorialTest extends TestTemplate {
 
 	@BeforeEach
@@ -22,7 +23,7 @@ public class TutorialTest extends TestTemplate {
 				"create table PERSON (ID int not null, NAME varchar(20), primary key (ID))"
 		});
 	}
-	
+
 	@Test
 	public void testTutorial() throws Exception {
 		createProjectAndExecuteGradleCommand();
@@ -34,5 +35,5 @@ public class TutorialTest extends TestTemplate {
 		assertTrue(generatedPersonJavaFile.exists());
 		assertTrue(generatedPersonJavaFile.isFile());
 	}
-	
+
 }

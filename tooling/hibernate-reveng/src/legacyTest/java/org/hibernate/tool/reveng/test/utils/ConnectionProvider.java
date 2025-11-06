@@ -1,42 +1,41 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.test.utils;
 
 import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
 
 import java.io.Serial;
-import java.sql.*;
+import java.sql.Array;
+import java.sql.Blob;
+import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.NClob;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.RowIdLifetime;
+import java.sql.SQLWarning;
+import java.sql.SQLXML;
+import java.sql.Savepoint;
+import java.sql.Statement;
+import java.sql.Struct;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
 public class ConnectionProvider extends UserSuppliedConnectionProviderImpl {
-	
+
 	@Serial
-    private static final long serialVersionUID = 1L;
-	
+	private static final long serialVersionUID = 1L;
+
 	private static final Connection CONNECTION = new Connection();
 	private static final DatabaseMetaData DATABASE_META_DATA = new DatabaseMetaData();
 
 	@Override public java.sql.Connection getConnection() { return CONNECTION; }
-	
+
 	@Override public void closeConnection(java.sql.Connection conn) {}
-	
+
 	private static class Connection implements java.sql.Connection {
 		@Override public <T> T unwrap(Class<T> iface) { return null; }
 		@Override public boolean isWrapperFor(Class<?> iface) { return false; }
@@ -93,7 +92,7 @@ public class ConnectionProvider extends UserSuppliedConnectionProviderImpl {
 		@Override public void setNetworkTimeout(Executor executor, int milliseconds) {}
 		@Override public int getNetworkTimeout() { return 0; }
 	}
-	
+
 	private static class DatabaseMetaData implements java.sql.DatabaseMetaData {
 		@Override public <T> T unwrap(Class<T> iface) { return null; }
 		@Override public boolean isWrapperFor(Class<?> iface) { return false; }
@@ -136,7 +135,7 @@ public class ConnectionProvider extends UserSuppliedConnectionProviderImpl {
 		@Override public boolean nullPlusNonNullIsNull() { return false; }
 		@Override public boolean supportsConvert() { return false; }
 		@Override public boolean supportsConvert(int fromType, int toType) { return false; }
-		@Override public boolean supportsTableCorrelationNames() { return false; } 
+		@Override public boolean supportsTableCorrelationNames() { return false; }
 		@Override public boolean supportsDifferentTableCorrelationNames() { return false; }
 		@Override public boolean supportsExpressionsInOrderBy() { return false; }
 		@Override public boolean supportsOrderByUnrelated() { return false; }
@@ -229,7 +228,7 @@ public class ConnectionProvider extends UserSuppliedConnectionProviderImpl {
 		@Override public ResultSet getPrimaryKeys(String catalog, String schema, String table) { return null; }
 		@Override public ResultSet getImportedKeys(String catalog, String schema, String table) { return null; }
 		@Override public ResultSet getExportedKeys(String catalog, String schema, String table) { return null; }
-		@Override public ResultSet getCrossReference(String parentCatalog, String parentSchema, String parentTable, String foreignCatalog, String foreignSchema, String foreignTable) { return null; } 
+		@Override public ResultSet getCrossReference(String parentCatalog, String parentSchema, String parentTable, String foreignCatalog, String foreignSchema, String foreignTable) { return null; }
 		@Override public ResultSet getTypeInfo() { return null; }
 		@Override public ResultSet getIndexInfo(String catalog, String schema, String table, boolean unique, boolean approximate) { return null; }
 		@Override public boolean supportsResultSetType(int type) { return false; }
@@ -272,5 +271,5 @@ public class ConnectionProvider extends UserSuppliedConnectionProviderImpl {
 		@Override public ResultSet getPseudoColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern) { return null; }
 		@Override public boolean generatedKeyAlwaysReturned() { return false; }
 	}
-	
+
 }

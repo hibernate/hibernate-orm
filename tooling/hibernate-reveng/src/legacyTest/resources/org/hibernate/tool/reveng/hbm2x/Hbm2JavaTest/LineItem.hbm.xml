@@ -31,7 +31,7 @@
      
 -->
 
-<hibernate-mapping package="org.hibernate.tool.hbm2x.Hbm2JavaTest">
+<hibernate-mapping package="org.hibernate.tool.reveng.hbm2x.Hbm2JavaTest">
 
     <class name="LineItem">
     	

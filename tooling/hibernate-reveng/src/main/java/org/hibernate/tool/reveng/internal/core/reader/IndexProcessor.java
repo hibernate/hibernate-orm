@@ -1,29 +1,8 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2015-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.core.reader;
-
-import java.sql.DatabaseMetaData;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import org.hibernate.JDBCException;
 import org.hibernate.mapping.Column;
@@ -34,107 +13,115 @@ import org.hibernate.tool.reveng.api.core.RevengDialect;
 import org.hibernate.tool.reveng.internal.util.TableNameQualifier;
 import org.jboss.logging.Logger;
 
+import java.sql.DatabaseMetaData;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 public class IndexProcessor {
 
-    private static final Logger log = Logger.getLogger(IndexProcessor.class);
+	private static final Logger log = Logger.getLogger(IndexProcessor.class);
 
-    public static void processIndices(
-            RevengDialect metaDataDialect,
-            String  defaultSchema,
-            String defaultCatalog,
-            Table table) {
+	public static void processIndices(
+			RevengDialect metaDataDialect,
+			String  defaultSchema,
+			String defaultCatalog,
+			Table table) {
 
-        Map<String, Index> indexes = new HashMap<>(); // indexname (String) -> Index
-        Map<String, UniqueKey> uniquekeys = new HashMap<>(); // name (String) -> UniqueKey
-        Map<Column, List<UniqueKey>> uniqueColumns = new HashMap<>(); // Column -> List<Index>
+		Map<String, Index> indexes = new HashMap<>(); // indexname (String) -> Index
+		Map<String, UniqueKey> uniquekeys = new HashMap<>(); // name (String) -> UniqueKey
+		Map<Column, List<UniqueKey>> uniqueColumns = new HashMap<>(); // Column -> List<Index>
 
-        Iterator<Map<String, Object>> indexIterator = null;
-        try {
-            Map<String,Object> indexRs;
-            indexIterator = metaDataDialect.getIndexInfo(getCatalogForDBLookup(table.getCatalog(), defaultCatalog), getSchemaForDBLookup(table.getSchema(), defaultSchema), table.getName());
+		Iterator<Map<String, Object>> indexIterator = null;
+		try {
+			Map<String,Object> indexRs;
+			indexIterator = metaDataDialect.getIndexInfo(getCatalogForDBLookup(table.getCatalog(), defaultCatalog), getSchemaForDBLookup(table.getSchema(), defaultSchema), table.getName());
 
-            while (indexIterator.hasNext() ) {
-                indexRs = indexIterator.next();
-                String indexName = (String) indexRs.get("INDEX_NAME");
-                String columnName = (String) indexRs.get("COLUMN_NAME");
-                boolean unique = !(Boolean) indexRs.get( "NON_UNIQUE" );
+			while (indexIterator.hasNext() ) {
+				indexRs = indexIterator.next();
+				String indexName = (String) indexRs.get("INDEX_NAME");
+				String columnName = (String) indexRs.get("COLUMN_NAME");
+				boolean unique = !(Boolean) indexRs.get( "NON_UNIQUE" );
 
-                if (columnName != null || indexName != null) { // both can be non-null with statistical indexs which we don't have any use for.
+				if (columnName != null || indexName != null) { // both can be non-null with statistical indexs which we don't have any use for.
 
-                    if(unique) {
-                        UniqueKey key = uniquekeys.get(indexName);
-                        if (key==null) {
-                            key = new UniqueKey();
-                            key.setName(indexName);
-                            key.setTable(table);
-                            table.addUniqueKey(key);
-                            uniquekeys.put(indexName, key);
-                        }
+					if(unique) {
+						UniqueKey key = uniquekeys.get(indexName);
+						if (key==null) {
+							key = new UniqueKey();
+							key.setName(indexName);
+							key.setTable(table);
+							table.addUniqueKey(key);
+							uniquekeys.put(indexName, key);
+						}
 
-                        if(indexes.containsKey(indexName) ) {
-                            throw new RuntimeException("UniqueKey exists also as Index! ");
-                        }
-                        Column column = getColumn(metaDataDialect, table, columnName);
-                        key.addColumn(column);
+						if(indexes.containsKey(indexName) ) {
+							throw new RuntimeException("UniqueKey exists also as Index! ");
+						}
+						Column column = getColumn(metaDataDialect, table, columnName);
+						key.addColumn(column);
 
-                        if ( key.getColumnSpan() == 1 ) {
-                            // make list of columns that has the chance of being unique
-                            List<UniqueKey> l = uniqueColumns.computeIfAbsent( column,
-                                    k -> new ArrayList<>() );
-                            l.add(key);
-                        }
-                    }
-                    else {
-                        Index index = indexes.get(indexName);
-                        if(index==null) {
-                            index = new Index();
-                            index.setName(indexName);
-                            index.setTable(table);
-                            table.addIndex(index);
-                            indexes.put(indexName, index);
-                        }
+						if ( key.getColumnSpan() == 1 ) {
+							// make list of columns that has the chance of being unique
+							List<UniqueKey> l = uniqueColumns.computeIfAbsent( column,
+									k -> new ArrayList<>() );
+							l.add(key);
+						}
+					}
+					else {
+						Index index = indexes.get(indexName);
+						if(index==null) {
+							index = new Index();
+							index.setName(indexName);
+							index.setTable(table);
+							table.addIndex(index);
+							indexes.put(indexName, index);
+						}
 
-                        if(uniquekeys.containsKey(indexName) ) {
-                            throw new RuntimeException("Index exists also as Unique! ");
-                        }
-                        Column column = getColumn(metaDataDialect, table, columnName);
-                        index.addColumn(column);
-                    }
+						if(uniquekeys.containsKey(indexName) ) {
+							throw new RuntimeException("Index exists also as Unique! ");
+						}
+						Column column = getColumn(metaDataDialect, table, columnName);
+						index.addColumn(column);
+					}
 
-                }
-                else {
-                    if( DatabaseMetaData.tableIndexStatistic != (Short) indexRs.get( "TYPE" ) ) {
-                        log.warn("Index was not statistical, but no column name was found in " + indexName);
-                    }
+				}
+				else {
+					if( DatabaseMetaData.tableIndexStatistic != (Short) indexRs.get( "TYPE" ) ) {
+						log.warn("Index was not statistical, but no column name was found in " + indexName);
+					}
 
-                }
-            }
-        }
-        catch (JDBCException t) {
-            log.warn("Exception while trying to get indexinfo on " + TableNameQualifier.qualify(table.getCatalog(), table.getSchema(), table.getName() ) +  "=" + t.getMessage() );
-            // Bug #604761 Oracle getIndexInfo() needs major grants And other dbs sucks too ;)
-            // http://sourceforge.net/tracker/index.php?func=detail&aid=604761&group_id=36044&atid=415990
-        }
-        finally {
-            if (indexIterator != null) {
-                try {
-                    metaDataDialect.close(indexIterator);
-                }
-                catch(JDBCException se) {
-                    log.warn("Exception while trying to close resultset for index meta data",se);
-                }
-            }
-        }
+				}
+			}
+		}
+		catch (JDBCException t) {
+			log.warn("Exception while trying to get indexinfo on " + TableNameQualifier.qualify(table.getCatalog(), table.getSchema(), table.getName() ) +  "=" + t.getMessage() );
+			// Bug #604761 Oracle getIndexInfo() needs major grants And other dbs sucks too ;)
+			// http://sourceforge.net/tracker/index.php?func=detail&aid=604761&group_id=36044&atid=415990
+		}
+		finally {
+			if (indexIterator != null) {
+				try {
+					metaDataDialect.close(indexIterator);
+				}
+				catch(JDBCException se) {
+					log.warn("Exception while trying to close resultset for index meta data",se);
+				}
+			}
+		}
 
-        // mark columns that are unique TODO: multiple columns are not unique on their own.
-        for ( Entry<Column, List<UniqueKey>> entry : uniqueColumns.entrySet() ) {
-            Column col = entry.getKey();
-            for ( UniqueKey key : entry.getValue() ) {
-                if ( key.getColumnSpan() == 1 ) {
-                    col.setUnique( true );
-                }
-            }
-        }
+		// mark columns that are unique TODO: multiple columns are not unique on their own.
+		for ( Entry<Column, List<UniqueKey>> entry : uniqueColumns.entrySet() ) {
+			Column col = entry.getKey();
+			for ( UniqueKey key : entry.getValue() ) {
+				if ( key.getColumnSpan() == 1 ) {
+					col.setUnique( true );
+				}
+			}
+		}
 
 /*		for ( Entry<String, UniqueKey> stringUniqueKeyEntry : uniquekeys.entrySet() ) {
 			// if keyset has no overlaps with primary key (table.getPrimaryKey())
@@ -142,35 +129,35 @@ public class IndexProcessor {
 		}
 */	}
 
-    private static String getCatalogForDBLookup(String catalog, String defaultCatalog) {
-        return catalog==null?defaultCatalog:catalog;
-    }
+	private static String getCatalogForDBLookup(String catalog, String defaultCatalog) {
+		return catalog==null?defaultCatalog:catalog;
+	}
 
-    private static String getSchemaForDBLookup(String schema, String defaultSchema) {
-        return schema==null?defaultSchema:schema;
-    }
+	private static String getSchemaForDBLookup(String schema, String defaultSchema) {
+		return schema==null?defaultSchema:schema;
+	}
 
-    private static Column getColumn(RevengDialect metaDataDialect, Table table, String columnName) {
-        Column column = new Column();
-        column.setName(quote(columnName, metaDataDialect));
-        Column existing = table.getColumn(column);
-        if(existing!=null) {
-            column = existing;
-        }
-        return column;
-    }
+	private static Column getColumn(RevengDialect metaDataDialect, Table table, String columnName) {
+		Column column = new Column();
+		column.setName(quote(columnName, metaDataDialect));
+		Column existing = table.getColumn(column);
+		if(existing!=null) {
+			column = existing;
+		}
+		return column;
+	}
 
-    private static String quote(String columnName, RevengDialect metaDataDialect) {
-        if(columnName==null) return columnName;
-        if(metaDataDialect.needQuote(columnName)) {
-            if(columnName.length()>1 && columnName.charAt(0)=='`' && columnName.charAt(columnName.length()-1)=='`') {
-                return columnName; // avoid double quoting
-            }
-            return "`" + columnName + "`";
-        }
-        else {
-            return columnName;
-        }
-    }
+	private static String quote(String columnName, RevengDialect metaDataDialect) {
+		if(columnName==null) return columnName;
+		if(metaDataDialect.needQuote(columnName)) {
+			if(columnName.length()>1 && columnName.charAt(0)=='`' && columnName.charAt(columnName.length()-1)=='`') {
+				return columnName; // avoid double quoting
+			}
+			return "`" + columnName + "`";
+		}
+		else {
+			return columnName;
+		}
+	}
 
 }

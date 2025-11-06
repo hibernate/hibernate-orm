@@ -28,7 +28,7 @@
 
 <hibernate-mapping package="org.hibernate.tool.hbm2x.hbm2hbmxml.IdBagTest">
 	
-	<class name="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.IdBagTest.User" table="`Users`">
+	<class name="User" table="`Users`">
 		<id name="name"/>
 		
 		<idbag name="groups" 
@@ -40,12 +40,12 @@
 			</collection-id>
 			<key column="userName"/>
 			<many-to-many column="groupName" 
-					class="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.IdBagTest.Group"/>
+					class="Group"/>
 		</idbag>
 		
 	</class>
 	
-	<class name="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.IdBagTest.Group" table="`Groups`">
+	<class name="Group" table="`Groups`">
 		<id name="name"/>
 	</class>
 	

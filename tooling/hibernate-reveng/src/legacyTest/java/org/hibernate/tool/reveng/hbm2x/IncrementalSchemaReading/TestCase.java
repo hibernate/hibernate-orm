@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.hbm2x.IncrementalSchemaReading;
 
@@ -39,21 +26,28 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Proxy;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Properties;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * @author max
  * @author koen
  */
 public class TestCase {
-	
+
 	private Properties properties = null;
 	private String defaultSchema = null;
 	private String defaultCatalog = null;
 	private final List<String> gottenTables = new ArrayList<>();
-		
+
 	@BeforeEach
 	public void setUp() {
 		JdbcUtil.createDatabase(this);
@@ -61,12 +55,12 @@ public class TestCase {
 		defaultSchema = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
 		defaultCatalog = properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
 	}
-	
+
 	@AfterEach
 	public void tearDown() {
 		JdbcUtil.dropDatabase(this);
 	}
-	
+
 	@Test
 	public void testReadSchemaIncremental() {
 		StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();
@@ -77,51 +71,51 @@ public class TestCase {
 		RevengDialect mockedMetaDataDialect = createMockedMetaDataDialect(
 				RevengDialectFactory.createMetaDataDialect(dialect, properties));
 		DatabaseReader reader = DatabaseReader.create( properties, tss, mockedMetaDataDialect, serviceRegistry);
-		
+
 		tss.addSchemaSelection( createSchemaSelection("CHILD") );
-		
+
 		RevengMetadataCollector dc = new RevengMetadataCollector();
 		reader.readDatabaseSchema(dc);
-		
+
 		assertEquals(1, gottenTables.size());
 		assertEquals("CHILD", gottenTables.get(0));
-		
+
 		Iterator<Table> iterator = dc.iterateTables();
 		Table firstChild = iterator.next();
 		assertEquals("CHILD", firstChild.getName());
 		assertFalse(iterator.hasNext());
-		
+
 		assertFalse(firstChild.getForeignKeyCollection().iterator().hasNext(), "should not record foreignkey to table it doesn't know about yet");
-		
+
 		tss.clearSchemaSelections();
 		tss.addSchemaSelection( createSchemaSelection("MASTER") );
-		
+
 		gottenTables.clear();
 		reader.readDatabaseSchema(dc);
-		
+
 		assertEquals(1, gottenTables.size());
 		assertEquals("MASTER", gottenTables.get(0));
-		
-		
+
+
 		iterator = dc.iterateTables();
 		assertNotNull(iterator.next());
 		assertNotNull(iterator.next());
 		assertFalse(iterator.hasNext());
-		
+
 		Table table = getTable(dc, mockedMetaDataDialect, defaultCatalog, defaultSchema, "CHILD" );
 		assertSame( firstChild, table );
-		
+
 		JUnitUtil.assertIteratorContainsExactly(
-				"should have recorded one foreignkey to child table", 
+				"should have recorded one foreignkey to child table",
 				firstChild.getForeignKeyCollection().iterator(),
-				1);		
-		
-		
-		tss.clearSchemaSelections();		
+				1);
+
+
+		tss.clearSchemaSelections();
 		reader.readDatabaseSchema(dc);
-		
+
 		Table finalMaster = getTable(dc, mockedMetaDataDialect, defaultCatalog, defaultSchema, "MASTER" );
-		
+
 		assertSame(firstChild, getTable(dc, mockedMetaDataDialect, defaultCatalog, defaultSchema, "CHILD" ));
 		JUnitUtil.assertIteratorContainsExactly(
 				null,
@@ -134,18 +128,18 @@ public class TestCase {
 	}
 
 	private Table getTable(
-			RevengMetadataCollector revengMetadataCollector, 
-			RevengDialect metaDataDialect, 
-			String catalog, 
-			String schema, 
+			RevengMetadataCollector revengMetadataCollector,
+			RevengDialect metaDataDialect,
+			String catalog,
+			String schema,
 			String name) {
 		return revengMetadataCollector.getTable(
 				TableIdentifier.create(
-						quote(metaDataDialect, catalog), 
-						quote(metaDataDialect, schema), 
+						quote(metaDataDialect, catalog),
+						quote(metaDataDialect, schema),
 						quote(metaDataDialect, name)));
 	}
- 	
+
 	private String quote(RevengDialect metaDataDialect, String name) {
 		if (name == null) return null;
 		if (metaDataDialect.needQuote(name)) {
@@ -172,32 +166,32 @@ public class TestCase {
 			@Override
 			public String getMatchTable() {
 				return matchTable;
-			}		
+			}
 		};
 	}
-	
+
 	private RevengDialect createMockedMetaDataDialect(RevengDialect delegate) {
 		return (RevengDialect)Proxy.newProxyInstance(
-				getClass().getClassLoader(), 
+				getClass().getClassLoader(),
 				new Class[] { RevengDialect.class },
-                (proxy, method, args) -> {
-                    if ("getTables".equals(method.getName())) {
-                        gottenTables.add((String)args[2]);
-                        return delegate.getTables(
-                                (String)args[0],
-                                (String)args[1],
-                                args[2] == null ? "%" : (String)args[2]);
-                    } else if ("getColumns".equals(method.getName())) {
-                        return delegate.getColumns(
-                                (String)args[0],
-                                (String)args[1],
-                                args[2] == null ? "%" : (String)args[2],
-                                args[3] == null ? "%" : (String)args[3]);
-                    } else {
-                        return method.invoke(delegate, args);
+				(proxy, method, args) -> {
+					if ("getTables".equals(method.getName())) {
+						gottenTables.add((String)args[2]);
+						return delegate.getTables(
+								(String)args[0],
+								(String)args[1],
+								args[2] == null ? "%" : (String)args[2]);
+					} else if ("getColumns".equals(method.getName())) {
+						return delegate.getColumns(
+								(String)args[0],
+								(String)args[1],
+								args[2] == null ? "%" : (String)args[2],
+								args[3] == null ? "%" : (String)args[3]);
+					} else {
+						return method.invoke(delegate, args);
 
-                    }
-                });
+					}
+				});
 	}
-	
+
 }

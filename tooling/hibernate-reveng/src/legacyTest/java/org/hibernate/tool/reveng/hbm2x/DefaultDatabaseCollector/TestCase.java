@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.hbm2x.DefaultDatabaseCollector;
 
@@ -39,26 +26,32 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Properties;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Dmitry Geraskov
  * @author koen
  */
 public class TestCase {
-		
+
 	@BeforeEach
 	public void setUp() {
 		JdbcUtil.createDatabase(this);
 	}
-	
+
 	@AfterEach
 	public void tearDown() {
 		JdbcUtil.dropDatabase(this);
 	}
-	
+
 	@Test
 	public void testReadOnlySpecificSchema() {
 		OverrideRepository or = new OverrideRepository();
@@ -73,27 +66,29 @@ public class TestCase {
 		if(catchild.getName().equals("cat.master")) {
 			catchild = tables.get(1);
 			catmaster = tables.get(0);
-		} 
+		}
 		TableIdentifier masterid = TableIdentifier.create(catmaster);
 		TableIdentifier childid = TableIdentifier.create(catchild);
 		assertEquals(TableIdentifier.create(null, "cat.cat", "cat.child"), childid);
 		assertEquals(TableIdentifier.create(null, "cat.cat", "cat.master"), masterid);
 	}
-	
+
 	@Test
 	public void testNeedQuote() {
 		Properties properties = Environment.getProperties();
 		StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
 		ssrb.applySettings(properties);
-		ServiceRegistry serviceRegistry = ssrb.build();
-		RevengDialect realMetaData = RevengDialectFactory.createMetaDataDialect(
-				Objects.requireNonNull(serviceRegistry.getService(JdbcServices.class)).getDialect(),
-				properties );
+		RevengDialect realMetaData;
+		try (ServiceRegistry serviceRegistry = ssrb.build()) {
+			realMetaData = RevengDialectFactory.createMetaDataDialect(
+					Objects.requireNonNull( serviceRegistry.getService( JdbcServices.class ) ).getDialect(),
+					properties );
+		}
 		assertTrue(realMetaData.needQuote("cat.cat"), "The name must be quoted!");
 		assertTrue(realMetaData.needQuote("cat.child"), "The name must be quoted!");
 		assertTrue(realMetaData.needQuote("cat.master"), "The name must be quoted!");
 	}
-	
+
 	/**
 	 * There are 2 solutions:
 	 * 1. DatabaseCollector#addTable()/getTable() should be called for not quoted parameters - I think it is a preferable way.
@@ -107,12 +102,12 @@ public class TestCase {
 		Properties properties = Environment.getProperties();
 		properties.put(AvailableSettings.DEFAULT_SCHEMA, "cat.cat");
 		StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();
-		ServiceRegistry serviceRegistry = builder.build();	
-		RevengDialect realMetaData = RevengDialectFactory.createMetaDataDialect( 
+		ServiceRegistry serviceRegistry = builder.build();
+		RevengDialect realMetaData = RevengDialectFactory.createMetaDataDialect(
 				Objects.requireNonNull(serviceRegistry.getService(JdbcServices.class)).getDialect(),
 				properties);
-		DatabaseReader reader = DatabaseReader.create( 
-				properties, new DefaultStrategy(), 
+		DatabaseReader reader = DatabaseReader.create(
+				properties, new DefaultStrategy(),
 				realMetaData, serviceRegistry );
 		RevengMetadataCollector dc = new RevengMetadataCollector();
 		reader.readDatabaseSchema(dc);
@@ -123,20 +118,20 @@ public class TestCase {
 		assertNull(getTable(dc, realMetaData, defaultCatalog, doubleQuote("cat.cat"), doubleQuote("cat.master")), "Quoted names should not return the table");
 		assertEquals(1, dc.getOneToManyCandidates().size(), "Foreign key 'masterref' was filtered!");
 	}
-	
+
 	private Table getTable(
-			RevengMetadataCollector revengMetadataCollector, 
-			RevengDialect metaDataDialect, 
-			String catalog, 
-			String schema, 
+			RevengMetadataCollector revengMetadataCollector,
+			RevengDialect metaDataDialect,
+			String catalog,
+			String schema,
 			String name) {
 		return revengMetadataCollector.getTable(
 				TableIdentifier.create(
-						quote(metaDataDialect, catalog), 
-						quote(metaDataDialect, schema), 
+						quote(metaDataDialect, catalog),
+						quote(metaDataDialect, schema),
 						quote(metaDataDialect, name)));
 	}
- 	
+
 	private String quote(RevengDialect metaDataDialect, String name) {
 		if (name == null) return null;
 		if (metaDataDialect.needQuote(name)) {
@@ -149,15 +144,15 @@ public class TestCase {
 			return name;
 		}
 	}
-	
+
 	private static String doubleQuote(String name) {
 		return "\"" + name + "\"";
 	}
-	
+
 	private List<Table> getTables(Metadata metadata) {
-        return new ArrayList<>(metadata.collectTableMappings());
+		return new ArrayList<>(metadata.collectTableMappings());
 	}
-	
+
 	private SchemaSelection createSchemaSelection() {
 		return new SchemaSelection() {
 			@Override
@@ -171,8 +166,8 @@ public class TestCase {
 			@Override
 			public String getMatchTable() {
 				return null;
-			}		
+			}
 		};
 	}
-	
+
 }

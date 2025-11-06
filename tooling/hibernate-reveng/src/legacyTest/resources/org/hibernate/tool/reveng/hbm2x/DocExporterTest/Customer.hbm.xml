@@ -45,7 +45,7 @@
 		<property name="address" type="string" not-null="true"
 			length="200" />
 
-       <property name="customDate" type="org.hibernate.tool.hbm2x.DocExporterTest.TestCase$DummyDateType" not-null="true" length="200"/> 
+       <property name="customDate" type="org.hibernate.tool.reveng.hbm2x.DocExporterTest.TestCase$DummyDateType" not-null="true" length="200"/>
         
         <property name="acl" type="byte[]">
          <meta attribute="use-in-equals">true</meta>

@@ -30,7 +30,7 @@
     <param name="column">STATUS</param>
     <param name="table">ORDERS</param>
     <param name="schema"/>
-    <param name="enumClass">org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.TypeParamsTest.TestCase$Status</param>
+    <param name="enumClass">org.hibernate.tool.hbm2x.hbm2hbmxml.TypeParamsTest.TestCase$Status</param>
    </type>
   </property>
   <property name="name" type="string"/>

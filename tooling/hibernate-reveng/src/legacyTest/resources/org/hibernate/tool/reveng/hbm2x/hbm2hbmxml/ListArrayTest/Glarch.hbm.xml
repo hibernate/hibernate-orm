@@ -20,9 +20,9 @@
 <hibernate-mapping default-lazy="false" 
 	package="org.hibernate.tool.hbm2x.hbm2hbmxml.ListArrayTest">
 
-    <class name="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.ListArrayTest.Glarch"
+    <class name="Glarch"
     	table="`glarchez`"
-    	proxy="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.ListArrayTest.GlarchProxy"
+    	proxy="GlarchProxy"
     	dynamic-update="true">
 
         <!--cache-->
@@ -30,7 +30,7 @@
             <generator class="uuid"/>
         </id>
         <version name="version"/>
-        <many-to-one name="next" column="next_" class="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.ListArrayTest.Glarch"/>
+        <many-to-one name="next" column="next_" class="Glarch"/>
         <dynamic-component name="dynaBean">
         	<property name="foo" type="string"/>
         	<property name="bar" type="integer"/>
@@ -43,10 +43,10 @@
         <list name="fooComponents" lazy="true" cascade="all">
             <key column="glarch_key"/>
             <index column="tha_indecks"/>
-            <composite-element class="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.ListArrayTest.FooComponent">
+            <composite-element class="FooComponent">
                 <property name="name" column="name_"/>
                 <property name="count" column="count_"/>
-                <nested-composite-element name="subcomponent" class="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.ListArrayTest.FooComponent">
+                <nested-composite-element name="subcomponent" class="FooComponent">
                     <property name="name" column="x_"/>
                     <property name="count" column="y_"/>
                 </nested-composite-element>
@@ -56,11 +56,11 @@
         <array name="proxyArray" element-class="GlarchProxy">
         	<key column="array_key"/>
         	<index column="array_indecks"/>
-        	<one-to-many class="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.ListArrayTest.Glarch"/>
+        	<one-to-many class="Glarch"/>
         </array>
     </class>
     
-     <class name="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.ListArrayTest.Fee" table="`the fees`">
+     <class name="Fee" table="`the fees`">
         <id type="string" name="key" column="id_" length="64" unsaved-value="null">
             <generator class="uuid"/>
         </id>

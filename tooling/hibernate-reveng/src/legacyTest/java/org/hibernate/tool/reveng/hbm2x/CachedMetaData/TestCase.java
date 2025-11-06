@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.hbm2x.CachedMetaData;
 
@@ -40,7 +27,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 
 /**
@@ -67,9 +56,9 @@ public class TestCase {
 		}
 
 		public void configure(ConnectionProvider cp) {
-			delegate.configure(cp);			
+			delegate.configure(cp);
 		}
-		
+
 		public Iterator<Map<String, Object>> getColumns(String catalog, String schema, String table, String column) {
 			if(failOnDelegateAccess) {
 				throw new IllegalStateException("delegate not accessible");
@@ -114,12 +103,8 @@ public class TestCase {
 			return delegate.needQuote( name );
 		}
 
-		public void setDelegate(Object object) {
-			this.delegate = null;			
-		}
-
 		public void setFailOnDelegateAccess(boolean b) {
-			failOnDelegateAccess = b;			
+			failOnDelegateAccess = b;
 		}
 
 		public Iterator<Map<String, Object>> getSuggestedPrimaryKeyStrategyName(String catalog, String schema, String name) {
@@ -129,47 +114,47 @@ public class TestCase {
 				return delegate.getSuggestedPrimaryKeyStrategyName(catalog, schema, name);
 			}
 		}
-		
+
 	}
-	
+
 	@BeforeEach
 	public void setUp() {
 		JdbcUtil.createDatabase(this);
 	}
-	
+
 	@AfterEach
 	public void tearDown() {
 		JdbcUtil.dropDatabase(this);
 	}
-	
+
 	@Test
 	public void testCachedDialect() {
 		StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();
-		ServiceRegistry serviceRegistry = builder.build();		
+		ServiceRegistry serviceRegistry = builder.build();
 		Properties properties = Environment.getProperties();
-		RevengDialect realMetaData = RevengDialectFactory.createMetaDataDialect( 
+		RevengDialect realMetaData = RevengDialectFactory.createMetaDataDialect(
 				Objects.requireNonNull(serviceRegistry.getService(JdbcServices.class)).getDialect(),
 				Environment.getProperties() );
 		MockedMetaDataDialect mock = new MockedMetaDataDialect(realMetaData);
 		CachedMetaDataDialect dialect = new CachedMetaDataDialect(mock);
-		DatabaseReader reader = DatabaseReader.create( 
-				properties, 
-				new DefaultStrategy(), 
-				dialect, 
+		DatabaseReader reader = DatabaseReader.create(
+				properties,
+				new DefaultStrategy(),
+				dialect,
 				serviceRegistry );
 		RevengMetadataCollector dc = new RevengMetadataCollector();
 		reader.readDatabaseSchema(dc);
-		validate( dc );				
-		mock.setFailOnDelegateAccess(true);	
-		reader = DatabaseReader.create( 
-				properties, 
-				new DefaultStrategy(), 
-				dialect, 
+		validate( dc );
+		mock.setFailOnDelegateAccess(true);
+		reader = DatabaseReader.create(
+				properties,
+				new DefaultStrategy(),
+				dialect,
 				serviceRegistry );
 		dc = new RevengMetadataCollector();
 		reader.readDatabaseSchema(dc);
 		validate(dc);
- 	}
+	}
 
 	private void validate(RevengMetadataCollector dc) {
 		Iterator<Table> iterator = dc.iterateTables();
@@ -186,14 +171,14 @@ public class TestCase {
 		}
 		assertNotNull(child);
 		assertNotNull(master);
-		
+
 		iterator = dc.iterateTables();
 		assertNotNull(iterator.next());
 		assertNotNull(iterator.next());
-		assertFalse(iterator.hasNext());		
-		
+		assertFalse(iterator.hasNext());
+
 		JUnitUtil.assertIteratorContainsExactly(
-				"should have recorded one foreignkey to child table",  
+				"should have recorded one foreignkey to child table",
 				child.getForeignKeyCollection().iterator(),
 				1);
 	}

@@ -30,7 +30,7 @@
 
 <hibernate-mapping package="org.hibernate.tool.hbm2x.hbm2hbmxml.FormulaTest">
 
-	<class name="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.FormulaTest.Customer"
+	<class name="Customer" 
 			select-before-update="true" 
 			dynamic-update="true">
 	
@@ -58,7 +58,7 @@
 			
 	</class>
 	
-	<class name="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.FormulaTest.Address"
+	<class name="Address"
 		table="Address"
 		entity-name="BillingAddress" 
 		where="type='BILLING'" 
@@ -78,7 +78,7 @@
 						
 	</class>
 
-	<class name="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.FormulaTest.Address"
+	<class name="Address" 
 		table="Address"
 		entity-name="ShippingAddress"
 		where="type='SHIPPING'"

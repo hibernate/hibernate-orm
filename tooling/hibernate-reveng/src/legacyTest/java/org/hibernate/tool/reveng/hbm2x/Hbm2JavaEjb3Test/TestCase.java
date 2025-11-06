@@ -1,21 +1,7 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.tool.reveng.hbm2x.Hbm2JavaEjb3Test;
 
 import jakarta.persistence.Persistence;
@@ -45,7 +31,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author max
@@ -59,19 +49,19 @@ public class TestCase {
 			"Train.hbm.xml",
 			"Passenger.hbm.xml"
 	};
-	
+
 	@TempDir
 	public File outputFolder = new File("output");
-	
+
 	private File srcDir = null;
 
-    private Metadata metadata = null;
-	
+	private Metadata metadata = null;
+
 	@BeforeEach
 	public void setUp() throws Exception {
 		srcDir = new File(outputFolder, "src");
 		assertTrue(srcDir.mkdir());
-        File resourcesDir = new File(outputFolder, "resources");
+		File resourcesDir = new File(outputFolder, "resources");
 		assertTrue(resourcesDir.mkdir());
 		MetadataDescriptor metadataDescriptor = HibernateUtil
 				.initializeMetadataDescriptor(this, HBM_XML_FILES, resourcesDir);
@@ -89,28 +79,28 @@ public class TestCase {
 	@Test
 	public void testFileExistence() {
 		JUnitUtil.assertIsNonEmptyFile(new File(
-				srcDir, 
+				srcDir,
 				"org/hibernate/tool/hbm2x/Hbm2JavaEjb3Test/Author.java"));
 		JUnitUtil.assertIsNonEmptyFile(new File(
-				srcDir, 
+				srcDir,
 				"org/hibernate/tool/hbm2x/Hbm2JavaEjb3Test/Article.java"));
 		JUnitUtil.assertIsNonEmptyFile(new File(
-				srcDir, 
+				srcDir,
 				"org/hibernate/tool/hbm2x/Hbm2JavaEjb3Test/Train.java"));
 		JUnitUtil.assertIsNonEmptyFile(new File(
-				srcDir, 
+				srcDir,
 				"org/hibernate/tool/hbm2x/Hbm2JavaEjb3Test/Passenger.java") );
 		JUnitUtil.assertIsNonEmptyFile(new File(
-				srcDir, 
+				srcDir,
 				"org/hibernate/tool/hbm2x/Hbm2JavaEjb3Test/TransportationPk.java") );
 	}
 
 	@Test
 	public void testBasicComponent() {
-		assertEquals( 
-				"@Embeddable", 
-				FileUtil.findFirstString( 
-						"@Embeddable", 
+		assertEquals(
+				"@Embeddable",
+				FileUtil.findFirstString(
+						"@Embeddable",
 						new File(
 								srcDir,
 								"org/hibernate/tool/hbm2x/Hbm2JavaEjb3Test/TransportationPk.java")));
@@ -121,26 +111,26 @@ public class TestCase {
 		File compiled = new File(outputFolder, "compiled");
 		assertTrue(compiled.mkdir());
 		List<String> jars = new ArrayList<>();
-		jars.add(JavaUtil.resolvePathToJarFileFor(Persistence.class)); // for jpa api
+		jars.add( JavaUtil.resolvePathToJarFileFor(Persistence.class)); // for jpa api
 		jars.add(JavaUtil.resolvePathToJarFileFor(Version.class)); // for hibernate core
 		JavaUtil.compile(srcDir, compiled, jars);
 		JUnitUtil.assertIsNonEmptyFile(new File(
-				compiled, 
+				compiled,
 				"comparator/NoopComparator.class") );
 		JUnitUtil.assertIsNonEmptyFile(new File(
-				compiled, 
+				compiled,
 				"org/hibernate/tool/hbm2x/Hbm2JavaEjb3Test/Article.class") );
 		JUnitUtil.assertIsNonEmptyFile(new File(
-				compiled, 
+				compiled,
 				"org/hibernate/tool/hbm2x/Hbm2JavaEjb3Test/Author.class") );
 		JUnitUtil.assertIsNonEmptyFile(new File(
-				compiled, 
+				compiled,
 				"org/hibernate/tool/hbm2x/Hbm2JavaEjb3Test/Passenger.class") );
 		JUnitUtil.assertIsNonEmptyFile(new File(
-				compiled, 
+				compiled,
 				"org/hibernate/tool/hbm2x/Hbm2JavaEjb3Test/Train.class") );
 		JUnitUtil.assertIsNonEmptyFile(new File(
-				compiled, 
+				compiled,
 				"org/hibernate/tool/hbm2x/Hbm2JavaEjb3Test/TransportationPk.class") );
 	}
 
@@ -153,7 +143,7 @@ public class TestCase {
 		clazz = new Cfg2JavaTool().getPOJOClass(classMapping);
 		assertTrue(clazz.needsEqualsHashCode());
 	}
-	
+
 	@Test
 	public void testAnnotationColumnDefaults() {
 		PersistentClass classMapping = metadata.getEntityBinding("org.hibernate.tool.hbm2x.Hbm2JavaEjb3Test.Article");
@@ -186,7 +176,7 @@ public class TestCase {
 		assertEquals(-1,string.indexOf("updatable="));
 		assertEquals(-1, string.indexOf("length="));
 	}
-	
+
 	@Test
 	public void testEmptyCascade() {
 		PersistentClass classMapping = metadata.getEntityBinding("org.hibernate.tool.hbm2x.Hbm2JavaEjb3Test.Article");
@@ -196,19 +186,19 @@ public class TestCase {
 		assertEquals(0, clazz.getCascadeTypes( property ).length);
 		assertNull(
 				FileUtil.findFirstString(
-						"cascade={}", 
+						"cascade={}",
 						new File(
-								srcDir, 
+								srcDir,
 								"org/hibernate/tool/hbm2x/Hbm2JavaEjb3Test/Article.java") ));
 	}
-		
+
 	@Test
 	public void testAnnotationBuilder() {
 		AnnotationBuilder builder =  AnnotationBuilder.createAnnotation("SingleCleared").resetAnnotation( "Single" );
 		assertEquals("@Single", builder.getResult());
 		builder = AnnotationBuilder.createAnnotation("jakarta.persistence.OneToMany")
-				    .addAttribute("willbecleared", (String)null)
-				    .resetAnnotation("jakarta.persistence.OneToMany")
+					.addAttribute("willbecleared", (String)null)
+					.resetAnnotation("jakarta.persistence.OneToMany")
 					.addAttribute("cascade", new String[] { "val1", "val2"})
 					.addAttribute("fetch", "singleValue");
 		assertEquals("@jakarta.persistence.OneToMany(cascade={val1, val2}, fetch=singleValue)", builder.getResult());
@@ -221,20 +211,20 @@ public class TestCase {
 		list.add(42);
 		list.add("xxx");
 		builder.addQuotedAttributes( "it", list.iterator() );
-		assertEquals("@abc(it={\"42\", \"xxx\"})", builder.getResult());		
+		assertEquals("@abc(it={\"42\", \"xxx\"})", builder.getResult());
 		List<String> columns = new ArrayList<>();
 		columns.add("first");
 		columns.add("second");
 		AnnotationBuilder constraint = AnnotationBuilder.createAnnotation( "UniqueConstraint" );
 		constraint.addQuotedAttributes( "columnNames", new IteratorTransformer<>(columns.iterator()) {
-            public String transform(String object) {
-                return object;
-            }
-        });
-		constraint.addAttribute( "single", "value" );	
+			public String transform(String object) {
+				return object;
+			}
+		});
+		constraint.addAttribute( "single", "value" );
 		String attribute = constraint.getAttributeAsString("columnNames");
 		assertEquals("{\"first\", \"second\"}", attribute);
 		assertEquals("value", constraint.getAttributeAsString( "single" ));
 	}
-	
+
 }

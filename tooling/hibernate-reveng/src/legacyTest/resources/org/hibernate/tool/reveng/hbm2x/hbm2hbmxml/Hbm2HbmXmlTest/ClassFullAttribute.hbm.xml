@@ -40,7 +40,7 @@
 		batch-size="10"
 		where="archive='N'"
 		subselect="from query"
-		persister="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.Hbm2HbmXmlTest.TestCase$Persister"
+		persister="org.hibernate.tool.hbm2x.hbm2hbmxml.Hbm2HbmXmlTest.TestCase$Persister"
 		rowid="rowid"
     >
         <comment>A comment for ClassFullAttribute</comment>

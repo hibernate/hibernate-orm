@@ -24,7 +24,7 @@
 
 <hibernate-mapping package="org.hibernate.tool.hbm2x.hbm2hbmxml.SetElementTest">
 	
-	<class name="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.SetElementTest.Search">
+	<class name="Search">
 		<id name="searchString"/>
 		<set name="searchResults" sort="natural" access="field">
 			<key column="searchString"/>

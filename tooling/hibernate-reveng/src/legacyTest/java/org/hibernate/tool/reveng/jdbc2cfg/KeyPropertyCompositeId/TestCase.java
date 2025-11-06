@@ -1,26 +1,19 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.jdbc2cfg.KeyPropertyCompositeId;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
-import org.hibernate.mapping.*;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.ForeignKey;
+import org.hibernate.mapping.ManyToOne;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Table;
 import org.hibernate.tool.reveng.api.export.Exporter;
 import org.hibernate.tool.reveng.api.export.ExporterConstants;
 import org.hibernate.tool.reveng.api.export.ExporterFactory;
@@ -48,17 +41,23 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author max
  * @author koen
  */
+@SuppressWarnings("DuplicatedCode")
 public class TestCase {
 
 	@TempDir
 	public File outputDir = new File("output");
-	
+
 	private MetadataDescriptor metadataDescriptor = null;
 	private RevengStrategy reverseEngineeringStrategy = null;
 
@@ -81,7 +80,7 @@ public class TestCase {
 	public void testMultiColumnForeignKeys() {
 		Metadata metadata = metadataDescriptor.createMetadata();
 		Table table = HibernateUtil.getTable(
-				metadata, 
+				metadata,
 				JdbcUtil.toIdentifier(this, "LINE_ITEM"));
 		assertNotNull(table);
 		ForeignKey foreignKey = HibernateUtil.getForeignKey(table, JdbcUtil.toIdentifier(this, "TO_CUSTOMER_ORDER"));
@@ -95,7 +94,7 @@ public class TestCase {
 		assertEquals("CUSTOMER_ID_REF", foreignKey.getColumn(0).getName());
 		assertEquals("ORDER_NUMBER", foreignKey.getColumn(1).getName());
 		Table tab = HibernateUtil.getTable(
-				metadata, 
+				metadata,
 				JdbcUtil.toIdentifier(this, "CUSTOMER_ORDER"));
 		assertEquals("CUSTOMER_ID", tab.getPrimaryKey().getColumn(0).getName());
 		assertEquals("ORDER_NUMBER", tab.getPrimaryKey().getColumn(1).getName());
@@ -114,7 +113,7 @@ public class TestCase {
 				reverseEngineeringStrategy
 					.tableToClassName(TableIdentifier.create(null, null, JdbcUtil.toIdentifier(this, "CUSTOMER_ORDER"))));
 		Property identifierProperty = product.getIdentifierProperty();
-        assertInstanceOf(Component.class, identifierProperty.getValue());
+		assertInstanceOf(Component.class, identifierProperty.getValue());
 		Component cmpid = (Component) identifierProperty.getValue();
 		assertEquals(2, cmpid.getPropertySpan());
 		Iterator<?> iter = cmpid.getProperties().iterator();
@@ -122,15 +121,15 @@ public class TestCase {
 		Property extraId = (Property) iter.next();
 		assertEquals(
 				reverseEngineeringStrategy.columnToPropertyName(
-						null, 
+						null,
 						"customer"),
 				id.getName());
 		assertEquals(
 				reverseEngineeringStrategy.columnToPropertyName(
-						null, 
+						null,
 						"orderNumber"),
 				extraId.getName());
-        assertInstanceOf(ManyToOne.class, id.getValue());
+		assertInstanceOf(ManyToOne.class, id.getValue());
 		assertFalse(extraId.getValue() instanceof ManyToOne);
 	}
 
@@ -140,7 +139,7 @@ public class TestCase {
 				reverseEngineeringStrategy
 					.tableToClassName(TableIdentifier.create(null, null, JdbcUtil.toIdentifier(this, "PRODUCT"))));
 		Property identifierProperty = product.getIdentifierProperty();
-        assertInstanceOf(Component.class, identifierProperty.getValue());
+		assertInstanceOf(Component.class, identifierProperty.getValue());
 		Component cmpid = (Component) identifierProperty.getValue();
 		assertEquals(2, cmpid.getPropertySpan());
 		Iterator<?> iter = cmpid.getProperties().iterator();
@@ -153,12 +152,12 @@ public class TestCase {
 		}
 		assertEquals(
 				reverseEngineeringStrategy.columnToPropertyName(
-						null, 
+						null,
 						"productId"),
 				id.getName());
 		assertEquals(
 				reverseEngineeringStrategy.columnToPropertyName(
-						null, 
+						null,
 						"extraId"),
 				extraId.getName());
 		assertFalse(id.getValue() instanceof ManyToOne);
@@ -192,13 +191,13 @@ public class TestCase {
 				.buildSessionFactory();
 		Session session = factory.openSession();
 		JdbcUtil.populateDatabase(this);
-		session.createQuery("from LineItem", (Class<?>)null).getResultList();
-		List<?> list = session.createQuery("from Product", (Class<?>)null).getResultList();
+		session.createQuery("from LineItem", null).getResultList();
+		List<?> list = session.createQuery("from Product", null).getResultList();
 		assertEquals(2, list.size());
 		list = session
-				.createQuery("select li.id.customerOrder.id from LineItem as li", (Class<?>)null)
+				.createQuery("select li.id.customerOrder.id from LineItem as li", null)
 				.getResultList();
-        assertFalse(list.isEmpty());
+		assertFalse(list.isEmpty());
 		Class<?> productIdClass = ucl.loadClass("ProductId");
 		Constructor<?> productIdConstructor = productIdClass.getConstructor();
 		Object object = productIdConstructor.newInstance();
@@ -208,7 +207,7 @@ public class TestCase {
 		} catch (Throwable t) {
 			fail("Hashcode on new instance should not fail " + t);
 		}
-        assertNotEquals(hash, System.identityHashCode(object), "hashcode should be different from system");
+		assertNotEquals(hash, System.identityHashCode(object), "hashcode should be different from system");
 		factory.close();
 		Thread.currentThread().setContextClassLoader(ucl.getParent());
 	}

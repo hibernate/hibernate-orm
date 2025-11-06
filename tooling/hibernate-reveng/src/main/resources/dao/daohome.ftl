@@ -23,7 +23,7 @@ ${pojo.getPackageDeclaration()}
  * @author Hibernate Tools
  */
 <#if ejb3>
-@${pojo.importType("jakarta.ejb.Stateless")}
+@${pojo.importType("javax.ejb.Stateless")}
 </#if>
 public class ${declarationName}Home {
 
@@ -261,7 +261,7 @@ TODO:
     public ${pojo.importType("java.util.List")} ${methname}(${argList}) {
 </#if>
         ${pojo.importType("org.hibernate.query.Query")} query = sessionFactory.getCurrentSession()
-                .createNamedQuery("${queryName}");
+                .getNamedQuery("${queryName}");
 <#if jdk5 && methname.startsWith("find")>
         return (List<${declarationName}>) query.list();
 <#elseif methname.startsWith("count")>

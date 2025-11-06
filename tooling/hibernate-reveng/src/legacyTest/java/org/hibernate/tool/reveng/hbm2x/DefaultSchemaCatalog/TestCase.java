@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.hbm2x.DefaultSchemaCatalog;
 
@@ -31,7 +18,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -41,17 +32,17 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author koen
  */
 public class TestCase {
-	
+
 	@BeforeEach
 	public void setUp() {
 		JdbcUtil.createDatabase(this);
 	}
-	
+
 	@AfterEach
 	public void tearDown() {
 		JdbcUtil.dropDatabase(this);
 	}
-	
+
 	@Test
 	public void testReadOnlySpecificSchema() {
 		OverrideRepository or = new OverrideRepository();
@@ -60,39 +51,39 @@ public class TestCase {
 		List<Table> tables = getTables(MetadataDescriptorFactory
 				.createReverseEngineeringDescriptor(res, null)
 				.createMetadata());
-		assertEquals(2,tables.size());	
+		assertEquals(2,tables.size());
 		Table catchild = tables.get(0);
 		Table catmaster = tables.get(1);
 		if(catchild.getName().equals("CATMASTER")) {
 			catchild = tables.get(1);
 			catmaster = tables.get(0);
-		} 	
+		}
 		TableIdentifier masterid = TableIdentifier.create(catmaster);
 		TableIdentifier childid = TableIdentifier.create(catchild);
 		assertEquals(TableIdentifier.create(null, "OVRTEST", "CATMASTER"), masterid);
-		assertEquals(TableIdentifier.create(null, "OVRTEST", "CATCHILD"), childid);	
+		assertEquals(TableIdentifier.create(null, "OVRTEST", "CATCHILD"), childid);
 	}
 
 	@Test
-	public void testOverlapping() {	
+	public void testOverlapping() {
 		OverrideRepository or = new OverrideRepository();
 		or.addSchemaSelection(createSchemaSelection("OVRTEST", null));
 		or.addSchemaSelection(createSchemaSelection(null, "MASTER"));
 		or.addSchemaSelection(createSchemaSelection(null, "CHILD"));
-		RevengStrategy res = 
+		RevengStrategy res =
 				or.getReverseEngineeringStrategy(new DefaultStrategy());
 		Metadata metadata = MetadataDescriptorFactory
 				.createReverseEngineeringDescriptor(res, null)
 				.createMetadata();
 		Set<TableIdentifier> tables = new HashSet<>();
-        for (Table element : metadata.collectTableMappings()) {
-            boolean added = tables.add(TableIdentifier.create(element));
-            if (!added)
-                fail("duplicate table found for " + element);
-        }
+		for (Table element : metadata.collectTableMappings()) {
+			boolean added = tables.add(TableIdentifier.create(element));
+			if (!added)
+				fail("duplicate table found for " + element);
+		}
 		assertEquals(4,tables.size());
 	}
-	
+
 	@Test
 	public void testUseDefault() {
 		Properties properties = new Properties();
@@ -107,7 +98,7 @@ public class TestCase {
 		if(catchild.getName().equals("CATMASTER")) {
 			catchild = tables.get(1);
 			catmaster = tables.get(0);
-		} 	
+		}
 		TableIdentifier masterid = TableIdentifier.create(catmaster);
 		TableIdentifier childid = TableIdentifier.create(catchild);
 		assertEquals(TableIdentifier.create(null, null, "CATMASTER"), masterid, "jdbcreader has not nulled out according to default schema");
@@ -115,7 +106,7 @@ public class TestCase {
 	}
 
 	private List<Table> getTables(Metadata metadata) {
-        return new ArrayList<>(metadata.collectTableMappings());
+		return new ArrayList<>(metadata.collectTableMappings());
 	}
 
 	private SchemaSelection createSchemaSelection(String matchSchema, String matchTable) {
@@ -131,8 +122,8 @@ public class TestCase {
 			@Override
 			public String getMatchTable() {
 				return matchTable;
-			}		
+			}
 		};
 	}
-	
+
 }

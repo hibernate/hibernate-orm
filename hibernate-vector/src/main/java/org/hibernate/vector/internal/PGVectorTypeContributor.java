@@ -38,6 +38,12 @@ public class PGVectorTypeContributor implements TypeContributor {
 					SqlTypes.VECTOR,
 					"vector"
 			);
+			final ArrayJdbcType doubleVectorJdbcType = new PGVectorJdbcType(
+					jdbcTypeRegistry.getDescriptor( SqlTypes.DOUBLE ),
+					SqlTypes.VECTOR_FLOAT64,
+					"vector"
+			);
+			jdbcTypeRegistry.addDescriptor( SqlTypes.VECTOR_FLOAT64, doubleVectorJdbcType );
 			jdbcTypeRegistry.addDescriptor( SqlTypes.VECTOR, genericVectorJdbcType );
 			final ArrayJdbcType floatVectorJdbcType = new PGVectorJdbcType(
 					jdbcTypeRegistry.getDescriptor( SqlTypes.FLOAT ),
@@ -88,6 +94,14 @@ public class PGVectorTypeContributor implements TypeContributor {
 			);
 			basicTypeRegistry.register(
 					new BasicArrayType<>(
+							basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ),
+							doubleVectorJdbcType,
+							javaTypeRegistry.getDescriptor( double[].class )
+					),
+					StandardBasicTypes.VECTOR_FLOAT64.getName()
+			);
+			basicTypeRegistry.register(
+					new BasicArrayType<>(
 							basicTypeRegistry.resolve( StandardBasicTypes.BYTE ),
 							bitVectorJdbcType,
 							javaTypeRegistry.getDescriptor( byte[].class )
@@ -104,6 +118,9 @@ public class PGVectorTypeContributor implements TypeContributor {
 			);
 			typeConfiguration.getDdlTypeRegistry().addDescriptor(
 					new VectorDdlType( SqlTypes.VECTOR, "vector($l)", "vector", dialect )
+			);
+			typeConfiguration.getDdlTypeRegistry().addDescriptor(
+					new VectorDdlType( SqlTypes.VECTOR_FLOAT64, "vector($l)", "vector", dialect )
 			);
 			typeConfiguration.getDdlTypeRegistry().addDescriptor(
 					new VectorDdlType( SqlTypes.VECTOR_FLOAT32, "vector($l)", "vector", dialect )

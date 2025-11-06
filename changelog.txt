@@ -1,6 +1,20 @@
 Hibernate 7 Changelog
 =======================
 
+7.1.7.Final (November 06, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/35881
+
+
+** Bug
+    * HHH-19887 Wrong ClassLoader used for Jackson Module discovery
+    * HHH-19868 RowTransformerConstructorImpl throws NullPointerException when TupleMetadata is null
+    * HHH-18691 Envers cannot read revisions with records
+
+** Improvement
+    * HHH-19913 Update the order of release steps and simplify the ORM build script
+
 Note: Please refer to JIRA to learn more about each issue.
 
 Changes in 7.1.6.Final (November 02, 2025)

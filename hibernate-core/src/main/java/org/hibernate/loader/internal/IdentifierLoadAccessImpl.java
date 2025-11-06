@@ -121,12 +121,17 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 		try {
 			final var influencers = session.getLoadQueryInfluencers();
 			final var fetchProfiles = influencers.adjustFetchProfiles( disabledFetchProfiles, enabledFetchProfiles );
-			final var effectiveEntityGraph = influencers.applyEntityGraph( rootGraph, graphSemantic);
+			final var effectiveEntityGraph =
+					rootGraph == null
+							? null
+							: influencers.applyEntityGraph( rootGraph, graphSemantic);
 			try {
 				return executor.get();
 			}
 			finally {
-				effectiveEntityGraph.clear();
+				if ( effectiveEntityGraph != null ) {
+					effectiveEntityGraph.clear();
+				}
 				influencers.setEnabledFetchProfileNames( fetchProfiles );
 			}
 		}

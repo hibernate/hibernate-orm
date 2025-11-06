@@ -15,8 +15,6 @@ import org.hibernate.OrderingMode;
 import org.hibernate.RemovalsMode;
 import org.hibernate.SessionCheckMode;
 import org.hibernate.UnknownProfileException;
-import org.hibernate.engine.spi.EffectiveEntityGraph;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
@@ -170,7 +168,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	}
 
 	public List<T> perform(Supplier<List<T>> executor) {
-		final CacheMode sessionCacheMode = session.getCacheMode();
+		final var sessionCacheMode = session.getCacheMode();
 		boolean cacheModeChanged = false;
 		if ( cacheMode != null ) {
 			// naive check for now...
@@ -182,16 +180,20 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 		}
 
 		try {
-			final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
-			final HashSet<String> fetchProfiles =
+			final var influencers = session.getLoadQueryInfluencers();
+			final var fetchProfiles =
 					influencers.adjustFetchProfiles( disabledFetchProfiles, enabledFetchProfiles );
-			final EffectiveEntityGraph effectiveEntityGraph =
-					influencers.applyEntityGraph( rootGraph, graphSemantic );
+			final var effectiveEntityGraph =
+					rootGraph == null
+							? null
+							: influencers.applyEntityGraph( rootGraph, graphSemantic );
 			try {
 				return executor.get();
 			}
 			finally {
-				effectiveEntityGraph.clear();
+				if ( effectiveEntityGraph != null ) {
+					effectiveEntityGraph.clear();
+				}
 				influencers.setEnabledFetchProfileNames( fetchProfiles );
 			}
 		}

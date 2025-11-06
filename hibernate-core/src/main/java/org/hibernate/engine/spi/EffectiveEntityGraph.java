@@ -74,7 +74,7 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	 * @throws IllegalArgumentException Thrown if the semantic is null
 	 * @throws IllegalStateException If previous state is still available (hasn't been cleared).
 	 */
-	public void applyGraph(RootGraphImplementor<?> graph, @Nullable GraphSemantic semantic) {
+	public void applyGraph(RootGraphImplementor<?> graph, GraphSemantic semantic) {
 		if ( semantic == null ) {
 			throw new IllegalArgumentException( "Graph semantic cannot be null" );
 		}

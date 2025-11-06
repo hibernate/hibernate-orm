@@ -210,8 +210,8 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping {
 	public ColumnValueBinding createNonDeletedValueBinding(ColumnReference softDeleteColumnReference) {
 		final var nonDeletedFragment =
 				strategy == SoftDeleteType.TIMESTAMP
-						? new ColumnWriteFragment( null, emptyList(), jdbcMapping )
-						: new ColumnWriteFragment( nonDeletedLiteralText, emptyList(), jdbcMapping );
+						? new ColumnWriteFragment( null, emptyList(), this )
+						: new ColumnWriteFragment( nonDeletedLiteralText, emptyList(), this );
 		return new ColumnValueBinding( softDeleteColumnReference, nonDeletedFragment );
 	}
 
@@ -219,8 +219,8 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping {
 	public ColumnValueBinding createDeletedValueBinding(ColumnReference softDeleteColumnReference) {
 		final ColumnWriteFragment deletedFragment =
 				strategy == SoftDeleteType.TIMESTAMP
-						? new ColumnWriteFragment( currentTimestampFunctionName, emptyList(), getJdbcMapping() )
-						: new ColumnWriteFragment( deletedLiteralText, emptyList(), jdbcMapping );
+						? new ColumnWriteFragment( currentTimestampFunctionName, emptyList(), this )
+						: new ColumnWriteFragment( deletedLiteralText, emptyList(), this );
 		return new ColumnValueBinding( softDeleteColumnReference, deletedFragment );
 	}
 

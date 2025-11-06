@@ -8,9 +8,10 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueParameter;
@@ -35,16 +36,19 @@ public class ColumnValueBindingBuilder {
 
 
 	public static ColumnValueBinding createValueBinding(
-			String columnName,
-			String writeExpression,
-			JdbcMapping jdbcMapping,
+			@Nullable String writeExpression,
+			SelectableMapping selectableMapping,
 			MutatingTableReference mutatingTableReference,
 			ParameterUsage parameterUsage,
 			Consumer<Object> parameterConsumer) {
-		final ColumnReference columnReference = new ColumnReference( mutatingTableReference, columnName, jdbcMapping );
+		final ColumnReference columnReference = new ColumnReference(
+				mutatingTableReference,
+				selectableMapping.getSelectionExpression(),
+				selectableMapping.getJdbcMapping()
+		);
 		final ColumnWriteFragment columnWriteFragment = buildWriteFragment(
 				writeExpression,
-				jdbcMapping,
+				selectableMapping,
 				mutatingTableReference,
 				columnReference,
 				parameterUsage,
@@ -54,8 +58,8 @@ public class ColumnValueBindingBuilder {
 	}
 
 	public static ColumnWriteFragment buildWriteFragment(
-			String writeExpression,
-			JdbcMapping jdbcMapping,
+			@Nullable String writeExpression,
+			SelectableMapping selectableMapping,
 			MutatingTableReference mutatingTableReference,
 			ColumnReference columnReference,
 			ParameterUsage parameterUsage,
@@ -66,28 +70,28 @@ public class ColumnValueBindingBuilder {
 
 		if ( writeExpression.equals( "?" )
 				|| ( writeExpression.contains( "?" ) && !writeExpression.contains( "'" ) ) ) {
-			return buildParameterizedWriteFragment( writeExpression, jdbcMapping, mutatingTableReference, columnReference, parameterUsage, parameterConsumer );
+			return buildParameterizedWriteFragment( writeExpression, selectableMapping, mutatingTableReference, columnReference, parameterUsage, parameterConsumer );
 		}
 
 		if ( !writeExpression.contains( "?" ) ) {
-			return new ColumnWriteFragment( writeExpression, jdbcMapping );
+			return new ColumnWriteFragment( writeExpression, selectableMapping );
 		}
 
 		if ( containsParameter( writeExpression ) ) {
-			return buildParameterizedWriteFragment( writeExpression, jdbcMapping, mutatingTableReference, columnReference, parameterUsage, parameterConsumer );
+			return buildParameterizedWriteFragment( writeExpression, selectableMapping, mutatingTableReference, columnReference, parameterUsage, parameterConsumer );
 		}
 
-		return new ColumnWriteFragment( writeExpression, jdbcMapping );
+		return new ColumnWriteFragment( writeExpression, selectableMapping );
 	}
 
 	private static ColumnWriteFragment buildParameterizedWriteFragment(
 			String writeExpression,
-			JdbcMapping jdbcMapping,
+			SelectableMapping selectableMapping,
 			MutatingTableReference mutatingTableReference,
 			ColumnReference columnReference,
 			ParameterUsage parameterUsage,
 			Consumer<Object> parameterConsumer) {
-		final JdbcType jdbcType = jdbcMapping.getJdbcType();
+		final JdbcType jdbcType = selectableMapping.getJdbcMapping().getJdbcType();
 		final EmbeddableMappingType aggregateMappingType =
 				jdbcType instanceof AggregateJdbcType aggregateJdbcType
 						? aggregateJdbcType.getEmbeddableMappingType()
@@ -101,12 +105,12 @@ public class ColumnValueBindingBuilder {
 			aggregateMappingType.forEachSelectable( parameters );
 			parameterConsumer.accept( parameters );
 
-			return new ColumnWriteFragment( writeExpression, parameters, jdbcMapping );
+			return new ColumnWriteFragment( writeExpression, parameters, selectableMapping );
 		}
 		else {
 			final ColumnValueParameter parameter = new ColumnValueParameter( columnReference, parameterUsage );
 			parameterConsumer.accept( parameter );
-			return new ColumnWriteFragment( writeExpression, parameter, jdbcMapping );
+			return new ColumnWriteFragment( writeExpression, parameter, selectableMapping );
 		}
 	}
 

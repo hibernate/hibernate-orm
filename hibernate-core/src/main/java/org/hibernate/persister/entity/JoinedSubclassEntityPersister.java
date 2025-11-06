@@ -671,8 +671,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					tableName,
 					tableIndex,
 					() -> columnConsumer -> columnConsumer.accept(
-							tableName,
 							getIdentifierMapping(),
+							tableName,
 							naturalOrderTableKeyColumns[tableIndex]
 					)
 			);
@@ -742,9 +742,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final TableInsertBuilder tableInsertBuilder =
 					insertGroupBuilder.getTableDetailsBuilder( getRootTableName() );
 			tableInsertBuilder.addValueColumn(
-					explicitDiscriminatorColumnName,
 					getDiscriminatorValueString(),
-					getDiscriminatorMapping().getJdbcMapping()
+					getDiscriminatorMapping()
 			);
 		}
 	}

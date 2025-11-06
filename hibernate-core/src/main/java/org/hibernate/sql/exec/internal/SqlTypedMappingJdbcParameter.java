@@ -6,11 +6,12 @@ package org.hibernate.sql.exec.internal;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.sql.ast.tree.expression.SqlTypedExpression;
 
 /**
  * @author Steve Ebersole
  */
-public class SqlTypedMappingJdbcParameter extends AbstractJdbcParameter {
+public class SqlTypedMappingJdbcParameter extends AbstractJdbcParameter implements SqlTypedExpression {
 
 	private final SqlTypedMapping sqlTypedMapping;
 
@@ -24,6 +25,7 @@ public class SqlTypedMappingJdbcParameter extends AbstractJdbcParameter {
 		this.sqlTypedMapping = sqlTypedMapping;
 	}
 
+	@Override
 	public SqlTypedMapping getSqlTypedMapping() {
 		return sqlTypedMapping;
 	}

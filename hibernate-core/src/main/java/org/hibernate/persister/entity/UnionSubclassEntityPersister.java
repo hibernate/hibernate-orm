@@ -384,7 +384,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		consumer.consume(
 				tableName,
 				0,
-				() -> columnConsumer -> columnConsumer.accept( tableName, getIdentifierMapping(), getIdentifierColumnNames() )
+				() -> columnConsumer -> columnConsumer.accept(
+						getIdentifierMapping(),
+						tableName,
+						getIdentifierColumnNames()
+				)
 		);
 	}
 

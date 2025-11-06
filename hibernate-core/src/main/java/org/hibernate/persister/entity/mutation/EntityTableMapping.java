@@ -4,18 +4,17 @@
  */
 package org.hibernate.persister.entity.mutation;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -384,118 +383,33 @@ public class EntityTableMapping implements TableMapping {
 		}
 	}
 
-	public static class KeyColumn implements TableDetails.KeyColumn {
-		private final String tableName;
-		private final String columnName;
-		private final String writeExpression;
+	public static class KeyColumn extends SelectableMappingImpl implements TableDetails.KeyColumn {
 
-		private final boolean formula;
-
-		private final JdbcMapping jdbcMapping;
-
-		public KeyColumn(
-				String tableName,
-				String columnName,
-				String writeExpression,
-				boolean formula,
-				JdbcMapping jdbcMapping) {
-			this.tableName = tableName;
-			this.columnName = columnName;
-			this.writeExpression = writeExpression;
-			this.formula = formula;
-			this.jdbcMapping = jdbcMapping;
+		public KeyColumn(String tableName, SelectableMapping originalMapping) {
+			super(
+					tableName,
+					originalMapping.getSelectionExpression(),
+					null, // Leads to construction of a fresh path based on selection expression
+					originalMapping.getCustomReadExpression(),
+					originalMapping.getCustomWriteExpression(),
+					originalMapping.getColumnDefinition(),
+					originalMapping.getLength(),
+					originalMapping.getPrecision(),
+					originalMapping.getScale(),
+					originalMapping.getTemporalPrecision(),
+					originalMapping.isLob(),
+					originalMapping.isNullable(),
+					originalMapping.isInsertable(),
+					originalMapping.isUpdateable(),
+					originalMapping.isPartitioned(),
+					originalMapping.isFormula(),
+					originalMapping.getJdbcMapping()
+			);
 		}
 
+		@Override
 		public String getColumnName() {
-			return columnName;
-		}
-
-		@Override
-		public String getContainingTableExpression() {
-			return tableName;
-		}
-
-		@Override
-		public String getWriteExpression() {
-			return writeExpression;
-		}
-
-		@Override
-		public String getSelectionExpression() {
-			return columnName;
-		}
-
-		@Override
-		public JdbcMapping getJdbcMapping() {
-			return jdbcMapping;
-		}
-
-		@Override
-		public boolean isFormula() {
-			return formula;
-		}
-
-		@Override
-		public boolean isNullable() {
-			// keys are never nullable
-			return false;
-		}
-
-		@Override
-		public boolean isInsertable() {
-			// keys are always insertable, unless this "column" is a formula
-			return !formula;
-		}
-
-		@Override
-		public boolean isUpdateable() {
-			// keys are never updateable
-			return false;
-		}
-
-		@Override
-		public boolean isPartitioned() {
-			return false;
-		}
-
-		@Override
-		public @Nullable String getColumnDefinition() {
-			return null;
-		}
-
-		@Override
-		public @Nullable Long getLength() {
-			return null;
-		}
-
-		@Override
-		public @Nullable Integer getArrayLength() {
-			return null;
-		}
-
-		@Override
-		public @Nullable Integer getPrecision() {
-			return null;
-		}
-
-		@Override
-		public @Nullable Integer getScale() {
-			return null;
-		}
-
-		@Override
-		public @Nullable Integer getTemporalPrecision() {
-			return null;
-		}
-
-		@Override
-		public @Nullable String getCustomReadExpression() {
-			return null;
-		}
-
-		@Override
-		public @Nullable String getCustomWriteExpression() {
-			return null;
+			return getSelectionExpression();
 		}
 	}
 }

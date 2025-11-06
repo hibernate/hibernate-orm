@@ -296,8 +296,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				new ColumnValueParameterList( tableReference, ParameterUsage.RESTRICT, keyColumnCount );
 		final List<ColumnValueBinding> keyRestrictionBindings = arrayList( keyColumnCount );
 		final List<ColumnValueBinding> valueBindings = arrayList( valuesCount );
-		foreignKeyDescriptor.getKeyPart().forEachSelectable( parameterBinders );
-		for ( var columnValueParameter : parameterBinders ) {
+		foreignKeyDescriptor.getKeyPart().forEachSelectable( (selectionIndex, selectableMapping) -> {
+			final var columnValueParameter = parameterBinders.addColumValueParameter( selectableMapping );
 			final var columnReference = columnValueParameter.getColumnReference();
 			keyRestrictionBindings.add(
 					new ColumnValueBinding(
@@ -305,17 +305,17 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 							new ColumnWriteFragment(
 									"?",
 									columnValueParameter,
-									columnReference.getJdbcMapping()
+									selectableMapping
 							)
 					)
 			);
 			valueBindings.add(
 					new ColumnValueBinding(
 							columnReference,
-							new ColumnWriteFragment( "null", columnReference.getJdbcMapping() )
+							new ColumnWriteFragment( "null", selectableMapping )
 					)
 			);
-		}
+		} );
 
 		if ( hasIndex() && !indexContainsFormula ) {
 			attributeMapping.getIndexDescriptor().forEachSelectable( (selectionIndex, selectableMapping) -> {
@@ -323,7 +323,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 					valueBindings.add(
 							new ColumnValueBinding(
 									new ColumnReference( tableReference, selectableMapping ),
-									new ColumnWriteFragment( "null", selectableMapping.getJdbcMapping() )
+									new ColumnWriteFragment( "null", selectableMapping )
 							)
 					);
 				}
@@ -484,10 +484,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				if ( selectable.isUpdateable() ) {
 					// set null
 					updateBuilder.addValueColumn(
-							selectable.getSelectionExpression(),
 							NULL,
-							selectable.getJdbcMapping(),
-							selectable.isLob()
+							selectable
 					);
 				}
 				// restrict
@@ -504,10 +502,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				final var selectable = indexDescriptor.getSelectable( i );
 				if ( selectable.isUpdateable() ) {
 					updateBuilder.addValueColumn(
-							selectable.getSelectionExpression(),
 							NULL,
-							selectable.getJdbcMapping(),
-							selectable.isLob()
+							selectable
 					);
 				}
 			}

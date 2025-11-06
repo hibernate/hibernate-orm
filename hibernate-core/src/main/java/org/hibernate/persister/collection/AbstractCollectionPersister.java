@@ -1739,8 +1739,8 @@ public abstract class AbstractCollectionPersister
 			List<ColumnValueBinding> restrictionBindings) {
 		final var foreignKeyDescriptor = getAttributeMapping().getKeyDescriptor();
 		assert foreignKeyDescriptor != null;
-		foreignKeyDescriptor.getKeyPart().forEachSelectable( parameterList );
-		for ( var columnValueParameter : parameterList ) {
+		foreignKeyDescriptor.getKeyPart().forEachSelectable( (selectionIndex, selectableMapping) -> {
+			final var columnValueParameter = parameterList.addColumValueParameter( selectableMapping );
 			final var columnReference = columnValueParameter.getColumnReference();
 			restrictionBindings.add(
 					new ColumnValueBinding(
@@ -1748,11 +1748,11 @@ public abstract class AbstractCollectionPersister
 							new ColumnWriteFragment(
 									"?",
 									columnValueParameter,
-									columnReference.getJdbcMapping()
+									selectableMapping
 							)
 					)
 			);
-		}
+		});
 	}
 
 

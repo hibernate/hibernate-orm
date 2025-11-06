@@ -132,10 +132,8 @@ public abstract class AbstractMutationCoordinator {
 			final String tableName = entityPersister.physicalTableNameForMutation( mapping );
 			final ColumnValuesTableMutationBuilder tableUpdateBuilder = mutationGroupBuilder.findTableDetailsBuilder( tableName );
 			tableUpdateBuilder.addValueColumn(
-					mapping.getSelectionExpression(),
 					writePropertyValue ? "?" : columnValues[j],
-					mapping.getJdbcMapping(),
-					mapping.isLob()
+					mapping
 			);
 		} );
 	}

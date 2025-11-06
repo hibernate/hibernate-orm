@@ -5,7 +5,6 @@
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 
-apply from: rootProject.file( 'gradle/releasable.gradle' )
 apply from: rootProject.file( 'gradle/java-module.gradle' )
 apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 
@@ -102,12 +101,19 @@ task ciBuild {
 	dependsOn test
 }
 
-tasks.release.dependsOn tasks.test
+task releasePrepare {
+    group 'Release'
+    description 'Performs release preparations on local check-out, including updating changelog'
 
-tasks.preVerifyRelease.dependsOn build
-tasks.preVerifyRelease.dependsOn generateMetadataFileForPublishedArtifactsPublication
-tasks.preVerifyRelease.dependsOn generatePomFileForPublishedArtifactsPublication
-tasks.preVerifyRelease.dependsOn generatePomFileForRelocationPomPublication
+    dependsOn build
+    dependsOn generateMetadataFileForPublishedArtifactsPublication
+    dependsOn generatePomFileForPublishedArtifactsPublication
+    dependsOn generatePomFileForRelocationPomPublication
+    dependsOn generatePomFileForRelocationPomPublication
+    // we depend on publishAllPublicationsToStagingRepository to make sure that the artifacts are "published" to a local staging directory
+    // used by JReleaser during the release process
+    dependsOn publishAllPublicationsToStagingRepository
+}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Ancillary tasks

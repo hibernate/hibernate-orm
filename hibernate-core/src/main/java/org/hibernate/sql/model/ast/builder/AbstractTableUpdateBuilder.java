@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
@@ -85,14 +85,10 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 	}
 
 	@Override
-	public void addValueColumn(
-			String columnName,
-			String columnWriteFragment,
-			JdbcMapping jdbcMapping,
-			boolean isLob) {
-		final ColumnValueBinding valueBinding = createValueBinding( columnName, columnWriteFragment, jdbcMapping );
+	public void addValueColumn(String columnWriteFragment, SelectableMapping selectableMapping) {
+		final ColumnValueBinding valueBinding = createValueBinding( columnWriteFragment, selectableMapping );
 
-		if ( isLob && getJdbcServices().getDialect().forceLobAsLastValue() ) {
+		if ( selectableMapping.isLob() && getJdbcServices().getDialect().forceLobAsLastValue() ) {
 			if ( lobValueBindings == null ) {
 				lobValueBindings = new ArrayList<>();
 			}
@@ -109,10 +105,7 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 	}
 
 	@Override
-	public void addKeyColumn(
-			String columnName,
-			String columnWriteFragment,
-			JdbcMapping jdbcMapping) {
-		addColumn( columnName, columnWriteFragment, jdbcMapping, keyBindings );
+	public void addKeyColumn(String columnWriteFragment, SelectableMapping selectableMapping) {
+		addColumn( columnWriteFragment, selectableMapping, keyBindings );
 	}
 }

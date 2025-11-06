@@ -3356,10 +3356,7 @@ public abstract class AbstractEntityPersister
 						.accept( (selectionIndex, selectableMapping) -> {
 							keyColumns.add( new EntityTableMapping.KeyColumn(
 									tableExpression,
-									selectableMapping.getSelectionExpression(),
-									selectableMapping.getWriteExpression(),
-									selectableMapping.isFormula(),
-									selectableMapping.getJdbcMapping()
+									selectableMapping
 							) );
 						} );
 

@@ -4,7 +4,6 @@
  */
 package org.hibernate.sql.model.ast.builder;
 
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
@@ -27,7 +26,7 @@ public class TableDeleteBuilderSkipped implements TableDeleteBuilder {
 	}
 
 	@Override
-	public void addKeyRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
+	public void addKeyRestrictionBinding(SelectableMapping selectableMapping) {
 	}
 
 	@Override
@@ -35,11 +34,7 @@ public class TableDeleteBuilderSkipped implements TableDeleteBuilder {
 	}
 
 	@Override
-	public void addOptimisticLockRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
-	}
-
-	@Override
-	public void addLiteralRestriction(String columnName, String sqlLiteralText, JdbcMapping jdbcMapping) {
+	public void addOptimisticLockRestriction(SelectableMapping selectableMapping) {
 	}
 
 	@Override

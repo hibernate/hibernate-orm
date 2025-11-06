@@ -120,6 +120,7 @@ import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
+import org.hibernate.sql.ast.tree.expression.SqlTypedExpression;
 import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
@@ -5664,10 +5665,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final List<SqlAstNode> arguments = new ArrayList<>( 2 );
 		arguments.add( expression );
 		final CastTarget castTarget;
-		if ( expression instanceof SqlTypedMappingJdbcParameter parameter ) {
-			final SqlTypedMapping sqlTypedMapping = parameter.getSqlTypedMapping();
+		if ( expression instanceof SqlTypedExpression sqlTypedExpression ) {
+			final SqlTypedMapping sqlTypedMapping = sqlTypedExpression.getSqlTypedMapping();
 			castTarget = new CastTarget(
-					parameter.getJdbcMapping(),
+					sqlTypedMapping.getJdbcMapping(),
 					sqlTypedMapping.getColumnDefinition(),
 					sqlTypedMapping.getLength(),
 					sqlTypedMapping.getArrayLength(),

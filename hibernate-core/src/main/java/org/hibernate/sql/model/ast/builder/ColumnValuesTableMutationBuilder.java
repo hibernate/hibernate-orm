@@ -6,7 +6,6 @@ package org.hibernate.sql.model.ast.builder;
 
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.TableMutation;
@@ -31,39 +30,30 @@ public interface ColumnValuesTableMutationBuilder<M extends TableMutation<?>> ex
 	/**
 	 * Add a column as part of the values list
 	 */
-	void addValueColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping, boolean isLob);
-	/**
-	 * Add a column as part of the values list
-	 */
-	default void addValueColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
-		addValueColumn( columnName, columnWriteFragment, jdbcMapping, jdbcMapping.getJdbcType().isLob() );
-	}
+	void addValueColumn(String columnWriteFragment, SelectableMapping selectableMapping);
 
 	/**
 	 * Add a column as part of the values list
 	 */
 	default void addValueColumn(SelectableMapping selectableMapping) {
 		addValueColumn(
-				selectableMapping.getSelectionExpression(),
 				selectableMapping.getWriteExpression(),
-				selectableMapping.getJdbcMapping(),
-				selectableMapping.isLob()
+				selectableMapping
 		);
 	}
 
 	/**
 	 * Add a key column
 	 */
-	void addKeyColumn(String columnName, String valueExpression, JdbcMapping jdbcMapping);
+	void addKeyColumn(String valueExpression, SelectableMapping selectableMapping);
 
 	/**
 	 * Add a key column
 	 */
 	default void addKeyColumn(int index, SelectableMapping selectableMapping) {
 		addKeyColumn(
-				selectableMapping.getSelectionExpression(),
 				selectableMapping.getWriteExpression(),
-				selectableMapping.getJdbcMapping()
+				selectableMapping
 		);
 	}
 }

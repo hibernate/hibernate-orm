@@ -51,7 +51,7 @@ if ( !manualRelease && cronRelease && !RELEASE_ON_SCHEDULE ) {
 
 def checkoutReleaseScripts() {
 	dir('.release/scripts') {
-		checkout scmGit(branches: [[name: '*/main']], extensions: [],
+		checkout scmGit(branches: [[name: '*/test/github-releases']], extensions: [],
 				userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com',
 									 url: 'https://github.com/hibernate/hibernate-release-scripts.git']])
 	}

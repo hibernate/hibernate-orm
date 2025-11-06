@@ -15,7 +15,7 @@ First, a list of resources you will need access to in order to perform a release
 
 == Steps
 
-1. Perform `./gradlew preVerifyRelease` locally (after pulling all upstream changes).  The Jenkins job does only the release steps, and we need to make sure tests and checkstyle especially are ok
+1. Perform `./gradlew releasePrepare` locally (after pulling all upstream changes).  The Jenkins job does only the release steps, and we need to make sure tests and checkstyle especially are ok
 2. Mark the version as released in Jira
 3. Close all issues associated with the version as closed.  Be sure to remove the version from any issues that are not resolved (e.g. rejected) - the Jira "release notes" mechanism includes all issues with that version as the fix-for regardless of the resolution
 4. Start the https://ci.hibernate.org/view/ORM/job/hibernate-orm-release/[Jenkins job].  It is a parameterized build - Jenkins will prompt user for needed information:

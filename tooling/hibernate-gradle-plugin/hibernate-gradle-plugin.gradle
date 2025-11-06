@@ -19,7 +19,6 @@ plugins {
 
 apply from: rootProject.file( 'gradle/module.gradle' )
 apply from: rootProject.file( 'gradle/javadoc.gradle' )
-apply from: rootProject.file( 'gradle/releasable.gradle' )
 
 description = "Gradle plugin for integrating Hibernate aspects into your build"
 
@@ -78,12 +77,6 @@ pluginBundle {
 test {
 	useJUnitPlatform()
 }
-
-// Publish to the Gradle Plugin Portal
-tasks.release.dependsOn tasks.publishPlugins
-
-// local publishing (SNAPSHOT testing)
-tasks.publish.dependsOn tasks.publishPlugins
 
 // local publishing (SNAPSHOT testing)
 publishing {
@@ -169,9 +162,9 @@ gradle.taskGraph.whenReady { tg ->
 	}
 }
 
-tasks.register("releasePerform") {
+task releaseGradlePluginPerform {
     group "release-perform"
-    description "See :release:releasePerform for details.  Here we hook in publishing to the Plugin Portal"
+    description "An explicit task for publishing Gradle Plugins to the Plugin Portal"
 
     dependsOn tasks.publishPlugins
 }

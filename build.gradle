@@ -40,19 +40,6 @@ apply from: file( 'gradle/module.gradle' )
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Release Task
 
-tasks.register('release') {
-	description = "The task performed when we are performing a release build.  Relies on " +
-			"the fact that subprojects will appropriately define a release task " +
-			"themselves if they have any release-related activities to perform"
-
-	doFirst {
-		def javaVersionsInUse = jdkVersions.allVersions
-		if (javaVersionsInUse != [JavaLanguageVersion.of(11)].toSet()) {
-			throw new IllegalStateException("Please use JDK 11 to perform the release. Currently using: ${javaVersionsInUse}")
-		}
-	}
-}
-
 tasks.register('publish') {
 	description = "The task performed when we want to just publish maven artifacts.  Relies on " +
 			"the fact that subprojects will appropriately define a release task " +

@@ -34,7 +34,6 @@ repositories {
 
 
 apply from: rootProject.file( 'gradle/module.gradle' )
-apply from: rootProject.file( 'gradle/releasable.gradle' )
 
 apply plugin: 'org.hibernate.orm.build.reports'
 
@@ -194,10 +193,6 @@ dependencies {
 if ( project.ormVersion.isSnapshot ) {
 	// only run the ci build tasks for SNAPSHOT versions
 	tasks.register('ciBuild') { dependsOn clean }
-	tasks.release.enabled false
-}
-else {
-	tasks.release.dependsOn clean
 }
 
 

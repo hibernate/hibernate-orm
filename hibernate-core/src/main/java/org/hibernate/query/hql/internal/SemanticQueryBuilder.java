@@ -25,7 +25,6 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -196,11 +195,9 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
@@ -389,12 +386,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		this.dotIdentifierConsumerStack = new StandardStack<>(
 				new BasicDotIdentifierConsumer( this )
 		);
-		this.parameterStyle = creationOptions.useStrictJpaCompliance()
-				? ParameterStyle.UNKNOWN
-				: ParameterStyle.MIXED;
+		this.parameterStyle =
+				creationOptions.useStrictJpaCompliance()
+						? ParameterStyle.UNKNOWN
+						: ParameterStyle.MIXED;
 
-		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
-		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
+		final var typeConfiguration = creationContext.getTypeConfiguration();
+		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		this.integerDomainType = typeConfiguration.standardBasicTypeForJavaType( Integer.class );
 		this.listJavaType = javaTypeRegistry.getDescriptor( List.class );
 		this.mapJavaType = javaTypeRegistry.getDescriptor( Map.class );
@@ -517,24 +515,20 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final SqmInsertSelectStatement<R> insertStatement =
 					new SqmInsertSelectStatement<>( root, nodeBuilder() );
 			parameterCollector = insertStatement;
-			final SqmDmlCreationProcessingState processingState = new SqmDmlCreationProcessingState(
-					insertStatement,
-					this
-			);
+			final var processingState =
+					new SqmDmlCreationProcessingState( insertStatement, this );
 
 			processingStateStack.push( processingState );
 
 			try {
-				final SqmCreationProcessingState stateFieldsProcessingState = new SqmCreationProcessingStateImpl(
-						insertStatement,
-						this
-				);
+				final var stateFieldsProcessingState =
+						new SqmCreationProcessingStateImpl( insertStatement, this );
 				stateFieldsProcessingState.getPathRegistry().register( root );
 
 				processingStateStack.push( stateFieldsProcessingState );
 				try {
-					for ( HqlParser.SimplePathContext stateFieldCtx : targetFieldsSpecContext.simplePath() ) {
-						final SqmPath<?> stateField = (SqmPath<?>) visitSimplePath( stateFieldCtx );
+					for ( var stateFieldCtx : targetFieldsSpecContext.simplePath() ) {
+						final var stateField = (SqmPath<?>) visitSimplePath( stateFieldCtx );
 						insertStatement.addInsertTargetStateField( stateField );
 					}
 				}
@@ -557,17 +551,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final SqmInsertValuesStatement<R> insertStatement =
 					new SqmInsertValuesStatement<>( root, nodeBuilder() );
 			parameterCollector = insertStatement;
-			final SqmDmlCreationProcessingState processingState = new SqmDmlCreationProcessingState(
-					insertStatement,
-					this
-			);
+			final var processingState =
+					new SqmDmlCreationProcessingState( insertStatement, this );
 
 			processingStateStack.push( processingState );
 			processingState.getPathRegistry().register( root );
 
 			try {
-				for ( HqlParser.SimplePathContext stateFieldCtx : targetFieldsSpecContext.simplePath() ) {
-					final SqmPath<?> stateField = (SqmPath<?>) visitSimplePath( stateFieldCtx );
+				for ( var stateFieldCtx : targetFieldsSpecContext.simplePath() ) {
+					final var stateField = (SqmPath<?>) visitSimplePath( stateFieldCtx );
 					insertStatement.addInsertTargetStateField( stateField );
 				}
 
@@ -576,7 +568,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				for ( int i = 1; i < valuesListContext.getChildCount(); i += 2 ) {
 					final ParseTree values = valuesListContext.getChild( i );
 					final ArrayList<SqmExpression<?>> valuesExpressions = new ArrayList<>();
-					final Iterator<SqmPath<?>> iterator = insertStatement.getInsertionTargetPaths().iterator();
+					final var iterator = insertStatement.getInsertionTargetPaths().iterator();
 					for ( int j = 1; j < values.getChildCount(); j += 2 ) {
 						final SqmPath<?> targetPath = iterator.next();
 						final String targetPathJavaType = targetPath.getJavaTypeName();
@@ -630,7 +622,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 			else {
 				final List<SqmPath<?>> constraintAttributes = new ArrayList<>();
-				for ( HqlParser.SimplePathContext pathContext : conflictTargetContext.simplePath() ) {
+				for ( var pathContext : conflictTargetContext.simplePath() ) {
 					constraintAttributes.add( consumeDomainPath( pathContext ) );
 				}
 				conflictClause.conflictOnConstraintPaths( constraintAttributes );
@@ -641,7 +633,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( setClauseContext != null ) {
 			processingState.getPathRegistry().registerByAliasOnly( conflictClause.getExcludedRoot() );
 			final SqmConflictUpdateAction<R> updateAction = conflictClause.onConflictDoUpdate();
-			for ( HqlParser.AssignmentContext assignmentContext : setClauseContext.assignment() ) {
+			for ( var assignmentContext : setClauseContext.assignment() ) {
 				updateAction.addAssignment( visitAssignment( assignmentContext ) );
 			}
 			updateAction.where( visitWhereClause( conflictActionContext.whereClause() ) );
@@ -653,10 +645,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmUpdateStatement<R> visitUpdateStatement(HqlParser.UpdateStatementContext ctx) {
 		final SqmUpdateStatement<R> updateStatement = new SqmUpdateStatement<>( nodeBuilder() );
 		parameterCollector = updateStatement;
-		final SqmDmlCreationProcessingState processingState = new SqmDmlCreationProcessingState(
-				updateStatement,
-				this
-		);
+		final var processingState =
+				new SqmDmlCreationProcessingState( updateStatement, this );
 		processingStateStack.push( processingState );
 
 		try {
@@ -686,7 +676,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmAssignment<?> visitAssignment(HqlParser.AssignmentContext ctx) {
 		//noinspection unchecked
-		final SqmPath<Object> targetPath = (SqmPath<Object>) consumeDomainPath( ctx.simplePath() );
+		final var targetPath = (SqmPath<Object>) consumeDomainPath( ctx.simplePath() );
 		final String targetPathJavaType = targetPath.getJavaTypeName();
 		final boolean isEnum = targetPath.isEnum();
 		final var rightSide = ctx.expressionOrPredicate();

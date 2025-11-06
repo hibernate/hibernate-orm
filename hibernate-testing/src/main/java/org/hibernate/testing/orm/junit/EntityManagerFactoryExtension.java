@@ -91,8 +91,8 @@ public class EntityManagerFactoryExtension
 	private static void collectProperties(PersistenceUnitInfoImpl pui, Jpa jpa) {
 		final Properties properties = pui.getProperties();
 		properties.putAll( Environment.getProperties() );
-		// JpaCompliance
-		setJpaComplianceProperties( properties, jpa );
+		// JpaCompliance, default to false, can be overridden in the integrationSettings
+		properties.put( AvailableSettings.JPA_COMPLIANCE, "false" );
 		for ( Setting property : jpa.properties() ) {
 			properties.setProperty( property.name(), property.value() );
 		}
@@ -187,18 +187,6 @@ public class EntityManagerFactoryExtension
 			}
 			integrationSettings.put( AvailableSettings.STATEMENT_INSPECTOR, new SQLStatementInspector() );
 		}
-	}
-
-	private static void setJpaComplianceProperties(Properties properties, Jpa jpa) {
-		properties.put( AvailableSettings.JPA_COMPLIANCE, jpa.jpaComplianceEnabled() );
-		properties.put( AvailableSettings.JPA_QUERY_COMPLIANCE, jpa.queryComplianceEnabled() );
-		properties.put( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, jpa.transactionComplianceEnabled() );
-		properties.put( AvailableSettings.JPA_CLOSED_COMPLIANCE, jpa.closedComplianceEnabled() );
-		properties.put( AvailableSettings.JPA_PROXY_COMPLIANCE, jpa.proxyComplianceEnabled() );
-		properties.put( AvailableSettings.JPA_CACHING_COMPLIANCE, jpa.cacheComplianceEnabled() );
-		properties.put( AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, jpa.generatorScopeComplianceEnabled() );
-		properties.put( AvailableSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE, jpa.orderByMappingComplianceEnabled() );
-		properties.put( AvailableSettings.JPA_LOAD_BY_ID_COMPLIANCE, jpa.loadByIdComplianceEnabled() );
 	}
 
 	private static DomainModelDescriptor instantiateDomainModelDescriptor(

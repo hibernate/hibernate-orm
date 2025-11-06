@@ -4,8 +4,10 @@
  */
 package org.hibernate.orm.test.jpa.compliance;
 
+import org.hibernate.cfg.JpaComplianceSettings;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Jpa(
 		annotatedClasses = CriteriaDeleteTest.Person.class,
-		jpaComplianceEnabled = true
+		integrationSettings = {@Setting(name = JpaComplianceSettings.JPA_COMPLIANCE, value = "true")}
 )
 public class CriteriaDeleteTest {
 

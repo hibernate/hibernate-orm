@@ -34,54 +34,49 @@ import org.jboss.logging.Logger;
  */
 public class ConfigurationNavigator {
 
-	private static final Logger log = Logger.getLogger(ConfigurationNavigator.class);
-	
-	/**
-	 * @param clazz
-	 */
-	public static void collectComponents(Map<String, Component> components, PersistentClass clazz) {
-		Iterator<Property> iter = new Cfg2JavaTool().getPOJOClass(clazz).getAllPropertiesIterator();
-		collectComponents( components, iter );		
-	}
+    private static final Logger log = Logger.getLogger(ConfigurationNavigator.class);
 
-	public static void collectComponents(Map<String, Component> components, POJOClass clazz) {
-		Iterator<Property> iter = clazz.getAllPropertiesIterator();
-		collectComponents( components, iter );		
-	}
-	
-	private static void collectComponents(Map<String, Component> components, Iterator<Property> iter) {
-		while(iter.hasNext()) {
-			Property property = iter.next();
-			if (!"embedded".equals(property.getPropertyAccessorName()) && // HBX-267, embedded property for <properties> should not be generated as component. 
-				property.getValue() instanceof Component) {
-				Component comp = (Component) property.getValue();
-				addComponent( components, comp );			
-			} 
-			else if (property.getValue() instanceof Collection) {
-				// compisite-element in collection
-				Collection collection = (Collection) property.getValue();				
-				if ( collection.getElement() instanceof Component) {
-					Component comp = (Component) collection.getElement();				
-					addComponent(components, comp);				
-				}
-			}
-		}
-	}
+    public static void collectComponents(Map<String, Component> components, PersistentClass clazz) {
+        Iterator<Property> iter = new Cfg2JavaTool().getPOJOClass(clazz).getAllPropertiesIterator();
+        collectComponents( components, iter );
+    }
 
-	private static void addComponent(Map<String, Component> components, Component comp) {
-		if(!comp.isDynamic()) {
-			Component existing = (Component) components.put(
-					comp.getComponentClassName(), 
-					comp);		
-			if(existing!=null) {
-				log.warn("Component " + existing.getComponentClassName() + " found more than once! Will only generate the last found.");
-			}
-		} else {
-			log.debug("dynamic-component found. Ignoring it as a component, but will collect any embedded components.");
-		}	
-		collectComponents( 
-				components, 
-				new ComponentPOJOClass(comp, new Cfg2JavaTool()).getAllPropertiesIterator());		
-	}
-	
+    public static void collectComponents(Map<String, Component> components, POJOClass clazz) {
+        Iterator<Property> iter = clazz.getAllPropertiesIterator();
+        collectComponents( components, iter );
+    }
+
+    private static void collectComponents(Map<String, Component> components, Iterator<Property> iter) {
+        while(iter.hasNext()) {
+            Property property = iter.next();
+            if (!"embedded".equals(property.getPropertyAccessorName()) && // HBX-267, embedded property for <properties> should not be generated as component.
+                    property.getValue() instanceof Component comp ) {
+                addComponent( components, comp );
+            }
+            else if ( property.getValue() instanceof Collection collection ) {
+                // compisite-element in collection
+                if ( collection.getElement() instanceof Component comp ) {
+                    addComponent(components, comp);
+                }
+            }
+        }
+    }
+
+    private static void addComponent(Map<String, Component> components, Component comp) {
+        if(!comp.isDynamic()) {
+            Component existing = components.put(
+                    comp.getComponentClassName(),
+                    comp);
+            if(existing!=null) {
+                log.warn("Component " + existing.getComponentClassName() + " found more than once! Will only generate the last found.");
+            }
+        }
+        else {
+            log.debug("dynamic-component found. Ignoring it as a component, but will collect any embedded components.");
+        }
+        collectComponents(
+                components,
+                new ComponentPOJOClass(comp, new Cfg2JavaTool()).getAllPropertiesIterator());
+    }
+
 }

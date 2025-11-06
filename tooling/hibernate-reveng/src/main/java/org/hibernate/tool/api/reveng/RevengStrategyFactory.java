@@ -39,8 +39,8 @@ public class RevengStrategyFactory {
                 "'" + revengClass.getSimpleName() + "(" + RevengStrategy.class.getName() + ")'");
     }
 
-	public static RevengStrategy createReverseEngineeringStrategy(
-			String revengClassName, RevengStrategy delegate) {
+    public static RevengStrategy createReverseEngineeringStrategy(
+            String revengClassName, RevengStrategy delegate) {
         if (revengClassName == null) {
             return delegate == null ? createDefaultStrategyInstance() : delegate;
         }
@@ -53,15 +53,18 @@ public class RevengStrategyFactory {
                     try {
                         Constructor<?> revengConstructor = revengClass.getConstructor();
                         return (RevengStrategy) revengConstructor.newInstance();
-                    } catch (NoSuchMethodException e1) {
+                    }
+                    catch (NoSuchMethodException e1) {
                         try {
                             Constructor<?> revengConstructor = revengClass.getConstructor(RevengStrategy.class);
                             return (RevengStrategy) revengConstructor.newInstance(createDefaultStrategyInstance());
-                        } catch (NoSuchMethodException e2) {
+                        }
+                        catch (NoSuchMethodException e2) {
                             throw createExceptionBecauseOfMissingConstructors(revengClass);
                         }
                     }
-                } catch (IllegalAccessException | InstantiationException | InvocationTargetException | IllegalArgumentException e) {
+                }
+                catch (IllegalAccessException | InstantiationException | InvocationTargetException | IllegalArgumentException e) {
                     throw new RuntimeException("A strategy of class '" + revengClassName + "' could not be created", e);
                 }
             }
@@ -70,25 +73,29 @@ public class RevengStrategyFactory {
                 try {
                     Constructor<?> revengConstructor = revengClass.getConstructor(RevengStrategy.class);
                     return (RevengStrategy) revengConstructor.newInstance(delegate);
-                } catch (NoSuchMethodException e1) {
+                }
+                catch (NoSuchMethodException e1) {
                     log.warn("Delegating strategy given, but no matching constructor is available on class '" +
                             revengClassName + "'. The delegating strategy will be ignored!");
                     try {
                         Constructor<?> revengConstructor = revengClass.getConstructor();
                         return (RevengStrategy) revengConstructor.newInstance();
-                    } catch (NoSuchMethodException e2) {
+                    }
+                    catch (NoSuchMethodException e2) {
                         throw createExceptionBecauseOfMissingConstructors(revengClass);
                     }
                 }
-            } catch (IllegalAccessException | InstantiationException | InvocationTargetException | IllegalArgumentException e) {
+            }
+            catch (IllegalAccessException | InstantiationException | InvocationTargetException | IllegalArgumentException e) {
                 throw new RuntimeException("A strategy of class '" + revengClassName + "' could not be created", e);
             }
-        } catch (ClassNotFoundException e) {
+        }
+        catch (ClassNotFoundException e) {
             throw new RuntimeException("A strategy of class '" + revengClassName + "' could not be created", e);
         }
-	}
-	
-	public static RevengStrategy createReverseEngineeringStrategy( String revengClassName, File[] revengFiles) {
+    }
+
+    public static RevengStrategy createReverseEngineeringStrategy( String revengClassName, File[] revengFiles) {
         RevengStrategy result = null;
         if (revengFiles != null && revengFiles.length > 0) {
             OverrideRepository overrideRepository = new OverrideRepository();
@@ -98,14 +105,14 @@ public class RevengStrategyFactory {
             result = overrideRepository.getReverseEngineeringStrategy(createDefaultStrategyInstance());
         }
 
-		return createReverseEngineeringStrategy(revengClassName, result);
-	}
+        return createReverseEngineeringStrategy(revengClassName, result);
+    }
 
     public static RevengStrategy createReverseEngineeringStrategy(String revengClassName) {
         return createReverseEngineeringStrategy(revengClassName, (RevengStrategy) null);
     }
 
-	public static RevengStrategy createReverseEngineeringStrategy() {
-		return createDefaultStrategyInstance();
-	}
+    public static RevengStrategy createReverseEngineeringStrategy() {
+        return createDefaultStrategyInstance();
+    }
 }

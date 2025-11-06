@@ -136,11 +136,11 @@ public class IndexProcessor {
             }
         }
 
-        for ( Entry<String, UniqueKey> stringUniqueKeyEntry : uniquekeys.entrySet() ) {
-            // if keyset has no overlaps with primary key (table.getPrimaryKey())
-            // if only key matches then mark as setNaturalId(true);
-        }
-    }
+/*		for ( Entry<String, UniqueKey> stringUniqueKeyEntry : uniquekeys.entrySet() ) {
+			// if keyset has no overlaps with primary key (table.getPrimaryKey())
+			// if only key matches then mark as setNaturalId(true);
+		}
+*/	}
 
     private static String getCatalogForDBLookup(String catalog, String defaultCatalog) {
         return catalog==null?defaultCatalog:catalog;

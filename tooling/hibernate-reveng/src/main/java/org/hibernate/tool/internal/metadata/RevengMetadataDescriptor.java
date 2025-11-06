@@ -17,6 +17,7 @@
  */
 package org.hibernate.tool.internal.metadata;
 
+import java.util.Objects;
 import java.util.Properties;
 
 import org.hibernate.boot.Metadata;
@@ -28,37 +29,32 @@ import org.hibernate.tool.api.reveng.RevengStrategyFactory;
 import org.hibernate.tool.internal.reveng.RevengMetadataBuilder;
 
 public class RevengMetadataDescriptor implements MetadataDescriptor {
-	
-	private RevengStrategy reverseEngineeringStrategy = null;
-    private Properties properties = new Properties();
 
-	public RevengMetadataDescriptor(
-			RevengStrategy reverseEngineeringStrategy, 
-			Properties properties) {
-		this.properties.putAll(Environment.getProperties());
-		if (properties != null) {
-			this.properties.putAll(properties);
-		}
-		if (reverseEngineeringStrategy != null) {
-			this.reverseEngineeringStrategy = reverseEngineeringStrategy;
-		} else {
-			this.reverseEngineeringStrategy = RevengStrategyFactory.createReverseEngineeringStrategy();
-		}
-		if (this.properties.get(MetadataConstants.PREFER_BASIC_COMPOSITE_IDS) == null) {
-			this.properties.put(MetadataConstants.PREFER_BASIC_COMPOSITE_IDS, true);
-		}
-	}
+    private final RevengStrategy reverseEngineeringStrategy;
+    private final Properties properties = new Properties();
 
-	public Properties getProperties() {
-		Properties result = new Properties();
-		result.putAll(properties);
-		return result;
-	}
-    
-	public Metadata createMetadata() {
-		return RevengMetadataBuilder
-				.create(properties, reverseEngineeringStrategy)
-				.build();
-	}
-	
+    public RevengMetadataDescriptor(
+            RevengStrategy reverseEngineeringStrategy,
+            Properties properties) {
+        this.properties.putAll(Environment.getProperties());
+        if (properties != null) {
+            this.properties.putAll(properties);
+        }
+        this.reverseEngineeringStrategy = Objects.requireNonNullElseGet( reverseEngineeringStrategy,
+                RevengStrategyFactory::createReverseEngineeringStrategy );
+        this.properties.putIfAbsent( MetadataConstants.PREFER_BASIC_COMPOSITE_IDS, true );
+    }
+
+    public Properties getProperties() {
+        Properties result = new Properties();
+        result.putAll(properties);
+        return result;
+    }
+
+    public Metadata createMetadata() {
+        return RevengMetadataBuilder
+                .create(properties, reverseEngineeringStrategy)
+                .build();
+    }
+
 }

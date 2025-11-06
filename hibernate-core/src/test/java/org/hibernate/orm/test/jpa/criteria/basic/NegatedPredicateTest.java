@@ -6,9 +6,11 @@ package org.hibernate.orm.test.jpa.criteria.basic;
 
 import java.util.List;
 
+import org.hibernate.cfg.JpaComplianceSettings;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,8 +51,7 @@ public class NegatedPredicateTest {
 	}
 
 	@Jpa(
-			annotatedClasses = {Wall.class},
-			jpaComplianceEnabled = false
+			annotatedClasses = {Wall.class}
 	)
 	@Test
 	public void testNegatedPredicate(EntityManagerFactoryScope scope) {
@@ -75,8 +76,7 @@ public class NegatedPredicateTest {
 	}
 
 	@Jpa(
-			annotatedClasses = {Wall.class},
-			jpaComplianceEnabled = false
+			annotatedClasses = {Wall.class}
 	)
 	@Test
 	public void testDoubleNegatedPredicate(EntityManagerFactoryScope scope) {
@@ -106,7 +106,7 @@ public class NegatedPredicateTest {
 
 	@Jpa(
 			annotatedClasses = {Wall.class},
-			jpaComplianceEnabled = true
+			integrationSettings = {@Setting(name = JpaComplianceSettings.JPA_COMPLIANCE, value = "true")}
 	)
 	@Test
 	public void testJpaCompliantNegatedPredicate(EntityManagerFactoryScope scope) {
@@ -132,7 +132,7 @@ public class NegatedPredicateTest {
 
 	@Jpa(
 			annotatedClasses = {Wall.class},
-			jpaComplianceEnabled = true
+			integrationSettings = {@Setting(name = JpaComplianceSettings.JPA_COMPLIANCE, value = "true")}
 	)
 	@Test
 	public void testJpaCompliantDoubleNegatedPredicate(EntityManagerFactoryScope scope) {

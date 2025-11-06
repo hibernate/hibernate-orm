@@ -41,6 +41,39 @@ See the link:{releaseSeriesBase}#whats-new[website] for the list of new features
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#api[API].
 
+[[jpa]]
+=== @Jpa (hibernate-testing)
+
+The following methods have been removed from the `@Jpa` test utility, located in the hibernate-testing project:
+
+- `jpaComplianceEnabled()`
+- `queryComplianceEnabled()`
+- `transactionComplianceEnabled()`
+- `closedComplianceEnabled()`
+- `orderByMappingComplianceEnabled()`
+- `proxyComplianceEnabled()`
+- `cacheComplianceEnabled()`
+- `generatorScopeComplianceEnabled()`
+- `loadByIdComplianceEnabled()`
+
+The default value for these settings is still `false`.
+
+To indicate a specific flag setting, or to override the generic value that was set with `JpaComplianceSettings.JPA_COMPLIANCE`, `@Jpa` 's `integrationSettings` array should be used.
+
+Example:
+
+```
+@Jpa(annotatedClasses =
+	...,
+	integrationSettings = {
+		// set all jpa compliance flags to true
+		@Setting(name = JpaComplianceSettings.JPA_COMPLIANCE, value = "true"),
+		// override or set a specific flag value to false
+		@Setting(name = JpaComplianceSettings.JPA_PROXY_COMPLIANCE, value = "false")
+	}
+)
+```
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // SPI changes

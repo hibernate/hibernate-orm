@@ -102,9 +102,9 @@ public class OneToOneSecondPass implements SecondPass {
 		}
 		else if ( !(targetPropertyValue instanceof OneToOne) ) {
 			throw new AnnotationException( "Association '" + getPath( propertyHolder, inferredData )
-										   + "' is 'mappedBy' a property named '" + mappedBy
-										   + "' of the target entity type '" + targetEntityName
-										   + "' which is not a '@OneToOne' or '@ManyToOne' association" );
+											+ "' is 'mappedBy' a property named '" + mappedBy
+											+ "' of the target entity type '" + targetEntityName
+											+ "' which is not a '@OneToOne' or '@ManyToOne' association" );
 		}
 		checkMappedByType(
 				mappedBy,

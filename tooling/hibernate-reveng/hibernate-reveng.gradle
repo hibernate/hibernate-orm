@@ -1,0 +1,14 @@
+plugins {
+    id "local.publishing-java-module"
+}
+
+description = "Library providing functionality to perform reverse engineering Hibernate related artefacts from an existing database"
+
+dependencies {
+    implementation project( ':hibernate-core' )
+    implementation project( ':hibernate-ant' )
+    implementation "org.apache.commons:commons-collections4:4.5.0"
+    implementation "com.google.googlejavaformat:google-java-format:1.27.0"
+    implementation "org.freemarker:freemarker:2.3.34"
+    implementation "org.antlr:antlr4-runtime:4.13.2"
+}

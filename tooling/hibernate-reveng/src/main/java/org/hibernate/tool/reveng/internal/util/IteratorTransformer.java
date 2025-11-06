@@ -1,0 +1,31 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.tool.reveng.internal.util;
+
+import java.util.Iterator;
+
+public abstract class IteratorTransformer<T> implements Iterator<String> {
+
+	private Iterator<T> delegate;
+
+	public IteratorTransformer(Iterator<T> delegate) {
+		this.delegate = delegate;
+	}
+
+	public boolean hasNext() {
+		return delegate.hasNext();
+	}
+
+	public String next() {
+		return transform(delegate.next());
+	}
+
+	public abstract String transform(T object);
+
+	public void remove() {
+		delegate.remove();
+	}
+
+}

@@ -13,11 +13,15 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.spi.DescriptiveJsonGeneratingVisitor;
 import org.hibernate.type.format.StringJsonDocumentWriter;
 import org.junit.jupiter.api.AfterAll;
@@ -26,6 +30,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -34,12 +40,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-@DomainModel( annotatedClasses = {
+@DomainModel(annotatedClasses = {
 		DescriptiveJsonGeneratingVisitorSmokeTest.Company.class,
 		DescriptiveJsonGeneratingVisitorSmokeTest.Address.class,
 		DescriptiveJsonGeneratingVisitorSmokeTest.Employee.class,
-} )
+		DescriptiveJsonGeneratingVisitorSmokeTest.EntityOfArrays.class,
+})
 @SessionFactory
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArray.class)
 public class DescriptiveJsonGeneratingVisitorSmokeTest {
 	private final DescriptiveJsonGeneratingVisitor visitor = new DescriptiveJsonGeneratingVisitor();
 
@@ -52,7 +60,7 @@ public class DescriptiveJsonGeneratingVisitorSmokeTest {
 				.findEntityDescriptor( Company.class );
 
 		scope.inTransaction( session -> {
-			final Company company = session.createQuery(
+			final Company company = session.createSelectionQuery(
 					"from Company where id = 1",
 					Company.class
 			).getSingleResult();
@@ -84,7 +92,7 @@ public class DescriptiveJsonGeneratingVisitorSmokeTest {
 				.findEntityDescriptor( Company.class );
 
 		scope.inTransaction( session -> {
-			final Company company = session.createQuery(
+			final Company company = session.createSelectionQuery(
 					"from Company c join fetch c.employees where c.id = 1",
 					Company.class
 			).getSingleResult();
@@ -115,6 +123,64 @@ public class DescriptiveJsonGeneratingVisitorSmokeTest {
 		} );
 	}
 
+	@Test
+	public void testEntityOfArrays(SessionFactoryScope scope) {
+		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel()
+				.findEntityDescriptor( EntityOfArrays.class );
+
+		scope.inTransaction( session -> {
+			final var entity = session.createSelectionQuery(
+					"from EntityOfArrays e where id = 1",
+					EntityOfArrays.class
+			).getSingleResult();
+
+			try {
+				final StringJsonDocumentWriter writer = new StringJsonDocumentWriter();
+				visitor.visit( entityDescriptor.getEntityMappingType(), entity, sessionFactory.getWrapperOptions(), writer );
+				final String result = writer.toString();
+
+				final JsonNode jsonNode = mapper.readTree( result );
+				System.out.println("Result: "+jsonNode.toPrettyString());
+
+				assertJsonArray( jsonNode.get( "integerArray" ), Arrays.asList( 1, null, 3 ) );
+				assertJsonArray( jsonNode.get( "stringCollectionArray" ), List.of( "one", "two", "three" ) );
+				assertJsonArray( jsonNode.get( "longArray" ), List.of( 10L, 20L, 30L ) );
+				assertJsonArray( jsonNode.get( "booleanListArray" ), List.of( true, false, true ) );
+			}
+			catch (Exception e) {
+				fail( "Test failed with exception", e );
+			}
+		} );
+	}
+
+	private static void assertJsonArray(JsonNode jsonNode, List<?> expectedValues) {
+		assertThat( jsonNode.isArray() ).isTrue();
+		assertThat( jsonNode.size() ).isEqualTo( expectedValues.size() );
+		for (int i = 0; i < expectedValues.size(); i++) {
+			final Object expectedValue = expectedValues.get( i );
+			final JsonNode element = jsonNode.get( i );
+			if ( expectedValue == null ) {
+				assertThat( element.isNull() ).isTrue();
+			}
+			else if ( expectedValue instanceof Boolean ) {
+				assertThat( element.booleanValue() ).isEqualTo( expectedValue );
+			}
+			else if ( expectedValue instanceof Integer ) {
+				assertThat( element.intValue() ).isEqualTo( expectedValue );
+			}
+			else if ( expectedValue instanceof Long ) {
+				assertThat( element.longValue() ).isEqualTo( expectedValue );
+			}
+			else if ( expectedValue instanceof String ) {
+				assertThat( element.textValue() ).isEqualTo( expectedValue );
+			}
+			else {
+				fail( "Unsupported element type: " + expectedValue.getClass() );
+			}
+		}
+	}
+
 	@BeforeAll
 	public void beforeAll(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
@@ -122,6 +188,13 @@ public class DescriptiveJsonGeneratingVisitorSmokeTest {
 			session.persist( rh );
 			session.persist( new Employee( UUID.randomUUID(), "Marco", "Belladelli", 100_000, rh ) );
 			session.persist( new Employee( UUID.randomUUID(), "Matteo", "Cauzzi", 50_000, rh ) );
+			final var ofArrays = new EntityOfArrays();
+			ofArrays.id = 1L;
+			ofArrays.integerArray = new Integer[] { 1, null, 3 };
+			ofArrays.stringCollectionArray = List.of( "one", "two", "three" );
+			ofArrays.longArray = new long[] { 10, 20, 30 };
+			ofArrays.booleanListArray = List.of( true, false, true );
+			session.persist( ofArrays );
 		} );
 	}
 
@@ -275,5 +348,23 @@ public class DescriptiveJsonGeneratingVisitorSmokeTest {
 		public void setCompany(Company company) {
 			this.company = company;
 		}
+	}
+
+	@Entity(name = "EntityOfArrays")
+	static class EntityOfArrays {
+		@Id
+		private Long id;
+
+		@JdbcTypeCode(SqlTypes.ARRAY)
+		private Integer[] integerArray;
+
+		@JdbcTypeCode(SqlTypes.ARRAY)
+		private Collection<String> stringCollectionArray;
+
+		@JdbcTypeCode(SqlTypes.JSON_ARRAY)
+		private long[] longArray;
+
+		@JdbcTypeCode(SqlTypes.JSON_ARRAY)
+		private List<Boolean> booleanListArray;
 	}
 }

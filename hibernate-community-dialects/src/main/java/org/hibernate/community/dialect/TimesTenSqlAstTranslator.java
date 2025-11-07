@@ -155,7 +155,7 @@ public class TimesTenSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			clauseStack.push( Clause.FETCH );
 			try {
 				if ( fetchClauseExpression != null ) {
-					// We need to substract 1 row to fit maxRows
+					// We need to subtract 1 row to fit maxRows
 					renderFetchPlusOffsetExpressionAsSingleParameter( fetchClauseExpression, offsetClauseExpression, -1 );
 				}
 				else{

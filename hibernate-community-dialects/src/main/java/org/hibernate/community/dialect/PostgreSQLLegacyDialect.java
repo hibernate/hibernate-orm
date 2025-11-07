@@ -1043,7 +1043,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 
 	/**
 	 * Constraint-name extractor for Postgres constraint violation exceptions.
-	 * Orginally contributed by Denny Bartelt.
+	 * Originally contributed by Denny Bartelt.
 	 */
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {

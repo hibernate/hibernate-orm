@@ -19,7 +19,7 @@ public class SingleStoreLocalTemporaryTableStrategy extends StandardLocalTempora
 		return "create temporary table if not exists";
 	}
 
-	//SingleStore throws an error on drop temporary table if there are uncommited statements within transaction.
+	//SingleStore throws an error on drop temporary table if there are uncommitted statements within transaction.
 	//Just 'drop table' statement causes implicit commit, so using 'delete from'.
 	@Override
 	public String getTemporaryTableDropCommand() {

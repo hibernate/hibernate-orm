@@ -113,7 +113,7 @@ public class RDMSOS2200Dialect extends Dialect {
 		 * The TIMESTAMP literal format is: YYYY-MM-DD HH:MM:SS[.[FFFFFF]]
 		 *
 		 * Note that $l (dollar-L) will use the length value if provided.
-		 * Also new for Hibernate3 is the $p percision and $s (scale) parameters
+		 * Also new for Hibernate3 is the $p precision and $s (scale) parameters
 		 */
 		return switch ( sqlTypeCode ) {
 			case BOOLEAN, TINYINT -> "smallint";

@@ -9,6 +9,7 @@ plugins {
 }
 
 description = 'Maven plugin to integrate aspects of Hibernate into your build.'
+def h2Version = '2.4.240'
 
 sourceSets {
     intTest {
@@ -42,6 +43,8 @@ dependencies {
     intTestRuntimeOnly 'org.apache.maven:maven-compat:3.9.12'
     intTestRuntimeOnly 'org.apache.maven.resolver:maven-resolver-transport-http:1.9.24'
     intTestRuntimeOnly 'org.apache.maven.resolver:maven-resolver-connector-basic:1.9.24'
+    intTestRuntimeOnly 'com.h2database:h2:' + h2Version
+//    intTestRuntimeOnly 'org.slf4j:slf4j-simple:2.0.17'
 }
 
 tasks.register('integrationTest', Test) {
@@ -87,6 +90,7 @@ publishingExtension.publications.named("publishedArtifacts") {
 
 integrationTest {
     environment "hibernateVersion", project.version
+    environment "h2Version", h2Version
 }
 
 integrationTest.dependsOn ':hibernate-core:publishToMavenLocal'

@@ -10,7 +10,10 @@ import org.hibernate.EntityFilterException;
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -148,26 +151,43 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		}
 		else {
 			final var rowProcessingState = data.getRowProcessingState();
-			final var lazyInitializer = extractLazyInitializer( data.getInstance() );
+			final var session = rowProcessingState.getSession();
+			final var persistenceContext = session.getPersistenceContextInternal();
+			final var lazyInitializer = extractLazyInitializer( instance );
 			if ( lazyInitializer == null ) {
 				data.setState( State.INITIALIZED );
-				if ( keyIsEager ) {
-					data.entityIdentifier = concreteDescriptor.getIdentifier( instance, rowProcessingState.getSession() );
-				}
+				data.entityIdentifier = concreteDescriptor.getIdentifier( instance, session );
 			}
 			else if ( lazyInitializer.isUninitialized() ) {
 				data.setState( State.RESOLVED );
-				if ( keyIsEager ) {
-					data.entityIdentifier = lazyInitializer.getInternalIdentifier();
-				}
+				data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 			}
 			else {
 				data.setState( State.INITIALIZED );
-				if ( keyIsEager ) {
-					data.entityIdentifier = lazyInitializer.getInternalIdentifier();
+				data.entityIdentifier = lazyInitializer.getInternalIdentifier();
+			}
+
+			final var entityKey = new EntityKey( data.entityIdentifier, concreteDescriptor );
+			final var entityHolder = persistenceContext.getEntityHolder(
+					entityKey
+			);
+
+			if ( entityHolder == null || entityHolder.getEntity() != instance && entityHolder.getProxy() != instance ) {
+				// the existing entity instance is detached or transient
+				if ( entityHolder != null ) {
+					final var managed = entityHolder.getManagedObject();
+					data.setInstance( managed );
+					data.entityIdentifier = entityHolder.getEntityKey().getIdentifier();
+					data.setState( entityHolder.isInitialized() ? State.INITIALIZED : State.RESOLVED );
+				}
+				else {
+					initialize( data, null, session, persistenceContext );
 				}
 			}
-			data.setInstance( instance );
+			else {
+				data.setInstance( instance );
+			}
+
 			if ( keyIsEager ) {
 				final var initializer = keyAssembler.getInitializer();
 				assert initializer != null;
@@ -191,10 +211,16 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	protected void initialize(EntitySelectFetchInitializerData data) {
 		final var rowProcessingState = data.getRowProcessingState();
 		final var session = rowProcessingState.getSession();
-		final var entityKey = new EntityKey( data.entityIdentifier, concreteDescriptor );
-
 		final var persistenceContext = session.getPersistenceContextInternal();
-		final var holder = persistenceContext.getEntityHolder( entityKey );
+		final EntityKey entityKey = new EntityKey( data.entityIdentifier, concreteDescriptor );
+		initialize( data, persistenceContext.getEntityHolder( entityKey ), session, persistenceContext );
+	}
+
+	protected void initialize(
+			EntitySelectFetchInitializerData data,
+			@Nullable EntityHolder holder,
+			SharedSessionContractImplementor session,
+			PersistenceContext persistenceContext) {
 		if ( holder != null ) {
 			data.setInstance( persistenceContext.proxyFor( holder, concreteDescriptor ) );
 			if ( holder.getEntityInitializer() == null ) {
@@ -205,7 +231,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 			}
 			else if ( holder.getEntityInitializer() != this ) {
 				// the entity is already being loaded elsewhere in this processing level
-				if ( holder.getJdbcValuesProcessingState() == rowProcessingState.getJdbcValuesSourceProcessingState() ) {
+				if ( holder.getJdbcValuesProcessingState() == data.getRowProcessingState().getJdbcValuesSourceProcessingState() ) {
 					data.setState( State.INITIALIZED );
 				}
 				return;
@@ -232,8 +258,8 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 			checkNotFound( data );
 			persistenceContext.claimEntityHolderIfPossible(
 					new EntityKey( data.entityIdentifier, concreteDescriptor ),
-					instance,
-					rowProcessingState.getJdbcValuesSourceProcessingState(),
+					null,
+					data.getRowProcessingState().getJdbcValuesSourceProcessingState(),
 					this
 			);
 		}

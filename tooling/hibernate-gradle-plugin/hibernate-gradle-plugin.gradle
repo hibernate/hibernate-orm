@@ -20,6 +20,7 @@ description = "Gradle plugin for integrating Hibernate aspects into your build"
 
 dependencies {
 	implementation project(':hibernate-core')
+	implementation project(':hibernate-reveng')
 	implementation libs.byteBuddy
 	implementation jakartaLibs.jaxbApi
 
@@ -49,6 +50,13 @@ gradlePlugin {
 			displayName = 'Gradle plugin for Hibernate ORM'
 			description = 'Applies Hibernate aspects into the build'
 			tags = ['hibernate','orm','bytecode','enhancement','bytebuddy']
+		}
+		hibernate {
+			id = 'org.hibernate.tool.hibernate-tools-gradle'
+			implementationClass = 'org.hibernate.tool.gradle.Plugin'
+			displayName = 'Hibernate Tools Gradle Plugin'
+			description = project.description
+			tags = ['hibernate','tools','reverse engineering','reveng','generation']
 		}
 	}
 }

@@ -11,6 +11,7 @@ import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 
+import org.hibernate.cfg.JpaComplianceSettings;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.orm.test.jpa.metamodel.Address;
 import org.hibernate.orm.test.jpa.metamodel.Alias;
@@ -26,6 +27,7 @@ import org.hibernate.orm.test.jpa.metamodel.Spouse;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 
 import org.junit.jupiter.api.AfterEach;
@@ -41,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @Jpa(
 		annotatedClasses = {Customer.class, Address.class, Alias.class, CreditCard.class, Order.class, LineItem.class,
 				Product.class, Spouse.class, Info.class, Phone.class},
-		queryComplianceEnabled = true
+		integrationSettings = {@Setting(name = JpaComplianceSettings.JPA_QUERY_COMPLIANCE, value = "true")}
 )
 public class ManipulationCriteriaTest {
 

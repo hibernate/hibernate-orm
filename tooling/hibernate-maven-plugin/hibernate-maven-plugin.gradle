@@ -26,10 +26,12 @@ configurations {
 
 dependencies {
     implementation project( ":hibernate-core" )
+    implementation project( ":hibernate-reveng" )
 
     implementation "org.apache.maven:maven-plugin-api:3.9.11"
-    implementation "org.apache.maven:maven-project:2.2.1"
+    implementation "org.apache.maven:maven-core:3.9.11"
     implementation "org.apache.maven.shared:file-management:3.1.0"
+    implementation "jakarta.xml.bind:jakarta.xml.bind-api:4.0.2"
 
     compileOnly "org.apache.maven.plugin-tools:maven-plugin-tools-annotations:3.15.1"
 
@@ -104,6 +106,7 @@ integrationTest {
     environment "hibernateVersion", project.version
 }
 
-integrationTest.dependsOn rootProject.childProjects.'hibernate-core'.tasks.publishToMavenLocal
+integrationTest.dependsOn ':hibernate-core:publishToMavenLocal'
+integrationTest.dependsOn ':hibernate-reveng:publishToMavenLocal'
 integrationTest.dependsOn publishToMavenLocal
 check.dependsOn integrationTest

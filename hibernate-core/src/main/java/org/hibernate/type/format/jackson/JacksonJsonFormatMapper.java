@@ -34,11 +34,7 @@ public final class JacksonJsonFormatMapper extends AbstractJsonFormatMapper {
 	}
 
 	public JacksonJsonFormatMapper(FormatMapperCreationContext creationContext) {
-		this(
-				creationContext.getBootstrapContext()
-						.getClassLoaderService()
-						.<List<Module>>workWithClassLoader( ObjectMapper::findModules )
-		);
+		this( JacksonIntegration.loadModules( creationContext ) );
 	}
 
 	private JacksonJsonFormatMapper(List<Module> modules) {

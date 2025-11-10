@@ -307,6 +307,10 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 			data.setState( State.MISSING );
 			data.setInstance( null );
 		}
+		else if ( hasIdClass ) {
+			resolveKey( data );
+			resolveInstance( data );
+		}
 		else {
 			data.setState( State.INITIALIZED );
 			data.setInstance( instance );

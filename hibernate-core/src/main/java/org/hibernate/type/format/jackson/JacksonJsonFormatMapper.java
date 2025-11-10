@@ -8,7 +8,6 @@ package org.hibernate.type.format.jackson;
 
 import com.fasterxml.jackson.databind.Module;
 
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.type.format.AbstractJsonFormatMapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -33,12 +32,7 @@ public final class JacksonJsonFormatMapper extends AbstractJsonFormatMapper {
 	}
 
 	public JacksonJsonFormatMapper(FormatMapperCreationContext creationContext) {
-		this(
-				creationContext.getBootstrapContext()
-						.getServiceRegistry()
-						.requireService( ClassLoaderService.class )
-						.<List<Module>>workWithClassLoader( ObjectMapper::findModules )
-		);
+		this( JacksonIntegration.loadModules( creationContext ) );
 	}
 
 	private JacksonJsonFormatMapper(List<Module> modules) {

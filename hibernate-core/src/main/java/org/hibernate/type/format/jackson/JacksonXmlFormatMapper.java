@@ -13,7 +13,6 @@ import java.util.ArrayList;
 
 import com.fasterxml.jackson.databind.Module;
 
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.format.FormatMapper;
@@ -41,18 +40,13 @@ public final class JacksonXmlFormatMapper implements FormatMapper {
 
 	public JacksonXmlFormatMapper() {
 		this(
-				createXmlMapper( XmlMapper.findModules( JacksonXmlFormatMapper.class.getClassLoader() ) )
+				createXmlMapper( ObjectMapper.findModules( JacksonXmlFormatMapper.class.getClassLoader() ) )
 		);
 	}
 
 	public JacksonXmlFormatMapper(FormatMapperCreationContext creationContext) {
 		this(
-				createXmlMapper(
-						creationContext.getBootstrapContext()
-								.getServiceRegistry()
-								.requireService( ClassLoaderService.class )
-								.<List<Module>>workWithClassLoader( XmlMapper::findModules )
-				)
+				createXmlMapper( JacksonIntegration.loadModules( creationContext ) )
 		);
 	}
 

@@ -4,79 +4,72 @@
  */
 package org.hibernate.orm.test.version.sybase;
 
-import org.hibernate.Session;
-import org.hibernate.annotations.Generated;
-import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.generator.EventType;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
-
-import static org.junit.Assert.assertTrue;
+import org.hibernate.annotations.Generated;
+import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.generator.EventType;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Gail Badner
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialect( SybaseASEDialect.class )
-public class SybaseTimestampComparisonAnnotationsTest extends BaseCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = SybaseTimestampComparisonAnnotationsTest.Thing.class)
+@SessionFactory
+public class SybaseTimestampComparisonAnnotationsTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
 	@JiraKey( value = "HHH-10413" )
-	public void testComparableTimestamps() {
-		final BasicType<?> versionType = sessionFactory()
+	public void testComparableTimestamps(SessionFactoryScope factoryScope) {
+		final BasicType<?> versionType = factoryScope
+				.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(Thing.class.getName()).getVersionType();
-		assertTrue( versionType.getJavaTypeDescriptor() instanceof PrimitiveByteArrayJavaType );
-		assertTrue( versionType.getJdbcType() instanceof VarbinaryJdbcType );
+		Assertions.assertInstanceOf( PrimitiveByteArrayJavaType.class, versionType.getJavaTypeDescriptor() );
+		Assertions.assertInstanceOf( VarbinaryJdbcType.class, versionType.getJdbcType() );
 
-		Session s = openSession();
-		s.getTransaction().begin();
-		Thing thing = new Thing();
-		thing.name = "n";
-		s.persist( thing );
-		s.getTransaction().commit();
-		s.close();
+		final var created = factoryScope.fromTransaction( (s) -> {
+			var t = new Thing();
+			t.name = "n";
+			s.persist( t );
+			return t;
+		} );
 
-		byte[] previousVersion = thing.version;
-		for ( int i = 0 ; i < 20 ; i++ ) {
-			try {
-				Thread.sleep(1000);                 //1000 milliseconds is one second.
-			} catch(InterruptedException ex) {
-				Thread.currentThread().interrupt();
-			}
+		byte[] previousVersion = created.version;
 
-			s = openSession();
-			s.getTransaction().begin();
-			thing.name = "n" + i;
-			thing = (Thing) s.merge( thing );
-			s.getTransaction().commit();
-			s.close();
-
-			assertTrue( versionType.compare( previousVersion, thing.version ) < 0 );
-			previousVersion = thing.version;
+		try {
+			// 2 seconds
+			Thread.sleep(2000);
+		}
+		catch(InterruptedException ex) {
+			Thread.currentThread().interrupt();
 		}
 
-		s = openSession();
-		s.getTransaction().begin();
-		s.remove( thing );
-		s.getTransaction().commit();
-		s.close();
-	}
+		var merged = factoryScope.fromTransaction( (s) -> {
+			created.name = "x";
+			return s.merge( created );
+		} );
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Thing.class };
+		Assertions.assertTrue( versionType.compare( previousVersion, merged.version ) < 0 );
 	}
 
 	@Entity

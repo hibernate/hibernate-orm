@@ -4,66 +4,40 @@
  */
 package org.hibernate.orm.test.schemaupdate.foreignkeys.definition;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.EnumSet;
-
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
+import java.io.File;
+import java.nio.file.Files;
+import java.util.EnumSet;
 
 /**
  * @author Vlad MIhalcea
  */
-
-public abstract class AbstractForeignKeyDefinitionTest extends BaseUnitTestCase {
-
-	private File output;
-
-	private StandardServiceRegistry ssr;
-
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ServiceRegistry
+public abstract class AbstractForeignKeyDefinitionTest {
 	private MetadataImplementor metadata;
 
-	@Before
-	public void setUp() throws IOException {
-		output = File.createTempFile( "update_script", ".sql" );
-		output.deleteOnExit();
-		ssr = ServiceRegistryUtil.serviceRegistry();
-		createSchema();
-	}
+	@BeforeEach
+	public void setUp(ServiceRegistryScope registryScope) {
+		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() );
 
-	@After
-	public void tearsDown() {
-		StandardServiceRegistryBuilder.destroy( ssr );
-	}
-
-	private void createSchema() {
-		final MetadataSources metadataSources = new MetadataSources( ssr );
-
-		for ( Class c : getAnnotatedClasses() ) {
+		for ( Class<?> c : getAnnotatedClasses() ) {
 			metadataSources.addAnnotatedClass( c );
 		}
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
 		metadata.orderColumns( false );
 		metadata.validate();
-		new SchemaExport()
-				.setHaltOnError( true )
-				.setOutputFile( output.getAbsolutePath() )
-				.setFormat( false )
-				.create( EnumSet.of( TargetType.SCRIPT ), metadata );
 	}
 
 	protected abstract Class<?>[] getAnnotatedClasses();
@@ -72,10 +46,17 @@ public abstract class AbstractForeignKeyDefinitionTest extends BaseUnitTestCase 
 
 	@Test
 	@JiraKey(value = "HHH-10643")
-	public void testForeignKeyDefinitionOverridesDefaultNamingStrategy()
-			throws Exception {
-		String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		assertTrue( "Script file : " + fileContent, validate( fileContent ) );
+	public void testForeignKeyDefinitionOverridesDefaultNamingStrategy(@TempDir File tmpDir) throws Exception {
+		final var scriptFile = new File( tmpDir, "script.sql" );
+
+		new SchemaExport()
+				.setHaltOnError( true )
+				.setOutputFile( scriptFile.getAbsolutePath() )
+				.setFormat( false )
+				.create( EnumSet.of( TargetType.SCRIPT ), metadata );
+
+		String fileContent = new String( Files.readAllBytes( scriptFile.toPath() ) );
+		Assertions.assertTrue( validate( fileContent ), "Script file : " + fileContent );
 	}
 
 }

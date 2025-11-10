@@ -12,23 +12,24 @@ import java.util.Set;
  * @author Steve Ebersole
  */
 public class Group {
-	private Long id;
+	private Integer id;
 	private Date timestamp;
 	private String name;
-	private Set users;
+	private Set<User> users;
 
 	public Group() {
 	}
 
-	public Group(String name) {
+	public Group(Integer id, String name) {
+		this.id = id;
 		this.name = name;
 	}
 
-	public Long getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	protected void setId(Integer id) {
 		this.id = id;
 	}
 
@@ -48,11 +49,11 @@ public class Group {
 		this.name = name;
 	}
 
-	public Set getUsers() {
+	public Set<User> getUsers() {
 		return users;
 	}
 
-	public void setUsers(Set users) {
+	public void setUsers(Set<User> users) {
 		this.users = users;
 	}
 }

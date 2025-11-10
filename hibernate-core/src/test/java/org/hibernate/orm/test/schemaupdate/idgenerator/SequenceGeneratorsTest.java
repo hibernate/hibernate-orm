@@ -4,12 +4,6 @@
  */
 package org.hibernate.orm.test.schemaupdate.idgenerator;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -17,78 +11,59 @@ import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.SequenceGenerators;
 import jakarta.persistence.Table;
-
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.Environment;
+import org.hamcrest.MatcherAssert;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import java.io.File;
+import java.nio.file.Files;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_AUTO;
 
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialect(H2Dialect.class)
-public class SequenceGeneratorsTest extends BaseUnitTestCase {
-	private StandardServiceRegistry ssr;
-	private File output;
-	private MetadataImplementor metadata;
+@ServiceRegistry(settings = @Setting(name = HBM2DDL_AUTO, value = "none"))
+@DomainModel(annotatedClasses = SequenceGeneratorsTest.TestEntity.class)
+public class SequenceGeneratorsTest {
+	@Test
+	public void testSequenceIsGenerated(
+			DomainModelScope modelScope,
+			@TempDir File tmpDir) throws Exception {
+		final var scriptFile = new File( tmpDir, "update_script.sql" );
 
-	@Before
-	public void setUp() throws Exception {
-		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( Environment.HBM2DDL_AUTO, "none" )
-				.build();
-		output = File.createTempFile( "update_script", ".sql" );
-		output.deleteOnExit();
-		metadata = (MetadataImplementor) new MetadataSources( ssr )
-				.addAnnotatedClass( TestEntity.class )
-				.buildMetadata();
+		final var metadata = modelScope.getDomainModel();
 		metadata.orderColumns( false );
 		metadata.validate();
-	}
 
-	@Test
-	public void testSequenceIsGenerated() throws Exception {
 		new SchemaExport()
-				.setOutputFile( output.getAbsolutePath() )
-				.create( EnumSet.of( TargetType.SCRIPT, TargetType.DATABASE ), metadata );
+				.setOutputFile( scriptFile.getAbsolutePath() )
+				.create( EnumSet.of( TargetType.SCRIPT ), metadata );
 
-		List<String> commands = Files.readAllLines( output.toPath() );
+		var commands = Files.readAllLines( scriptFile.toPath() );
 
-		assertThat(
+		MatcherAssert.assertThat(
 				isCommandGenerated( commands, "CREATE TABLE TEST_ENTITY \\(ID .*, PRIMARY KEY \\(ID\\)\\);" ),
-				is( true )
-		);
+				is( true ) );
 
-		assertThat(
+		MatcherAssert.assertThat(
 				isCommandGenerated( commands, "CREATE SEQUENCE SEQUENCE_GENERATOR START WITH 5 INCREMENT BY 3;" ),
-				is( true )
-		);
-	}
-
-	@After
-	public void tearDown() {
-		try {
-			new SchemaExport()
-					.drop( EnumSet.of( TargetType.DATABASE ), metadata );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
-
+				is( true ) );
 	}
 
 	private boolean isCommandGenerated(List<String> commands, String expectedCommnad) {

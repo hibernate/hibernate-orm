@@ -5,298 +5,172 @@
 package org.hibernate.orm.test.version.sybase;
 
 import jakarta.persistence.OptimisticLockException;
-
-import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
 import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-/**
- * Implementation of VersionTest.
- *
- * @author Steve Ebersole
- */
-@RequiresDialect( SybaseASEDialect.class )
-public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
-	}
-
-	@Override
-	public String[] getMappings() {
-		return new String[] { "version/sybase/User.hbm.xml" };
+/// @author Steve Ebersole
+@SuppressWarnings("JUnitMalformedDeclaration")
+@RequiresDialect(SybaseASEDialect.class)
+@DomainModel(xmlMappings = "org/hibernate/orm/test/version/sybase/User.hbm.xml")
+@SessionFactory
+public class SybaseTimestampVersioningTest {
+	@AfterEach
+	public void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testLocking() {
+	public void testLocking(SessionFactoryScope factoryScope) {
 		// First, create the needed row...
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		User steve = new User( "steve" );
-		s.persist( steve );
-		t.commit();
-		s.close();
+		factoryScope.inTransaction( (s) -> {
+			var steve = new User( 1, "steve" );
+			s.persist( steve );
+		} );
 
 		// next open two sessions, and try to update from each "simultaneously"...
-		Session s1 = null;
-		Session s2 = null;
-		Transaction t1 = null;
-		Transaction t2 = null;
 		try {
-			s1 = sessionFactory().openSession();
-			t1 = s1.beginTransaction();
-			s2 = sessionFactory().openSession();
-			t2 = s2.beginTransaction();
+			factoryScope.inTransaction( (s1) -> {
+				var steve1 = s1.find( User.class, 1 );
 
-			User user1 = s1.get( User.class, steve.getId() );
-			User user2 = s2.get( User.class, steve.getId() );
+				factoryScope.inTransaction( (s2) -> {
+					var steve2 = s2.find( User.class, 1 );
+					steve2.setUsername( "steve-e" );
+				} );
 
-			user1.setUsername( "se" );
-			t1.commit();
-			t1 = null;
-
-			user2.setUsername( "steve-e" );
-			try {
-				t2.commit();
-				fail( "optimistic lock check did not fail" );
-			}
-			catch( OptimisticLockException e ) {
-				// expected...
-				try {
-					t2.rollback();
-				}
-				catch( Throwable ignore ) {
-				}
-			}
+				// this one should cause a failure during flush
+				steve1.setUsername( "se" );
+			} );
+			Assertions.fail( "Should have thrown an OptimisticLockException" );
 		}
-		catch( Throwable error ) {
-			if ( t1 != null ) {
-				try {
-					t1.rollback();
-				}
-				catch( Throwable ignore ) {
-				}
-			}
-			if ( t2 != null ) {
-				try {
-					t2.rollback();
-				}
-				catch( Throwable ignore ) {
-				}
-			}
-			throw error;
+		catch (OptimisticLockException expected) {
 		}
-		finally {
-			if ( s1 != null ) {
-				try {
-					s1.close();
-				}
-				catch( Throwable ignore ) {
-				}
-			}
-			if ( s2 != null ) {
-				try {
-					s2.close();
-				}
-				catch( Throwable ignore ) {
-				}
-			}
-		}
-
-		// lastly, clean up...
-		s = openSession();
-		t = s.beginTransaction();
-		s.remove( s.getReference( User.class, steve.getId() ) );
-		t.commit();
-		s.close();
 	}
 
 	@Test
-	@SuppressWarnings( {"unchecked"})
-	public void testCollectionVersion() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		User steve = new User( "steve" );
-		s.persist( steve );
-		Group admin = new Group( "admin" );
-		s.persist( admin );
-		t.commit();
-		s.close();
-
-		byte[] steveTimestamp = steve.getTimestamp();
+	public void testCollectionVersion(SessionFactoryScope factoryScope) {
+		var first = factoryScope.fromTransaction( (s) -> {
+			var steve = new User( 1, "steve" );
+			s.persist( steve );
+			var admin = new Group( 1, "admin" );
+			s.persist( admin );
+			return steve;
+		} );
 
 		sleep();
 
-		s = openSession();
-		t = s.beginTransaction();
-		steve = s.get( User.class, steve.getId() );
-		admin = s.get( Group.class, admin.getId() );
-		steve.getGroups().add( admin );
-		admin.getUsers().add( steve );
-		t.commit();
-		s.close();
+		var second = factoryScope.fromTransaction( (s) -> {
+			var steve = s.find( User.class, 1 );
+			var admin = s.find( Group.class, 1 );
+			steve.getGroups().add( admin );
+			admin.getUsers().add( steve );
+			return steve;
+		} );
 
-		// Hibernate used to increment the version here,
-		// when the collections changed, but now doesn't
-		// that's OK, because the only reason this worked
-		// in H5 was due to a bug (it used to go and ask
-		// for getdate() from the database, even though
-		// it wasn't planning on doing anything with it,
-		// and then issue a spurious 'update' statement)
-//		assertFalse(
-//				"owner version not incremented",
-//				PrimitiveByteArrayJavaType.INSTANCE.areEqual( steveTimestamp, steve.getTimestamp() )
-//		);
-
-		steveTimestamp = steve.getTimestamp();
+		// since this collection is mapped as excluded from
+		// optimistic locking, the version should not change
+		Assertions.assertTrue( PrimitiveByteArrayJavaType.INSTANCE.areEqual( first.getTimestamp(), second.getTimestamp() ),
+				"owner version unexpectedly incremented" );
 
 		sleep();
 
-		s = openSession();
-		t = s.beginTransaction();
-		steve = s.get( User.class, steve.getId() );
-		steve.getGroups().clear();
-		t.commit();
-		s.close();
+		var third = factoryScope.fromTransaction( (s) -> {
+			var steve = s.find( User.class, 1 );
+			steve.getGroups().clear();
+			return steve;
+		} );
 
-		// Hibernate used to increment the version here,
-		// when the collections changed, but now doesn't
-		// that's OK, because the only reason this worked
-		// in H5 was due to a bug (it used to go and ask
-		// for getdate() from the database, even though
-		// it wasn't planning on doing anything with it,
-		// and then issue a spurious 'update' statement)
-// 		assertFalse(
-//				"owner version not incremented",
-//				PrimitiveByteArrayJavaType.INSTANCE.areEqual( steveTimestamp, steve.getTimestamp() )
-//		);
-
-		sleep();
-
-		s = openSession();
-		t = s.beginTransaction();
-		s.remove( s.getReference( User.class, steve.getId() ) );
-		s.remove( s.getReference( Group.class, admin.getId() ) );
-		t.commit();
-		s.close();
+		// as per discussion before, the version should not change
+		Assertions.assertTrue( PrimitiveByteArrayJavaType.INSTANCE.areEqual( second.getTimestamp(), third.getTimestamp() ),
+				"owner version unexpectedly incremented" );
 	}
 
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	public void testCollectionNoVersion() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		User steve = new User( "steve" );
-		s.persist( steve );
-		Permission perm = new Permission( "silly", "user", "rw" );
-		s.persist( perm );
-		t.commit();
-		s.close();
-
-		byte[] steveTimestamp = steve.getTimestamp();
+	public void testCollectionNoVersion(SessionFactoryScope factoryScope) {
+		var first = factoryScope.fromTransaction( (s) -> {
+			User steve = new User( 1, "steve" );
+			s.persist( steve );
+			Permission perm = new Permission( 1, "silly", "user", "rw" );
+			s.persist( perm );
+			return steve;
+		} );
 
 		sleep();
 
-		s = openSession();
-		t = s.beginTransaction();
-		steve = s.get( User.class, steve.getId() );
-		perm = s.get( Permission.class, perm.getId() );
-		steve.getPermissions().add( perm );
-		t.commit();
-		s.close();
+		var second = factoryScope.fromTransaction( (s) -> {
+			var steve = s.find( User.class, 1 );
+			var perm = s.find( Permission.class, 1 );
+			steve.getPermissions().add( perm );
+			return steve;
+		} );
 
-		assertTrue(
-				"owner version was incremented",
-				PrimitiveByteArrayJavaType.INSTANCE.areEqual( steveTimestamp, steve.getTimestamp() )
-		);
-
-		sleep();
-
-		s = openSession();
-		t = s.beginTransaction();
-		steve = s.get( User.class, steve.getId() );
-		steve.getPermissions().clear();
-		t.commit();
-		s.close();
-
-		assertTrue(
-				"owner version was incremented",
-				PrimitiveByteArrayJavaType.INSTANCE.areEqual( steveTimestamp, steve.getTimestamp() )
-		);
+		// since this collection *is* included in optimistic locking,
+		// this should trigger an increment of the version
+		Assertions.assertTrue(
+				PrimitiveByteArrayJavaType.INSTANCE.areEqual( first.getTimestamp(), second.getTimestamp() ),
+				"owner version was incremented" );
 
 		sleep();
 
-		s = openSession();
-		t = s.beginTransaction();
-		s.remove( s.getReference( User.class, steve.getId() ) );
-		s.remove( s.getReference( Permission.class, perm.getId() ) );
-		t.commit();
-		s.close();
+		var third = factoryScope.fromTransaction( (s) -> {
+			var steve = s.find( User.class, 1 );
+			steve.getPermissions().clear();
+			return steve;
+		} );
+
+		Assertions.assertTrue(
+				PrimitiveByteArrayJavaType.INSTANCE.areEqual( second.getTimestamp(), third.getTimestamp() ),
+				"owner version was incremented" );
 	}
 
 	private static void sleep() {
+		sleep( 200 );
+	}
+
+	private static void sleep(long millis) {
 		try {
-			Thread.sleep(200);
-		} catch (InterruptedException ignored) {
+			Thread.sleep(millis);
+		}
+		catch (InterruptedException ignored) {
 		}
 	}
 
 	@Test
 	@JiraKey( value = "HHH-10413" )
-	public void testComparableTimestamps() {
-		final BasicType<?> versionType = sessionFactory()
+	public void testComparableTimestamps(SessionFactoryScope factoryScope) {
+		final BasicType<?> versionType = factoryScope
+				.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(User.class.getName())
 				.getVersionType();
-		assertTrue( versionType.getJavaTypeDescriptor() instanceof PrimitiveByteArrayJavaType );
-		assertTrue( versionType.getJdbcType() instanceof VarbinaryJdbcType );
+		Assertions.assertInstanceOf( PrimitiveByteArrayJavaType.class, versionType.getJavaTypeDescriptor() );
+		Assertions.assertInstanceOf( VarbinaryJdbcType.class, versionType.getJdbcType() );
 
-		Session s = openSession();
-		s.getTransaction().begin();
-		User user = new User();
-		user.setUsername( "n" );
-		s.persist( user );
-		s.getTransaction().commit();
-		s.close();
+		var first = factoryScope.fromTransaction( (s) -> {
+			var user = new User( 1, "n" );
+			s.persist( user );
+			return user;
+		} );
 
-		byte[] previousTimestamp = user.getTimestamp();
-		for ( int i = 0 ; i < 20 ; i++ ) {
-			try {
-				Thread.sleep(1000);                 //1000 milliseconds is one second.
-			} catch(InterruptedException ex) {
-				Thread.currentThread().interrupt();
-			}
+		sleep( 2000 );
 
-			s = openSession();
-			s.getTransaction().begin();
-			user.setUsername( "n" + i );
-			user = s.merge( user );
-			s.getTransaction().commit();
-			s.close();
+		var second = factoryScope.fromTransaction( (s) -> {
+			var u = s.find( User.class, 1 );
+			u.setUsername( "x" );
+			return u;
+		} );
 
-			assertTrue( versionType.compare( previousTimestamp, user.getTimestamp() ) < 0 );
-			previousTimestamp = user.getTimestamp();
-		}
-
-		s = openSession();
-		s.getTransaction().begin();
-		s.remove( user );
-		s.getTransaction().commit();
-		s.close();
+		Assertions.assertTrue( versionType.compare( first.getTimestamp(), second.getTimestamp() ) < 0 );
 	}
 }

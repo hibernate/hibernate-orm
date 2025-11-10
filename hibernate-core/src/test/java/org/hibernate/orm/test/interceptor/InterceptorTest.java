@@ -6,78 +6,81 @@ package org.hibernate.orm.test.interceptor;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Queue;
-
-import org.junit.Test;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
 import org.hibernate.resource.jdbc.internal.EmptyStatementInspector;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.Type;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Queue;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gavin King
  * @author Lukasz Antoniak
  */
-public class InterceptorTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public String[] getMappings() {
-		return new String[] { "interceptor/User.hbm.xml", "interceptor/Image.hbm.xml" };
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(xmlMappings = {
+		"org/hibernate/orm/test/interceptor/User.hbm.xml",
+		"org/hibernate/orm/test/interceptor/Image.hbm.xml"
+})
+@SessionFactory
+public class InterceptorTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testCollectionIntercept() {
-		Session s = openSession( new CollectionInterceptor() );
-		Transaction t = s.beginTransaction();
-		User u = new User( "Gavin", "nivag" );
-		s.persist( u );
-		u.setPassword( "vagni" );
-		t.commit();
-		s.close();
+	public void testCollectionIntercept(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction(
+				(sf) -> sf.withOptions().interceptor( new CollectionInterceptor() ).openSession(),
+				(s) -> {
+					User u = new User( "Gavin", "nivag" );
+					s.persist( u );
+					u.setPassword( "vagni" );
+				}
+		);
 
-		s = openSession();
-		t = s.beginTransaction();
-		u = s.get( User.class, "Gavin" );
-		assertEquals( 2, u.getActions().size() );
-		s.remove( u );
-		t.commit();
-		s.close();
+		factoryScope.inTransaction( (s) -> {
+			var u = s.find( User.class, "Gavin" );
+			Assertions.assertEquals( 2, u.getActions().size() );
+			s.remove( u );
+		} );
 	}
 
 	@Test
-	public void testPropertyIntercept() {
-		Session s = openSession( new PropertyInterceptor() );
-		Transaction t = s.beginTransaction();
-		User u = new User( "Gavin", "nivag" );
-		s.persist( u );
-		u.setPassword( "vagni" );
-		t.commit();
-		s.close();
+	public void testPropertyIntercept(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction(
+				(sf) -> sf.withOptions().interceptor( new PropertyInterceptor() ).openSession(),
+				(s) -> {
+					User u = new User( "Gavin", "nivag" );
+					s.persist( u );
+					u.setPassword( "vagni" );
+				}
+		);
 
-		s = openSession();
-		t = s.beginTransaction();
-		u = s.get( User.class, "Gavin" );
-		assertNotNull( u.getCreated() );
-		assertNotNull( u.getLastUpdated() );
-		s.remove( u );
-		t.commit();
-		s.close();
+		factoryScope.inTransaction( (s) -> {
+			var u = s.find( User.class, "Gavin" );
+			assertNotNull( u.getCreated() );
+			assertNotNull( u.getLastUpdated() );
+			s.remove( u );
+		} );
 	}
 
 	/**
@@ -87,180 +90,165 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	 */
 	@Test
 	@JiraKey(value = "HHH-1921")
-	public void testPropertyIntercept2() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		User u = new User( "Josh", "test" );
-		s.persist( u );
-		t.commit();
-		s.close();
+	public void testPropertyIntercept2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (s) -> {
+			User u = new User( "Josh", "test" );
+			s.persist( u );
+		} );
 
-		s = openSession(
-				new Interceptor() {
-					@Override
-					public boolean onFlushDirty(
-							Object entity,
-							Object id,
-							Object[] currentState,
-							Object[] previousState,
-							String[] propertyNames,
-							Type[] types) {
-						for ( int i = 0; i < propertyNames.length; i++ ) {
-							if ( propertyNames[i].equals( "password" ) ) {
-								currentState[i] = "test";
+		factoryScope.inTransaction(
+				(sf) -> sf.withOptions().interceptor(
+						new Interceptor() {
+							@Override
+							public boolean onFlushDirty(
+									Object entity,
+									Object id,
+									Object[] currentState,
+									Object[] previousState,
+									String[] propertyNames,
+									Type[] types) {
+								for ( int i = 0; i < propertyNames.length; i++ ) {
+									if ( propertyNames[i].equals( "password" ) ) {
+										currentState[i] = "test";
+									}
+								}
+
+								return true;
 							}
-						}
-
-						return true;
-					}
+						} ).openSession(),
+				(s) -> {
+					var u = s.find( User.class, "Josh" );
+					u.setPassword( "nottest" );
 				}
 		);
-		t = s.beginTransaction();
-		u = s.get( User.class, u.getName() );
-		u.setPassword( "nottest" );
-		t.commit();
-		s.close();
 
-		s = openSession();
-		t = s.beginTransaction();
-		u = s.get( User.class, "Josh" );
-		assertEquals( "test", u.getPassword() );
-		s.remove( u );
-		t.commit();
-		s.close();
+		factoryScope.inTransaction( (s) -> {
+			var u = s.find( User.class, "Josh" );
+			Assertions.assertEquals( "test", u.getPassword() );
+			s.remove( u );
+		} );
 
 	}
 
 	@Test
-	public void testComponentInterceptor() {
+	public void testComponentInterceptor(SessionFactoryScope factoryScope) {
 		final int checkPerm = 500;
 		final String checkComment = "generated from interceptor";
 
-		Session s = openSession(
-				new Interceptor() {
-					@Override
-					public boolean onPersist(
-							Object entity,
-							Object id,
-							Object[] state,
-							String[] propertyNames,
-							Type[] types) {
-						if ( state[0] == null ) {
-							Image.Details detail = new Image.Details();
-							detail.setPerm1( checkPerm );
-							detail.setComment( checkComment );
-							state[0] = detail;
+		factoryScope.inTransaction(
+				(sf) -> sf.withOptions().interceptor(
+						new Interceptor() {
+							@Override
+							public boolean onPersist(
+									Object entity,
+									Object id,
+									Object[] state,
+									String[] propertyNames,
+									Type[] types) {
+								if ( state[0] == null ) {
+									Image.Details detail = new Image.Details();
+									detail.setPerm1( checkPerm );
+									detail.setComment( checkComment );
+									state[0] = detail;
+								}
+								return true;
+							}
 						}
-						return true;
-					}
+				).openSession(),
+				(s) -> {
+					Image i = new Image();
+					i.setName( "compincomp" );
+					i = s.merge( i );
+					assertNotNull( i.getDetails() );
+					Assertions.assertEquals( checkPerm, i.getDetails().getPerm1() );
+					Assertions.assertEquals( checkComment, i.getDetails().getComment() );
 				}
 		);
-		s.beginTransaction();
-		Image i = new Image();
-		i.setName( "compincomp" );
-		i = (Image) s.merge( i );
-		assertNotNull( i.getDetails() );
-		assertEquals( checkPerm, i.getDetails().getPerm1() );
-		assertEquals( checkComment, i.getDetails().getComment() );
-		s.getTransaction().commit();
-		s.close();
 
-		s = openSession();
-		s.beginTransaction();
-		i = s.get( Image.class, i.getId() );
-		assertNotNull( i.getDetails() );
-		assertEquals( checkPerm, i.getDetails().getPerm1() );
-		assertEquals( checkComment, i.getDetails().getComment() );
-		s.remove( i );
-		s.getTransaction().commit();
-		s.close();
+		factoryScope.inTransaction( (s) -> {
+			var i = s.find( Image.class, 1L );
+			assertNotNull( i.getDetails() );
+			Assertions.assertEquals( checkPerm, i.getDetails().getPerm1() );
+			Assertions.assertEquals( checkComment, i.getDetails().getComment() );
+			s.remove( i );
+		} );
 	}
 
 	@Test
-	public void testStatefulIntercept() {
-		User u = new User( "Gavin", "nivag" );
-
+	public void testStatefulIntercept(SessionFactoryScope factoryScope) {
+		final User u = new User( "Gavin", "nivag" );
 		final StatefulInterceptor statefulInterceptor = new StatefulInterceptor();
-		try (Session s = openSession( statefulInterceptor )) {
-			statefulInterceptor.setSession( s );
 
-			Transaction t = s.beginTransaction();
-			try {
-				s.persist( u );
-				u.setPassword( "vagni" );
-				t.commit();
-			}
-			catch (Exception e) {
-				if ( t.isActive() ) {
-					t.rollback();
-				}
-				throw e;
-			}
-		}
-
-		inTransaction(
-				s -> {
-					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
-					CriteriaQuery<Log> criteria = criteriaBuilder.createQuery( Log.class );
-					criteria.from( Log.class );
-					List<Log> logs = s.createQuery( criteria ).list();
-//		List logs = s.createCriteria(Log.class).list();
-					assertEquals( 2, logs.size() );
-					s.remove( u );
-					s.createMutationQuery( "delete from Log" ).executeUpdate();
-
+		factoryScope.inTransaction(
+				(sf) -> sf.withOptions().interceptor( statefulInterceptor ).openSession(),
+				(s) -> {
+					statefulInterceptor.setSession( s );
+					s.persist( u );
+					u.setPassword( "vagni" );
 				}
 		);
+
+		factoryScope.inTransaction( s -> {
+			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+			CriteriaQuery<Log> criteria = criteriaBuilder.createQuery( Log.class );
+			criteria.from( Log.class );
+			List<Log> logs = s.createQuery( criteria ).list();
+//		List logs = s.createCriteria(Log.class).list();
+			Assertions.assertEquals( 2, logs.size() );
+			s.remove( u );
+			s.createMutationQuery( "delete from Log" ).executeUpdate();
+		} );
 	}
 
 	@Test
-	public void testInitiateIntercept() {
+	public void testInitiateIntercept(SessionFactoryScope factoryScope) {
 		final String injectedString = "******";
 		final InstantiateInterceptor initiateInterceptor = new InstantiateInterceptor( injectedString );
-		Session s = openSession( initiateInterceptor );
+		var created = factoryScope.fromTransaction(
+				(sf) -> sf.withOptions().interceptor( initiateInterceptor ).openSession(),
+				(s) -> {
+					User u = new User( "Gavin", "nivag" );
+					s.persist( u );
+					Assertions.assertNull( u.getInjectedString() );
+					return u;
+				}
+		);
 
-		Transaction t = s.beginTransaction();
-		User u = new User( "Gavin", "nivag" );
-		s.persist( u );
-		t.commit();
-		s.close();
+		created.setPassword( "blah" );
 
-		assertNull( u.getInjectedString() );
-		u.setPassword( "blah" );
+		factoryScope.inTransaction(
+				(sf) -> sf.withOptions().interceptor( initiateInterceptor ).openSession(),
+				(s) -> {
+					User merged = s.merge( created );
+					Assertions.assertEquals( injectedString, merged.getInjectedString() );
+					Assertions.assertEquals( created.getName(), merged.getName() );
+					Assertions.assertEquals( created.getPassword(), merged.getPassword() );
 
-		s = openSession( initiateInterceptor );
-		t = s.beginTransaction();
+					merged.setInjectedString( null );
 
-		User merged = (User) s.merge( u );
-		assertEquals( injectedString, merged.getInjectedString() );
-		assertEquals( u.getName(), merged.getName() );
-		assertEquals( u.getPassword(), merged.getPassword() );
+					User loaded = s.getReference( User.class, merged.getName() );
+					// the session-bound instance was not instantiated by the interceptor, load simply returns it
+					Assertions.assertSame( merged, loaded );
+					Assertions.assertNull( merged.getInjectedString() );
 
-		merged.setInjectedString( null );
+					// flush the session and evict the merged instance from session to force an actual load
+					s.flush();
+					s.evict( merged );
 
-		User loaded = s.getReference( User.class, merged.getName() );
-		// the session-bound instance was not instantiated by the interceptor, load simply returns it
-		assertSame( merged, loaded );
-		assertNull( merged.getInjectedString() );
+					User reloaded = s.getReference( User.class, merged.getName() );
+					// Interceptor IS called for instantiating the persistent instance associated to the session when using load
+					Assertions.assertEquals( injectedString, reloaded.getInjectedString() );
+					Assertions.assertEquals( created.getName(), reloaded.getName() );
+					Assertions.assertEquals( created.getPassword(), reloaded.getPassword() );
 
-		// flush the session and evict the merged instance from session to force an actual load
-		s.flush();
-		s.evict( merged );
-
-		User reloaded = s.getReference( User.class, merged.getName() );
-		// Interceptor IS called for instantiating the persistent instance associated to the session when using load
-		assertEquals( injectedString, reloaded.getInjectedString() );
-		assertEquals( u.getName(), reloaded.getName() );
-		assertEquals( u.getPassword(), reloaded.getPassword() );
-
-		s.remove( reloaded );
-		t.commit();
-		s.close();
+					s.remove( reloaded );
+				}
+		);
 	}
 
 	@Test
 	@JiraKey(value = "HHH-6594")
-	public void testPrepareStatementIntercept() {
+	public void testPrepareStatementIntercept(SessionFactoryScope factoryScope) {
 		final Queue<String> expectedSQLs = new LinkedList<>();
 		// Transaction 1
 		expectedSQLs.add( "insert" );
@@ -281,21 +269,22 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 				assertNotNull( sql );
 				String expectedSql = expectedSQLs.poll().toLowerCase( Locale.ROOT );
 				assertTrue(
-						"sql:\n " + sql.toLowerCase( Locale.ROOT ) + "\n doesn't start with \n" + expectedSql + "\n",
-						sql.toLowerCase( Locale.ROOT ).startsWith( expectedSql )
+						sql.toLowerCase( Locale.ROOT ).startsWith( expectedSql ),
+						"sql:\n " + sql.toLowerCase( Locale.ROOT ) + "\n doesn't start with \n" + expectedSql + "\n"
+
 				);
 				return sql;
 			}
 		};
 
-		Session s = sessionFactory().withOptions().statementInspector( statementInspector ).openSession();
+		Session s = factoryScope.getSessionFactory().withOptions().statementInspector( statementInspector ).openSession();
 		Transaction t = s.beginTransaction();
 		User u = new User( "Lukasz", "Antoniak" );
 		s.persist( u );
 		t.commit();
 		s.close();
 
-		s = sessionFactory().withOptions().statementInspector( statementInspector ).openSession();
+		s = factoryScope.getSessionFactory().withOptions().statementInspector( statementInspector ).openSession();
 		t = s.beginTransaction();
 		s.get( User.class, "Lukasz" );
 		s.createQuery( "from User u" ).list();
@@ -303,13 +292,13 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		u.setPassword( "Kinga" );
-		s = sessionFactory().withOptions().statementInspector( statementInspector ).openSession();
+		s = factoryScope.getSessionFactory().withOptions().statementInspector( statementInspector ).openSession();
 		t = s.beginTransaction();
 		s.merge( u );
 		t.commit();
 		s.close();
 
-		s = sessionFactory().withOptions().statementInspector( statementInspector ).openSession();
+		s = factoryScope.getSessionFactory().withOptions().statementInspector( statementInspector ).openSession();
 		t = s.beginTransaction();
 		s.remove( u );
 		t.commit();
@@ -318,7 +307,8 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		assertTrue( expectedSQLs.isEmpty() );
 	}
 
-	public void testPrepareStatementFaultIntercept() {
+	@Test
+	public void testPrepareStatementFaultIntercept(SessionFactoryScope factoryScope) {
 		final StatementInspector statementInspector = new EmptyStatementInspector() {
 			@Override
 			public String inspect(String sql) {
@@ -326,19 +316,19 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 			}
 		};
 
-		Session s = sessionFactory().withOptions().statementInspector( statementInspector ).openSession();
-		try {
-
-			Transaction t = s.beginTransaction();
-			User u = new User( "Kinga", "Mroz" );
-			s.persist( u );
-			t.commit();
-		}
-		catch (TransactionException e) {
-			assertTrue( e.getCause() instanceof AssertionFailure );
-		}
-		finally {
-			s.close();
+		try (var s = factoryScope.getSessionFactory().withOptions().statementInspector( statementInspector ).openSession()) {
+			try {
+				Transaction t = s.beginTransaction();
+				User u = new User( "Kinga", "Mroz" );
+				s.persist( u );
+				t.commit();
+			}
+			catch (TransactionException e) {
+				Assertions.assertInstanceOf( AssertionFailure.class, e.getCause() );
+			}
+			finally {
+				s.close();
+			}
 		}
 	}
 }

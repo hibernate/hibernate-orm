@@ -13,27 +13,28 @@ import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 
 import org.hibernate.dialect.H2Dialect;
-
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = H2Dialect.class)
-public class ForeignKeyDefinitionSecondaryTableTest
-		extends AbstractForeignKeyDefinitionTest {
+@RequiresDialect(H2Dialect.class)
+public class ForeignKeyDefinitionSecondaryTableTest extends AbstractForeignKeyDefinitionTest {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				User.class,
-		};
+		return new Class<?>[] { User.class };
+	}
+
+	@Override
+	protected boolean validate(String fileContent) {
+		return fileContent.contains( "/* FK */" );
 	}
 
 	@Entity(name = "User")
 	@Table(name = "USERS")
 	@SecondaryTable(name = "User_details", foreignKey = @ForeignKey(name = "secondary", foreignKeyDefinition = "foreign key /* FK */ (id) references Users"))
-	public class User {
+	public static class User {
 
 		@Id
 		@GeneratedValue
@@ -46,11 +47,5 @@ public class ForeignKeyDefinitionSecondaryTableTest
 
 		@Column(name = "SECURITY_PASSWORD", table = "User_details")
 		private String password;
-	}
-
-
-	@Override
-	protected boolean validate(String fileContent) {
-		return fileContent.contains( "/* FK */" );
 	}
 }

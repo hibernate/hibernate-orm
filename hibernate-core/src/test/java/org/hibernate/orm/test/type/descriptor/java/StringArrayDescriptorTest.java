@@ -7,9 +7,8 @@ package org.hibernate.orm.test.type.descriptor.java;
 import org.hibernate.orm.test.mapping.type.java.AbstractDescriptorTest;
 import org.hibernate.type.descriptor.java.ArrayJavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
-
-import static org.junit.Assert.assertTrue;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Jordan Gigov
@@ -40,7 +39,7 @@ public class StringArrayDescriptorTest extends AbstractDescriptorTest<String[]> 
 		String[] emptyArray = new String[]{};
 		String externalized = typeDescriptor().toString( emptyArray );
 		String[] consumed = typeDescriptor().fromString( externalized );
-		assertTrue( typeDescriptor().areEqual( emptyArray, consumed ) );
+		Assertions.assertTrue( typeDescriptor().areEqual( emptyArray, consumed ) );
 	}
 
 }

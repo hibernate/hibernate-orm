@@ -4,120 +4,93 @@
  */
 package org.hibernate.orm.test.hql;
 
-import java.sql.Statement;
-import java.util.List;
-import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
-
-import org.hibernate.Session;
-import org.hibernate.boot.spi.MetadataBuilderContributor;
+import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.StandardBasicTypes;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.After;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import java.sql.Statement;
 
 /**
  * @author Vlad Mihalcea
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialect(PostgreSQLDialect.class)
-public class PostgreSQLFunctionSelectClauseTest extends BaseEntityManagerFunctionalTestCase {
+@BootstrapServiceRegistry( javaServices = @BootstrapServiceRegistry.JavaService(
+		role = FunctionContributor.class,
+		impl = PostgreSQLFunctionSelectClauseTest.FunctionContributorImpl.class
+) )
+@DomainModel(annotatedClasses = PostgreSQLFunctionSelectClauseTest.Book.class)
+@SessionFactory
+public class PostgreSQLFunctionSelectClauseTest {
+	@BeforeEach
+	void setUp(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> session.doWork( (connection) -> {
+			try(Statement statement = connection.createStatement()) {
+				statement.executeUpdate(
+						"CREATE OR REPLACE FUNCTION apply_vat(integer) RETURNS integer " +
+						"   AS 'select cast(($1 * 1.2) as integer);' " +
+						"   LANGUAGE SQL " +
+						"   IMMUTABLE " +
+						"   RETURNS NULL ON NULL INPUT;"
+				);
+			}
+		} ) );
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Book.class
-		};
-	}
-
-	@Override
-	protected void addMappings(Map settings) {
-		//tag::hql-user-defined-functions-register-metadata-builder-example[]
-		settings.put("hibernate.metadata_builder_contributor",
-			(MetadataBuilderContributor) metadataBuilder ->
-				metadataBuilder.applySqlFunction(
-					"apply_vat",
-					new StandardSQLFunction(
-						"apply_vat",
-						StandardBasicTypes.INTEGER
-					)
-				)
-		);
-		//end::hql-user-defined-functions-register-metadata-builder-example[]
-	}
-
-	@Override
-	protected void afterEntityManagerFactoryBuilt() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			entityManager.unwrap(Session.class).doWork(
-				connection -> {
-					try(Statement statement = connection.createStatement()) {
-						statement.executeUpdate(
-							"CREATE OR REPLACE FUNCTION apply_vat(integer) RETURNS integer " +
-							"   AS 'select cast(($1 * 1.2) as integer);' " +
-							"   LANGUAGE SQL " +
-							"   IMMUTABLE " +
-							"   RETURNS NULL ON NULL INPUT;"
-						);
-					}
-				}
-			);
-		});
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Book book = new Book();
-
+		factoryScope.inTransaction( (session) -> {
+			var book = new Book();
 			book.setIsbn("978-9730228236");
 			book.setTitle("High-Performance Java Persistence");
 			book.setAuthor("Vlad Mihalcea");
 			book.setPriceCents(4500);
-
-			entityManager.persist(book);
-		});
+			session.persist(book);
+		} );
 	}
 
-	@After
-	public void destroy() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			entityManager.unwrap(Session.class).doWork(
-				connection -> {
-					try(Statement statement = connection.createStatement()) {
-						statement.executeUpdate(
-							"DROP FUNCTION apply_vat(integer)"
-						);
-					}
-				}
-			);
-		});
+	@AfterEach
+	public void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> session.doWork( (connection) -> {
+			try(Statement statement = connection.createStatement()) {
+				statement.executeUpdate(
+						"DROP FUNCTION apply_vat(integer)"
+				);
+			}
+		} ) );
+
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testHibernateSelectClauseFunction() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testHibernateSelectClauseFunction(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (entityManager) -> {
 			//tag::hql-user-defined-function-postgresql-select-clause-example[]
-			List<Tuple> books = entityManager.createQuery(
-				"select b.title as title, apply_vat(b.priceCents) as price " +
-				"from Book b " +
-				"where b.author = :author ", Tuple.class)
-			.setParameter("author", "Vlad Mihalcea")
-			.getResultList();
+			var books = entityManager.createQuery(
+							"select b.title as title, apply_vat(b.priceCents) as price " +
+							"from Book b " +
+							"where b.author = :author ", Tuple.class)
+					.setParameter("author", "Vlad Mihalcea")
+					.getResultList();
+			//end::hql-user-defined-function-postgresql-select-clause-example[]
 
-			assertEquals(1, books.size());
+			Assertions.assertEquals( 1, books.size() );
 
 			Tuple book = books.get(0);
-			assertEquals("High-Performance Java Persistence", book.get("title"));
-			assertEquals(5400, ((Number) book.get("price")).intValue());
-
-			//end::hql-user-defined-function-postgresql-select-clause-example[]
-		});
+			Assertions.assertEquals( "High-Performance Java Persistence", book.get("title") );
+			Assertions.assertEquals( 4500 * 1.2, ((Number) book.get("price")).intValue() );
+		} );
 	}
 
 	@Entity(name = "Book")
@@ -162,6 +135,18 @@ public class PostgreSQLFunctionSelectClauseTest extends BaseEntityManagerFunctio
 
 		public void setPriceCents(Integer priceCents) {
 			this.priceCents = priceCents;
+		}
+	}
+
+	public static class FunctionContributorImpl implements FunctionContributor {
+		@Override
+		public void contributeFunctions(FunctionContributions functionContributions) {
+			//tag::hql-user-defined-functions-register-metadata-builder-example[]
+			functionContributions.getFunctionRegistry().namedDescriptorBuilder( "apply_vat" )
+					.setInvariantType( functionContributions.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ) )
+					.setArgumentsValidator( StandardArgumentsValidators.of( Integer.class ) )
+					.register();
+			//end::hql-user-defined-functions-register-metadata-builder-example[]
 		}
 	}
 }

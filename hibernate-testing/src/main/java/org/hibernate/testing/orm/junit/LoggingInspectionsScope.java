@@ -72,4 +72,15 @@ public class LoggingInspectionsScope {
 		final Map<String, MessageKeyWatcherImpl> messageKeyWatcherMap = watcherMap.get( messageKey );
 		return messageKeyWatcherMap.get( loggerNameClass.getName() );
 	}
+
+	public boolean wereAnyTriggered() {
+		for ( Map.Entry<String, Map<String, MessageKeyWatcherImpl>> watcherMapEntry : watcherMap.entrySet() ) {
+			for ( Map.Entry<String, MessageKeyWatcherImpl> messageWatcherEntry : watcherMapEntry.getValue().entrySet() ) {
+				if ( messageWatcherEntry.getValue().wasTriggered() ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 }

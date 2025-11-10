@@ -4,6 +4,43 @@
  */
 package org.hibernate.orm.test.schemaupdate.foreignkeys.crossschema;
 
+import org.hamcrest.MatcherAssert;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.orm.test.tool.schema.TargetDatabaseImpl;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.hbm2ddl.SchemaUpdate;
+import org.hibernate.tool.schema.SourceType;
+import org.hibernate.tool.schema.TargetType;
+import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
+import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
+import org.hibernate.tool.schema.internal.GroupedSchemaMigratorImpl;
+import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
+import org.hibernate.tool.schema.internal.IndividuallySchemaMigratorImpl;
+import org.hibernate.tool.schema.internal.SchemaDropperImpl;
+import org.hibernate.tool.schema.internal.exec.GenerationTargetToStdout;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
+import org.hibernate.tool.schema.spi.ExceptionHandler;
+import org.hibernate.tool.schema.spi.ExecutionOptions;
+import org.hibernate.tool.schema.spi.GenerationTarget;
+import org.hibernate.tool.schema.spi.SchemaManagementTool;
+import org.hibernate.tool.schema.spi.ScriptSourceInput;
+import org.hibernate.tool.schema.spi.ScriptTargetOutput;
+import org.hibernate.tool.schema.spi.SourceDescriptor;
+import org.hibernate.tool.schema.spi.TargetDescriptor;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -12,139 +49,78 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.hbm2ddl.SchemaUpdate;
-import org.hibernate.tool.schema.SourceType;
-import org.hibernate.tool.schema.TargetType;
-import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
-import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
-import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
-import org.hibernate.tool.schema.internal.GroupedSchemaMigratorImpl;
-import org.hibernate.tool.schema.internal.SchemaDropperImpl;
-import org.hibernate.tool.schema.internal.IndividuallySchemaMigratorImpl;
-import org.hibernate.tool.schema.spi.GenerationTarget;
-import org.hibernate.tool.schema.internal.exec.GenerationTargetToStdout;
-import org.hibernate.tool.schema.spi.ContributableMatcher;
-import org.hibernate.tool.schema.spi.ExceptionHandler;
-import org.hibernate.tool.schema.spi.ExecutionOptions;
-import org.hibernate.tool.schema.spi.SchemaManagementTool;
-import org.hibernate.tool.schema.spi.ScriptSourceInput;
-import org.hibernate.tool.schema.spi.ScriptTargetOutput;
-import org.hibernate.tool.schema.spi.SourceDescriptor;
-import org.hibernate.tool.schema.spi.TargetDescriptor;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-
-import org.hibernate.orm.test.tool.schema.TargetDatabaseImpl;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.hibernate.cfg.SchemaToolingSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS;
 
 /**
  * @author Andrea Boriero
  */
-@RequiresDialectFeature( value = DialectChecks.SupportSchemaCreation.class)
-public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
-	private File output;
-	private StandardServiceRegistry ssr;
-
-	@Before
-	public void setUp() throws IOException {
-		output = File.createTempFile( "update_script", ".sql" );
-		output.deleteOnExit();
-		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( AvailableSettings.HBM2DDL_CREATE_SCHEMAS, "true" )
-				.build();
-	}
-
-	@After
-	public void tearsDown() {
-		StandardServiceRegistryBuilder.destroy( ssr );
+@SuppressWarnings("JUnitMalformedDeclaration")
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportSchemaCreation.class)
+@ServiceRegistry(settings = @Setting(name = JAKARTA_HBM2DDL_CREATE_SCHEMAS, value = "true"))
+@DomainModel(annotatedClasses = {SchemaOneEntity.class, SchemaTwoEntity.class})
+public class CrossSchemaForeignKeyGenerationTest {
+	@BeforeEach
+	public void setUp(DomainModelScope modelScope) throws IOException {
+		modelScope.getDomainModel().orderColumns( false );
+		modelScope.getDomainModel().validate();
 	}
 
 	@Test
 	@JiraKey(value = "HHH-10420")
-	public void testSchemaExportForeignKeysAreGeneratedAfterAllTheTablesAreCreated() throws Exception {
-		final MetadataSources metadataSources = new MetadataSources( ssr );
-		metadataSources.addAnnotatedClass( SchemaOneEntity.class );
-		metadataSources.addAnnotatedClass( SchemaTwoEntity.class );
-
-		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+	public void testSchemaExportForeignKeysAreGeneratedAfterAllTheTablesAreCreated(
+			DomainModelScope modelScope,
+			@TempDir File tmpDir) throws Exception {
+		var scriptFile = new File( tmpDir, "fk-order.sql" );
 
 		new SchemaExport().setHaltOnError( true )
-				.setOutputFile( output.getAbsolutePath() )
+				.setOutputFile( scriptFile.getAbsolutePath() )
 				.setFormat( false )
-				.create( EnumSet.of( TargetType.SCRIPT, TargetType.STDOUT ), metadata );
+				.create( EnumSet.of( TargetType.SCRIPT, TargetType.STDOUT ), modelScope.getDomainModel() );
 
-		final List<String> sqlLines = Files.readAllLines( output.toPath(), Charset.defaultCharset() );
-		assertThat(
-				"Expected alter table SCHEMA1.Child add constraint but is : " + sqlLines.get( 4 ),
-				sqlLines.get( sqlLines.size() - 1 ).startsWith( "alter table " ),
-				is( true )
-		);
+		final List<String> sqlLines = Files.readAllLines( scriptFile.toPath(), Charset.defaultCharset() );
+		MatcherAssert.assertThat( "Expected alter table SCHEMA1.Child add constraint but is : " + sqlLines.get( 4 ),
+				sqlLines.get( sqlLines.size() - 1 ).startsWith( "alter table " ), is( true ) );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-10802")
-	public void testSchemaUpdateDoesNotFailResolvingCrossSchemaForeignKey() throws Exception {
-		final MetadataSources metadataSources = new MetadataSources( ssr );
-		metadataSources.addAnnotatedClass( SchemaOneEntity.class );
-		metadataSources.addAnnotatedClass( SchemaTwoEntity.class );
-
-		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+	public void testSchemaUpdateDoesNotFailResolvingCrossSchemaForeignKey(
+			DomainModelScope modelScope,
+			@TempDir File tmpDir) throws Exception {
+		var scriptFile = new File( tmpDir, "cross-schema.sql" );
 
 		new SchemaExport()
-				.setOutputFile( output.getAbsolutePath() )
+				.setOutputFile( scriptFile.getAbsolutePath() )
 				.setFormat( false )
-				.create( EnumSet.of( TargetType.DATABASE ), metadata );
+				.create( EnumSet.of( TargetType.DATABASE ), modelScope.getDomainModel() );
 
 		new SchemaUpdate().setHaltOnError( true )
-				.setOutputFile( output.getAbsolutePath() )
+				.setOutputFile( scriptFile.getAbsolutePath() )
 				.setFormat( false )
-				.execute( EnumSet.of( TargetType.DATABASE ), metadata );
+				.execute( EnumSet.of( TargetType.DATABASE ), modelScope.getDomainModel() );
 
 		new SchemaExport().setHaltOnError( true )
-				.setOutputFile( output.getAbsolutePath() )
+				.setOutputFile( scriptFile.getAbsolutePath() )
 				.setFormat( false )
-				.drop( EnumSet.of( TargetType.DATABASE ), metadata );
+				.drop( EnumSet.of( TargetType.DATABASE ), modelScope.getDomainModel() );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-10420")
-	public void testSchemaMigrationForeignKeysAreGeneratedAfterAllTheTablesAreCreated() throws Exception {
-		final MetadataSources metadataSources = new MetadataSources( ssr );
-		metadataSources.addAnnotatedClass( SchemaOneEntity.class );
-		metadataSources.addAnnotatedClass( SchemaTwoEntity.class );
+	public void testSchemaMigrationForeignKeysAreGeneratedAfterAllTheTablesAreCreated(
+			ServiceRegistryScope registryScope,
+			DomainModelScope modelScope) throws Exception {
+		final var metadata = modelScope.getDomainModel();
 
-		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		final HibernateSchemaManagementTool tool = (HibernateSchemaManagementTool) registryScope
+				.getRegistry()
+				.requireService( SchemaManagementTool.class );
 
-		final Database database = metadata.getDatabase();
-		final HibernateSchemaManagementTool tool = (HibernateSchemaManagementTool) ssr.getService( SchemaManagementTool.class );
-
-		final Map<String,Object> configurationValues = ssr.requireService( ConfigurationService.class ).getSettings();
+		final Map<String,Object> configurationValues = registryScope
+				.getRegistry()
+				.requireService( ConfigurationService.class )
+				.getSettings();
 		final ExecutionOptions options = new ExecutionOptions() {
 			@Override
 			public boolean shouldManageNamespaces() {
@@ -179,7 +155,7 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 		new SchemaDropperImpl( tool ).doDrop(
 				metadata,
 				options,
-				ssr.getService( JdbcEnvironment.class ).getDialect(),
+				registryScope.getRegistry().requireService( JdbcEnvironment.class ).getDialect(),
 				new SourceDescriptor() {
 					@Override
 					public SourceType getSourceType() {
@@ -191,24 +167,24 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 						return null;
 					}
 				},
-				buildTargets()
+				buildTargets( registryScope.getRegistry().requireService( JdbcServices.class ) )
 		);
 	}
 
 	@Test
 	@JiraKey(value = "HHH-10420")
-	public void testImprovedSchemaMigrationForeignKeysAreGeneratedAfterAllTheTablesAreCreated() throws Exception {
-		final MetadataSources metadataSources = new MetadataSources( ssr );
-		metadataSources.addAnnotatedClass( SchemaOneEntity.class );
-		metadataSources.addAnnotatedClass( SchemaTwoEntity.class );
+	public void testImprovedSchemaMigrationForeignKeysAreGeneratedAfterAllTheTablesAreCreated(
+			ServiceRegistryScope registryScope,
+			DomainModelScope modelScope) throws Exception {
+		final HibernateSchemaManagementTool tool = (HibernateSchemaManagementTool) registryScope
+				.getRegistry()
+				.requireService( SchemaManagementTool.class );
 
-		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		final Map<String,Object> configurationValues = registryScope
+				.getRegistry()
+				.requireService( ConfigurationService.class )
+				.getSettings();
 
-		final HibernateSchemaManagementTool tool = (HibernateSchemaManagementTool) ssr.getService( SchemaManagementTool.class );
-
-		final Map<String,Object> configurationValues = ssr.requireService( ConfigurationService.class ).getSettings();
 		final ExecutionOptions options = new ExecutionOptions() {
 			@Override
 			public boolean shouldManageNamespaces() {
@@ -227,16 +203,18 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 		};
 
 		new GroupedSchemaMigratorImpl( tool, DefaultSchemaFilter.INSTANCE ).doMigration(
-				metadata,
+				modelScope.getDomainModel(),
 				options,
 				ContributableMatcher.ALL,
 				TargetDescriptorImpl.INSTANCE
 		);
 
+		final var jdbcServices = registryScope.getRegistry().requireService( JdbcServices.class );
+
 		new SchemaDropperImpl( tool ).doDrop(
-				metadata,
+				modelScope.getDomainModel(),
 				options,
-				ssr.getService( JdbcEnvironment.class ).getDialect(),
+				jdbcServices.getDialect(),
 				new SourceDescriptor() {
 					@Override
 					public SourceType getSourceType() {
@@ -248,14 +226,14 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 						return null;
 					}
 				},
-				buildTargets()
+				buildTargets( jdbcServices )
 		);
 	}
 
-	public GenerationTarget[] buildTargets() {
+	public GenerationTarget[] buildTargets(JdbcServices jdbcServices) {
 		return new GenerationTarget[] {
 				new GenerationTargetToStdout(),
-				new TargetDatabaseImpl( ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess() )
+				new TargetDatabaseImpl( jdbcServices.getBootstrapJdbcConnectionAccess() )
 		};
 	}
 

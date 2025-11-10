@@ -385,6 +385,15 @@ public class SessionFactoryExtension
 		}
 
 		@Override
+		public <T> T fromTransaction(Function<SessionFactoryImplementor, SessionImplementor> sessionProducer, Function<SessionImplementor, T> action) {
+			log.trace( "fromTransaction(Function,Function)" );
+
+			try (SessionImplementor session = sessionProducer.apply( getSessionFactory() )) {
+				return TransactionUtil.fromTransaction( session, action );
+			}
+		}
+
+		@Override
 		public void inStatelessSession(Consumer<StatelessSessionImplementor> action) {
 			log.trace( "#inStatelessSession(Consumer)" );
 

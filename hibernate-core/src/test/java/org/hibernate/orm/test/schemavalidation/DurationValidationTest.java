@@ -36,7 +36,6 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.RequiresDialects;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -51,14 +50,9 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 @JiraKey("HHH-17293")
 @BaseUnitTest
-@RequiresDialects(
-		{
-				@RequiresDialect(PostgreSQLDialect.class),
-				@RequiresDialect(H2Dialect.class),
-		}
-)
+@RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialect(H2Dialect.class)
 public class DurationValidationTest implements ExecutionOptions {
-
 	private StandardServiceRegistry ssr;
 	private MetadataImplementor metadata;
 

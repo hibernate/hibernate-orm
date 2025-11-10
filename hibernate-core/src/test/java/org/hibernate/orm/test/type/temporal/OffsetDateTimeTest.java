@@ -2,7 +2,31 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.type;
+package org.hibernate.orm.test.type.temporal;
+
+import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import org.hamcrest.MatcherAssert;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.type.StandardBasicTypes;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,53 +39,30 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
-import jakarta.persistence.Basic;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-
-import org.hibernate.annotations.TimeZoneStorageType;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.query.Query;
-import org.hibernate.dialect.MariaDBDialect;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.type.StandardBasicTypes;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-import org.junit.runners.Parameterized;
 
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
+import static org.hibernate.cfg.MappingSettings.TIMEZONE_DEFAULT_STORAGE;
+import static org.hibernate.orm.test.type.temporal.Timezones.ZONE_AMSTERDAM;
+import static org.hibernate.orm.test.type.temporal.Timezones.ZONE_AUCKLAND;
+import static org.hibernate.orm.test.type.temporal.Timezones.ZONE_GMT;
+import static org.hibernate.orm.test.type.temporal.Timezones.ZONE_OSLO;
+import static org.hibernate.orm.test.type.temporal.Timezones.ZONE_PARIS;
+import static org.hibernate.orm.test.type.temporal.Timezones.ZONE_UTC_MINUS_8;
 
 /**
  * @author Andrea Boriero
  */
 @JiraKey(value = "HHH-10372")
-public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime, OffsetDateTimeTest.EntityWithOffsetDateTime> {
+@TestInstance( TestInstance.Lifecycle.PER_METHOD )
+@ParameterizedClass
+@MethodSource("testData")
+@DomainModel(annotatedClasses = OffsetDateTimeTest.EntityWithOffsetDateTime.class)
+@SessionFactory
+public class OffsetDateTimeTest extends AbstractJavaTimeTypeTests<OffsetDateTime, OffsetDateTimeTest.EntityWithOffsetDateTime> {
 
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure(configuration);
-		configuration.setProperty( AvailableSettings.TIMEZONE_DEFAULT_STORAGE, TimeZoneStorageType.NORMALIZE );
-	}
-
-	private static class ParametersBuilder extends AbstractParametersBuilder<ParametersBuilder> {
-		public ParametersBuilder add(int year, int month, int day,
-				int hour, int minute, int second, int nanosecond, String offset, ZoneId defaultTimeZone) {
-			if ( !isNanosecondPrecisionSupported() ) {
-				nanosecond = 0;
-			}
-			return add( defaultTimeZone, year, month, day, hour, minute, second, nanosecond, offset );
-		}
-	}
-
-	@Parameterized.Parameters(name = "{1}-{2}-{3}T{4}:{5}:{6}.{7}[{8}] {0}")
-	public static List<Object[]> data() {
-		return new ParametersBuilder()
+	public static List<Parameter<OffsetDateTime,DataImpl>> testData() {
+		return new ParametersBuilder( DialectContext.getDialect()  )
 				// Not affected by any known bug
 				.add( 2017, 11, 6, 19, 19, 1, 0, "+10:00", ZONE_UTC_MINUS_8 )
 				.add( 2017, 11, 6, 19, 19, 1, 0, "+07:00", ZONE_UTC_MINUS_8 )
@@ -141,26 +142,17 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 				.build();
 	}
 
-	private final int year;
-	private final int month;
-	private final int day;
-	private final int hour;
-	private final int minute;
-	private final int second;
-	private final int nanosecond;
-	private final String offset;
+	private final Parameter<OffsetDateTime,DataImpl> testParam;
 
-	public OffsetDateTimeTest(EnvironmentParameters env, int year, int month, int day,
-			int hour, int minute, int second, int nanosecond, String offset) {
-		super( env );
-		this.year = year;
-		this.month = month;
-		this.day = day;
-		this.hour = hour;
-		this.minute = minute;
-		this.second = second;
-		this.nanosecond = nanosecond;
-		this.offset = offset;
+	public OffsetDateTimeTest(Parameter<OffsetDateTime,DataImpl> testParam) {
+		super( testParam.env() );
+		this.testParam = testParam;
+	}
+
+	@Override
+	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder) {
+		builder.applySetting( TIMEZONE_DEFAULT_STORAGE, NORMALIZE );
+		return super.produceServiceRegistry( builder );
 	}
 
 	@Override
@@ -174,7 +166,7 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 	}
 
 	private OffsetDateTime getOriginalOffsetDateTime() {
-		return OffsetDateTime.of( year, month, day, hour, minute, second, nanosecond, ZoneOffset.of( offset ) );
+		return testParam.data().makeValue();
 	}
 
 	@Override
@@ -188,7 +180,10 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 	}
 
 	@Override
-	protected void setJdbcValueForNonHibernateWrite(PreparedStatement statement, int parameterIndex) throws SQLException {
+	protected void bindJdbcValue(
+			PreparedStatement statement,
+			int parameterIndex,
+			SessionFactoryScope factoryScope) throws SQLException {
 		statement.setTimestamp( parameterIndex, getExpectedJdbcValueAfterHibernateWrite() );
 	}
 
@@ -206,21 +201,24 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 	}
 
 	@Override
-	protected Object getActualJdbcValue(ResultSet resultSet, int columnIndex) throws SQLException {
+	protected Object extractJdbcValue(
+			ResultSet resultSet,
+			int columnIndex,
+			SessionFactoryScope factoryScope) throws SQLException {
 		return resultSet.getTimestamp( columnIndex );
 	}
 
 	@Test
-	public void testRetrievingEntityByOffsetDateTime() {
-		withDefaultTimeZone( () -> {
-			inTransaction( session -> {
+	public void testRetrievingEntityByOffsetDateTime(SessionFactoryScope factoryScope) {
+		Timezones.withDefaultTimeZone( testParam.env(), () -> {
+			factoryScope.inTransaction( session -> {
 				session.persist( new EntityWithOffsetDateTime( 1, getOriginalOffsetDateTime() ) );
 			} );
-			Consumer<OffsetDateTime> checkOneMatch = expected -> inSession( s -> {
-				Query query = s.createQuery( "from " + ENTITY_NAME + " o where o.value = :date" );
-				query.setParameter( "date", expected, StandardBasicTypes.OFFSET_DATE_TIME );
-				List<EntityWithOffsetDateTime> list = query.list();
-				assertThat( list.size(), is( 1 ) );
+			Consumer<OffsetDateTime> checkOneMatch = expected -> factoryScope.inSession( s -> {
+				var list = s.createQuery( "from EntityWithOffsetDateTime o where o.value = :date" )
+						.setParameter( "date", expected, StandardBasicTypes.OFFSET_DATE_TIME )
+						.list();
+				MatcherAssert.assertThat( list.size(), is( 1 ) );
 			} );
 			checkOneMatch.accept( getOriginalOffsetDateTime() );
 			checkOneMatch.accept( getExpectedPropertyValueAfterHibernateRead() );
@@ -228,14 +226,16 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 		} );
 	}
 
-	@Entity(name = ENTITY_NAME)
-	static final class EntityWithOffsetDateTime {
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
+	@Entity(name = "EntityWithOffsetDateTime")
+	@Table(name = ENTITY_TBL_NAME)
+	public static class EntityWithOffsetDateTime {
 		@Id
 		@Column(name = ID_COLUMN_NAME)
 		private Integer id;
 
 		@Basic
-		@Column(name = PROPERTY_COLUMN_NAME)
+		@Column(name = VALUE_COLUMN_NAME)
 		private OffsetDateTime value;
 
 		protected EntityWithOffsetDateTime() {
@@ -244,6 +244,30 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 		private EntityWithOffsetDateTime(int id, OffsetDateTime value) {
 			this.id = id;
 			this.value = value;
+		}
+	}
+
+	private static class ParametersBuilder extends AbstractParametersBuilder<OffsetDateTime, DataImpl, ParametersBuilder> {
+		protected ParametersBuilder(Dialect dialect) {
+			super( dialect );
+		}
+
+		public ParametersBuilder add(int year, int month, int day,
+									int hour, int minute, int second, int nanosecond, String offset, ZoneId defaultTimeZone) {
+			if ( !isNanosecondPrecisionSupported() ) {
+				nanosecond = 0;
+			}
+			return add( defaultTimeZone, new DataImpl( year, month, day, hour, minute, second, nanosecond, offset ) );
+		}
+	}
+
+	public record DataImpl(
+			int year, int month, int day,
+			int hour, int minute, int second, int nanosecond,
+			String offset) implements Data<OffsetDateTime> {
+		@Override
+		public OffsetDateTime makeValue() {
+			return OffsetDateTime.of( year, month, day, hour, minute, second, nanosecond, ZoneOffset.of( offset ) );
 		}
 	}
 }

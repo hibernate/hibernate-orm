@@ -14,22 +14,23 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.OneToMany;
 
 import org.hibernate.dialect.H2Dialect;
-
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = H2Dialect.class)
-public class ForeignKeyDefinitionOneToManyJoinTableTest
-		extends AbstractForeignKeyDefinitionTest {
+@RequiresDialect(H2Dialect.class)
+public class ForeignKeyDefinitionOneToManyJoinTableTest extends AbstractForeignKeyDefinitionTest {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Box.class,
-				Thing.class,
-		};
+		return new Class<?>[] { Box.class, Thing.class };
+	}
+
+	@Override
+	protected boolean validate(String fileContent) {
+		return fileContent.contains( "/* Thing_FK */" )
+			&& fileContent.contains( "/* Box_FK */" );
 	}
 
 	@Entity(name = "Box")
@@ -57,11 +58,5 @@ public class ForeignKeyDefinitionOneToManyJoinTableTest
 				)
 		)
 		public List<Thing> things = new ArrayList<>();
-	}
-
-	@Override
-	protected boolean validate(String fileContent) {
-		return fileContent.contains( "/* Thing_FK */" ) && fileContent.contains(
-				"/* Box_FK */" );
 	}
 }

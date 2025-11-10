@@ -14,9 +14,7 @@
 <hibernate-mapping package="org.hibernate.orm.test.version.sybase">
 
 	<class name="User" table="syb_ts_user">
-        <id name="id" column="user_id" type="long">
-            <generator class="native"/>
-        </id>
+        <id name="id" column="user_id" type="integer"/>
         <version name="timestamp" type="binary" generated="always">
             <column name="ts" sql-type="timestamp"/>
         </version>
@@ -32,9 +30,7 @@
 	</class>
 
 	<class name="Group" table="syb_ts_group">
-        <id name="id" column="group_id" type="long">
-            <generator class="native"/>
-        </id>
+        <id name="id" column="group_id" type="integer"/>
         <timestamp name="timestamp" column="ts" source="db"/>
         <property name="name" column="name" type="string" unique="true"/>
         <set name="users" table="syb_ts_user_group" batch-size="9" inverse="false" lazy="true" cascade="none" >
@@ -44,9 +40,7 @@
 	</class>
 
 	<class name="Permission" table="syb_ts_permission">
-        <id name="id" column="perm_id" type="long">
-            <generator class="native"/>
-        </id>
+        <id name="id" column="perm_id" type="integer"/>
         <timestamp name="timestamp" column="ts" source="db"/>
         <property name="name" column="name" type="string" unique="true"/>
         <property name="context" column="ctx" type="string"/>

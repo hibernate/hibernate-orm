@@ -2,7 +2,25 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.type;
+package org.hibernate.orm.test.type.temporal;
+
+import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,36 +30,27 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
-import jakarta.persistence.Basic;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.MariaDBDialect;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.SybaseDialect;
-
-import org.junit.runners.Parameterized;
+import static org.hibernate.orm.test.type.temporal.Timezones.ZONE_AMSTERDAM;
+import static org.hibernate.orm.test.type.temporal.Timezones.ZONE_AUCKLAND;
+import static org.hibernate.orm.test.type.temporal.Timezones.ZONE_GMT;
+import static org.hibernate.orm.test.type.temporal.Timezones.ZONE_OSLO;
+import static org.hibernate.orm.test.type.temporal.Timezones.ZONE_PARIS;
+import static org.hibernate.orm.test.type.temporal.Timezones.ZONE_UTC_MINUS_8;
 
 /**
  * Tests for storage of LocalDateTime properties.
  */
-public class LocalDateTimeTest extends AbstractJavaTimeTypeTest<LocalDateTime, LocalDateTimeTest.EntityWithLocalDateTime> {
+@TestInstance( TestInstance.Lifecycle.PER_METHOD )
+@ParameterizedClass
+@MethodSource("testData")
+@DomainModel(annotatedClasses = LocalDateTimeTest.EntityWithLocalDateTime.class)
+@SessionFactory
+public class LocalDateTimeTest
+		extends AbstractJavaTimeTypeTests<LocalDateTime, LocalDateTimeTest.EntityWithLocalDateTime> {
 
-	private static class ParametersBuilder extends AbstractParametersBuilder<ParametersBuilder> {
-		public ParametersBuilder add(int year, int month, int day,
-				int hour, int minute, int second, int nanosecond, ZoneId defaultTimeZone) {
-			if ( !isNanosecondPrecisionSupported() ) {
-				nanosecond = 0;
-			}
-			return add( defaultTimeZone, year, month, day, hour, minute, second, nanosecond );
-		}
-	}
-
-	@Parameterized.Parameters(name = "{1}-{2}-{3}T{4}:{5}:{6}.{7} {0}")
-	public static List<Object[]> data() {
-		return new ParametersBuilder()
+	public static List<Parameter<LocalDateTime, LocalDateTimeTest.DataImpl>> testData() {
+		return new ParametersBuilder( DialectContext.getDialect() )
 				// Not affected by HHH-13266 (JDK-8061577)
 				.add( 2017, 11, 6, 19, 19, 1, 0, ZONE_UTC_MINUS_8 )
 				.add( 2017, 11, 6, 19, 19, 1, 0, ZONE_PARIS )
@@ -101,24 +110,11 @@ public class LocalDateTimeTest extends AbstractJavaTimeTypeTest<LocalDateTime, L
 				.build();
 	}
 
-	private final int year;
-	private final int month;
-	private final int day;
-	private final int hour;
-	private final int minute;
-	private final int second;
-	private final int nanosecond;
+	private final Parameter<LocalDateTime, LocalDateTimeTest.DataImpl> testParam;
 
-	public LocalDateTimeTest(EnvironmentParameters env, int year, int month, int day,
-			int hour, int minute, int second, int nanosecond) {
-		super( env );
-		this.year = year;
-		this.month = month;
-		this.day = day;
-		this.hour = hour;
-		this.minute = minute;
-		this.second = second;
-		this.nanosecond = nanosecond;
+	public LocalDateTimeTest(Parameter<LocalDateTime, LocalDateTimeTest.DataImpl> testParam) {
+		super( testParam.env() );
+		this.testParam = testParam;
 	}
 
 	@Override
@@ -133,7 +129,7 @@ public class LocalDateTimeTest extends AbstractJavaTimeTypeTest<LocalDateTime, L
 
 	@Override
 	protected LocalDateTime getExpectedPropertyValueAfterHibernateRead() {
-		return LocalDateTime.of( year, month, day, hour, minute, second, nanosecond );
+		return testParam.data().makeValue();
 	}
 
 	@Override
@@ -142,31 +138,35 @@ public class LocalDateTimeTest extends AbstractJavaTimeTypeTest<LocalDateTime, L
 	}
 
 	@Override
-	protected void setJdbcValueForNonHibernateWrite(PreparedStatement statement, int parameterIndex) throws SQLException {
+	protected void bindJdbcValue(
+			PreparedStatement statement,
+			int parameterIndex,
+			SessionFactoryScope factoryScope) throws SQLException {
 		statement.setTimestamp( parameterIndex, getExpectedJdbcValueAfterHibernateWrite() );
 	}
 
 	@Override
 	protected Timestamp getExpectedJdbcValueAfterHibernateWrite() {
-		return new Timestamp(
-				year - 1900, month - 1, day,
-				hour, minute, second, nanosecond
-		);
+		return testParam.data().asTimestamp();
 	}
 
 	@Override
-	protected Object getActualJdbcValue(ResultSet resultSet, int columnIndex) throws SQLException {
+	protected Object extractJdbcValue(
+			ResultSet resultSet,
+			int columnIndex,
+			SessionFactoryScope factoryScope) throws SQLException {
 		return resultSet.getTimestamp( columnIndex );
 	}
 
-	@Entity(name = ENTITY_NAME)
-	static final class EntityWithLocalDateTime {
+	@Entity
+	@Table(name = ENTITY_TBL_NAME)
+	public static final class EntityWithLocalDateTime {
 		@Id
 		@Column(name = ID_COLUMN_NAME)
 		private Integer id;
 
 		@Basic
-		@Column(name = PROPERTY_COLUMN_NAME)
+		@Column(name = VALUE_COLUMN_NAME)
 		private LocalDateTime value;
 
 		protected EntityWithLocalDateTime() {
@@ -175,6 +175,39 @@ public class LocalDateTimeTest extends AbstractJavaTimeTypeTest<LocalDateTime, L
 		private EntityWithLocalDateTime(int id, LocalDateTime value) {
 			this.id = id;
 			this.value = value;
+		}
+	}
+
+	private static class ParametersBuilder
+			extends AbstractParametersBuilder<LocalDateTime, DataImpl, ParametersBuilder> {
+		protected ParametersBuilder(Dialect dialect) {
+			super( dialect );
+		}
+
+		public ParametersBuilder add(int year, int month, int day,
+									int hour, int minute, int second, int nanosecond, ZoneId defaultTimeZone) {
+			if ( !isNanosecondPrecisionSupported() ) {
+				nanosecond = 0;
+			}
+			return add( defaultTimeZone, new DataImpl( year, month, day, hour, minute, second, nanosecond ) );
+		}
+	}
+
+	public record DataImpl(
+			int year,
+			int month,
+			int day,
+			int hour,
+			int minute,
+			int second,
+			int nanosecond) implements Data<LocalDateTime> {
+		@Override
+		public LocalDateTime makeValue() {
+			return LocalDateTime.of( year, month, day, hour, minute, second, nanosecond );
+		}
+
+		public Timestamp asTimestamp() {
+			return new Timestamp( year - 1900, month - 1, day, hour, minute, second, nanosecond );
 		}
 	}
 }

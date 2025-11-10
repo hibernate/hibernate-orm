@@ -11,7 +11,7 @@ import java.util.Date;
  * @author Steve Ebersole
  */
 public class Permission {
-	private Long id;
+	private Integer id;
 	private Date timestamp;
 	private String name;
 	private String context;
@@ -20,17 +20,18 @@ public class Permission {
 	public Permission() {
 	}
 
-	public Permission(String name, String context, String access) {
+	public Permission(Integer id, String name, String context, String access) {
+		this.id = id;
 		this.name = name;
 		this.context = context;
 		this.access = access;
 	}
 
-	public Long getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	protected void setId(Integer id) {
 		this.id = id;
 	}
 

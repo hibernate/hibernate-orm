@@ -3,6 +3,48 @@ Hibernate 7 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.2.0.CR2 (November 10, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/35584
+
+** Bug
+    * [HHH-19914] - JPA_COMPLIANCE setting ignored in @Jpa
+    * [HHH-19896] - Criteria select case expressions: NPE when second query contains an otherwise case expression but not the first query
+    * [HHH-19888] - FetchPlusOffsetParameterBinder fails to apply static offset for root pagination
+    * [HHH-19887] - Wrong ClassLoader used for Jackson Module discovery
+    * [HHH-19883] - JOIN TREAT ignores predicates
+    * [HHH-19874] - NullPointerException in org.hibernate.sql.ast.tree.from.TableGroup.resolveTableReference
+    * [HHH-19872] - CriteriaUpdate error updating generic field in @MappedSuperclass
+    * [HHH-19868] - RowTransformerConstructorImpl throws NullPointerException when TupleMetadata is null
+    * [HHH-19865] - In JTA after-completion callbacks may get ignored
+    * [HHH-19862] - Can't update converted column throught CriteriaUpdate#set( SingularAttribute<? super T, Y> attribute, X value);
+    * [HHH-19857] - When one of the lazy attributes is `null` the other ones may not get initialized correctly
+    * [HHH-19851] - Session#findMultiple(EntityGraph...) fails for dynamic entities
+    * [HHH-19848] - NPE when using MySQLLegacyDialect
+    * [HHH-19840] - JDBC batching is not working with @CreationTimestamp and @UpdateTimestamp from Hibernate 7
+    * [HHH-19824] - DB2zDialect does not use correct querySequenceString on a DB2 on zOs
+    * [HHH-18691] - Envers cannot read revisions with records
+
+** Improvement
+    * [HHH-19899] - Proxy generation fails with @ConcreteProxy and sealed abstract entities
+    * [HHH-19892] - signature of Session.merge() accepting EntityGraph
+    * [HHH-19884] - Hibernate testing class-template lifecycle listeners
+    * [HHH-19852] - Better detection of Oracle extended maximum string size
+    * [HHH-19830] - Use of markdown for Javadoc
+    * [HHH-18286] - Add option to fail bootstrapping on failure to access JDBC DatabaseMetadata
+
+** Sub-task
+    * [HHH-19871] - Drop JUnit 4 usage in Hibernate Envers
+
+** Task
+    * [HHH-19894] - Use Java 25 for building
+    * [HHH-19889] - Mention third-party dialects throughout the documentation
+    * [HHH-19873] - Upgrade build to Gradle 9.1
+    * [HHH-19869] - Regroup all dialect information under a single guide
+    * [HHH-19846] - Drop JUnit 4 usage
+
+
 Changes in 7.2.0.CR1 (October 08, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

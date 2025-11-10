@@ -57,7 +57,7 @@ public final class JacksonXmlFormatMapper implements FormatMapper {
 
 	public JacksonXmlFormatMapper(boolean legacyFormat) {
 		this(
-				createXmlMapper( XmlMapper.findModules( JacksonXmlFormatMapper.class.getClassLoader() ), legacyFormat ),
+				createXmlMapper( ObjectMapper.findModules( JacksonXmlFormatMapper.class.getClassLoader() ), legacyFormat ),
 				legacyFormat
 		);
 	}
@@ -65,9 +65,7 @@ public final class JacksonXmlFormatMapper implements FormatMapper {
 	public JacksonXmlFormatMapper(FormatMapperCreationContext creationContext) {
 		this(
 				createXmlMapper(
-						creationContext.getBootstrapContext()
-								.getClassLoaderService()
-								.<List<Module>>workWithClassLoader( XmlMapper::findModules ),
+						JacksonIntegration.loadModules( creationContext ),
 						creationContext.getBootstrapContext()
 								.getMetadataBuildingOptions()
 								.isXmlFormatMapperLegacyFormatEnabled()

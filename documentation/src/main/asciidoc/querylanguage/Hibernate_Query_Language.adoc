@@ -1,5 +1,3 @@
-:shared-attributes-dir: ../shared/
-
 include::{shared-attributes-dir}/common-attributes.adoc[]
 include::{shared-attributes-dir}/url-attributes.adoc[]
 include::{shared-attributes-dir}/filesystem-attributes.adoc[]
@@ -10,7 +8,7 @@ include::{shared-attributes-dir}/renderer-attributes.adoc[]
 :extrasdir: extras
 
 = A Guide to Hibernate Query Language
-:title-logo-image: image:../../style/asciidoctor/images/org/hibernate/logo.png[]
+:title-logo-image: image:{doc-main-dir}/style/asciidoctor/images/org/hibernate/logo.png[]
 :toc:
 :toclevels: 3
 

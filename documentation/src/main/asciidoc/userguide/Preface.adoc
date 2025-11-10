@@ -1,4 +1,3 @@
-:shared-attributes-dir: ../shared/
 include::{shared-attributes-dir}/url-attributes.adoc[]
 
 [[preface]]

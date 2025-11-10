@@ -263,7 +263,10 @@ asciidoctorj {
 			fullVersion: rootProject.ormVersion.fullName,
 			javaCompatibleVersions: jdks.versions.compatible.get(),
 			jakartaJpaVersion: rootProject.jakartaJpaVersion,
-			jdbcVersion: jdks.versions.jdbc.get()
+			jdbcVersion: jdks.versions.jdbc.get(),
+            'root-project-dir': rootProject.layout.projectDirectory.asFile.absolutePath,
+            'doc-main-dir': project(':documentation').layout.projectDirectory.dir('src').dir("main").asFile.absolutePath,
+            'shared-attributes-dir': project(':documentation').layout.projectDirectory.dir('src').dir("main").dir("asciidoc").dir("shared").asFile.absolutePath
 
 	options logDocuments: true
 }

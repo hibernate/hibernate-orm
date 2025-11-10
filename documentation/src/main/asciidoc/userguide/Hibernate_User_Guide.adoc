@@ -1,5 +1,3 @@
-:shared-attributes-dir: ../shared/
-
 include::{shared-attributes-dir}/common-attributes.adoc[]
 include::{shared-attributes-dir}/url-attributes.adoc[]
 include::{shared-attributes-dir}/filesystem-attributes.adoc[]

@@ -4,6 +4,11 @@
  */
 package org.hibernate.orm.test.fetchstrategyhelper;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.engine.FetchStyle;
@@ -11,70 +16,50 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.results.graph.FetchOptions;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-
-import static org.junit.Assert.assertEquals;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Gail Badner
  */
-public class FetchStrategyDeterminationTests extends BaseCoreFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = {
+		FetchStrategyDeterminationTests.AnEntity.class,
+		FetchStrategyDeterminationTests.OtherEntity.class
+})
+@SessionFactory
+public class FetchStrategyDeterminationTests {
 
 	@Test
-	public void testManyToOneDefaultFetch() {
-		final EntityPersister entityDescriptor = sessionFactory().getMappingMetamodel().getEntityDescriptor( AnEntity.class );
+	public void testManyToOneDefaultFetch(SessionFactoryScope factoryScope) {
+		final EntityPersister entityDescriptor = factoryScope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( AnEntity.class );
 		final AttributeMapping attributeMapping = entityDescriptor.findAttributeMapping( "otherEntityDefault" );
 		final FetchOptions mappedFetchOptions = attributeMapping.getMappedFetchOptions();
-		assertEquals( mappedFetchOptions.getTiming(), FetchTiming.IMMEDIATE );
-		assertEquals( mappedFetchOptions.getStyle(), FetchStyle.JOIN );
+		Assertions.assertEquals( FetchTiming.IMMEDIATE, mappedFetchOptions.getTiming() );
+		Assertions.assertEquals( FetchStyle.JOIN, mappedFetchOptions.getStyle() );
 	}
 
 	@Test
-	public void testManyToOneJoinFetch() {
-		final EntityPersister entityDescriptor = sessionFactory().getMappingMetamodel().getEntityDescriptor( AnEntity.class );
+	public void testManyToOneJoinFetch(SessionFactoryScope factoryScope) {
+		final EntityPersister entityDescriptor = factoryScope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( AnEntity.class );
 		final AttributeMapping attributeMapping = entityDescriptor.findAttributeMapping( "otherEntityJoin" );
 		final FetchOptions mappedFetchOptions = attributeMapping.getMappedFetchOptions();
-		assertEquals( mappedFetchOptions.getTiming(), FetchTiming.IMMEDIATE );
-		assertEquals( mappedFetchOptions.getStyle(), FetchStyle.JOIN );
+		Assertions.assertEquals( FetchTiming.IMMEDIATE, mappedFetchOptions.getTiming() );
+		Assertions.assertEquals( FetchStyle.JOIN, mappedFetchOptions.getStyle() );
 	}
 
 	@Test
-	public void testManyToOneSelectFetch() {
-		final EntityPersister entityDescriptor = sessionFactory().getMappingMetamodel().getEntityDescriptor( AnEntity.class );
+	public void testManyToOneSelectFetch(SessionFactoryScope factoryScope) {
+		final EntityPersister entityDescriptor = factoryScope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( AnEntity.class );
 		final AttributeMapping attributeMapping = entityDescriptor.findAttributeMapping( "otherEntitySelect" );
 		final FetchOptions mappedFetchOptions = attributeMapping.getMappedFetchOptions();
-		assertEquals( mappedFetchOptions.getTiming(), FetchTiming.IMMEDIATE );
-		assertEquals( mappedFetchOptions.getStyle(), FetchStyle.SELECT );
+		Assertions.assertEquals( FetchTiming.IMMEDIATE, mappedFetchOptions.getTiming() );
+		Assertions.assertEquals( FetchStyle.SELECT, mappedFetchOptions.getStyle() );
 	}
-//
-//	private org.hibernate.FetchMode determineFetchMode(Class<?> entityClass, String path) {
-//		AbstractEntityPersister entityPersister = (AbstractEntityPersister)
-//				sessionFactory().getMappingMetamodel().getEntityDescriptor(entityClass.getName());
-//		int index = entityPersister.getPropertyIndex( path );
-//		return  entityPersister.getFetchMode( index );
-//	}
-//
-//	private AssociationType determineAssociationType(Class<?> entityClass, String path) {
-//		AbstractEntityPersister entityPersister = (AbstractEntityPersister)
-//				sessionFactory().getMappingMetamodel().getEntityDescriptor(entityClass.getName());
-//		int index = entityPersister.getPropertyIndex( path );
-//		return (AssociationType) entityPersister.getSubclassPropertyType( index );
-//	}
 
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				AnEntity.class,
-				OtherEntity.class
-		};
-	}
 	@Entity
 	@Table(name="entity")
 	public static class AnEntity {

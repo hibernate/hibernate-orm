@@ -15,68 +15,64 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.Session;
-import org.hibernate.query.Query;
+import org.hibernate.internal.CoreMessageLogger;
 
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.logger.LoggerInspectionRule;
-import org.hibernate.testing.logger.Triggerable;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Logger;
+import org.hibernate.testing.orm.junit.LoggingInspections;
+import org.hibernate.testing.orm.junit.LoggingInspectionsScope;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static jakarta.persistence.LockModeType.NONE;
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
-import static org.junit.Assert.assertFalse;
 
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-10513")
-public class LockNoneWarningTest extends BaseCoreFunctionalTestCase {
-
-	private Triggerable triggerable;
-
-	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule( CORE_LOGGER );
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {Item.class, Bid.class};
-	}
-
-	@Before
-	public void setUp() {
-		buildSessionFactory();
-		final Set messagesPrefixes = new HashSet<>();
-		messagesPrefixes.add( "HHH000444" );
-		messagesPrefixes.add( "HHH000445" );
-		triggerable = logInspection.watchForLogMessages( messagesPrefixes );
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+@LoggingInspections(messages = {
+		@LoggingInspections.Message(
+				messageKey = "HHH000444",
+				loggers = @Logger(loggerName = CoreMessageLogger.NAME)
+		),
+		@LoggingInspections.Message(
+				messageKey = "HHH000445",
+				loggers = @Logger(loggerName = CoreMessageLogger.NAME)
+		)
+})
+@DomainModel(annotatedClasses = {LockNoneWarningTest.Item.class, LockNoneWarningTest.Bid.class})
+@SessionFactory
+public class LockNoneWarningTest {
+	@BeforeEach
+	void setUp(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
 			Item item = new Item();
 			item.name = "ZZZZ";
 			session.persist( item );
 		} );
 	}
 
-	@After
-	public void tearDown(){
-		releaseSessionFactory();
-		triggerable.reset();
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
+	/// Test that no warning is triggered when [#NONE] is used with follow-on locking
 	@Test
-	public void testQuerySetLockModeNONEDoNotLogAWarnMessageWhenTheDialectUseFollowOnLockingIsTrue() {
-		try (Session s = openSession();) {
-			final Query query = s.createQuery( "from Item i join i.bids b where name = :name", Object[].class );
-			query.setParameter( "name", "ZZZZ" );
-			query.setLockMode( NONE );
-			query.list();
-			assertFalse( "Log message was not triggered", triggerable.wasTriggered() );
-		}
+	public void testIt(SessionFactoryScope factoryScope, LoggingInspectionsScope loggingScope) {
+		factoryScope.inTransaction( (s) -> {
+			s.createQuery( "from Item i join i.bids b where name = :name", Object[].class )
+					.setParameter( "name", "ZZZZ" )
+					.setLockMode( NONE )
+					.list();
+			Assertions.assertFalse( loggingScope.wereAnyTriggered(), "Log message was unexpectedly triggered" );
+		} );
 	}
 
 	@Entity(name = "Item")

@@ -11,22 +11,22 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 
 import org.hibernate.dialect.H2Dialect;
-
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = H2Dialect.class)
-public class ForeignKeyDefinitionOneToOneTest
-		extends AbstractForeignKeyDefinitionTest {
+@RequiresDialect(H2Dialect.class)
+public class ForeignKeyDefinitionOneToOneTest extends AbstractForeignKeyDefinitionTest {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Box.class,
-				Thing.class,
-		};
+		return new Class<?>[] { Box.class, Thing.class };
+	}
+
+	@Override
+	protected boolean validate(String fileContent) {
+		return fileContent.contains( "/* FK */" );
 	}
 
 	@Entity(name = "Box")
@@ -43,10 +43,5 @@ public class ForeignKeyDefinitionOneToOneTest
 	public static class Thing {
 		@Id
 		public Integer id;
-	}
-
-	@Override
-	protected boolean validate(String fileContent) {
-		return fileContent.contains( "/* FK */" );
 	}
 }

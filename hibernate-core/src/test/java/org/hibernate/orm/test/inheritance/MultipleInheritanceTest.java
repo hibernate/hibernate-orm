@@ -16,35 +16,31 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
-
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class MultipleInheritanceTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new  Class<?>[] {
-				CarOptional.class,
-				CarPart.class,
-				BasicCar.class,
-				SuperCar.class,
-				Car.class
-		};
-	}
-
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = {
+		MultipleInheritanceTest.CarOptional.class,
+		MultipleInheritanceTest.CarPart.class,
+		MultipleInheritanceTest.BasicCar.class,
+		MultipleInheritanceTest.SuperCar.class,
+		MultipleInheritanceTest.Car.class
+})
+@SessionFactory
+public class MultipleInheritanceTest {
 	@Test
-	public void test() {
-		inTransaction( session -> {
-
+	public void test(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
 			Car car = new Car();
 			CarPart carPart = new CarPart();
 
@@ -122,7 +118,7 @@ public class MultipleInheritanceTest extends BaseCoreFunctionalTestCase {
 		private String name;
 
 		@Embeddable
-		public class CarOptionalPK implements Serializable {
+		public static class CarOptionalPK implements Serializable {
 
 			@Column(name = "OPTIONAL_ID1")
 			private String id1;

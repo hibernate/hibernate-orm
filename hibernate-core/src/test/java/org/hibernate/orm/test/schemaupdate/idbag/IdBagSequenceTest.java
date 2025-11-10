@@ -4,63 +4,55 @@
  */
 package org.hibernate.orm.test.schemaupdate.idbag;
 
+import org.hamcrest.MatcherAssert;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.tool.hbm2ddl.SchemaUpdate;
+import org.hibernate.tool.schema.TargetType;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.util.EnumSet;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.Environment;
-import org.hibernate.tool.hbm2ddl.SchemaUpdate;
-import org.hibernate.tool.schema.TargetType;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
-
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_AUTO;
 
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-10373")
-@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
-public class IdBagSequenceTest extends BaseUnitTestCase {
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
+@ServiceRegistry(settings = @Setting(name = HBM2DDL_AUTO, value = "none"))
+@DomainModel(xmlMappings = "org/hibernate/orm/test/schemaupdate/idbag/Mappings.hbm.xml")
+public class IdBagSequenceTest {
 
 	@Test
-	public void testIdBagSequenceGeneratorIsCreated() throws Exception {
-		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( Environment.HBM2DDL_AUTO, "none" )
-				.build();
-		try {
-			File output = File.createTempFile( "update_script", ".sql" );
-			output.deleteOnExit();
+	public void testIdBagSequenceGeneratorIsCreated(
+			DomainModelScope modelScope,
+			@TempDir File tmpDir) throws Exception {
+		final var scriptFile = new File( tmpDir, "update_script.sql" );
 
-			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addResource( "org/hibernate/orm/test/schemaupdate/idbag/Mappings.hbm.xml" )
-					.buildMetadata();
-			metadata.orderColumns( false );
-			metadata.validate();
+		final var metadata = modelScope.getDomainModel();
+		metadata.orderColumns( false );
+		metadata.validate();
 
-			new SchemaUpdate()
-					.setHaltOnError( true )
-					.setOutputFile( output.getAbsolutePath() )
-					.setDelimiter( ";" )
-					.setFormat( true )
-					.execute( EnumSet.of( TargetType.SCRIPT ), metadata );
+		new SchemaUpdate()
+				.setHaltOnError( true )
+				.setOutputFile( scriptFile.getAbsolutePath() )
+				.setDelimiter( ";" )
+				.setFormat( true )
+				.execute( EnumSet.of( TargetType.SCRIPT ), metadata );
 
-			String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-			assertThat( fileContent.toLowerCase().contains( "create sequence seq_child_id" ), is( true ) );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
+		String fileContent = new String( Files.readAllBytes( scriptFile.toPath() ) );
+		MatcherAssert.assertThat( fileContent.toLowerCase().contains( "create sequence seq_child_id" ), is( true ) );
 	}
 
 }

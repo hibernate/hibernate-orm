@@ -4,22 +4,6 @@
  */
 package org.hibernate.orm.test.schemavalidation;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.tool.hbm2ddl.SchemaValidator;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -27,50 +11,69 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.jdbc.JdbcUtils;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.hibernate.tool.hbm2ddl.SchemaValidator;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static jakarta.persistence.GenerationType.IDENTITY;
 
 @JiraKey("HHH-17675")
 @RequiresDialect(H2Dialect.class)
-public class H2ExistingEnumColumnValidationTest extends BaseCoreFunctionalTestCase {
+public class H2ExistingEnumColumnValidationTest {
 
-	private StandardServiceRegistry ssr;
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { EntityE.class };
-	}
-
-	@Before
+	@BeforeEach
 	public void setUp() {
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.createNativeQuery( "DROP TABLE IF EXISTS en CASCADE" ).executeUpdate();
-			session.createNativeQuery(
-							"CREATE TABLE en (id INTEGER NOT NULL AUTO_INCREMENT, sign_position enum ('AFTER_NO_SPACE','AFTER_WITH_SPACE','BEFORE_NO_SPACE','BEFORE_WITH_SPACE'), PRIMARY KEY (id))" )
-					.executeUpdate();
-		} );
+		try (var registry = ServiceRegistryUtil.serviceRegistryBuilder().build()) {
+			JdbcUtils.withConnection( registry, (connection) -> {
+				try (var statement = connection.createStatement()) {
+					statement.execute( "DROP TABLE IF EXISTS en CASCADE" );
+					statement.execute(
+							"""
+								CREATE TABLE en (
+									id INTEGER NOT NULL AUTO_INCREMENT,
+									sign_position enum (
+										'AFTER_NO_SPACE',
+										'AFTER_WITH_SPACE',
+										'BEFORE_NO_SPACE',
+										'BEFORE_WITH_SPACE'
+									),
+									PRIMARY KEY (id)
+								)
+								"""
+					);
+				}
+			} );
+		}
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.createNativeQuery( "DROP TABLE en CASCADE" ).executeUpdate();
-		} );
+		try (var registry = ServiceRegistryUtil.serviceRegistryBuilder().build()) {
+			JdbcUtils.withConnection( registry, (connection) -> {
+				try (var statement = connection.createStatement()) {
+					statement.execute( "DROP TABLE en CASCADE" );
+				}
+			} );
+		}
 	}
 
 	@Test
 	public void testEnumDataTypeSchemaValidator() {
-		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
+		try (var ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "validate" )
-				.build();
-		try {
+				.build()) {
 			final MetadataSources metadataSources = new MetadataSources( ssr );
 			metadataSources.addAnnotatedClass( EntityE.class );
 
 			new SchemaValidator().validate( metadataSources.buildMetadata() );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
 		}
 	}
 

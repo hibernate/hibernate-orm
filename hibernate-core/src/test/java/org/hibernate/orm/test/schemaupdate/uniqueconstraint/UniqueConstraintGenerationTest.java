@@ -4,6 +4,24 @@
  */
 package org.hibernate.orm.test.schemaupdate.uniqueconstraint;
 
+import org.hamcrest.MatcherAssert;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
+import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
+import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
+import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.schema.TargetType;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,94 +29,61 @@ import java.util.EnumSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
-import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
-import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
-import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.schema.TargetType;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_AUTO;
 
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ServiceRegistry(settings = @Setting(name = HBM2DDL_AUTO, value = "none"))
+@DomainModel(xmlMappings = "org/hibernate/orm/test/schemaupdate/uniqueconstraint/TestEntity.hbm.xml")
 public class UniqueConstraintGenerationTest {
-	private File output;
-	private MetadataImplementor metadata;
-	StandardServiceRegistry ssr;
-
-	@Before
-	public void setUp() throws Exception {
-		output = File.createTempFile( "update_script", ".sql" );
-		output.deleteOnExit();
-		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( Environment.HBM2DDL_AUTO, "none" )
-				.build();
-		metadata = (MetadataImplementor) new MetadataSources( ssr )
-				.addResource( "org/hibernate/orm/test/schemaupdate/uniqueconstraint/TestEntity.hbm.xml" )
-				.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
-	}
-
-	@After
-	public void tearDown() {
-		StandardServiceRegistryBuilder.destroy( ssr );
-	}
 
 	@Test
 	@JiraKey(value = "HHH-11101")
-	public void testUniqueConstraintIsGenerated() throws Exception {
+	public void testUniqueConstraintIsGenerated(
+			ServiceRegistryScope registryScope,
+			DomainModelScope modelScope,
+			@TempDir File tmpDir) throws Exception {
+		final var scriptFile = new File( tmpDir, "update_script.sql" );
+
+		final var metadata = modelScope.getDomainModel();
+		metadata.orderColumns( false );
+		metadata.validate();
+
 		new SchemaExport()
-				.setOutputFile( output.getAbsolutePath() )
+				.setOutputFile( scriptFile.getAbsolutePath() )
 				.create( EnumSet.of( TargetType.SCRIPT ), metadata );
 
-		if ( !(getDialect().getUniqueDelegate() instanceof SkipNullableUniqueDelegate) ) {
-			if ( getDialect().getUniqueDelegate() instanceof AlterTableUniqueIndexDelegate ) {
-				assertThat(
-						"The test_entity_item table unique constraint has not been generated",
-						isCreateUniqueIndexGenerated("test_entity_item", "item"),
+		final var dialect = registryScope.getRegistry().requireService( JdbcEnvironment.class ).getDialect();
+		if ( !(dialect.getUniqueDelegate() instanceof SkipNullableUniqueDelegate) ) {
+			if ( dialect.getUniqueDelegate() instanceof AlterTableUniqueIndexDelegate ) {
+				MatcherAssert.assertThat( "The test_entity_item table unique constraint has not been generated",
+						isCreateUniqueIndexGenerated("test_entity_item", "item", scriptFile),
 						is(true)
 				);
 			}
 			else {
-				assertThat(
-						"The test_entity_item table unique constraint has not been generated",
-						isUniqueConstraintGenerated("test_entity_item", "item"),
+				MatcherAssert.assertThat( "The test_entity_item table unique constraint has not been generated",
+						isUniqueConstraintGenerated("test_entity_item", "item", dialect, scriptFile),
 						is(true)
 				);
 			}
 
-			assertThat(
-					"The test_entity_children table unique constraint has not been generated",
-					isUniqueConstraintGenerated( "test_entity_children", "child" ),
+			MatcherAssert.assertThat( "The test_entity_children table unique constraint has not been generated",
+					isUniqueConstraintGenerated( "test_entity_children", "child", dialect, scriptFile ),
 					is( true )
 			);
 		}
 	}
 
-	private Dialect getDialect() {
-		return ssr.getService(JdbcEnvironment.class).getDialect();
-	}
-
-	private boolean isUniqueConstraintGenerated(String tableName, String columnName) throws IOException {
+	private boolean isUniqueConstraintGenerated(
+			String tableName,
+			String columnName,
+			Dialect dialect,
+			File scriptFile) throws IOException {
 		final String regex;
-		Dialect dialect = getDialect();
 		if ( dialect.getUniqueDelegate() instanceof CreateTableUniqueDelegate ) {
 			regex = dialect.getCreateTableString() + " " + tableName + " .* " + columnName + " .+ unique.*\\)"
 					+ dialect.getTableTypeString().toLowerCase() + ";";
@@ -110,7 +95,7 @@ public class UniqueConstraintGenerationTest {
 			return true;
 		}
 
-		final String fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase();
+		final String fileContent = new String( Files.readAllBytes( scriptFile.toPath() ) ).toLowerCase();
 		final String[] split = fileContent.split( System.lineSeparator() );
 		for ( String line : split ) {
 			if ( line.matches(regex) ) {
@@ -120,10 +105,13 @@ public class UniqueConstraintGenerationTest {
 		return false;
 	}
 
-	private boolean isCreateUniqueIndexGenerated(String tableName, String columnName) throws IOException {
+	private boolean isCreateUniqueIndexGenerated(
+			String tableName,
+			String columnName,
+			File scriptFile) throws IOException {
 		String regex = "create unique (nonclustered )?index uk.* on " + tableName
 				+ " \\(" + columnName + "\\)( where .*| exclude null keys)?;";
-		final String fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase();
+		final String fileContent = new String( Files.readAllBytes( scriptFile.toPath() ) ).toLowerCase();
 		final String[] split = fileContent.split( System.lineSeparator() );
 		Pattern p = Pattern.compile( regex );
 		for ( String line : split ) {

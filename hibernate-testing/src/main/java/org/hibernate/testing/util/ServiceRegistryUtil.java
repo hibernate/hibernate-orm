@@ -29,7 +29,7 @@ public class ServiceRegistryUtil {
 		return applySettings( ssrb );
 	}
 
-	private static void applyEnvSettings(StandardServiceRegistryBuilder ssrb) {
+	public static void applyEnvSettings(StandardServiceRegistryBuilder ssrb) {
 		ssrb.applySettings( Environment.getProperties() );
 	}
 

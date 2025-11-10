@@ -4,54 +4,38 @@
  */
 package org.hibernate.orm.test.schemaupdate.index;
 
-import java.util.List;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
-
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
-
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import java.util.List;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-11913")
 @RequiresDialect(H2Dialect.class)
 @RequiresDialect(PostgreSQLDialect.class)
 @RequiresDialect(MySQLDialect.class)
-public class IndexesCreationTest extends BaseUnitTestCase {
-	private StandardServiceRegistry ssr;
-	private Metadata metadata;
-
-	@Before
-	public void setUp() {
-		ssr = ServiceRegistryUtil.serviceRegistry();
-		metadata = new MetadataSources( ssr )
-				.addAnnotatedClass( TestEntity.class )
-				.buildMetadata();
-	}
-
+@ServiceRegistry
+@DomainModel(annotatedClasses = IndexesCreationTest.TestEntity.class)
+public class IndexesCreationTest {
 	@Test
-	public void testTheIndexIsGenerated() {
-		final List<String> commands = new SchemaCreatorImpl( ssr ).generateCreationCommands(
-				metadata,
-				false
-		);
+	public void testTheIndexIsGenerated(ServiceRegistryScope registryScope, DomainModelScope modelScope) {
+		final List<String> commands = new SchemaCreatorImpl( registryScope.getRegistry() )
+				.generateCreationCommands( modelScope.getDomainModel(), false );
 
 		assertThatCreateIndexCommandIsGenerated( "CREATE INDEX FIELD_1_INDEX ON TEST_ENTITY (FIELD_1)", commands );
 		assertThatCreateIndexCommandIsGenerated(
@@ -69,18 +53,10 @@ public class IndexesCreationTest extends BaseUnitTestCase {
 		for ( String command : commands ) {
 			if ( command.toLowerCase().contains( expectedCommand.toLowerCase() ) ) {
 				createIndexCommandIsGenerated = true;
+				break;
 			}
 		}
-		assertTrue(
-
-				"Expected " + expectedCommand + " command not found",
-				createIndexCommandIsGenerated
-		);
-	}
-
-	@After
-	public void tearDown() {
-		StandardServiceRegistryBuilder.destroy( ssr );
+		Assertions.assertTrue( createIndexCommandIsGenerated, "Expected " + expectedCommand + " command not found" );
 	}
 
 	@Entity(name = "TestEntity")

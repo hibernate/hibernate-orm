@@ -11,53 +11,43 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Steve Ebersole
  */
-@RequiresDialectFeature( value = {DialectChecks.SupportCatalogCreation.class})
-public class ForeignKeyMigrationTest extends BaseUnitTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportCatalogCreation.class)
+@ServiceRegistry
+@DomainModel(annotatedClasses = {ForeignKeyMigrationTest.Box.class, ForeignKeyMigrationTest.Thing.class})
+public class ForeignKeyMigrationTest {
 	@Test
 	@JiraKey( value = "HHH-9716" )
-//	@FailureExpected( jiraKey = "HHH-9716" )
-	public void testMigrationOfForeignKeys() {
-		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
+	public void testMigrationOfForeignKeys(DomainModelScope modelScope) {
+		final var metadata = modelScope.getDomainModel();
+		metadata.orderColumns( false );
+		metadata.validate();
+
+		// first create the schema...
+		new SchemaExport().create( EnumSet.of( TargetType.DATABASE ), metadata );
+
 		try {
-			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( Box.class )
-					.addAnnotatedClass( Thing.class )
-					.buildMetadata();
-			metadata.orderColumns( false );
-			metadata.validate();
-
-			// first create the schema...
-			new SchemaExport().create( EnumSet.of( TargetType.DATABASE ), metadata );
-
-			try {
-				// try to update the just created schema
-				new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), metadata );
-			}
-			finally {
-				// clean up
-				new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
-			}
+			// try to update the just created schema
+			new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), metadata );
 		}
 		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
+			// clean up
+			new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
 		}
 	}
 

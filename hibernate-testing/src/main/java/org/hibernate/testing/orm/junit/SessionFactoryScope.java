@@ -38,6 +38,7 @@ public interface SessionFactoryScope {
 	<T> T fromSession(Function<SessionImplementor, T> action);
 	<T> T fromTransaction(Function<SessionImplementor, T> action);
 	<T> T fromTransaction(SessionImplementor session, Function<SessionImplementor, T> action);
+	<T> T fromTransaction(Function<SessionFactoryImplementor,SessionImplementor> sessionProducer, Function<SessionImplementor, T> action);
 
 	void inStatelessSession(Consumer<StatelessSessionImplementor> action);
 	void inStatelessTransaction(Consumer<StatelessSessionImplementor> action);

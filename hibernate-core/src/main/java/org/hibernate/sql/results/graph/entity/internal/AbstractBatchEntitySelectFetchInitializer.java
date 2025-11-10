@@ -138,10 +138,11 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			data.setInstance( null );
 			return;
 		}
-		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		final var rowProcessingState = data.getRowProcessingState();
+		final var session = rowProcessingState.getSession();
+		final var persistenceContext = session.getPersistenceContextInternal();
 		// Only need to extract the identifier if the identifier has a many to one
 		final LazyInitializer lazyInitializer = extractLazyInitializer( instance );
-		data.entityKey = null;
 		data.entityIdentifier = null;
 		if ( lazyInitializer == null ) {
 			// Entity is most probably initialized
@@ -162,10 +163,10 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 				// If the entity initializer is null, we know the entity is fully initialized,
 				// otherwise it will be initialized by some other initializer
 				data.setState( State.RESOLVED );
-				data.entityIdentifier = concreteDescriptor.getIdentifier( instance, rowProcessingState.getSession() );
+				data.entityIdentifier = concreteDescriptor.getIdentifier( instance, session );
 			}
-			if ( keyIsEager && data.entityIdentifier == null ) {
-				data.entityIdentifier = concreteDescriptor.getIdentifier( instance, rowProcessingState.getSession() );
+			if ( data.entityIdentifier == null ) {
+				data.entityIdentifier = concreteDescriptor.getIdentifier( instance, session );
 			}
 		}
 		else if ( lazyInitializer.isUninitialized() ) {
@@ -175,15 +176,47 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 		else {
 			// Entity is initialized
 			data.setState( State.INITIALIZED );
-			if ( keyIsEager ) {
-				data.entityIdentifier = lazyInitializer.getInternalIdentifier();
-			}
+			data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 			data.setInstance( lazyInitializer.getImplementation() );
 		}
 
-		if ( data.getState() == State.RESOLVED ) {
-			resolveInstanceFromIdentifier( data );
+		data.entityKey = new EntityKey( data.entityIdentifier, concreteDescriptor );
+		final var entityHolder = persistenceContext.getEntityHolder(
+				data.entityKey
+		);
+
+		if ( entityHolder == null || entityHolder.getEntity() != instance && entityHolder.getProxy() != instance ) {
+			// the existing entity instance is detached or transient
+			if ( entityHolder != null ) {
+				final var managed = entityHolder.getManagedObject();
+				data.setInstance( managed );
+				data.entityKey = entityHolder.getEntityKey();
+				data.entityIdentifier = data.entityKey.getIdentifier();
+				if ( entityHolder.isInitialized() ) {
+					data.setState( State.INITIALIZED );
+				}
+				else {
+					data.setState( State.RESOLVED );
+				}
+			}
+			else {
+				data.setState( State.RESOLVED );
+			}
 		}
+
+		if ( data.getState() == State.RESOLVED ) {
+			// similar to resolveInstanceFromIdentifier, but we already have the holder here
+			if ( data.batchDisabled ) {
+				initialize( data, entityHolder, session, persistenceContext );
+			}
+			else if ( entityHolder == null || !entityHolder.isEventuallyInitialized() ) {
+				// need to add the key to the batch queue only when the entity has not been already loaded or
+				// there isn't another initializer that is loading it
+				registerResolutionListener( data );
+				registerToBatchFetchQueue( data );
+			}
+		}
+
 		if ( keyIsEager ) {
 			final Initializer<?> initializer = keyAssembler.getInitializer();
 			assert initializer != null;
@@ -233,6 +266,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 				: parentInstance;
 		// No need to initialize these fields
 		data.entityKey = null;
+		data.entityIdentifier = null;
 		data.setInstance( null );
 		if ( instance == null ) {
 			data.setState( State.MISSING );

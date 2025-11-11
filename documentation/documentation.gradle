@@ -34,7 +34,6 @@ repositories {
 
 
 apply from: rootProject.file( 'gradle/module.gradle' )
-apply from: rootProject.file( 'gradle/releasable.gradle' )
 
 apply plugin: 'org.hibernate.orm.build.reports'
 
@@ -192,10 +191,6 @@ dependencies {
 if ( project.ormVersion.isSnapshot ) {
 	// only run the ci build tasks for SNAPSHOT versions
 	tasks.register('ciBuild') { dependsOn clean }
-	tasks.release.enabled false
-}
-else {
-	tasks.release.dependsOn clean
 }
 
 
@@ -797,4 +792,12 @@ tasks.withType(AsciidoctorTask).configureEach {
 		separateOutputDirs = false
 		backends 'html5'
 	}
+    // See https://docs.asciidoctor.org/gradle-plugin/latest/common-task-configuration/#choosing-an-execution-mode-for-asciidoctorj
+    executionMode = org.ysb33r.grolifant.api.core.jvm.ExecutionMode.JAVA_EXEC
 }
+
+tasks.withType(AsciidoctorPdfTask).configureEach {
+    // See https://docs.asciidoctor.org/gradle-plugin/latest/common-task-configuration/#choosing-an-execution-mode-for-asciidoctorj
+    executionMode = org.ysb33r.grolifant.api.core.jvm.ExecutionMode.JAVA_EXEC
+}
+

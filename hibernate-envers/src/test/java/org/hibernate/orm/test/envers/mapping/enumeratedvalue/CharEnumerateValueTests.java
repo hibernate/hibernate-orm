@@ -6,7 +6,6 @@ package org.hibernate.orm.test.envers.mapping.enumeratedvalue;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumeratedValue;
@@ -14,24 +13,30 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.envers.Audited;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.type.SqlTypes;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
-@JiraKey( "HHH-19747" )
-public class CharEnumerateValueTests extends EntityManagerFactoryBasedFunctionalTest {
+@JiraKey("HHH-19747")
+@Jpa(
+		annotatedClasses = {
+				CharEnumerateValueTests.Person.class
+		}
+)
+public class CharEnumerateValueTests {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {Person.class};
-	}
 
 	@Test
-	public void testBasicUsage() {
-		final EntityManagerFactory testEmf = produceEntityManagerFactory();
-		testEmf.close();
+	public void testBasicUsage(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(
+				entityManager -> {
+					Person person = new Person( 1, "John ", Gender.MALE );
+					entityManager.persist( person );
+				}
+		);
 	}
 
 	public enum Gender {

@@ -157,7 +157,7 @@ tasks.withType( JavaCompile ).configureEach {
     options.compilerArgumentProviders.add(new CompilerStubsArgumentProvider(stubsDir: new File(project.rootDir, "checkerstubs")))
 
     if (System.getProperty('APT_DEBUG', 'false') == 'true') {
-        task.options.forkOptions.jvmArgs += ['-Xdebug', '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=9099']
+        options.forkOptions.jvmArgs += ['-Xdebug', '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=9099']
     }
 }
 

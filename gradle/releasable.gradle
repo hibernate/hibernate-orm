@@ -5,6 +5,6 @@ task release {
     enabled !project.ormVersion.isSnapshot
 }
 
-task preVerifyRelease {
-    dependsOn ':release:preVerifyRelease'
+task prepareRelease {
+    dependsOn ':release:prepareRelease'
 }

@@ -182,7 +182,7 @@ pipeline {
 							configFile(fileId: 'release.config.ssh', targetLocation: "${env.HOME}/.ssh/config"),
 							configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: "${env.HOME}/.ssh/known_hosts")
 					]) {
-						sshagent(['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'hibernate-ci.frs.sourceforge.net']) {
+						sshagent(['ed25519.Hibernate-CI.github.com', 'hibernate-ci.frs.sourceforge.net']) {
 							// set release version
 							// update changelog from JIRA
 							// tags the version
@@ -217,13 +217,21 @@ pipeline {
 							string(credentialsId: 'release.gpg.passphrase', variable: 'JRELEASER_GPG_PASSPHRASE'),
 							string(credentialsId: 'Hibernate-CI.github.com', variable: 'JRELEASER_GITHUB_TOKEN')
 						]) {
-							sshagent(['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'jenkins.in.relation.to', 'hibernate-ci.frs.sourceforge.net']) {
+							sshagent(['ed25519.Hibernate-CI.github.com', 'jenkins.in.relation.to', 'hibernate-ci.frs.sourceforge.net']) {
 								// performs documentation upload and Sonatype release
 								// push to github
 								withEnv([
 										"DISABLE_REMOTE_GRADLE_CACHE=true"
 								]) {
-									sh ".release/scripts/publish.sh -j ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION} ${env.GIT_BRANCH}"
+                                    def notesFiles = findFiles(glob: 'release_notes.md')
+                                    if ( notesFiles.length < 1 ) {
+                                        throw new IllegalStateException( "Could not locate `release_notes.md`" )
+                                    }
+                                    if ( notesFiles.length > 1 ) {
+                                        throw new IllegalStateException( "Located more than 1 `release_notes.md`" )
+                                    }
+
+									sh ".release/scripts/publish.sh -j --notes=${notesFiles[0].path} ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION} ${env.GIT_BRANCH} "
 								}
 							}
 						}
@@ -254,30 +262,17 @@ pipeline {
 						withCredentials([
 								gitUsernamePassword(credentialsId: 'username-and-token.Hibernate-CI.github.com', gitToolName: 'Default')
 						]) {
-							sshagent( ['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'hibernate-ci.frs.sourceforge.net'] ) {
+							sshagent( ['ed25519.Hibernate-CI.github.com'] ) {
 								dir( '.release/hibernate.org' ) {
-                                    // Lock to avoid rejected pushes when multiple releases try to clone-commit-push
-                                    lock('hibernate.org-git') {
-                                        checkout scmGit(
-                                                branches: [[name: '*/production']],
-                                                extensions: [],
-                                                userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com', url: 'https://github.com/hibernate/hibernate.org.git']]
-                                        )
-                                        sh "../scripts/website-release.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION}"
-                                    }
+                                    checkout scmGit(
+                                            branches: [[name: '*/production']],
+                                            extensions: [],
+                                            userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com', url: 'https://github.com/hibernate/hibernate.org.git']]
+                                    )
+                                    sh "../scripts/website-release.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION}"
 								}
 							}
 						}
-					}
-				}
-			}
-		}
-		stage('Create GitHub release') {
-			steps {
-				script {
-					checkoutReleaseScripts()
-					withCredentials([string(credentialsId: 'Hibernate-CI.github.com', variable: 'GITHUB_API_TOKEN')]) {
-						sh ".release/scripts/github-release.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION}"
 					}
 				}
 			}

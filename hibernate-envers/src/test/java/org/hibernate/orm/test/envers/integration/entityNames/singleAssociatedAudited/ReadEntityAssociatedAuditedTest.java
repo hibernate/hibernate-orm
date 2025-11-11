@@ -81,7 +81,7 @@ public class ReadEntityAssociatedAuditedTest {
 	}
 
 	private void loadDataOnSessionAndAuditReader(SessionImplementor session, AuditReader auditReader) {
-		currentCar1 = (Car) session.get( Car.class, id_car1 );
+		currentCar1 = session.get( Car.class, id_car1 );
 		currentPerson1 = (Person) session.get( "Personaje", id_pers1 );
 		car1 = auditReader.find( Car.class, id_car1, 1 );
 		person1 = car1.getOwner();

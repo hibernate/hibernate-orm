@@ -60,7 +60,6 @@ public class EntityTypeChangeAuditDefaultTrackingTest extends EntityManagerFacto
 					customer.setLastName( "Doe Jr." );
 
 					entityManager.persist( customer );
-					entityManager.getTransaction().commit();
 				} );
 			}
 		}

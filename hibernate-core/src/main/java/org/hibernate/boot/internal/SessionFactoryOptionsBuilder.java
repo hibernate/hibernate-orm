@@ -24,12 +24,14 @@ import org.hibernate.CacheMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
+import org.hibernate.GraphParserMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.context.spi.MultiTenancy;
+import org.hibernate.cfg.GraphParserSettings;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -259,6 +261,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean delayBatchFetchLoaderCreations;
 	@Deprecated(forRemoval = true)
 	private boolean releaseResourcesOnCloseEnabled;
+	@Deprecated(forRemoval = true)
+	private final GraphParserMode graphParserMode;
+
 
 	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry, BootstrapContext context) {
 		this.serviceRegistry = serviceRegistry;
@@ -273,7 +278,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		final var dialect = jdbcServices.getJdbcEnvironment().getDialect();
 
-		final Map<String,Object> settings = new HashMap<>();
+		final Map<String, Object> settings = new HashMap<>();
 		settings.putAll( map( dialect.getDefaultProperties() ) );
 		settings.putAll( configurationService.getSettings() );
 
@@ -282,8 +287,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				() -> {
 					final Object value = settings.get( CDI_BEAN_MANAGER );
 					if ( value != null ) {
-						DEPRECATION_LOGGER.deprecatedSetting( CDI_BEAN_MANAGER,
-								JAKARTA_CDI_BEAN_MANAGER );
+						DEPRECATION_LOGGER.deprecatedSetting(
+								CDI_BEAN_MANAGER,
+								JAKARTA_CDI_BEAN_MANAGER
+						);
 					}
 					return value;
 				}
@@ -302,7 +309,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		};
 		jsonFormatMapper = jsonFormatMapper(
 				settings.get( JSON_FORMAT_MAPPER ),
-				!getBoolean( ORACLE_OSON_DISABLED, settings),
+				!getBoolean( ORACLE_OSON_DISABLED, settings ),
 				strategySelector,
 				formatMapperCreationContext
 		);
@@ -334,17 +341,21 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		statelessInterceptorSupplier = determineStatelessInterceptor( settings, strategySelector );
 
 		statementInspector =
-				strategySelector.resolveStrategy( StatementInspector.class,
-						settings.get( STATEMENT_INSPECTOR ) );
+				strategySelector.resolveStrategy(
+						StatementInspector.class,
+						settings.get( STATEMENT_INSPECTOR )
+				);
 
 
 		baselineSessionEventsListenerBuilder =
 				new BaselineSessionEventsListenerBuilder( getAutoSessionEventsListener( settings, strategySelector ) );
 
 		customEntityDirtinessStrategy =
-				strategySelector.resolveDefaultableStrategy( CustomEntityDirtinessStrategy.class,
+				strategySelector.resolveDefaultableStrategy(
+						CustomEntityDirtinessStrategy.class,
 						settings.get( CUSTOM_ENTITY_DIRTINESS_STRATEGY ),
-						DefaultCustomEntityDirtinessStrategy.INSTANCE );
+						DefaultCustomEntityDirtinessStrategy.INSTANCE
+				);
 
 		entityNotFoundDelegate = StandardEntityNotFoundDelegate.INSTANCE;
 
@@ -419,15 +430,22 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 					configurationService.getSetting( USE_QUERY_CACHE, BOOLEAN, false );
 			cacheRegionPrefix = extractPropertyValue( CACHE_REGION_PREFIX, settings );
 			queryCacheLayout =
-					configurationService.getSetting( QUERY_CACHE_LAYOUT,
+					configurationService.getSetting(
+							QUERY_CACHE_LAYOUT,
 							value -> CacheLayout.valueOf( value.toString().toUpperCase( Locale.ROOT ) ),
-							CacheLayout.FULL );
+							CacheLayout.FULL
+					);
 			timestampsCacheFactory =
-					strategySelector.resolveDefaultableStrategy( TimestampsCacheFactory.class,
-							settings.get( QUERY_CACHE_FACTORY ), StandardTimestampsCacheFactory.INSTANCE );
+					strategySelector.resolveDefaultableStrategy(
+							TimestampsCacheFactory.class,
+							settings.get( QUERY_CACHE_FACTORY ), StandardTimestampsCacheFactory.INSTANCE
+					);
 			minimalPutsEnabled =
-					configurationService.getSetting( USE_MINIMAL_PUTS, BOOLEAN,
-							regionFactory.isMinimalPutsEnabledByDefault() );
+					configurationService.getSetting(
+							USE_MINIMAL_PUTS,
+							BOOLEAN,
+							regionFactory.isMinimalPutsEnabledByDefault()
+					);
 			structuredCacheEntriesEnabled =
 					configurationService.getSetting( USE_STRUCTURED_CACHE, BOOLEAN, false );
 			directReferenceCacheEntriesEnabled =
@@ -477,12 +495,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		commentsEnabled = getBoolean( USE_SQL_COMMENTS, settings );
 
-		preferUserTransaction = getBoolean( PREFER_USER_TRANSACTION, settings  );
+		preferUserTransaction = getBoolean( PREFER_USER_TRANSACTION, settings );
 
 		allowOutOfTransactionUpdateOperations = getBoolean( ALLOW_UPDATE_OUTSIDE_TRANSACTION, settings );
 
 		releaseResourcesOnCloseEnabled = getBoolean( DISCARD_PC_ON_CLOSE, settings );
-		if ( releaseResourcesOnCloseEnabled) {
+		if ( releaseResourcesOnCloseEnabled ) {
 			DEPRECATION_LOGGER.deprecatedSetting( DISCARD_PC_ON_CLOSE );
 		}
 
@@ -531,6 +549,14 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		defaultLockOptions = defaultLockOptions( defaultSessionProperties );
 		initialSessionFlushMode = defaultFlushMode( defaultSessionProperties );
+
+		var graphParserModeSetting = settings.get( GraphParserSettings.GRAPH_PARSER_MODE );
+
+		if ( graphParserModeSetting != null ) {
+			DEPRECATION_LOGGER.deprecatedSetting( GraphParserSettings.GRAPH_PARSER_MODE );
+		}
+
+		graphParserMode = GraphParserMode.interpret( graphParserModeSetting );
 	}
 
 	@Deprecated(forRemoval = true)
@@ -576,14 +602,16 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		}
 		else if ( defaultNullPrecedence != null ) {
 			throw new IllegalArgumentException( "Configuration property " + DEFAULT_NULL_ORDERING
-					+ " value [" + defaultNullPrecedence + "] is not supported" );
+												+ " value [" + defaultNullPrecedence + "] is not supported" );
 		}
 		else {
 			return null;
 		}
 	}
 
-	private static Class<? extends SessionEventListener> getAutoSessionEventsListener(Map<String, Object> configurationSettings, StrategySelector strategySelector) {
+	private static Class<? extends SessionEventListener> getAutoSessionEventsListener(
+			Map<String, Object> configurationSettings,
+			StrategySelector strategySelector) {
 		// todo : expose this from builder?
 		final String name = (String) configurationSettings.get( AUTO_SESSION_EVENTS_LISTENER );
 		return name == null ? null : strategySelector.selectStrategyImplementor( SessionEventListener.class, name );
@@ -728,7 +756,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 						catch (Exception e) {
 							throw new StrategySelectionException(
 									"Could not instantiate named strategy class [" +
-											strategyClass.getName() + "]",
+									strategyClass.getName() + "]",
 									e
 							);
 						}
@@ -789,7 +817,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	private static Interceptor determineInterceptor(
-			Map<String,Object> configurationSettings,
+			Map<String, Object> configurationSettings,
 			StrategySelector strategySelector) {
 		return strategySelector.resolveStrategy(
 				Interceptor.class,
@@ -799,7 +827,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@SuppressWarnings("unchecked")
 	private static Supplier<? extends Interceptor> determineStatelessInterceptor(
-			Map<String,Object> configurationSettings,
+			Map<String, Object> configurationSettings,
 			StrategySelector strategySelector) {
 		final Object setting = configurationSettings.get( SESSION_SCOPED_INTERCEPTOR );
 		if ( setting == null ) {
@@ -828,13 +856,17 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				return clazz.newInstance();
 			}
 			catch (InstantiationException | IllegalAccessException e) {
-				throw new org.hibernate.InstantiationException( "Could not instantiate session-scoped Interceptor", clazz, e );
+				throw new org.hibernate.InstantiationException(
+						"Could not instantiate session-scoped Interceptor",
+						clazz,
+						e
+				);
 			}
 		};
 	}
 
 	private PhysicalConnectionHandlingMode interpretConnectionHandlingMode(
-			Map<String,Object> configurationSettings,
+			Map<String, Object> configurationSettings,
 			StandardServiceRegistry serviceRegistry) {
 		final var specifiedHandlingMode =
 				PhysicalConnectionHandlingMode.interpret( configurationSettings.get( CONNECTION_HANDLING ) );
@@ -844,7 +876,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 						.getDefaultConnectionHandlingMode();
 	}
 
-	private static FormatMapper jsonFormatMapper(Object setting, boolean osonExtensionEnabled, StrategySelector selector, FormatMapperCreationContext creationContext) {
+	private static FormatMapper jsonFormatMapper(
+			Object setting,
+			boolean osonExtensionEnabled,
+			StrategySelector selector, FormatMapperCreationContext creationContext) {
 		return formatMapper(
 				setting,
 				selector,
@@ -876,7 +911,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 	}
 
-	private static FormatMapper formatMapper(Object setting, StrategySelector selector, Callable<FormatMapper> defaultResolver, FormatMapperCreationContext creationContext) {
+	private static FormatMapper formatMapper(
+			Object setting,
+			StrategySelector selector,
+			Callable<FormatMapper> defaultResolver, FormatMapperCreationContext creationContext) {
 		return selector.resolveStrategy( FormatMapper.class, setting, defaultResolver, strategyClass -> {
 			try {
 				final Constructor<? extends FormatMapper> creationContextConstructor =
@@ -1005,15 +1043,19 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy resolveCustomSqmMultiTableMutationStrategy(EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext creationContext) {
+	public SqmMultiTableMutationStrategy resolveCustomSqmMultiTableMutationStrategy(
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext creationContext) {
 		if ( sqmMultiTableMutationStrategyConstructor != null ) {
 			try {
 				return sqmMultiTableMutationStrategyConstructor.newInstance( rootEntityDescriptor, creationContext );
 			}
 			catch (Exception e) {
 				throw new StrategySelectionException(
-						String.format( "Could not instantiate named strategy class [%s]",
-								sqmMultiTableMutationStrategyConstructor.getDeclaringClass().getName() ),
+						String.format(
+								"Could not instantiate named strategy class [%s]",
+								sqmMultiTableMutationStrategyConstructor.getDeclaringClass().getName()
+						),
 						e
 				);
 			}
@@ -1022,15 +1064,19 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public SqmMultiTableInsertStrategy resolveCustomSqmMultiTableInsertStrategy(EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext creationContext) {
+	public SqmMultiTableInsertStrategy resolveCustomSqmMultiTableInsertStrategy(
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext creationContext) {
 		if ( sqmMultiTableInsertStrategyConstructor != null ) {
 			try {
 				return sqmMultiTableInsertStrategyConstructor.newInstance( rootEntityDescriptor, creationContext );
 			}
 			catch (Exception e) {
 				throw new StrategySelectionException(
-						String.format( "Could not instantiate named strategy class [%s]",
-								sqmMultiTableInsertStrategyConstructor.getDeclaringClass().getName() ),
+						String.format(
+								"Could not instantiate named strategy class [%s]",
+								sqmMultiTableInsertStrategyConstructor.getDeclaringClass().getName()
+						),
 						e
 				);
 			}
@@ -1055,7 +1101,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Override
 	public SessionFactoryObserver[] getSessionFactoryObservers() {
-		return sessionFactoryObserverList.toArray(new SessionFactoryObserver[0]);
+		return sessionFactoryObserverList.toArray( new SessionFactoryObserver[0] );
 	}
 
 	@Override
@@ -1078,12 +1124,14 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return initializeLazyStateOutsideTransactions;
 	}
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	public TempTableDdlTransactionHandling getTempTableDdlTransactionHandling() {
 		return tempTableDdlTransactionHandling;
 	}
 
-	@Override @Deprecated(forRemoval = true)
+	@Override
+	@Deprecated(forRemoval = true)
 	public boolean isDelayBatchFetchLoaderCreationsEnabled() {
 		return delayBatchFetchLoaderCreations;
 	}
@@ -1188,7 +1236,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return autoEvictCollectionCache;
 	}
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	public SchemaAutoTooling getSchemaAutoTooling() {
 		return schemaAutoTooling;
 	}
@@ -1240,7 +1289,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Override
 	public EntityNameResolver[] getEntityNameResolvers() {
-		return entityNameResolvers.toArray(new EntityNameResolver[0]);
+		return entityNameResolvers.toArray( new EntityNameResolver[0] );
 	}
 
 	@Override
@@ -1490,8 +1539,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 						return statelessInterceptorClass.newInstance();
 					}
 					catch (InstantiationException | IllegalAccessException e) {
-						throw new HibernateException( "Could not supply stateless Interceptor of class '"
-								+ statelessInterceptorClass.getName() + "'", e );
+						throw new HibernateException(
+								"Could not supply stateless Interceptor of class '"
+								+ statelessInterceptorClass.getName() + "'", e
+						);
 					}
 				}
 		);
@@ -1585,7 +1636,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	public void enableSecondLevelCacheSupport(boolean enabled) {
-		this.secondLevelCacheEnabled =  enabled;
+		this.secondLevelCacheEnabled = enabled;
 	}
 
 	public void enableQueryCacheSupport(boolean enabled) {
@@ -1775,8 +1826,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return defaultSessionProperties;
 	}
 
+	@Override
+	public GraphParserMode getGraphParserMode() {
+		return graphParserMode;
+	}
+
 	private Map<String, Object> initializeDefaultSessionProperties(ConfigurationService configurationService) {
-		final HashMap<String,Object> settings = new HashMap<>();
+		final HashMap<String, Object> settings = new HashMap<>();
 
 		//Static defaults:
 		settings.putIfAbsent( HibernateHints.HINT_FLUSH_MODE, FlushMode.AUTO );
@@ -1814,4 +1870,5 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		}
 		return unmodifiableMap( settings );
 	}
+
 }

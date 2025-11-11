@@ -15,6 +15,7 @@ import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.service.ServiceRegistry;
 
 import java.util.function.Function;
 
@@ -39,7 +40,8 @@ class NamedGraphCreatorJpa implements NamedGraphCreator {
 	@Override
 	public <T> RootGraphImplementor<T> createEntityGraph(
 			Function<Class<T>, EntityDomainType<?>> entityDomainClassResolver,
-			Function<String, EntityDomainType<?>> entityDomainNameResolver) {
+			Function<String, EntityDomainType<?>> entityDomainNameResolver,
+			ServiceRegistry serviceRegistry) {
 		//noinspection unchecked
 		final EntityDomainType<T> rootEntityType =
 				(EntityDomainType<T>) entityDomainNameResolver.apply( jpaEntityName );

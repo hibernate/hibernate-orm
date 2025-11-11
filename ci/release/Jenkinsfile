@@ -176,92 +176,111 @@ pipeline {
                 script {
                     checkoutReleaseScripts()
 
-                    configFileProvider([
-                            configFile(fileId: 'release.config.ssh', targetLocation: "${env.HOME}/.ssh/config"),
-                            configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: "${env.HOME}/.ssh/known_hosts")
-                    ]) {
-                        sshagent(['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'hibernate-ci.frs.sourceforge.net']) {
-                            // set release version
-                            // update changelog from JIRA
-                            // tags the version
-                            // changes the version to the provided development version
-                            withEnv([
-                                    "DISABLE_REMOTE_GRADLE_CACHE=true",
-                                    // Increase the amount of memory for this part since asciidoctor doc rendering consumes a lot of metaspace
-                                    "GRADLE_OPTS=-Dorg.gradle.jvmargs='-Dlog4j2.disableJmx -Xmx4g -XX:MaxMetaspaceSize=768m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8'"
-                            ]) {
-                                sh ".release/scripts/prepare-release.sh -j -b ${env.GIT_BRANCH} -v ${env.DEVELOPMENT_VERSION} ${env.PROJECT} ${env.RELEASE_VERSION}"
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        stage('Publish release') {
-            steps {
-                script {
-                    checkoutReleaseScripts()
+					configFileProvider([
+							configFile(fileId: 'release.config.ssh', targetLocation: "${env.HOME}/.ssh/config"),
+							configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: "${env.HOME}/.ssh/known_hosts")
+					]) {
+						sshagent(['ed25519.Hibernate-CI.github.com', 'hibernate-ci.frs.sourceforge.net']) {
+							// set release version
+							// update changelog from JIRA
+							// tags the version
+							// changes the version to the provided development version
+							withEnv([
+									"DISABLE_REMOTE_GRADLE_CACHE=true",
+									// Increase the amount of memory for this part since asciidoctor doc rendering consumes a lot of metaspace
+									"GRADLE_OPTS=-Dorg.gradle.jvmargs='-Dlog4j2.disableJmx -Xmx4g -XX:MaxMetaspaceSize=768m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8'"
+							]) {
+								sh ".release/scripts/prepare-release.sh -j -b ${env.GIT_BRANCH} -v ${env.DEVELOPMENT_VERSION} ${env.PROJECT} ${env.RELEASE_VERSION}"
+							}
+						}
+					}
+				}
+			}
+		}
+		stage('Publish') {
+			steps {
+				script {
+					checkoutReleaseScripts()
 
-                    configFileProvider([
-                            configFile(fileId: 'release.config.ssh', targetLocation: "${env.HOME}/.ssh/config"),
-                            configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: "${env.HOME}/.ssh/known_hosts")
-                    ]) {
-                        withCredentials([
-                                usernamePassword(credentialsId: 'central.sonatype.com', passwordVariable: 'JRELEASER_MAVENCENTRAL_TOKEN', usernameVariable: 'JRELEASER_MAVENCENTRAL_USERNAME'),
-                                // https://docs.gradle.org/current/userguide/publishing_gradle_plugins.html#account_setup
-                                usernamePassword(credentialsId: 'gradle-plugin-portal-api-key', passwordVariable: 'GRADLE_PUBLISH_SECRET', usernameVariable: 'GRADLE_PUBLISH_KEY'),
-                                gitUsernamePassword(credentialsId: 'username-and-token.Hibernate-CI.github.com', gitToolName: 'Default'),
-                                file(credentialsId: 'release.gpg.private-key', variable: 'RELEASE_GPG_PRIVATE_KEY_PATH'),
-                                string(credentialsId: 'release.gpg.passphrase', variable: 'JRELEASER_GPG_PASSPHRASE'),
-                                string(credentialsId: 'Hibernate-CI.github.com', variable: 'JRELEASER_GITHUB_TOKEN')
-                        ]) {
-                            sshagent(['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'hibernate-ci.frs.sourceforge.net']) {
-                                // performs documentation upload and Sonatype release
-                                // push to github
-                                withEnv([
-                                        "DISABLE_REMOTE_GRADLE_CACHE=true"
-                                ]) {
-                                    sh ".release/scripts/publish.sh -j ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION} ${env.GIT_BRANCH}"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        stage('Website release') {
-            steps {
-                script {
-                    checkoutReleaseScripts()
+					configFileProvider([
+							configFile(fileId: 'release.config.ssh', targetLocation: "${env.HOME}/.ssh/config"),
+							configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: "${env.HOME}/.ssh/known_hosts")
+					]) {
+						withCredentials([
+							usernamePassword(credentialsId: 'central.sonatype.com', passwordVariable: 'JRELEASER_MAVENCENTRAL_TOKEN', usernameVariable: 'JRELEASER_MAVENCENTRAL_USERNAME'),
+							// https://docs.gradle.org/current/userguide/publishing_gradle_plugins.html#account_setup
+							usernamePassword(credentialsId: 'gradle-plugin-portal-api-key', passwordVariable: 'GRADLE_PUBLISH_SECRET', usernameVariable: 'GRADLE_PUBLISH_KEY'),
+							gitUsernamePassword(credentialsId: 'username-and-token.Hibernate-CI.github.com', gitToolName: 'Default'),
+							file(credentialsId: 'release.gpg.private-key', variable: 'RELEASE_GPG_PRIVATE_KEY_PATH'),
+							string(credentialsId: 'release.gpg.passphrase', variable: 'JRELEASER_GPG_PASSPHRASE'),
+							string(credentialsId: 'Hibernate-CI.github.com', variable: 'JRELEASER_GITHUB_TOKEN')
+						]) {
+							sshagent(['ed25519.Hibernate-CI.github.com', 'jenkins.in.relation.to', 'hibernate-ci.frs.sourceforge.net']) {
+								// performs documentation upload and Sonatype release
+								// push to github
+								withEnv([
+										"DISABLE_REMOTE_GRADLE_CACHE=true"
+								]) {
+                                    def notesFiles = findFiles(glob: 'release_notes.md')
+                                    if ( notesFiles.length < 1 ) {
+                                        throw new IllegalStateException( "Could not locate `release_notes.md`" )
+                                    }
+                                    if ( notesFiles.length > 1 ) {
+                                        throw new IllegalStateException( "Located more than 1 `release_notes.md`" )
+                                    }
 
-                    configFileProvider([
-                            configFile(fileId: 'release.config.ssh', targetLocation: "${env.HOME}/.ssh/config"),
-                            configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: "${env.HOME}/.ssh/known_hosts")
-                    ]) {
-                        withCredentials([
-                                gitUsernamePassword(credentialsId: 'username-and-token.Hibernate-CI.github.com', gitToolName: 'Default')
-                        ]) {
-                            sshagent( ['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'hibernate-ci.frs.sourceforge.net'] ) {
-                                dir( '.release/hibernate.org' ) {
+									sh ".release/scripts/publish.sh -j --notes=${notesFiles[0].path} ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION} ${env.GIT_BRANCH} "
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		stage('Release on Jira') {
+			steps {
+				script {
+					checkoutReleaseScripts()
+
+					withCredentials([string(credentialsId: 'release-webhook.hibernate.atlassian.net', variable: 'JIRA_WEBHOOK_SECRET')]) {
+						sh ".release/scripts/jira-release.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION}"
+					}
+				}
+			}
+		}
+		stage('Update website') {
+			steps {
+				script {
+					checkoutReleaseScripts()
+
+					configFileProvider([
+							configFile(fileId: 'release.config.ssh', targetLocation: "${env.HOME}/.ssh/config"),
+							configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: "${env.HOME}/.ssh/known_hosts")
+					]) {
+						withCredentials([
+								gitUsernamePassword(credentialsId: 'username-and-token.Hibernate-CI.github.com', gitToolName: 'Default')
+						]) {
+							sshagent( ['ed25519.Hibernate-CI.github.com'] ) {
+								dir( '.release/hibernate.org' ) {
                                     checkout scmGit(
                                             branches: [[name: '*/production']],
                                             extensions: [],
                                             userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com', url: 'https://github.com/hibernate/hibernate.org.git']]
                                     )
                                     sh "../scripts/website-release.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION}"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    post {
-        always {
-            configFileProvider([configFile(fileId: 'job-configuration.yaml', variable: 'JOB_CONFIGURATION_FILE')]) {
-                notifyBuildResult maintainers: (String) readYaml(file: env.JOB_CONFIGURATION_FILE).notification?.email?.recipients
-            }
-        }
-    }
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+ 	post {
+ 		always {
+ 			configFileProvider([configFile(fileId: 'job-configuration.yaml', variable: 'JOB_CONFIGURATION_FILE')]) {
+ 				notifyBuildResult maintainers: (String) readYaml(file: env.JOB_CONFIGURATION_FILE).notification?.email?.recipients
+ 			}
+ 		}
+ 	}
 }

@@ -13,10 +13,10 @@ import org.hibernate.boot.model.relational.QualifiedNameImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.id.enhanced.SequenceStructure;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +26,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
 @BaseUnitTest
 public class ExportIdentifierTest {
 

@@ -164,5 +164,8 @@ publishing {
 
 task ciBuild( dependsOn: [test, publish] )
 
-task release( dependsOn: [test] )
+task releasePrepare( dependsOn: [publishAllPublicationsToStagingRepository] ) {
+    group = "Release"
+    description = "Performs a release: the hibernate version is set and the changelog.txt file updated, the changes are pushed to github, then the release is performed, tagged and the hibernate version is set to the development one."
+}
 

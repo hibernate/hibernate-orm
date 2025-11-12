@@ -208,6 +208,7 @@ dependencyResolutionManagement {
             library( "bytemanBmunit", "org.jboss.byteman", "byteman-bmunit" ).versionRef( bytemanVersion )
 
             library( "mockito", "org.mockito", "mockito-core" ).versionRef( mockitoVersion )
+            library( "mockitoJunitJupiter", "org.mockito", "mockito-junit-jupiter" ).versionRef( mockitoVersion )
 
             library( "jbossJta", "org.jboss.narayana.jta", "narayana-jta" ).versionRef( jbossJtaVersion )
             library( "jbossTxSpi", "org.jboss", "jboss-transaction-spi" ).versionRef( jbossTxSpiVersion )

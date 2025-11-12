@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetomany;
+
 import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.Entity;
@@ -20,7 +21,7 @@ public class Order {
 	private Integer schoolIdSort;
 	private Integer academicYear;
 
-	private List<OrderItem> itemList = new ArrayList<OrderItem>();
+	private List<OrderItem> itemList = new ArrayList<>();
 
 	public boolean equals(Object obj) {
 		return super.equals( obj );

@@ -22,7 +22,7 @@ public class Box implements Serializable {
 
 	@OneToMany( mappedBy = "box" )
 	@OrderBy( "sortField DESC, code" ) // Sorting by @Formula calculated field.
-	private List<Item> items = new ArrayList<Item>();
+	private List<Item> items = new ArrayList<>();
 
 	public Box() {
 	}

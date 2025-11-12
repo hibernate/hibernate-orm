@@ -13,6 +13,9 @@ import org.hibernate.testing.orm.junit.SettingProvider;
 
 import static org.hibernate.cfg.TransactionSettings.TRANSACTION_COORDINATOR_STRATEGY;
 
+/**
+ * @author Luis Barreiro
+ */
 @ServiceRegistry(
 		settings = @Setting(name = TRANSACTION_COORDINATOR_STRATEGY, value = "jta"),
 		settingProviders = {
@@ -22,22 +25,25 @@ import static org.hibernate.cfg.TransactionSettings.TRANSACTION_COORDINATOR_STRA
 				),
 				@SettingProvider(
 						settingName = AvailableSettings.CONNECTION_HANDLING,
-						provider = BeforeCompletionReleaseTest.PhysicalConnectionHandlingModeSettingProvider.class
+						provider = BeforeCompletionReleaseInSesionBuilderTest.PhysicalConnectionHandlingModeSettingProvider.class
 				),
 				@SettingProvider(settingName = AvailableSettings.JTA_PLATFORM,
 						provider = JtaPlatformSettingProvider.class),
 		}
 )
-public class BeforeCompletionReleaseTest extends AbstractBeforeCompletionReleaseTest {
+public class BeforeCompletionReleaseInSesionBuilderTest extends AbstractBeforeCompletionReleaseTest{
+
+
 	public static class PhysicalConnectionHandlingModeSettingProvider
 			implements SettingProvider.Provider<PhysicalConnectionHandlingMode> {
 		@Override
 		public PhysicalConnectionHandlingMode getSetting() {
-			return PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION;
+			return PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
 		}
 	}
 
 	public PhysicalConnectionHandlingMode getConnectionHandlingModeInSessionBuilder() {
-		return null;
+		return PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION;
 	}
+
 }

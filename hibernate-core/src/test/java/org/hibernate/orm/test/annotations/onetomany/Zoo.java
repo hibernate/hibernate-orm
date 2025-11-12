@@ -30,17 +30,17 @@ public class Zoo implements Serializable {
 	@OneToMany
 	@JoinColumn(name = "zoo_id")
 	@SQLOrder("name asc nulls last") // By default H2 places NULL values first.
-	private Set<Tiger> tigers = new HashSet<Tiger>();
+	private Set<Tiger> tigers = new HashSet<>();
 
 	@OneToMany
 	@JoinColumn(name = "zoo_id")
 	@jakarta.persistence.OrderBy("name asc nulls last") // According to JPA specification this is illegal, but works in Hibernate.
-	private Set<Monkey> monkeys = new HashSet<Monkey>();
+	private Set<Monkey> monkeys = new HashSet<>();
 
 	@OneToMany
 	@JoinColumn(name = "zoo_id")
 	@jakarta.persistence.OrderBy("lastName desc nulls last, firstName asc nulls LaSt") // Sorting by multiple columns.
-	private Set<Visitor> visitors = new HashSet<Visitor>();
+	private Set<Visitor> visitors = new HashSet<>();
 
 	public Zoo() {
 	}

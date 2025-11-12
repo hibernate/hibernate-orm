@@ -18,9 +18,9 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
-@Entity(name="CommentTable") // "Comment" reserved in Oracle
+@Entity(name = "CommentTable") // "Comment" reserved in Oracle
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "DTYPE", discriminatorType= DiscriminatorType.STRING, length = 3)
+@DiscriminatorColumn(name = "DTYPE", discriminatorType = DiscriminatorType.STRING, length = 3)
 @DiscriminatorValue(value = "WPT")
 public class Comment {
 
@@ -40,8 +40,8 @@ public class Comment {
 		this.id = id;
 	}
 
-	@ManyToOne(optional=true,fetch=FetchType.LAZY)
-	@JoinColumn(name="FK_PostId", nullable=true, insertable=true,updatable=false)
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "FK_PostId", updatable = false)
 	public Post getPost() {
 		return post;
 	}
@@ -50,8 +50,8 @@ public class Comment {
 		this.post = family;
 	}
 
-	@ManyToOne(optional=true,fetch=FetchType.LAZY)
-	@JoinColumn(name="FK_ForumId", nullable=true, insertable=true,updatable=false)
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "FK_ForumId", updatable = false)
 	public Forum getForum() {
 		return forum;
 	}

@@ -13,7 +13,7 @@ public class Employee {
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "employee", orphanRemoval = true)
 	@OrderBy // order by PK
-	private final List<Asset> assets = new ArrayList<Asset>();
+	private final List<Asset> assets = new ArrayList<>();
 
 	@Id
 	@Column(name = "id")

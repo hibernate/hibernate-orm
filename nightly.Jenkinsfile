@@ -14,7 +14,7 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 @Library('hibernate-jenkins-pipeline-helpers') _
 import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 
-@Field final String DEFAULT_JDK_VERSION = '21'
+@Field final String DEFAULT_JDK_VERSION = '25'
 @Field final String DEFAULT_JDK_TOOL = "OpenJDK ${DEFAULT_JDK_VERSION} Latest"
 @Field final String NODE_PATTERN_BASE = 'Worker&&Containers'
 @Field List<BuildEnvironment> environments

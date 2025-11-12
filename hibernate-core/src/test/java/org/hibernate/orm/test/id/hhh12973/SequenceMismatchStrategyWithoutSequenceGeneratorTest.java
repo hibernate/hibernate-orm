@@ -15,18 +15,18 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
-import org.junit.Rule;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.EnumSet;
 import java.util.Map;
@@ -43,8 +43,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
 public class SequenceMismatchStrategyWithoutSequenceGeneratorTest extends EntityManagerFactoryBasedFunctionalTest {
 
-	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule( SEQUENCE_GENERATOR_LOGGER );
+	@RegisterExtension
+	public LoggerInspectionExtension logInspection =
+			LoggerInspectionExtension.builder().setLogger( SEQUENCE_GENERATOR_LOGGER ).build();
 
 	private Triggerable triggerable = logInspection.watchForLogMessages( "HHH090203:" );
 

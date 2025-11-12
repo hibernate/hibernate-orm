@@ -26,8 +26,6 @@ dependencies {
 
     testImplementation project( ':hibernate-testing' )
 
-    testImplementation project(':hibernate-testing')
-
     testAnnotationProcessor project( ':hibernate-processor' )
 }
 

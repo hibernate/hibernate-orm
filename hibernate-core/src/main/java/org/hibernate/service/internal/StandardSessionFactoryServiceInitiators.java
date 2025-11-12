@@ -7,6 +7,7 @@ package org.hibernate.service.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.engine.extension.spi.ExtensionIntegrationServiceInitiator;
 import org.hibernate.engine.query.spi.NativeQueryInterpreterInitiator;
 import org.hibernate.engine.spi.CacheInitiator;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
@@ -25,6 +26,7 @@ public final class StandardSessionFactoryServiceInitiators {
 		serviceInitiators.add( StatisticsInitiator.INSTANCE );
 		serviceInitiators.add( CacheInitiator.INSTANCE );
 		serviceInitiators.add( NativeQueryInterpreterInitiator.INSTANCE );
+		serviceInitiators.add( ExtensionIntegrationServiceInitiator.INSTANCE );
 		return serviceInitiators;
 	}
 

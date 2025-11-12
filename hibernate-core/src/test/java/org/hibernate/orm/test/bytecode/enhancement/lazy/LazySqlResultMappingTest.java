@@ -8,13 +8,14 @@ import java.util.List;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.runner.RunWith;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
@@ -26,102 +27,103 @@ import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.Table;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Jan Schatteman
  * @author Christian Beikov
  */
-@RunWith( BytecodeEnhancerRunner.class )
-public class LazySqlResultMappingTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				LazySqlResultMappingTest.User.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class LazySqlResultMappingTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{ User.class };
-	}
-
-	@Before
-	public void prepareData() {
-		doInHibernate( this::sessionFactory,
-					session -> {
-						session.persist(new User(1L, (byte)1));
-					}
+	@BeforeEach
+	public void prepareData(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+					session.persist( new User( 1L, (byte) 1 ) );
+				}
 		);
 	}
 
-	@After
-	public void cleanupData() {
-		doInHibernate( this::sessionFactory,
-					session -> {
-						session.createMutationQuery("delete from User").executeUpdate();
-					}
+	@AfterEach
+	public void cleanupData(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+	}
+
+	@Test
+	public void testGetIdAndPrincipalUsingFieldResults(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+					List<User> users = session.createNamedQuery( "getIdAndPrincipalUsingFieldResults", User.class )
+							.getResultList();
+					Assertions.assertTrue( Hibernate.isPropertyInitialized( users.get( 0 ), "principal" ) );
+				}
 		);
 	}
 
 	@Test
-	public void testGetIdAndPrincipalUsingFieldResults() {
-		doInHibernate( this::sessionFactory,
-					session -> {
-							List<User> users = session.createNamedQuery( "getIdAndPrincipalUsingFieldResults", User.class ).getResultList();
-							Assertions.assertTrue( Hibernate.isPropertyInitialized( users.get(0), "principal" ) );
-					}
+	@JiraKey(value = "HHH-953")
+	public void testGetIdAndPrincipalWithoutUsingFieldResults(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+					List<User> users = session.createNamedQuery( "getIdAndPrincipalWithoutUsingFieldResults",
+							User.class ).getResultList();
+					Assertions.assertTrue( Hibernate.isPropertyInitialized( users.get( 0 ), "principal" ) );
+				}
 		);
 	}
 
 	@Test
-	@JiraKey( value = "HHH-953" )
-	public void testGetIdAndPrincipalWithoutUsingFieldResults() {
-		doInHibernate( this::sessionFactory,
-					session -> {
-						List<User> users = session.createNamedQuery( "getIdAndPrincipalWithoutUsingFieldResults", User.class ).getResultList();
-						Assertions.assertTrue( Hibernate.isPropertyInitialized( users.get(0), "principal" ) );
-					}
+	@JiraKey(value = "HHH-15667")
+	@FailureExpected(jiraKey = "HHH-15667",
+			reason = "SQLGrammarException: Unable to find column position by name: principal")
+	public void testGetIdWithoutUsingFieldResults(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+					List<User> users = session.createNamedQuery( "getIdWithoutUsingFieldResults", User.class )
+							.getResultList();
+					Assertions.assertFalse( Hibernate.isPropertyInitialized( users.get( 0 ), "principal" ) );
+				}
 		);
 	}
 
 	@Test
-	@JiraKey( value = "HHH-15667" )
-	@FailureExpected(jiraKey = "HHH-15667", message = "SQLGrammarException: Unable to find column position by name: principal")
-	public void testGetIdWithoutUsingFieldResults() {
-		doInHibernate( this::sessionFactory,
-					session -> {
-						List<User> users = session.createNamedQuery( "getIdWithoutUsingFieldResults", User.class ).getResultList();
-						Assertions.assertFalse( Hibernate.isPropertyInitialized( users.get(0), "principal" ) );
-					}
+	public void testGetIdUsingFieldResults(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+					List<User> users = session.createNamedQuery( "getIdUsingFieldResults", User.class ).getResultList();
+					Assertions.assertFalse( Hibernate.isPropertyInitialized( users.get( 0 ), "principal" ) );
+				}
 		);
 	}
 
-	@Test
-	public void testGetIdUsingFieldResults() {
-		doInHibernate( this::sessionFactory,
-					session -> {
-						List<User> users = session.createNamedQuery( "getIdUsingFieldResults", User.class ).getResultList();
-						Assertions.assertFalse( Hibernate.isPropertyInitialized( users.get(0), "principal" ) );
-					}
-		);
-	}
+	@NamedNativeQuery(name = "getIdAndPrincipalUsingFieldResults",
+			query = "select u.id as id, u.principal as principal from user_tbl u",
+			resultSetMapping = "id_and_principal_with_fields")
+	@NamedNativeQuery(name = "getIdUsingFieldResults", query = "select u.id as id from user_tbl u",
+			resultSetMapping = "id_with_fields")
+	@NamedNativeQuery(name = "getIdAndPrincipalWithoutUsingFieldResults",
+			query = "select u.id as id, u.principal as principal from user_tbl u", resultSetMapping = "without_fields")
+	@NamedNativeQuery(name = "getIdWithoutUsingFieldResults", query = "select u.id as id from user_tbl u",
+			resultSetMapping = "without_fields")
 
-	@NamedNativeQuery(name = "getIdAndPrincipalUsingFieldResults", query = "select u.id as id, u.principal as principal from user_tbl u", resultSetMapping = "id_and_principal_with_fields")
-	@NamedNativeQuery(name = "getIdUsingFieldResults", query = "select u.id as id from user_tbl u", resultSetMapping = "id_with_fields")
-	@NamedNativeQuery(name = "getIdAndPrincipalWithoutUsingFieldResults", query = "select u.id as id, u.principal as principal from user_tbl u", resultSetMapping = "without_fields")
-	@NamedNativeQuery(name = "getIdWithoutUsingFieldResults", query = "select u.id as id from user_tbl u", resultSetMapping = "without_fields")
-
-	@SqlResultSetMapping( name = "id_and_principal_with_fields",
-			entities = @EntityResult( entityClass = User.class, fields = { @FieldResult(name = "id", column = "id"), @FieldResult(name = "principal", column = "principal") } )
+	@SqlResultSetMapping(name = "id_and_principal_with_fields",
+			entities = @EntityResult(entityClass = User.class,
+					fields = {@FieldResult(name = "id", column = "id"), @FieldResult(name = "principal",
+							column = "principal")})
 	)
-	@SqlResultSetMapping( name = "id_with_fields",
-			entities = @EntityResult( entityClass = User.class, fields = { @FieldResult(name = "id", column = "id") } )
+	@SqlResultSetMapping(name = "id_with_fields",
+			entities = @EntityResult(entityClass = User.class, fields = {@FieldResult(name = "id", column = "id")})
 	)
-	@SqlResultSetMapping( name = "without_fields",
-			entities = @EntityResult( entityClass = User.class )
+	@SqlResultSetMapping(name = "without_fields",
+			entities = @EntityResult(entityClass = User.class)
 	)
 
-	@Entity( name = "User")
+	@Entity(name = "User")
 	@Table(name = "user_tbl")
-	private static class User {
+	static class User {
 		@Id
 		private Long id;
 		@Basic(fetch = FetchType.LAZY)

@@ -6,14 +6,15 @@ package org.hibernate.orm.test.event.entity;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.Session;
 import org.hibernate.annotations.processing.Exclude;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostInsertEvent;
@@ -22,29 +23,34 @@ import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Gail Badner
  */
-@JiraKey( value = "HHH-9979")
+@JiraKey(value = "HHH-9979")
 @Exclude
-public class MergeListPreAndPostPersistTest extends BaseCoreFunctionalTestCase {
-
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Order.class,
-				Item.class
-		};
-	}
+@DomainModel(
+		annotatedClasses = {
+				MergeListPreAndPostPersistTest.Order.class,
+				MergeListPreAndPostPersistTest.Item.class
+		}
+)
+@ServiceRegistry(settings = @Setting(name= MappingSettings.IMPLICIT_NAMING_STRATEGY, value = "legacy-jpa"))
+@SessionFactory
+public class MergeListPreAndPostPersistTest {
 
 	@Test
-	@JiraKey( value = "HHH-9979")
-	public void testAllPropertiesCopied() {
+	@JiraKey(value = "HHH-9979")
+	public void testAllPropertiesCopied(SessionFactoryScope scope) {
 		final Order order = new Order();
 		order.id = 1L;
 		order.name = "order";
@@ -53,23 +59,19 @@ public class MergeListPreAndPostPersistTest extends BaseCoreFunctionalTestCase {
 		item.name = "item";
 		order.items.add( item );
 
-		addEntityListeners( order );
+		addEntityListeners( scope, order );
 
-		Session s = openSession();
-		s.getTransaction().begin();
-		s.merge( order );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction( s -> {
+			s.merge( order );
+		} );
 
-		s = openSession();
-		s.getTransaction().begin();
-		s.remove( order );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction( s -> {
+			s.remove( order );
+		} );
 	}
 
 	@Entity(name = "`Order`")
-	private static class Order {
+	static class Order {
 		@Id
 		public Long id;
 
@@ -101,7 +103,7 @@ public class MergeListPreAndPostPersistTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "Item")
-	private static class Item {
+	static class Item {
 		@Id
 		public Long id;
 
@@ -128,17 +130,17 @@ public class MergeListPreAndPostPersistTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	private void addEntityListeners(final Order order) {
+	private void addEntityListeners(SessionFactoryScope scope, final Order order) {
 
-		EventListenerRegistry registry = sessionFactory().getEventListenerRegistry();
+		EventListenerRegistry registry = scope.getSessionFactory().getEventListenerRegistry();
 		registry.setListeners(
 				EventType.PRE_INSERT,
 				new PreInsertEventListener() {
 					@Override
 					public boolean onPreInsert(PreInsertEvent event) {
 						if ( event.getEntity() instanceof Order ) {
-							assertEquals( order, event.getEntity());
-							assertEquals( order.items, ( (Order) event.getEntity() ).items );
+							assertEquals( order, event.getEntity() );
+							assertEquals( order.items, ((Order) event.getEntity()).items );
 						}
 						return false;
 					}
@@ -150,8 +152,8 @@ public class MergeListPreAndPostPersistTest extends BaseCoreFunctionalTestCase {
 				new PostInsertEventListener() {
 					public void onPostInsert(PostInsertEvent event) {
 						if ( event.getEntity() instanceof Order ) {
-							assertEquals( order, event.getEntity());
-							assertEquals( order.items, ( (Order) event.getEntity() ).items );
+							assertEquals( order, event.getEntity() );
+							assertEquals( order.items, ((Order) event.getEntity()).items );
 						}
 					}
 

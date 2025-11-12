@@ -134,7 +134,7 @@ public class SessionFactoryExtension
 						}
 
 						if ( ! sessionFactoryConfig.interceptorClass().equals( Interceptor.class ) ) {
-							sessionFactoryBuilder.applyInterceptor( sessionFactoryConfig.interceptorClass().newInstance() );
+							sessionFactoryBuilder.applyInterceptor( sessionFactoryConfig.interceptorClass().getDeclaredConstructor().newInstance() );
 						}
 
 						final Class<? extends StatementInspector> explicitInspectorClass = sessionFactoryConfig.statementInspectorClass();
@@ -145,6 +145,10 @@ public class SessionFactoryExtension
 							sessionFactoryBuilder.applyStatementInspector( explicitInspectorClass.getConstructor().newInstance() );
 						}
 						sessionFactoryBuilder.applyCollectionsInDefaultFetchGroup( sessionFactoryConfig.applyCollectionsInDefaultFetchGroup() );
+
+						sessionFactoryConfig.sessionFactoryConfigurer().getDeclaredConstructor().newInstance()
+								.accept( sessionFactoryBuilder );
+
 						final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) sessionFactoryBuilder.build();
 						if ( sessionFactoryConfig.exportSchema() ) {
 							prepareSchemaExport( sessionFactory, model, sessionFactoryConfig.createSecondarySchemas() );

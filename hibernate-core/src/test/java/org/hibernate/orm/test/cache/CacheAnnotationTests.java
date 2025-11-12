@@ -7,41 +7,42 @@ package org.hibernate.orm.test.cache;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.junit.Test;
-
+import org.hibernate.cfg.Environment;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Chris Cranford
  */
-public class CacheAnnotationTests extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				CacheAnnotationTests.NoCacheConcurrencyStrategyEntity.class
+		}
+)
+@SessionFactory
+@ServiceRegistry(
+		settings = {
+				@Setting(name = Environment.USE_SECOND_LEVEL_CACHE, value = "true"),
+		}
+)
+public class CacheAnnotationTests {
 
 	private Integer entityId;
 
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, true );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { NoCacheConcurrencyStrategyEntity.class };
-	}
 
 	@Test
 	@JiraKey(value = "HHH-12587")
-	public void testCacheWriteConcurrencyStrategyNone() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testCacheWriteConcurrencyStrategyNone(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			NoCacheConcurrencyStrategyEntity entity = new NoCacheConcurrencyStrategyEntity();
 			session.persist( entity );
 			session.flush();
@@ -51,8 +52,8 @@ public class CacheAnnotationTests extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-12868")
-	public void testCacheReadConcurrencyStrategyNone() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testCacheReadConcurrencyStrategyNone(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			NoCacheConcurrencyStrategyEntity entity = new NoCacheConcurrencyStrategyEntity();
 			entity.setName( "name" );
 			session.persist( entity );
@@ -63,8 +64,9 @@ public class CacheAnnotationTests extends BaseCoreFunctionalTestCase {
 			session.clear();
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			NoCacheConcurrencyStrategyEntity entity = session.getReference( NoCacheConcurrencyStrategyEntity.class, this.entityId );
+		scope.inTransaction( session -> {
+			NoCacheConcurrencyStrategyEntity entity = session.getReference( NoCacheConcurrencyStrategyEntity.class,
+					this.entityId );
 			assertEquals( "name", entity.getName() );
 		} );
 	}

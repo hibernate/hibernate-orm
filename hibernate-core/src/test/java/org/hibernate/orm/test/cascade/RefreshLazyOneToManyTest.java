@@ -4,11 +4,6 @@
  */
 package org.hibernate.orm.test.cascade;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertFalse;
-
-import java.util.List;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -20,26 +15,33 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-
 import org.hibernate.Hibernate;
-
-import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @JiraKey(value = "HHH-12867")
-public class RefreshLazyOneToManyTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{ Invoice.class, Tax.class, Line.class };
-	}
+@DomainModel(
+		annotatedClasses = {
+				RefreshLazyOneToManyTest.Invoice.class,
+				RefreshLazyOneToManyTest.Tax.class,
+				RefreshLazyOneToManyTest.Line.class
+		}
+)
+@SessionFactory
+public class RefreshLazyOneToManyTest {
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-12867")
-	public void testRefreshCascade() {
-		doInHibernate( this::sessionFactory, session -> {
+	@FailureExpected(jiraKey = "HHH-12867")
+	public void testRefreshCascade(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			Invoice invoice = new Invoice( "An invoice for John Smith" );
 			session.persist( invoice );
 
@@ -47,20 +49,20 @@ public class RefreshLazyOneToManyTest extends BaseCoreFunctionalTestCase {
 			session.persist( new Tax( "21%", invoice ) );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			Invoice invoice = session.get( Invoice.class, 1 );
 
-			assertFalse( "Taxes should not be initialized before refresh",
-					Hibernate.isInitialized( invoice.getTaxes() ) );
-			assertFalse( "Lines should not be initialized before refresh",
-					Hibernate.isInitialized( invoice.getLines() ) );
+			assertFalse( Hibernate.isInitialized( invoice.getTaxes() ),
+					"Taxes should not be initialized before refresh" );
+			assertFalse( Hibernate.isInitialized( invoice.getLines() ),
+					"Lines should not be initialized before refresh" );
 
 			session.refresh( invoice );
 
-			assertFalse( "Taxes should not be initialized after refresh",
-					Hibernate.isInitialized( invoice.getTaxes() ) );
-			assertFalse( "Lines should not be initialized after refresh",
-					Hibernate.isInitialized( invoice.getLines() ) );
+			assertFalse( Hibernate.isInitialized( invoice.getTaxes() ),
+					"Taxes should not be initialized after refresh" );
+			assertFalse( Hibernate.isInitialized( invoice.getLines() ),
+					"Lines should not be initialized after refresh" );
 		} );
 	}
 

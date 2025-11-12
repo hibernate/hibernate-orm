@@ -4,11 +4,6 @@
  */
 package org.hibernate.orm.test.caching.mocked;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.internal.NaturalIdCacheKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -16,11 +11,15 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -56,12 +55,12 @@ public class NaturalIdCacheKeyTest {
 		final ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
 		final NaturalIdCacheKey keyClone = (NaturalIdCacheKey) ois.readObject();
 
-		assertEquals(key, keyClone);
-		assertEquals(key.hashCode(), keyClone.hashCode());
-		assertEquals(key.toString(), keyClone.toString());
-		assertEquals(key.getEntityName(), keyClone.getEntityName());
+		assertEquals( key, keyClone );
+		assertEquals( key.hashCode(), keyClone.hashCode() );
+		assertEquals( key.toString(), keyClone.toString() );
+		assertEquals( key.getEntityName(), keyClone.getEntityName() );
 		assertArrayEquals( (Object[]) key.getNaturalIdValues(), (Object[]) keyClone.getNaturalIdValues() );
-		assertEquals(key.getTenantId(), keyClone.getTenantId());
+		assertEquals( key.getTenantId(), keyClone.getTenantId() );
 
 	}
 

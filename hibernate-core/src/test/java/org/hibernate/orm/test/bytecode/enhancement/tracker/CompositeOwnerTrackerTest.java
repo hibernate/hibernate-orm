@@ -6,9 +6,9 @@ package org.hibernate.orm.test.bytecode.enhancement.tracker;
 
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.engine.spi.CompositeOwner;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Ståle W. Pedersen

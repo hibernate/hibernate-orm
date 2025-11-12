@@ -9,398 +9,414 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
 
 import org.hibernate.event.spi.MergeContext;
 import org.hibernate.event.spi.EntityCopyObserver;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 2011/10/20 Unit test for code added in MergeContext for performance improvement.
  *
  * @author Wim Ockerman @ CISCO
  */
-public class MergeContextTest extends BaseCoreFunctionalTestCase {
-	private EventSource session = null;
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Simple.class };
-	}
-
-	@Before
-	public void setUp() {
-		session = (EventSource) openSession();
-	}
-
-	@After
-	public void tearDown() {
-		session.close();
-		session = null;
-	}
-
-	@Test
-	public void testMergeToManagedEntityFillFollowedByInvertMapping() {
-		MergeContext cache = new MergeContext( session, new DoNothingEntityCopyObserver() );
-
-		Object mergeEntity = new Simple( 1 );
-		Object managedEntity = new Simple( 2 );
-
-		cache.put(mergeEntity, managedEntity);
-
-		checkCacheConsistency( cache, 1 );
-
-		assertTrue( cache.containsKey( mergeEntity ) );
-		assertFalse( cache.containsKey( managedEntity ) );
-		assertTrue( cache.containsValue( managedEntity ) );
-
-		assertTrue( cache.invertMap().containsKey( managedEntity ) );
-		assertFalse( cache.invertMap().containsKey( mergeEntity ) );
-		assertTrue( cache.invertMap().containsValue( mergeEntity ) );
-
-		cache.clear();
-
-		checkCacheConsistency( cache, 0 );
-
-		assertFalse(cache.containsKey(mergeEntity));
-		assertFalse(cache.invertMap().containsKey(managedEntity));
-	}
-
-	@Test
-	public void testMergeToManagedEntityFillFollowedByInvert() {
-		MergeContext cache = new MergeContext( session, new DoNothingEntityCopyObserver() );
-
-		Object mergeEntity = new Simple( 1 );
-		Object managedEntity = new Simple( 2 );
-
-		cache.put(mergeEntity, managedEntity);
-
-		checkCacheConsistency( cache, 1 );
-
-		assertTrue(cache.containsKey(mergeEntity));
-		assertFalse( cache.containsKey( managedEntity ) );
-
-		assertTrue( cache.invertMap().containsKey( managedEntity ) );
-		assertFalse( cache.invertMap().containsKey( mergeEntity ) );
-	}
-
-	@Test
-	public void testMergeToManagedEntityFillFollowedByInvertUsingPutAll() {
-		MergeContext cache = new MergeContext( session, new DoNothingEntityCopyObserver() );
-
-		Map<Object,Object> input = new HashMap<Object,Object>();
-		Object mergeEntity1 = new Simple( 1 );
-		//
-		Object managedEntity1 = 1;
-		input.put(mergeEntity1, managedEntity1);
-		Object mergeEntity2 = new Simple( 3 );
-		Object managedEntity2 = 2;
-		input.put(mergeEntity2, managedEntity2);
-		cache.putAll(input);
-
-		checkCacheConsistency( cache, 2 );
-
-		assertTrue(cache.containsKey(mergeEntity1));
-		assertFalse(cache.containsKey(managedEntity1));
-		assertTrue(cache.containsKey(mergeEntity2));
-		assertFalse(cache.containsKey(managedEntity2));
-
-		assertTrue(cache.invertMap().containsKey(managedEntity1));
-		assertFalse(cache.invertMap().containsKey(mergeEntity1));
-
-		assertTrue(cache.invertMap().containsKey(managedEntity2));
-		assertFalse(cache.invertMap().containsKey(mergeEntity2));
-	}
-
-	@Test
-	public void testMergeToManagedEntityFillFollowedByInvertUsingPutWithSetOperatedOnArg() {
-		MergeContext cache = new MergeContext( session, new DoNothingEntityCopyObserver() );
-
-		Object mergeEntity = new Simple( 1 );
-		Object managedEntity = new Simple( 2 );
-
-		cache.put(mergeEntity, managedEntity, true);
-
-		checkCacheConsistency( cache, 1 );
-
-		assertTrue(cache.containsKey(mergeEntity));
-		assertFalse( cache.containsKey( managedEntity ) );
-
-		assertTrue( cache.invertMap().containsKey( managedEntity ) );
-		assertFalse( cache.invertMap().containsKey( mergeEntity ) );
-
-		cache.clear();
-
-		checkCacheConsistency( cache, 0 );
-
-		cache.put(mergeEntity, managedEntity, false);
-		assertFalse( cache.isOperatedOn( mergeEntity ) );
-
-		checkCacheConsistency( cache, 1 );
-
-		assertTrue(cache.containsKey(mergeEntity));
-		assertFalse(cache.containsKey(managedEntity));
-	}
-
-	@Test
-	public void testMergeToManagedEntityFillFollowedByIterateEntrySet() {
-		MergeContext cache = new MergeContext( session, new DoNothingEntityCopyObserver() );
-
-		Object mergeEntity = new Simple( 1 );
-		Object managedEntity = new Simple( 2 );
-
-		cache.put( mergeEntity, managedEntity, true );
-
-		checkCacheConsistency( cache, 1 );
-
-		Iterator it = cache.entrySet().iterator();
-		assertTrue( it.hasNext() );
-		Map.Entry entry = ( Map.Entry ) it.next();
-		assertSame( mergeEntity, entry.getKey() );
-		assertSame( managedEntity, entry.getValue() );
-		assertFalse( it.hasNext() );
-
-	}
-
-	@Test
-	public void testMergeToManagedEntityFillFollowedByModifyEntrySet() {
-		MergeContext cache = new MergeContext( session, new DoNothingEntityCopyObserver() );
-
-		Object mergeEntity = new Simple( 1 );
-		Object managedEntity = new Simple( 2 );
-
-		cache.put( mergeEntity, managedEntity, true );
-
-		Iterator it = cache.entrySet().iterator();
-		try {
-			it.remove();
-			fail( "should have thrown UnsupportedOperationException" );
+@DomainModel(
+		annotatedClasses = {
+				MergeContextTest.Simple.class
 		}
-		catch ( UnsupportedOperationException ex ) {
-			// expected
-		}
+)
+@SessionFactory
+public class MergeContextTest {
 
-		Map.Entry entry = (Map.Entry) cache.entrySet().iterator().next();
-		try {
-			cache.entrySet().remove( entry );
-			fail( "should have thrown UnsupportedOperationException" );
-		}
-		catch ( UnsupportedOperationException ex ) {
-			// expected
-		}
+	@Test
+	public void testMergeToManagedEntityFillFollowedByInvertMapping(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			MergeContext cache = new MergeContext( (EventSource) session, new DoNothingEntityCopyObserver() );
 
-		Map.Entry anotherEntry = new Map.Entry() {
-			private Object key = new Simple( 3 );
-			private Object value = 4;
-			@Override
-			public Object getKey() {
-				return key;
+			Object mergeEntity = new Simple( 1 );
+			Object managedEntity = new Simple( 2 );
+
+			cache.put( mergeEntity, managedEntity );
+
+			checkCacheConsistency( cache, 1 );
+
+			assertTrue( cache.containsKey( mergeEntity ) );
+			assertFalse( cache.containsKey( managedEntity ) );
+			assertTrue( cache.containsValue( managedEntity ) );
+
+			assertTrue( cache.invertMap().containsKey( managedEntity ) );
+			assertFalse( cache.invertMap().containsKey( mergeEntity ) );
+			assertTrue( cache.invertMap().containsValue( mergeEntity ) );
+
+			cache.clear();
+
+			checkCacheConsistency( cache, 0 );
+
+			assertFalse( cache.containsKey( mergeEntity ) );
+			assertFalse( cache.invertMap().containsKey( managedEntity ) );
+		} );
+	}
+
+	@Test
+	public void testMergeToManagedEntityFillFollowedByInvert(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			MergeContext cache = new MergeContext( (EventSource) session, new DoNothingEntityCopyObserver() );
+
+			Object mergeEntity = new Simple( 1 );
+			Object managedEntity = new Simple( 2 );
+
+			cache.put( mergeEntity, managedEntity );
+
+			checkCacheConsistency( cache, 1 );
+
+			assertTrue( cache.containsKey( mergeEntity ) );
+			assertFalse( cache.containsKey( managedEntity ) );
+
+			assertTrue( cache.invertMap().containsKey( managedEntity ) );
+			assertFalse( cache.invertMap().containsKey( mergeEntity ) );
+		} );
+	}
+
+	@Test
+	public void testMergeToManagedEntityFillFollowedByInvertUsingPutAll(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			MergeContext cache = new MergeContext( (EventSource) session, new DoNothingEntityCopyObserver() );
+
+			Map<Object, Object> input = new HashMap<Object, Object>();
+			Object mergeEntity1 = new Simple( 1 );
+			//
+			Object managedEntity1 = 1;
+			input.put( mergeEntity1, managedEntity1 );
+			Object mergeEntity2 = new Simple( 3 );
+			Object managedEntity2 = 2;
+			input.put( mergeEntity2, managedEntity2 );
+			cache.putAll( input );
+
+			checkCacheConsistency( cache, 2 );
+
+			assertTrue( cache.containsKey( mergeEntity1 ) );
+			assertFalse( cache.containsKey( managedEntity1 ) );
+			assertTrue( cache.containsKey( mergeEntity2 ) );
+			assertFalse( cache.containsKey( managedEntity2 ) );
+
+			assertTrue( cache.invertMap().containsKey( managedEntity1 ) );
+			assertFalse( cache.invertMap().containsKey( mergeEntity1 ) );
+
+			assertTrue( cache.invertMap().containsKey( managedEntity2 ) );
+			assertFalse( cache.invertMap().containsKey( mergeEntity2 ) );
+		} );
+	}
+
+	@Test
+	public void testMergeToManagedEntityFillFollowedByInvertUsingPutWithSetOperatedOnArg(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			MergeContext cache = new MergeContext( (EventSource) session, new DoNothingEntityCopyObserver() );
+
+			Object mergeEntity = new Simple( 1 );
+			Object managedEntity = new Simple( 2 );
+
+			cache.put( mergeEntity, managedEntity, true );
+
+			checkCacheConsistency( cache, 1 );
+
+			assertTrue( cache.containsKey( mergeEntity ) );
+			assertFalse( cache.containsKey( managedEntity ) );
+
+			assertTrue( cache.invertMap().containsKey( managedEntity ) );
+			assertFalse( cache.invertMap().containsKey( mergeEntity ) );
+
+			cache.clear();
+
+			checkCacheConsistency( cache, 0 );
+
+			cache.put( mergeEntity, managedEntity, false );
+			assertFalse( cache.isOperatedOn( mergeEntity ) );
+
+			checkCacheConsistency( cache, 1 );
+
+			assertTrue( cache.containsKey( mergeEntity ) );
+			assertFalse( cache.containsKey( managedEntity ) );
+		} );
+	}
+
+	@Test
+	public void testMergeToManagedEntityFillFollowedByIterateEntrySet(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			MergeContext cache = new MergeContext( (EventSource) session, new DoNothingEntityCopyObserver() );
+
+			Object mergeEntity = new Simple( 1 );
+			Object managedEntity = new Simple( 2 );
+
+			cache.put( mergeEntity, managedEntity, true );
+
+			checkCacheConsistency( cache, 1 );
+
+			var it = cache.entrySet().iterator();
+			assertTrue( it.hasNext() );
+			var entry = it.next();
+			assertSame( mergeEntity, entry.getKey() );
+			assertSame( managedEntity, entry.getValue() );
+			assertFalse( it.hasNext() );
+		} );
+	}
+
+	@Test
+	public void testMergeToManagedEntityFillFollowedByModifyEntrySet(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			MergeContext cache = new MergeContext( (EventSource) session, new DoNothingEntityCopyObserver() );
+
+			Object mergeEntity = new Simple( 1 );
+			Object managedEntity = new Simple( 2 );
+
+			cache.put( mergeEntity, managedEntity, true );
+
+			var it = cache.entrySet().iterator();
+			try {
+				it.remove();
+				fail( "should have thrown UnsupportedOperationException" );
+			}
+			catch (UnsupportedOperationException ex) {
+				// expected
 			}
 
-			@Override
-			public Object getValue() {
-				return value;
+			var entry = cache.entrySet().iterator().next();
+			try {
+				cache.entrySet().remove( entry );
+				fail( "should have thrown UnsupportedOperationException" );
+			}
+			catch (UnsupportedOperationException ex) {
+				// expected
 			}
 
-			@Override
-			public Object setValue(Object value) {
-				Object oldValue = this.value;
-				this.value = value;
-				return oldValue;
+			Map.Entry anotherEntry = new Map.Entry() {
+				private Object key = new Simple( 3 );
+				private Object value = 4;
+
+				@Override
+				public Object getKey() {
+					return key;
+				}
+
+				@Override
+				public Object getValue() {
+					return value;
+				}
+
+				@Override
+				public Object setValue(Object value) {
+					Object oldValue = this.value;
+					this.value = value;
+					return oldValue;
+				}
+			};
+			try {
+				cache.entrySet().add( anotherEntry );
+				fail( "should have thrown UnsupportedOperationException" );
 			}
-		};
-		try {
-			cache.entrySet().add( anotherEntry );
-			fail( "should have thrown UnsupportedOperationException" );
-		}
-		catch ( UnsupportedOperationException ex ) {
-			// expected
-		}
-
+			catch (UnsupportedOperationException ex) {
+				// expected
+			}
+		} );
 	}
 
 	@Test
-	public void testMergeToManagedEntityFillFollowedByModifyKeys() {
-		MergeContext cache = new MergeContext( session, new DoNothingEntityCopyObserver() );
+	public void testMergeToManagedEntityFillFollowedByModifyKeys(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			MergeContext cache = new MergeContext( (EventSource) session, new DoNothingEntityCopyObserver() );
 
-		Object mergeEntity = new Simple( 1 );
-		Object managedEntity = new Simple( 2 );
+			Object mergeEntity = new Simple( 1 );
+			Object managedEntity = new Simple( 2 );
 
-		cache.put( mergeEntity, managedEntity, true );
+			cache.put( mergeEntity, managedEntity, true );
 
-		Iterator it = cache.keySet().iterator();
-		try {
-			it.remove();
-			fail( "should have thrown UnsupportedOperationException" );
-		}
-		catch ( UnsupportedOperationException ex ) {
-			// expected
-		}
+			Iterator it = cache.keySet().iterator();
+			try {
+				it.remove();
+				fail( "should have thrown UnsupportedOperationException" );
+			}
+			catch (UnsupportedOperationException ex) {
+				// expected
+			}
 
-		try {
-			cache.keySet().remove( mergeEntity );
-			fail( "should have thrown UnsupportedOperationException" );
-		}
-		catch ( UnsupportedOperationException ex ) {
-			// expected
-		}
+			try {
+				cache.keySet().remove( mergeEntity );
+				fail( "should have thrown UnsupportedOperationException" );
+			}
+			catch (UnsupportedOperationException ex) {
+				// expected
+			}
 
-		Object newmanagedEntity = new Simple( 3 );
-		try {
-			cache.keySet().add( newmanagedEntity );
-			fail( "should have thrown UnsupportedOperationException" );
-		}
-		catch ( UnsupportedOperationException ex ) {
-			// expected
-		}
+			Object newmanagedEntity = new Simple( 3 );
+			try {
+				cache.keySet().add( newmanagedEntity );
+				fail( "should have thrown UnsupportedOperationException" );
+			}
+			catch (UnsupportedOperationException ex) {
+				// expected
+			}
+		} );
 	}
 
 	@Test
-	public void testMergeToManagedEntityFillFollowedByModifyValues() {
-		MergeContext cache = new MergeContext( session, new DoNothingEntityCopyObserver() );
+	public void testMergeToManagedEntityFillFollowedByModifyValues(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			MergeContext cache = new MergeContext( (EventSource) session, new DoNothingEntityCopyObserver() );
 
-		Object mergeEntity = new Simple( 1 );
-		Object managedEntity = new Simple( 2 );
+			Object mergeEntity = new Simple( 1 );
+			Object managedEntity = new Simple( 2 );
 
-		cache.put( mergeEntity, managedEntity, true );
+			cache.put( mergeEntity, managedEntity, true );
 
-		Iterator it = cache.values().iterator();
-		try {
-			it.remove();
-			fail( "should have thrown UnsupportedOperationException" );
-		}
-		catch ( UnsupportedOperationException ex ) {
-			// expected
-		}
+			Iterator it = cache.values().iterator();
+			try {
+				it.remove();
+				fail( "should have thrown UnsupportedOperationException" );
+			}
+			catch (UnsupportedOperationException ex) {
+				// expected
+			}
 
-		try {
-			cache.values().remove( managedEntity );
-			fail( "should have thrown UnsupportedOperationException" );
-		}
-		catch ( UnsupportedOperationException ex ) {
-			// expected
-		}
+			try {
+				cache.values().remove( managedEntity );
+				fail( "should have thrown UnsupportedOperationException" );
+			}
+			catch (UnsupportedOperationException ex) {
+				// expected
+			}
 
-		Object newmanagedEntity = new Simple( 3 );
-		try {
-			cache.values().add( newmanagedEntity );
-			fail( "should have thrown UnsupportedOperationException" );
-		}
-		catch ( UnsupportedOperationException ex ) {
-			// expected
-		}
+			Object newmanagedEntity = new Simple( 3 );
+			try {
+				cache.values().add( newmanagedEntity );
+				fail( "should have thrown UnsupportedOperationException" );
+			}
+			catch (UnsupportedOperationException ex) {
+				// expected
+			}
+		} );
 	}
 
 	@Test
-	public void testMergeToManagedEntityFillFollowedByModifyKeyOfEntrySetElement() {
-		MergeContext cache = new MergeContext( session, new DoNothingEntityCopyObserver() );
+	public void testMergeToManagedEntityFillFollowedByModifyKeyOfEntrySetElement(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			MergeContext cache = new MergeContext( (EventSource) session, new DoNothingEntityCopyObserver() );
 
-		Simple mergeEntity = new Simple( 1 );
-		Simple managedEntity = new Simple( 0 );
-		cache.put(mergeEntity, managedEntity, true);
+			Simple mergeEntity = new Simple( 1 );
+			Simple managedEntity = new Simple( 0 );
+			cache.put( mergeEntity, managedEntity, true );
 
-		Map.Entry entry = (Map.Entry) cache.entrySet().iterator().next();
-		( ( Simple ) entry.getKey() ).setValue( 2 );
-		assertEquals( 2, mergeEntity.getValue() );
+			var entry = cache.entrySet().iterator().next();
+			((Simple) entry.getKey()).setValue( 2 );
+			assertEquals( 2, mergeEntity.getValue() );
 
-		checkCacheConsistency( cache, 1 );
+			checkCacheConsistency( cache, 1 );
 
-		entry = (Map.Entry) cache.entrySet().iterator().next();
-		assertSame( mergeEntity, entry.getKey() );
-		assertSame( managedEntity, entry.getValue() );
+			entry = cache.entrySet().iterator().next();
+			assertSame( mergeEntity, entry.getKey() );
+			assertSame( managedEntity, entry.getValue() );
+		} );
 	}
 
 	@Test
-	public void testMergeToManagedEntityFillFollowedByModifyValueOfEntrySetElement() {
-		MergeContext cache = new MergeContext( session, new DoNothingEntityCopyObserver() );
+	public void testMergeToManagedEntityFillFollowedByModifyValueOfEntrySetElement(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			MergeContext cache = new MergeContext( (EventSource) session, new DoNothingEntityCopyObserver() );
 
-		Simple mergeEntity = new Simple( 1 );
-		Simple managedEntity = new Simple( 0 );
-		cache.put(mergeEntity, managedEntity, true);
+			Simple mergeEntity = new Simple( 1 );
+			Simple managedEntity = new Simple( 0 );
+			cache.put( mergeEntity, managedEntity, true );
 
-		Map.Entry entry = (Map.Entry) cache.entrySet().iterator().next();
-		( ( Simple ) entry.getValue() ).setValue( 2 );
-		assertEquals( 2, managedEntity.getValue() );
+			var entry = cache.entrySet().iterator().next();
+			((Simple) entry.getValue()).setValue( 2 );
+			assertEquals( 2, managedEntity.getValue() );
 
-		checkCacheConsistency( cache, 1 );
+			checkCacheConsistency( cache, 1 );
 
-		entry = (Map.Entry) cache.entrySet().iterator().next();
-		assertSame( mergeEntity, entry.getKey() );
-		assertSame( managedEntity, entry.getValue() );
+			entry = cache.entrySet().iterator().next();
+			assertSame( mergeEntity, entry.getKey() );
+			assertSame( managedEntity, entry.getValue() );
+		} );
 	}
 
 	@Test
-	public void testReplaceManagedEntity() {
-		MergeContext cache = new MergeContext( session, new DoNothingEntityCopyObserver() );
+	public void testReplaceManagedEntity(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			MergeContext cache = new MergeContext( (EventSource) session, new DoNothingEntityCopyObserver() );
 
-		Simple mergeEntity = new Simple( 1 );
-		Simple managedEntity = new Simple( 0 );
-		cache.put(mergeEntity, managedEntity);
+			Simple mergeEntity = new Simple( 1 );
+			Simple managedEntity = new Simple( 0 );
+			cache.put( mergeEntity, managedEntity );
 
-		Simple managedEntityNew = new Simple( 0 );
-		try {
-			cache.put( mergeEntity, managedEntityNew );
-		}
-		catch( IllegalArgumentException ex) {
-			// expected; cannot replace the managed entity result for a particular merge entity.
-		}
+			Simple managedEntityNew = new Simple( 0 );
+
+			assertThatThrownBy( () -> cache.put( mergeEntity, managedEntityNew ) )
+					// expected; cannot replace the managed entity result for a particular merge entity.
+					.isInstanceOf( IllegalArgumentException.class );
+		} );
 	}
 
 	@Test
-	public void testManagedEntityAssociatedWithNewAndExistingMergeEntities() {
-		MergeContext cache = new MergeContext( session, new DoNothingEntityCopyObserver() );
+	public void testManagedEntityAssociatedWithNewAndExistingMergeEntities(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			MergeContext cache = new MergeContext( (EventSource) session, new DoNothingEntityCopyObserver() );
 
-		session.getTransaction().begin();
-		Simple mergeEntity = new Simple( 1 );
-		Simple managedEntity = new Simple( 0 );
-		cache.put(mergeEntity, managedEntity);
-		cache.put( new Simple( 1 ), managedEntity );
+			session.getTransaction().begin();
+			Simple mergeEntity = new Simple( 1 );
+			Simple managedEntity = new Simple( 0 );
+			cache.put( mergeEntity, managedEntity );
+			cache.put( new Simple( 1 ), managedEntity );
+		} );
 	}
 
 	@Test
-	public void testManagedAssociatedWith2ExistingMergeEntities() {
-		MergeContext cache = new MergeContext( session, new DoNothingEntityCopyObserver() );
+	public void testManagedAssociatedWith2ExistingMergeEntities(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			MergeContext cache = new MergeContext( (EventSource) session, new DoNothingEntityCopyObserver() );
 
-		session.getTransaction().begin();
-		Simple mergeEntity1 = new Simple( 1 );
-		session.persist( mergeEntity1 );
-		Simple managedEntity1 = new Simple( 1 );
-		cache.put( mergeEntity1, managedEntity1 );
-		Simple managedEntity2 = new Simple( 2 );
+			session.getTransaction().begin();
+			Simple mergeEntity1 = new Simple( 1 );
+			session.persist( mergeEntity1 );
+			Simple managedEntity1 = new Simple( 1 );
+			cache.put( mergeEntity1, managedEntity1 );
+			Simple managedEntity2 = new Simple( 2 );
 
-		try {
-			cache.put( mergeEntity1, managedEntity2 );
-			fail( "should have thrown IllegalArgumentException");
-		}
-		catch( IllegalArgumentException ex ) {
-			// expected; cannot change managed entity associated with a merge entity
-		}
-		finally {
-			session.getTransaction().rollback();
-		}
+			try {
+				cache.put( mergeEntity1, managedEntity2 );
+				fail( "should have thrown IllegalArgumentException" );
+			}
+			catch (IllegalArgumentException ex) {
+				// expected; cannot change managed entity associated with a merge entity
+			}
+			finally {
+				session.getTransaction().rollback();
+			}
+		} );
 	}
 
 	@Test
-	public void testRemoveNonExistingEntity() {
-		MergeContext cache = new MergeContext( session, new DoNothingEntityCopyObserver() );
-		try {
-			cache.remove( new Simple( 1 ) );
-		}
-		catch (UnsupportedOperationException ex) {
-			// expected; remove is not supported.
-		}
+	public void testRemoveNonExistingEntity(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			MergeContext cache = new MergeContext( (EventSource) session, new DoNothingEntityCopyObserver() );
+			try {
+				cache.remove( new Simple( 1 ) );
+			}
+			catch (UnsupportedOperationException ex) {
+				// expected; remove is not supported.
+			}
+		} );
 	}
 
 	private void checkCacheConsistency(MergeContext cache, int expectedSize) {
@@ -416,7 +432,7 @@ public class MergeContextTest extends BaseCoreFunctionalTestCase {
 		assertEquals( expectedSize, invertedMap.size() );
 
 		for ( Object entry : cache.entrySet() ) {
-			Map.Entry mapEntry = ( Map.Entry ) entry;
+			Map.Entry mapEntry = (Map.Entry) entry;
 			assertSame( cache.get( mapEntry.getKey() ), mapEntry.getValue() );
 			assertTrue( cacheKeys.contains( mapEntry.getKey() ) );
 			assertTrue( cacheValues.contains( mapEntry.getValue() ) );
@@ -425,7 +441,7 @@ public class MergeContextTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	private static class Simple {
+	static class Simple {
 		@Id
 		private int value;
 
@@ -444,8 +460,8 @@ public class MergeContextTest extends BaseCoreFunctionalTestCase {
 		@Override
 		public String toString() {
 			return "Simple{" +
-					"value=" + value +
-					'}';
+				"value=" + value +
+				'}';
 		}
 	}
 

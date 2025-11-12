@@ -21,9 +21,9 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 /**
  * @author Gail Badner
@@ -53,7 +53,7 @@ public class CacheKeyImplementationHashCodeTest {
 								.getEntityDescriptor( AnotherEntity.class ),
 						sessionFactory
 				);
-				assertFalse( anEntityCacheKey.equals( anotherEntityCacheKey ) );
+				assertNotEquals( anEntityCacheKey, anotherEntityCacheKey );
 			}
 		}
 	}

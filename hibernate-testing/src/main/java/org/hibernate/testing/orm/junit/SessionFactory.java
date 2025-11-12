@@ -9,8 +9,10 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.function.Consumer;
 
 import org.hibernate.Interceptor;
+import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -56,4 +58,13 @@ public @interface SessionFactory {
 	boolean useCollectingStatementInspector() default false;
 
 	boolean applyCollectionsInDefaultFetchGroup() default true;
+
+	Class<? extends Consumer<SessionFactoryBuilder>> sessionFactoryConfigurer() default NoOpConfigurer.class;
+
+	class NoOpConfigurer implements Consumer<SessionFactoryBuilder> {
+
+		@Override
+		public void accept(SessionFactoryBuilder sessionFactoryBuilder) {
+		}
+	}
 }

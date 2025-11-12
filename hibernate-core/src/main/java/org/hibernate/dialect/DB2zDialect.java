@@ -233,4 +233,10 @@ public class DB2zDialect extends DB2Dialect {
 	public String getRowIdColumnString(String rowId) {
 		return rowId( rowId ) + " rowid not null generated always";
 	}
+
+	@Override
+	public boolean supportsValuesList() {
+		// DB2 z/OS has a VALUES statement, but that doesn't support multiple values
+		return false;
+	}
 }

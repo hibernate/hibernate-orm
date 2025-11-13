@@ -77,4 +77,17 @@ tasks.withType(Javadoc).configureEach {
         docFilesSubDirs = true
     }
     dependsOn tasks.unpackTheme
+    onlyIf {
+        def javaLanguageVersion = javadocTool.present
+                ? javadocTool.get().metadata.languageVersion
+                : JavaLanguageVersion.of(JavaVersion.current().name)
+
+        if (javaLanguageVersion.asInt() < 18) {
+            println "Javadocs require at least JDK 18 to be able to use some of the config options we rely on (e.g. --add-scripts). " +
+                    "Ignoring Javadoc rendering for this builds!"
+            return false
+        } else {
+            return true
+        }
+    }
 }

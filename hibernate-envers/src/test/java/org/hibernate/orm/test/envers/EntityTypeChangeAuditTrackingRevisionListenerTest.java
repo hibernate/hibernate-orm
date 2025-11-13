@@ -4,29 +4,6 @@
  */
 package org.hibernate.orm.test.envers;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.envers.AuditReader;
-import org.hibernate.envers.AuditReaderFactory;
-import org.hibernate.envers.Audited;
-import org.hibernate.envers.EntityTrackingRevisionListener;
-import org.hibernate.envers.RevisionEntity;
-import org.hibernate.envers.RevisionNumber;
-import org.hibernate.envers.RevisionTimestamp;
-import org.hibernate.envers.RevisionType;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-
-import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
-import org.junit.Test;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -38,9 +15,28 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.envers.AuditReader;
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.EntityTrackingRevisionListener;
+import org.hibernate.envers.RevisionEntity;
+import org.hibernate.envers.RevisionNumber;
+import org.hibernate.envers.RevisionTimestamp;
+import org.hibernate.envers.RevisionType;
+import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Vlad Mihalcea
@@ -50,87 +46,75 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends EntityMan
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
-			Customer.class,
-			CustomTrackingRevisionEntity.class,
-			EntityType.class
+				Customer.class,
+				CustomTrackingRevisionEntity.class,
+				EntityType.class
 		};
 	}
 
 	@Test
 	public void testLifecycle() {
-		final EntityManagerFactory testEmf = produceEntityManagerFactory();
+		try (final EntityManagerFactory testEmf = produceEntityManagerFactory()) {
 
-		doInJPA( () -> testEmf, entityManager -> {
-			Customer customer = new Customer();
-			customer.setId(1L);
-			customer.setFirstName("John");
-			customer.setLastName("Doe");
+			testEmf.runInTransaction( entityManager -> {
+				Customer customer = new Customer();
+				customer.setId( 1L );
+				customer.setFirstName( "John" );
+				customer.setLastName( "Doe" );
 
-			entityManager.persist(customer);
-		});
+				entityManager.persist( customer );
+			} );
 
-		EntityManagerFactory entityManagerFactory = null;
-		try {
-			Map settings = buildSettings();
-			settings.put(
+			try (EntityManagerFactory entityManagerFactory = buildEntityManagerFactory()) {
+				entityManagerFactory.runInTransaction( entityManager -> {
+					ApplicationCustomer customer = new ApplicationCustomer();
+					customer.setId( 2L );
+					customer.setFirstName( "John" );
+					customer.setLastName( "Doe Jr." );
+
+					entityManager.persist( customer );
+				} );
+
+				entityManagerFactory.runInTransaction( entityManager -> {
+					//tag::envers-tracking-modified-entities-revchanges-query-example[]
+					AuditReader auditReader = AuditReaderFactory.get( entityManager );
+
+					List<Number> revisions = auditReader.getRevisions(
+							ApplicationCustomer.class,
+							1L
+					);
+
+					CustomTrackingRevisionEntity revEntity = auditReader.findRevision(
+							CustomTrackingRevisionEntity.class,
+							revisions.get( 0 )
+					);
+
+					Set<EntityType> modifiedEntityTypes = revEntity.getModifiedEntityTypes();
+					assertThat( modifiedEntityTypes ).hasSize( 1 );
+
+					EntityType entityType = modifiedEntityTypes.iterator().next();
+					assertThat( entityType.getEntityClassName() ).isEqualTo( Customer.class.getName() );
+					//end::envers-tracking-modified-entities-revchanges-query-example[]
+				} );
+			}
+		}
+	}
+
+	private EntityManagerFactory buildEntityManagerFactory() {
+		Map<Object, Object> settings = buildSettings();
+		settings.put(
 				AvailableSettings.LOADED_CLASSES,
 				Arrays.asList(
-					ApplicationCustomer.class,
-					CustomTrackingRevisionEntity.class,
-					EntityType.class
+						ApplicationCustomer.class,
+						CustomTrackingRevisionEntity.class,
+						EntityType.class
 				)
-			);
-			settings.put(
-					AvailableSettings.HBM2DDL_AUTO,
-					"update"
-			);
-			entityManagerFactory =  Bootstrap.getEntityManagerFactoryBuilder(
-					new TestingPersistenceUnitDescriptorImpl(getClass().getSimpleName()),
-					settings
-			).build().unwrap(SessionFactoryImplementor.class);
-
-			final EntityManagerFactory emf = entityManagerFactory;
-
-			doInJPA(() -> emf, entityManager -> {
-				ApplicationCustomer customer = new ApplicationCustomer();
-				customer.setId(2L);
-				customer.setFirstName("John");
-				customer.setLastName("Doe Jr.");
-
-				entityManager.persist(customer);
-			});
-
-			doInJPA(() -> emf, entityManager -> {
-				//tag::envers-tracking-modified-entities-revchanges-query-example[]
-				AuditReader auditReader = AuditReaderFactory.get(entityManager);
-
-				List<Number> revisions = auditReader.getRevisions(
-					ApplicationCustomer.class,
-					1L
-				);
-
-				CustomTrackingRevisionEntity revEntity = auditReader.findRevision(
-					CustomTrackingRevisionEntity.class,
-					revisions.get(0)
-				);
-
-				Set<EntityType> modifiedEntityTypes = revEntity.getModifiedEntityTypes();
-				assertEquals(1, modifiedEntityTypes.size());
-
-				EntityType entityType = modifiedEntityTypes.iterator().next();
-				assertEquals(
-					Customer.class.getName(),
-					entityType.getEntityClassName()
-				);
-				//end::envers-tracking-modified-entities-revchanges-query-example[]
-			});
-		}
-		finally {
-			if (entityManagerFactory != null) {
-				entityManagerFactory.close();
-			}
-			testEmf.close();
-		}
+		);
+		settings.put( AvailableSettings.HBM2DDL_AUTO, "update" );
+		return Bootstrap.getEntityManagerFactoryBuilder(
+						new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ),
+						settings )
+				.build();
 	}
 
 	@Audited
@@ -241,7 +225,7 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends EntityMan
 								RevisionType revisionType,
 								Object revisionEntity) {
 			String type = entityClass.getName();
-			((CustomTrackingRevisionEntity) revisionEntity).addModifiedEntityType(type);
+			((CustomTrackingRevisionEntity) revisionEntity).addModifiedEntityType( type );
 		}
 
 		@Override
@@ -265,11 +249,11 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends EntityMan
 		private long customTimestamp;
 
 		@OneToMany(
-			mappedBy="revision",
-			cascade={
-				CascadeType.PERSIST,
-				CascadeType.REMOVE
-			}
+				mappedBy = "revision",
+				cascade = {
+						CascadeType.PERSIST,
+						CascadeType.REMOVE
+				}
 		)
 		private Set<EntityType> modifiedEntityTypes = new HashSet<>();
 
@@ -278,7 +262,7 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends EntityMan
 		}
 
 		public void addModifiedEntityType(String entityClassName) {
-			modifiedEntityTypes.add(new EntityType(this, entityClassName));
+			modifiedEntityTypes.add( new EntityType( this, entityClassName ) );
 		}
 	}
 	//end::envers-tracking-modified-entities-revchanges-RevisionEntity-example[]
@@ -305,7 +289,7 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends EntityMan
 		}
 
 		//Getters and setters are omitted for brevity
-	//end::envers-tracking-modified-entities-revchanges-EntityType-example[]
+		//end::envers-tracking-modified-entities-revchanges-EntityType-example[]
 
 		public Integer getId() {
 			return id;
@@ -330,7 +314,7 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends EntityMan
 		public void setEntityClassName(String entityClassName) {
 			this.entityClassName = entityClassName;
 		}
-	//tag::envers-tracking-modified-entities-revchanges-EntityType-example[]
+		//tag::envers-tracking-modified-entities-revchanges-EntityType-example[]
 	}
 	//end::envers-tracking-modified-entities-revchanges-EntityType-example[]
 }

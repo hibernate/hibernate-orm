@@ -25,7 +25,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
  *
  * @author asusnjar
  */
-public class EntityGraphParserTest extends AbstractEntityGraphTest {
+public abstract class AbstractEntityGraphParserTest extends AbstractEntityGraphTest {
 
 	@Test
 	public void testNullParsing(EntityManagerFactoryScope scope) {
@@ -170,28 +170,6 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 	}
 
 	@Test
-	public void testLinkSubtypeParsing(EntityManagerFactoryScope scope) {
-		RootGraphImplementor<GraphParsingTestEntity> graph = parseGraph(
-				"linkToOne(name, description), linkToOne(GraphParsingTestSubEntity: sub)", scope );
-		assertThat( graph ).isNotNull();
-
-		List<? extends AttributeNodeImplementor<?, ?, ?>> attrs = graph.getAttributeNodeList();
-		assertThat( attrs ).isNotNull();
-		assertThat( attrs.size() ).isEqualTo( 1 );
-
-		AttributeNodeImplementor<?, ?, ?> linkToOneNode = attrs.get( 0 );
-		assertThat( linkToOneNode ).isNotNull();
-		assertThat( linkToOneNode.getAttributeName() ).isEqualTo( "linkToOne" );
-
-		AssertionHelper.assertNullOrEmpty( linkToOneNode.getKeySubgraphs() );
-
-		final SubGraphImplementor<?> subgraph = linkToOneNode.getSubGraphs().get( GraphParsingTestSubEntity.class );
-		assertThat( subgraph ).isNotNull();
-
-		AssertionHelper.assertBasicAttributes( subgraph, "sub" );
-	}
-
-	@Test
 	public void testHHH10378IsNotFixedYet(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
@@ -209,7 +187,6 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 					assert subTypeAttrNode != null;
 				}
 		);
-
 	}
 
 	@Test

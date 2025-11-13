@@ -5,7 +5,7 @@ lexer grammar GraphLanguageLexer;
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.grammars.graph;
+package org.hibernate.grammars.graph.legacy;
 }
 
 @members {

@@ -803,16 +803,17 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return this;
 	}
 
-	private boolean multipleBinding(QueryParameter<Object> param, Object value){
-		if ( param.allowsMultiValuedBinding() ) {
-			final Type<?> hibernateType = param.getHibernateType();
-			if ( hibernateType == null
+	private boolean multipleBinding(QueryParameter<Object> parameter, Object value){
+		if ( parameter.allowsMultiValuedBinding() ) {
+			final var hibernateType = parameter.getHibernateType();
+			return hibernateType == null
+				|| value == null
 				|| hibernateType instanceof NullSqmExpressible
-				|| isInstance( hibernateType, value ) ) {
-				return true;
-			}
+				|| isInstance( hibernateType, value );
 		}
-		return false;
+		else {
+			return false;
+		}
 	}
 
 	private <T> void setTypedParameter(String name, TypedParameterValue<T> typedValue) {

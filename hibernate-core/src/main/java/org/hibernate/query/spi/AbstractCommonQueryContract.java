@@ -816,13 +816,14 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	private boolean multipleBinding(QueryParameter<Object> parameter, Object value){
 		if ( parameter.allowsMultiValuedBinding() ) {
 			final var hibernateType = parameter.getHibernateType();
-			if ( hibernateType == null
+			return hibernateType == null
+				|| value == null
 				|| hibernateType instanceof NullSqmExpressible
-				|| isInstance( hibernateType, value ) ) {
-				return true;
-			}
+				|| isInstance( hibernateType, value );
 		}
-		return false;
+		else {
+			return false;
+		}
 	}
 
 	private <T> void setTypedParameter(String name, TypedParameterValue<T> typedValue) {

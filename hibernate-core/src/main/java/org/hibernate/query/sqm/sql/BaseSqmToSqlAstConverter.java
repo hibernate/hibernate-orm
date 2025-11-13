@@ -2270,10 +2270,46 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( rootPathsForLockingCollector == null ) {
 			return;
 		}
-		if ( sqmSelection.getExpressible() instanceof EntityTypeImpl
-				&& sqmSelection.getSelectableNode() instanceof SqmPath<?> entityValuedPath ) {
-			rootPathsForLockingCollector.accept( entityValuedPath.getNavigablePath() );
+
+		collectRootPathsForLocking( sqmSelection.getSelectableNode() );
+	}
+
+	private void collectRootPathsForLocking(SqmSelectableNode<?> selectableNode) {
+		// roughly speaking we only care about 2 cases here:
+		//		1) entity path - the entity will be locked
+		//		2) scalar path - the entity from which the path originates will be locked
+		//
+		// note, however, that we need to account for both cases as the argument to a dynamic instantiation
+
+		if ( selectableNode instanceof SqmPath<?> selectedPath ) {
+			collectRootPathsForLocking( selectedPath );
 		}
+		else if ( selectableNode instanceof SqmDynamicInstantiation<?> dynamicInstantiation ) {
+			collectRootPathsForLocking( dynamicInstantiation );
+		}
+	}
+
+	private void collectRootPathsForLocking(SqmPath<?> selectedPath) {
+		assert rootPathsForLockingCollector != null;
+
+		if ( selectedPath == null ) {
+			// typically this comes from paths rooted in a CTE.
+			// regardless, without a path we cannot evaluate so just return.
+			return;
+		}
+
+		if ( selectedPath.getNodeType() instanceof EntityTypeImpl ) {
+			rootPathsForLockingCollector.accept( selectedPath.getNavigablePath() );
+		}
+		else {
+			collectRootPathsForLocking( selectedPath.getLhs() );
+		}
+	}
+
+	private void collectRootPathsForLocking(SqmDynamicInstantiation<?> dynamicInstantiation) {
+		dynamicInstantiation.getArguments().forEach( ( argument ) -> {
+			collectRootPathsForLocking( argument.getSelectableNode() );
+		} );
 	}
 
 	private void inferTargetPath(int index) {

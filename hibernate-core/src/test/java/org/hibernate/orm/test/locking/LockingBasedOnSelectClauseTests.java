@@ -84,6 +84,10 @@ public class LockingBasedOnSelectClauseTests {
 		} );
 	}
 
+	private static final String BOOK_PATH = "org.hibernate.orm.test.locking.LockingBasedOnSelectClauseTests$Book";
+	private static final String BOOK_PATH_HQL = BOOK_PATH+ "(b)";
+	private static final String BOOK_AUTHOR_PATH_HQL = BOOK_PATH_HQL + ".author";
+
 	@Test
 	void testBasicHqlTranslation(SessionFactoryScope factoryScope) {
 		final HqlHelper.HqlTranslation hqlTranslation = HqlHelper.translateHql(
@@ -96,7 +100,56 @@ public class LockingBasedOnSelectClauseTests {
 		final SelectStatement selectAst = ( SelectStatement ) sqlAst;
 		assertThat( selectAst.getRootPathsForLocking() ).hasSize( 1 );
 		assertThat( selectAst.getRootPathsForLocking().get( 0 ).getFullPath() )
-				.isEqualTo( "org.hibernate.orm.test.locking.LockingBasedOnSelectClauseTests$Book(b).author");
+				.isEqualTo( BOOK_AUTHOR_PATH_HQL );
+	}
+
+	@Test
+	void testScalarHqlTranslation(SessionFactoryScope factoryScope) {
+		final HqlHelper.HqlTranslation hqlTranslation = HqlHelper.translateHql(
+				"select b.title from Book b",
+				factoryScope.getSessionFactory()
+		);
+
+		final Statement sqlAst = hqlTranslation.sqlAst();
+		assertThat( sqlAst ).isInstanceOf( SelectStatement.class );
+		final SelectStatement selectAst = ( SelectStatement ) sqlAst;
+		assertThat( selectAst.getRootPathsForLocking() ).hasSize( 1 );
+		assertThat( selectAst.getRootPathsForLocking().get( 0 ).getFullPath() )
+				.isEqualTo( BOOK_PATH_HQL );
+	}
+
+	@Test
+	void testScalarHqlTranslation2(SessionFactoryScope factoryScope) {
+		final HqlHelper.HqlTranslation hqlTranslation = HqlHelper.translateHql(
+				"select b.title, b.author from Book b",
+				factoryScope.getSessionFactory()
+		);
+
+		final Statement sqlAst = hqlTranslation.sqlAst();
+		assertThat( sqlAst ).isInstanceOf( SelectStatement.class );
+		final SelectStatement selectAst = ( SelectStatement ) sqlAst;
+		assertThat( selectAst.getRootPathsForLocking() ).hasSize( 2 );
+		assertThat( selectAst.getRootPathsForLocking().get( 0 ).getFullPath() )
+				.isEqualTo( BOOK_PATH_HQL );
+		assertThat( selectAst.getRootPathsForLocking().get( 1 ).getFullPath() )
+				.isEqualTo( BOOK_AUTHOR_PATH_HQL );
+	}
+
+	@Test
+	void testDynamicInstantiationHqlTranslation(SessionFactoryScope factoryScope) {
+		final HqlHelper.HqlTranslation hqlTranslation = HqlHelper.translateHql(
+				"select new list(b.title, b.author) from Book b",
+				factoryScope.getSessionFactory()
+		);
+
+		final Statement sqlAst = hqlTranslation.sqlAst();
+		assertThat( sqlAst ).isInstanceOf( SelectStatement.class );
+		final SelectStatement selectAst = ( SelectStatement ) sqlAst;
+		assertThat( selectAst.getRootPathsForLocking() ).hasSize( 2 );
+		assertThat( selectAst.getRootPathsForLocking().get( 0 ).getFullPath() )
+				.isEqualTo( BOOK_PATH_HQL );
+		assertThat( selectAst.getRootPathsForLocking().get( 1 ).getFullPath() )
+				.isEqualTo( BOOK_AUTHOR_PATH_HQL );
 	}
 
 	@Test
@@ -109,7 +162,7 @@ public class LockingBasedOnSelectClauseTests {
 		);
 		assertThat( translation.sqlAst().getRootPathsForLocking() ).hasSize( 1 );
 		assertThat( translation.sqlAst().getRootPathsForLocking().get( 0 ).getFullPath() )
-				.isEqualTo( "org.hibernate.orm.test.locking.LockingBasedOnSelectClauseTests$Book");
+				.isEqualTo( BOOK_PATH );
 	}
 
 	@Entity(name="Book")
@@ -117,7 +170,7 @@ public class LockingBasedOnSelectClauseTests {
 	public static class Book {
 		@Id
 		private Integer id;
-		private String name;
+		private String title;
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn(name = "author_fk")
 		private Author author;
@@ -125,9 +178,9 @@ public class LockingBasedOnSelectClauseTests {
 		public Book() {
 		}
 
-		public Book(Integer id, String name, Author author) {
+		public Book(Integer id, String title, Author author) {
 			this.id = id;
-			this.name = name;
+			this.title = title;
 			this.author = author;
 		}
 	}

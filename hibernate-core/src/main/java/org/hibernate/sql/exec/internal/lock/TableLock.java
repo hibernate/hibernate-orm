@@ -123,6 +123,7 @@ public class TableLock {
 		}
 
 		querySpec.getFromClause().addRoot( physicalTableGroup );
+		querySpec.applyRootPathForLocking( rootPath );
 
 		creationStates = new LockingCreationStates(
 				querySpec,

@@ -114,6 +114,7 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategyProvide
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -2369,14 +2370,15 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			default -> throw new IllegalStateException( "Should never happen due to checks above" );
 		}
 
-		return buildLockingClauseStrategy( lockKind, rowLockStrategy, lockOptions );
+		return buildLockingClauseStrategy( lockKind, rowLockStrategy, lockOptions, querySpec.getRootPathsForLocking() );
 	}
 
 	protected LockingClauseStrategy buildLockingClauseStrategy(
 			PessimisticLockKind lockKind,
 			RowLockStrategy rowLockStrategy,
-			LockOptions lockOptions) {
-		return new StandardLockingClauseStrategy( this, lockKind, rowLockStrategy, lockOptions );
+			LockOptions lockOptions,
+			Set<NavigablePath> rootPathsForLocking) {
+		return new StandardLockingClauseStrategy( this, lockKind, rowLockStrategy, lockOptions, rootPathsForLocking );
 	}
 
 	/**

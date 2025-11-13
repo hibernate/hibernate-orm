@@ -171,7 +171,7 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 		protected LockOptions lockOptions;
 		protected QuerySpec lockingTarget;
 		protected LockingClauseStrategy lockingClauseStrategy;
-		boolean isFollonOnLockStrategy;
+		boolean isFollowOnLockStrategy;
 
 		@Override
 		public Builder setPrimaryAction(JdbcSelect primaryAction){
@@ -218,8 +218,8 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 		}
 
 		@Override
-		public Builder setIsFollowOnLockStrategy(boolean isFollonOnLockStrategy){
-			this.isFollonOnLockStrategy = isFollonOnLockStrategy;
+		public Builder setIsFollowOnLockStrategy(boolean isFollowOnLockStrategy){
+			this.isFollowOnLockStrategy = isFollowOnLockStrategy;
 			return this;
 		}
 
@@ -233,7 +233,7 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 						)
 				);
 			}
-			if ( isFollonOnLockStrategy ) {
+			if ( isFollowOnLockStrategy ) {
 				FollowOnLockingAction.apply( lockOptions, lockingTarget, lockingClauseStrategy, this );
 			}
 			else if ( lockOptions.getScope() == Locking.Scope.INCLUDE_COLLECTIONS ) {
@@ -341,18 +341,17 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 
 		// Used by Hibernate Reactive
 		static PreAction[] toPreActionArray(List<PreAction> actions) {
-		if ( CollectionHelper.isEmpty( actions ) ) {
-			return null;
+			if ( CollectionHelper.isEmpty( actions ) ) {
+				return null;
+			}
+			return actions.toArray( new PreAction[0] );
 		}
-		return actions.toArray( new PreAction[0] );
-	}
-	// Used by Hibernate Reactive
-	static PostAction[] toPostActionArray(List<PostAction> actions) {
-		if ( CollectionHelper.isEmpty( actions ) ) {
-			return null;
+		// Used by Hibernate Reactive
+		static PostAction[] toPostActionArray(List<PostAction> actions) {
+			if ( CollectionHelper.isEmpty( actions ) ) {
+				return null;
+			}
+			return actions.toArray( new PostAction[0] );
 		}
-		return actions.toArray( new PostAction[0] );
-	}
-
 	}
 }

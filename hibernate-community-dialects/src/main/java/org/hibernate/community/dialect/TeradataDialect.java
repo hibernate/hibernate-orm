@@ -40,6 +40,7 @@ import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableI
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -65,6 +66,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
+import java.util.Set;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -529,13 +531,14 @@ public class TeradataDialect extends Dialect {
 	protected LockingClauseStrategy buildLockingClauseStrategy(
 			PessimisticLockKind lockKind,
 			RowLockStrategy rowLockStrategy,
-			LockOptions lockOptions) {
+			LockOptions lockOptions,
+			Set<NavigablePath> rootPathsForLocking) {
 		if ( getVersion().isBefore( 14 ) ) {
 			return NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 		}
 		// we'll reuse the StandardLockingClauseStrategy for the collecting
 		// aspect and just handle the special rendering in the SQL AST translator
-		return super.buildLockingClauseStrategy( lockKind, rowLockStrategy, lockOptions );
+		return super.buildLockingClauseStrategy( lockKind, rowLockStrategy, lockOptions, rootPathsForLocking );
 	}
 
 	@Override

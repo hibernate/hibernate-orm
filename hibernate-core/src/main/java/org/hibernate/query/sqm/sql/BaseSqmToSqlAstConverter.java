@@ -1645,6 +1645,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		finally {
 			this.currentSqmStatement = oldSqmStatement;
 			this.cteContainer = oldCteContainer;
+			rootPathsForLockingCollector = null;
 		}
 	}
 
@@ -2205,11 +2206,19 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return getFromClauseAccess().getTableGroup( navigablePath );
 	}
 
+	private Consumer<NavigablePath> rootPathsForLockingCollector;
+
 	@Override
 	public SelectClause visitSelectClause(SqmSelectClause selectClause) {
 		currentClauseStack.push( Clause.SELECT );
 		try {
 			final SelectClause sqlSelectClause = currentQuerySpec().getSelectClause();
+			if ( sqmQueryPartStack.depth() == 1 && currentClauseStack.depth() == 1 ) {
+				// these 2 conditions combined *should* indicate we have the
+				// root query-spec of a top-level select statement
+				rootPathsForLockingCollector = (path) ->
+						currentQuerySpec().applyRootPathForLocking( path );
+			}
 			if ( selectClause.getSelections().isEmpty() ) {
 				final SqmFrom<?, ?> implicitSelection = determineImplicitSelection( (SqmQuerySpec<?>) getCurrentSqmQueryPart() );
 				visitSelection( 0, new SqmSelection<>( implicitSelection, implicitSelection.nodeBuilder() ) );
@@ -2224,6 +2233,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return sqlSelectClause;
 		}
 		finally {
+			rootPathsForLockingCollector = null;
 			currentClauseStack.pop();
 		}
 	}
@@ -2243,12 +2253,60 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private void visitSelection(int index, SqmSelection<?> sqmSelection) {
+		collectRootPathsForLocking( sqmSelection );
+
 		inferTargetPath( index );
 		callResultProducers( resultProducers( sqmSelection ) );
 		if ( statement instanceof SqmInsertSelectStatement<?>
 				&& contributesToTopLevelSelectClause() ) {
 			inferrableTypeAccessStack.pop();
 		}
+	}
+
+	private void collectRootPathsForLocking(SqmSelection<?> sqmSelection) {
+		if ( rootPathsForLockingCollector == null ) {
+			return;
+		}
+
+		collectRootPathsForLocking( sqmSelection.getSelectableNode() );
+	}
+
+	private void collectRootPathsForLocking(SqmSelectableNode<?> selectableNode) {
+		// roughly speaking we only care about 2 cases here:
+		//		1) entity path - the entity will be locked
+		//		2) scalar path - the entity from which the path originates will be locked
+		//
+		// note, however, that we need to account for both cases as the argument to a dynamic instantiation
+
+		if ( selectableNode instanceof SqmPath<?> selectedPath ) {
+			collectRootPathsForLocking( selectedPath );
+		}
+		else if ( selectableNode instanceof SqmDynamicInstantiation<?> dynamicInstantiation ) {
+			collectRootPathsForLocking( dynamicInstantiation );
+		}
+	}
+
+	private void collectRootPathsForLocking(SqmPath<?> selectedPath) {
+		assert rootPathsForLockingCollector != null;
+
+		if ( selectedPath == null ) {
+			// typically this comes from paths rooted in a CTE.
+			// regardless, without a path we cannot evaluate so just return.
+			return;
+		}
+
+		if ( selectedPath.getNodeType() instanceof EntityTypeImpl ) {
+			rootPathsForLockingCollector.accept( selectedPath.getNavigablePath() );
+		}
+		else {
+			collectRootPathsForLocking( selectedPath.getLhs() );
+		}
+	}
+
+	private void collectRootPathsForLocking(SqmDynamicInstantiation<?> dynamicInstantiation) {
+		dynamicInstantiation.getArguments().forEach( ( argument ) -> {
+			collectRootPathsForLocking( argument.getSelectableNode() );
+		} );
 	}
 
 	private void inferTargetPath(int index) {

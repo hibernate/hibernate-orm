@@ -5,10 +5,13 @@
 package org.hibernate.sql.ast.tree.select;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -29,6 +32,8 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 
 	private List<Expression> groupByClauseExpressions = Collections.emptyList();
 	private Predicate havingClauseRestrictions;
+
+	private Set<NavigablePath> rootPathsForLocking;
 
 	public QuerySpec(boolean isRoot) {
 		super( isRoot );
@@ -85,6 +90,21 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 
 	public SelectClause getSelectClause() {
 		return selectClause;
+	}
+
+	/// Set of [NavigablePath] references to be considered roots
+	/// for locking purposes.
+	public Set<NavigablePath> getRootPathsForLocking() {
+		return rootPathsForLocking;
+	}
+
+	/// Applies a [NavigablePath] to be considered a root for the
+	/// purpose of potential locking.
+	public void applyRootPathForLocking(NavigablePath path) {
+		if ( rootPathsForLocking == null ) {
+			rootPathsForLocking = new HashSet<>();
+		}
+		rootPathsForLocking.add( path );
 	}
 
 	public Predicate getWhereClauseRestrictions() {

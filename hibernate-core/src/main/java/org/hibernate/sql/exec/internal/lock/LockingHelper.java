@@ -6,6 +6,7 @@ package org.hibernate.sql.exec.internal.lock;
 
 import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
+import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
 import org.hibernate.Session;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -43,7 +44,6 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -84,13 +84,14 @@ public class LockingHelper {
 
 		final var tableReference = new NamedTableReference( keyTableName, "tbl" );
 
-		querySpec.getFromClause()
-				.addRoot( new LockingTableGroup(
-						tableReference,
-						keyTableName,
-						attributeMapping,
-						keyDescriptor.getKeySide().getModelPart()
-				) );
+		final LockingTableGroup tableGroup = new LockingTableGroup(
+				tableReference,
+				keyTableName,
+				attributeMapping,
+				keyDescriptor.getKeySide().getModelPart()
+		);
+		querySpec.getFromClause().addRoot( tableGroup );
+		querySpec.applyRootPathForLocking( tableGroup.getNavigablePath() );
 
 		final var keyPart = keyDescriptor.getKeyPart();
 		final var columnReference = new ColumnReference( tableReference, keyPart.getSelectable( 0 ) );
@@ -169,13 +170,14 @@ public static void lockCollectionTable(
 
 		final var tableReference = new NamedTableReference( keyTableName, "tbl" );
 
-		querySpec.getFromClause()
-				.addRoot( new LockingTableGroup(
-						tableReference,
-						keyTableName,
-						attributeMapping,
-						keyDescriptor.getKeySide().getModelPart()
-				) );
+		final LockingTableGroup tableGroup = new LockingTableGroup(
+				tableReference,
+				keyTableName,
+				attributeMapping,
+				keyDescriptor.getKeySide().getModelPart()
+		);
+		querySpec.getFromClause().addRoot( tableGroup );
+		querySpec.applyRootPathForLocking( tableGroup.getNavigablePath() );
 
 		final var keyPart = keyDescriptor.getKeyPart();
 		final var columnReference = new ColumnReference( tableReference, keyPart.getSelectable( 0 ) );
@@ -325,8 +327,6 @@ public static void lockCollectionTable(
 			SQL_EXEC_LOGGER.followOnLockingForCollectionTable( keyTableName, attributeMapping.getRootPathName() );
 		}
 
-		final var querySpec = new QuerySpec( true );
-
 		final var tableReference = new NamedTableReference( keyTableName, "tbl" );
 		final var tableGroup = new LockingTableGroup(
 				tableReference,
@@ -335,7 +335,9 @@ public static void lockCollectionTable(
 				keyDescriptor.getKeySide().getModelPart()
 		);
 
+		final var querySpec = new QuerySpec( true );
 		querySpec.getFromClause().addRoot( tableGroup );
+		querySpec.applyRootPathForLocking( tableGroup.getNavigablePath() );
 
 		final var keyPart = keyDescriptor.getKeyPart();
 		final var columnReference = new ColumnReference( tableReference, keyPart.getSelectable( 0 ) );
@@ -465,18 +467,11 @@ public static void lockCollectionTable(
 	public static void logLoadedValues(LoadedValuesCollector collector) {
 		if ( SQL_EXEC_LOGGER.isDebugEnabled() ) {
 			var summary = new StringBuilder();
-			summary.append( "  Loaded root entities:\n" );
-			collector.getCollectedRootEntities().forEach( (reg) -> {
+			summary.append( "  Loaded entities:\n" );
+			collector.getCollectedEntities().forEach( (reg) -> {
 				summary.append( String.format( "    - %s#%s\n",
 						reg.entityDescriptor().getEntityName(),
 						reg.entityKey().getIdentifier() ) );
-			} );
-
-			summary.append( "  Loaded non-root entities:\n" );
-			collector.getCollectedNonRootEntities().forEach( (reg) -> {
-				summary.append( String.format( "    - %s#%s\n",
-						reg.entityDescriptor().getEntityName()
-						, reg.entityKey().getIdentifier() ) );
 			} );
 
 			summary.append( "  Loaded collections:\n" );
@@ -494,29 +489,7 @@ public static void lockCollectionTable(
 	 * from the {@linkplain SqlAstTranslator SQL AST translator}.
 	 */
 	public static Collection<NavigablePath> extractPathsToLock(LockingClauseStrategy lockingClauseStrategy) {
-		final LinkedHashSet<NavigablePath> paths = new LinkedHashSet<>();
-
-		final var rootsToLock = lockingClauseStrategy.getRootsToLock();
-		if ( rootsToLock != null ) {
-			rootsToLock.forEach( (tableGroup) -> paths.add( tableGroup.getNavigablePath() ) );
-		}
-
-		final var joinsToLock = lockingClauseStrategy.getJoinsToLock();
-		if ( joinsToLock != null ) {
-			joinsToLock.forEach( (tableGroupJoin) -> {
-				final var navigablePath = tableGroupJoin.getNavigablePath();
-				paths.add( navigablePath );
-				final var modelPart = tableGroupJoin.getJoinedGroup().getModelPart();
-				if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping ) {
-					paths.add( navigablePath.append( pluralAttributeMapping.getElementDescriptor().getPartName() ) );
-					final var indexDescriptor = pluralAttributeMapping.getIndexDescriptor();
-					if ( indexDescriptor != null ) {
-						paths.add( navigablePath.append( indexDescriptor.getPartName() ) );
-					}
-				}
-			} );
-		}
-		return paths;
+		return lockingClauseStrategy.getPathsToLock();
 	}
 
 	public static void segmentLoadedValues(List<LoadedValuesCollector.LoadedEntityRegistration> registrations, Map<EntityMappingType, List<EntityKey>> map) {
@@ -530,17 +503,23 @@ public static void lockCollectionTable(
 		}
 	}
 
-	public static void segmentLoadedCollections(List<LoadedValuesCollector.LoadedCollectionRegistration> registrations, Map<EntityMappingType, Map<PluralAttributeMapping, List<CollectionKey>>> map) {
+	public static void segmentLoadedCollections(
+			List<LoadedValuesCollector.LoadedCollectionRegistration> registrations,
+			Locking.Scope lockScope,
+			Map<EntityMappingType, Map<PluralAttributeMapping, List<CollectionKey>>> map) {
 		if ( registrations != null ) {
 			registrations.forEach( (registration) -> {
 				final var pluralAttributeMapping = registration.collectionDescriptor();
-				if ( pluralAttributeMapping.getSeparateCollectionTable() != null ) {
-					final var attributeKeys =
-							map.computeIfAbsent( pluralAttributeMapping.findContainingEntityMapping(),
-									entityMappingType -> new HashMap<>() );
-					final var collectionKeys =
-							attributeKeys.computeIfAbsent( pluralAttributeMapping,
-									entityMappingType -> new ArrayList<>() );
+				if ( lockScope == Locking.Scope.INCLUDE_FETCHES
+					|| pluralAttributeMapping.getSeparateCollectionTable() != null ) {
+					final var attributeKeys = map.computeIfAbsent(
+							pluralAttributeMapping.findContainingEntityMapping(),
+							entityMappingType -> new HashMap<>()
+					);
+					final var collectionKeys = attributeKeys.computeIfAbsent(
+							pluralAttributeMapping,
+							entityMappingType -> new ArrayList<>()
+					);
 					collectionKeys.add( registration.collectionKey() );
 				}
 			} );
@@ -557,4 +536,5 @@ public static void lockCollectionTable(
 		} );
 		return map;
 	}
+
 }

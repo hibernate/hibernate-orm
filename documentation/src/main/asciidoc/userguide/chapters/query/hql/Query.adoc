@@ -86,7 +86,7 @@ include::{example-dir-model}/Person.java[tags=jpa-read-only-entities-native-exam
 ====
 
 Alternatively, Hibernate offers an extended
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedQuery.html[`@NamedQuery`] annotation
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedQuery.html[`@NamedQuery`] annotation
 which allows the specification of additional properties of the query, including flush mode, cacheability, and timeout interval, in a more typesafe way.
 
 [[jpql-api-hibernate-named-query-example]]
@@ -347,7 +347,7 @@ On the other hand, `setHint()` refers to the Jakarta Persistence notion of a que
 This is a completely different concept.
 ====
 
-For complete details, see the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Query.html[Query] Javadocs.
+For complete details, see the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/Query.html[Query] Javadocs.
 
 [[hql-api-basic-usage-example]]
 .Advanced query control
@@ -363,7 +363,7 @@ include::{example-dir-query}/HQLTest.java[tags=hql-api-basic-usage-example]
 
 A program may hook into the process of building the query results by providing a `org.hibernate.transform.ResultListTransformer` or `org.hibernate.transform.TupleTransformer`.
 
-See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/transform/ResultListTransformer.html[Javadocs] along with the built-in implementations for additional details.
+See the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/transform/ResultListTransformer.html[Javadocs] along with the built-in implementations for additional details.
 
 //[[hql-api-parameters]]
 //==== Binding arguments to parameters

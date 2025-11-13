@@ -145,7 +145,7 @@ include::{extrasdir}/locking-optimistic-version-timestamp-source-persist-example
 
 By default, every entity attribute modification is going to trigger a version incrementation.
 If there is an entity property which should not bump up the entity version,
-then you need to annotate it with the Hibernate https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLock.html[`@OptimisticLock`] annotation,
+then you need to annotate it with the Hibernate https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLock.html[`@OptimisticLock`] annotation,
 as illustrated in the following example.
 
 [[locking-optimistic-exclude-attribute-mapping-example]]
@@ -196,9 +196,9 @@ This is also useful for use with modeling legacy schemas.
 
 The idea is that you can get Hibernate to perform "version checks" using either all of the entity's attributes or just the attributes that have changed.
 This is achieved through the use of the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLocking.html[`@OptimisticLocking`]
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLocking.html[`@OptimisticLocking`]
 annotation which defines a single attribute of type
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLockType.html[`org.hibernate.annotations.OptimisticLockType`].
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLockType.html[`org.hibernate.annotations.OptimisticLockType`].
 
 There are 4 available OptimisticLockTypes:
 
@@ -290,7 +290,7 @@ is that it allows you to minimize the risk of `OptimisticEntityLockException` ac
 
 When using `OptimisticLockType.DIRTY`, you should also use `@DynamicUpdate` because the `UPDATE` statement must take into consideration all the dirty entity property values,
 and also the `@SelectBeforeUpdate` annotation so that detached entities are properly handled by the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#update-java.lang.Object-[`Session#update(entity)`] operation.
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#update-java.lang.Object-[`Session#update(entity)`] operation.
 ====
 
 [[locking-pessimistic]]

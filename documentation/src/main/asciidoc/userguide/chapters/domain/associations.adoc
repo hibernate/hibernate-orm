@@ -755,7 +755,7 @@ include::{extrasdir}/associations-many-to-any-example.sql[]
 [[associations-JoinFormula]]
 ==== `@JoinFormula` mapping
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinFormula.html[`@JoinFormula`] annotation is used to customize the join between a child Foreign Key and a parent row Primary Key.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinFormula.html[`@JoinFormula`] annotation is used to customize the join between a child Foreign Key and a parent row Primary Key.
 
 [[associations-JoinFormula-example]]
 .`@JoinFormula` mapping usage
@@ -805,7 +805,7 @@ Therefore, the `@JoinFormula` annotation is used to define a custom join associa
 [[associations-JoinColumnOrFormula]]
 ==== `@JoinColumnOrFormula` mapping
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinColumnOrFormula.html[`@JoinColumnOrFormula`] annotation is used to customize the join between a child Foreign Key and a parent row Primary Key when we need to take into consideration a column value as well as a `@JoinFormula`.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinColumnOrFormula.html[`@JoinColumnOrFormula`] annotation is used to customize the join between a child Foreign Key and a parent row Primary Key when we need to take into consideration a column value as well as a `@JoinFormula`.
 
 [[associations-JoinColumnOrFormula-example]]
 .`@JoinColumnOrFormula` mapping usage

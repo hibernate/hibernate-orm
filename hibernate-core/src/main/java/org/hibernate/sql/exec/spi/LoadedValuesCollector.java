@@ -57,12 +57,7 @@ public interface LoadedValuesCollector {
 	/**
 	 * Access to all root entities loaded.
 	 */
-	List<LoadedEntityRegistration> getCollectedRootEntities();
-
-	/**
-	 * Access to all non-root entities (join fetches e.g.) loaded.
-	 */
-	List<LoadedEntityRegistration> getCollectedNonRootEntities();
+	List<LoadedEntityRegistration> getCollectedEntities();
 
 	/**
 	 * Access to all collection loaded.

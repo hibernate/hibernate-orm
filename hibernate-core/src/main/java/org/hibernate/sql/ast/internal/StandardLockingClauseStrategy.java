@@ -7,7 +7,6 @@ package org.hibernate.sql.ast.internal;
 import jakarta.persistence.Timeout;
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockOptions;
-import org.hibernate.Locking;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -17,11 +16,10 @@ import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.TableDetails;
-import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -31,7 +29,6 @@ import org.hibernate.sql.exec.internal.lock.LockingTableGroup;
 import org.hibernate.sql.model.TableMapping;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -43,21 +40,12 @@ import java.util.Set;
  *
  * @author Steve Ebersole
  */
-public class StandardLockingClauseStrategy implements LockingClauseStrategy {
+public class StandardLockingClauseStrategy extends AbstractLockingClauseStrategy {
 	private final Dialect dialect;
 	private final RowLockStrategy rowLockStrategy;
 	private final PessimisticLockKind lockKind;
-	private final Locking.Scope lockingScope;
 	private final Timeout timeout;
 
-	/**
-	 * @implNote Tracked separately from {@linkplain #rootsToLock} and
-	 * {@linkplain #joinsToLock} to help answer {@linkplain #containsOuterJoins()}
-	 * for {@linkplain RowLockStrategy#NONE cases} where we otherwise don't need to
-	 * track the tables, allowing to avoid the overhead of the Sets.  There is a
-	 * slight trade-off in that we need to inspect the from-elements to make that
-	 * determination when we might otherwise not need to - memory versus cpu.
-	 */
 	private boolean queryHasOuterJoins = false;
 
 	private Set<TableGroup> rootsToLock;
@@ -67,21 +55,20 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 			Dialect dialect,
 			PessimisticLockKind lockKind,
 			RowLockStrategy rowLockStrategy,
-			LockOptions lockOptions) {
-		// NOTE: previous versions would limit collection based on RowLockStrategy.
-		// however, this causes problems with the new follow-on locking approach
+			LockOptions lockOptions,
+			Set<NavigablePath> rootsForLocking) {
+		super( lockOptions.getScope(), rootsForLocking );
 
 		assert lockKind != PessimisticLockKind.NONE;
 
 		this.dialect = dialect;
 		this.rowLockStrategy = rowLockStrategy;
 		this.lockKind = lockKind;
-		this.lockingScope = lockOptions.getScope();
 		this.timeout = lockOptions.getTimeout();
 	}
 
 	@Override
-	public void registerRoot(TableGroup root) {
+	public boolean registerRoot(TableGroup root) {
 		if ( !queryHasOuterJoins ) {
 			if ( CollectionHelper.isNotEmpty( root.getTableReferenceJoins() ) ) {
 				// joined inheritance and/or secondary tables - inherently has outer joins
@@ -89,6 +76,12 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 			}
 		}
 
+		return super.registerRoot( root );
+	}
+
+	@Override
+	protected void trackRoot(TableGroup root) {
+		super.trackRoot( root );
 		if ( rootsToLock == null ) {
 			rootsToLock = new HashSet<>();
 		}
@@ -96,27 +89,18 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 	}
 
 	@Override
-	public void registerJoin(TableGroupJoin join) {
+	public boolean registerJoin(TableGroupJoin join) {
 		checkForOuterJoins( join );
+		return super.registerJoin( join );
+	}
 
-		if ( lockingScope == Locking.Scope.INCLUDE_COLLECTIONS ) {
-			// if the TableGroup is an owned (aka, non-inverse) collection,
-			// and we are to lock collections, track it
-			if ( join.getJoinedGroup().getModelPart() instanceof PluralAttributeMapping attrMapping ) {
-				if ( !attrMapping.getCollectionDescriptor().isInverse() ) {
-					// owned collection
-					if ( attrMapping.getElementDescriptor() instanceof BasicValuedCollectionPart ) {
-						// an element-collection
-						trackJoin( join );
-					}
-				}
-			}
+	@Override
+	protected void trackJoin(TableGroupJoin join) {
+		super.trackJoin( join );
+		if ( joinsToLock == null ) {
+			joinsToLock = new LinkedHashSet<>();
 		}
-		else if ( lockingScope == Locking.Scope.INCLUDE_FETCHES ) {
-			if ( join.getJoinedGroup().isFetched() ) {
-				trackJoin( join );
-			}
-		}
+		joinsToLock.add( join );
 	}
 
 	private void checkForOuterJoins(TableGroupJoin join) {
@@ -144,13 +128,6 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 		return false;
 	}
 
-	private void trackJoin(TableGroupJoin join) {
-		if ( joinsToLock == null ) {
-			joinsToLock = new LinkedHashSet<>();
-		}
-		joinsToLock.add( join );
-	}
-
 	@Override
 	public boolean containsOuterJoins() {
 		return queryHasOuterJoins;
@@ -162,19 +139,24 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 		renderResultSetOptions( sqlAppender );
 	}
 
-	@Override
-	public Collection<TableGroup> getRootsToLock() {
-		return rootsToLock;
-	}
-
-	@Override
-	public Collection<TableGroupJoin> getJoinsToLock() {
-		return joinsToLock;
-	}
-
 	protected void renderLockFragment(SqlAppender sqlAppender) {
 		final String fragment;
 		if ( rowLockStrategy == RowLockStrategy.NONE ) {
+			fragment = lockKind == PessimisticLockKind.SHARE
+					? dialect.getReadLockString( timeout )
+					: dialect.getWriteLockString( timeout );
+		}
+		else if ( CollectionHelper.isEmpty( rootsToLock )
+				&& CollectionHelper.isEmpty( joinsToLock ) ) {
+			// this might happen with locking and scalar queries.  e.g.
+			// 		session.createQuery( "select p.unitCost * .049 from Product p" )
+			//				.setLockMode(...)
+			//
+			// the spec says:
+			//   > (if) the query returns scalar data ..., the underlying database rows will be locked
+			//
+			// so we use a simple `for update`, with no `of`.  aka, we treat it the same as RowLockStrategy.NONE
+			assert CollectionHelper.isEmpty( rootsForLocking );
 			fragment = lockKind == PessimisticLockKind.SHARE
 					? dialect.getReadLockString( timeout )
 					: dialect.getWriteLockString( timeout );
@@ -194,8 +176,10 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 		}
 
 		final List<String> lockItems = new ArrayList<>();
-		for ( TableGroup root : rootsToLock ) {
-			collectLockItems( root, lockItems );
+		if ( rootsToLock != null ) {
+			for ( TableGroup root : rootsToLock ) {
+				collectLockItems( root, lockItems );
+			}
 		}
 		if ( joinsToLock != null ) {
 			for ( TableGroupJoin join : joinsToLock ) {

@@ -166,15 +166,15 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				// We have to inject the lateral predicate into the sub-query
 				final Predicate lateralPredicate = this.lateralPredicate;
 				this.lateralPredicate = predicate;
-				renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+				renderJoinedTableGroup( tableGroupJoin, null, tableGroupJoinCollector );
 				this.lateralPredicate = lateralPredicate;
 			}
 			else {
-				renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
+				renderJoinedTableGroup( tableGroupJoin, predicate, tableGroupJoinCollector );
 			}
 		}
 		else {
-			renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+			renderJoinedTableGroup( tableGroupJoin, null, tableGroupJoinCollector );
 		}
 	}
 

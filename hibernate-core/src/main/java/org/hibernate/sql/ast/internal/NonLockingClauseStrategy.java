@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.ast.internal;
 
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -23,13 +24,15 @@ public class NonLockingClauseStrategy implements LockingClauseStrategy {
 	public static final NonLockingClauseStrategy NON_CLAUSE_STRATEGY = new NonLockingClauseStrategy();
 
 	@Override
-	public void registerRoot(TableGroup root) {
+	public boolean registerRoot(TableGroup root) {
 		// nothing to do
+		return false;
 	}
 
 	@Override
-	public void registerJoin(TableGroupJoin join) {
+	public boolean registerJoin(TableGroupJoin join) {
 		// nothing to do
+		return false;
 	}
 
 	@Override
@@ -43,12 +46,7 @@ public class NonLockingClauseStrategy implements LockingClauseStrategy {
 	}
 
 	@Override
-	public Collection<TableGroup> getRootsToLock() {
-		return List.of();
-	}
-
-	@Override
-	public Collection<TableGroupJoin> getJoinsToLock() {
+	public Collection<NavigablePath> getPathsToLock() {
 		return List.of();
 	}
 }

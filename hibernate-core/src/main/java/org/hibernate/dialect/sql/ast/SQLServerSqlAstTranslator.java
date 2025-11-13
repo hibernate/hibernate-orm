@@ -167,15 +167,15 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 				// We have to inject the lateral predicate into the sub-query
 				final Predicate lateralPredicate = this.lateralPredicate;
 				this.lateralPredicate = predicate;
-				renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+				renderJoinedTableGroup( tableGroupJoin, null, tableGroupJoinCollector );
 				this.lateralPredicate = lateralPredicate;
 			}
 			else {
-				renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
+				renderJoinedTableGroup( tableGroupJoin, predicate, tableGroupJoinCollector );
 			}
 		}
 		else {
-			renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+			renderJoinedTableGroup( tableGroupJoin, null, tableGroupJoinCollector );
 		}
 	}
 
@@ -202,7 +202,9 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 	@Override
 	protected boolean renderNamedTableReference(NamedTableReference tableReference, LockMode lockMode) {
 		final String tableExpression = tableReference.getTableExpression();
-		if ( tableReference instanceof UnionTableReference && lockMode != LockMode.NONE && tableExpression.charAt( 0 ) == '(' ) {
+		if ( tableReference instanceof UnionTableReference
+			&& lockMode != LockMode.NONE
+			&& tableExpression.charAt( 0 ) == '(' ) {
 			// SQL Server requires to push down the lock hint to the actual table names
 			int searchIndex = 0;
 			int unionIndex;

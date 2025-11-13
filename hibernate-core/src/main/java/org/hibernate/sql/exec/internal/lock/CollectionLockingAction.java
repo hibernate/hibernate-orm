@@ -15,8 +15,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.tree.from.FromClause;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcSelectWithActionsBuilder;
@@ -29,6 +27,7 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
 
@@ -63,7 +62,7 @@ public class CollectionLockingAction implements PostAction {
 			JdbcSelectWithActionsBuilder jdbcSelectBuilder) {
 		assert lockOptions.getScope() == Locking.Scope.INCLUDE_COLLECTIONS;
 
-		final var loadedValuesCollector = resolveLoadedValuesCollector( lockingTarget.getFromClause() );
+		final var loadedValuesCollector = resolveLoadedValuesCollector( lockingTarget );
 
 		// NOTE: we need to set this separately so that it can get incorporated into
 		// the JdbcValuesSourceProcessingState for proper callbacks
@@ -140,25 +139,14 @@ public class CollectionLockingAction implements PostAction {
 	}
 
 	// Used by Hibernate Reactive
-	protected static LoadedValuesCollectorImpl resolveLoadedValuesCollector(FromClause fromClause) {
-		final var fromClauseRoots = fromClause.getRoots();
-		if ( fromClauseRoots.size() == 1 ) {
-			return new LoadedValuesCollectorImpl(
-					List.of( fromClauseRoots.get( 0 ).getNavigablePath() )
-			);
-		}
-		else {
-			return new LoadedValuesCollectorImpl(
-					fromClauseRoots.stream().map( TableGroup::getNavigablePath ).toList()
-			);
-		}
+	protected static LoadedValuesCollectorImpl resolveLoadedValuesCollector(QuerySpec lockingTarget) {
+		return new LoadedValuesCollectorImpl( lockingTarget.getRootPathsForLocking() );
 	}
 
 	// Used by Hibernate Reactive
 	protected static Map<EntityMappingType, List<EntityKey>> segmentLoadedValues(LoadedValuesCollector loadedValuesCollector) {
 		final Map<EntityMappingType, List<EntityKey>> map = new IdentityHashMap<>();
-		LockingHelper.segmentLoadedValues( loadedValuesCollector.getCollectedRootEntities(), map );
-		LockingHelper.segmentLoadedValues( loadedValuesCollector.getCollectedNonRootEntities(), map );
+		LockingHelper.segmentLoadedValues( loadedValuesCollector.getCollectedEntities(), map );
 		if ( map.isEmpty() ) {
 			// NOTE: this may happen with Session#lock routed through SqlAstBasedLockingStrategy.
 			// however, we cannot tell that is the code path from here.
@@ -168,29 +156,22 @@ public class CollectionLockingAction implements PostAction {
 
 	// Used by Hibernate Reactive
 	protected static class LoadedValuesCollectorImpl implements LoadedValuesCollector {
-		private final List<NavigablePath> rootPaths;
+		private final Set<NavigablePath> pathsToLock;
 
-		private List<LoadedEntityRegistration> rootEntitiesToLock;
-		private List<LoadedEntityRegistration> nonRootEntitiesToLock;
+		private List<LoadedEntityRegistration> entitiesToLock;
 		private List<LoadedCollectionRegistration> collectionsToLock;
 
-		private LoadedValuesCollectorImpl(List<NavigablePath> rootPaths) {
-			this.rootPaths = rootPaths;
+		private LoadedValuesCollectorImpl(Set<NavigablePath> pathsToLock) {
+			this.pathsToLock = pathsToLock;
 		}
 
 		@Override
 		public void registerEntity(NavigablePath navigablePath, EntityMappingType entityDescriptor, EntityKey entityKey) {
-			if ( rootPaths.contains( navigablePath ) ) {
-				if ( rootEntitiesToLock == null ) {
-					rootEntitiesToLock = new ArrayList<>();
+			if ( pathsToLock.contains( navigablePath ) ) {
+				if ( entitiesToLock == null ) {
+					entitiesToLock = new ArrayList<>();
 				}
-				rootEntitiesToLock.add( new LoadedEntityRegistration( navigablePath, entityDescriptor, entityKey ) );
-			}
-			else {
-				if ( nonRootEntitiesToLock == null ) {
-					nonRootEntitiesToLock = new ArrayList<>();
-				}
-				nonRootEntitiesToLock.add( new LoadedEntityRegistration( navigablePath, entityDescriptor, entityKey ) );
+				entitiesToLock.add( new LoadedEntityRegistration( navigablePath, entityDescriptor, entityKey ) );
 			}
 		}
 
@@ -204,11 +185,8 @@ public class CollectionLockingAction implements PostAction {
 
 		@Override
 		public void clear() {
-			if ( rootEntitiesToLock != null ) {
-				rootEntitiesToLock.clear();
-			}
-			if ( nonRootEntitiesToLock != null ) {
-				nonRootEntitiesToLock.clear();
+			if ( entitiesToLock != null ) {
+				entitiesToLock.clear();
 			}
 			if ( collectionsToLock != null ) {
 				collectionsToLock.clear();
@@ -216,13 +194,8 @@ public class CollectionLockingAction implements PostAction {
 		}
 
 		@Override
-		public List<LoadedEntityRegistration> getCollectedRootEntities() {
-			return rootEntitiesToLock;
-		}
-
-		@Override
-		public List<LoadedEntityRegistration> getCollectedNonRootEntities() {
-			return nonRootEntitiesToLock;
+		public List<LoadedEntityRegistration> getCollectedEntities() {
+			return entitiesToLock;
 		}
 
 		@Override

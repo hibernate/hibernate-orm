@@ -116,7 +116,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 			}
 			appendSql( COMMA_SEPARATOR_CHAR );
 
-			renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+			renderJoinedTableGroup( tableGroupJoin, null, tableGroupJoinCollector );
 			if ( tableGroupJoin.getPredicate() != null && !tableGroupJoin.getPredicate().isEmpty() ) {
 				addAdditionalWherePredicate( tableGroupJoin.getPredicate() );
 			}

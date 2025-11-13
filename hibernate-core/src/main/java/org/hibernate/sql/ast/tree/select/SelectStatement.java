@@ -4,9 +4,6 @@
  */
 package org.hibernate.sql.ast.tree.select;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -22,6 +19,9 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * @author Steve Ebersole
  */
@@ -33,7 +33,9 @@ public class SelectStatement extends AbstractStatement implements SqlAstNode, Ex
 		this( queryPart, Collections.emptyList() );
 	}
 
-	public SelectStatement(QueryPart queryPart, List<DomainResult<?>> domainResults) {
+	public SelectStatement(
+			QueryPart queryPart,
+			List<DomainResult<?>> domainResults) {
 		this( null, queryPart, domainResults );
 	}
 
@@ -122,13 +124,11 @@ public class SelectStatement extends AbstractStatement implements SqlAstNode, Ex
 	public JdbcMappingContainer getExpressionType() {
 		final SelectClause selectClause = queryPart.getFirstQuerySpec().getSelectClause();
 		final List<SqlSelection> sqlSelections = selectClause.getSqlSelections();
-		switch ( sqlSelections.size() ) {
-			case 1:
-				return sqlSelections.get( 0 ).getExpressionType();
-			default:
-				// todo (6.0): At some point we should create an ArrayTupleType and return that
-			case 0:
-				return null;
+		if ( sqlSelections.size() == 1 ) {
+			return sqlSelections.get( 0 ).getExpressionType();
+		}
+		else {
+			return null;
 		}
 	}
 }

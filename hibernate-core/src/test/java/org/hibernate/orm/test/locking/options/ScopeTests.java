@@ -6,7 +6,6 @@ package org.hibernate.orm.test.locking.options;
 
 import org.hibernate.EnabledFetchProfile;
 import org.hibernate.Hibernate;
-import org.hibernate.Locking;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
@@ -27,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import static jakarta.persistence.PessimisticLockScope.EXTENDED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.LockMode.PESSIMISTIC_WRITE;
+import static org.hibernate.Locking.Scope.INCLUDE_FETCHES;
 import static org.hibernate.orm.test.locking.options.Helper.Table.BOOKS;
 import static org.hibernate.orm.test.locking.options.Helper.Table.BOOK_AUTHORS;
 import static org.hibernate.orm.test.locking.options.Helper.Table.BOOK_GENRES;
@@ -209,7 +209,7 @@ public class ScopeTests {
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Cursor must be on simple SELECT for FOR UPDATE")
 	void testEagerFindWithFetchScope(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			final Report report = session.find( Report.class, 2, PESSIMISTIC_WRITE, Locking.Scope.INCLUDE_FETCHES );
+			final Report report = session.find( Report.class, 2, PESSIMISTIC_WRITE, INCLUDE_FETCHES );
 
 			REPORTS.checkLocked( report.getId(), true, factoryScope );
 			PERSONS.checkLocked( report.getReporter().getId(), true, factoryScope );

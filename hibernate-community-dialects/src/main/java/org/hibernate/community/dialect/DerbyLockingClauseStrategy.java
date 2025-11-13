@@ -7,9 +7,12 @@ package org.hibernate.community.dialect;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.internal.PessimisticLockKind;
 import org.hibernate.sql.ast.internal.StandardLockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
+
+import java.util.Set;
 
 /**
  * StandardLockingClauseStrategy subclass, specific for Derby.
@@ -21,8 +24,9 @@ public class DerbyLockingClauseStrategy extends StandardLockingClauseStrategy {
 			Dialect dialect,
 			PessimisticLockKind lockKind,
 			RowLockStrategy rowLockStrategy,
-			LockOptions lockOptions) {
-		super( dialect, lockKind, rowLockStrategy, lockOptions );
+			LockOptions lockOptions,
+			Set<NavigablePath> rootPathsForLocking) {
+		super( dialect, lockKind, rowLockStrategy, lockOptions, rootPathsForLocking );
 	}
 
 	@Override

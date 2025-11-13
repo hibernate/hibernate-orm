@@ -1,6 +1,18 @@
 Hibernate 6 Changelog
 =======================
 
+Changes in 6.6.35.Final (November 13, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/35782
+
+
+** Bug
+    * HHH-19895 hibernate-core 6.6.30.Final breaks compatibility on entities with composite keys for multiple variants of DB2
+    * HHH-19888 FetchPlusOffsetParameterBinder fails to apply static offset for root pagination
+    * HHH-19887 Wrong ClassLoader used for Jackson Module discovery
+    * HHH-19739 Exceptions during load of entity with different persistent fields with same name
+
 Note: Please refer to JIRA to learn more about each issue.
 
 Changes in 6.6.34.Final (October 27, 2025)

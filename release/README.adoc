@@ -31,7 +31,7 @@ This process has a number of "outputs"...
 
 === Release Artifacts (jar)
 
-Release artifacts are published to https://oss.sonatype.org/[Sonatype OSSRH] (aka, Maven Central).  For each module, we publish:
+Release artifacts are published to https://central.sonatype.com/[Maven Central].  For each module, we publish:
 
 * The "main" jar
 * The sources jar
@@ -47,5 +47,5 @@ See https://plugins.gradle.org/plugin/org.hibernate.orm
 
 === Documentation
 
-All documentation for the release is generated, assembled and then published to the https://docs.jboss.org/hibernate/orm/[documentation server].
+All documentation for the release is generated, assembled and then published to the https://docs.hibernate.org/orm/[documentation server].
 

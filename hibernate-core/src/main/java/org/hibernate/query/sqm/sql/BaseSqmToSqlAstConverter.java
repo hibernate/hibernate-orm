@@ -1640,11 +1640,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final QueryPart queryPart = visitQueryPart( statement.getQueryPart() );
 		final List<DomainResult<?>> domainResults = queryPart.isRoot() ? this.domainResults : emptyList();
 		try {
-			return new SelectStatement( cteContainer, queryPart, domainResults );
+			return new SelectStatement( cteContainer, queryPart, domainResults, rootPathsForLocking );
 		}
 		finally {
 			this.currentSqmStatement = oldSqmStatement;
 			this.cteContainer = oldCteContainer;
+			rootPathsForLocking = null;
 		}
 	}
 
@@ -1753,7 +1754,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 								final CteStatement cteStatement = new CteStatement(
 										cteTable,
-										new SelectStatement( subCteContainer, group, emptyList() ),
+										new SelectStatement( subCteContainer, group, emptyList(), emptyList() ),
 										sqmCteStatement.getMaterialization(),
 										sqmCteStatement.getSearchClauseKind(),
 										visitSearchBySpecifications( cteTable, sqmCteStatement.getSearchBySpecifications() ),
@@ -2205,11 +2206,22 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return getFromClauseAccess().getTableGroup( navigablePath );
 	}
 
+	private List<NavigablePath> rootPathsForLocking;
+	private Consumer<NavigablePath> rootPathsForLockingCollector;
+
 	@Override
 	public SelectClause visitSelectClause(SqmSelectClause selectClause) {
 		currentClauseStack.push( Clause.SELECT );
 		try {
 			final SelectClause sqlSelectClause = currentQuerySpec().getSelectClause();
+			if ( sqmQueryPartStack.depth() == 1 ) {
+				rootPathsForLockingCollector = (navigablePath) -> {
+					if ( rootPathsForLocking == null ) {
+						rootPathsForLocking = new ArrayList<>();
+					}
+					rootPathsForLocking.add(  navigablePath );
+				};
+			}
 			if ( selectClause == null ) {
 				final SqmFrom<?, ?> implicitSelection = determineImplicitSelection( (SqmQuerySpec<?>) getCurrentSqmQueryPart() );
 				visitSelection( 0, new SqmSelection<>( implicitSelection, implicitSelection.nodeBuilder() ) );
@@ -2224,6 +2236,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return sqlSelectClause;
 		}
 		finally {
+			rootPathsForLockingCollector = null;
 			currentClauseStack.pop();
 		}
 	}
@@ -2243,11 +2256,23 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private void visitSelection(int index, SqmSelection<?> sqmSelection) {
+		collectRootPathsForLocking( sqmSelection );
+
 		inferTargetPath( index );
 		callResultProducers( resultProducers( sqmSelection ) );
 		if ( statement instanceof SqmInsertSelectStatement<?>
 				&& contributesToTopLevelSelectClause() ) {
 			inferrableTypeAccessStack.pop();
+		}
+	}
+
+	private void collectRootPathsForLocking(SqmSelection<?> sqmSelection) {
+		if ( rootPathsForLockingCollector == null ) {
+			return;
+		}
+		if ( sqmSelection.getExpressible() instanceof EntityTypeImpl
+				&& sqmSelection.getSelectableNode() instanceof SqmPath<?> entityValuedPath ) {
+			rootPathsForLockingCollector.accept( entityValuedPath.getNavigablePath() );
 		}
 	}
 
@@ -7129,7 +7154,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final QueryPart queryPart = visitQueryPart( sqmSubQuery.getQueryPart() );
 		currentlyProcessingJoin = oldJoin;
 		this.cteContainer = oldCteContainer;
-		return new SelectStatement( cteContainer, queryPart, emptyList() );
+		return new SelectStatement( cteContainer, queryPart, emptyList(), emptyList() );
 	}
 
 	@Override

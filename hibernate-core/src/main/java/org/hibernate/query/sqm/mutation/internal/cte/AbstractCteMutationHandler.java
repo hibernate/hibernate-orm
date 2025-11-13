@@ -138,7 +138,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		// Create the main query spec that will return the count of
 		final QuerySpec querySpec = new QuerySpec( true, 1 );
 		final List<DomainResult<?>> domainResults = new ArrayList<>( 1 );
-		final SelectStatement statement = new SelectStatement( querySpec, domainResults );
+		final SelectStatement statement = new SelectStatement( querySpec, domainResults, List.of() );
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 		final SqlAstTranslator<JdbcOperationQuerySelect> translator = jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()

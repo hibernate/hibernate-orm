@@ -4,12 +4,10 @@
  */
 package org.hibernate.sql.ast.tree.select;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -22,28 +20,37 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * @author Steve Ebersole
  */
 public class SelectStatement extends AbstractStatement implements SqlAstNode, Expression, DomainResultProducer {
 	private final QueryPart queryPart;
 	private final List<DomainResult<?>> domainResults;
+	private final List<NavigablePath> rootPathsForLocking;
 
 	public SelectStatement(QueryPart queryPart) {
-		this( queryPart, Collections.emptyList() );
+		this( queryPart, Collections.emptyList(), Collections.emptyList() );
 	}
 
-	public SelectStatement(QueryPart queryPart, List<DomainResult<?>> domainResults) {
-		this( null, queryPart, domainResults );
+	public SelectStatement(
+			QueryPart queryPart,
+			List<DomainResult<?>> domainResults,
+			List<NavigablePath> rootPathsForLocking) {
+		this( null, queryPart, domainResults, rootPathsForLocking );
 	}
 
 	public SelectStatement(
 			CteContainer cteContainer,
 			QueryPart queryPart,
-			List<DomainResult<?>> domainResults) {
+			List<DomainResult<?>> domainResults,
+			List<NavigablePath> rootPathsForLocking) {
 		super( cteContainer );
 		this.queryPart = queryPart;
 		this.domainResults = domainResults;
+		this.rootPathsForLocking = rootPathsForLocking == null ? Collections.emptyList() : rootPathsForLocking;
 	}
 
 	@Override
@@ -61,6 +68,12 @@ public class SelectStatement extends AbstractStatement implements SqlAstNode, Ex
 
 	public List<DomainResult<?>> getDomainResultDescriptors() {
 		return domainResults;
+	}
+
+	/// List of [NavigablePath] references to be considered roots
+	/// for locking purposes.
+	public List<NavigablePath> getRootPathsForLocking() {
+		return rootPathsForLocking;
 	}
 
 	@Override
@@ -122,13 +135,11 @@ public class SelectStatement extends AbstractStatement implements SqlAstNode, Ex
 	public JdbcMappingContainer getExpressionType() {
 		final SelectClause selectClause = queryPart.getFirstQuerySpec().getSelectClause();
 		final List<SqlSelection> sqlSelections = selectClause.getSqlSelections();
-		switch ( sqlSelections.size() ) {
-			case 1:
-				return sqlSelections.get( 0 ).getExpressionType();
-			default:
-				// todo (6.0): At some point we should create an ArrayTupleType and return that
-			case 0:
-				return null;
+		if ( sqlSelections.size() == 1 ) {
+			return sqlSelections.get( 0 ).getExpressionType();
+		}
+		else {
+			return null;
 		}
 	}
 }

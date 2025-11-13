@@ -154,7 +154,7 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 			);
 		}
 
-		final var selectStatement = new SelectStatement( rootQuerySpec, List.of( idResult ) );
+		final var selectStatement = new SelectStatement( rootQuerySpec, List.of( idResult ), List.of( entityPath ) );
 		final JdbcSelect selectOperation =
 				session.getDialect().getSqlAstTranslatorFactory()
 						.buildSelectTranslator( factory, selectStatement )

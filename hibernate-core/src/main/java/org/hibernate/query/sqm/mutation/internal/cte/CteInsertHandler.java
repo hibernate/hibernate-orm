@@ -291,7 +291,7 @@ public class CteInsertHandler implements InsertHandler {
 		// Create the main query spec that will return the count of rows
 		final QuerySpec querySpec = new QuerySpec( true, 1 );
 		final List<DomainResult<?>> domainResults = new ArrayList<>( 1 );
-		final SelectStatement statement = new SelectStatement( querySpec, domainResults );
+		final SelectStatement statement = new SelectStatement( querySpec, domainResults, List.of() );
 
 		final CteStatement entityCte;
 		if ( additionalInsertValues.requiresRowNumberIntermediate() ) {

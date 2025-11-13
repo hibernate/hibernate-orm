@@ -177,7 +177,7 @@ public class LoaderSelectBuilder {
 			builder.applyFiltering( rootQuerySpec, rootTableGroup, (Restrictable) loadable, sqlAstCreationState );
 		}
 
-		return new SelectStatement( rootQuerySpec, domainResults );
+		return new SelectStatement( rootQuerySpec, domainResults, List.of( rootNavigablePath ) );
 	}
 
 	private static void applyArrayParamRestriction(
@@ -505,7 +505,7 @@ public class LoaderSelectBuilder {
 			applyFiltering( rootQuerySpec, rootTableGroup, (Restrictable) loadable, sqlAstCreationState );
 		}
 
-		return new SelectStatement( rootQuerySpec, domainResults );
+		return new SelectStatement( rootQuerySpec, domainResults, List.of( rootNavigablePath ) );
 	}
 
 	private List<DomainResult<?>> buildRequestedDomainResults(
@@ -1024,7 +1024,8 @@ public class LoaderSelectBuilder {
 								rootTableGroup,
 								sqlAstCreationState
 						)
-				)
+				),
+				singletonList( rootNavigablePath )
 		);
 	}
 

@@ -238,7 +238,7 @@ public class TableLock {
 	public void performActions(Map<Object, EntityDetails> entityDetailsMap, QueryOptions lockingQueryOptions, SharedSessionContractImplementor session) {
 		final var sessionFactory = session.getSessionFactory();
 		final var jdbcServices = sessionFactory.getJdbcServices();
-		final var selectStatement = new SelectStatement( querySpec, domainResults );
+		final var selectStatement = new SelectStatement( querySpec, domainResults, List.of( rootPath ) );
 		final List<Object[]> results =
 				jdbcServices.getJdbcSelectExecutor()
 						.executeQuery(

@@ -593,7 +593,8 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 									null,
 									false
 							)
-					)
+					),
+					List.of()
 			);
 			temporaryTableIdentitySelect = jdbcServices.getJdbcEnvironment()
 					.getSqlAstTranslatorFactory()

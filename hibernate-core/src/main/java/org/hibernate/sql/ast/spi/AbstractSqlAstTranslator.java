@@ -6492,6 +6492,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						new SelectStatement(
 								statement,
 								new QueryGroup( false, SetOperator.INTERSECT, queryParts ),
+								emptyList(),
 								emptyList()
 						),
 						false,
@@ -6540,7 +6541,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				);
 
 				return new ExistsPredicate(
-					new SelectStatement( statement, existsQuery, emptyList() ),
+					new SelectStatement( statement, existsQuery, emptyList(), emptyList() ),
 					false,
 						booleanType
 				);
@@ -6583,7 +6584,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			);
 
 			final ExistsPredicate existsPredicate = new ExistsPredicate(
-					new SelectStatement( statement, existsQuery, emptyList() ),
+					new SelectStatement( statement, existsQuery, emptyList(), emptyList() ),
 					false,
 					booleanType
 			);
@@ -6701,7 +6702,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					List.of(
 							existsPredicate,
 							new BetweenPredicate(
-									new SelectStatement( statement, countQuery, emptyList() ),
+									new SelectStatement( statement, countQuery, emptyList(), emptyList() ),
 									countLower,
 									countUpper,
 									false,
@@ -6764,6 +6765,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return new SelectStatement(
 				statement,
 				stripToSelectClause( statement.getQueryPart() ),
+				emptyList(),
 				emptyList()
 		);
 	}

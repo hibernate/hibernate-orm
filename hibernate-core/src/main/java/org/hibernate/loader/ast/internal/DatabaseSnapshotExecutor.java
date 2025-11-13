@@ -128,7 +128,7 @@ class DatabaseSnapshotExecutor {
 				}
 		);
 
-		final var selectStatement = new SelectStatement( rootQuerySpec, domainResults );
+		final var selectStatement = new SelectStatement( rootQuerySpec, domainResults, List.of() );
 		jdbcSelect =
 				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
 						.buildSelectTranslator( sessionFactory, selectStatement )

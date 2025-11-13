@@ -46,7 +46,7 @@ pipeline {
 						}
 					}
 					dir('quarkus') {
-						sh "git clone -b 3.15 --single-branch https://github.com/quarkusio/quarkus.git . || git reset --hard && git clean -fx && git pull"
+						sh "git clone -b 3.20 --single-branch https://github.com/quarkusio/quarkus.git . || git reset --hard && git clean -fx && git pull"
         				script {
 							def sedStatus = sh (script: "sed -i 's@<hibernate-orm.version>.*</hibernate-orm.version>@<hibernate-orm.version>${env.HIBERNATE_VERSION}</hibernate-orm.version>@' pom.xml", returnStatus: true)
 							if ( sedStatus != 0 ) {

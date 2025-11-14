@@ -137,6 +137,6 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 
 	@Override
 	public String toString() {
-		return query.toString() + " : " + resultType.getSimpleName();
+		return query.toString() + (resultType != null ? " : " + resultType.getSimpleName() : "");
 	}
 }

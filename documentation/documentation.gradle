@@ -264,6 +264,8 @@ asciidoctorj {
             'html-meta-version-family': ormBuildDetails.hibernateVersion.family
 
     options logDocuments: true
+
+    fatalWarnings(missingIncludes())
 }
 
 

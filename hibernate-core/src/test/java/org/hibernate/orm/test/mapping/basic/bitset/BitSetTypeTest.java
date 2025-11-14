@@ -10,6 +10,9 @@ import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
+import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -35,6 +38,22 @@ public class BitSetTypeTest {
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
 		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+	}
+
+	/*
+	 * We don't need this code for the test itself but we need to include it in the ref doc.
+	 */
+	public void ignoredJustForIncludeInSources() {
+		try (org.hibernate.service.ServiceRegistry standardRegistry = new StandardServiceRegistryBuilder().build()) {
+			//tag::basic-custom-type-register-BasicType-example[]
+			MetadataSources sources = new MetadataSources( standardRegistry );
+			MetadataBuilder metadataBuilder = sources.getMetadataBuilder();
+			metadataBuilder.applyBasicType( BitSetType.INSTANCE );
+			//end::basic-custom-type-register-BasicType-example[]
+		}
+		catch (Exception ignore) {
+
+		}
 	}
 
 	@Test

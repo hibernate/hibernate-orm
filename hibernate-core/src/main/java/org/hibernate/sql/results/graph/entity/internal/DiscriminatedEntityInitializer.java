@@ -234,32 +234,43 @@ public class DiscriminatedEntityInitializer
 		final var lazyInitializer = extractLazyInitializer( instance );
 		if ( lazyInitializer == null ) {
 			data.setState( State.INITIALIZED );
-			if ( keyIsEager ) {
-				data.concreteDescriptor = session.getEntityPersister( null, instance );
-				data.entityIdentifier = data.concreteDescriptor.getIdentifier( instance, session );
-			}
+			data.concreteDescriptor = session.getEntityPersister( null, instance );
+			data.entityIdentifier = data.concreteDescriptor.getIdentifier( instance, session );
 		}
 		else if ( lazyInitializer.isUninitialized() ) {
 			data.setState( eager ? State.RESOLVED : State.INITIALIZED );
-			if ( keyIsEager ) {
-				// Read the discriminator from the result set if necessary
-				final Object discriminatorValue =
-						discriminatorValueAssembler.assemble( rowProcessingState );
-				data.concreteDescriptor =
-						fetchedPart.resolveDiscriminatorValue( discriminatorValue )
-								.getEntityPersister();
-				data.entityIdentifier = lazyInitializer.getInternalIdentifier();
-			}
+			// Read the discriminator from the result set if necessary
+			final Object discriminatorValue = discriminatorValueAssembler.assemble( rowProcessingState );
+			data.concreteDescriptor = fetchedPart.resolveDiscriminatorValue( discriminatorValue ).getEntityPersister();
+			data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 		}
 		else {
 			data.setState( State.INITIALIZED );
-			if ( keyIsEager ) {
-				data.concreteDescriptor =
-						session.getEntityPersister( null, lazyInitializer.getImplementation() );
-				data.entityIdentifier = lazyInitializer.getInternalIdentifier();
+			data.concreteDescriptor = session.getEntityPersister( null, lazyInitializer.getImplementation() );
+			data.entityIdentifier = lazyInitializer.getInternalIdentifier();
+		}
+
+		final var entityKey = new EntityKey( data.entityIdentifier, data.concreteDescriptor );
+		final var entityHolder = session.getPersistenceContextInternal().getEntityHolder(
+				entityKey
+		);
+
+		if ( entityHolder == null || entityHolder.getEntity() != instance && entityHolder.getProxy() != instance ) {
+			// the existing entity instance is detached or transient
+			if ( entityHolder != null ) {
+				final var managed = entityHolder.getManagedObject();
+				data.setInstance( managed );
+				data.entityIdentifier = entityHolder.getEntityKey().getIdentifier();
+				data.setState( !eager || entityHolder.isInitialized() ? State.INITIALIZED : State.RESOLVED );
+			}
+			else {
+				data.setState( State.RESOLVED );
+				initializeInstance( data );
 			}
 		}
-		data.setInstance( instance );
+		else {
+			data.setInstance( instance );
+		}
 	}
 
 	@Override

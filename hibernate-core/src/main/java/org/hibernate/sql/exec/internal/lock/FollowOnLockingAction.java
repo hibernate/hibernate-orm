@@ -254,9 +254,6 @@ public class FollowOnLockingAction implements PostAction {
 		final Map<EntityMappingType, List<EntityKey>> map = new IdentityHashMap<>();
 		LockingHelper.segmentLoadedValues( loadedValuesCollector.getCollectedRootEntities(), map );
 		LockingHelper.segmentLoadedValues( loadedValuesCollector.getCollectedNonRootEntities(), map );
-		if ( map.isEmpty() ) {
-			throw new AssertionFailure( "Expecting some values" );
-		}
 		return map;
 	}
 

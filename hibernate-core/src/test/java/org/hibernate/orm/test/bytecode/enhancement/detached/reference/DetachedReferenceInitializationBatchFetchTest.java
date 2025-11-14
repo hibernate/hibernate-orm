@@ -1,0 +1,217 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.orm.test.bytecode.enhancement.detached.reference;
+
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.engine.spi.SessionImplementor;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@DomainModel(annotatedClasses = {
+		DetachedReferenceInitializationBatchFetchTest.EntityA.class,
+		DetachedReferenceInitializationBatchFetchTest.EntityB.class,
+})
+@SessionFactory
+@BytecodeEnhanced(runNotEnhancedAsWell = true)
+@Jira("https://hibernate.atlassian.net/browse/HHH-19910")
+public class DetachedReferenceInitializationBatchFetchTest {
+	@Test
+	public void testDetachedAndPersistentEntity(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.find( EntityB.class, 1L );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.find( EntityB.class, 1L );
+
+			fetchQuery( entityB, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedEntityAndPersistentInitializedProxy(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.find( EntityB.class, 1L );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.getReference( EntityB.class, 1L );
+			Hibernate.initialize( ignored );
+
+			fetchQuery( entityB, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedEntityAndPersistentProxy(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.find( EntityB.class, 1L );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.getReference( EntityB.class, 1L );
+
+			fetchQuery( entityB, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedProxyAndPersistentEntity(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.getReference( EntityB.class, 1L );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.find( EntityB.class, 1L );
+
+			fetchQuery( entityB, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedProxyAndPersistentInitializedProxy(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.getReference( EntityB.class, 1L );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.getReference( EntityB.class, 1L );
+			Hibernate.initialize( ignored );
+
+			fetchQuery( entityB, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedAndPersistentProxy(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.getReference( EntityB.class, 1L );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.getReference( EntityB.class, 1L );
+
+
+			fetchQuery( entityB, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedInitializedProxyAndPersistentEntity(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.getReference( EntityB.class, 1L );
+			Hibernate.initialize(  entityB );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.find( EntityB.class, 1L );
+
+			fetchQuery( entityB, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedAndPersistentInitializedProxy(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.getReference( EntityB.class, 1L );
+			Hibernate.initialize(  entityB );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.getReference( EntityB.class, 1L );
+			Hibernate.initialize( ignored );
+
+			fetchQuery( entityB, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedInitializedProxyAndPersistentProxy(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.getReference( EntityB.class, 1L );
+			Hibernate.initialize(  entityB );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.getReference( EntityB.class, 1L );
+
+			fetchQuery( entityB, session );
+		} );
+	}
+
+	@BeforeAll
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = new EntityB();
+			entityB.id = 1L;
+			entityB.name = "b_1";
+			session.persist( entityB );
+		} );
+	}
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.createMutationQuery( "delete from EntityA" ).executeUpdate();
+		} );
+	}
+
+	private void fetchQuery(EntityB entityB, SessionImplementor session) {
+		final var entityA = new EntityA();
+		entityA.id = 1L;
+		entityA.b = entityB;
+		session.persist( entityA );
+		final var entityA2 = new EntityA();
+		entityA2.id = 2L;
+		session.persist( entityA2 );
+
+		final var wasInitialized = Hibernate.isInitialized( entityB );
+
+		final var result = session.createQuery(
+				"from EntityA a order by a.id",
+				EntityA.class
+		).getResultList().get( 0 );
+
+		assertThat( Hibernate.isInitialized( entityB ) ).isEqualTo( wasInitialized );
+		assertThat( result.b ).isSameAs( entityB );
+
+		final var id = session.getSessionFactory().getPersistenceUnitUtil().getIdentifier( entityB );
+		final var reference = session.getReference( EntityB.class, id );
+		assertThat( Hibernate.isInitialized(  reference ) ).isTrue();
+		assertThat( reference ).isNotSameAs( entityB );
+	}
+
+	@Entity(name = "EntityA")
+	static class EntityA {
+		@Id
+		private Long id;
+
+		@ManyToOne
+		private EntityB b;
+	}
+
+	@BatchSize( size = 10 )
+	@Entity(name = "EntityB")
+	static class EntityB {
+		@Id
+		private Long id;
+
+		private String name;
+	}
+}

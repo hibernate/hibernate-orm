@@ -124,7 +124,7 @@ public class MatchingIdSelectionHelper {
 				sqmConverter
 		);
 
-		return new SelectStatement( idSelectionQuery, domainResults, List.of() );
+		return new SelectStatement( idSelectionQuery, domainResults );
 	}
 
 	/// Generates a query-spec for selecting all ids matching the restriction defined as part

@@ -7,7 +7,6 @@ package org.hibernate.sql.ast.tree.select;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -29,28 +28,24 @@ import java.util.List;
 public class SelectStatement extends AbstractStatement implements SqlAstNode, Expression, DomainResultProducer {
 	private final QueryPart queryPart;
 	private final List<DomainResult<?>> domainResults;
-	private final List<NavigablePath> rootPathsForLocking;
 
 	public SelectStatement(QueryPart queryPart) {
-		this( queryPart, Collections.emptyList(), Collections.emptyList() );
+		this( queryPart, Collections.emptyList() );
 	}
 
 	public SelectStatement(
 			QueryPart queryPart,
-			List<DomainResult<?>> domainResults,
-			List<NavigablePath> rootPathsForLocking) {
-		this( null, queryPart, domainResults, rootPathsForLocking );
+			List<DomainResult<?>> domainResults) {
+		this( null, queryPart, domainResults );
 	}
 
 	public SelectStatement(
 			CteContainer cteContainer,
 			QueryPart queryPart,
-			List<DomainResult<?>> domainResults,
-			List<NavigablePath> rootPathsForLocking) {
+			List<DomainResult<?>> domainResults) {
 		super( cteContainer );
 		this.queryPart = queryPart;
 		this.domainResults = domainResults;
-		this.rootPathsForLocking = rootPathsForLocking == null ? Collections.emptyList() : rootPathsForLocking;
 	}
 
 	@Override
@@ -68,12 +63,6 @@ public class SelectStatement extends AbstractStatement implements SqlAstNode, Ex
 
 	public List<DomainResult<?>> getDomainResultDescriptors() {
 		return domainResults;
-	}
-
-	/// List of [NavigablePath] references to be considered roots
-	/// for locking purposes.
-	public List<NavigablePath> getRootPathsForLocking() {
-		return rootPathsForLocking;
 	}
 
 	@Override

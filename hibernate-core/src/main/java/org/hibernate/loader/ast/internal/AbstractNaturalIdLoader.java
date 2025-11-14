@@ -215,7 +215,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		return executeNaturalIdQuery(
 				naturalIdValue,
 				LockOptions.NONE,
-				new SelectStatement( rootQuerySpec, singletonList( domainResult ), List.of() ),
+				new SelectStatement( rootQuerySpec, singletonList( domainResult ) ),
 				rootTableGroup,
 				rootQuerySpec::applyPredicate,
 				sqlAstCreationState,

@@ -11,17 +11,21 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.transaction.TransactionUtil;
 import org.hibernate.testing.util.ast.HqlHelper;
 import org.hibernate.testing.util.ast.LoadingAstHelper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import java.util.Iterator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -57,23 +61,15 @@ public class LockingBasedOnSelectClauseTests {
 			session.createQuery( "select b.author from Book b" )
 					.setLockMode( LockModeType.PESSIMISTIC_WRITE )
 					.list();
-			// NOTE : The correct outcome here is for the authors table to be locked as the root selection.
-			//		However, that is not what happens today - atm, the books table is locked (as the root
-			// 		of the from-clause).
-			//		So ideally we want to make sure that -
-			//			* authors is locked
-			//			* books is not
-			// 		Unfortunately we cannot even craft a good assertion here because some of the dialects
-			//		will lock both.
-
-//			TransactionUtil.assertRowLock(
-//					factoryScope,
-//					"authors",
-//					"name",
-//					"id",
-//					1,
-//					session.getDialect().getLockingSupport().getMetadata().getWriteRowLockStrategy() == RowLockStrategy.NONE
-//			);
+			// The correct outcome here is for the authors table to be locked as the root selection.
+			TransactionUtil.assertRowLock(
+					factoryScope,
+					"authors",
+					"name",
+					"id",
+					1,
+					true
+			);
 		} );
 	}
 
@@ -98,8 +94,8 @@ public class LockingBasedOnSelectClauseTests {
 		final Statement sqlAst = hqlTranslation.sqlAst();
 		assertThat( sqlAst ).isInstanceOf( SelectStatement.class );
 		final SelectStatement selectAst = ( SelectStatement ) sqlAst;
-		assertThat( selectAst.getRootPathsForLocking() ).hasSize( 1 );
-		assertThat( selectAst.getRootPathsForLocking().get( 0 ).getFullPath() )
+		assertThat( selectAst.getQuerySpec().getRootPathsForLocking() ).hasSize( 1 );
+		assertThat( selectAst.getQuerySpec().getRootPathsForLocking().iterator().next().getFullPath() )
 				.isEqualTo( BOOK_AUTHOR_PATH_HQL );
 	}
 
@@ -113,8 +109,8 @@ public class LockingBasedOnSelectClauseTests {
 		final Statement sqlAst = hqlTranslation.sqlAst();
 		assertThat( sqlAst ).isInstanceOf( SelectStatement.class );
 		final SelectStatement selectAst = ( SelectStatement ) sqlAst;
-		assertThat( selectAst.getRootPathsForLocking() ).hasSize( 1 );
-		assertThat( selectAst.getRootPathsForLocking().get( 0 ).getFullPath() )
+		assertThat( selectAst.getQuerySpec().getRootPathsForLocking() ).hasSize( 1 );
+		assertThat( selectAst.getQuerySpec().getRootPathsForLocking().iterator().next().getFullPath() )
 				.isEqualTo( BOOK_PATH_HQL );
 	}
 
@@ -128,11 +124,10 @@ public class LockingBasedOnSelectClauseTests {
 		final Statement sqlAst = hqlTranslation.sqlAst();
 		assertThat( sqlAst ).isInstanceOf( SelectStatement.class );
 		final SelectStatement selectAst = ( SelectStatement ) sqlAst;
-		assertThat( selectAst.getRootPathsForLocking() ).hasSize( 2 );
-		assertThat( selectAst.getRootPathsForLocking().get( 0 ).getFullPath() )
-				.isEqualTo( BOOK_PATH_HQL );
-		assertThat( selectAst.getRootPathsForLocking().get( 1 ).getFullPath() )
-				.isEqualTo( BOOK_AUTHOR_PATH_HQL );
+		assertThat( selectAst.getQuerySpec().getRootPathsForLocking() ).hasSize( 2 );
+		final Iterator<NavigablePath> paths = selectAst.getQuerySpec().getRootPathsForLocking().iterator();
+		assertThat( paths.next().getFullPath() ).isEqualTo( BOOK_PATH_HQL );
+		assertThat( paths.next().getFullPath() ).isEqualTo( BOOK_AUTHOR_PATH_HQL );
 	}
 
 	@Test
@@ -145,11 +140,10 @@ public class LockingBasedOnSelectClauseTests {
 		final Statement sqlAst = hqlTranslation.sqlAst();
 		assertThat( sqlAst ).isInstanceOf( SelectStatement.class );
 		final SelectStatement selectAst = ( SelectStatement ) sqlAst;
-		assertThat( selectAst.getRootPathsForLocking() ).hasSize( 2 );
-		assertThat( selectAst.getRootPathsForLocking().get( 0 ).getFullPath() )
-				.isEqualTo( BOOK_PATH_HQL );
-		assertThat( selectAst.getRootPathsForLocking().get( 1 ).getFullPath() )
-				.isEqualTo( BOOK_AUTHOR_PATH_HQL );
+		assertThat( selectAst.getQuerySpec().getRootPathsForLocking() ).hasSize( 2 );
+		final Iterator<NavigablePath> paths = selectAst.getQuerySpec().getRootPathsForLocking().iterator();
+		assertThat( paths.next().getFullPath() ).isEqualTo( BOOK_PATH_HQL );
+		assertThat( paths.next().getFullPath() ).isEqualTo( BOOK_AUTHOR_PATH_HQL );
 	}
 
 	@Test
@@ -160,8 +154,8 @@ public class LockingBasedOnSelectClauseTests {
 				1,
 				factoryScope.getSessionFactory()
 		);
-		assertThat( translation.sqlAst().getRootPathsForLocking() ).hasSize( 1 );
-		assertThat( translation.sqlAst().getRootPathsForLocking().get( 0 ).getFullPath() )
+		assertThat( translation.sqlAst().getQuerySpec().getRootPathsForLocking() ).hasSize( 1 );
+		assertThat( translation.sqlAst().getQuerySpec().getRootPathsForLocking().iterator().next().getFullPath() )
 				.isEqualTo( BOOK_PATH );
 	}
 

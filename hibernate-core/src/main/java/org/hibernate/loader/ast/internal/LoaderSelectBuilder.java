@@ -148,6 +148,8 @@ public class LoaderSelectBuilder {
 		final var sqlAstCreationState = builder.createSqlAstCreationState( rootQuerySpec );
 
 		final var rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
+		rootQuerySpec.applyRootPathForLocking( rootNavigablePath );
+
 		final var rootTableGroup =
 				builder.buildRootTableGroup( rootNavigablePath, rootQuerySpec, sqlAstCreationState );
 
@@ -177,7 +179,7 @@ public class LoaderSelectBuilder {
 			builder.applyFiltering( rootQuerySpec, rootTableGroup, (Restrictable) loadable, sqlAstCreationState );
 		}
 
-		return new SelectStatement( rootQuerySpec, domainResults, List.of( rootNavigablePath ) );
+		return new SelectStatement( rootQuerySpec, domainResults );
 	}
 
 	private static void applyArrayParamRestriction(
@@ -464,6 +466,8 @@ public class LoaderSelectBuilder {
 		final var rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
 
 		final var rootQuerySpec = new QuerySpec( true );
+		rootQuerySpec.applyRootPathForLocking( rootNavigablePath );
+
 		final var sqlAstCreationState = createSqlAstCreationState( rootQuerySpec );
 
 		final var rootTableGroup = buildRootTableGroup( rootNavigablePath, rootQuerySpec, sqlAstCreationState );
@@ -505,7 +509,7 @@ public class LoaderSelectBuilder {
 			applyFiltering( rootQuerySpec, rootTableGroup, (Restrictable) loadable, sqlAstCreationState );
 		}
 
-		return new SelectStatement( rootQuerySpec, domainResults, List.of( rootNavigablePath ) );
+		return new SelectStatement( rootQuerySpec, domainResults );
 	}
 
 	private List<DomainResult<?>> buildRequestedDomainResults(
@@ -980,12 +984,11 @@ public class LoaderSelectBuilder {
 		//		- so `loadable` is the owner entity-descriptor and the `partsToSelect` is the collection
 
 		assert loadable instanceof PluralAttributeMapping;
-
 		final var attributeMapping = (PluralAttributeMapping) loadable;
 
-		final var rootQuerySpec = new QuerySpec( true );
-
 		final var rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
+		final var rootQuerySpec = new QuerySpec( true );
+		rootQuerySpec.applyRootPathForLocking( rootNavigablePath );
 
 		// We need to initialize the acronymMap based on subselect.getLoadingSqlAst() to avoid alias collisions
 		final var tableReferences = AliasCollector.getTableReferences( subselect.getLoadingSqlAst() );
@@ -1024,8 +1027,7 @@ public class LoaderSelectBuilder {
 								rootTableGroup,
 								sqlAstCreationState
 						)
-				),
-				singletonList( rootNavigablePath )
+				)
 		);
 	}
 

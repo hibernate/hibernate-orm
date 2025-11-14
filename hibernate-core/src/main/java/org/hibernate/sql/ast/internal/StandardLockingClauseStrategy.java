@@ -20,6 +20,7 @@ import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -60,14 +61,18 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 	 */
 	private boolean queryHasOuterJoins = false;
 
+	private final Set<NavigablePath> rootsForLocking;
+
 	private Set<TableGroup> rootsToLock;
 	private Set<TableGroupJoin> joinsToLock;
+	private Set<NavigablePath> pathsToLock;
 
 	public StandardLockingClauseStrategy(
 			Dialect dialect,
 			PessimisticLockKind lockKind,
 			RowLockStrategy rowLockStrategy,
-			LockOptions lockOptions) {
+			LockOptions lockOptions,
+			Set<NavigablePath> rootsForLocking) {
 		// NOTE: previous versions would limit collection based on RowLockStrategy.
 		// however, this causes problems with the new follow-on locking approach
 
@@ -78,6 +83,8 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 		this.lockKind = lockKind;
 		this.lockingScope = lockOptions.getScope();
 		this.timeout = lockOptions.getTimeout();
+
+		this.rootsForLocking = rootsForLocking == null ? Set.of() : rootsForLocking;
 	}
 
 	@Override
@@ -89,34 +96,62 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 			}
 		}
 
-		if ( rootsToLock == null ) {
-			rootsToLock = new HashSet<>();
+		if ( rootsForLocking.contains( root.getNavigablePath() ) ) {
+			if ( rootsToLock == null ) {
+				rootsToLock = new HashSet<>();
+			}
+			if ( pathsToLock == null ) {
+				pathsToLock = new HashSet<>();
+			}
+			rootsToLock.add( root );
+			pathsToLock.add( root.getNavigablePath() );
 		}
-		rootsToLock.add( root );
 	}
 
 	@Override
 	public void registerJoin(TableGroupJoin join) {
 		checkForOuterJoins( join );
 
-		if ( lockingScope == Locking.Scope.INCLUDE_COLLECTIONS ) {
-			// if the TableGroup is an owned (aka, non-inverse) collection,
-			// and we are to lock collections, track it
-			if ( join.getJoinedGroup().getModelPart() instanceof PluralAttributeMapping attrMapping ) {
-				if ( !attrMapping.getCollectionDescriptor().isInverse() ) {
-					// owned collection
-					if ( attrMapping.getElementDescriptor() instanceof BasicValuedCollectionPart ) {
-						// an element-collection
-						trackJoin( join );
+		// we only want to consider applying locks to joins in 2 cases:
+		//		1) It is a root path for locking (aka occurs in the domain select-clause)
+		//		2) It's left-hand side is to be locked
+		if ( isRootForLocking( join ) ) {
+			trackJoin( join );
+		}
+		else if ( isLhsLocked( join ) ) {
+			if ( lockingScope == Locking.Scope.INCLUDE_COLLECTIONS ) {
+				// if the TableGroup is an owned (aka, non-inverse) collection,
+				// and we are to lock collections, track it
+				if ( join.getJoinedGroup().getModelPart() instanceof PluralAttributeMapping attrMapping ) {
+					if ( !attrMapping.getCollectionDescriptor().isInverse() ) {
+						// owned collection
+						if ( attrMapping.getElementDescriptor() instanceof BasicValuedCollectionPart ) {
+							// an element-collection
+							trackJoin( join );
+						}
 					}
 				}
 			}
-		}
-		else if ( lockingScope == Locking.Scope.INCLUDE_FETCHES ) {
-			if ( join.getJoinedGroup().isFetched() ) {
-				trackJoin( join );
+			else if ( lockingScope == Locking.Scope.INCLUDE_FETCHES ) {
+				if ( join.getJoinedGroup().isFetched() ) {
+					trackJoin( join );
+				}
 			}
 		}
+	}
+
+	private boolean isRootForLocking(TableGroupJoin join) {
+		return rootsForLocking.contains( join.getNavigablePath() );
+	}
+
+	private boolean isLhsLocked(TableGroupJoin join) {
+		// TODO (pessimistic-locking) : The use of NavigablePath#parent for LHS here is not ideal.
+		//		However, the only alternative is to change the method signature to pass the
+		//		join's LHS which would have a broad impact on Dialects and translators.
+		//		I'm sure this will miss some cases, but let's start here fow now and deal with
+		//		these other cases as they come up.
+		return pathsToLock != null
+				&& pathsToLock.contains( join.getNavigablePath().getParent() );
 	}
 
 	private void checkForOuterJoins(TableGroupJoin join) {
@@ -148,7 +183,11 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 		if ( joinsToLock == null ) {
 			joinsToLock = new LinkedHashSet<>();
 		}
+		if ( pathsToLock == null ) {
+			pathsToLock = new HashSet<>();
+		}
 		joinsToLock.add( join );
+		pathsToLock.add( join.getNavigablePath() );
 	}
 
 	@Override
@@ -194,8 +233,10 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 		}
 
 		final List<String> lockItems = new ArrayList<>();
-		for ( TableGroup root : rootsToLock ) {
-			collectLockItems( root, lockItems );
+		if ( rootsToLock != null ) {
+			for ( TableGroup root : rootsToLock ) {
+				collectLockItems( root, lockItems );
+			}
 		}
 		if ( joinsToLock != null ) {
 			for ( TableGroupJoin join : joinsToLock ) {

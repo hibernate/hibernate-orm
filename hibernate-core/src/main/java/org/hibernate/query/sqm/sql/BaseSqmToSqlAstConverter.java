@@ -1640,12 +1640,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final QueryPart queryPart = visitQueryPart( statement.getQueryPart() );
 		final List<DomainResult<?>> domainResults = queryPart.isRoot() ? this.domainResults : emptyList();
 		try {
-			return new SelectStatement( cteContainer, queryPart, domainResults, rootPathsForLocking );
+			return new SelectStatement( cteContainer, queryPart, domainResults );
 		}
 		finally {
 			this.currentSqmStatement = oldSqmStatement;
 			this.cteContainer = oldCteContainer;
-			rootPathsForLocking = null;
+			rootPathsForLockingCollector = null;
 		}
 	}
 
@@ -1754,7 +1754,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 								final CteStatement cteStatement = new CteStatement(
 										cteTable,
-										new SelectStatement( subCteContainer, group, emptyList(), emptyList() ),
+										new SelectStatement( subCteContainer, group, emptyList() ),
 										sqmCteStatement.getMaterialization(),
 										sqmCteStatement.getSearchClauseKind(),
 										visitSearchBySpecifications( cteTable, sqmCteStatement.getSearchBySpecifications() ),
@@ -2206,7 +2206,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return getFromClauseAccess().getTableGroup( navigablePath );
 	}
 
-	private List<NavigablePath> rootPathsForLocking;
 	private Consumer<NavigablePath> rootPathsForLockingCollector;
 
 	@Override
@@ -2214,13 +2213,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		currentClauseStack.push( Clause.SELECT );
 		try {
 			final SelectClause sqlSelectClause = currentQuerySpec().getSelectClause();
-			if ( sqmQueryPartStack.depth() == 1 ) {
-				rootPathsForLockingCollector = (navigablePath) -> {
-					if ( rootPathsForLocking == null ) {
-						rootPathsForLocking = new ArrayList<>();
-					}
-					rootPathsForLocking.add(  navigablePath );
-				};
+			if ( sqmQueryPartStack.depth() == 1 && currentClauseStack.depth() == 1 ) {
+				// these 2 conditions combined *should* indicate we have the
+				// root query-spec of a top-level select statement
+				rootPathsForLockingCollector = (path) ->
+						currentQuerySpec().applyRootPathForLocking( path );
 			}
 			if ( selectClause == null ) {
 				final SqmFrom<?, ?> implicitSelection = determineImplicitSelection( (SqmQuerySpec<?>) getCurrentSqmQueryPart() );
@@ -7190,7 +7187,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final QueryPart queryPart = visitQueryPart( sqmSubQuery.getQueryPart() );
 		currentlyProcessingJoin = oldJoin;
 		this.cteContainer = oldCteContainer;
-		return new SelectStatement( cteContainer, queryPart, emptyList(), emptyList() );
+		return new SelectStatement( cteContainer, queryPart, emptyList() );
 	}
 
 	@Override

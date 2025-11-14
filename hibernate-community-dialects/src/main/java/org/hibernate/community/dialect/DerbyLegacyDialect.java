@@ -58,6 +58,7 @@ import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -85,6 +86,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Set;
 
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -551,8 +553,9 @@ public class DerbyLegacyDialect extends Dialect {
 	protected LockingClauseStrategy buildLockingClauseStrategy(
 			PessimisticLockKind lockKind,
 			RowLockStrategy rowLockStrategy,
-			LockOptions lockOptions) {
-		return new DerbyLockingClauseStrategy( this, lockKind, rowLockStrategy, lockOptions );
+			LockOptions lockOptions,
+			Set<NavigablePath> rootPathsForLocking) {
+		return new DerbyLockingClauseStrategy( this, lockKind, rowLockStrategy, lockOptions, rootPathsForLocking );
 	}
 
 	@Override

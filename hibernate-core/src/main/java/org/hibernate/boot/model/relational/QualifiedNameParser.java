@@ -79,17 +79,19 @@ public class QualifiedNameParser {
 			if ( this == o ) {
 				return true;
 			}
-			if ( !(o instanceof NameParts that) ) {
+			else if ( !(o instanceof NameParts that) ) {
 				return false;
 			}
-			return Objects.equals( this.catalogName, that.catalogName )
-				&& Objects.equals( this.schemaName, that.schemaName )
-				&& Objects.equals( this.objectName, that.objectName );
+			else {
+				return Objects.equals( this.catalogName, that.catalogName )
+					&& Objects.equals( this.schemaName, that.schemaName )
+					&& Objects.equals( this.objectName, that.objectName );
+			}
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(  catalogName, schemaName, objectName );
+			return Objects.hash( catalogName, schemaName, objectName );
 		}
 	}
 

@@ -1344,7 +1344,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public String getDual() {
-		return "sysibm.dual";
+		return "sysibm.sysdummy1";
 	}
 
 	@Override

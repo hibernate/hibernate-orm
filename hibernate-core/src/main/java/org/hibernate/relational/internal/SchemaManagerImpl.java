@@ -4,10 +4,15 @@
  */
 package org.hibernate.relational.internal;
 
+import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.mapping.Table;
 import org.hibernate.relational.SchemaManager;
 import org.hibernate.tool.schema.Action;
+import org.hibernate.tool.schema.spi.SchemaFilter;
+import org.hibernate.tool.schema.spi.SchemaFilterProvider;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
@@ -18,9 +23,14 @@ import jakarta.persistence.SchemaValidationException;
 
 import static org.hibernate.cfg.MappingSettings.DEFAULT_CATALOG;
 import static org.hibernate.cfg.MappingSettings.DEFAULT_SCHEMA;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_IMPORT_FILES;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_LOAD_SCRIPT_SOURCE;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_SKIP_DEFAULT_IMPORT_FILE;
 import static org.hibernate.cfg.SchemaToolingSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS;
 import static org.hibernate.cfg.SchemaToolingSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
+import static org.hibernate.cfg.SchemaToolingSettings.JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE;
 import static org.hibernate.cfg.SchemaToolingSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_FILTER_PROVIDER;
 
 /**
  * Implementation of {@link SchemaManager}, backed by a {@link SessionFactoryImplementor}
@@ -119,6 +129,65 @@ public class SchemaManagerImpl implements SchemaManager {
 		Map<String, Object> properties = new HashMap<>( sessionFactory.getProperties() );
 		properties.put( JAKARTA_HBM2DDL_DATABASE_ACTION, Action.TRUNCATE );
 		properties.put( JAKARTA_HBM2DDL_SCRIPTS_ACTION, Action.NONE );
+		addSchemaAndCatalog( properties );
+		SchemaManagementToolCoordinator.process(
+				metadata,
+				sessionFactory.getServiceRegistry(),
+				properties,
+				action -> {}
+		);
+	}
+
+	@Override
+	public void truncateTable(String tableName) {
+		Map<String, Object> properties = new HashMap<>( sessionFactory.getProperties() );
+		properties.put( JAKARTA_HBM2DDL_DATABASE_ACTION, Action.TRUNCATE );
+		properties.put( JAKARTA_HBM2DDL_SCRIPTS_ACTION, Action.NONE );
+		properties.put( HBM2DDL_SKIP_DEFAULT_IMPORT_FILE, true );
+		properties.remove( JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE );
+		properties.remove( HBM2DDL_LOAD_SCRIPT_SOURCE );
+		properties.remove( HBM2DDL_IMPORT_FILES );
+		properties.put( HBM2DDL_FILTER_PROVIDER, new SchemaFilterProvider() {
+			@Override
+			public SchemaFilter getCreateFilter() {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public SchemaFilter getDropFilter() {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public SchemaFilter getTruncatorFilter() {
+				return new SchemaFilter() {
+					@Override
+					public boolean includeNamespace(Namespace namespace) {
+						return true;
+					}
+
+					@Override
+					public boolean includeTable(Table table) {
+						return table.getName().equals( tableName );
+					}
+
+					@Override
+					public boolean includeSequence(Sequence sequence) {
+						return false;
+					}
+				};
+			}
+
+			@Override
+			public SchemaFilter getMigrateFilter() {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public SchemaFilter getValidateFilter() {
+				throw new UnsupportedOperationException();
+			}
+		} );
 		addSchemaAndCatalog( properties );
 		SchemaManagementToolCoordinator.process(
 				metadata,

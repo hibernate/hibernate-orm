@@ -142,6 +142,18 @@ public abstract class AbstractSchemaPopulator {
 		final String[] importFiles =
 				StringHelper.split( ",",
 						getString( HBM2DDL_IMPORT_FILES, options.getConfigurationValues(), defaultImportFile ) );
+		if ( importFiles.length > 0 ) {
+			applyImportFiles( options, commandExtractor, dialect, formatter, importFiles, targets );
+		}
+	}
+
+	private void applyImportFiles(
+			ExecutionOptions options,
+			SqlScriptCommandExtractor commandExtractor,
+			Dialect dialect,
+			Formatter formatter,
+			String[] importFiles,
+			GenerationTarget[] targets) {
 		final String charsetName = getCharsetName( options );
 		final var classLoaderService = getClassLoaderService();
 		for ( String currentFile : importFiles ) {

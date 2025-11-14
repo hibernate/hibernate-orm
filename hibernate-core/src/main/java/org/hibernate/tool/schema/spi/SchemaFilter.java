@@ -8,6 +8,7 @@ import org.hibernate.Incubating;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.mapping.Table;
+import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 
 /**
  * Defines a filter for Hibernate's schema tooling.
@@ -52,21 +53,5 @@ public interface SchemaFilter {
 	/**
 	 * Matches everything
 	 */
-	SchemaFilter ALL = new SchemaFilter() {
-		@Override
-		public boolean includeNamespace( Namespace namespace ) {
-			return true;
-		}
-
-		@Override
-		public boolean includeTable( Table table ) {
-			return true;
-		}
-
-		@Override
-		public boolean includeSequence( Sequence sequence ) {
-			return true;
-		}
-	};
-
+	SchemaFilter ALL = DefaultSchemaFilter.INSTANCE;
 }

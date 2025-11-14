@@ -584,7 +584,7 @@ if the `@Filter` defines a condition that uses predicates across multiple tables
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-pc}/FilterSqlFragementAliasTest.java[tags=pc-filter-sql-fragment-alias-example]
+include::{example-dir-pc}/FilterSqlFragmentAliasTest.java[tags=pc-filter-sql-fragment-alias-example]
 ----
 ====
 
@@ -596,7 +596,7 @@ Hibernate is going to apply the right table aliases to the filter predicates:
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-pc}/FilterSqlFragementAliasTest.java[tags=pc-filter-sql-fragment-alias-query-example]
+include::{example-dir-pc}/FilterSqlFragmentAliasTest.java[tags=pc-filter-sql-fragment-alias-query-example]
 ----
 
 [source, sql, indent=0]

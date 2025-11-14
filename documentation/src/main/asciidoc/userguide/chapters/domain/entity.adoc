@@ -470,7 +470,7 @@ The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/an
 ====
 [source,java]
 ----
-include::{example-dir-proxy}/concrete/AbstractConcreteProxyTest.java[tag=entity-concrete-proxy-mapping,indent=0]
+include::{example-dir-proxy}/concrete/ConcreteProxyTest.java[tag=entity-concrete-proxy-mapping,indent=0]
 ----
 ====
 
@@ -481,7 +481,7 @@ In the following example we load the parent's lazy association and resolve to th
 ====
 [source,java]
 ----
-include::{example-dir-proxy}/concrete/AbstractConcreteProxyTest.java[tag=entity-concrete-proxy-find,indent=0]
+include::{example-dir-proxy}/concrete/ConcreteProxyTest.java[tag=entity-concrete-proxy-find,indent=0]
 ----
 
 [source,sql]
@@ -505,7 +505,7 @@ In the following example, you can see how Hibernate issues a query to resolve th
 ====
 [source,java]
 ----
-include::{example-dir-proxy}/concrete/AbstractConcreteProxyTest.java[tag=entity-concrete-proxy-reference,indent=0]
+include::{example-dir-proxy}/concrete/ConcreteProxyTest.java[tag=entity-concrete-proxy-reference,indent=0]
 ----
 
 [source,sql]

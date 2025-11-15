@@ -689,11 +689,10 @@ public class MySQLDialect extends Dialect {
 		functionFactory.jsonArrayInsert_mysql();
 		functionFactory.regexpLike_regexp();
 
-		if ( getMySQLVersion().isSameOrAfter( 8 ) ) {
-			functionFactory.unnest_emulated();
-			functionFactory.jsonTable_mysql();
-			functionFactory.regexpLike();
-		}
+		functionFactory.unnest_emulated();
+		functionFactory.jsonTable_mysql();
+		functionFactory.regexpLike();
+
 		if ( supportsRecursiveCTE() ) {
 			functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
 		}

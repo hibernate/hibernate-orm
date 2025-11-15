@@ -20,7 +20,7 @@ public class Post extends Comment{
 
 	protected List<Comment> comments = new ArrayList<>();
 
-	@OneToMany(mappedBy = "post", cascade = CascadeType.ALL , orphanRemoval = false, fetch = FetchType.LAZY)
+	@OneToMany(mappedBy = "post", cascade = CascadeType.ALL , fetch = FetchType.LAZY)
 	@OrderColumn(name = "idx")
 	public List<Comment> getComments() {
 		return comments;

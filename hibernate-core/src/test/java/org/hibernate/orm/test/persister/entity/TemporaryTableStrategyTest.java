@@ -11,7 +11,6 @@ import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
-import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -20,9 +19,10 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
 import org.jboss.logging.Logger;
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.Set;
 
@@ -41,9 +41,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @RequiresDialect(OracleDialect.class)
 public class TemporaryTableStrategyTest {
 
-	@Rule
-	public LoggerInspectionRule logInspection =
-			new LoggerInspectionRule( Logger.getLogger( GlobalTemporaryTableStrategy.class ) );
+	@RegisterExtension
+	public LoggerInspectionExtension logInspection =
+			LoggerInspectionExtension.builder().setLogger(  Logger.getLogger( GlobalTemporaryTableStrategy.class ) ).build();
 
 	private final Triggerable triggerable = logInspection.watchForLogMessages( Set.of(
 			"Creating global-temp ID table",

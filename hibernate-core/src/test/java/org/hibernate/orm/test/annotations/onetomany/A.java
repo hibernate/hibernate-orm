@@ -32,7 +32,7 @@ public class A {
 	@OneToMany( cascade = CascadeType.ALL)
 	@Cascade(org.hibernate.annotations.CascadeType.ALL)
 	@OrderBy("name")
-	java.util.List<B> bs = new ArrayList<B>();
+	java.util.List<B> bs = new ArrayList<>();
 
 
 

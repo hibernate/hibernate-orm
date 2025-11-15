@@ -11,13 +11,12 @@ import jakarta.persistence.OneToOne;
 
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.junit.Rule;
+import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
 import org.junit.jupiter.api.Test;
-
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
@@ -35,9 +34,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		}
 )
 public class OneToOneMapsIdChangeParentTest {
-
-	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule( CORE_LOGGER );
+	@RegisterExtension
+	public LoggerInspectionExtension logInspection =
+			LoggerInspectionExtension.builder().setLogger( CORE_LOGGER ).build();
 
 	private final Triggerable triggerable = logInspection.watchForLogMessages( "HHH000502:" );
 

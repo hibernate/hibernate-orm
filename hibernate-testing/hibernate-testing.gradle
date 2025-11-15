@@ -22,6 +22,7 @@ dependencies {
     api testLibs.assertjCore
 
     api testLibs.mockito
+    api testLibs.mockitoJunitJupiter
 
     api testLibs.bytemanBmunit
 

@@ -33,7 +33,7 @@ public class B {
 	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	@Cascade(org.hibernate.annotations.CascadeType.ALL)
 	@OrderBy("name")
-	java.util.List<C> cs = new ArrayList<C>();
+	java.util.List<C> cs = new ArrayList<>();
 
 	public Long getId() {
 		return id;

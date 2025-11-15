@@ -36,7 +36,7 @@ public class Forum{
 		this.id = id;
 	}
 
-	@OneToMany(mappedBy = "forum", cascade = CascadeType.ALL , orphanRemoval = false, fetch = FetchType.LAZY)
+	@OneToMany(mappedBy = "forum", cascade = CascadeType.ALL , fetch = FetchType.LAZY)
 	@OrderColumn(name = "idx2")
 	public List<Comment> getPosts() {
 		return posts;

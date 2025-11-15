@@ -19,16 +19,17 @@ import org.jboss.logging.annotations.ValidIdRange;
 import java.lang.invoke.MethodHandles;
 import java.util.ServiceConfigurationError;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
- * Miscellaneous logging related to Hibernate ORM Core.
+ * Logging related to Hibernate Services.
  */
 @SubSystemLogging(
 		name = SessionLogging.NAME,
-		description = "Miscellaneous Logging related to Hibernate ORM Core"
+		description = "Logging related to Hibernate Services"
 )
 @MessageLogger(projectCode = "HHH")
 @ValidIdRange(min=10002,max = 20000)
@@ -67,4 +68,9 @@ public interface ServiceLogger extends BasicLogger {
 	@LogMessage(level = TRACE)
 	@Message(id = 10453, value = "Skipping destroying bootstrap registry after deregistration of every child ServiceRegistry")
 	void skippingBootstrapRegistryDestruction();
+
+	@LogMessage(level = DEBUG)
+	@Message( id = 10454, value = "EventListenerRegistry access via ServiceRegistry is deprecated - "
+								+ "use 'sessionFactory.getEventEngine().getListenerRegistry()' instead" )
+	void eventListenerRegistryAccessDeprecated();
 }

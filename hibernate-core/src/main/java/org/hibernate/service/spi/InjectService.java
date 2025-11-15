@@ -3,6 +3,9 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.service.spi;
+
+import org.hibernate.service.Service;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -23,7 +26,7 @@ public @interface InjectService {
 	 *
 	 * @return The service role.
 	 */
-	Class serviceRole() default Void.class;
+	Class<? extends Service> serviceRole() default Service.class;
 
 	/**
 	 * Is the service to be injected required (not optional)?

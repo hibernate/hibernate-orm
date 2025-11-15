@@ -29,14 +29,8 @@ public class SessionFactoryServiceRegistryBuilderImpl implements SessionFactoryS
 	public SessionFactoryServiceRegistryBuilderImpl(ServiceRegistryImplementor parent) {
 		this.parent = parent;
 		if ( parent != null ) {
-			for ( var iterator = initiators.iterator(); iterator.hasNext(); ) {
-				final var initiator = iterator.next();
-				if ( parent.locateServiceBinding( initiator.getServiceInitiated() ) != null ) {
-					// Parent takes precedence over the standard service initiators
-					iterator.remove();
-				}
-			}
-
+			// Parent takes precedence over the standard service initiators
+			initiators.removeIf( initiator -> parent.locateServiceBinding( initiator.getServiceInitiated() ) != null );
 		}
 	}
 

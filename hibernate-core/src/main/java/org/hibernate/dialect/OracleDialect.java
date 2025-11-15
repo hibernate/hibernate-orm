@@ -403,7 +403,7 @@ public class OracleDialect extends Dialect {
 		functionFactory.jsonValue_oracle();
 		functionFactory.jsonQuery_oracle();
 		functionFactory.jsonExists_oracle();
-		functionFactory.jsonObject_oracle( getVersion().isSameOrAfter( 19 ) );
+		functionFactory.jsonObject_oracle( true );
 		functionFactory.jsonArray_oracle();
 		functionFactory.jsonArrayAgg_oracle();
 		functionFactory.jsonObjectAgg_oracle();

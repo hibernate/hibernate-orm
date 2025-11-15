@@ -19,9 +19,9 @@ import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
-import org.jboss.logging.Logger;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.service.internal.ServiceLogger.SERVICE_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -29,8 +29,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class SessionFactoryServiceRegistryImpl
 		extends AbstractServiceRegistryImpl
 		implements SessionFactoryServiceRegistry, SessionFactoryServiceInitiatorContext {
-
-	private static final Logger LOG = Logger.getLogger( SessionFactoryServiceRegistryImpl.class );
 
 	private final SessionFactoryOptions sessionFactoryOptions;
 	private final SessionFactoryImplementor sessionFactory;
@@ -101,11 +99,7 @@ public class SessionFactoryServiceRegistryImpl
 	@Override
 	public <R extends Service> @Nullable R getService(Class<R> serviceRole) {
 		if ( serviceRole.equals( EventListenerRegistry.class ) ) {
-			LOG.debug(
-					"EventListenerRegistry access via ServiceRegistry is deprecated - "
-						+ "use 'sessionFactory.getEventEngine().getListenerRegistry()' instead"
-			);
-
+			SERVICE_LOGGER.eventListenerRegistryAccessDeprecated();
 			//noinspection unchecked
 			return (R) sessionFactory.getEventEngine().getListenerRegistry();
 		}

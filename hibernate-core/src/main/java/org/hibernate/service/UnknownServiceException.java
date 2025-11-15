@@ -11,14 +11,14 @@ import org.hibernate.service.spi.ServiceException;
  * @author Steve Ebersole
  */
 public class UnknownServiceException extends ServiceException {
-	public final Class serviceRole;
+	public final Class<?> serviceRole;
 
-	public UnknownServiceException(Class serviceRole) {
+	public UnknownServiceException(Class<?> serviceRole) {
 		super( "Unknown service requested [" + serviceRole.getName() + "]" );
 		this.serviceRole = serviceRole;
 	}
 
-	public Class getServiceRole() {
+	public Class<?> getServiceRole() {
 		return serviceRole;
 	}
 }

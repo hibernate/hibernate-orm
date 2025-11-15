@@ -59,7 +59,7 @@ public final class StandardServiceInitiators {
 
 		// Please do not rearrange - it's useful to maintain this particular order
 		// so to simplify comparisons with custom initiator lists in other projects;
-		// for example we customize this list in Hibernate Reactive and Quarkus.
+		// for example, we customize this list in Hibernate Reactive and Quarkus.
 
 		final ArrayList<StandardServiceInitiator<?>> serviceInitiators = new ArrayList<>();
 

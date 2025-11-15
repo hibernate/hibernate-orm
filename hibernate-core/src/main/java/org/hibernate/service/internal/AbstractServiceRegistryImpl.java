@@ -110,12 +110,12 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	protected <R extends Service> void createServiceBinding(ProvidedService<R> providedService) {
-		var binding = locateServiceBinding( providedService.getServiceRole(), false );
+		var binding = locateServiceBinding( providedService.serviceRole(), false );
 		if ( binding == null ) {
-			binding = new ServiceBinding<>( this, providedService.getServiceRole(), providedService.getService() );
-			serviceBindingMap.put( providedService.getServiceRole(), binding );
+			binding = new ServiceBinding<>( this, providedService.serviceRole(), providedService.service() );
+			serviceBindingMap.put( providedService.serviceRole(), binding );
 		}
-		registerService( binding, providedService.getService() );
+		registerService( binding, providedService.service() );
 	}
 
 	protected void visitServiceBindings(Consumer<ServiceBinding<?>> action) {
@@ -156,18 +156,21 @@ public abstract class AbstractServiceRegistryImpl
 
 		// perform a crawl looking for an alternate registration
 		for ( var binding : serviceBindingMap.values() ) {
-			if ( serviceRole.isAssignableFrom( binding.getServiceRole() ) ) {
+			final Class<?> bindingServiceRole = binding.getServiceRole();
+			if ( serviceRole.isAssignableFrom( bindingServiceRole ) ) {
 				// we found an alternate...
-				SERVICE_LOGGER.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
-				registerAlternate( serviceRole, binding.getServiceRole() );
+				SERVICE_LOGGER.alternateServiceRole( serviceRole.getName(), bindingServiceRole.getName() );
+				registerAlternate( serviceRole, bindingServiceRole );
 				return (ServiceBinding<R>) binding;
 			}
-
-			if ( binding.getService() != null && serviceRole.isInstance( binding.getService() ) ) {
-				// we found an alternate...
-				SERVICE_LOGGER.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
-				registerAlternate( serviceRole, binding.getServiceRole() );
-				return (ServiceBinding<R>) binding;
+			else {
+				final var bindingService = binding.getService();
+				if ( serviceRole.isInstance( bindingService ) ) {
+					// we found an alternate...
+					SERVICE_LOGGER.alternateServiceRole( serviceRole.getName(), bindingServiceRole.getName() );
+					registerAlternate( serviceRole, bindingServiceRole );
+					return (ServiceBinding<R>) binding;
+				}
 			}
 		}
 
@@ -183,10 +186,8 @@ public abstract class AbstractServiceRegistryImpl
 		// Fast-path for ClassLoaderService as it's extremely hot during bootstrap
 		// (and after bootstrap service loading performance is less interesting as it's
 		// ideally being cached by long-term consumers)
-		if ( ClassLoaderService.class == serviceRole ) {
-			if ( parent != null ) {
-				return parent.getService( serviceRole );
-			}
+		if ( ClassLoaderService.class == serviceRole && parent != null ) {
+			return parent.getService( serviceRole );
 		}
 		// TODO: should an exception be thrown if active == false???
 		R service = serviceRole.cast( initializedServiceByRole.get( serviceRole ) );
@@ -231,7 +232,7 @@ public abstract class AbstractServiceRegistryImpl
 		}
 
 		// PHASE 1: create service
-		R service = createService( serviceBinding );
+		final R service = createService( serviceBinding );
 		if ( service == null ) {
 			return null;
 		}
@@ -256,7 +257,7 @@ public abstract class AbstractServiceRegistryImpl
 		}
 
 		try {
-			R service = serviceBinding.getLifecycleOwner().initiateService( serviceInitiator );
+			final R service = serviceBinding.getLifecycleOwner().initiateService( serviceInitiator );
 			// IMPL NOTE: the register call here is important to avoid potential stack overflow issues
 			//		      from recursive calls through #configureService
 			if ( service != null ) {
@@ -276,9 +277,7 @@ public abstract class AbstractServiceRegistryImpl
 	@Override
 	public <R extends Service> void injectDependencies(ServiceBinding<R> serviceBinding) {
 		final R service = serviceBinding.getService();
-
 		applyInjections( service );
-
 		if ( service instanceof ServiceRegistryAwareService serviceRegistryAwareService ) {
 			serviceRegistryAwareService.injectServices( this );
 		}
@@ -286,8 +285,8 @@ public abstract class AbstractServiceRegistryImpl
 
 	private <R extends Service> void applyInjections(R service) {
 		try {
-			for ( Method method : service.getClass().getMethods() ) {
-				final InjectService injectService = method.getAnnotation( InjectService.class );
+			for ( var method : service.getClass().getMethods() ) {
+				final var injectService = method.getAnnotation( InjectService.class );
 				if ( injectService != null ) {
 					processInjection( service, method, injectService );
 				}
@@ -299,23 +298,14 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	private <T extends Service> void processInjection(T service, Method injectionMethod, InjectService injectService) {
-		final Class<?>[] parameterTypes = injectionMethod.getParameterTypes();
-		if ( injectionMethod.getParameterCount() != 1 ) {
-			throw new ServiceDependencyException(
-					"Encountered @InjectService on method with unexpected number of parameters"
-			);
-		}
+		injectDependentService( service, injectionMethod, injectService,
+				dependentServiceRole( injectionMethod, injectService ) );
+	}
 
-		//noinspection rawtypes
-		Class dependentServiceRole = injectService.serviceRole();
-		if ( dependentServiceRole == null || dependentServiceRole.equals( Void.class ) ) {
-			dependentServiceRole = parameterTypes[0];
-		}
-
+	private <T extends Service> void injectDependentService(T service, Method injectionMethod, InjectService injectService, Class<? extends Service> dependentServiceRole) {
 		// todo : because of the use of proxies, this is no longer returning null here...
 
-		//noinspection unchecked
-		final Service dependantService = getService( dependentServiceRole );
+		final var dependantService = getService( dependentServiceRole );
 		if ( dependantService == null ) {
 			if ( injectService.required() ) {
 				throw new ServiceDependencyException(
@@ -330,6 +320,25 @@ public abstract class AbstractServiceRegistryImpl
 			catch ( Exception e ) {
 				throw new ServiceDependencyException( "Cannot inject dependency service", e );
 			}
+		}
+	}
+
+	private static Class<? extends Service> dependentServiceRole(Method injectionMethod, InjectService injectService) {
+		final var parameterTypes = injectionMethod.getParameterTypes();
+		if ( injectionMethod.getParameterCount() != 1 ) {
+			throw new ServiceDependencyException(
+					"Encountered @InjectService on method with unexpected number of parameters"
+			);
+		}
+
+		final var dependentServiceRole = injectService.serviceRole();
+		if ( dependentServiceRole == null
+				|| Void.class.equals( dependentServiceRole )  // old default value
+				|| Service.class.equals( dependentServiceRole ) ) {  // new default value
+			return (Class<? extends Service>) parameterTypes[0];
+		}
+		else {
+			return dependentServiceRole;
 		}
 	}
 

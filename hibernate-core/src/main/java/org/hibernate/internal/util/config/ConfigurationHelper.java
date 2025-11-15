@@ -8,22 +8,25 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
-import java.util.StringTokenizer;
 import java.util.function.Supplier;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.Incubating;
-import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 
+import static org.hibernate.cfg.MappingSettings.PREFERRED_ARRAY_JDBC_TYPE;
+import static org.hibernate.cfg.MappingSettings.PREFERRED_BOOLEAN_JDBC_TYPE;
+import static org.hibernate.cfg.MappingSettings.PREFERRED_DURATION_JDBC_TYPE;
+import static org.hibernate.cfg.MappingSettings.PREFERRED_INSTANT_JDBC_TYPE;
+import static org.hibernate.cfg.MappingSettings.PREFERRED_UUID_JDBC_TYPE;
 import static org.hibernate.internal.log.IncubationLogger.INCUBATION_LOGGER;
+import static org.hibernate.internal.util.StringHelper.isBlank;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
  * Collection of helper methods for dealing with configuration settings.
@@ -243,40 +246,15 @@ public final class ConfigurationHelper {
 	}
 
 	/**
-	 * Make a clone of the configuration values.
+	 * Replace a property value with a starred version
 	 *
-	 * @param configurationValues The config values to clone
-	 *
-	 * @return The clone
-	 *
-	 * @deprecated No longer used
-	 */
-	@SuppressWarnings("rawtypes")
-	@Deprecated(since = "7", forRemoval = true)
-	public static Map clone(Map<?,?> configurationValues) {
-		if ( configurationValues == null ) {
-			return null;
-		}
-		else if ( configurationValues instanceof Properties properties ) {
-			// If a Properties object, leverage its clone() impl
-			return (Properties) properties.clone();
-		}
-		else {
-			// Otherwise make a manual copy
-			return new HashMap<>( configurationValues );
-		}
-	}
-
-	/**
-	 * Replace a property by a starred version
-	 *
-	 * @param props properties to check
+	 * @param properties properties to check
 	 * @param key property to mask
 	 *
 	 * @return cloned and masked properties
 	 */
-	public static Properties maskOut(Properties props, String key) {
-		final var clone = (Properties) props.clone();
+	public static Properties maskOut(Properties properties, String key) {
+		final var clone = (Properties) properties.clone();
 		if ( clone.get( key ) != null ) {
 			clone.setProperty( key, "****" );
 		}
@@ -284,19 +262,19 @@ public final class ConfigurationHelper {
 	}
 
 	/**
-	 * Replace properties by starred version
+	 * Replace property values with starred versions
 	 *
-	 * @param props properties to check
+	 * @param properties properties to check
 	 * @param keys properties to mask
 	 *
 	 * @return cloned and masked properties
 	 */
-	public static Properties maskOut(Properties props, String... keys) {
-		Properties result = props;
+	public static Properties maskOut(Properties properties, String... keys) {
+		Properties result = properties;
 		for ( String key : keys ) {
-			if ( props.get( key ) != null ) {
-				if ( result == props ) {
-					result = (Properties) props.clone();
+			if ( properties.get( key ) != null ) {
+				if ( result == properties ) {
+					result = (Properties) properties.clone();
 				}
 				result.setProperty( key, "****" );
 			}
@@ -307,17 +285,17 @@ public final class ConfigurationHelper {
 	/**
 	 * Replace properties by starred version
 	 *
-	 * @param props properties to check
+	 * @param properties properties to check
 	 * @param keys properties to mask
 	 *
 	 * @return cloned and masked properties
 	 */
-	public static Map<String, Object> maskOut(Map<String, Object> props, String... keys) {
-		Map<String,Object> result = props;
+	public static Map<String, Object> maskOut(Map<String, Object> properties, String... keys) {
+		Map<String,Object> result = properties;
 		for ( String key : keys ) {
-			if ( props.containsKey( key ) ) {
-				if ( result == props ) {
-					result = new HashMap<>( props );
+			if ( properties.containsKey( key ) ) {
+				if ( result == properties ) {
+					result = new HashMap<>( properties );
 				}
 				result.put( key, "****" );
 			}
@@ -335,15 +313,9 @@ public final class ConfigurationHelper {
 	 * @return The property value; may be null.
 	 */
 	public static String extractPropertyValue(String propertyName, Properties properties) {
-		String value = properties.getProperty( propertyName );
-		if ( value == null ) {
-			return null;
-		}
-		value = value.trim();
-		if ( value.isEmpty() ) {
-			return null;
-		}
-		return value;
+		final String value = properties.getProperty( propertyName );
+		return isBlank( value ) ? null : value.trim();
+
 	}
 	/**
 	 * Extract a property value by name from the given properties object.
@@ -355,120 +327,8 @@ public final class ConfigurationHelper {
 	 * @return The property value; may be null.
 	 */
 	public static String extractPropertyValue(String propertyName, Map<?,?> properties) {
-		String value = (String) properties.get( propertyName );
-		if ( value == null ) {
-			return null;
-		}
-		value = value.trim();
-		if ( value.isEmpty() ) {
-			return null;
-		}
-		return value;
-	}
-
-	/**
-	 * @deprecated No longer used
-	 */
-	@Deprecated(since = "7.2", forRemoval = true)
-	public static String extractValue(
-			String name,
-			Map<?,?> values,
-			Supplier<String> fallbackValueFactory) {
-		final String value = extractPropertyValue( name, values );
-		if ( value != null ) {
-			return value;
-		}
-
-		return fallbackValueFactory.get();
-	}
-
-	/**
-	 * Constructs a map from a property value.
-	 * <p>
-	 * The exact behavior here is largely dependant upon what is passed in as
-	 * the delimiter.
-	 *
-	 * @see #extractPropertyValue(String, Properties)
-	 *
-	 * @param propertyName The name of the property for which to retrieve value
-	 * @param delim The string defining tokens used as both entry and key/value delimiters.
-	 * @param properties The properties object
-	 * @return The resulting map; never null, though perhaps empty.
-	 *
-	 * @deprecated No longer used
-	 */
-	@SuppressWarnings("rawtypes")
-	@Deprecated(since = "7", forRemoval = true)
-	public static Map toMap(String propertyName, String delim, Properties properties) {
-		final Map<String,String> map = new HashMap<>();
-		final String value = extractPropertyValue( propertyName, properties );
-		if ( value != null ) {
-			final var tokens = new StringTokenizer( value, delim );
-			while ( tokens.hasMoreTokens() ) {
-				map.put( tokens.nextToken(), tokens.hasMoreElements() ? tokens.nextToken() : "" );
-			}
-		}
-		return map;
-	}
-
-	/**
-	 * Constructs a map from a property value.
-	 * <p>
-	 * The exact behavior here is largely dependant upon what is passed in as
-	 * the delimiter.
-	 *
-	 * @see #extractPropertyValue(String, Properties)
-	 *
-	 * @param propertyName The name of the property for which to retrieve value
-	 * @param delim The string defining tokens used as both entry and key/value delimiters.
-	 * @param properties The properties object
-	 * @return The resulting map; never null, though perhaps empty.
-	 *
-	 * @deprecated No longer used
-	 */
-	@SuppressWarnings("rawtypes")
-	@Deprecated(since = "7", forRemoval = true)
-	public static Map toMap(String propertyName, String delim, Map<?,?> properties) {
-		final Map<String,String> map = new HashMap<>();
-		final String value = extractPropertyValue( propertyName, properties );
-		if ( value != null ) {
-			final var tokens = new StringTokenizer( value, delim );
-			while ( tokens.hasMoreTokens() ) {
-				map.put( tokens.nextToken(), tokens.hasMoreElements() ? tokens.nextToken() : "" );
-			}
-		}
-		return map;
-	}
-
-	/**
-	 * Get a property value as a string array.
-	 *
-	 * @see #extractPropertyValue(String, Properties)
-	 * @see #toStringArray(String, String)
-	 *
-	 * @param propertyName The name of the property for which to retrieve value
-	 * @param delim The delimiter used to separate individual array elements.
-	 * @param properties The properties object
-	 * @return The array; never null, though may be empty.
-	 */
-	public static String[] toStringArray(String propertyName, String delim, Properties properties) {
-		return toStringArray( extractPropertyValue( propertyName, properties ), delim );
-	}
-
-	/**
-	 * Convert a string to an array of strings.  The assumption is that
-	 * the individual array elements are delimited in the source stringForm
-	 * param by the delim param.
-	 *
-	 * @param stringForm The string form of the string array.
-	 * @param delim The delimiter used to separate individual array elements.
-	 * @return The array; never null, though may be empty.
-	 */
-	public static String[] toStringArray(String stringForm, String delim) {
-		// todo : move to StringHelper?
-		return stringForm != null
-				? StringHelper.split( delim, stringForm )
-				: ArrayHelper.EMPTY_STRING_ARRAY;
+		final String value = (String) properties.get( propertyName );
+		return isBlank( value ) ? null : value.trim();
 	}
 
 	/**
@@ -477,14 +337,14 @@ public final class ConfigurationHelper {
 	 * @param configurationValues The configuration map.
 	 */
 	public static void resolvePlaceHolders(Map<?,Object> configurationValues) {
-		final var itr = configurationValues.entrySet().iterator();
-		while ( itr.hasNext() ) {
-			final var entry = itr.next();
+		final var entries = configurationValues.entrySet().iterator();
+		while ( entries.hasNext() ) {
+			final var entry = entries.next();
 			if ( entry.getValue() instanceof String string ) {
 				final String resolved = resolvePlaceHolder( string );
 				if ( !string.equals( resolved ) ) {
 					if ( resolved == null ) {
-						itr.remove();
+						entries.remove();
 					}
 					else {
 						entry.setValue( resolved );
@@ -511,17 +371,17 @@ public final class ConfigurationHelper {
 				// peek ahead
 				if ( chars[pos+1] == '{' ) {
 					// we have a placeholder, spin forward till we find the end
-					String systemPropertyName = "";
+					final var systemPropertyName = new StringBuilder();
 					int x = pos + 2;
-					for (  ; x < chars.length && chars[x] != '}'; x++ ) {
-						systemPropertyName += chars[x];
+					for ( ; x < chars.length && chars[x] != '}'; x++ ) {
+						systemPropertyName.append( chars[x] );
 						// if we reach the end of the string w/o finding the
 						// matching end, that is an exception
 						if ( x == chars.length - 1 ) {
 							throw new IllegalArgumentException( "unmatched placeholder start [" + property + "]" );
 						}
 					}
-					final String systemProperty = extractFromSystem( systemPropertyName );
+					final String systemProperty = extractFromSystem( systemPropertyName.toString() );
 					result.append( systemProperty == null ? "" : systemProperty );
 					pos = x + 1;
 					// make sure spinning forward did not put us past the end of the buffer...
@@ -557,7 +417,7 @@ public final class ConfigurationHelper {
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForBoolean(ServiceRegistry serviceRegistry) {
 		final Integer typeCode =
-				getConfiguredTypeCode( serviceRegistry, MappingSettings.PREFERRED_BOOLEAN_JDBC_TYPE );
+				getConfiguredTypeCode( serviceRegistry, PREFERRED_BOOLEAN_JDBC_TYPE );
 		return typeCode != null
 				? typeCode
 				: serviceRegistry.requireService( JdbcServices.class )
@@ -567,14 +427,14 @@ public final class ConfigurationHelper {
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForBoolean(ServiceRegistry serviceRegistry, Dialect dialect) {
 		final Integer typeCode =
-				getConfiguredTypeCode( serviceRegistry, MappingSettings.PREFERRED_BOOLEAN_JDBC_TYPE );
+				getConfiguredTypeCode( serviceRegistry, PREFERRED_BOOLEAN_JDBC_TYPE );
 		return typeCode != null ? typeCode : dialect.getPreferredSqlTypeCodeForBoolean();
 	}
 
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForDuration(ServiceRegistry serviceRegistry) {
 		final Integer explicitSetting =
-				getConfiguredTypeCode( serviceRegistry, MappingSettings.PREFERRED_DURATION_JDBC_TYPE );
+				getConfiguredTypeCode( serviceRegistry, PREFERRED_DURATION_JDBC_TYPE );
 		return explicitSetting != null ? explicitSetting : SqlTypes.DURATION;
 
 	}
@@ -582,7 +442,7 @@ public final class ConfigurationHelper {
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForUuid(ServiceRegistry serviceRegistry) {
 		final Integer explicitSetting =
-				getConfiguredTypeCode( serviceRegistry, MappingSettings.PREFERRED_UUID_JDBC_TYPE );
+				getConfiguredTypeCode( serviceRegistry, PREFERRED_UUID_JDBC_TYPE );
 		return explicitSetting != null ? explicitSetting : SqlTypes.UUID;
 
 	}
@@ -590,7 +450,7 @@ public final class ConfigurationHelper {
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForInstant(ServiceRegistry serviceRegistry) {
 		final Integer explicitSetting =
-				getConfiguredTypeCode( serviceRegistry, MappingSettings.PREFERRED_INSTANT_JDBC_TYPE );
+				getConfiguredTypeCode( serviceRegistry, PREFERRED_INSTANT_JDBC_TYPE );
 		return explicitSetting != null ? explicitSetting : SqlTypes.TIMESTAMP_UTC;
 
 	}
@@ -598,7 +458,7 @@ public final class ConfigurationHelper {
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForArray(ServiceRegistry serviceRegistry) {
 		final Integer explicitSetting =
-				getConfiguredTypeCode( serviceRegistry, MappingSettings.PREFERRED_ARRAY_JDBC_TYPE );
+				getConfiguredTypeCode( serviceRegistry, PREFERRED_ARRAY_JDBC_TYPE );
 		return explicitSetting != null
 				? explicitSetting
 				: serviceRegistry.requireService( JdbcServices.class )
@@ -606,14 +466,7 @@ public final class ConfigurationHelper {
 	}
 
 	public static void setIfNotEmpty(String value, String settingName, Map<String, String> configuration) {
-		if ( StringHelper.isNotEmpty( value ) ) {
-			configuration.put( settingName, value );
-		}
-	}
-
-	@Deprecated(since = "7", forRemoval = true)
-	public static void setIfNotNull(Object value, String settingName, Map<String, Object> configuration) {
-		if ( value != null ) {
+		if ( isNotEmpty( value ) ) {
 			configuration.put( settingName, value );
 		}
 	}

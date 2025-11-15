@@ -9,6 +9,9 @@ import java.util.Locale;
 
 import org.hibernate.type.descriptor.WrapperOptions;
 
+import static java.lang.Character.isLetter;
+import static java.lang.Character.toLowerCase;
+
 /**
  * Descriptor for {@link Locale} handling.
  *
@@ -48,13 +51,13 @@ public class LocaleJavaType extends AbstractClassJavaType<Locale> {
 			return null;
 		}
 
-		String string = sequence.toString();
+		final String string = sequence.toString();
 		if ( string.isEmpty() ) {
 			return Locale.ROOT;
 		}
 
 		final char[] chars = string.toCharArray();
-		final Locale.Builder builder = new Locale.Builder();
+		final var builder = new Locale.Builder();
 		State state = State.LANGUAGE;
 		int position = 0;
 
@@ -148,17 +151,17 @@ public class LocaleJavaType extends AbstractClassJavaType<Locale> {
 
 		private boolean isScript(char[] chars, int start, int length) {
 			return length == 4
-				&& Character.isLetter( chars[start] )
-				&& Character.isLetter( chars[start + 1] )
-				&& Character.isLetter( chars[start + 2] )
-				&& Character.isLetter( chars[start + 3] );
+				&& isLetter( chars[start] )
+				&& isLetter( chars[start + 1] )
+				&& isLetter( chars[start + 2] )
+				&& isLetter( chars[start + 3] );
 		}
 
 		private void handleExtension(char[] chars, int start, int length, Locale.Builder builder) {
 			if ( length < 3 || chars[start + 1] != '-' ) {
 				throw new IllegalArgumentException( "Invalid extension: " + new String( chars, start, length ) );
 			}
-			if ( Character.toLowerCase( chars[start] ) == 'u' ) {
+			if ( toLowerCase( chars[start] ) == 'u' ) {
 				// After a Unicode extension, there could come a private use extension which we need to detect
 				int unicodeStart = start + 2;
 				int unicodeLength = length - 2;

@@ -7,10 +7,15 @@ package org.hibernate.boot.spi;
 import org.hibernate.Incubating;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
-import org.hibernate.cfg.MappingSettings;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
+
+import static org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC;
+import static org.hibernate.cfg.MappingSettings.PREFER_LOCALE_LANGUAGE_TAG;
+import static org.hibernate.cfg.MappingSettings.PREFER_NATIVE_ENUM_TYPES;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
  * Describes the context in which the process of building {@link org.hibernate.boot.Metadata}
@@ -53,44 +58,48 @@ public interface MetadataBuildingContext {
 	 */
 	ObjectNameNormalizer getObjectNameNormalizer();
 
+	private StandardServiceRegistry getRegistry() {
+		return getBootstrapContext().getServiceRegistry();
+	}
+
 	@Incubating
 	default int getPreferredSqlTypeCodeForBoolean() {
-		return ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( getBootstrapContext().getServiceRegistry() );
+		return ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( getRegistry() );
 	}
 
 	@Incubating
 	default int getPreferredSqlTypeCodeForDuration() {
-		return ConfigurationHelper.getPreferredSqlTypeCodeForDuration( getBootstrapContext().getServiceRegistry() );
+		return ConfigurationHelper.getPreferredSqlTypeCodeForDuration( getRegistry() );
 	}
 
 	@Incubating
 	default int getPreferredSqlTypeCodeForUuid() {
-		return ConfigurationHelper.getPreferredSqlTypeCodeForUuid( getBootstrapContext().getServiceRegistry() );
+		return ConfigurationHelper.getPreferredSqlTypeCodeForUuid( getRegistry() );
 	}
 
 	@Incubating
 	default int getPreferredSqlTypeCodeForInstant() {
-		return ConfigurationHelper.getPreferredSqlTypeCodeForInstant( getBootstrapContext().getServiceRegistry() );
+		return ConfigurationHelper.getPreferredSqlTypeCodeForInstant( getRegistry() );
 	}
 
 	@Incubating
 	default int getPreferredSqlTypeCodeForArray() {
-		return ConfigurationHelper.getPreferredSqlTypeCodeForArray( getBootstrapContext().getServiceRegistry() );
+		return ConfigurationHelper.getPreferredSqlTypeCodeForArray( getRegistry() );
 	}
 
 	@Incubating
 	default boolean isPreferJavaTimeJdbcTypesEnabled() {
-		return isPreferJavaTimeJdbcTypesEnabled( getBootstrapContext().getServiceRegistry() );
+		return isPreferJavaTimeJdbcTypesEnabled( getRegistry() );
 	}
 
 	@Incubating
 	default boolean isPreferNativeEnumTypesEnabled() {
-		return isPreferNativeEnumTypesEnabled( getBootstrapContext().getServiceRegistry() );
+		return isPreferNativeEnumTypesEnabled( getRegistry() );
 	}
 
 	@Incubating
 	default boolean isPreferLocaleLanguageTagEnabled() {
-		return isPreferLocaleLanguageTagEnabled( getBootstrapContext().getServiceRegistry() );
+		return isPreferLocaleLanguageTagEnabled( getRegistry() );
 	}
 
 	static boolean isPreferJavaTimeJdbcTypesEnabled(ServiceRegistry serviceRegistry) {
@@ -106,29 +115,16 @@ public interface MetadataBuildingContext {
 	}
 
 	static boolean isPreferJavaTimeJdbcTypesEnabled(ConfigurationService configurationService) {
-		return ConfigurationHelper.getBoolean(
-				MappingSettings.JAVA_TIME_USE_DIRECT_JDBC,
-				configurationService.getSettings(),
-				// todo : true would be better eventually so maybe just rip off that band aid
-				false
-		);
+		return getBoolean( JAVA_TIME_USE_DIRECT_JDBC, configurationService.getSettings() );
 	}
 
 	static boolean isPreferNativeEnumTypesEnabled(ConfigurationService configurationService) {
-		return ConfigurationHelper.getBoolean(
-				MappingSettings.PREFER_NATIVE_ENUM_TYPES,
-				configurationService.getSettings(),
-				// todo: switch to true with HHH-17905
-				false
-		);
+		//TODO: HHH-17905 proposes to switch this default to true
+		return getBoolean( PREFER_NATIVE_ENUM_TYPES, configurationService.getSettings() );
 	}
 
 	static boolean isPreferLocaleLanguageTagEnabled(ConfigurationService configurationService) {
-		return ConfigurationHelper.getBoolean(
-				MappingSettings.PREFER_LOCALE_LANGUAGE_TAG,
-				configurationService.getSettings(),
-				false
-		);
+		return getBoolean( PREFER_LOCALE_LANGUAGE_TAG, configurationService.getSettings() );
 	}
 
 	TypeDefinitionRegistry getTypeDefinitionRegistry();

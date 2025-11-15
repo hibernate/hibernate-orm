@@ -15,9 +15,6 @@ import org.hibernate.type.descriptor.jdbc.DoubleJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
-import static java.lang.Math.ceil;
-import static java.lang.Math.log;
-
 /**
  * Descriptor for {@link Double} handling.
  *
@@ -26,8 +23,6 @@ import static java.lang.Math.log;
 public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 		PrimitiveJavaType<Double> {
 	public static final DoubleJavaType INSTANCE = new DoubleJavaType();
-	//needed for converting precision from binary to decimal digits
-	private static final double LOG_BASE10OF2 = log(2)/log(10);
 
 	public DoubleJavaType() {
 		super( Double.class );
@@ -156,16 +151,13 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		if ( jdbcType.isFloat() ) {
-			//this is the number of *binary* digits
-			//in a double-precision FP number
-			return dialect.getDoublePrecision();
-		}
-		else {
-			return Math.min( dialect.getDefaultDecimalPrecision(), (int) ceil( dialect.getDoublePrecision() * LOG_BASE10OF2 ) );
-		}
+		return jdbcType.isFloat()
+				// this is usually the number of *binary* digits
+				// in a double-precision FP number
+				? dialect.getDoublePrecision()
+				// this is the number of decimal digits in a Java double
+				: 17;
 	}
-
 
 	@Override
 	public <X> Double coerce(X value, CoercionContext coercionContext) {

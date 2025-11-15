@@ -6,7 +6,6 @@ package org.hibernate.dialect;
 
 import jakarta.persistence.TemporalType;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.TrimFunction;
@@ -50,11 +49,9 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
@@ -68,7 +65,6 @@ import java.sql.Types;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
-import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.DOUBLE;
 import static org.hibernate.type.SqlTypes.NCLOB;
 
@@ -411,14 +407,6 @@ public class HSQLDialect extends Dialect {
 	@Override
 	public boolean supportsDistinctFromPredicate() {
 		return true;
-	}
-
-	@Override
-	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
-		if ( getVersion().isBefore( 2 ) ) {
-			return NON_CLAUSE_STRATEGY;
-		}
-		return super.getLockingClauseStrategy( querySpec, lockOptions );
 	}
 
 	@Override

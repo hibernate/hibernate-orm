@@ -15,9 +15,6 @@ import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
-import static java.lang.Math.ceil;
-import static java.lang.Math.log;
-
 /**
  * Descriptor for {@link Float} handling.
  *
@@ -25,8 +22,6 @@ import static java.lang.Math.log;
  */
 public class FloatJavaType extends AbstractClassJavaType<Float> implements PrimitiveJavaType<Float> {
 	public static final FloatJavaType INSTANCE = new FloatJavaType();
-	//needed for converting precision from binary to decimal digits
-	private static final double LOG_BASE10OF2 = log(2)/log(10);
 
 	public FloatJavaType() {
 		super( Float.class );
@@ -154,14 +149,12 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		if ( jdbcType.isFloat() ) {
-			//this is the number of *binary* digits
-			//in a single-precision FP number
-			return dialect.getFloatPrecision();
-		}
-		else {
-			return Math.min( dialect.getDefaultDecimalPrecision(), (int) ceil( dialect.getFloatPrecision() * LOG_BASE10OF2 ) );
-		}
+		return jdbcType.isFloat()
+				// this is usually the number of *binary* digits
+				// in a single-precision FP number
+				? dialect.getFloatPrecision()
+				// this is the number of decimal digits in a Java float
+				: 8;
 	}
 
 	@Override

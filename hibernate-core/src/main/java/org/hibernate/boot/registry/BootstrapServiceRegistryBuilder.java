@@ -14,7 +14,6 @@ import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
-import org.hibernate.boot.registry.selector.StrategyRegistration;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.boot.registry.selector.internal.StrategySelectorBuilder;
 import org.hibernate.integrator.internal.IntegratorServiceImpl;
@@ -129,7 +128,7 @@ public class BootstrapServiceRegistryBuilder {
 	 * @see org.hibernate.boot.registry.selector.spi.StrategySelector#registerStrategyImplementor(Class, String, Class)
 	 */
 	public BootstrapServiceRegistryBuilder applyStrategySelectors(StrategyRegistrationProvider strategyRegistrationProvider) {
-		for ( StrategyRegistration<?> strategyRegistration : strategyRegistrationProvider.getStrategyRegistrations() ) {
+		for ( var strategyRegistration : strategyRegistrationProvider.getStrategyRegistrations() ) {
 			this.strategySelectorBuilder.addExplicitStrategyRegistration( strategyRegistration );
 		}
 		return this;
@@ -169,33 +168,28 @@ public class BootstrapServiceRegistryBuilder {
 	 * @return The built bootstrap registry
 	 */
 	public BootstrapServiceRegistry build() {
-		final ClassLoaderService classLoaderService;
-		if ( providedClassLoaderService == null ) {
-			// Use a set.  As an example, in JPA, OsgiClassLoader may be in both
-			// the providedClassLoaders and the overriddenClassLoader.
-			final Set<ClassLoader> classLoaders = new HashSet<>();
-
-			if ( providedClassLoaders != null )  {
-				classLoaders.addAll( providedClassLoaders );
-			}
-
-			classLoaderService = new ClassLoaderServiceImpl( classLoaders,tcclLookupPrecedence );
-		}
-		else {
-			classLoaderService = providedClassLoaderService;
-		}
-
-		final IntegratorServiceImpl integratorService = IntegratorServiceImpl.create(
-				providedIntegrators,
-				classLoaderService
-		);
-
+		final var classLoaderService = classLoaderService();
 		return new BootstrapServiceRegistryImpl(
 				autoCloseRegistry,
 				classLoaderService,
 				strategySelectorBuilder.buildSelector( classLoaderService ),
-				integratorService
+				new IntegratorServiceImpl( providedIntegrators, classLoaderService )
 		);
+	}
+
+	private ClassLoaderService classLoaderService() {
+		if ( providedClassLoaderService == null ) {
+			// Use a set.  As an example, in JPA, OsgiClassLoader may be in both
+			// the providedClassLoaders and the overriddenClassLoader.
+			final Set<ClassLoader> classLoaders = new HashSet<>();
+			if ( providedClassLoaders != null )  {
+				classLoaders.addAll( providedClassLoaders );
+			}
+			return new ClassLoaderServiceImpl( classLoaders,tcclLookupPrecedence );
+		}
+		else {
+			return providedClassLoaderService;
+		}
 	}
 
 	/**
@@ -204,10 +198,8 @@ public class BootstrapServiceRegistryBuilder {
 	 * @param serviceRegistry The registry to be closed.
 	 */
 	public static void destroy(ServiceRegistry serviceRegistry) {
-		if ( serviceRegistry == null ) {
-			return;
+		if ( serviceRegistry != null ) {
+			((BootstrapServiceRegistryImpl) serviceRegistry).destroy();
 		}
-
-		( (BootstrapServiceRegistryImpl) serviceRegistry ).destroy();
 	}
 }

@@ -73,4 +73,8 @@ public interface ServiceLogger extends BasicLogger {
 	@Message( id = 10454, value = "EventListenerRegistry access via ServiceRegistry is deprecated - "
 								+ "use 'sessionFactory.getEventEngine().getListenerRegistry()' instead" )
 	void eventListenerRegistryAccessDeprecated();
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 10455, value = "Adding integrator: %s")
+	void addingIntegrator(String name);
 }

@@ -73,8 +73,11 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 		lockOptions.setScope( lockScope );
 		lockOptions.setTimeOut( timeout );
 
-		final var rootQuerySpec = new QuerySpec( true );
 		final var entityPath = new NavigablePath( entityToLock.getRootPathName() );
+
+		final var rootQuerySpec = new QuerySpec( true );
+		rootQuerySpec.applyRootPathForLocking( entityPath );
+
 		final var idMapping = entityToLock.getIdentifierMapping();
 
 		// NOTE: there are 2 possible ways to handle the select list for the query...

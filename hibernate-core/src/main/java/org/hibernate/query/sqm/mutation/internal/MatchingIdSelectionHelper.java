@@ -65,15 +65,11 @@ import org.jboss.logging.Logger;
 public class MatchingIdSelectionHelper {
 	private static final Logger LOG = Logger.getLogger( MatchingIdSelectionHelper.class );
 
-	/**
-	 * @asciidoc
-	 *
-	 * Generates a query-spec for selecting all ids matching the restriction defined as part
-	 * of the user's update/delete query.  This query-spec is generally used:
-	 *
-	 * 		* to select all the matching ids via JDBC - see {@link MatchingIdSelectionHelper#selectMatchingIds}
-	 * 		* as a sub-query restriction to insert rows into an "id table"
-	 */
+	/// Generates a query-spec for selecting all ids matching the restriction defined as part
+	/// of the user's update/delete query.  This query-spec is generally used:
+	///
+	///  * to select all the matching ids via JDBC - see {@link MatchingIdSelectionHelper#selectMatchingIds}
+	///  * as a sub-query restriction to insert rows into an "id table"
 	public static SelectStatement generateMatchingIdSelectStatement(
 			EntityMappingType targetEntityDescriptor,
 			SqmDeleteOrUpdateStatement<?> sqmStatement,
@@ -109,14 +105,12 @@ public class MatchingIdSelectionHelper {
 				mutatingTableGroup.getNavigablePath(),
 				mutatingTableGroup,
 				sqmConverter,
-				(selection, jdbcMapping) ->
-						domainResults.add(
-								new BasicResult<>(
-										selection.getValuesArrayPosition(),
-										null,
-										jdbcMapping
-								)
-						)
+				(selection, jdbcMapping) -> domainResults.add(
+					new BasicResult<>(
+							selection.getValuesArrayPosition(),
+							null,
+							jdbcMapping
+					) )
 		);
 		sqmConverter.getProcessingStateStack().pop();
 
@@ -133,15 +127,11 @@ public class MatchingIdSelectionHelper {
 		return new SelectStatement( idSelectionQuery, domainResults );
 	}
 
-	/**
-	 * @asciidoc
-	 *
-	 * Generates a query-spec for selecting all ids matching the restriction defined as part
-	 * of the user's update/delete query.  This query-spec is generally used:
-	 *
-	 * 		* to select all the matching ids via JDBC - see {@link MatchingIdSelectionHelper#selectMatchingIds}
-	 * 		* as a sub-query restriction to insert rows into an "id table"
-	 */
+	/// Generates a query-spec for selecting all ids matching the restriction defined as part
+	/// of the user's update/delete query.  This query-spec is generally used:
+	///
+	/// 	* to select all the matching ids via JDBC - see {@link MatchingIdSelectionHelper#selectMatchingIds}
+	/// 	* as a sub-query restriction to insert rows into an "id table"
 	public static SqmSelectStatement<?> generateMatchingIdSelectStatement(
 			SqmDeleteOrUpdateStatement<?> sqmStatement,
 			EntityMappingType entityDescriptor) {
@@ -167,59 +157,6 @@ public class MatchingIdSelectionHelper {
 				nodeBuilder
 		);
 	}
-//
-//	/**
-//	 * @asciidoc
-//	 *
-//	 * Generates a query-spec for selecting all ids matching the restriction defined as part
-//	 * of the user's update/delete query.  This query-spec is generally used:
-//	 *
-//	 * 		* to select all the matching ids via JDBC - see {@link MatchingIdSelectionHelper#selectMatchingIds}
-//	 * 		* as a sub-query restriction to insert rows into an "id table"
-//	 */
-//	public static QuerySpec generateMatchingIdSelectQuery(
-//			EntityMappingType targetEntityDescriptor,
-//			SqmDeleteOrUpdateStatement sqmStatement,
-//			DomainParameterXref domainParameterXref,
-//			Predicate restriction,
-//			MultiTableSqmMutationConverter sqmConverter,
-//			SessionFactoryImplementor sessionFactory) {
-//		final EntityDomainType entityDomainType = sqmStatement.getTarget().getModel();
-//		if ( LOG.isTraceEnabled() ) {
-//			LOG.tracef(
-//					"Starting generation of entity-id SQM selection - %s",
-//					entityDomainType.getHibernateEntityName()
-//			);
-//		}
-//
-//		final QuerySpec idSelectionQuery = new QuerySpec( true, 1 );
-//
-//		final TableGroup mutatingTableGroup = sqmConverter.getMutatingTableGroup();
-//		idSelectionQuery.getFromClause().addRoot( mutatingTableGroup );
-//
-//		targetEntityDescriptor.getIdentifierMapping().forEachSelectable(
-//				(position, selection) -> {
-//					final TableReference tableReference = mutatingTableGroup.resolveTableReference(
-//							mutatingTableGroup.getNavigablePath(),
-//							selection.getContainingTableExpression()
-//					);
-//					final Expression expression = sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
-//							tableReference,
-//							selection
-//					);
-//					idSelectionQuery.getSelectClause().addSqlSelection(
-//							new SqlSelectionImpl(
-//									position,
-//									expression
-//							)
-//					);
-//				}
-//		);
-//
-//		idSelectionQuery.applyPredicate( restriction );
-//
-//		return idSelectionQuery;
-//	}
 
 	/**
 	 * Centralized selection of ids matching the restriction of the DELETE

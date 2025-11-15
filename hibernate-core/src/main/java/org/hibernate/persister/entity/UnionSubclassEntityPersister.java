@@ -89,7 +89,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			final PersistentClass persistentClass,
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			final RuntimeModelCreationContext creationContext) throws HibernateException {
+			final RuntimeModelCreationContext creationContext)
+					throws HibernateException {
 		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 
 		validateGenerator();
@@ -540,13 +541,12 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 						unionSubquery.append( dialect.getSelectClauseNullString( selectableMapping, typeConfiguration ) )
 								.append( " as " );
 					}
-					if ( selectableMapping.isFormula() ) {
-						unionSubquery.append( selectableMapping.getSelectableName() );
-					}
-					else {
-						unionSubquery.append( selectableMapping.getSelectionExpression() );
-					}
-					unionSubquery.append( ", " );
+					final String selectable =
+							selectableMapping.isFormula()
+									? selectableMapping.getSelectableName()
+									: selectableMapping.getSelectionExpression();
+					unionSubquery.append( selectable )
+							.append( ", " );
 				}
 				unionSubquery.append( persister.getDiscriminatorSQLValue() )
 						.append( " as clazz_ from " )

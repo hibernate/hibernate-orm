@@ -105,7 +105,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			final PersistentClass persistentClass,
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			final RuntimeModelCreationContext creationContext) throws HibernateException {
+			final RuntimeModelCreationContext creationContext)
+					throws HibernateException {
 		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 
 		final var dialect = creationContext.getDialect();
@@ -575,7 +576,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 					// Also, it makes no sense to filter for any of the super types,
 					// as the query will contain a filter for that already anyway
 					final var superMappingType = getSuperMappingType();
-					if ( superMappingType == null || !getSuperMappingType().isTypeOrSuperType( persister ) ) {
+					if ( superMappingType == null || !superMappingType.isTypeOrSuperType( persister ) ) {
 						return true;
 					}
 				}

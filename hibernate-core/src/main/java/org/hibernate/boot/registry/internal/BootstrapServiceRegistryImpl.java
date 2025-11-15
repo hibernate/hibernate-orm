@@ -105,17 +105,16 @@ public class BootstrapServiceRegistryImpl
 				classLoaderService
 		);
 
-		final StrategySelectorImpl strategySelector = new StrategySelectorImpl( classLoaderService );
 		this.strategySelectorBinding = new ServiceBinding<>(
 				this,
 				StrategySelector.class,
-				strategySelector
+				new StrategySelectorImpl( classLoaderService )
 		);
 
 		this.integratorServiceBinding = new ServiceBinding<>(
 				this,
 				IntegratorService.class,
-				IntegratorServiceImpl.create( providedIntegrators, classLoaderService )
+				new IntegratorServiceImpl( providedIntegrators, classLoaderService )
 		);
 	}
 
@@ -184,7 +183,7 @@ public class BootstrapServiceRegistryImpl
 
 	@Override
 	public <R extends Service> @Nullable R getService(Class<R> serviceRole) {
-		final ServiceBinding<R> binding = locateServiceBinding( serviceRole );
+		final var binding = locateServiceBinding( serviceRole );
 		return binding == null ? null : binding.getService();
 	}
 
@@ -206,24 +205,20 @@ public class BootstrapServiceRegistryImpl
 
 	@Override
 	public synchronized void destroy() {
-		if ( !active ) {
-			return;
-		}
-		active = false;
-		destroy( classLoaderServiceBinding );
-		destroy( strategySelectorBinding );
-		destroy( integratorServiceBinding );
-
-		if ( childRegistries != null ) {
-			for ( ServiceRegistry serviceRegistry : childRegistries ) {
-				if ( serviceRegistry instanceof ServiceRegistryImplementor serviceRegistryImplementor ) {
-					serviceRegistryImplementor.destroy();
+		if ( active ) {
+			active = false;
+			destroy( classLoaderServiceBinding );
+			destroy( strategySelectorBinding );
+			destroy( integratorServiceBinding );
+			if ( childRegistries != null ) {
+				for ( var serviceRegistry : childRegistries ) {
+					serviceRegistry.destroy();
 				}
 			}
 		}
 	}
 
-	private synchronized void destroy(ServiceBinding serviceBinding) {
+	private synchronized void destroy(ServiceBinding<?> serviceBinding) {
 		serviceBinding.getLifecycleOwner().stopService( serviceBinding );
 	}
 

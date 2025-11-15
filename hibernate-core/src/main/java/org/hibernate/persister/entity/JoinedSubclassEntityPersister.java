@@ -29,7 +29,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
@@ -48,7 +47,6 @@ import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
@@ -151,7 +149,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final PersistentClass persistentClass,
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			final RuntimeModelCreationContext creationContext) throws HibernateException {
+			final RuntimeModelCreationContext creationContext)
+					throws HibernateException {
 		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 
 		final var dialect = creationContext.getDialect();
@@ -575,7 +574,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			return new String[0][];
 		}
 		else {
-			final String[][] mapping = new String[numberOfSubclassTables][];
+			final var mapping = new String[numberOfSubclassTables][];
 			processPersistentClassHierarchy( persistentClass, true, mapping, context );
 			return mapping;
 		}
@@ -868,7 +867,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			return false;
 		}
 		else {
-			final String[] inclusionSubclassNameClosure =
+			final var inclusionSubclassNameClosure =
 					getSubclassNameClosureBySubclassTable( subclassTableNumber );
 			// NOTE: we assume the entire hierarchy is joined-subclass here
 			for ( String subclassName : treatAsDeclarations ) {
@@ -907,23 +906,24 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	protected int determineTableNumberForColumn(String columnName) {
 		// HHH-7630: In case the naturalOrder/identifier column is explicitly given in the ordering, check here.
 		for ( int i = 0, max = naturalOrderTableKeyColumns.length; i < max; i++ ) {
-			final String[] keyColumns = naturalOrderTableKeyColumns[i];
+			final var keyColumns = naturalOrderTableKeyColumns[i];
 			if ( contains( keyColumns, columnName ) ) {
 				return naturalOrderPropertyTableNumbers[i];
 			}
 		}
 
 		for ( int i = 0, max = subclassColumnClosure.length; i < max; i++ ) {
+			final String subclassColumn = subclassColumnClosure[i];
 			final boolean quoted =
-					subclassColumnClosure[i].startsWith( "\"" )
-					&& subclassColumnClosure[i].endsWith( "\"" );
+					subclassColumn.startsWith( "\"" )
+					&& subclassColumn.endsWith( "\"" );
 			if ( quoted ) {
-				if ( subclassColumnClosure[i].equals( columnName ) ) {
+				if ( subclassColumn.equals( columnName ) ) {
 					return subclassColumnNaturalOrderTableNumberClosure[i];
 				}
 			}
 			else {
-				if ( subclassColumnClosure[i].equalsIgnoreCase( columnName ) ) {
+				if ( subclassColumn.equalsIgnoreCase( columnName ) ) {
 					return subclassColumnNaturalOrderTableNumberClosure[i];
 				}
 			}
@@ -963,7 +963,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 		else {
 			if ( getTableName().equals( getVersionedTableName() ) ) {
-				final String versionPropertyName = getPropertyNames()[this.getVersionPropertyIndex()];
+				final String versionPropertyName = getPropertyNames()[getVersionPropertyIndex()];
 				return creationProcess.processSubPart(
 						versionPropertyName,
 						(role, process) -> generateVersionMapping(
@@ -986,7 +986,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			Supplier<?> templateInstanceCreator,
 			PersistentClass persistentClass,
 			MappingModelCreationProcess creationProcess) {
-		final Type idType = getIdentifierType();
+		final var idType = getIdentifierType();
 		if ( idType instanceof CompositeType compositeIdType ) {
 			return compositeIdentifierMapping( persistentClass, creationProcess, compositeIdType );
 		}
@@ -1141,7 +1141,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public TableDetails getIdentifierTableDetails() {
-		final EntityMappingType superMappingType = getSuperMappingType();
+		final var superMappingType = getSuperMappingType();
 		return superMappingType == null
 				? getMappedTableDetails()
 				: getRootEntityDescriptor().getIdentifierTableDetails();
@@ -1187,7 +1187,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 		// If no tables to inner join have been found, we add at least the super class tables of this persister
 		if ( innerJoinOptimization && tablesToInnerJoin.isEmpty() ) {
-			final String[] subclassTableNames = getSubclassTableNames();
+			final var subclassTableNames = getSubclassTableNames();
 			for ( int i = 0; i < subclassTableNames.length; i++ ) {
 				if ( isClassOrSuperclassTable[i] ) {
 					tablesToInnerJoin.add( subclassTableNames[i] );
@@ -1266,7 +1266,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			Set<String> tablesToInnerJoin,
 			Set<TableReference> retainedTableReferences) {
 		if ( useKind == EntityNameUse.UseKind.TREAT || useKind == EntityNameUse.UseKind.FILTER ) {
-			final String[] subclassTableNames = persister.getSubclassTableNames();
+			final var subclassTableNames = persister.getSubclassTableNames();
 			// Build the intersection of all tables names that are of the class or super class
 			// These are the tables that can be safely inner joined
 			final Set<String> classOrSuperclassTables = new HashSet<>( subclassTableNames.length );

@@ -29,9 +29,12 @@ public class TenantIdGeneration implements BeforeExecutionGenerator {
 	private final String propertyName;
 
 	public TenantIdGeneration(TenantId annotation, Member member, GeneratorCreationContext context) {
-		entityName = context.getPersistentClass() == null
-				? member.getDeclaringClass().getName() //it's an attribute of an embeddable
-				: context.getPersistentClass().getEntityName();
+		final var persistentClass = context.getPersistentClass();
+		entityName =
+				persistentClass != null
+						? persistentClass.getEntityName()
+						// it's an attribute of an embeddable
+						: member.getDeclaringClass().getName();
 		propertyName = context.getProperty().getName();
 	}
 

@@ -33,13 +33,10 @@ public class LimitOffsetLimitHandler extends AbstractSimpleLimitHandler {
 
 	@Override
 	protected String limitClause(boolean hasFirstRow, int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
-		final String firstParameter = parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null );
-		if ( hasFirstRow ) {
-			return " limit " + firstParameter + " offset " + parameterMarkerStrategy.createMarker( jdbcParameterCount + 2, null );
-		}
-		else {
-			return " limit " + firstParameter;
-		}
+		final String limit = " limit " + parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null );
+		return hasFirstRow
+				? limit + " offset " + parameterMarkerStrategy.createMarker( jdbcParameterCount + 2, null )
+				: limit;
 	}
 
 	@Override
@@ -49,7 +46,10 @@ public class LimitOffsetLimitHandler extends AbstractSimpleLimitHandler {
 
 	@Override
 	protected String offsetOnlyClause(int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
-		return " limit " + Integer.MAX_VALUE + " offset " + parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null );
+		return " limit "
+				+ Integer.MAX_VALUE
+				+ " offset "
+				+ parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null );
 	}
 
 	@Override

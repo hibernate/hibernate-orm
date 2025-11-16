@@ -7,8 +7,9 @@ package org.hibernate.dialect.pagination;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+
+import static org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard.isStandardRenderer;
 
 /**
  * A {@link LimitHandler} for databases which support the
@@ -38,8 +39,8 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 	}
 
 	private String processSql(String sql, int jdbcParameterCount, @Nullable ParameterMarkerStrategy parameterMarkerStrategy, @Nullable Limit limit) {
-		boolean hasFirstRow = hasFirstRow(limit);
-		boolean hasMaxRows = hasMaxRows(limit);
+		final boolean hasFirstRow = hasFirstRow(limit);
+		final boolean hasMaxRows = hasMaxRows(limit);
 
 		if ( !hasFirstRow && !hasMaxRows ) {
 			return sql;
@@ -52,7 +53,7 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 		if ( hasFirstRow ) {
 			offsetFetch.append( " offset " );
 			if ( supportsVariableLimit() ) {
-				if ( ParameterMarkerStrategyStandard.isStandardRenderer( parameterMarkerStrategy ) ) {
+				if ( isStandardRenderer( parameterMarkerStrategy ) ) {
 					offsetFetch.append( "?" );
 				}
 				else {
@@ -75,7 +76,7 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 				offsetFetch.append( " fetch first " );
 			}
 			if ( supportsVariableLimit() ) {
-				if ( ParameterMarkerStrategyStandard.isStandardRenderer( parameterMarkerStrategy ) ) {
+				if ( isStandardRenderer( parameterMarkerStrategy ) ) {
 					offsetFetch.append( "?" );
 				}
 				else {

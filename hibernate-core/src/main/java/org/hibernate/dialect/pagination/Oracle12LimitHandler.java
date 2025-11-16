@@ -7,12 +7,12 @@ package org.hibernate.dialect.pagination;
 import java.util.Locale;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+
+import static org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard.isStandardRenderer;
 
 /**
  * A {@link LimitHandler} for databases which support the
@@ -45,19 +45,19 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 	private String processSql(String sql, int jdbcParameterCount, @Nullable Limit limit, @Nullable ParameterMarkerStrategy parameterMarkerStrategy, QueryOptions queryOptions) {
 		final boolean hasFirstRow = hasFirstRow( limit );
 		final boolean hasMaxRows = hasMaxRows( limit );
-
 		if ( !hasFirstRow && !hasMaxRows ) {
 			return sql;
 		}
-
-		return processSql(
-				sql,
-				hasFirstRow,
-				hasMaxRows,
-				jdbcParameterCount,
-				parameterMarkerStrategy,
-				queryOptions.getLockOptions()
-		);
+		else {
+			return processSql(
+					sql,
+					hasFirstRow,
+					hasMaxRows,
+					jdbcParameterCount,
+					parameterMarkerStrategy,
+					queryOptions.getLockOptions()
+			);
+		}
 	}
 
 	protected String processSql(String sql, boolean hasFirstRow, boolean hasMaxRows, LockOptions lockOptions) {
@@ -65,60 +65,70 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 	}
 
 	protected String processSql(String sql, boolean hasFirstRow, boolean hasMaxRows, int jdbcParameterCount, @Nullable ParameterMarkerStrategy parameterMarkerStrategy, LockOptions lockOptions) {
-		if ( lockOptions != null ) {
-			final LockMode lockMode = lockOptions.getLockMode();
-			return switch ( lockMode ) {
-				case PESSIMISTIC_READ, PESSIMISTIC_WRITE, UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT, UPGRADE_SKIPLOCKED ->
+		return lockOptions == null
+				? processSqlOffsetFetch( sql, hasFirstRow, hasMaxRows, jdbcParameterCount, parameterMarkerStrategy )
+				: processSqlWithLockOptions( sql, hasFirstRow, hasMaxRows, jdbcParameterCount, parameterMarkerStrategy,
+						lockOptions );
+	}
+
+	private String processSqlWithLockOptions(String sql, boolean hasFirstRow, boolean hasMaxRows, int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy, LockOptions lockOptions) {
+		return switch ( lockOptions.getLockMode() ) {
+			case PESSIMISTIC_READ, PESSIMISTIC_WRITE, UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT, UPGRADE_SKIPLOCKED ->
 					processSql( sql, getForUpdateIndex( sql ), hasFirstRow, hasMaxRows, jdbcParameterCount, parameterMarkerStrategy );
-				default -> processSqlOffsetFetch( sql, hasFirstRow, hasMaxRows, jdbcParameterCount, parameterMarkerStrategy );
-				};
-		}
-		return processSqlOffsetFetch( sql, hasFirstRow, hasMaxRows, jdbcParameterCount, parameterMarkerStrategy );
+			default ->
+					processSqlOffsetFetch( sql, hasFirstRow, hasMaxRows, jdbcParameterCount, parameterMarkerStrategy );
+		};
 	}
 
 	protected String processSqlOffsetFetch(String sql, boolean hasFirstRow, boolean hasMaxRows) {
 		return processSqlOffsetFetch( sql, hasFirstRow, hasMaxRows, -1, null );
 	}
 
-	protected String processSqlOffsetFetch(String sql, boolean hasFirstRow, boolean hasMaxRows, int jdbcParameterCount, @Nullable ParameterMarkerStrategy parameterMarkerStrategy) {
-
+	protected String processSqlOffsetFetch(
+			String sql,
+			boolean hasFirstRow, boolean hasMaxRows,
+			int jdbcParameterCount,
+			@Nullable ParameterMarkerStrategy parameterMarkerStrategy) {
 		final int forUpdateLastIndex = getForUpdateIndex( sql );
-
 		if ( forUpdateLastIndex > -1 ) {
 			return processSql( sql, forUpdateLastIndex, hasFirstRow, hasMaxRows );
 		}
+		else {
+			bindLimitParametersInReverseOrder = false;
+			useMaxForLimit = false;
+			supportOffset = true;
+			return insertAtEnd( offsetFetch( hasFirstRow, hasMaxRows, jdbcParameterCount, parameterMarkerStrategy ), sql );
+		}
+	}
 
-		bindLimitParametersInReverseOrder = false;
-		useMaxForLimit = false;
-		supportOffset = true;
-
-		final String offsetFetchString;
-		if ( ParameterMarkerStrategyStandard.isStandardRenderer( parameterMarkerStrategy ) ) {
+	private static String offsetFetch(
+			boolean hasFirstRow, boolean hasMaxRows,
+			int jdbcParameterCount,
+			ParameterMarkerStrategy parameterMarkerStrategy) {
+		if ( isStandardRenderer( parameterMarkerStrategy ) ) {
 			if ( hasFirstRow && hasMaxRows ) {
-				offsetFetchString = " offset ? rows fetch next ? rows only";
+				return " offset ? rows fetch next ? rows only";
 			}
 			else if ( hasFirstRow ) {
-				offsetFetchString = " offset ? rows";
+				return " offset ? rows";
 			}
 			else {
-				offsetFetchString = " fetch first ? rows only";
+				return " fetch first ? rows only";
 			}
 		}
 		else {
 			final String firstParameter = parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null );
 			if ( hasFirstRow && hasMaxRows ) {
 				final String secondParameter = parameterMarkerStrategy.createMarker( jdbcParameterCount + 2, null );
-				offsetFetchString = " offset " + firstParameter + " rows fetch next " + secondParameter + " rows only";
+				return " offset " + firstParameter + " rows fetch next " + secondParameter + " rows only";
 			}
 			else if ( hasFirstRow ) {
-				offsetFetchString = " offset " + firstParameter + " rows";
+				return " offset " + firstParameter + " rows";
 			}
 			else {
-				offsetFetchString = " fetch first " + firstParameter + " rows only";
+				return " fetch first " + firstParameter + " rows only";
 			}
 		}
-
-		return insertAtEnd(offsetFetchString, sql);
 	}
 
 	protected String processSql(String sql, int forUpdateIndex, boolean hasFirstRow, boolean hasMaxRows) {
@@ -139,17 +149,9 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 			isForUpdate = true;
 		}
 
+		final int forUpdateClauseLength = forUpdateClause == null ? 0 : forUpdateClause.length() + 1;
 		final StringBuilder pagingSelect;
-
-		final int forUpdateClauseLength;
-		if ( forUpdateClause == null ) {
-			forUpdateClauseLength = 0;
-		}
-		else {
-			forUpdateClauseLength = forUpdateClause.length() + 1;
-		}
-
-		if ( ParameterMarkerStrategyStandard.isStandardRenderer( parameterMarkerStrategy ) ) {
+		if ( isStandardRenderer( parameterMarkerStrategy ) ) {
 			if ( hasFirstRow && hasMaxRows ) {
 				pagingSelect = new StringBuilder( sql.length() + forUpdateClauseLength + 98 );
 				pagingSelect.append( "select * from (select row_.*,rownum rownum_ from (" );
@@ -207,7 +209,7 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 
 	private int getForUpdateIndex(String sql) {
 		final int forUpdateLastIndex = sql.toLowerCase( Locale.ROOT ).lastIndexOf( "for update" );
-		// We need to recognize cases like : select a from t where b = 'for update';
+		// We need to recognize cases like: select a from t where b = 'for update';
 		final int lastIndexOfQuote = sql.lastIndexOf( '\'' );
 		if ( forUpdateLastIndex > -1 ) {
 			if ( lastIndexOfQuote == -1 ) {

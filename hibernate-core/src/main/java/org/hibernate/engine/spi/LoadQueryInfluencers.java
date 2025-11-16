@@ -14,8 +14,6 @@ import java.util.function.Supplier;
 import org.hibernate.Filter;
 import org.hibernate.Internal;
 import org.hibernate.UnknownProfileException;
-import org.hibernate.engine.profile.Fetch;
-import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.FilterImpl;
@@ -182,29 +180,29 @@ public class LoadQueryInfluencers implements Serializable {
 		}
 	}
 
-	public Object getFilterParameterValue(String filterParameterName) {
-		final String[] parsed = parseFilterParameterName( filterParameterName );
-		if ( enabledFilters == null ) {
-			throw new IllegalArgumentException( "Filter [" + parsed[0] + "] currently not enabled" );
-		}
-		final var filter = (FilterImpl) enabledFilters.get( parsed[0] );
-		if ( filter == null ) {
-			throw new IllegalArgumentException( "Filter [" + parsed[0] + "] currently not enabled" );
-		}
-		return filter.getParameter( parsed[1] );
-	}
-
-	public static String [] parseFilterParameterName(String filterParameterName) {
-		final int dot = filterParameterName.lastIndexOf( '.' );
-		if ( dot <= 0 ) {
-			throw new IllegalArgumentException(
-					"Invalid filter-parameter name format [" + filterParameterName + "]; expecting {filter-name}.{param-name}"
-			);
-		}
-		final String filterName = filterParameterName.substring( 0, dot );
-		final String parameterName = filterParameterName.substring( dot + 1 );
-		return new String[] { filterName, parameterName };
-	}
+//	public Object getFilterParameterValue(String filterParameterName) {
+//		final String[] parsed = parseFilterParameterName( filterParameterName );
+//		if ( enabledFilters == null ) {
+//			throw new IllegalArgumentException( "Filter [" + parsed[0] + "] currently not enabled" );
+//		}
+//		final var filter = (FilterImpl) enabledFilters.get( parsed[0] );
+//		if ( filter == null ) {
+//			throw new IllegalArgumentException( "Filter [" + parsed[0] + "] currently not enabled" );
+//		}
+//		return filter.getParameter( parsed[1] );
+//	}
+//
+//	public static String[] parseFilterParameterName(String filterParameterName) {
+//		final int dot = filterParameterName.lastIndexOf( '.' );
+//		if ( dot <= 0 ) {
+//			throw new IllegalArgumentException(
+//					"Invalid filter-parameter name format [" + filterParameterName + "]; expecting {filter-name}.{param-name}"
+//			);
+//		}
+//		final String filterName = filterParameterName.substring( 0, dot );
+//		final String parameterName = filterParameterName.substring( dot + 1 );
+//		return new String[] { filterName, parameterName };
+//	}
 
 
 	// fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -327,9 +325,9 @@ public class LoadQueryInfluencers implements Serializable {
 		if ( hasEnabledFetchProfiles() ) {
 			final var sqlTranslationEngine = persister.getFactory().getSqlTranslationEngine();
 			for ( String profile : getEnabledFetchProfileNames() ) {
-				final FetchProfile fetchProfile = sqlTranslationEngine.getFetchProfile( profile )	;
+				final var fetchProfile = sqlTranslationEngine.getFetchProfile( profile )	;
 				if ( fetchProfile != null ) {
-					final Fetch fetch = fetchProfile.getFetchByRole( persister.getRole() );
+					final var fetch = fetchProfile.getFetchByRole( persister.getRole() );
 					if ( fetch != null && fetch.getMethod() == SUBSELECT) {
 						return true;
 					}

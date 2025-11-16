@@ -18,7 +18,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 /**
  * @author Steve Ebersole
  */
-public class JdbcSessionContextImpl implements JdbcSessionContext {
+class JdbcSessionContextImpl implements JdbcSessionContext {
 	private final SessionFactoryImplementor sessionFactory;
 	private final StatementInspector statementInspector;
 	private final PhysicalConnectionHandlingMode connectionHandlingMode;
@@ -27,7 +27,7 @@ public class JdbcSessionContextImpl implements JdbcSessionContext {
 
 	private final transient JdbcEventHandler jdbcEventHandler;
 
-	public JdbcSessionContextImpl(
+	JdbcSessionContextImpl(
 			SessionFactoryImplementor sessionFactory,
 			StatementInspector statementInspector,
 			PhysicalConnectionHandlingMode connectionHandlingMode,

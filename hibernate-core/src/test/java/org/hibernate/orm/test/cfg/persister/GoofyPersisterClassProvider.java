@@ -39,7 +39,7 @@ import org.hibernate.generator.Generator;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.internal.FilterAliasGenerator;
+import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.mapping.Collection;

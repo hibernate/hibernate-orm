@@ -51,7 +51,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	private Set<String> enabledFetchProfiles;
 	private Set<String> disabledFetchProfiles;
 
-	public MultiIdentifierLoadAccessImpl(SharedSessionContractImplementor session, EntityPersister entityPersister) {
+	MultiIdentifierLoadAccessImpl(SharedSessionContractImplementor session, EntityPersister entityPersister) {
 		this.session = session;
 		this.entityPersister = entityPersister;
 	}

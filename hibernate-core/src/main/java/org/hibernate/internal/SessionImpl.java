@@ -966,14 +966,14 @@ public class SessionImpl
 			else if ( option instanceof BatchSize batchSizeOption ) {
 				batchSize = batchSizeOption.batchSize();
 			}
-			else if ( option instanceof SessionCheckMode sessionCheckMode ) {
-				loadAccess.enableSessionCheck( option == sessionCheckMode.ENABLED );
+			else if ( option instanceof SessionCheckMode ) {
+				loadAccess.enableSessionCheck( option == SessionCheckMode.ENABLED );
 			}
-			else if ( option instanceof OrderingMode orderingMode ) {
-				loadAccess.enableOrderedReturn( option == orderingMode.ORDERED );
+			else if ( option instanceof OrderingMode ) {
+				loadAccess.enableOrderedReturn( option == OrderingMode.ORDERED );
 			}
-			else if ( option instanceof RemovalsMode removalsMode ) {
-				loadAccess.enableReturnOfDeletedEntities( option == removalsMode.INCLUDE );
+			else if ( option instanceof RemovalsMode ) {
+				loadAccess.enableReturnOfDeletedEntities( option == RemovalsMode.INCLUDE );
 			}
 		}
 		loadAccess.with( lockOptions )
@@ -1033,7 +1033,7 @@ public class SessionImpl
 
 	@Override
 	public Object internalLoad(String entityName, Object id, boolean eager, boolean nullable) {
-		final LoadType type = internalLoadType( eager, nullable );
+		final var type = internalLoadType( eager, nullable );
 		final var effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
 		final var semantic = effectiveEntityGraph.getSemantic();
 		final var graph = effectiveEntityGraph.getGraph();
@@ -2116,13 +2116,7 @@ public class SessionImpl
 	@Override
 	public void flushBeforeTransactionCompletion() {
 		if ( mustFlushBeforeCompletion() ) {
-			try {
-				managedFlush();
-			}
-			catch ( RuntimeException re ) {
-				throw ExceptionMapperStandardImpl.INSTANCE
-						.mapManagedFlushFailure( "error during managed flush", re, this );
-			}
+			managedFlush();
 		}
 	}
 

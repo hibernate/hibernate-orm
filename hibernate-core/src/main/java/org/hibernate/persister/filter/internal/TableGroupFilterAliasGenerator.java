@@ -2,10 +2,10 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.internal;
+package org.hibernate.persister.filter.internal;
 
+import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
 
 /**
  * @author Rob Worsnop
@@ -21,10 +21,8 @@ public class TableGroupFilterAliasGenerator implements FilterAliasGenerator {
 
 	@Override
 	public String getAlias(String table) {
-		if ( table == null ) {
-			table = defaultTable;
-		}
-		final TableReference tableReference = tableGroup.getTableReference( null, table, true );
+		final var tableReference =
+				tableGroup.getTableReference( null, table == null ? defaultTable : table, true );
 		return tableReference == null ? null : tableReference.getIdentificationVariable();
 	}
 

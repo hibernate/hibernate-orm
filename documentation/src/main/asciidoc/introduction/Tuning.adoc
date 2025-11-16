@@ -899,10 +899,48 @@ This is quite different to what happens with the first-level cache.
 
 Entity instances aren't automatically evicted from the session cache when they're no longer needed.
 Instead, they stay pinned in memory until the session they belong to is discarded by your program.
+So if you query many entities from within a single persistence context, you might experience very poor performance.
+In such cases, it becomes necessary to manage the session cache manually.
 
 The methods `detach()` and `clear()` allow you to remove entities from the session cache, making them available for garbage collection.
 Since most sessions are rather short-lived, you won't need these operations very often.
 And if you find yourself thinking you _do_ need them in a certain situation, you should strongly consider an alternative solution: a _stateless session_.
+
+[TIP]
+====
+The very best way to avoid having too many entities pinned in the session cache is to not load them from the database in the first place.
+Many operations can be performed more efficiently on the database server.
+This is especially true for bulk operations.
+
+To update many entities at once, use an `update` statement:
+
+[source, hql]
+----
+session.createMutationQuery(
+        """
+        update Book as b
+            set b.totalSales =
+                coalesce((select sum(quantity) from OrderItem where book = b), 0)
+        """
+        ).executeUpdate();
+----
+
+To insert many entities at once, use `insert ... select`:
+
+[source, hql]
+----
+session.createMutationQuery(
+        """
+        insert into OrderQueue (id, isbn, quantity, customerId)
+            select o.id, i.quantity, i.book.isbn, o.customer.id
+            from Order o join o.items i
+            where o.status = PENDING
+        """
+        ).executeUpdate();
+----
+
+For more complicated operations, consider using a stored procedure.
+====
 
 [[stateless-sessions]]
 === Stateless sessions

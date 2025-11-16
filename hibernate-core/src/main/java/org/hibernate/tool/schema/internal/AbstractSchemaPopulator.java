@@ -45,7 +45,7 @@ public abstract class AbstractSchemaPopulator {
 			Dialect dialect,
 			GenerationTarget... targets) {
 		final var formatter = getImportScriptFormatter(format);
-		boolean hasDefaultImportFileScriptBeenExecuted = applyImportScript(
+		final boolean hasDefaultImportFileScriptBeenExecuted = applyImportScript(
 				options,
 				commandExtractor,
 				dialect,
@@ -123,8 +123,11 @@ public abstract class AbstractSchemaPopulator {
 			return false;
 		}
 		else {
-			final URL defaultImportFileUrl = getClassLoaderService().locateResource( DEFAULT_IMPORT_FILE );
-			return defaultImportFileUrl != null && importScriptInput.containsScript( defaultImportFileUrl );
+			final URL defaultImportFileUrl =
+					getClassLoaderService()
+							.locateResource( DEFAULT_IMPORT_FILE );
+			return defaultImportFileUrl != null
+				&& importScriptInput.containsScript( defaultImportFileUrl );
 		}
 	}
 

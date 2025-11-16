@@ -70,7 +70,7 @@ public class SchemaManagementToolCoordinator {
 			final ServiceRegistry serviceRegistry,
 			final Map<String,Object> configuration,
 			DelayedDropRegistry delayedDropRegistry) {
-		final Set<ActionGrouping> groupings = ActionGrouping.interpret( metadata, configuration );
+		final var groupings = ActionGrouping.interpret( metadata, configuration );
 		if ( groupings.isEmpty() ) {
 			// no actions specified
 			LOG.debug( "No schema management actions found" );

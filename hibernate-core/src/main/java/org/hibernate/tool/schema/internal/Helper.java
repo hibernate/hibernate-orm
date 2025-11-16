@@ -63,15 +63,17 @@ public class Helper {
 		else {
 			final String scriptSourceSettingString = scriptSourceSetting.toString();
 			CORE_LOGGER.attemptingToResolveScriptSourceSetting( scriptSourceSettingString );
-			final String[] paths = splitAtCommas( scriptSourceSettingString );
+			final var paths = splitAtCommas( scriptSourceSettingString );
 			if ( paths.length == 1 ) {
 				return interpretScriptSourceSetting( scriptSourceSettingString, classLoaderService, charsetName );
 			}
-			final var inputs = new AbstractScriptSourceInput[paths.length];
-			for ( int i = 0; i < paths.length; i++ ) {
-				inputs[i] = interpretScriptSourceSetting( paths[i], classLoaderService, charsetName ) ;
+			else {
+				final var inputs = new AbstractScriptSourceInput[paths.length];
+				for ( int i = 0; i < paths.length; i++ ) {
+					inputs[i] = interpretScriptSourceSetting( paths[i], classLoaderService, charsetName );
+				}
+				return new ScriptSourceInputAggregate( inputs );
 			}
-			return new ScriptSourceInputAggregate( inputs );
 		}
 	}
 

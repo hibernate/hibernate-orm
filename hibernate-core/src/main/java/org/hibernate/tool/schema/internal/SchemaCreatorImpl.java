@@ -30,7 +30,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.spi.GenerationTarget;
-import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
@@ -94,7 +93,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			TargetDescriptor targetDescriptor) {
 		if ( !targetDescriptor.getTargetTypes().isEmpty() ) {
 			final var configuration = options.getConfigurationValues();
-			final JdbcContext jdbcContext = tool.resolveJdbcContext( configuration );
+			final var jdbcContext = tool.resolveJdbcContext( configuration );
 			doCreation(
 					metadata,
 					jdbcContext.getDialect(),
@@ -505,8 +504,9 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			Formatter formatter,
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
-		final boolean tryToCreateCatalogs = options.shouldManageNamespaces() && dialect.canCreateCatalog();
-		final boolean tryToCreateSchemas = options.shouldManageNamespaces() && dialect.canCreateSchema();
+		final boolean manageNamespaces = options.shouldManageNamespaces();
+		final boolean tryToCreateCatalogs = manageNamespaces && dialect.canCreateCatalog();
+		final boolean tryToCreateSchemas = manageNamespaces && dialect.canCreateSchema();
 		// first, create each catalog/schema
 		if ( tryToCreateCatalogs || tryToCreateSchemas ) {
 			Set<Identifier> exportedCatalogs = new HashSet<>();
@@ -560,35 +560,35 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 	 *
 	 * @return The generation commands
 	 */
+	@Internal
 	public List<String> generateCreationCommands(Metadata metadata, final boolean manageNamespaces) {
 		final var target = new JournalingGenerationTarget();
-
 		final var metadataImplementor = (MetadataImplementor) metadata;
-		final var dialect =
+		createFromMetadata(
+				metadata,
+				new ExecutionOptions() {
+					@Override
+					public boolean shouldManageNamespaces() {
+						return manageNamespaces;
+					}
+
+					@Override
+					public Map<String,Object> getConfigurationValues() {
+						return Collections.emptyMap();
+					}
+
+					@Override
+					public ExceptionHandler getExceptionHandler() {
+						return ExceptionHandlerHaltImpl.INSTANCE;
+					}
+				},
 				metadataImplementor.getMetadataBuildingOptions()
 						.getServiceRegistry()
 						.requireService( JdbcEnvironment.class )
-						.getDialect();
-
-		final ExecutionOptions options = new ExecutionOptions() {
-			@Override
-			public boolean shouldManageNamespaces() {
-				return manageNamespaces;
-			}
-
-			@Override
-			public Map<String,Object> getConfigurationValues() {
-				return Collections.emptyMap();
-			}
-
-			@Override
-			public ExceptionHandler getExceptionHandler() {
-				return ExceptionHandlerHaltImpl.INSTANCE;
-			}
-		};
-
-		createFromMetadata( metadata, options, dialect, FormatStyle.NONE.getFormatter(), target );
-
+						.getDialect(),
+				FormatStyle.NONE.getFormatter(),
+				target
+		);
 		return target.commands;
 	}
 

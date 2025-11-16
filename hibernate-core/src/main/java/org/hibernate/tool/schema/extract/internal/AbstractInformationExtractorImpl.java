@@ -1024,12 +1024,12 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			final String currentPkName = resultSet.getString( getResultSetPrimaryKeyNameLabel() );
 			final Identifier currentPrimaryKeyIdentifier =
 					currentPkName == null ? null : toIdentifier( currentPkName );
-			final TableInformation tableInformation = getTableInformation(
+			final var tableInformation = getTableInformation(
 					resultSet.getString( getResultSetPrimaryKeyCatalogLabel() ),
 					resultSet.getString( getResultSetPrimaryKeySchemaLabel() ),
 					currentTableName
 			);
-			PrimaryKeyInformation primaryKeyInformation =
+			var primaryKeyInformation =
 					primaryKeysInformation.getPrimaryKeyInformation( currentTableName );
 			final List<ColumnInformation> columns;
 			if ( primaryKeyInformation != null ) {
@@ -1162,7 +1162,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 									!= DatabaseMetaData.tableIndexStatistic ) {
 								final Identifier indexIdentifier =
 										toIdentifier( resultSet.getString( getResultSetIndexNameLabel() ) );
-								var builder = indexInformationBuilder( builders, indexIdentifier );
+								final var builder = indexInformationBuilder( builders, indexIdentifier );
 								final Identifier columnIdentifier =
 										toIdentifier( resultSet.getString( getResultSetColumnNameLabel() ) );
 								final var columnInformation = tableInformation.getColumn( columnIdentifier );
@@ -1199,12 +1199,15 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	private static IndexInformationImpl.Builder indexInformationBuilder(
 			Map<Identifier, IndexInformationImpl.Builder> builders,
 			Identifier indexIdentifier) {
-		var builder = builders.get( indexIdentifier );
+		final var builder = builders.get( indexIdentifier );
 		if ( builder == null ) {
-			builder = IndexInformationImpl.builder( indexIdentifier );
-			builders.put( indexIdentifier, builder );
+			final var newBuilder = IndexInformationImpl.builder( indexIdentifier );
+			builders.put( indexIdentifier, newBuilder );
+			return newBuilder;
 		}
-		return builder;
+		else {
+			return builder;
+		}
 	}
 
 	@Override
@@ -1238,7 +1241,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		while ( resultSet.next() ) {
 			if ( resultSet.getShort( getResultSetIndexTypeLabel() )
 				!= DatabaseMetaData.tableIndexStatistic ) {
-				final TableInformation tableInformation = getTableInformation(
+				final var tableInformation = getTableInformation(
 						resultSet.getString( getResultSetCatalogLabel() ),
 						resultSet.getString( getResultSetSchemaLabel() ),
 						resultSet.getString( getResultSetTableNameLabel() )
@@ -1266,10 +1269,10 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			NameSpaceIndexesInformation indexesInformation,
 			Identifier indexIdentifier,
 			TableInformation tableInformation) {
-		final List<IndexInformation> indexes =
+		final var indexes =
 				indexesInformation.getIndexesInformation( tableInformation.getName().getTableName().getText() );
 		if ( indexes != null ) {
-			for ( IndexInformation index : indexes ) {
+			for ( var index : indexes ) {
 				if ( indexIdentifier.equals( index.getIndexIdentifier() ) ) {
 					return index;
 				}
@@ -1515,7 +1518,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		final var foreignKeysInformation = new NameSpaceForeignKeysInformation( getIdentifierHelper() );
 
 		while ( resultSet.next() ) {
-			final TableInformation tableInformation = getTableInformation(
+			final var tableInformation = getTableInformation(
 					resultSet.getString( getResultSetForeignKeyCatalogLabel() ),
 					resultSet.getString( getResultSetForeignKeySchemaLabel() ),
 					resultSet.getString( getResultSetForeignKeyTableLabel() )
@@ -1550,10 +1553,10 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			NameSpaceForeignKeysInformation foreignKeysInformation,
 			Identifier foreignKeyIdentifier,
 			TableInformation tableInformation) {
-		final List<ForeignKeyInformation> foreignKeys =
+		final var foreignKeys =
 				foreignKeysInformation.getForeignKeysInformation( tableInformation.getName().getTableName().getText() );
 		if ( foreignKeys != null ) {
-			for ( ForeignKeyInformation foreignKey : foreignKeys ) {
+			for ( var foreignKey : foreignKeys ) {
 				if ( foreignKeyIdentifier.equals( foreignKey.getForeignKeyIdentifier() ) ) {
 					return foreignKey;
 				}

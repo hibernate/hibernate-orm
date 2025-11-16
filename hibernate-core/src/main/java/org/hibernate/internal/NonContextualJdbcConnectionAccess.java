@@ -17,13 +17,13 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 /**
  * @author Steve Ebersole
  */
-public class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {
+class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {
 	private final boolean readOnly;
 	private final SessionEventListener listener;
 	private final ConnectionProvider connectionProvider;
 	private final SharedSessionContractImplementor session;
 
-	public NonContextualJdbcConnectionAccess(
+	NonContextualJdbcConnectionAccess(
 			boolean readOnly,
 			SessionEventListener listener,
 			ConnectionProvider connectionProvider,

@@ -27,7 +27,7 @@ import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossRefere
 /**
  * @author Steve Ebersole
  */
-public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAccess<T>, MultiNaturalIdLoadOptions {
+class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAccess<T>, MultiNaturalIdLoadOptions {
 	private final EntityPersister entityDescriptor;
 	private final SharedSessionContractImplementor session;
 
@@ -41,7 +41,7 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 	private RemovalsMode removalsMode = RemovalsMode.REPLACE;
 	private OrderingMode orderingMode = OrderingMode.ORDERED;
 
-	public NaturalIdMultiLoadAccessStandard(EntityPersister entityDescriptor, SharedSessionContractImplementor session) {
+	NaturalIdMultiLoadAccessStandard(EntityPersister entityDescriptor, SharedSessionContractImplementor session) {
 		this.entityDescriptor = entityDescriptor;
 		this.session = session;
 	}

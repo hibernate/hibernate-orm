@@ -15,7 +15,6 @@ import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -106,7 +105,7 @@ public class FilterImpl implements Filter, Serializable {
 		final Object argument = definition.processArgument( value );
 
 		// Make sure this is a defined parameter and check the incoming value type
-		final JdbcMapping type = definition.getParameterJdbcMapping( name );
+		final var type = definition.getParameterJdbcMapping( name );
 		if ( type == null ) {
 			throw new IllegalArgumentException( "Undefined filter parameter '" + name + "'" );
 		}
@@ -134,7 +133,7 @@ public class FilterImpl implements Filter, Serializable {
 		if ( values == null ) {
 			throw new IllegalArgumentException( "Collection must be not null" );
 		}
-		final JdbcMapping type = definition.getParameterJdbcMapping( name );
+		final var type = definition.getParameterJdbcMapping( name );
 		if ( type == null ) {
 			throw new HibernateException( "Undefined filter parameter '" + name + "'" );
 		}
@@ -212,7 +211,7 @@ public class FilterImpl implements Filter, Serializable {
 			return value;
 		}
 		else {
-			final Supplier<?> filterParamResolver = getParameterResolver( paramName );
+			final var filterParamResolver = getParameterResolver( paramName );
 			return filterParamResolver == null ? null : filterParamResolver.get();
 		}
 	}

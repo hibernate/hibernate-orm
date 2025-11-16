@@ -2,9 +2,12 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.internal;
+package org.hibernate.persister.filter.internal;
 
-import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.filter.FilterAliasGenerator;
+
+import static org.hibernate.persister.entity.AbstractEntityPersister.generateTableAlias;
+import static org.hibernate.persister.entity.AbstractEntityPersister.getTableId;
 
 /**
  * @author Rob Worsnop
@@ -20,15 +23,9 @@ public class DynamicFilterAliasGenerator implements FilterAliasGenerator {
 
 	@Override
 	public String getAlias(String table) {
-		if ( table == null ) {
-			return rootAlias;
-		}
-		else {
-			return AbstractEntityPersister.generateTableAlias(
-					rootAlias,
-					AbstractEntityPersister.getTableId( table, tables )
-			);
-		}
+		return table == null
+				? rootAlias
+				: generateTableAlias( rootAlias,
+						getTableId( table, tables ) );
 	}
-
 }

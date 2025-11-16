@@ -31,7 +31,7 @@ import static org.hibernate.engine.profile.DefaultFetchProfile.HIBERNATE_DEFAULT
  *
  * @author Gavin King
  */
-public class FetchProfileHelper {
+class FetchProfileHelper {
 
 	@SuppressWarnings("unused")
 	public static Map<String, FetchProfile> getFetchProfiles(
@@ -48,7 +48,7 @@ public class FetchProfileHelper {
 			Map<String, FetchProfile> fetchProfiles) {
 		final MappingMetamodel mappingMetamodel = runtimeMetamodels.getMappingMetamodel();
 		for ( var mappingProfile : bootMetamodel.getFetchProfiles() ) {
-			final FetchProfile fetchProfile = createFetchProfile( mappingMetamodel, mappingProfile );
+			final var fetchProfile = createFetchProfile( mappingMetamodel, mappingProfile );
 			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 		}
 		fetchProfiles.put( HIBERNATE_DEFAULT_PROFILE, new DefaultFetchProfile( mappingMetamodel ) );
@@ -58,20 +58,20 @@ public class FetchProfileHelper {
 			MappingMetamodel mappingMetamodel,
 			org.hibernate.mapping.FetchProfile mappingProfile) {
 		final String profileName = mappingProfile.getName();
-		final FetchProfile fetchProfile = new FetchProfile( profileName );
+		final var fetchProfile = new FetchProfile( profileName );
 		for ( var mappingFetch : mappingProfile.getFetches() ) {
 			// resolve the persister owning the fetch
-			final EntityPersister owner = getEntityPersister( mappingMetamodel, fetchProfile, mappingFetch );
+			final var owner = getEntityPersister( mappingMetamodel, fetchProfile, mappingFetch );
 			if ( owner instanceof FetchProfileAffectee fetchProfileAffectee ) {
 				fetchProfileAffectee.registerAffectingFetchProfile( profileName );
 			}
 
-			final Association association = new Association( owner, mappingFetch.getAssociation() );
-			final FetchStyle fetchStyle = fetchStyle( mappingFetch.getMethod() );
-			final FetchTiming fetchTiming = FetchTiming.forType( mappingFetch.getType() );
+			final var association = new Association( owner, mappingFetch.getAssociation() );
+			final var fetchStyle = fetchStyle( mappingFetch.getMethod() );
+			final var fetchTiming = FetchTiming.forType( mappingFetch.getType() );
 
 			// validate the specified association fetch
-			final ModelPart fetchablePart = owner.findByPath( association.getAssociationPath() );
+			final var fetchablePart = owner.findByPath( association.getAssociationPath() );
 			validateFetchablePart( fetchablePart, profileName, association );
 			if ( fetchablePart instanceof FetchProfileAffectee fetchProfileAffectee ) {
 				fetchProfileAffectee.registerAffectingFetchProfile( profileName );
@@ -120,7 +120,7 @@ public class FetchProfileHelper {
 			org.hibernate.mapping.FetchProfile.Fetch mappingFetch) {
 		final String entityName = mappingMetamodel.getImportedName( mappingFetch.getEntity() );
 		if ( entityName != null ) {
-			final EntityPersister persister = mappingMetamodel.getEntityDescriptor( entityName );
+			final var persister = mappingMetamodel.getEntityDescriptor( entityName );
 			if ( persister != null ) {
 				return persister;
 			}

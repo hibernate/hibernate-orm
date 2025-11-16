@@ -11,35 +11,33 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 /**
  * @author Steve Ebersole
  */
-public class CoordinatingEntityNameResolver implements EntityNameResolver {
+class CoordinatingEntityNameResolver implements EntityNameResolver {
 	private final SessionFactoryImplementor sessionFactory;
 	private final Interceptor interceptor;
 
-	public CoordinatingEntityNameResolver(SessionFactoryImplementor sessionFactory, Interceptor interceptor) {
+	CoordinatingEntityNameResolver(SessionFactoryImplementor sessionFactory, Interceptor interceptor) {
 		this.sessionFactory = sessionFactory;
 		this.interceptor = interceptor;
 	}
 
 	@Override
 	public String resolveEntityName(Object entity) {
-		String entityName = interceptor.getEntityName( entity );
-		if ( entityName != null ) {
-			return entityName;
+		final String interceptorEntityName = interceptor.getEntityName( entity );
+		if ( interceptorEntityName != null ) {
+			return interceptorEntityName;
 		}
 
-		for ( EntityNameResolver resolver :
-				sessionFactory.getSessionFactoryOptions().getEntityNameResolvers() ) {
-			entityName = resolver.resolveEntityName( entity );
-			if ( entityName != null ) {
-				return entityName;
+		for ( var resolver : sessionFactory.getSessionFactoryOptions().getEntityNameResolvers() ) {
+			final String resolverEntityName = resolver.resolveEntityName( entity );
+			if ( resolverEntityName != null ) {
+				return resolverEntityName;
 			}
 		}
 
-		for ( EntityNameResolver resolver :
-				sessionFactory.getMappingMetamodel().getEntityNameResolvers() ) {
-			entityName = resolver.resolveEntityName( entity );
-			if ( entityName != null ) {
-				return entityName;
+		for ( var resolver : sessionFactory.getMappingMetamodel().getEntityNameResolvers() ) {
+			final String resolverEntityName = resolver.resolveEntityName( entity );
+			if ( resolverEntityName != null ) {
+				return resolverEntityName;
 			}
 		}
 

@@ -2,20 +2,21 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.internal;
+package org.hibernate.persister.filter.internal;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.hibernate.Filter;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.persister.entity.EntityNameUse;
+import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -109,7 +110,7 @@ public class FilterHelper {
 	private void qualifyParameterNames(int filterCount, String filterName) {
 		final List<String> parameterNames = new ArrayList<>();
 		boolean foundAny = false;
-		final Matcher matcher = FILTER_PARAMETER_PATTERN.matcher( filterConditions[filterCount] );
+		final var matcher = FILTER_PARAMETER_PATTERN.matcher( filterConditions[filterCount] );
 		while ( matcher.find() ) {
 			parameterNames.add( matcher.group(1) );
 			foundAny = true;
@@ -136,7 +137,8 @@ public class FilterHelper {
 	public boolean isAffectedBy(Map<String, Filter> enabledFilters, boolean onlyApplyForLoadByKey) {
 		for ( String filterName : filterNames ) {
 			final var filter = enabledFilters.get( filterName );
-			if ( filter != null && ( !onlyApplyForLoadByKey || filter.isAppliedToLoadByKey() ) ) {
+			if ( filter != null
+					&& ( !onlyApplyForLoadByKey || filter.isAppliedToLoadByKey() ) ) {
 				return true;
 			}
 		}
@@ -233,7 +235,7 @@ public class FilterHelper {
 			return replace( condition, MARKER + ".", "");
 		}
 		else {
-			final Map<String, String> aliasTableMap = filterAliasTableMaps[filterIndex];
+			final var aliasTableMap = filterAliasTableMaps[filterIndex];
 			if ( filterAutoAliasFlags[filterIndex] ) {
 				final String tableName = aliasTableMap.get( null );
 				return replaceMarker( tableGroup, creationState, condition,

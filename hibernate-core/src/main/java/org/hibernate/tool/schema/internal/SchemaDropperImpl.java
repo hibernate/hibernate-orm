@@ -108,7 +108,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			TargetDescriptor targetDescriptor) {
 		if ( !targetDescriptor.getTargetTypes().isEmpty() ) {
 			final var configuration = options.getConfigurationValues();
-			final JdbcContext jdbcContext = tool.resolveJdbcContext( configuration );
+			final var jdbcContext = tool.resolveJdbcContext( configuration );
 			doDrop(
 					metadata,
 					options,
@@ -417,14 +417,15 @@ public class SchemaDropperImpl implements SchemaDropper {
 			Formatter formatter,
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
-		boolean tryToDropCatalogs = options.shouldManageNamespaces() && dialect.canCreateCatalog();
-		boolean tryToDropSchemas = options.shouldManageNamespaces() && dialect.canCreateSchema();
+		final boolean manageNamespaces = options.shouldManageNamespaces();
+		final boolean tryToDropCatalogs = manageNamespaces && dialect.canCreateCatalog();
+		final boolean tryToDropSchemas = manageNamespaces && dialect.canCreateSchema();
 		if ( tryToDropCatalogs || tryToDropSchemas) {
 			final Set<Identifier> exportedCatalogs = new HashSet<>();
 			for ( var namespace : metadata.getDatabase().getNamespaces() ) {
 				if ( schemaFilter.includeNamespace( namespace ) ) {
-					Namespace.Name logicalName = namespace.getName();
-					Namespace.Name physicalName = namespace.getPhysicalName();
+					final var logicalName = namespace.getName();
+					final var physicalName = namespace.getPhysicalName();
 
 					if ( tryToDropSchemas ) {
 						final Identifier schemaPhysicalName = context.schemaWithDefault( physicalName.schema() );
@@ -434,7 +435,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 						}
 					}
 
-					if (tryToDropCatalogs) {
+					if ( tryToDropCatalogs ) {
 						final Identifier catalogLogicalName = logicalName.catalog();
 						final Identifier catalogPhysicalName = context.catalogWithDefault( physicalName.catalog() );
 						if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
@@ -495,8 +496,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 			ExecutionOptions options,
 			ContributableMatcher inclusionFilter,
 			SourceDescriptor sourceDescriptor) {
-		final JournalingGenerationTarget target = new JournalingGenerationTarget();
-		final Dialect dialect = tool.getServiceRegistry().requireService( JdbcEnvironment.class ).getDialect();
+		final var target = new JournalingGenerationTarget();
+		final var dialect = tool.getServiceRegistry().requireService( JdbcEnvironment.class ).getDialect();
 		doDrop( metadata, options, inclusionFilter, dialect, sourceDescriptor, target );
 		return new DelayedDropActionImpl( target.commands, tool.getCustomDatabaseGenerationTarget() );
 	}
@@ -520,6 +521,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 	/**
 	 * For tests
 	 */
+	@Internal
 	public void doDrop(
 			Metadata metadata,
 			final ServiceRegistry serviceRegistry,
@@ -527,11 +529,10 @@ public class SchemaDropperImpl implements SchemaDropper {
 			final boolean manageNamespaces,
 			GenerationTarget... targets) {
 		if ( targets == null || targets.length == 0 ) {
-			final var jdbcContext = tool.resolveJdbcContext( settings );
 			targets = new GenerationTarget[] {
 				new GenerationTargetToDatabase(
 						serviceRegistry.requireService( TransactionCoordinatorBuilder.class )
-								.buildDdlTransactionIsolator( jdbcContext ),
+								.buildDdlTransactionIsolator( tool.resolveJdbcContext( settings ) ),
 						true
 				)
 			};
@@ -603,12 +604,10 @@ public class SchemaDropperImpl implements SchemaDropper {
 		public void perform(ServiceRegistry serviceRegistry) {
 			CORE_LOGGER.startingDelayedSchemaDrop();
 
-			final var jdbcContext = new JdbcContextDelayedDropImpl( serviceRegistry );
-
 			if ( target == null ) {
 				target = new GenerationTargetToDatabase(
 						serviceRegistry.requireService( TransactionCoordinatorBuilder.class )
-								.buildDdlTransactionIsolator( jdbcContext ),
+								.buildDdlTransactionIsolator( new JdbcContextDelayedDropImpl( serviceRegistry ) ),
 						true
 				);
 			}

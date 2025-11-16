@@ -57,7 +57,7 @@ public enum UniqueConstraintSchemaUpdateStrategy {
 		}
 
 		try {
-			final UniqueConstraintSchemaUpdateStrategy byName = byName( setting.toString() );
+			final var byName = byName( setting.toString() );
 			if ( byName != null ) {
 				return byName;
 			}

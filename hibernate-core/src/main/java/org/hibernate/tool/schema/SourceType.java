@@ -77,7 +77,7 @@ public enum SourceType {
 		if ( name.isEmpty() ) {
 			return METADATA;
 		}
-		for ( SourceType sourceType: values() ) {
+		for ( var sourceType: values() ) {
 			if ( sourceType.toString().equalsIgnoreCase(name) ) {
 				return sourceType;
 			}

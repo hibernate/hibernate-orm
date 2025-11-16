@@ -1,6 +1,24 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.1.8.Final (November 16, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/35981
+
+
+** Bug
+    * HHH-19932 NullPointerException in SqmInterpretationsKey::toString
+    * HHH-19918 Avoid reflection when instantiating known FormatMapper
+    * HHH-19914 JPA_COMPLIANCE setting ignored in @Jpa
+    * HHH-19906 JsonGeneratingVisitor#visit doesn't handle plural types correctly
+    * HHH-19895 hibernate-core 6.6.30.Final breaks compatibility on entities with composite keys for multiple variants of DB2
+    * HHH-19758 HQL parse failure with SLL can lead to wrong parse
+    * HHH-19749 [Oracle] Merge with @SecondaryTable may generate invalid NUMERIC type casts
+    * HHH-19739 Exceptions during load of entity with different persistent fields with same name
+    * HHH-19240 Significant increase in heap allocation for queries after migrating Hibernate ORM 6.5 to 6.6
+    * HHH-18860 Updates on SecondaryTable cause incorrect cast for BigDecimal
+
 7.1.7.Final (November 06, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -1,6 +1,17 @@
 Hibernate 6 Changelog
 =======================
 
+Changes in 6.6.36.Final (November 16, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/36046
+
+
+** Bug
+    * HHH-19918 Avoid reflection when instantiating known FormatMapper
+    * HHH-19758 HQL parse failure with SLL can lead to wrong parse
+    * HHH-19240 Significant increase in heap allocation for queries after migrating Hibernate ORM 6.5 to 6.6
+
 Changes in 6.6.35.Final (November 13, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

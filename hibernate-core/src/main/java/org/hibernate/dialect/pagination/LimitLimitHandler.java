@@ -30,13 +30,10 @@ public class LimitLimitHandler extends AbstractSimpleLimitHandler {
 
 	@Override
 	protected String limitClause(boolean hasFirstRow, int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
-		final String firstParameter = parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null );
-		if ( hasFirstRow ) {
-			return " limit " + firstParameter + "," + parameterMarkerStrategy.createMarker( jdbcParameterCount + 2, null );
-		}
-		else {
-			return " limit " + firstParameter;
-		}
+		final String limit = " limit " + parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null );
+		return hasFirstRow
+				? limit + "," + parameterMarkerStrategy.createMarker( jdbcParameterCount + 2, null )
+				: limit;
 	}
 
 	@Override
@@ -46,7 +43,10 @@ public class LimitLimitHandler extends AbstractSimpleLimitHandler {
 
 	@Override
 	protected String offsetOnlyClause(int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
-		return " limit " + parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null ) +"," + Integer.MAX_VALUE;
+		return " limit "
+				+ parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null )
+				+ ","
+				+ Integer.MAX_VALUE;
 	}
 
 	private static final Pattern FOR_UPDATE_PATTERN =

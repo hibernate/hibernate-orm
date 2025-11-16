@@ -28,7 +28,9 @@ public class FetchLimitHandler extends AbstractNoOffsetLimitHandler {
 
 	@Override
 	protected String limitClause(int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
-		return " fetch first " + parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null ) + " rows only";
+		return " fetch first "
+				+ parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null )
+				+ " rows only";
 	}
 
 	@Override

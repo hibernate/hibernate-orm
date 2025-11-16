@@ -5,7 +5,6 @@
 package org.hibernate.dialect.pagination;
 
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
@@ -40,7 +39,7 @@ public class SQLServer2012LimitHandler extends OffsetFetchLimitHandler {
 		AS ("as"),
 		WITH ("with");
 
-		Pattern pattern;
+		final Pattern pattern;
 		Keyword(String keyword) {
 			pattern = compile( "^\\b" + keyword + "\\b", CASE_INSENSITIVE );
 		}
@@ -56,12 +55,11 @@ public class SQLServer2012LimitHandler extends OffsetFetchLimitHandler {
 		 *         parentheses.
 		 */
 		int rootOffset(String sql) {
-
 			//TODO: does not handle comments
 
 			//use a regex here for its magical ability
 			//to match word boundaries and whitespace
-			Matcher matcher = pattern.matcher( sql ).useTransparentBounds( true );
+			final var matcher = pattern.matcher( sql ).useTransparentBounds( true );
 
 			int depth = 0;
 			boolean quoted = false;
@@ -116,7 +114,7 @@ public class SQLServer2012LimitHandler extends OffsetFetchLimitHandler {
 		if ( Keyword.ORDER_BY.rootOffset( sql ) <= 0 ) {
 			//we need to add a whole 'order by' clause
 			offsetFetch.append(" order by ");
-			int from = Keyword.FROM.rootOffset( sql );
+			final int from = Keyword.FROM.rootOffset( sql );
 			if ( from > 0 ) {
 				//if we can find the end of the select
 				//clause, we will add a dummy column to

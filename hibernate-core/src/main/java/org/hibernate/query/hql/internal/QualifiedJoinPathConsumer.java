@@ -109,6 +109,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			assert delegate != null;
 			delegate.consumeIdentifier(
 					identifier,
+					isTerminal,
 					!nested && isTerminal,
 					// Non-nested joins shall allow reuse, but nested ones (i.e. in treat)
 					// only allow join reuse for non-terminal parts
@@ -254,7 +255,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 	}
 
 	private interface ConsumerDelegate {
-		void consumeIdentifier(String identifier, boolean isTerminal, boolean allowReuse);
+		void consumeIdentifier(String identifier, boolean originallyTerminal, boolean isTerminal, boolean allowReuse);
 		void consumeTreat(String typeName, boolean isTerminal);
 		SemanticPathPart getConsumedPart();
 	}
@@ -282,11 +283,11 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		}
 
 		@Override
-		public void consumeIdentifier(String identifier, boolean isTerminal, boolean allowReuse) {
+		public void consumeIdentifier(String identifier, boolean originallyTerminal, boolean isTerminal, boolean allowReuse) {
 			currentPath = createJoin(
 					currentPath,
 					identifier,
-					joinType,
+					originallyTerminal ? joinType : SqmJoinType.INNER,
 					alias,
 					fetch,
 					isTerminal,
@@ -347,11 +348,11 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			this.fetch = fetch;
 			this.alias = alias;
 
-			consumeIdentifier( identifier, isTerminal, true );
+			consumeIdentifier( identifier, isTerminal, isTerminal, true );
 		}
 
 		@Override
-		public void consumeIdentifier(String identifier, boolean isTerminal, boolean allowReuse) {
+		public void consumeIdentifier(String identifier, boolean originallyTerminal, boolean isTerminal, boolean allowReuse) {
 			if ( !path.isEmpty() ) {
 				path.append( '.' );
 			}

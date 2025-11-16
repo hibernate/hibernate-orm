@@ -58,7 +58,7 @@ public class JoinFetchElementCollectionTest {
 				session -> {
 					final String qry = "SELECT user "
 							+ "FROM User user "
-							+ "LEFT OUTER JOIN FETCH user.contact "
+							+ "JOIN FETCH user.contact "
 							+ "LEFT OUTER JOIN FETCH user.contact.emailAddresses2 "
 							+ "LEFT OUTER JOIN FETCH user.contact.emailAddresses";
 					User user = (User) session.createQuery( qry ).uniqueResult();

@@ -106,7 +106,7 @@ public class FunctionNameAsColumnTest {
 		sessionFactory.inTransaction(s -> {
 			EntityWithFunctionAsColumnHolder holder1 = (EntityWithFunctionAsColumnHolder) s.createQuery(
 					"from EntityWithFunctionAsColumnHolder h left join fetch h.entityWithArgFunctionAsColumns " +
-							"left join fetch h.nextHolder left join fetch h.nextHolder.entityWithArgFunctionAsColumns " +
+							"join fetch h.nextHolder left join fetch h.nextHolder.entityWithArgFunctionAsColumns " +
 							"where h.nextHolder is not null" )
 					.uniqueResult();
 			assertTrue( Hibernate.isInitialized( holder1.getEntityWithArgFunctionAsColumns() ) );
@@ -193,7 +193,7 @@ public class FunctionNameAsColumnTest {
 			var hql = """
 					from EntityWithFunctionAsColumnHolder h
 						left join fetch h.entityWithNoArgFunctionAsColumns
-						left join fetch h.nextHolder
+						join fetch h.nextHolder
 						left join fetch h.nextHolder.entityWithNoArgFunctionAsColumns
 					where h.nextHolder is not null
 					""";

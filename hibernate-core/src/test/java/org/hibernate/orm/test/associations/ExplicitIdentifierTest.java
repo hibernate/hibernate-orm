@@ -13,12 +13,7 @@ import jakarta.persistence.Table;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.MariaDBDialect;
-import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -68,7 +63,10 @@ public class ExplicitIdentifierTest {
 
 			if ( session.getDialect().getSequenceSupport().supportsSequences() ) {
 				assertEquals( 51, session.createNativeQuery(
-						getSqlStringImplicit( session.getDialect() ),
+						session.getDialect().getSequenceSupport()
+								.getSequenceNextValString( session.getDialect() instanceof HSQLDialect
+										? "\"SEQUENCE_`TABLE_`ExplicitIdentifierTest$PersonImplicit`_SEQ`\""
+										: "SEQUENCE_TABLE_ExplicitIdentifierTest$PersonImplicit_SEQ" ),
 						Integer.class ).getSingleResult() );
 			}
 			else {
@@ -99,7 +97,8 @@ public class ExplicitIdentifierTest {
 
 			if ( session.getDialect().getSequenceSupport().supportsSequences() ) {
 				assertEquals( 51, session.createNativeQuery(
-						getSqlStringExplicit( session.getDialect() ),
+						session.getDialect().getSequenceSupport()
+								.getSequenceNextValString( "person_explicit_seq" ),
 						Integer.class ).getSingleResult() );
 			}
 			else {
@@ -108,38 +107,6 @@ public class ExplicitIdentifierTest {
 						Integer.class ).getSingleResult() );
 			}
 		} );
-	}
-
-	private String getSqlStringImplicit(Dialect dialect) {
-		if ( dialect instanceof MariaDBDialect || dialect instanceof SQLServerDialect ) {
-			return "select next value for SEQUENCE_TABLE_ExplicitIdentifierTest$PersonImplicit_SEQ";
-		}
-		else if ( dialect instanceof HSQLDialect ) {
-			return "call next value for \"SEQUENCE_`TABLE_`ExplicitIdentifierTest$PersonImplicit`_SEQ`\"";
-		}
-		else if ( dialect instanceof DB2Dialect ) {
-			return "values next value for SEQUENCE_TABLE_ExplicitIdentifierTest$PersonImplicit_SEQ";
-		}
-		else if ( dialect instanceof OracleDialect ) {
-			return "select SEQUENCE_TABLE_ExplicitIdentifierTest$PersonImplicit_SEQ.nextval";
-		}
-		return "select nextval('SEQUENCE_TABLE_ExplicitIdentifierTest$PersonImplicit_SEQ')";
-	}
-
-	private String getSqlStringExplicit(Dialect session) {
-		if ( session instanceof MariaDBDialect || session instanceof SQLServerDialect ) {
-			return "select next value for person_explicit_seq";
-		}
-		else if ( session instanceof HSQLDialect ) {
-			return "call next value for person_explicit_seq";
-		}
-		else if ( session instanceof DB2Dialect ) {
-			return "values next value for person_explicit_seq";
-		}
-		else if ( session instanceof OracleDialect ) {
-			return "select person_explicit_seq.nextval";
-		}
-		return "select nextval('person_explicit_seq')";
 	}
 
 	@AfterAll

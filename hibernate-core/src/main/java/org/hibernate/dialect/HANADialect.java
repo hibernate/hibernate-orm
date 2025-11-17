@@ -430,8 +430,7 @@ public class HANADialect extends Dialect {
 
 	@Override
 	public int getPreferredSqlTypeCodeForArray() {
-		// Prefer XML since JSON was only added later
-		return getVersion().isSameOrAfter( 2 ) ? SqlTypes.XML_ARRAY : super.getPreferredSqlTypeCodeForArray();
+		return SqlTypes.XML_ARRAY;
 	}
 
 	@Override

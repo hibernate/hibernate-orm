@@ -55,6 +55,13 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 			return lastTimestamp.toEpochMilli();
 		}
 
+		/**
+		 * Sub-miliseconds part of timestamp (micro- and nanoseconds) mapped to 12 bit integral value.
+		 * Calculated as nanos / 1000000 * 4096
+		 *
+		 * @param timestamp
+		 * @return
+		 */
 		private static long nanos(Instant timestamp) {
 			return (long) ((timestamp.getNano() % 1_000_000L) * 0.004096);
 		}
@@ -65,17 +72,24 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 				lastTimestamp.toEpochMilli() == now.toEpochMilli() && nanos < nanos( now ) ) {
 				return new State( now, randomSequence() );
 			}
-			final long nextSequence = lastSequence + Holder.numberGenerator.nextLong( 0xFFFF_FFFFL );
-			if ( nextSequence > MAX_RANDOM_SEQUENCE ) {
-				return new State( lastTimestamp.plusNanos( 250 ), randomSequence() );
-			}
 			else {
-				return new State( lastTimestamp, nextSequence );
+				final long nextSequence = randomSequence();
+				/*
+				 *	If next random sequence is less or equal to last one sub-millisecond part
+				 * 	should be incremented to preserve monotonicity of generated UUIDs.
+				 * 	To do this smallest number of nanoseconds that will always increase
+				 * 	sub-millisecond part mapped to 12 bits is
+				 * 		1_000_000 (nanons per milli) / 4096 (12 bits) = 244.14...
+				 * 	So 245 is used as smallest integer larger than this value.
+				 */
+				return lastSequence >= nextSequence
+						? new State( lastTimestamp.plusNanos( 245 ), nextSequence )
+						: new State( lastTimestamp, nextSequence );
 			}
 		}
 
 		private static long randomSequence() {
-			return Holder.numberGenerator.nextLong( MAX_RANDOM_SEQUENCE );
+			return Holder.numberGenerator.nextLong( MAX_RANDOM_SEQUENCE + 1 );
 		}
 	}
 
@@ -117,7 +131,7 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 				| state.nanos() & 0xFFFL,
 				// LSB bits 0-1 - variant = 4
 				0x8000_0000_0000_0000L
-				// LSB bits 2-15 - pseudorandom counter
+				// LSB bits 2-63 - pseudorandom counter
 				| state.lastSequence
 		);
 	}

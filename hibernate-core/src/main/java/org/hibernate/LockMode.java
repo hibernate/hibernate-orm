@@ -34,6 +34,23 @@ import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
  * which any pessimistic lock is already held has no effect,
  * and does not force a version increment.
  * <p>
+ * When an entity is read from the database, its lock mode
+ * determines whether lost updates and non-repeatable reads
+ * are possible.
+ * <ul>
+ * <li>{@link #NONE} and {@link #READ} prevent lost updates
+ *     only for versioned entities, but do not prevent
+ *     non-repeatable reads, and do not prevent lost updates
+ *     for entities with no version attribute.
+ * <li>{@link #OPTIMISTIC} and {@link #OPTIMISTIC_FORCE_INCREMENT}
+ *     prevent lost updates and non-repeatable reads only for
+ *     versioned entities.
+ * <li>{@link #PESSIMISTIC_READ}, {@link #PESSIMISTIC_WRITE},
+ *     and {@link #PESSIMISTIC_FORCE_INCREMENT} prevent lost
+ *     updates and non-repeatable reads for all entities,
+ *     including entities with no version attribute.
+ * </ul>
+ * <p>
  * This enumeration of lock modes competes with the JPA-defined
  * {@link LockModeType}, but offers additional options, including
  * {@link #UPGRADE_NOWAIT} and {@link #UPGRADE_SKIPLOCKED}.

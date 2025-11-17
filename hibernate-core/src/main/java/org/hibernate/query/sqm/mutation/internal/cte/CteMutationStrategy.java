@@ -80,13 +80,6 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 			);
 		}
 
-		if ( !dialect.supportsValuesList() ) {
-			throw new UnsupportedOperationException(
-					getClass().getSimpleName() +
-							" can only be used with Dialects that support VALUES lists"
-			);
-		}
-
 		this.idCteTable = CteTable.createIdTable( ID_TABLE_NAME,
 				runtimeModelCreationContext.getMetadata().getEntityBinding( rootDescriptor.getEntityName() ) );
 	}

@@ -126,13 +126,6 @@ public class CteInsertStrategy implements SqmMultiTableInsertStrategy {
 			);
 		}
 
-		if ( !dialect.supportsValuesList() ) {
-			throw new UnsupportedOperationException(
-					getClass().getSimpleName() +
-							" can only be used with Dialects that support VALUES lists"
-			);
-		}
-
 		final PersistentClass persistentClass = runtimeModelCreationContext.getMetadata()
 				.getEntityBinding( rootDescriptor.getEntityName() );
 		final Identifier tableNameIdentifier;

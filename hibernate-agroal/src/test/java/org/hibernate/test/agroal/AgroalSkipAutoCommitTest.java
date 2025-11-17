@@ -4,6 +4,9 @@
  */
 package org.hibernate.test.agroal;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
 import org.hibernate.test.agroal.util.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -12,8 +15,6 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SettingProvider;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
@@ -23,8 +24,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.cfg.JdbcSettings.AUTOCOMMIT;
 import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER;
 import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Vlad Mihalcea
@@ -75,7 +76,7 @@ public class AgroalSkipAutoCommitTest {
 					Connection.class.getMethod( "setAutoCommit", boolean.class ),
 					connections.get( 0 )
 			);
-			assertTrue( "setAutoCommit should never be called", setAutoCommitCalls.isEmpty() );
+			assertTrue( setAutoCommitCalls.isEmpty(), "setAutoCommit should never be called" );
 		}
 		catch (NoSuchMethodException e) {
 			throw new RuntimeException( e );

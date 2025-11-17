@@ -20,6 +20,7 @@ import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
@@ -161,14 +162,13 @@ public class EntityEntryContext {
 	private ManagedEntity getAssociatedManagedEntity(Object entity) {
 		if ( isManagedEntity( entity ) ) {
 			final var managedEntity = asManagedEntity( entity );
-			if ( managedEntity.$$_hibernate_getEntityEntry() == null ) {
-				// it is not associated
-				return null;
-			}
 			final var entityEntry =
 					(EntityEntryImpl)
 							managedEntity.$$_hibernate_getEntityEntry();
-
+			if ( entityEntry == null ) {
+				// it is not associated
+				return null;
+			}
 			if ( entityEntry.getPersister().isMutable() ) {
 				return entityEntry.getPersistenceContext() == persistenceContext
 						? managedEntity // it is associated
@@ -313,7 +313,8 @@ public class EntityEntryContext {
 	private void removeXref(Object entity, ManagedEntity managedEntity) {
 		if ( managedEntity instanceof ImmutableManagedEntityHolder holder ) {
 			assert entity == holder.managedEntity;
-			if ( !isReferenceCachingEnabled( holder.$$_hibernate_getEntityEntry().getPersister() ) ) {
+			final var entry = holder.$$_hibernate_getEntityEntry();
+			if ( entry != null && !isReferenceCachingEnabled( entry.getPersister() ) ) {
 				immutableManagedEntityXref.remove( managedEntity.$$_hibernate_getInstanceId(), entity );
 			}
 			else {
@@ -449,13 +450,14 @@ public class EntityEntryContext {
 		var managedEntity = head;
 		while ( managedEntity != null ) {
 			// so we know whether or not to build a ManagedEntityImpl on deserialize
-			final Object instance = managedEntity.$$_hibernate_getEntityInstance();
+			final var instance = managedEntity.$$_hibernate_getEntityInstance();
 			oos.writeBoolean( managedEntity == instance );
 			oos.writeObject( instance );
 			// we need to know which implementation of EntityEntry is being serialized
-			oos.writeInt( managedEntity.$$_hibernate_getEntityEntry().getClass().getName().length() );
-			oos.writeChars( managedEntity.$$_hibernate_getEntityEntry().getClass().getName() );
-			managedEntity.$$_hibernate_getEntityEntry().serialize( oos );
+			final var entry = Objects.requireNonNull(managedEntity.$$_hibernate_getEntityEntry());
+			oos.writeInt( entry.getClass().getName().length() );
+			oos.writeChars( entry.getClass().getName() );
+			entry.serialize( oos );
 			managedEntity = managedEntity.$$_hibernate_getNextManagedEntity();
 		}
 	}
@@ -722,6 +724,9 @@ public class EntityEntryContext {
 		// Check instance type of EntityEntry and if type is ImmutableEntityEntry,
 		// check to see if entity is referenced cached in the second level cache
 		private static boolean canClearEntityEntryReference(EntityEntry entityEntry) {
+			if (entityEntry == null) {
+				return false;
+			}
 			final EntityPersister persister = entityEntry.getPersister();
 			return persister.isMutable() || !isReferenceCachingEnabled( persister );
 		}

@@ -121,13 +121,6 @@ public class CteInsertStrategy implements SqmMultiTableInsertStrategy {
 			);
 		}
 
-		if ( !dialect.supportsValuesList() ) {
-			throw new UnsupportedOperationException(
-					getClass().getSimpleName() +
-							" can only be used with Dialects that support VALUES lists"
-			);
-		}
-
 		// The table name might be a sub-query, which is inappropriate for a temporary table name
 		final String originalTableName = rootDescriptor.getEntityPersister().getSynchronizedQuerySpaces()[0];
 		final String name;

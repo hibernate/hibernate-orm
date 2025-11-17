@@ -5,14 +5,15 @@
 package org.hibernate.spatial.geometry;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
 
 import org.geolatte.geom.codec.Wkt;
 import org.geolatte.geom.jts.JTS;
+import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Geometry;
 import org.geolatte.geom.jts.JTSUtils;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 public class JTSUtilsTest {
 
@@ -24,8 +25,8 @@ public class JTSUtilsTest {
 		Geometry elem1a = JTS.to( Wkt.fromWkt( "GEOMETRYCOLLECTION(POINT(2 3))" ) );
 		Geometry elem1b = JTS.to( Wkt.fromWkt( "GEOMETRYCOLLECTION(POINT(2 3))" ) );
 
-		assertTrue( JTSUtils.equalsExact3D( elem2a, elem2b ) );
-		assertTrue( JTSUtils.equalsExact3D( elem1a, elem1b ) );
+		assertThat( JTSUtils.equalsExact3D( elem2a, elem2b ) ).isTrue();
+		assertThat( JTSUtils.equalsExact3D( elem1a, elem1b ) ).isTrue();
 	}
 
 }

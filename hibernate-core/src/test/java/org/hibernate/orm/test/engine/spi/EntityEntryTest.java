@@ -5,7 +5,7 @@
 package org.hibernate.orm.test.engine.spi;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.internal.EntityEntryImpl;
+import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -91,8 +91,14 @@ public class EntityEntryTest {
 		oos.flush();
 
 		InputStream is = new ByteArrayInputStream( baos.toByteArray() );
+		final var entityEntryClass =
+				Class.forName( "org.hibernate.engine.internal.EntityEntryImpl" );
+
+		final var deserializeMethod =
+				entityEntryClass.getDeclaredMethod( "deserialize",
+						ObjectInputStream.class, PersistenceContext.class );
 		EntityEntry deserializedEntry =
-				EntityEntryImpl.deserialize( new ObjectInputStream( is ),
+				(EntityEntry) deserializeMethod.invoke( null, new ObjectInputStream( is ),
 						getPersistenceContextMock() );
 
 		assertThat( deserializedEntry.getLockMode() ).isEqualTo( LockMode.OPTIMISTIC );
@@ -102,7 +108,7 @@ public class EntityEntryTest {
 	}
 
 	private EntityEntry createEntityEntry() {
-		return new EntityEntryImpl(
+		return MutableEntityEntryFactory.INSTANCE.createEntityEntry(
 				Status.MANAGED,
 				new Object[] {},
 				1L,

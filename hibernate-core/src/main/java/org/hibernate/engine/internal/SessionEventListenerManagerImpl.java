@@ -5,12 +5,14 @@
 package org.hibernate.engine.internal;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 import org.hibernate.SessionEventListener;
 import org.hibernate.engine.spi.SessionEventListenerManager;
+
+import static java.lang.System.arraycopy;
+import static java.util.Arrays.copyOf;
+import static java.util.Objects.requireNonNull;
 
 /**
  * @author Steve Ebersole
@@ -21,28 +23,28 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 
 	public SessionEventListenerManagerImpl(SessionEventListener... initialListener) {
 		//no need for defensive copies until the array is mutated:
-		this.listeners = initialListener;
+		listeners = initialListener;
 	}
 
 	public SessionEventListenerManagerImpl(List<SessionEventListener> initialListener) {
 		//no need for defensive copies until the array is mutated:
-		this.listeners = initialListener.toArray( new SessionEventListener[0] );
+		listeners = initialListener.toArray( new SessionEventListener[0] );
 	}
 
 	@Override
 	public void addListener(final SessionEventListener... additionalListeners) {
-		Objects.requireNonNull( additionalListeners );
-		final var existing = this.listeners;
+		requireNonNull( additionalListeners );
+		final var existing = listeners;
 		if ( existing == null ) {
 			//Make a defensive copy as this array can be tracked back to API (user code)
-			this.listeners = Arrays.copyOf( additionalListeners, additionalListeners.length );
+			listeners = copyOf( additionalListeners, additionalListeners.length );
 		}
 		else {
 			// Resize our existing array and add the new listeners
 			final var newList = new SessionEventListener[ existing.length + additionalListeners.length ];
-			System.arraycopy( existing, 0, newList, 0, existing.length );
-			System.arraycopy( additionalListeners, 0, newList, existing.length, additionalListeners.length );
-			this.listeners = newList;
+			arraycopy( existing, 0, newList, 0, existing.length );
+			arraycopy( additionalListeners, 0, newList, existing.length, additionalListeners.length );
+			listeners = newList;
 		}
 	}
 

@@ -31,7 +31,7 @@ import static java.util.Collections.unmodifiableCollection;
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
 import static org.hibernate.engine.internal.NaturalIdLogging.NATURAL_ID_LOGGER;
 
-public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializable {
+class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializable {
 
 	private final StatefulPersistenceContext persistenceContext;
 	private final ConcurrentHashMap<EntityMappingType, EntityResolutions> resolutionsByEntity = new ConcurrentHashMap<>();
@@ -50,7 +50,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	 *
 	 * @return The session
 	 */
-	protected SharedSessionContractImplementor session() {
+	private SharedSessionContractImplementor session() {
 		return persistenceContext.getSession();
 	}
 

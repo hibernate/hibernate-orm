@@ -11,14 +11,14 @@ import org.hibernate.engine.spi.TransactionCompletionCallbacks.BeforeCompletionC
 /**
  * Encapsulates behavior needed for before transaction processing
  */
-public class BeforeTransactionCompletionProcessQueue
+class BeforeTransactionCompletionProcessQueue
 		extends AbstractTransactionCompletionProcessQueue<BeforeCompletionCallback> {
 
-	public BeforeTransactionCompletionProcessQueue(SharedSessionContractImplementor session) {
+	BeforeTransactionCompletionProcessQueue(SharedSessionContractImplementor session) {
 		super( session );
 	}
 
-	public void beforeTransactionCompletion() {
+	void beforeTransactionCompletion() {
 		BeforeCompletionCallback process;
 		while ( (process = processes.poll()) != null ) {
 			try {

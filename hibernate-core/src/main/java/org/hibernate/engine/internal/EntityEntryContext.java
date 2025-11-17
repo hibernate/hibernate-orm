@@ -43,7 +43,7 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
  *
  * @author Steve Ebersole
  */
-public class EntityEntryContext {
+class EntityEntryContext {
 
 	private final transient PersistenceContext persistenceContext;
 
@@ -63,7 +63,7 @@ public class EntityEntryContext {
 	/**
 	 * Constructs a EntityEntryContext
 	 */
-	public EntityEntryContext(PersistenceContext persistenceContext) {
+	EntityEntryContext(PersistenceContext persistenceContext) {
 		this.persistenceContext = persistenceContext;
 	}
 
@@ -73,7 +73,7 @@ public class EntityEntryContext {
 	 * @param entity The entity
 	 * @param entityEntry The entry
 	 */
-	public void addEntityEntry(Object entity, EntityEntry entityEntry) {
+	void addEntityEntry(Object entity, EntityEntry entityEntry) {
 		// IMPORTANT!!!!!
 		//		add is called more than once of some entities.  In such cases the first
 		//		call is simply setting up a "marker" to avoid infinite looping from reentrancy
@@ -233,7 +233,7 @@ public class EntityEntryContext {
 	 *
 	 * @return {@code true} if it is associated with this context
 	 */
-	public boolean hasEntityEntry(Object entity) {
+	boolean hasEntityEntry(Object entity) {
 		return getEntityEntry( entity ) != null;
 	}
 
@@ -244,7 +244,7 @@ public class EntityEntryContext {
 	 *
 	 * @return The associated {@link EntityEntry}
 	 */
-	public EntityEntry getEntityEntry(Object entity) {
+	EntityEntry getEntityEntry(Object entity) {
 		// locate a ManagedEntity for the entity, but only if it is associated with the same PersistenceContext.
 		final var managedEntity = getAssociatedManagedEntity( entity );
 		// and get/return the EntityEntry from the ManagedEntry
@@ -260,7 +260,7 @@ public class EntityEntryContext {
 	 *
 	 * @return The removed {@link EntityEntry}
 	 */
-	public EntityEntry removeEntityEntry(Object entity) {
+	EntityEntry removeEntityEntry(Object entity) {
 		// locate a ManagedEntity for the entity, but only if it is associated with the same PersistenceContext.
 		// no need to check if the entity is a ManagedEntity that is associated with a different PersistenceContext
 		final var managedEntity = getAssociatedManagedEntity( entity );
@@ -335,7 +335,7 @@ public class EntityEntryContext {
 	 *
 	 * @return The safe array
 	 */
-	public Map.Entry<Object, EntityEntry>[] reentrantSafeEntityEntries() {
+	Map.Entry<Object, EntityEntry>[] reentrantSafeEntityEntries() {
 		if ( dirty ) {
 			reentrantSafeEntries = new EntityEntryCrossRefImpl[count];
 			int i = 0;
@@ -758,7 +758,7 @@ public class EntityEntryContext {
 	/**
 	 * Used in building the {@link #reentrantSafeEntityEntries()} entries
 	 */
-	public interface EntityEntryCrossRef extends Map.Entry<Object,EntityEntry> {
+	private interface EntityEntryCrossRef extends Map.Entry<Object,EntityEntry> {
 		/**
 		 * The entity
 		 *

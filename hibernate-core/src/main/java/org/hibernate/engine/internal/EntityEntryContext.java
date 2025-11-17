@@ -152,11 +152,11 @@ public class EntityEntryContext {
 	private ManagedEntity getAssociatedManagedEntity(Object entity) {
 		if ( ManagedEntity.class.isInstance( entity ) ) {
 			final ManagedEntity managedEntity = (ManagedEntity) entity;
-			if ( managedEntity.$$_hibernate_getEntityEntry() == null ) {
+			final AbstractEntityEntry entityEntry = (AbstractEntityEntry) managedEntity.$$_hibernate_getEntityEntry();
+			if ( entityEntry == null ) {
 				// it is not associated
 				return null;
 			}
-			final AbstractEntityEntry entityEntry = (AbstractEntityEntry) managedEntity.$$_hibernate_getEntityEntry();
 
 			if ( entityEntry.getPersister().isMutable() ) {
 				return entityEntry.getPersistenceContext() == persistenceContext
@@ -391,12 +391,14 @@ public class EntityEntryContext {
 		ManagedEntity managedEntity = head;
 		while ( managedEntity != null ) {
 			// so we know whether or not to build a ManagedEntityImpl on deserialize
-			oos.writeBoolean( managedEntity == managedEntity.$$_hibernate_getEntityInstance() );
-			oos.writeObject( managedEntity.$$_hibernate_getEntityInstance() );
+			final Object instance = managedEntity.$$_hibernate_getEntityInstance();
+			oos.writeBoolean( managedEntity == instance );
+			oos.writeObject( instance );
 			// we need to know which implementation of EntityEntry is being serialized
-			oos.writeInt( managedEntity.$$_hibernate_getEntityEntry().getClass().getName().length() );
-			oos.writeChars( managedEntity.$$_hibernate_getEntityEntry().getClass().getName() );
-			managedEntity.$$_hibernate_getEntityEntry().serialize( oos );
+			final EntityEntry entry = managedEntity.$$_hibernate_getEntityEntry();
+			oos.writeInt( entry.getClass().getName().length() );
+			oos.writeChars( entry.getClass().getName() );
+			entry.serialize( oos );
 
 			managedEntity = managedEntity.$$_hibernate_getNextManagedEntity();
 		}
@@ -633,16 +635,16 @@ public class EntityEntryContext {
 		/*
 		Check instance type of EntityEntry and if type is ImmutableEntityEntry, check to see if entity is referenced cached in the second level cache
 		 */
-		private boolean canClearEntityEntryReference(){
-
-			if( managedEntity.$$_hibernate_getEntityEntry() == null ) {
+		private boolean canClearEntityEntryReference() {
+			final EntityEntry entry = managedEntity.$$_hibernate_getEntityEntry();
+			if( entry == null ) {
 				return true;
 			}
 
-			if( !(managedEntity.$$_hibernate_getEntityEntry() instanceof ImmutableEntityEntry) ) {
+			if( !(entry instanceof ImmutableEntityEntry) ) {
 				return true;
 			}
-			else if( managedEntity.$$_hibernate_getEntityEntry().getPersister().canUseReferenceCacheEntries() ) {
+			else if( entry.getPersister().canUseReferenceCacheEntries() ) {
 				return false;
 			}
 

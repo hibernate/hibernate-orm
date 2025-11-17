@@ -226,7 +226,7 @@ public class InsertedDataTest {
 		inTransaction(
 				sessionFactory,
 				s -> {
-					CacheableItem item = s.get( CacheableItem.class, 1L );
+					CacheableItem item = s.find( CacheableItem.class, 1L );
 					assertNull( item, "it should be null" );
 				}
 		);
@@ -280,7 +280,7 @@ public class InsertedDataTest {
 					s.persist( item );
 					s.flush();
 					s.clear();
-					item = s.get( CacheableItem.class, item.getId() );
+					s.find( CacheableItem.class, item.getId() );
 					s.getTransaction().markRollbackOnly();
 				}
 		);
@@ -290,7 +290,7 @@ public class InsertedDataTest {
 		inTransaction(
 				sessionFactory,
 				s -> {
-					final CacheableItem item = s.get( CacheableItem.class, 1L );
+					final CacheableItem item = s.find( CacheableItem.class, 1L );
 					assertNull( item, "it should be null" );
 				}
 		);
@@ -308,7 +308,7 @@ public class InsertedDataTest {
 					s.persist( item );
 					s.flush();
 					s.clear();
-					item = s.get( CacheableEmbeddedIdItem.class, item.getId() );
+					s.find( CacheableEmbeddedIdItem.class, item.getId() );
 					s.getTransaction().markRollbackOnly();
 				}
 		);
@@ -318,7 +318,7 @@ public class InsertedDataTest {
 		inTransaction(
 				sessionFactory,
 				s -> {
-					final CacheableEmbeddedIdItem item = s.get( CacheableEmbeddedIdItem.class, new PK( 2l ) );
+					final CacheableEmbeddedIdItem item = s.find( CacheableEmbeddedIdItem.class, new PK( 2l ) );
 					assertNull( item, "it should be null" );
 				}
 		);

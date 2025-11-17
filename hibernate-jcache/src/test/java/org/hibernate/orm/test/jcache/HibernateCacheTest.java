@@ -57,7 +57,7 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 
 		s = sessionFactory().openSession();
 		t = s.beginTransaction();
-		i = s.get( Item.class, i.getId() );
+		i = s.find( Item.class, i.getId() );
 
 		assertThat( slcs.getHitCount(), equalTo( 1L ) );
 		assertThat( slcs.getMissCount(), equalTo( 0L ) );
@@ -116,8 +116,6 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 		s.persist( item );
 		txn.commit();
 		s.close();
-
-		Long initialVersion = item.getVersion();
 
 		// manually revert the version property
 		item.setVersion( item.getVersion() - 1 );
@@ -209,7 +207,7 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 		mgr.addEmailToPerson( steveId, "steve@tc.com" );
 		mgr.addEmailToPerson( steveId, "sharrif@tc.com" );
 		mgr.addTalismanToPerson( steveId, "rabbit foot" );
-		mgr.addTalismanToPerson( steveId, "john de conqueroo" );
+		mgr.addTalismanToPerson( steveId, "john de conqueror" );
 
 		PhoneNumber p1 = new PhoneNumber();
 		p1.setNumberType( "Office" );

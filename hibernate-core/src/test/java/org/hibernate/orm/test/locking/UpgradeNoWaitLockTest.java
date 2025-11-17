@@ -10,10 +10,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import org.hibernate.LockMode;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -29,6 +31,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 		}
 )
 @SessionFactory
+@SkipForDialect(dialectClass = InformixDialect.class,
+		reason = "Cursor must be on simple SELECT for FOR UPDATE")
 public class UpgradeNoWaitLockTest {
 
 	@AfterEach

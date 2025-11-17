@@ -20,7 +20,6 @@ import org.hibernate.dialect.lock.internal.H2LockingSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
-import org.hibernate.dialect.sequence.H2V1SequenceSupport;
 import org.hibernate.dialect.sequence.H2V2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.H2SqlAstTranslator;
@@ -131,10 +130,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
 public class H2Dialect extends Dialect {
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 2, 1, 214 );
 
-	private final boolean ansiSequence;
-	private final boolean cascadeConstraints;
-	private final boolean useLocalTime;
-
 	private final SequenceInformationExtractor sequenceInformationExtractor;
 	private final String querySequenceString;
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
@@ -150,15 +145,6 @@ public class H2Dialect extends Dialect {
 
 	public H2Dialect(DatabaseVersion version) {
 		super( version );
-
-		// Prior to 1.4.200 there was no support for 'current value for sequence_name'
-		// After 2.0.202 there is no support for 'sequence_name.nextval' and 'sequence_name.currval'
-		ansiSequence = true;
-
-		// Prior to 1.4.200 the 'cascade' in 'drop table' was implicit
-		cascadeConstraints = true;
-		// 1.4.200 introduced changes in current_time and current_timestamp
-		useLocalTime = true;
 
 		sequenceInformationExtractor = SequenceInformationExtractorLegacyImpl.INSTANCE;
 		querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
@@ -307,9 +293,9 @@ public class H2Dialect extends Dialect {
 		functionFactory.dayOfWeekMonthYear();
 		functionFactory.weekQuarter();
 		functionFactory.daynameMonthname();
-		if ( useLocalTime ) {
-			functionFactory.localtimeLocaltimestamp();
-		}
+
+		functionFactory.localtimeLocaltimestamp();
+
 		functionFactory.trunc_dateTrunc();
 		functionFactory.dateTrunc();
 		functionFactory.bitLength();
@@ -466,12 +452,12 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public String currentTime() {
-		return useLocalTime ? "localtime" : super.currentTime();
+		return  "localtime";
 	}
 
 	@Override
 	public String currentTimestamp() {
-		return useLocalTime ? "localtimestamp" : super.currentTimestamp();
+		return "localtimestamp";
 	}
 
 	@Override
@@ -713,12 +699,12 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeTableName() {
-		return cascadeConstraints;
+		return true;
 	}
 
 	@Override
 	public boolean supportsIfExistsAfterAlterTable() {
-		return cascadeConstraints;
+		return true;
 	}
 
 	@Override
@@ -728,8 +714,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public String getCascadeConstraintsString() {
-		return cascadeConstraints ? " cascade "
-				: super.getCascadeConstraintsString();
+		return " cascade ";
 	}
 
 	@Override
@@ -756,7 +741,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return ansiSequence ? H2V2SequenceSupport.INSTANCE: H2V1SequenceSupport.INSTANCE;
+		return H2V2SequenceSupport.INSTANCE;
 	}
 
 	@Override

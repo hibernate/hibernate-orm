@@ -5,9 +5,10 @@
 package org.hibernate.community.dialect;
 
 import org.hibernate.dialect.Dialect;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 public class CommunityDialectSelectorTest {
 
@@ -36,8 +37,8 @@ public class CommunityDialectSelectorTest {
 			simpleName = simpleName.substring( 0, simpleName.length() - "Dialect".length() );
 		}
 		Class<? extends Dialect> aClass = strategySelector.resolve( simpleName );
-		Assert.assertNotNull( aClass );
-		Assert.assertEquals( dialectClass, aClass );
+		assertThat( aClass ).isNotNull();
+		assertThat( aClass ).isEqualTo( dialectClass );
 	}
 
 }

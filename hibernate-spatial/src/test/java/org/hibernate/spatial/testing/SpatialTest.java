@@ -8,12 +8,13 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Ignore;
-import org.junit.Test;
 
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 //tag::spatial-types-mapping-example[]
 import org.locationtech.jts.geom.Point;
@@ -22,29 +23,26 @@ import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Polygon;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Vlad Mihalcea
  */
 @RequiresDialect(PostgreSQLDialect.class)
-@Ignore
-public class SpatialTest extends BaseEntityManagerFunctionalTestCase {
+@Disabled
+@Jpa(
+		annotatedClasses = {
+				SpatialTest.Event.class
+		}
+)
+public class SpatialTest  {
 
 	private final GeometryFactory geometryFactory = new GeometryFactory();
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Event.class,
-		};
-	}
-
 	@Test
-	public void test() {
-		Long addressId = doInJPA( this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		Long addressId = scope.fromTransaction( entityManager -> {
 			//tag::spatial-types-point-creation-example[]
 			Event event = new Event();
 			event.setId( 1L);
@@ -57,14 +55,14 @@ public class SpatialTest extends BaseEntityManagerFunctionalTestCase {
 			return event.getId();
 		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction(  entityManager -> {
 			Event event = entityManager.find( Event.class, addressId);
 			Coordinate coordinate = event.getLocation().getCoordinate();
 			assertEquals( 10.0d, coordinate.getOrdinate( Coordinate.X), 0.1);
 			assertEquals( 5.0d, coordinate.getOrdinate( Coordinate.Y), 0.1);
 		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction(  entityManager -> {
 			Coordinate [] coordinates = new Coordinate[] {
 				new Coordinate(1,1), new Coordinate(20,1), new Coordinate(20,20),
 				new Coordinate(1,20), new Coordinate(1,1)

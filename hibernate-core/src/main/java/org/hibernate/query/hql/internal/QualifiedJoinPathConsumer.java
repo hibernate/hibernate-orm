@@ -203,12 +203,11 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		if ( allowReuse ) {
 			if ( !isTerminal ) {
 				for ( SqmJoin<?, ?> sqmJoin : lhs.getSqmJoins() ) {
-					// In order for an HQL join to be reusable, is must have the same path source,
+					// In order for an HQL join to be reusable, it must have the same path source,
 					if ( sqmJoin.getModel() == subPathSource
-						// must not have a join condition
-						&& sqmJoin.getJoinPredicate() == null
-						// and the same join type
-						&& sqmJoin.getSqmJoinType() == joinType ) {
+						// and must not have a join condition.
+						&& sqmJoin.getJoinPredicate() == null ) {
+						// We explicitly allow reusing implicit joins of any type
 						return sqmJoin;
 					}
 				}

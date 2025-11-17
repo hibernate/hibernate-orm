@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 import org.hibernate.Filter;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.FilterConfiguration;
+import org.hibernate.mapping.FilterConfiguration;
 import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.persister.filter.FilterAliasGenerator;
@@ -59,7 +59,7 @@ public class FilterHelper {
 	 * @param factory The session factory
 	 */
 	public FilterHelper(List<FilterConfiguration> filters, Map<String, String> tableToEntityName, SessionFactoryImplementor factory) {
-		int filterCount = filters.size();
+		final int filterCount = filters.size();
 
 		filterNames = new String[filterCount];
 		filterConditions = new String[filterCount];
@@ -68,19 +68,17 @@ public class FilterHelper {
 		parameterNames = new List[filterCount];
 		this.tableToEntityName = tableToEntityName;
 
-		filterCount = 0;
-		for ( final FilterConfiguration filter : filters ) {
+		for ( int i = 0; i < filters.size(); i++ ) {
+			final var filter = filters.get( i );
 			final String filterName = safeInterning( filter.getName() );
-			filterNames[filterCount] = filterName;
-			filterConditions[filterCount] = safeInterning( filter.getCondition() );
+			filterNames[i] = filterName;
+			filterConditions[i] = safeInterning( filter.getCondition() );
 
-			filterAliasTableMaps[filterCount] = filter.getAliasTableMap( factory );
-			filterAutoAliasFlags[filterCount] = false;
+			filterAliasTableMaps[i] = filter.getAliasTableMap( factory );
+			filterAutoAliasFlags[i] = false;
 
-			injectAliases( factory, filter, filterCount );
-			qualifyParameterNames( filterCount, filterName );
-
-			filterCount++;
+			injectAliases( factory, filter, i );
+			qualifyParameterNames( i, filterName );
 		}
 	}
 
@@ -193,15 +191,13 @@ public class FilterHelper {
 		for ( int i = 0, max = filterNames.length; i < max; i++ ) {
 			final var enabledFilter = enabledFilters.get( filterNames[i] );
 			if ( enabledFilter != null && ( !onlyApplyLoadByKeyFilters || enabledFilter.isAppliedToLoadByKey() ) ) {
-				filterPredicate.applyFragment( render( aliasGenerator, i, tableGroup, creationState ), enabledFilter, parameterNames[i] );
+				filterPredicate.applyFragment( render( aliasGenerator, i, tableGroup, creationState ),
+						enabledFilter, parameterNames[i] );
 			}
 		}
 
-		if ( filterPredicate.isEmpty() ) {
-			return null;
-		}
+		return filterPredicate.isEmpty() ? null : filterPredicate;
 
-		return filterPredicate;
 	}
 
 	public String render(FilterAliasGenerator aliasGenerator, Map<String, Filter> enabledFilters) {
@@ -213,13 +209,12 @@ public class FilterHelper {
 	public void render(StringBuilder buffer, FilterAliasGenerator aliasGenerator, Map<String, Filter> enabledFilters) {
 		if ( isNotEmpty( filterNames ) ) {
 			for ( int i = 0, max = filterNames.length; i < max; i++ ) {
-				if ( enabledFilters.containsKey( filterNames[i] ) ) {
-					if ( isNotEmpty( filterConditions[i] ) ) {
-						if ( !buffer.isEmpty() ) {
-							buffer.append( " and " );
-						}
-						buffer.append( render( aliasGenerator, i, null, null ) );
+				if ( enabledFilters.containsKey( filterNames[i] )
+						&& isNotEmpty( filterConditions[i] ) ) {
+					if ( !buffer.isEmpty() ) {
+						buffer.append( " and " );
 					}
+					buffer.append( render( aliasGenerator, i, null, null ) );
 				}
 			}
 		}

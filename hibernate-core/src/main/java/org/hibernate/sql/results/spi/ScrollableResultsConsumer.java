@@ -7,8 +7,8 @@ package org.hibernate.sql.results.spi;
 import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.FetchingScrollableResultsImpl;
-import org.hibernate.internal.ScrollableResultsImpl;
+import org.hibernate.internal.scrollable.FetchingScrollableResultsImpl;
+import org.hibernate.internal.scrollable.ScrollableResultsImpl;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;

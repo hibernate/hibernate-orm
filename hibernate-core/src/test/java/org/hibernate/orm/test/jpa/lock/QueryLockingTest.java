@@ -9,7 +9,7 @@ import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.internal.SessionImpl;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -211,7 +211,7 @@ public class QueryLockingTest {
 					.setLockMode( LockModeType.OPTIMISTIC )
 					.getSingleResult();
 			assertEquals( initial, reread.getVersion() );
-			assertTrue( em.unwrap( SessionImpl.class ).getActionQueue().hasBeforeTransactionActions() );
+			assertTrue( em.unwrap( SessionImplementor.class ).getActionQueue().hasBeforeTransactionActions() );
 			return reread.getId();
 		} );
 		scope.inTransaction( em -> {
@@ -234,7 +234,7 @@ public class QueryLockingTest {
 					.setHint( HINT_NATIVE_LOCK_MODE, LockModeType.OPTIMISTIC )
 					.getSingleResult();
 			assertEquals( initial, reread.getVersion() );
-			assertTrue( em.unwrap( SessionImpl.class ).getActionQueue().hasBeforeTransactionActions() );
+			assertTrue( em.unwrap( SessionImplementor.class ).getActionQueue().hasBeforeTransactionActions() );
 			return reread.getId();
 		} );
 		scope.inTransaction( em -> {

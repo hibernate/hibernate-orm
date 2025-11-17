@@ -9,15 +9,12 @@ import java.util.function.BiFunction;
 
 import org.hibernate.FlushMode;
 import org.hibernate.LazyInitializationException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
-import org.hibernate.mapping.Value;
 
 import static org.hibernate.bytecode.enhance.spi.interceptor.BytecodeInterceptorLogging.BYTECODE_INTERCEPTOR_LOGGER;
 
@@ -39,7 +36,7 @@ public class EnhancementHelper {
 			boolean isEnhanced,
 			InheritanceChecker inheritanceChecker,
 			boolean collectionsInDefaultFetchGroupEnabled) {
-		final Value value = bootMapping.getValue();
+		final var value = bootMapping.getValue();
 
 		if ( ! isEnhanced ) {
 			if ( value instanceof ToOne toOne ) {
@@ -62,7 +59,7 @@ public class EnhancementHelper {
 		if ( value instanceof ToOne toOne ) {
 
 			if ( ! toOne.isLazy() ) {
-				// its not lazy... select it
+				// it's not lazy... select it
 				return true;
 			}
 
@@ -273,8 +270,8 @@ public class EnhancementHelper {
 			throw createLazyInitializationException( Cause.NO_SF_UUID, entityName, attributeName );
 		}
 
-		final SessionFactoryImplementor sf = SessionFactoryRegistry.INSTANCE.getSessionFactory( interceptor.getSessionFactoryUuid() );
-		final SessionImplementor session = sf.openSession();
+		final var factory = SessionFactoryRegistry.INSTANCE.getSessionFactory( interceptor.getSessionFactoryUuid() );
+		final var session = factory.openSession();
 		session.getPersistenceContextInternal().setDefaultReadOnly( true );
 		session.setHibernateFlushMode( FlushMode.MANUAL );
 		return session;

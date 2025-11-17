@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 /**
  * @author Steve Ebersole
  */
-public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {
+class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {
 	private final Object tenantIdentifier;
 	private final boolean readOnly;
 	private final SessionEventListener listener;
@@ -25,7 +25,7 @@ public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Ser
 	private final SharedSessionContractImplementor session;
 
 
-	public ContextualJdbcConnectionAccess(
+	ContextualJdbcConnectionAccess(
 			Object tenantIdentifier,
 			boolean readOnly,
 			SessionEventListener listener,

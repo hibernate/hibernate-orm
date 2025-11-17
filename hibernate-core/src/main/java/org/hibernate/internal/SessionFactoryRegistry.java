@@ -15,6 +15,9 @@ import javax.naming.event.NamingExceptionEvent;
 import javax.naming.spi.ObjectFactory;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jndi.JndiException;
 import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.jndi.spi.JndiService;
@@ -49,6 +52,16 @@ public class SessionFactoryRegistry {
 
 	private SessionFactoryRegistry() {
 		REGISTRY_LOGGER.initializingSessionFactoryRegistry( hashCode() );
+	}
+
+	/**
+	 * Create a new instance of the package-private class {@link SessionFactoryImpl}.
+	 */
+	public static SessionFactoryImplementor instantiateSessionFactory(
+			MetadataImplementor bootMetamodel,
+			SessionFactoryOptions options,
+			BootstrapContext bootstrapContext) {
+		return new SessionFactoryImpl( bootMetamodel, options, bootstrapContext );
 	}
 
 	/**

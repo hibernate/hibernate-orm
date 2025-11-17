@@ -1881,9 +1881,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 	 * @throws IOException deserialization errors.
 	 * @throws ClassNotFoundException deserialization errors.
 	 */
-	public static StatefulPersistenceContext deserialize(
-			ObjectInputStream ois,
-			SessionImplementor session) throws IOException, ClassNotFoundException {
+	public static StatefulPersistenceContext deserialize(ObjectInputStream ois, SessionImplementor session)
+				throws IOException, ClassNotFoundException {
 		PERSISTENCE_CONTEXT_LOGGER.deserializingPersistenceContext();
 		final var context = new StatefulPersistenceContext( session );
 		final var factory = session.getFactory();

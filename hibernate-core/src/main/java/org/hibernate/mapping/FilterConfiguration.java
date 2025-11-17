@@ -2,13 +2,12 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.internal;
+package org.hibernate.mapping;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.mapping.PersistentClass;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;

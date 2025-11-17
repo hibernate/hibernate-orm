@@ -13,10 +13,10 @@ import org.hibernate.SessionFactoryObserver;
 /**
  * @author Steve Ebersole
  */
-public class SessionFactoryObserverChain implements SessionFactoryObserver {
+class SessionFactoryObserverChain implements SessionFactoryObserver {
 	private List<SessionFactoryObserver> observers;
 
-	public void addObserver(SessionFactoryObserver observer) {
+	void addObserver(SessionFactoryObserver observer) {
 		if ( observers == null ) {
 			observers = new ArrayList<>();
 		}

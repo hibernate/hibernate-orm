@@ -5,8 +5,8 @@
 package org.hibernate.engine.internal;
 
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.SessionImpl;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -23,7 +23,7 @@ public class PersistenceContexts {
 		return new StatefulPersistenceContext( session );
 	}
 
-	public static PersistenceContext deserialize(ObjectInputStream ois, SessionImpl session)
+	public static PersistenceContext deserialize(ObjectInputStream ois, SessionImplementor session)
 			throws IOException, ClassNotFoundException {
 		return StatefulPersistenceContext.deserialize( ois, session );
 	}

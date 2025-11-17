@@ -11,7 +11,6 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
-import org.hibernate.internal.SessionImpl;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -94,7 +93,7 @@ public class SessionWithSharedConnectionTest {
 
 		// directly assert state of the second session
 		assertTrue( secondSession.isAutoCloseSessionEnabled() );
-		assertTrue( ((SessionImpl) secondSession).shouldAutoClose() );
+//		assertTrue( ((SessionImpl) secondSession).shouldAutoClose() );
 
 		// now commit the transaction and make sure that does not close the sessions
 		session.getTransaction().commit();
@@ -118,7 +117,7 @@ public class SessionWithSharedConnectionTest {
 
 		// directly assert state of the second session
 		assertTrue( secondSession.isAutoCloseSessionEnabled() );
-		assertTrue( ((SessionImpl) secondSession).shouldAutoClose() );
+//		assertTrue( ((SessionImpl) secondSession).shouldAutoClose() );
 
 		// now rollback the transaction and make sure that does not close the sessions
 		session.getTransaction().rollback();

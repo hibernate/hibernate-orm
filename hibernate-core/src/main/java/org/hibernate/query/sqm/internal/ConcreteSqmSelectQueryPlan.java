@@ -10,7 +10,7 @@ import org.hibernate.InstantiationException;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.SubselectFetch;
-import org.hibernate.internal.EmptyScrollableResults;
+import org.hibernate.internal.scrollable.EmptyScrollableResults;
 import org.hibernate.internal.util.MutableObject;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.QueryTypeMismatchException;

@@ -11,7 +11,7 @@ import java.util.Set;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.EmptyScrollableResults;
+import org.hibernate.internal.scrollable.EmptyScrollableResults;
 import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryOptions;

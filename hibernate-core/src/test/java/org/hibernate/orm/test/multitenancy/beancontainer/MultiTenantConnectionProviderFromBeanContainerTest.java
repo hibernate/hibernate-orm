@@ -10,7 +10,7 @@ import java.util.Map;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
-import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.multitenancy.AbstractMultiTenancyTest;
 import org.hibernate.orm.test.multitenancy.ConfigurableMultiTenantConnectionProvider;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
@@ -88,7 +88,9 @@ public class MultiTenantConnectionProviderFromBeanContainerTest extends Abstract
 
 	@Test
 	public void testProviderInUse() {
-		MultiTenantConnectionProvider<?> providerInUse = ((SessionFactoryImpl) sessionFactory).getServiceRegistry().getService( MultiTenantConnectionProvider.class );
+		MultiTenantConnectionProvider<?> providerInUse =
+				((SessionFactoryImplementor) sessionFactory).getServiceRegistry()
+						.getService( MultiTenantConnectionProvider.class );
 		assertThat( providerInUse).isSameAs( expectedProviderInUse() );
 	}
 

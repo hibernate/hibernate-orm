@@ -12,7 +12,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 
 import org.hibernate.LazyInitializationException;
-import org.hibernate.internal.AbstractSharedSessionContract;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -87,8 +86,7 @@ public class LazyLoadingLoggingTest {
 		scope.inTransaction(
 				session -> {
 					Address address = session.getReference( Address.class, 1L );
-					AbstractSharedSessionContract sessionContract = (AbstractSharedSessionContract) session;
-					sessionContract.getJdbcCoordinator().close();
+					session.getJdbcCoordinator().close();
 
 					try {
 						address.getClient().getName();

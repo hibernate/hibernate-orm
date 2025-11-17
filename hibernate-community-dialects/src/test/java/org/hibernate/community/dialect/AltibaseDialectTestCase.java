@@ -4,63 +4,62 @@
  */
 package org.hibernate.community.dialect;
 
-import java.util.Locale;
-
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.orm.test.dialect.LimitQueryOptions;
 import org.hibernate.query.spi.Limit;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import java.util.Locale;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 /**
  * Unit test of the behavior of the AltibaseDialect utility methods
  *
  * @author Geoffrey Park
  */
-public class AltibaseDialectTestCase extends BaseUnitTestCase {
+@BaseUnitTest
+public class AltibaseDialectTestCase {
 	private Dialect dialect;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
-		dialect = new AltibaseDialect( DatabaseVersion.make( 7, 3 ));
+		dialect = new AltibaseDialect( DatabaseVersion.make( 7, 3 ) );
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		dialect = null;
 	}
 
 	@Test
 	public void testSupportLimits() {
-		assertTrue(dialect.getLimitHandler().supportsLimit());
+		assertThat( dialect.getLimitHandler().supportsLimit() ).isTrue();
 	}
 
 	@Test
 	public void testSelectWithLimitOnly() {
-		assertEquals( "select c1, c2 from t1 order by c1, c2 desc limit ?",
-					withLimit("select c1, c2 from t1 order by c1, c2 desc",
-														toRowSelection( 0, 15 ) ).toLowerCase( Locale.ROOT));
+		assertThat( withLimit( "select c1, c2 from t1 order by c1, c2 desc",
+				toRowSelection( 0, 15 ) ).toLowerCase( Locale.ROOT ) )
+				.isEqualTo( "select c1, c2 from t1 order by c1, c2 desc limit ?" );
 	}
 
 	@Test
 	public void testSelectWithOffsetLimit() {
-		assertEquals( "select c1, c2 from t1 order by c1, c2 desc limit 1+?,?",
-					withLimit("select c1, c2 from t1 order by c1, c2 desc",
-														toRowSelection( 5, 15 ) ).toLowerCase(Locale.ROOT));
+		assertThat( withLimit( "select c1, c2 from t1 order by c1, c2 desc",
+				toRowSelection( 5, 15 ) ).toLowerCase( Locale.ROOT ) )
+				.isEqualTo( "select c1, c2 from t1 order by c1, c2 desc limit 1+?,?" );
 	}
 
 	@Test
 	public void testSelectWithNoLimit() {
-		assertEquals( "select c1, c2 from t1 order by c1, c2 desc",
-					withLimit( "select c1, c2 from t1 order by c1, c2 desc",
-														null ).toLowerCase(Locale.ROOT));
+		assertThat( withLimit( "select c1, c2 from t1 order by c1, c2 desc", null ).toLowerCase( Locale.ROOT ) )
+				.isEqualTo( "select c1, c2 from t1 order by c1, c2 desc" );
 	}
 
 	private String withLimit(String sql, Limit limit) {

@@ -4,6 +4,19 @@
  */
 package org.hibernate.community.dialect;
 
+import jakarta.persistence.StoredProcedureQuery;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.orm.test.jpa.procedure.User;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -12,26 +25,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.orm.test.jpa.procedure.User;
-
-import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.StoredProcedureQuery;
-
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests various JPA usage scenarios for performing stored procedures.  Inspired by the awesomely well-done JPA TCK
@@ -39,187 +36,140 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 @RequiresDialect(DerbyDialect.class)
-public class DerbyJpaTckUsageTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				User.class
+		}
+)
+public class DerbyJpaTckUsageTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{ User.class};
+	@Test
+	public void testMultipleGetUpdateCountCalls(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "findOneUser" );
+					// this is what the TCK attempts to do, don't shoot the messenger...
+					query.getUpdateCount();
+					// yep, twice
+					query.getUpdateCount();
+				}
+		);
 	}
 
 	@Test
-	public void testMultipleGetUpdateCountCalls() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+	public void testBasicScalarResults(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				em -> {
+					StoredProcedureQuery query = em.createStoredProcedureQuery( "findOneUser" );
+					boolean isResult = query.execute();
+					assertThat( isResult ).isTrue();
+					int updateCount = query.getUpdateCount();
 
-		try {
-			StoredProcedureQuery query = em.createStoredProcedureQuery( "findOneUser" );
-			// this is what the TCK attempts to do, don't shoot the messenger...
-			query.getUpdateCount();
-			// yep, twice
-			query.getUpdateCount();
-		}
-		finally {
-			em.getTransaction().commit();
-			em.close();
-		}
+					boolean results = false;
+					do {
+						List list = query.getResultList();
+						assertThat( list ).hasSize( 1 );
+
+						results = query.hasMoreResults();
+						// and it only sets the updateCount once lol
+					}
+					while ( results || updateCount != -1 );
+				}
+		);
 	}
 
 	@Test
-	public void testBasicScalarResults() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-
-		try {
-			StoredProcedureQuery query = em.createStoredProcedureQuery( "findOneUser" );
-			boolean isResult = query.execute();
-			assertTrue( isResult );
-			int updateCount = query.getUpdateCount();
-
-			boolean results = false;
-			do {
-				List list = query.getResultList();
-				assertEquals( 1, list.size() );
-
-				results = query.hasMoreResults();
-				// and it only sets the updateCount once lol
-			} while ( results || updateCount != -1);
-		}
-		finally {
-			em.getTransaction().commit();
-			em.close();
-		}
+	@FailureExpected(jiraKey = "HHH-8416", reason = "JPA TCK challenge")
+	public void testHasMoreResultsHandlingTckChallenge(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				em -> {
+					StoredProcedureQuery query = em.createStoredProcedureQuery( "findOneUser", User.class );
+					assertThat( query.execute() ).isTrue();
+					assertThat( query.hasMoreResults() ).isTrue();
+					query.getResultList();
+					assertThat( query.hasMoreResults() ).isFalse();
+				}
+		);
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-8416", reason = "JPA TCK challenge" )
-	public void testHasMoreResultsHandlingTckChallenge() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-
-		try {
-			StoredProcedureQuery query = em.createStoredProcedureQuery( "findOneUser", User.class );
-			assertTrue( query.execute() );
-			assertTrue( query.hasMoreResults() );
-			query.getResultList();
-			assertFalse( query.hasMoreResults() );
-		}
-		finally {
-			em.getTransaction().commit();
-			em.close();
-		}
+	public void testHasMoreResultsHandling(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				em -> {
+					StoredProcedureQuery query = em.createStoredProcedureQuery( "findOneUser", User.class );
+					assertThat( query.execute() ).isTrue();
+					query.getResultList();
+					assertThat( query.hasMoreResults() ).isFalse();
+				}
+		);
 	}
 
 	@Test
-	public void testHasMoreResultsHandling() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+	public void testResultClassHandling(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				em -> {
+					StoredProcedureQuery query = em.createStoredProcedureQuery( "findOneUser", User.class );
+					boolean isResult = query.execute();
+					assertThat( isResult ).isTrue();
+					int updateCount = query.getUpdateCount();
 
-		try {
-			StoredProcedureQuery query = em.createStoredProcedureQuery( "findOneUser", User.class );
-			assertTrue( query.execute() );
-			query.getResultList();
-			assertFalse( query.hasMoreResults() );
-		}
-		finally {
-			em.getTransaction().commit();
-			em.close();
-		}
+					boolean results = false;
+					do {
+						List list = query.getResultList();
+						assertThat( list ).hasSize( 1 );
+						assertTyping( User.class, list.get( 0 ) );
+
+						results = query.hasMoreResults();
+						// and it only sets the updateCount once lol
+					}
+					while ( results || updateCount != -1 );
+				}
+		);
 	}
 
 	@Test
-	public void testResultClassHandling() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-
-		try {
-			StoredProcedureQuery query = em.createStoredProcedureQuery( "findOneUser", User.class );
-			boolean isResult = query.execute();
-			assertTrue( isResult );
-			int updateCount = query.getUpdateCount();
-
-			boolean results = false;
-			do {
-				List list = query.getResultList();
-				assertEquals( 1, list.size() );
-				assertTyping( User.class, list.get( 0 ) );
-
-				results = query.hasMoreResults();
-				// and it only sets the updateCount once lol
-			} while ( results || updateCount != -1);
-		}
-		finally {
-			em.getTransaction().commit();
-			em.close();
-		}
+	public void testSettingInParamDefinedOnNamedStoredProcedureQuery(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				em -> {
+					StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "positional-param" );
+					query.setParameter( 1, 1 );
+				}
+		);
 	}
 
 	@Test
-	public void testSettingInParamDefinedOnNamedStoredProcedureQuery() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "positional-param" );
-			query.setParameter( 1, 1 );
-		}
-		finally {
-			em.getTransaction().commit();
-			em.close();
-		}
+	public void testSettingNonExistingParams(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				em -> {
+					// non-existing positional param
+					assertThrows( IllegalArgumentException.class, () -> {
+						StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "positional-param" );
+						query.setParameter( 99, 1 );
+					} );
+
+					// non-existing named param
+					assertThrows( IllegalArgumentException.class, () -> {
+						StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "positional-param" );
+						query.setParameter( "does-not-exist", 1 );
+						fail( "Expecting an exception" );
+					} );
+				}
+		);
 	}
 
 	@Test
-	public void testSettingNonExistingParams() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-
-		try {
-			// non-existing positional param
-			try {
-				StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "positional-param" );
-				query.setParameter( 99, 1 );
-				fail( "Expecting an exception" );
-			}
-			catch (IllegalArgumentException expected) {
-				// this is the expected condition
-			}
-
-			// non-existing named param
-			try {
-				StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "positional-param" );
-				query.setParameter( "does-not-exist", 1 );
-				fail( "Expecting an exception" );
-			}
-			catch (IllegalArgumentException expected) {
-				// this is the expected condition
-			}
-		}
-		finally {
-			em.getTransaction().commit();
-			em.close();
-		}
-	}
-
-	@Test
-	@FailureExpected( jiraKey = "HHH-8395", reason = "Out of the frying pan into the fire: https://issues.apache.org/jira/browse/DERBY-211" )
-	public void testExecuteUpdate() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-
-		try {
-			StoredProcedureQuery query = em.createStoredProcedureQuery( "deleteAllUsers" );
-			int count = query.executeUpdate();
-			// this fails because the Derby EmbeddedDriver is returning zero here rather than the actual updateCount :(
-			// https://issues.apache.org/jira/browse/DERBY-211
-			assertEquals( 1, count );
-		}
-		finally {
-			em.getTransaction().commit();
-			em.close();
-		}
-	}
-
-	public void testParameterRegistration() {
-
+	@FailureExpected(jiraKey = "HHH-8395",
+			reason = "Out of the frying pan into the fire: https://issues.apache.org/jira/browse/DERBY-211")
+	public void testExecuteUpdate(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				em -> {
+					StoredProcedureQuery query = em.createStoredProcedureQuery( "deleteAllUsers" );
+					int count = query.executeUpdate();
+					// this fails because the Derby EmbeddedDriver is returning zero here rather than the actual updateCount :(
+					// https://issues.apache.org/jira/browse/DERBY-211
+					assertThat( count ).isEqualTo( 1 );
+				}
+		);
 	}
 
 	// todo : look at ways to allow "Auxiliary DB Objects" to the db via EMF bootstrapping.
@@ -247,25 +197,26 @@ public class DerbyJpaTckUsageTest extends BaseEntityManagerFunctionalTestCase {
 //	public static final String deleteAllUsers_DROP_CMD = "DROP ALIAS deleteAllUsers IF EXISTS";
 
 
-	@Before
-	public void startUp() {
-
+	@BeforeEach
+	public void startUp(EntityManagerFactoryScope scope) {
 		// create the procedures
-		createTestUser( entityManagerFactory() );
-		createProcedures( entityManagerFactory() );
+		createTestUser( scope );
+		createProcedures( scope );
 	}
 
 
-	@After
-	public void tearDown() {
-
-		deleteTestUser( entityManagerFactory() );
-		dropProcedures( entityManagerFactory() );
-
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		deleteTestUser( scope );
+		dropProcedures( scope );
 	}
 
-	private void createProcedures(SessionFactoryImplementor emf) {
-		final JdbcConnectionAccess connectionAccess = emf.getServiceRegistry().getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess();
+	private void createProcedures(EntityManagerFactoryScope scope) {
+		SessionFactoryImplementor sessionFactoryImplementor = scope.getEntityManagerFactory()
+				.unwrap( SessionFactoryImplementor.class );
+		final JdbcConnectionAccess connectionAccess = sessionFactoryImplementor.getServiceRegistry()
+				.getService( JdbcServices.class )
+				.getBootstrapJdbcConnectionAccess();
 		final Connection conn;
 		try {
 			conn = connectionAccess.obtainConnection();
@@ -294,7 +245,7 @@ public class DerbyJpaTckUsageTest extends BaseEntityManagerFunctionalTestCase {
 					conn.commit();
 				}
 				catch (SQLException e) {
-					System.out.println( "Unable to commit transaction after creating creating procedures");
+					System.out.println( "Unable to commit transaction after creating creating procedures" );
 				}
 
 				try {
@@ -317,19 +268,19 @@ public class DerbyJpaTckUsageTest extends BaseEntityManagerFunctionalTestCase {
 	private void createProcedureFindOneUser(Statement statement) throws SQLException {
 		statement.execute(
 				"CREATE PROCEDURE findOneUser() " +
-						"language java " +
-						"dynamic result sets 1 " +
-						"external name 'org.hibernate.community.dialect.DerbyJpaTckUsageTest.findOneUser' " +
-						"parameter style java"
+				"language java " +
+				"dynamic result sets 1 " +
+				"external name 'org.hibernate.community.dialect.DerbyJpaTckUsageTest.findOneUser' " +
+				"parameter style java"
 		);
 	}
 
 	private void createProcedureDeleteAllUsers(Statement statement) throws SQLException {
 		statement.execute(
 				"CREATE PROCEDURE deleteAllUsers() " +
-						"language java " +
-						"external name 'org.hibernate.community.dialect.DerbyJpaTckUsageTest.deleteAllUsers' " +
-						"parameter style java"
+				"language java " +
+				"external name 'org.hibernate.community.dialect.DerbyJpaTckUsageTest.deleteAllUsers' " +
+				"parameter style java"
 		);
 	}
 
@@ -361,26 +312,22 @@ public class DerbyJpaTckUsageTest extends BaseEntityManagerFunctionalTestCase {
 		conn.close();
 	}
 
-	private void createTestUser(SessionFactoryImplementor entityManagerFactory) {
-		EntityManager em = entityManagerFactory.createEntityManager();
-		em.getTransaction().begin();
-
-		em.persist( new User( 1, "steve" ) );
-		em.getTransaction().commit();
-		em.close();
+	private void createTestUser(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				em -> em.persist( new User( 1, "steve" ) )
+		);
 	}
 
-	private void deleteTestUser(SessionFactoryImplementor entityManagerFactory) {
-		EntityManager em = entityManagerFactory.createEntityManager();
-		em.getTransaction().begin();
-		em.createQuery( "delete from User" ).executeUpdate();
-		em.getTransaction().commit();
-		em.close();
+	private void deleteTestUser(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				em -> em.createQuery( "delete from User" ).executeUpdate()
+		);
 	}
 
-	private void dropProcedures(SessionFactoryImplementor emf) {
-		final SessionFactoryImplementor sf = emf.unwrap( SessionFactoryImplementor.class );
-		final JdbcConnectionAccess connectionAccess = sf.getServiceRegistry().getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess();
+	private void dropProcedures(EntityManagerFactoryScope scope) {
+		final SessionFactoryImplementor sf = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		final JdbcConnectionAccess connectionAccess = sf.getServiceRegistry().getService( JdbcServices.class )
+				.getBootstrapJdbcConnectionAccess();
 		final Connection conn;
 		try {
 			conn = connectionAccess.obtainConnection();
@@ -400,7 +347,7 @@ public class DerbyJpaTckUsageTest extends BaseEntityManagerFunctionalTestCase {
 					conn.commit();
 				}
 				catch (SQLException e) {
-					System.out.println( "Unable to commit transaction after creating dropping procedures");
+					System.out.println( "Unable to commit transaction after creating dropping procedures" );
 				}
 
 				try {

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -42,7 +40,7 @@ class SingularIdentifierAttributeSourceImpl
 	private final AttributeRole attributeRole;
 	private final AttributePath attributePath;
 
-	private ToolingHintContext toolingHintContext;
+	private final ToolingHintContext toolingHintContext;
 
 	public SingularIdentifierAttributeSourceImpl(
 			MappingDocument mappingDocument,
@@ -52,7 +50,7 @@ class SingularIdentifierAttributeSourceImpl
 
 		if ( StringHelper.isEmpty( idElement.getName() ) ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfNonNamedIdAttribute( container.getAttributeRoleBase().getFullPath() );
-			name = null;
+			name = "id";
 		}
 		else {
 			name = idElement.getName();

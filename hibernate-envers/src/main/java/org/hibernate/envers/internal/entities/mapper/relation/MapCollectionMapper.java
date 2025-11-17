@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
@@ -16,9 +14,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
@@ -35,11 +34,14 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
 	protected final MiddleComponentData indexComponentData;
 
 	public MapCollectionMapper(
+			Configuration configuration,
 			CommonCollectionMapperData commonCollectionMapperData,
-			Class<? extends T> collectionClass, Class<? extends T> proxyClass,
-			MiddleComponentData elementComponentData, MiddleComponentData indexComponentData,
+			Class<? extends T> collectionClass,
+			Class<? extends T> proxyClass,
+			MiddleComponentData elementComponentData,
+			MiddleComponentData indexComponentData,
 			boolean revisionTypeInId) {
-		super( commonCollectionMapperData, collectionClass, proxyClass, false, revisionTypeInId );
+		super( configuration, commonCollectionMapperData, collectionClass, proxyClass, false, revisionTypeInId );
 		this.elementComponentData = elementComponentData;
 		this.indexComponentData = indexComponentData;
 	}
@@ -86,7 +88,7 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
 
 	@Override
 	protected void mapToMapFromObject(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> idData,
 			Map<String, Object> data,
 			Object changed) {
@@ -135,10 +137,10 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
 
 	@Override
 	public List<PersistentCollectionChangeData> mapCollectionChanges(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			PersistentCollection newColl,
 			Serializable oldColl,
-			Serializable id) {
+			Object id) {
 		final List<PersistentCollectionChangeData> collectionChanges = new ArrayList<>();
 		final CollectionPersister collectionPersister = resolveCollectionPersister( session, newColl );
 

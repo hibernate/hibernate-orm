@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
+        http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd"
+             version="2.1">
+
+    <!-- Used to test org.hibernate.orm.test.jpa.boot.BootFailureTest :
+         intentionally needs to refer to some invalid configuration properties
+         so to fail bootstrap -->
+    <persistence-unit name="IntentionallyBroken" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <properties>
+            <property name="hibernate.connection.driver_class" value="IntentionallyWrongClassName"/>
+        </properties>
+    </persistence-unit>
+
+    <persistence-unit name="IntentionallyBrokenWihoutExplicitProvider" transaction-type="RESOURCE_LOCAL">
+        <properties>
+            <property name="hibernate.connection.driver_class" value="IntentionallyWrongClassName"/>
+        </properties>
+    </persistence-unit>
+
+    <persistence-unit name="IntentionallyMissingClass">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <class>org.hibernate.orm.test.jpa.boot.Event</class>
+    </persistence-unit>
+
+</persistence>

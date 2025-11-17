@@ -1,15 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.jta;
 
-import javax.transaction.Status;
-import javax.transaction.TransactionManager;
-import javax.transaction.TransactionSynchronizationRegistry;
-import javax.transaction.UserTransaction;
+import jakarta.transaction.NotSupportedException;
+import jakarta.transaction.Status;
+import jakarta.transaction.SystemException;
+import jakarta.transaction.TransactionManager;
+import jakarta.transaction.TransactionSynchronizationRegistry;
+import jakarta.transaction.UserTransaction;
 
 import org.hibernate.engine.transaction.jta.platform.internal.AbstractJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaSynchronizationStrategy;
@@ -26,6 +26,7 @@ import com.arjuna.common.internal.util.propertyservice.BeanPopulator;
  * @author Steve Ebersole
  */
 public class TestingJtaPlatformImpl extends AbstractJtaPlatform {
+	public static final String NAME = TestingJtaPlatformImpl.class.getName();
 	public static final TestingJtaPlatformImpl INSTANCE = new TestingJtaPlatformImpl();
 
 	private final TransactionManager transactionManager;
@@ -83,6 +84,51 @@ public class TestingJtaPlatformImpl extends AbstractJtaPlatform {
 		}
 		else {
 			transactionManager().commit();
+		}
+	}
+
+	public static void inNoopJtaTransaction(TransactionManager tm, Runnable action) throws Exception {
+		tm.begin();
+		action.run();
+		tm.rollback();
+	}
+
+	public static void inJtaTransaction(TransactionManager tm, Runnable action) throws Exception {
+		inJtaTransaction( tm, -1, action );
+	}
+
+	public static void inJtaTransaction(TransactionManager tm, int timeout, Runnable action) throws Exception {
+		// account for the timeout, if one was requested
+		if ( timeout > 0 ) {
+			try {
+				tm.setTransactionTimeout( timeout );
+			}
+			catch (SystemException e) {
+				throw new RuntimeException( "Unable to set requested JTA timeout", e );
+			}
+		}
+
+		try {
+			tm.begin();
+		}
+		catch (NotSupportedException | SystemException e) {
+			throw new RuntimeException( "TransactionManager#begin exception", e );
+		}
+
+		try {
+			action.run();
+
+			tm.commit();
+		}
+		catch (Exception e) {
+			try {
+				tm.rollback();
+			}
+			catch (SystemException ex) {
+				throw new RuntimeException( ex );
+			}
+
+			throw e;
 		}
 	}
 

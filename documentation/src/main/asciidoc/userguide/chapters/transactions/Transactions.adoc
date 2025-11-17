@@ -1,6 +1,7 @@
 [[transactions]]
-== Transactions and concurrency control
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/transactions
+== Transactions
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-transaction: {core-project-dir}/src/test/java/org/hibernate/orm/test/transactions
 
 It is important to understand that the term transaction has many different yet related meanings in regards to persistence and Object/Relational Mapping.
 In most use-cases these definitions align, but that is not always the case.
@@ -25,22 +26,22 @@ which are built by the `org.hibernate.resource.transaction.spi.TransactionCoordi
 `TransactionCoordinatorBuilder` represents a strategy for dealing with transactions whereas TransactionCoordinator represents one instance of that strategy related to a Session.
 Which `TransactionCoordinatorBuilder` implementation to use is defined by the `hibernate.transaction.coordinator_class` setting.
 
-`jdbc` (the default for non-JPA applications):: Manages transactions via calls to `java.sql.Connection`
+`jdbc` (the default for non-Jakarta Persistence applications):: Manages transactions via calls to `java.sql.Connection`
 `jta`:: Manages transactions via JTA. See <<chapters/bootstrap/Bootstrap.adoc#bootstrap-jpa-compliant,Java EE bootstrapping>>
 
-If a JPA application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate will 
+If a Jakarta Persistence application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate will
 automatically build the proper transaction coordinator based on the transaction type for the persistence unit.
 
-If a non-JPA application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate 
+If a non-Jakarta Persistence application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate
 will use `jdbc` as the default. This default will cause problems if the application actually uses JTA-based transactions.
-A non-JPA application that uses JTA-based transactions should explicitly set `hibernate.transaction.coordinator_class=jta` 
+A non-Jakarta Persistence application that uses JTA-based transactions should explicitly set `hibernate.transaction.coordinator_class=jta`
 or provide a custom `org.hibernate.resource.transaction.TransactionCoordinatorBuilder` that builds a 
 `org.hibernate.resource.transaction.TransactionCoordinator` that properly coordinates with JTA-based transactions. 
 
 [NOTE]
 ====
 For details on implementing a custom `TransactionCoordinatorBuilder`, or simply better understanding how it works, see the
-http://docs.jboss.org/hibernate/orm/{majorMinorVersion}/integrationguide/html_single/Hibernate_Integration_Guide.html[Integration Guide] .
+https://docs.hibernate.org/orm/{majorMinorVersion}/integrationguide/html_single/[Integration Guide] .
 ====
 
 Hibernate uses JDBC connections and JTA resources directly, without adding any additional locking behavior.
@@ -74,22 +75,15 @@ Hibernate tries to discover the `JtaPlatform` it should use through the use of a
 If that resolution does not work, or if you wish to provide a custom implementation you will need to specify the `hibernate.transaction.jta.platform` setting.
 Hibernate provides many implementations of the `JtaPlatform` contract, all with short names:
 
-`Atomikos`:: `JtaPlatform` for Atomikos.
-`Borland`:: `JtaPlatform` for the Borland Enterprise Server.
-`Bitronix`:: `JtaPlatform` for Bitronix.
 `JBossAS`:: `JtaPlatform` for Arjuna/JBossTransactions/Narayana when used within the JBoss/WildFly Application Server.
-`JBossTS`:: `JtaPlatform` for Arjuna/JBossTransactions/Narayana when used standalone.
-`JOnAS`:: `JtaPlatform` for JOTM when used within JOnAS.
-`JOTM`:: `JtaPlatform` for JOTM when used standalone.
-`JRun4`:: `JtaPlatform` for the JRun 4 Application Server.
-`OC4J`:: `JtaPlatform` for Oracle's OC4J container.
-`Orion`:: `JtaPlatform` for the Orion Application Server.
+`JBossTS`:: **deprecated**, use `Narayana` or `WildFlyStandAlone` instead.
+`Atomikos`:: `JtaPlatform` for Atomikos.
+`GlassFish`, `Payara`:: `JtaPlatform` for GlassFish or Payara.
 `Resin`:: `JtaPlatform` for the Resin Application Server.
-`SapNetWeaver`:: `JtaPlatform` for the SAP NetWeaver Application Server.
-`SunOne`:: `JtaPlatform` for the SunOne Application Server.
+`Narayana`:: `JtaPlatform` for Arjuna/Narayana when used outside the WildFly Application Server.
 `Weblogic`:: `JtaPlatform` for the Weblogic Application Server.
-`WebSphere`:: `JtaPlatform` for older versions of the WebSphere Application Server.
-`WebSphereExtended`:: `JtaPlatform` for newer versions of the WebSphere Application Server.
+`WebSphere`, `WebSphereLiberty`:: `JtaPlatform` for newer versions of the WebSphere Application Server.
+`WildFlyStandAlone`:: `JtaPlatform` for WildFly Transaction Client when used outside the WildFly Application Server.
 
 [[transactions-api]]
 === Hibernate Transaction API
@@ -114,27 +108,27 @@ Let's take a look at using the Transaction API in the various environments.
 [[transactions-api-jdbc-example]]
 .Using Transaction API in JDBC
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/TransactionsTest.java[tags=transactions-api-jdbc-example]
+include::{example-dir-transaction}/TransactionsTest.java[tags=transactions-api-jdbc-example]
 ----
 ====
 
 [[transactions-api-cmt-example]]
 .Using Transaction API in JTA (CMT)
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/TransactionsTest.java[tags=transactions-api-cmt-example]
+include::{example-dir-transaction}/TransactionsTest.java[tags=transactions-api-cmt-example]
 ----
 ====
 
 [[transactions-api-bmt-example]]
 .Using Transaction API in JTA (BMT)
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/TransactionsTest.java[tags=transactions-api-bmt-example]
+include::{example-dir-transaction}/TransactionsTest.java[tags=transactions-api-bmt-example]
 ----
 ====
 
@@ -162,7 +156,7 @@ However, as of version 3.1, the processing behind `SessionFactory.getCurrentSess
 To that end, a new extension interface, `org.hibernate.context.spi.CurrentSessionContext`,
 and a new configuration parameter, `hibernate.current_session_context_class`, have been added to allow pluggability of the scope and context of defining current sessions.
 
-See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/spi/CurrentSessionContext.html[Javadocs] for the `org.hibernate.context.spi.CurrentSessionContext` interface for a detailed discussion of its contract.
+See the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/context/spi/CurrentSessionContext.html[Javadocs] for the `org.hibernate.context.spi.CurrentSessionContext` interface for a detailed discussion of its contract.
 It defines a single method, `currentSession()`, by which the implementation is responsible for tracking the current contextual session.
 Out-of-the-box, Hibernate comes with three implementations of this interface:
 
@@ -170,7 +164,7 @@ Out-of-the-box, Hibernate comes with three implementations of this interface:
 current sessions are tracked and scoped by a `JTA` transaction.
 The processing here is exactly the same as in the older JTA-only approach.
 `org.hibernate.context.internal.ThreadLocalSessionContext`::
-current sessions are tracked by thread of execution. See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/internal/ThreadLocalSessionContext.html[Javadocs] for more details.
+current sessions are tracked by thread of execution. See the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/context/internal/ThreadLocalSessionContext.html[Javadocs] for more details.
 `org.hibernate.context.internal.ManagedSessionContext`::
 current sessions are tracked by thread of execution.
 However, you are responsible to bind and unbind a `Session` instance with static methods on this class; it does not open, flush, or close a `Session`.
@@ -297,7 +291,7 @@ Session-per-request-with-detached-objects and session-per-conversation each have
 ==== Session-per-application anti-pattern
 
 The _session-per-application_ is also considered an anti-pattern.
-The Hibernate `Session`, like the JPA `EntityManager`, is not a thread-safe object and it is intended to be confined to a single thread at once.
+The Hibernate `Session`, like the Jakarta Persistence `EntityManager`, is not a thread-safe object and it is intended to be confined to a single thread at once.
 If the `Session` is shared among multiple threads, there will be race conditions as well as visibility issues, so beware of this.
 
 An exception thrown by Hibernate means you have to rollback your database transaction and close the `Session` immediately. 

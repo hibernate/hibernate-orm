@@ -1,0 +1,62 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Applies details for `https://develocity.commonhaus.dev`
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ext {
+    isCiEnvironment = isJenkins() || isGitHubActions() || isGenericCi()
+    populateRemoteBuildCache = getSetting('POPULATE_REMOTE_GRADLE_CACHE').orElse('false').toBoolean()
+    useRemoteCache = !getSetting('DISABLE_REMOTE_GRADLE_CACHE').orElse('false').toBoolean()
+}
+
+private static boolean isJenkins() {
+    return getSetting( "JENKINS_URL" ).isPresent()
+}
+
+private static boolean isGitHubActions() {
+    return getSetting( "GITHUB_ACTIONS" ).isPresent()
+}
+
+private static boolean isGenericCi() {
+    return System.getenv("CI") != null || System.getProperty("CI") != null
+}
+
+static java.util.Optional<String> getSetting(String name) {
+    def envVar = System.getenv(name)
+    if ( envVar != null ) {
+        return java.util.Optional.of(envVar);
+    }
+
+    def sysProp = System.getProperty(name)
+    return java.util.Optional.ofNullable(sysProp);
+}
+
+develocity {
+    server = 'https://develocity.commonhaus.dev'
+
+    buildScan {
+        capture {
+            fileFingerprints = true
+        }
+        publishing.onlyIf { it.authenticated }
+
+        obfuscation {
+            // Don't share ip addresses
+            ipAddresses { addresses -> addresses.collect { address -> "0.0.0.0" } }
+        }
+
+        uploadInBackground = !settings.ext.isCiEnvironment
+
+        tag "jdk-${settings.extensions.jdkVersions.test.launcher}"
+        tag settings.extensions.db
+        value 'database', settings.extensions.db
+
+        if ( settings.extensions.findByName( 'ci.node' ) ) {
+            tag settings.extensions.findByName( 'ci.node' )
+        }
+    }
+}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing;
 
@@ -21,17 +19,19 @@ import org.hibernate.dialect.Dialect;
  * @see RequiresDialects
  *
  * @author Hardy Ferentschik
+ * @deprecated Use JUnit Jupiter and {@link org.hibernate.testing.orm.junit.RequiresDialect} instead.
  */
 @Target({ ElementType.METHOD, ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Repeatable(RequiresDialects.class)
+@Deprecated(forRemoval = true)
 public @interface RequiresDialect {
 	/**
 	 * The dialects against which to run the test
 	 *
 	 * @return The dialects
 	 */
-	Class<? extends Dialect>[] value();
+	Class<? extends Dialect> value();
 
 	/**
 	 * Used to indicate if the dialects should be matched strictly (classes equal) or

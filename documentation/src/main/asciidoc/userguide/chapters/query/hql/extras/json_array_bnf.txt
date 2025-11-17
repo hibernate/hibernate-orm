@@ -1,0 +1,5 @@
+"json_array(" (expressionOrPredicate ("," expressionOrPredicate)* jsonNullClause?)? ")"
+
+jsonNullClause
+	: ("absent"|"null") "on null"
+	;

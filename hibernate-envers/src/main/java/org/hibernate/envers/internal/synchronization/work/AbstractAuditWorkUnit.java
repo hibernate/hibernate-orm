@@ -1,22 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.synchronization.work;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.hibernate.Session;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
-import org.hibernate.envers.strategy.AuditStrategy;
+import org.hibernate.envers.internal.tools.OrmTools;
+import org.hibernate.envers.strategy.spi.AuditStrategy;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -25,9 +22,9 @@ import org.hibernate.envers.strategy.AuditStrategy;
  * @author Chris Cranford
  */
 public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
-	protected final SessionImplementor sessionImplementor;
+	protected final SharedSessionContractImplementor sessionImplementor;
 	protected final EnversService enversService;
-	protected final Serializable id;
+	protected final Object id;
 	protected final String entityName;
 	protected final AuditStrategy auditStrategy;
 	protected final RevisionType revisionType;
@@ -35,10 +32,10 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 	private Object performedData;
 
 	protected AbstractAuditWorkUnit(
-			SessionImplementor sessionImplementor,
+			SharedSessionContractImplementor sessionImplementor,
 			String entityName,
 			EnversService enversService,
-			Serializable id,
+			Object id,
 			RevisionType revisionType) {
 		this.sessionImplementor = sessionImplementor;
 		this.enversService = enversService;
@@ -49,29 +46,31 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 	}
 
 	protected void fillDataWithId(Map<String, Object> data, Object revision) {
-		final AuditEntitiesConfiguration entitiesCfg = enversService.getAuditEntitiesConfiguration();
+		final Configuration configuration = enversService.getConfig();
 
 		final Map<String, Object> originalId = new HashMap<>();
-		originalId.put( entitiesCfg.getRevisionFieldName(), revision );
+		originalId.put( configuration.getRevisionFieldName(), revision );
 
 		final IdMapper idMapper = enversService.getEntitiesConfigurations().get( getEntityName() ).getIdMapper();
 		idMapper.mapToMapFromId( sessionImplementor, originalId, id );
 
-		data.put( entitiesCfg.getRevisionTypePropName(), revisionType );
-		data.put( entitiesCfg.getOriginalIdPropName(), originalId );
+		data.put( configuration.getRevisionTypePropertyName(), revisionType );
+		data.put( configuration.getOriginalIdPropertyName(), originalId );
+		// The $type$ property holds the name of the (versions) entity
+		data.put( "$type$", configuration.getAuditEntityName( entityName ) );
 	}
 
 	@Override
-	public void perform(Session session, Object revisionData) {
+	public void perform(SharedSessionContractImplementor session, Object revisionData) {
 		final Map<String, Object> data = generateData( revisionData );
 
-		auditStrategy.perform( session, getEntityName(), enversService, id, data, revisionData );
+		auditStrategy.perform( session, getEntityName(), enversService.getConfig(), id, data, revisionData );
 
 		setPerformed( data );
 	}
 
 	@Override
-	public Serializable getEntityId() {
+	public Object getEntityId() {
 		return id;
 	}
 
@@ -89,12 +88,9 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 		this.performedData = performedData;
 	}
 
-	public void undo(Session session) {
+	public void undo(SharedSessionContractImplementor session) {
 		if ( isPerformed() ) {
-			session.delete(
-					enversService.getAuditEntitiesConfiguration().getAuditEntityName( getEntityName() ),
-					performedData
-			);
+			OrmTools.removeData( performedData, session );
 			session.flush();
 		}
 	}

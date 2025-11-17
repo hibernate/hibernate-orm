@@ -1,45 +1,163 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-apply plugin: 'groovy'
+import org.apache.tools.ant.filters.ReplaceTokens
+import org.gradle.api.internal.provider.DefaultProvider
 
-description = "Gradle plugin for integrating Hibernate functionality into your build"
+plugins {
+	id 'java-gradle-plugin'
+	id "local.java-module"
+	id "local.javadoc"
+	id "local.code-quality"
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-apply plugin: 'java-gradle-plugin'
-apply plugin: 'maven'
-
-
-dependencies {
-	compile( project( ':hibernate-core' ) )
-	compile( libraries.jpa )
-	compile( libraries.javassist )
-	compile( libraries.byteBuddy )
-	compile gradleApi()
-	compile localGroovy()
+	id 'com.gradle.plugin-publish' version '2.0.0'
+	// for local publishing
+	id 'maven-publish'
 }
 
-tasks.withType( GroovyCompile ) {
+description = "Gradle plugin for integrating Hibernate aspects into your build"
+
+dependencies {
+	implementation project(':hibernate-core')
+	implementation libs.byteBuddy
+	implementation jakartaLibs.jaxbApi
+
+	implementation gradleApi()
+	implementation localGroovy()
+
+	// for Gradle
+	implementation jakartaLibs.inject
+	implementation localGroovy()
+
+	testImplementation gradleTestKit()
+	testImplementation testLibs.assertjCore
+	testImplementation testLibs.junitJupiterApi
+
+	testRuntimeOnly testLibs.junitJupiterEngine
+	testRuntimeOnly testLibs.junitJupiterLauncher
+}
+
+gradlePlugin {
+	website = 'https://github.com/hibernate/hibernate-orm/tree/main/tooling/hibernate-gradle-plugin'
+	vcsUrl = 'https://github.com/hibernate/hibernate-orm/tree/main/tooling/hibernate-gradle-plugin'
+
+	plugins {
+		ormPlugin {
+			id = "org.hibernate.orm"
+			implementationClass = "org.hibernate.orm.tooling.gradle.HibernateOrmPlugin"
+			displayName = 'Gradle plugin for Hibernate ORM'
+			description = 'Applies Hibernate aspects into the build'
+			tags = ['hibernate','orm','bytecode','enhancement','bytebuddy']
+		}
+	}
+}
+
+tasks.withType(AbstractArchiveTask).configureEach {
+	preserveFileTimestamps = false
+	reproducibleFileOrder = true
+}
+
+test {
+	useJUnitPlatform()
+	if ( project.hasProperty( 'excludeTests' ) ) {
+		exclude project.property( 'excludeTests' ) as String
+	}
+    systemProperty("orm.gradle.min", project.property("orm.gradle.min"))
+	jvmArgs("--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED",
+			"--add-opens", "java.base/java.util=ALL-UNNAMED",
+			"--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED")
+}
+
+if ( jdkVersions.test.launcher.asInt() > 21 ) {
+    project.logger.lifecycle( "Skipping {} tests for JDK version {}", project.name, jdkVersions.test.launcher.asInt() )
+    tasks.getByName( "test" ).enabled = false
+}
+
+def releasePrepareTask = tasks.register("releasePrepare") {
+	group "release-prepare"
+	description "See :release:releasePrepare for details.  Here we hook in the `check` task."
+
+	dependsOn tasks.check
+}
+
+// used from the h2 CI job
+tasks.register("preVerifyRelease") {
+	group "release-prepare"
+	description "Delegates to `releasePrepare` task"
+
+	dependsOn releasePrepareTask
+}
+
+tasks.register("releaseGradlePluginPerform") {
+	group "release-perform"
+	description "An explicit task for publishing Gradle Plugins to the Plugin Portal"
+
+	dependsOn tasks.publishPlugins
+}
+
+
+// local publishing (SNAPSHOT testing)
+publishing {
+	repositories {
+		maven {
+			name = 'localPluginRepository'
+			url = "${buildDir}/local-plugin-repository"
+		}
+	}
+}
+
+processResources {
+	inputs.property( "orm-version", getVersion() )
+	description = description + " (injected with Hibernate version)"
+	filter( ReplaceTokens, tokens: [ 'hibernateVersion': getVersion() ] )
+}
+
+tasks.withType(JavaCompile).configureEach {
 	options.encoding = 'UTF-8'
 }
 
-if ( !gradle.ext.javaToolchainEnabled ) {
-	tasks.withType( GroovyCompile ) {
-		sourceCompatibility = JavaVersion.toVersion( gradle.ext.baselineJavaVersion )
-		targetCompatibility = JavaVersion.toVersion( gradle.ext.baselineJavaVersion )
+if ( !jdkVersions.explicit ) {
+	tasks.withType(GroovyCompile).configureEach {
+		sourceCompatibility = JavaVersion.toVersion(jdkVersions.baseline)
+		targetCompatibility = JavaVersion.toVersion(jdkVersions.baseline)
 	}
 }
 else {
 	logger.warn( "[WARN] Toolchains are not yet supported for Groovy compilation." +
-			" Using the JDK that runs Gradle for Groovy compilation." )
-}
-
-tasks.test {
-	if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
-		// Needs add-opens because Gradle uses illegal accesses to inject... mocks? Something like that.
-		jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
+						 " Using the JDK that runs Gradle for Groovy compilation." )
+	if ( jdkVersions.test.explicit && jdkVersions.test.launcher.asInt() > jdkVersions.min.asInt() ) {
+		// Configure the gradle plugin to also compile test to at most the orm.jdk.min version,
+		// because the test will have to be able to run with a JVM of version orm.jdk.min
+		tasks.named( "compileTestJava", JavaCompile ).configure {
+			options.release = Math.min( jdkVersions.test.compiler.asInt(), jdkVersions.min.asInt() )
+		}
+		// Must configure the test launcher to a version <= orm.jdk.max, because the tests invoke gradle,
+		// which inherently can only run with a JDK up to orm.jdk.max.
+		// Since we only support running Gradle with JDKs in the range of orm.jdk.min up to orm.jdk.max,
+		// we use a test java launcher for the latest available/configured JDK version
+		tasks.named( "test", Test ).configure {
+			def launcher = javaToolchains.launcherFor {
+				languageVersion = jdkVersions.min
+			}
+			for ( int version = jdkVersions.min.asInt() + 1; version <= jdkVersions.max.asInt(); version++ ) {
+				launcher = new DefaultProvider(() -> {
+					try {
+						return javaToolchains.launcherFor {
+							languageVersion = JavaLanguageVersion.of( version )
+						}.get()
+					}
+					catch (GradleException ex) {
+						// JavaToolchainQueryService unfortunately throws an exception if a version is not found,
+						// so we have to catch the exception and return null here to allow a fallback
+						return null
+					}
+				}).orElse( launcher )
+			}
+			javaLauncher = launcher
+		}
 	}
 }
+
+tasks.publish.enabled = !ormBuildDetails.hibernateVersion.isSnapshot
+tasks.publishPlugins.enabled = !ormBuildDetails.hibernateVersion.isSnapshot

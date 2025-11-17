@@ -1,8 +1,25 @@
-insert_statement ::=
-    insert_clause select_statement
+insertStatement
+    : "INSERT" "INTO"? targetEntity targetFields (queryExpression | valuesList) conflictClause?
 
-insert_clause ::=
-    INSERT INTO entity_name (attribute_list)
+targetEntity
+	: entityName variable?
 
-attribute_list ::=
-    state_field[, state_field ]*
+targetFields
+	: "(" simplePath ("," simplePath)* ")"
+
+valuesList
+	: "VALUES" values ("," values)*
+
+values
+	: "(" expression ("," expression)* ")"
+
+conflictClause
+	: "on conflict" conflictTarget? conflictAction
+
+conflictTarget
+	: "on constraint" identifier
+	| "(" simplePath ("," simplePath)* ")";
+
+conflictAction
+	: "do nothing"
+	| "do update" setClause whereClause?

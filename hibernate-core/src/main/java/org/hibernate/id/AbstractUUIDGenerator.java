@@ -1,14 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
 import java.net.InetAddress;
 
 import org.hibernate.internal.util.BytesHelper;
+
+import static java.lang.System.currentTimeMillis;
 
 /**
  * The base class for identifier generators that use a UUID algorithm. This
@@ -17,7 +17,10 @@ import org.hibernate.internal.util.BytesHelper;
  *
  * @see UUIDHexGenerator
  * @author Gavin King
+ *
+ * @deprecated since {@link UUIDHexGenerator} is deprecated
  */
+@Deprecated(since = "6")
 public abstract class AbstractUUIDGenerator implements IdentifierGenerator {
 
 	private static final int IP;
@@ -33,14 +36,14 @@ public abstract class AbstractUUIDGenerator implements IdentifierGenerator {
 	}
 
 	private static short counter = (short) 0;
-	private static final int JVM = (int) ( System.currentTimeMillis() >>> 8 );
+	private static final int JVM = (int) ( currentTimeMillis() >>> 8 );
 
 	public AbstractUUIDGenerator() {
 	}
 
 	/**
 	 * Unique across JVMs on this machine (unless they load this class
-	 * in the same quarter second - very unlikely)
+	 * in the same quarter-second, which is very unlikely)
 	 */
 	protected int getJVM() {
 		return JVM;
@@ -48,7 +51,8 @@ public abstract class AbstractUUIDGenerator implements IdentifierGenerator {
 
 	/**
 	 * Unique in a millisecond for this JVM instance (unless there
-	 * are > Short.MAX_VALUE instances created in a millisecond)
+	 * are more than {@value Short#MAX_VALUE} instances created in
+	 * a millisecond)
 	 */
 	protected short getCount() {
 		synchronized(AbstractUUIDGenerator.class) {
@@ -70,10 +74,10 @@ public abstract class AbstractUUIDGenerator implements IdentifierGenerator {
 	 * Unique down to millisecond
 	 */
 	protected short getHiTime() {
-		return (short) ( System.currentTimeMillis() >>> 32 );
+		return (short) ( currentTimeMillis() >>> 32 );
 	}
 
 	protected int getLoTime() {
-		return (int) System.currentTimeMillis();
+		return (int) currentTimeMillis();
 	}
 }

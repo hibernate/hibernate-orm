@@ -1,34 +1,29 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain;
 
-import java.util.Objects;
-import javax.persistence.metamodel.BasicType;
+import jakarta.persistence.metamodel.BasicType;
 
-import org.hibernate.HibernateException;
+import org.hibernate.type.OutputableType;
+
+import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
 
 /**
  * Hibernate extension to the JPA {@link BasicType} contract.
  *
- * Describes the mapping between a Java type and a SQL type.
- *
- * @apiNote Again, like {@link CollectionDomainType} and
- * {@link EmbeddedDomainType}, this is a per-usage descriptor as it
- * encompasses both the Java and SQL types.
- *
  * @author Steve Ebersole
  */
-public interface BasicDomainType<J> extends SimpleDomainType<J>, BasicType<J> {
+public interface BasicDomainType<J>
+		extends ReturnableType<J>, BasicType<J>, OutputableType<J> {
 	@Override
 	default PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
+		return BASIC;
 	}
 
-	default boolean areEqual(J x, J y) throws HibernateException {
-		return Objects.equals( x, y );
+	@Override
+	default Class<J> getJavaType() {
+		return ReturnableType.super.getJavaType();
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.jdbc.internal;
 
@@ -11,18 +9,16 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.sql.Connection;
 
-import org.hibernate.resource.jdbc.LogicalConnection;
+import static org.hibernate.resource.jdbc.internal.LogicalConnectionLogging.CONNECTION_LOGGER;
 import org.hibernate.resource.jdbc.ResourceRegistry;
-import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.IMMEDIATE_ACQUISITION_AND_HOLD;
 
 /**
  * @author Steve Ebersole
  */
 public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImplementor {
-	private static final Logger log = Logger.getLogger( LogicalConnection.class );
 
 	private transient Connection providedConnection;
 	private final boolean initiallyAutoCommit;
@@ -33,7 +29,6 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 		if ( providedConnection == null ) {
 			throw new IllegalArgumentException( "Provided Connection cannot be null" );
 		}
-
 		this.providedConnection = providedConnection;
 		this.initiallyAutoCommit = determineInitialAutoCommitMode( providedConnection );
 	}
@@ -46,7 +41,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 
 	@Override
 	public PhysicalConnectionHandlingMode getConnectionHandlingMode() {
-		return PhysicalConnectionHandlingMode.IMMEDIATE_ACQUISITION_AND_HOLD;
+		return IMMEDIATE_ACQUISITION_AND_HOLD;
 	}
 
 	@Override
@@ -56,17 +51,15 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 
 	@Override
 	public Connection close() {
-		log.trace( "Closing logical connection" );
-
+		CONNECTION_LOGGER.closingLogicalConnection();
 		getResourceRegistry().releaseResources();
-
 		try {
 			return providedConnection;
 		}
 		finally {
 			providedConnection = null;
 			closed = true;
-			log.trace( "Logical connection closed" );
+			CONNECTION_LOGGER.logicalConnectionClosed();
 		}
 	}
 
@@ -79,13 +72,6 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 	public Connection getPhysicalConnection() {
 		errorIfClosed();
 		return providedConnection;
-	}
-
-	@Override
-	public LogicalConnectionImplementor makeShareableCopy() {
-		errorIfClosed();
-
-		return new LogicalConnectionProvidedImpl( providedConnection, new ResourceRegistryStandardImpl() );
 	}
 
 	@Override
@@ -109,28 +95,27 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 			return providedConnection;
 		}
 		finally {
-			this.providedConnection = null;
+			providedConnection = null;
 		}
 	}
 
 	@Override
 	public void manualReconnect(Connection connection) {
 		errorIfClosed();
-
 		if ( connection == null ) {
 			throw new IllegalArgumentException( "cannot reconnect using a null connection" );
 		}
 		else if ( connection == providedConnection ) {
 			// likely an unmatched reconnect call (no matching disconnect call)
-			log.debug( "reconnecting the same connection that is already connected; should this connection have been disconnected?" );
+			CONNECTION_LOGGER.reconnectingSameConnectionAlreadyConnected();
 		}
 		else if ( providedConnection != null ) {
 			throw new IllegalArgumentException(
-					"cannot reconnect to a new user-supplied connection because currently connected; must disconnect before reconnecting."
+					"Cannot reconnect to a new user-supplied connection because currently connected; must disconnect before reconnecting."
 			);
 		}
 		providedConnection = connection;
-		log.debug( "Manually reconnected logical connection" );
+		CONNECTION_LOGGER.manuallyReconnectedLogicalConnection();
 	}
 
 	@Override
@@ -141,7 +126,6 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 	@Override
 	protected void afterCompletion() {
 		afterTransaction();
-
 		resetConnection( initiallyAutoCommit );
 	}
 }

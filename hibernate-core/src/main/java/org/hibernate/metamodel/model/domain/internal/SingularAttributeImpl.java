@@ -1,77 +1,248 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
 import java.lang.reflect.Member;
-import java.util.function.Supplier;
 
-import org.hibernate.graph.spi.GraphHelper;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.AttributeClassification;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
+import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.SimpleDomainType;
+import org.hibernate.query.SemanticException;
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
+import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
+import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
+import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmFunctionJoin;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.spi.EntityIdentifierNavigablePath;
+import org.hibernate.spi.NavigablePath;
+import org.hibernate.type.BasicPluralType;
+import org.hibernate.type.descriptor.java.JavaType;
+
+import static jakarta.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRIBUTE;
+import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildSubNavigablePath;
+import static org.hibernate.query.sqm.spi.SqmCreationHelper.determineAlias;
 
 /**
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-public class SingularAttributeImpl<D, J>
-		extends AbstractAttribute<D, J>
-		implements SingularPersistentAttribute<D, J>, Serializable {
+public class SingularAttributeImpl<D,J>
+		extends AbstractAttribute<D,J,J>
+		implements SqmSingularPersistentAttribute<D,J>, Serializable {
 	private final boolean isIdentifier;
 	private final boolean isVersion;
 	private final boolean isOptional;
 
-	private final SimpleTypeDescriptor<J> attributeType;
-
-	// NOTE : delay access for timing reasons
-	private final DelayedKeyTypeAccess graphKeyTypeAccess = new DelayedKeyTypeAccess();
+	private final SqmPathSource<J> sqmPathSource;
 
 	public SingularAttributeImpl(
-			ManagedTypeDescriptor<D> declaringType,
+			ManagedDomainType<D> declaringType,
 			String name,
-			PersistentAttributeType attributeNature,
-			SimpleTypeDescriptor<J> attributeType,
+			AttributeClassification attributeClassification,
+			SqmDomainType<J> attributeType,
+			JavaType<?> relationalJavaType,
 			Member member,
 			boolean isIdentifier,
 			boolean isVersion,
-			boolean isOptional) {
-		super( declaringType, name, attributeNature, attributeType, member );
+			boolean isOptional,
+			boolean isGeneric) {
+		super(
+				declaringType,
+				name,
+				attributeType.getExpressibleJavaType(),
+				attributeClassification,
+				attributeType,
+				member
+		);
 		this.isIdentifier = isIdentifier;
 		this.isVersion = isVersion;
 		this.isOptional = isOptional;
 
-		this.attributeType = attributeType;
+		this.sqmPathSource = SqmMappingModelHelper.resolveSqmPathSource(
+				name,
+				this,
+				attributeType,
+				relationalJavaType,
+				SINGULAR_ATTRIBUTE,
+				isGeneric
+		);
 	}
 
 	@Override
-	public SimpleTypeDescriptor<J> getValueGraphType() {
-		return attributeType;
+	public String getPathName() {
+		return getName();
+	}
+
+	public JavaType<J> getExpressibleJavaType() {
+		return sqmPathSource.getExpressibleJavaType();
 	}
 
 	@Override
-	public SimpleTypeDescriptor<J> getKeyGraphType() {
-		return graphKeyTypeAccess.get();
+	public SqmDomainType<J> getPathType() {
+		return sqmPathSource.getPathType();
 	}
 
+	@Override
+	public SqmDomainType<J> getValueGraphType() {
+		return getPathType();
+	}
 
+	@Override
+	public SimpleDomainType<?> getKeyGraphType() {
+		return getType() instanceof IdentifiableDomainType<?> identifiableDomainType
+				? identifiableDomainType.getIdType()
+				: null;
+	}
+
+	@Override
+	public SimpleDomainType<J> getType() {
+		// TODO: very ugly and fragile, fix this
+		return (SimpleDomainType<J>) sqmPathSource.getPathType();
+	}
+
+	@Override
+	public Class<J> getBindableJavaType() {
+//		return getJavaType();
+		return sqmPathSource.getBindableJavaType();
+	}
+
+	@Override
+	public SqmPathSource<?> findSubPathSource(String name) {
+		return sqmPathSource.findSubPathSource( name );
+	}
+
+	@Override
+	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
+		return sqmPathSource.findSubPathSource( name, includeSubtypes );
+	}
+
+	@Override
+	public SqmPathSource<J> getSqmPathSource() {
+		return sqmPathSource;
+	}
+
+	@Override
+	public SqmBindableType<J> getExpressible() {
+		return sqmPathSource.getExpressible();
+	}
+
+	@Override
+	public boolean isGeneric() {
+		return sqmPathSource.isGeneric();
+	}
+
+	@Override
+	public SqmJoin<D,J> createSqmJoin(
+			SqmFrom<?,D> lhs,
+			SqmJoinType joinType,
+			String alias,
+			boolean fetched,
+			SqmCreationState creationState) {
+		final NodeBuilder nodeBuilder = creationState.getCreationContext().getNodeBuilder();
+		if ( getType() instanceof AnyMappingDomainType ) {
+			throw new SemanticException( "An @Any attribute cannot be join fetched" );
+		}
+		else if ( sqmPathSource.getPathType() instanceof BasicPluralType<?,?> ) {
+			final SqmSetReturningFunction<J> setReturningFunction =
+					nodeBuilder.unnestArray( lhs.get( getName() ) );
+			//noinspection unchecked
+			final SqmFunctionJoin<J> join = new SqmFunctionJoin<>(
+					createNavigablePath( lhs, alias ),
+					setReturningFunction,
+					true,
+					setReturningFunction.getType(),
+					alias,
+					joinType,
+					(SqmRoot<Object>) lhs
+			);
+			return (SqmJoin<D, J>) join;
+		}
+		else {
+			return new SqmSingularJoin<>(
+					lhs,
+					this,
+					alias,
+					joinType,
+					fetched,
+					nodeBuilder
+			);
+		}
+	}
+
+	@Override
+	public NavigablePath createNavigablePath(SqmPath<?> parent, String alias) {
+		if ( parent == null ) {
+			throw new IllegalArgumentException(
+					"LHS cannot be null for a sub-navigable reference - " + getName()
+			);
+		}
+
+		return buildSubNavigablePath( getParentNavigablePath( parent ), getName(), alias );
+	}
 
 	/**
 	 * Subclass used to simplify instantiation of singular attributes representing an entity's
 	 * identifier.
 	 */
-	public static class Identifier<D, J> extends SingularAttributeImpl<D, J> {
+	public static class Identifier<D,J> extends SingularAttributeImpl<D,J> {
 		public Identifier(
-				ManagedTypeDescriptor<D> declaringType,
+				ManagedDomainType<D> declaringType,
 				String name,
-				SimpleTypeDescriptor<J> attributeType,
+				SqmDomainType<J> attributeType,
 				Member member,
-				PersistentAttributeType attributeNature) {
-			super( declaringType, name, attributeNature, attributeType, member, true, false, false );
+				AttributeClassification attributeClassification,
+				boolean isGeneric) {
+			super(
+					declaringType,
+					name,
+					attributeClassification,
+					attributeType,
+					attributeType.getExpressibleJavaType(),
+					member,
+					true,
+					false,
+					false,
+					isGeneric
+			);
+		}
+
+		@Override
+		public NavigablePath createNavigablePath(SqmPath<?> parent, String alias) {
+			if ( parent == null ) {
+				throw new IllegalArgumentException(
+						"LHS cannot be null for a sub-navigable reference - " + getName()
+				);
+			}
+			final SqmPathSource<?> parentPathSource = parent.getResolvedModel();
+			final NavigablePath parentNavigablePath =
+					parentPathSource instanceof PluralPersistentAttribute<?, ?, ?>
+							? parent.getNavigablePath().append( CollectionPart.Nature.ELEMENT.getName() )
+							: parent.getNavigablePath();
+			if ( getDeclaringType() instanceof IdentifiableDomainType<?> declaringType
+					&& !declaringType.hasSingleIdAttribute() ) {
+				return new EntityIdentifierNavigablePath( parentNavigablePath, null )
+						.append( getName(), determineAlias( alias ) );
+			}
+			else {
+				return new EntityIdentifierNavigablePath( parentNavigablePath, determineAlias( alias ), getName() );
+			}
 		}
 	}
 
@@ -81,12 +252,23 @@ public class SingularAttributeImpl<D, J>
 	 */
 	public static class Version<X,Y> extends SingularAttributeImpl<X,Y> {
 		public Version(
-				ManagedTypeDescriptor<X> declaringType,
+				ManagedDomainType<X> declaringType,
 				String name,
-				PersistentAttributeType attributeNature,
-				SimpleTypeDescriptor<Y> attributeType,
+				AttributeClassification attributeClassification,
+				SqmDomainType<Y> attributeType,
 				Member member) {
-			super( declaringType, name, attributeNature, attributeType, member, false, true, false );
+			super(
+					declaringType,
+					name,
+					attributeClassification,
+					attributeType,
+					attributeType.getExpressibleJavaType(),
+					member,
+					false,
+					true,
+					false,
+					false
+			);
 		}
 	}
 
@@ -106,14 +288,10 @@ public class SingularAttributeImpl<D, J>
 	}
 
 	@Override
-	public SimpleTypeDescriptor<J> getType() {
-		return attributeType;
-	}
-
-	@Override
 	public boolean isAssociation() {
-		return getPersistentAttributeType() == PersistentAttributeType.MANY_TO_ONE
-				|| getPersistentAttributeType() == PersistentAttributeType.ONE_TO_ONE;
+		final PersistentAttributeType persistentAttributeType = getPersistentAttributeType();
+		return persistentAttributeType == PersistentAttributeType.MANY_TO_ONE
+			|| persistentAttributeType == PersistentAttributeType.ONE_TO_ONE;
 	}
 
 	@Override
@@ -123,25 +301,16 @@ public class SingularAttributeImpl<D, J>
 
 	@Override
 	public BindableType getBindableType() {
-		return BindableType.SINGULAR_ATTRIBUTE;
+		return SINGULAR_ATTRIBUTE;
 	}
 
 	@Override
-	public Class<J> getBindableJavaType() {
-		return attributeType.getJavaType();
+	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+		return sqmPathSource.createSqmPath( lhs, intermediatePathSource );
 	}
 
-	private class DelayedKeyTypeAccess implements Supplier<SimpleTypeDescriptor<J>>, Serializable {
-		private boolean resolved;
-		private SimpleTypeDescriptor<J> type;
-
-		@Override
-		public SimpleTypeDescriptor<J> get() {
-			if ( ! resolved ) {
-				type = GraphHelper.resolveKeyTypeDescriptor( SingularAttributeImpl.this );
-				resolved = true;
-			}
-			return type;
-		}
+	@Override
+	public JavaType<?> getRelationalJavaType() {
+		return sqmPathSource.getRelationalJavaType();
 	}
 }

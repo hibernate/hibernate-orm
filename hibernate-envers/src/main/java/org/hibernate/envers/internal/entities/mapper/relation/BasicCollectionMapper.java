@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
@@ -16,9 +14,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.BasicCollectionInitializor;
@@ -37,13 +36,14 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 	protected final MiddleComponentData elementComponentData;
 
 	public BasicCollectionMapper(
+			Configuration configuration,
 			CommonCollectionMapperData commonCollectionMapperData,
 			Class<? extends T> collectionClass,
 			Class<? extends T> proxyClass,
 			MiddleComponentData elementComponentData,
 			boolean ordinalInId,
 			boolean revisionTypeInId) {
-		super( commonCollectionMapperData, collectionClass, proxyClass, ordinalInId, revisionTypeInId );
+		super( configuration, commonCollectionMapperData, collectionClass, proxyClass, ordinalInId, revisionTypeInId );
 		this.elementComponentData = elementComponentData;
 	}
 
@@ -86,7 +86,7 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 
 	@Override
 	protected void mapToMapFromObject(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> idData,
 			Map<String, Object> data,
 			Object changed) {
@@ -108,10 +108,10 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 
 	@Override
 	protected List<PersistentCollectionChangeData> mapCollectionChanges(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			PersistentCollection newColl,
 			Serializable oldColl,
-			Serializable id) {
+			Object id) {
 
 		final List<PersistentCollectionChangeData> collectionChanges = new ArrayList<>();
 
@@ -154,7 +154,7 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 	}
 
 	private boolean isCollectionElementSame(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			CollectionPersister collectionPersister,
 			Object lhs,
 			Object rhs) {
@@ -198,7 +198,7 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 		//		Currently the tuple is { owner_id, entity_id, rev } and so having this special
 		//		treatment is critical to avoid HHH-13080.
 		//
-		if ( elementType.isEntityType() && !revisionTypeInId ) {
+		if ( elementType instanceof EntityType && !revisionTypeInId ) {
 
 			// This is a short-circuit to check for reference equality only.
 			// There is no need to delegate to the identifier if the objects are reference equal.
@@ -207,8 +207,8 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 			}
 
 			final EntityPersister entityPersister = session.getFactory()
-					.getMetamodel()
-					.locateEntityPersister( ( (EntityType) elementType ).getAssociatedEntityName() );
+					.getMappingMetamodel()
+					.getEntityDescriptor( ( (EntityType) elementType ).getAssociatedEntityName() );
 
 			final Object lhsId = entityPersister.getIdentifier( lhs, session );
 			final Object rhsId = entityPersister.getIdentifier( rhs, session );

@@ -1,27 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.backend.jta.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import javax.transaction.Status;
-import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
+import jakarta.transaction.Status;
 
-import org.hibernate.HibernateException;
-import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.engine.transaction.spi.IsolationDelegate;
-import org.hibernate.engine.transaction.spi.TransactionObserver;
+import org.hibernate.resource.transaction.spi.IsolationDelegate;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
-import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.RegisteredSynchronization;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.SynchronizationCallbackCoordinator;
@@ -33,11 +22,15 @@ import org.hibernate.resource.transaction.spi.SynchronizationRegistry;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
+import org.hibernate.resource.transaction.spi.TransactionObserver;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
-import org.jboss.logging.Logger;
 
-import static org.hibernate.internal.CoreLogging.logger;
+import static java.util.Collections.addAll;
+import static java.util.Collections.emptyList;
+import static org.hibernate.resource.transaction.backend.jta.internal.JtaLogging.JTA_LOGGER;
+import static org.hibernate.resource.transaction.spi.TransactionStatus.ACTIVE;
+import static org.hibernate.resource.transaction.spi.TransactionStatus.NOT_ACTIVE;
 
 /**
  * An implementation of TransactionCoordinator based on managing a transaction through the JTA API (either TM or UT)
@@ -45,7 +38,6 @@ import static org.hibernate.internal.CoreLogging.logger;
  * @author Steve Ebersole
  */
 public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, SynchronizationCallbackTarget {
-	private static final Logger log = logger( JtaTransactionCoordinatorImpl.class );
 
 	private final TransactionCoordinatorBuilder transactionCoordinatorBuilder;
 	private final TransactionCoordinatorOwner transactionCoordinatorOwner;
@@ -74,18 +66,16 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	JtaTransactionCoordinatorImpl(
 			TransactionCoordinatorBuilder transactionCoordinatorBuilder,
 			TransactionCoordinatorOwner owner,
-			boolean autoJoinTransactions) {
+			boolean autoJoinTransactions,
+			JtaPlatform jtaPlatform) {
 		this.transactionCoordinatorBuilder = transactionCoordinatorBuilder;
 		this.transactionCoordinatorOwner = owner;
 		this.autoJoinTransactions = autoJoinTransactions;
+		this.jtaPlatform = jtaPlatform;
 
-		final JdbcSessionContext jdbcSessionContext = owner.getJdbcSessionOwner().getJdbcSessionContext();
-
-		this.jtaPlatform = jdbcSessionContext.getServiceRegistry().getService( JtaPlatform.class );
-
-		final SessionFactoryOptions sessionFactoryOptions = jdbcSessionContext.getSessionFactory().getSessionFactoryOptions();
-		this.preferUserTransactions = sessionFactoryOptions.isPreferUserTransaction();
-		this.performJtaThreadTracking = sessionFactoryOptions.isJtaTrackByThread();
+		final var jdbcSessionContext = owner.getJdbcSessionOwner().getJdbcSessionContext();
+		preferUserTransactions = jdbcSessionContext.isPreferUserTransaction();
+		performJtaThreadTracking = jdbcSessionContext.isJtaTrackByThread();
 
 		synchronizationRegistered = false;
 
@@ -109,7 +99,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 		if ( observers != null ) {
 			this.observers = new ArrayList<>( observers.length );
-			Collections.addAll( this.observers, observers );
+			addAll( this.observers, observers );
 		}
 
 		synchronizationRegistered = false;
@@ -125,12 +115,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	 * @return TransactionObserver
 	 */
 	private Iterable<TransactionObserver> observers() {
-		if ( this.observers == null ) {
-			return Collections.EMPTY_LIST;
-		}
-		else {
-			return new ArrayList<>( this.observers );
-		}
+		return observers == null ? emptyList() : new ArrayList<>( observers );
 	}
 
 	public SynchronizationCallbackCoordinator getSynchronizationCallbackCoordinator() {
@@ -144,21 +129,15 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 	@Override
 	public void pulse() {
-		if ( !autoJoinTransactions ) {
-			return;
+		if ( autoJoinTransactions && !synchronizationRegistered ) {
+			// Can we register a synchronization according to the JtaPlatform?
+			if ( !jtaPlatform.canRegisterSynchronization() ) {
+				JTA_LOGGER.cannotRegisterSynchronization();
+			}
+			else {
+				joinJtaTransaction();
+			}
 		}
-
-		if ( synchronizationRegistered ) {
-			return;
-		}
-
-		// Can we register a synchronization according to the JtaPlatform?
-		if ( !jtaPlatform.canRegisterSynchronization() ) {
-			log.trace( "JTA platform says we cannot currently register synchronization; skipping" );
-			return;
-		}
-
-		joinJtaTransaction();
 	}
 
 	/**
@@ -166,33 +145,30 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	 * RegisteredSynchronization with the JTA system
 	 */
 	private void joinJtaTransaction() {
-		if ( synchronizationRegistered ) {
-			return;
+		if ( !synchronizationRegistered ) {
+			jtaPlatform.registerSynchronization(
+					new RegisteredSynchronization( getSynchronizationCallbackCoordinator() ) );
+			getSynchronizationCallbackCoordinator().synchronizationRegistered();
+			synchronizationRegistered = true;
+			JTA_LOGGER.registeredSynchronization();
+			// report entering into a "transactional context"
+			getTransactionCoordinatorOwner().startTransactionBoundary();
 		}
-
-		jtaPlatform.registerSynchronization( new RegisteredSynchronization( getSynchronizationCallbackCoordinator() ) );
-		getSynchronizationCallbackCoordinator().synchronizationRegistered();
-		synchronizationRegistered = true;
-		log.debug( "Hibernate RegisteredSynchronization successfully registered with JTA platform" );
-
-		// report entering into a "transactional context"
-		getTransactionCoordinatorOwner().startTransactionBoundary();
 	}
 
 	@Override
 	public void explicitJoin() {
 		if ( synchronizationRegistered ) {
-			log.debug( "JTA transaction was already joined (RegisteredSynchronization already registered)" );
-			return;
+			JTA_LOGGER.alreadyJoinedJtaTransaction();
 		}
-
-		if ( getTransactionDriverControl().getStatus() != TransactionStatus.ACTIVE ) {
-			throw new TransactionRequiredForJoinException(
-					"Explicitly joining a JTA transaction requires a JTA transaction be currently active"
-			);
+		else {
+			if ( getTransactionDriverControl().getStatus() != ACTIVE ) {
+				throw new TransactionRequiredForJoinException(
+						"Explicitly joining a JTA transaction requires a JTA transaction be currently active"
+				);
+			}
+			joinJtaTransaction();
 		}
-
-		joinJtaTransaction();
 	}
 
 	@Override
@@ -212,16 +188,12 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	}
 
 	public TransactionCoordinatorOwner getTransactionCoordinatorOwner(){
-		return this.transactionCoordinatorOwner;
+		return transactionCoordinatorOwner;
 	}
 
 	@Override
 	public JpaCompliance getJpaCompliance() {
-		return transactionCoordinatorOwner.getJdbcSessionOwner()
-				.getJdbcSessionContext()
-				.getSessionFactory()
-				.getSessionFactoryOptions()
-				.getJpaCompliance();
+		return transactionCoordinatorOwner.getJdbcSessionOwner().getJdbcSessionContext().getJpaCompliance();
 	}
 
 	@Override
@@ -233,66 +205,70 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	}
 
 	private TransactionDriverControlImpl makePhysicalTransactionDelegate() {
-		JtaTransactionAdapter adapter;
-
-		if ( preferUserTransactions ) {
-			adapter = makeUserTransactionAdapter();
-
-			if ( adapter == null ) {
-				log.debug( "Unable to access UserTransaction, attempting to use TransactionManager instead" );
-				adapter = makeTransactionManagerAdapter();
-			}
-		}
-		else {
-			adapter = makeTransactionManagerAdapter();
-
-			if ( adapter == null ) {
-				log.debug( "Unable to access TransactionManager, attempting to use UserTransaction instead" );
-				adapter = makeUserTransactionAdapter();
-			}
-		}
-
+		final var adapter =
+				preferUserTransactions
+						? getTransactionAdapterPreferringUserTransaction()
+						: getTransactionAdapterPreferringTransactionManager();
 		if ( adapter == null ) {
 			throw new JtaPlatformInaccessibleException(
 					"Unable to access TransactionManager or UserTransaction to make physical transaction delegate"
 			);
 		}
+		else {
+			return new TransactionDriverControlImpl( adapter );
+		}
+	}
 
-		return new TransactionDriverControlImpl( adapter );
+	private JtaTransactionAdapter getTransactionAdapterPreferringTransactionManager() {
+		final var adapter = makeTransactionManagerAdapter();
+		if ( adapter == null ) {
+			JTA_LOGGER.unableToAccessTransactionManagerTryingUserTransaction();
+			return makeUserTransactionAdapter();
+		}
+		return adapter;
+	}
+
+	private JtaTransactionAdapter getTransactionAdapterPreferringUserTransaction() {
+		final var adapter = makeUserTransactionAdapter();
+		if ( adapter == null ) {
+			JTA_LOGGER.unableToAccessUserTransactionTryingTransactionManager();
+			return makeTransactionManagerAdapter();
+		}
+		return adapter;
 	}
 
 	private JtaTransactionAdapter makeUserTransactionAdapter() {
 		try {
-			final UserTransaction userTransaction = jtaPlatform.retrieveUserTransaction();
+			final var userTransaction = jtaPlatform.retrieveUserTransaction();
 			if ( userTransaction == null ) {
-				log.debug( "JtaPlatform#retrieveUserTransaction returned null" );
+				JTA_LOGGER.userTransactionReturnedNull();
+				return null;
 			}
 			else {
 				return new JtaTransactionAdapterUserTransactionImpl( userTransaction );
 			}
 		}
-		catch (Exception ignore) {
-			log.debugf( "JtaPlatform#retrieveUserTransaction threw an exception [%s]", ignore.getMessage() );
+		catch ( Exception exception ) {
+			JTA_LOGGER.exceptionRetrievingUserTransaction( exception.getMessage(), exception );
+			return null;
 		}
-
-		return null;
 	}
 
 	private JtaTransactionAdapter makeTransactionManagerAdapter() {
 		try {
-			final TransactionManager transactionManager = jtaPlatform.retrieveTransactionManager();
+			final var transactionManager = jtaPlatform.retrieveTransactionManager();
 			if ( transactionManager == null ) {
-				log.debug( "JtaPlatform#retrieveTransactionManager returned null" );
+				JTA_LOGGER.transactionManagerReturnedNull();
+				return null;
 			}
 			else {
 				return new JtaTransactionAdapterTransactionManagerImpl( transactionManager );
 			}
 		}
-		catch (Exception ignore) {
-			log.debugf( "JtaPlatform#retrieveTransactionManager threw an exception [%s]", ignore.getMessage() );
+		catch ( Exception exception ) {
+			JTA_LOGGER.exceptionRetrievingTransactionManager( exception.getMessage(), exception );
+			return null;
 		}
-
-		return null;
 	}
 
 	@Override
@@ -306,26 +282,17 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	}
 
 	public boolean isJtaTransactionCurrentlyActive() {
-		return getTransactionDriverControl().getStatus() == TransactionStatus.ACTIVE;
+		return getTransactionDriverControl().getStatus() == ACTIVE;
 	}
 
 	@Override
 	public IsolationDelegate createIsolationDelegate() {
-		final JdbcSessionOwner jdbcSessionOwner = transactionCoordinatorOwner.getJdbcSessionOwner();
-
-		return new JtaIsolationDelegate(
-				jdbcSessionOwner.getJdbcConnectionAccess(),
-				jdbcSessionOwner.getJdbcSessionContext()
-						.getServiceRegistry()
-						.getService( JdbcServices.class )
-						.getSqlExceptionHelper(),
-				jtaPlatform.retrieveTransactionManager()
-		);
+		return new JtaIsolationDelegate( transactionCoordinatorOwner, jtaPlatform.retrieveTransactionManager() );
 	}
 
 	@Override
 	public TransactionCoordinatorBuilder getTransactionCoordinatorBuilder() {
-		return this.transactionCoordinatorBuilder;
+		return transactionCoordinatorBuilder;
 	}
 
 	@Override
@@ -336,7 +303,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 	@Override
 	public int getTimeOut() {
-		return this.timeOut;
+		return timeOut;
 	}
 
 	@Override
@@ -351,48 +318,45 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 	@Override
 	public void beforeCompletion() {
+		JTA_LOGGER.notifyingJtaObserversBeforeCompletion();
 		try {
 			transactionCoordinatorOwner.beforeTransactionCompletion();
 		}
-		catch (HibernateException e) {
+		catch ( Exception e ) {
 			physicalTransactionDelegate.markRollbackOnly();
 			throw e;
 		}
-		catch (RuntimeException re) {
-			physicalTransactionDelegate.markRollbackOnly();
-			throw re;
-		}
 		finally {
 			synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();
-			for ( TransactionObserver observer : observers() ) {
-				observer.beforeCompletion();
+			for ( var transactionObserver : observers() ) {
+				transactionObserver.beforeCompletion();
 			}
 		}
 	}
 
 	@Override
 	public void afterCompletion(boolean successful, boolean delayed) {
-		if ( !transactionCoordinatorOwner.isActive() ) {
-			return;
+		if ( transactionCoordinatorOwner.isActive() ) {
+			JTA_LOGGER.notifyingJtaObserversAfterCompletion();
+
+			final int statusToSend = successful ? Status.STATUS_COMMITTED : Status.STATUS_UNKNOWN;
+			synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( statusToSend );
+
+//			afterCompletionAction.doAction( this, statusToSend );
+
+			transactionCoordinatorOwner.afterTransactionCompletion( successful, delayed );
+
+			for ( var transactionObserver : observers() ) {
+				transactionObserver.afterCompletion( successful, delayed );
+			}
+
+			synchronizationRegistered = false;
 		}
-
-		final int statusToSend =  successful ? Status.STATUS_COMMITTED : Status.STATUS_UNKNOWN;
-		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( statusToSend );
-
-//		afterCompletionAction.doAction( this, statusToSend );
-
-		transactionCoordinatorOwner.afterTransactionCompletion( successful, delayed );
-
-		for ( TransactionObserver observer : observers() ) {
-			observer.afterCompletion( successful, delayed );
-		}
-
-		synchronizationRegistered = false;
 	}
 
 	public void addObserver(TransactionObserver observer) {
-		if ( this.observers == null ) {
-			this.observers = new ArrayList<>( 3 ); //These lists are typically very small.
+		if ( observers == null ) {
+			observers = new ArrayList<>( 3 ); //These lists are typically very small.
 		}
 		observers.add( observer );
 	}
@@ -406,7 +370,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 	/**
 	 * Implementation of the LocalInflow for this TransactionCoordinator.  Allows the
-	 * local transaction ({@link org.hibernate.Transaction} to callback into this
+	 * local transaction ({@link org.hibernate.Transaction}) to callback into this
 	 * TransactionCoordinator for the purpose of driving the underlying JTA transaction.
 	 */
 	public class TransactionDriverControlImpl implements TransactionDriver {
@@ -424,9 +388,8 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		@Override
 		public void begin() {
 			errorIfInvalid();
-
 			jtaTransactionAdapter.begin();
-			JtaTransactionCoordinatorImpl.this.joinJtaTransaction();
+			joinJtaTransaction();
 		}
 
 		protected void errorIfInvalid() {
@@ -439,7 +402,6 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		public void commit() {
 			errorIfInvalid();
 			getTransactionCoordinatorOwner().flushBeforeTransactionCompletion();
-
 			// we don't have to perform any before/after completion processing here.  We leave that for
 			// the Synchronization callbacks
 			jtaTransactionAdapter.commit();
@@ -448,7 +410,6 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		@Override
 		public void rollback() {
 			errorIfInvalid();
-
 			// we don't have to perform any after completion processing here.  We leave that for
 			// the Synchronization callbacks
 			jtaTransactionAdapter.rollback();
@@ -461,7 +422,9 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 		@Override
 		public void markRollbackOnly() {
-			jtaTransactionAdapter.markRollbackOnly();
+			if ( jtaTransactionAdapter.getStatus() != NOT_ACTIVE  ) {
+				jtaTransactionAdapter.markRollbackOnly();
+			}
 		}
 	}
 

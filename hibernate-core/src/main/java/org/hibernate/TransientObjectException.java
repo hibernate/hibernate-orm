@@ -1,19 +1,30 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 /**
- * Thrown when the user passes a transient instance to a Session method that expects a persistent instance.
+ * Thrown if a transient instance of an entity class is passed to
+ * a {@link Session} method that expects a persistent instance,
+ * or if the state of an entity instance cannot be made persistent
+ * because the instance holds a reference to a transient entity.
+ * <p>
+ * An entity is considered <em>transient</em> if it is:
+ * <ul>
+ * <li>a newly-instantiated instance of an entity class which has
+ *    never been {@linkplain Session#persist made persistent} in
+ *    the database, or
+ * <li>an entity instance previously associated with a persistence
+ *     context which has been {@linkplain Session#remove removed}
+ *     from the database.
+ * </ul>
  *
  * @author Gavin King
  */
 public class TransientObjectException extends HibernateException {
 	/**
-	 * Constructs a TransientObjectException using the supplied message.
+	 * Constructs a {@code TransientObjectException} using the supplied message.
 	 *
 	 * @param message The message explaining the exception condition
 	 */

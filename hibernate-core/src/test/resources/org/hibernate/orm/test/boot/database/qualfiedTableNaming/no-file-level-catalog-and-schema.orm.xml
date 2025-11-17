@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://xmlns.jcp.org/xml/ns/persistence/orm"
+				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				 xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence/orm
+                 http://xmlns.jcp.org/xml/ns/persistence/orm_2_1.xsd"
+				 version="2.1">
+	<package>org.hibernate.orm.test.boot.database.qualfiedTableNaming</package>
+	<entity class="DefaultCatalogAndSchemaTest$EntityWithOrmXmlNoFileLevelQualifiers" name="EntityWithOrmXmlNoFileLevelQualifiers"
+			access="FIELD">
+		<attributes>
+			<id name="id"/>
+			<basic name="basic"/>
+			<one-to-many name="oneToMany">
+				<join-table name="EntityWithOrmXmlNoFileLevelQualifiers_oneToMany">
+					<!-- Custom names to avoid false positive in assertions -->
+					<join-column name="forward" />
+					<foreign-key name="FK_oneToMany" />
+					<inverse-join-column name="inverse" />
+				</join-table>
+			</one-to-many>
+			<many-to-many name="manyToMany">
+				<join-table name="EntityWithOrmXmlNoFileLevelQualifiers_manyToMany">
+					<!-- Custom names to avoid false positive in assertions -->
+					<join-column name="forward" />
+					<foreign-key name="FK_oneToMany" />
+					<inverse-join-column name="inverse" />
+				</join-table>
+			</many-to-many>
+			<element-collection name="elementCollection">
+				<collection-table name="EntityWithOrmXmlNoFileLevelQualifiers_elementCollection">
+					<!-- Custom names to avoid false positive in assertions -->
+					<join-column name="forward" />
+					<foreign-key name="FK_elementCollection" />
+				</collection-table>
+			</element-collection>
+		</attributes>
+	</entity>
+</entity-mappings>

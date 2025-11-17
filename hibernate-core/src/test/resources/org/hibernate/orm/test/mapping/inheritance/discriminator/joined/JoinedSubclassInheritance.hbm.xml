@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 4.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-4.0.xsd">
+
+<hibernate-mapping
+        package="org.hibernate.orm.test.mapping.inheritance.discriminator.joined"
+        default-access="field">
+
+    <class name="ParentEntity" discriminator-value="pe">
+        <id name="id" type="integer">
+            <column name="id"/>
+        </id>
+        <discriminator type="string">
+            <column name="type" length="255" />
+        </discriminator>
+        <property name="type" insert="false" update="false" type="string"/>
+    </class>
+
+    <joined-subclass name="ChildEntity" discriminator-value="ce" extends="ParentEntity">
+        <key>
+            <column name="id" />
+        </key>
+        <property name="name" type="string"/>
+    </joined-subclass>
+
+</hibernate-mapping>

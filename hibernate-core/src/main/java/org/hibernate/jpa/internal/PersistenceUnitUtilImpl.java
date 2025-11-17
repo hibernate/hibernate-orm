@@ -1,31 +1,31 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.internal;
 
 import java.io.Serializable;
-import javax.persistence.PersistenceUnitUtil;
-import javax.persistence.spi.LoadState;
+import jakarta.persistence.PersistenceUnitUtil;
+import jakarta.persistence.metamodel.Attribute;
 
 import org.hibernate.Hibernate;
 import org.hibernate.MappingException;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.HibernateProxy;
 
-import org.jboss.logging.Logger;
+import static jakarta.persistence.spi.LoadState.NOT_LOADED;
+import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedEntity;
+import static org.hibernate.jpa.internal.util.PersistenceUtilHelper.getLoadState;
+import static org.hibernate.jpa.internal.util.PersistenceUtilHelper.isLoadedWithReference;
+import static org.hibernate.jpa.internal.util.PersistenceUtilHelper.isLoadedWithoutReference;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * @author Steve Ebersole
  */
 public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializable {
-	private static final Logger log = Logger.getLogger( PersistenceUnitUtilImpl.class );
 
 	private final SessionFactoryImplementor sessionFactory;
 	private final transient PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
@@ -36,74 +36,118 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 
 	@Override
 	public boolean isLoaded(Object entity, String attributeName) {
-		// added log message to help with HHH-7454, if state == LoadState,NOT_LOADED, returning true or false is not accurate.
-		log.debug( "PersistenceUnitUtil#isLoaded is not always accurate; consider using EntityManager#contains instead" );
-		LoadState state = PersistenceUtilHelper.isLoadedWithoutReference( entity, attributeName, cache );
-		if ( state == LoadState.LOADED ) {
-			return true;
-		}
-		else if ( state == LoadState.NOT_LOADED ) {
-			return false;
-		}
-		else {
-			return PersistenceUtilHelper.isLoadedWithReference(
-					entity,
-					attributeName,
-					cache
-			) != LoadState.NOT_LOADED;
-		}
+		return switch ( isLoadedWithoutReference( entity, attributeName, cache ) ) {
+			case LOADED -> true;
+			case NOT_LOADED -> false;
+			default -> isLoadedWithReference( entity, attributeName, cache ) != NOT_LOADED;
+		};
+	}
+
+	@Override
+	public <E> boolean isLoaded(E entity, Attribute<? super E, ?> attribute) {
+		return Hibernate.isPropertyInitialized( entity, attribute.getName() );
 	}
 
 	@Override
 	public boolean isLoaded(Object entity) {
-		// added log message to help with HHH-7454, if state == LoadState,NOT_LOADED, returning true or false is not accurate.
-		log.debug( "PersistenceUnitUtil#isLoaded is not always accurate; consider using EntityManager#contains instead" );
-		return PersistenceUtilHelper.isLoaded( entity ) != LoadState.NOT_LOADED;
+		return getLoadState( entity ) != NOT_LOADED;
+	}
+
+	@Override
+	public void load(Object entity, String attributeName) {
+		Hibernate.initializeProperty( entity, attributeName );
+	}
+
+	@Override
+	public <E> void load(E entity, Attribute<? super E, ?> attribute) {
+		load( entity, attribute.getName() );
+	}
+
+	@Override
+	public void load(Object entity) {
+		Hibernate.initialize( entity );
+	}
+
+	@Override
+	public boolean isInstance(Object entity, Class<?> entityClass) {
+		return entityClass.isAssignableFrom( Hibernate.getClassLazy( entity ) );
+	}
+
+	@Override
+	public <T> Class<? extends T> getClass(T entity) {
+		return Hibernate.getClassLazy( entity );
 	}
 
 	@Override
 	public Object getIdentifier(Object entity) {
 		if ( entity == null ) {
-			throw new IllegalArgumentException( "Passed entity cannot be null" );
+			throw new IllegalArgumentException( "Entity may not be null" );
 		}
 
-		if ( entity instanceof HibernateProxy ) {
-			return ((HibernateProxy) entity).getHibernateLazyInitializer().getIdentifier();
+		final var lazyInitializer = extractLazyInitializer( entity );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getInternalIdentifier();
 		}
-		else if ( entity instanceof ManagedEntity ) {
-			EntityEntry entityEntry = ((ManagedEntity) entity).$$_hibernate_getEntityEntry();
+		else if ( isManagedEntity( entity ) ) {
+			final var entityEntry = asManagedEntity( entity ).$$_hibernate_getEntityEntry();
 			if ( entityEntry != null ) {
 				return entityEntry.getId();
 			}
 			else {
-				// HHH-11426 - best effort to deal with the case of detached entities
-				log.debug( "javax.persistence.PersistenceUnitUtil.getIdentifier may not be able to read identifier of a detached entity" );
 				return getIdentifierFromPersister( entity );
 			}
 		}
 		else {
-			log.debugf(
-					"javax.persistence.PersistenceUnitUtil.getIdentifier is only intended to work with enhanced entities " +
-							"(although Hibernate also adapts this support to its proxies); " +
-							"however the passed entity was not enhanced (nor a proxy).. may not be able to read identifier"
-			);
 			return getIdentifierFromPersister( entity );
 		}
 	}
 
+	@Override
+	public Object getVersion(Object entity) {
+		if ( entity == null ) {
+			throw new IllegalArgumentException( "Entity may not be null" );
+		}
+
+		final var lazyInitializer = extractLazyInitializer( entity );
+		if ( lazyInitializer != null ) {
+			return getVersionFromPersister( lazyInitializer.getImplementation() );
+		}
+		else if ( isManagedEntity( entity ) ) {
+			final var entityEntry = asManagedEntity( entity ).$$_hibernate_getEntityEntry();
+			if ( entityEntry != null ) {
+				return entityEntry.getVersion();
+			}
+			else {
+				return getVersionFromPersister( entity );
+			}
+		}
+		else {
+			return getVersionFromPersister( entity );
+		}
+	}
+
 	private Object getIdentifierFromPersister(Object entity) {
-		Class<?> entityClass = Hibernate.getClass( entity );
-		final EntityPersister persister;
+		return getPersister( entity ).getIdentifier( entity );
+	}
+
+	private Object getVersionFromPersister(Object entity) {
+		return getPersister( entity ).getVersion( entity );
+	}
+
+	private EntityPersister getPersister(Object entity) {
+		final var entityClass = Hibernate.getClass( entity );
 		try {
-			persister = sessionFactory.getMetamodel().entityPersister( entityClass );
-			if ( persister == null ) {
+			final var entityPersister =
+					sessionFactory.getMappingMetamodel()
+							.getEntityDescriptor( entityClass );
+			if ( entityPersister == null ) {
 				throw new IllegalArgumentException( entityClass.getName() + " is not an entity" );
 			}
+			return entityPersister;
 		}
 		catch (MappingException ex) {
 			throw new IllegalArgumentException( entityClass.getName() + " is not an entity", ex );
 		}
-		return persister.getIdentifier( entity, null );
 	}
 
 }

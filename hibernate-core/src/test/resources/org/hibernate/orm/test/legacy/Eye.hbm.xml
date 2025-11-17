@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false"
+	default-cascade="merge,persist"
+	package="org.hibernate.orm.test.legacy">
+	
+	<class name="Eye" lazy="true">
+		<id name="id" unsaved-value="0">
+			<generator class="increment"/>
+		</id>
+		<property name="name"/>
+		<set name="jays" inverse="true" outer-join="true" cascade="all">
+			<key column="eye"/>
+			<one-to-many class="Jay"/>
+		</set>
+		<many-to-one name="jay" outer-join="true"/>
+	</class>
+	
+	<class name="Jay" lazy="true">
+		<id name="id" unsaved-value="0">
+			<generator class="increment"/>
+		</id>
+		<many-to-one name="eye" outer-join="true"/>
+	</class>
+	
+</hibernate-mapping>

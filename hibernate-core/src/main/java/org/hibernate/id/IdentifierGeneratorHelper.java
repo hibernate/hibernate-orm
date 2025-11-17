@@ -1,26 +1,40 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.Objects;
+import java.util.Properties;
 
-import org.hibernate.HibernateException;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.type.CustomType;
-import org.hibernate.type.Type;
+import org.hibernate.Internal;
+import org.hibernate.Session;
+import org.hibernate.StatelessSession;
+import org.hibernate.TransientObjectException;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
+import org.hibernate.id.enhanced.StandardNamingStrategy;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.EntityType;
+
+import static org.hibernate.cfg.MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
+import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNotUnsaved;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.internal.log.IncubationLogger.INCUBATION_LOGGER;
+import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
+import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 
 /**
  * Factory and helper methods for {@link IdentifierGenerator} framework.
@@ -28,15 +42,18 @@ import org.hibernate.type.Type;
  * @author Gavin King
  * @author Steve Ebersole
  */
+@Internal
 public final class IdentifierGeneratorHelper {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IdentifierGeneratorHelper.class );
 
 	/**
-	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that we should short-circuit any
-	 * continued generated id checking.  Currently this is only used in the case of the
-	 * {@link org.hibernate.id.ForeignGenerator foreign} generator as a way to signal that we should use the associated
+	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that we should
+	 * short-circuit any continued generated id checking. Currently, this is only used in the case of the
+	 * {@linkplain ForeignGenerator foreign} generator as a way to signal that we should use the associated
 	 * entity's id value.
+	 *
+	 * @deprecated This is not an elegant way to do anything
 	 */
+	@Deprecated(forRemoval = true, since = "6.2")
 	public static final Serializable SHORT_CIRCUIT_INDICATOR = new Serializable() {
 		@Override
 		public String toString() {
@@ -44,170 +61,7 @@ public final class IdentifierGeneratorHelper {
 		}
 	};
 
-	/**
-	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that the entity's identifier will
-	 * be generated as part of the database insertion.
-	 */
-	public static final Serializable POST_INSERT_INDICATOR = new Serializable() {
-		@Override
-		public String toString() {
-			return "POST_INSERT_INDICATOR";
-		}
-	};
-
-
-	/**
-	 * Get the generated identifier when using identity columns
-	 *
-	 * @param rs The result set from which to extract the the generated identity.
-	 * @param identifier The name of the identifier column
-	 * @param type The expected type mapping for the identity value.
-	 * @param dialect The current database dialect.
-	 *
-	 * @return The generated identity value
-	 *
-	 * @throws SQLException Can be thrown while accessing the result set
-	 * @throws HibernateException Indicates a problem reading back a generated identity value.
-	 */
-	public static Serializable getGeneratedIdentity(ResultSet rs, String identifier, Type type, Dialect dialect)
-			throws SQLException, HibernateException {
-		if ( !rs.next() ) {
-			throw new HibernateException( "The database returned no natively generated identity value" );
-		}
-		final Serializable id = get( rs, identifier, type, dialect );
-		LOG.debugf( "Natively generated identity: %s", id );
-		return id;
-	}
-
-	/**
-	 * Extract the value from the result set (which is assumed to already have been positioned to the appropriate row)
-	 * and wrp it in the appropriate Java numeric type.
-	 *
-	 * @param rs The result set from which to extract the value.
-	 * @param identifier The name of the identifier column
-	 * @param type The expected type of the value.
-	 * @param dialect The current database dialect.
-	 *
-	 * @return The extracted value.
-	 *
-	 * @throws SQLException Indicates problems access the result set
-	 * @throws IdentifierGenerationException Indicates an unknown type.
-	 */
-	public static Serializable get(ResultSet rs, String identifier, Type type, Dialect dialect)
-			throws SQLException, IdentifierGenerationException {
-		if ( ResultSetIdentifierConsumer.class.isInstance( type ) ) {
-			return ( (ResultSetIdentifierConsumer) type ).consumeIdentifier( rs );
-		}
-		if ( CustomType.class.isInstance( type ) ) {
-			final CustomType customType = (CustomType) type;
-			if ( ResultSetIdentifierConsumer.class.isInstance( customType.getUserType() ) ) {
-				return ( (ResultSetIdentifierConsumer) customType.getUserType() ).consumeIdentifier( rs );
-			}
-		}
-		ResultSetMetaData resultSetMetaData = null;
-		int columnCount = 1;
-		try {
-			resultSetMetaData = rs.getMetaData();
-			columnCount = resultSetMetaData.getColumnCount();
-		}
-		catch (Exception e) {
-			//Oracle driver will throw NPE
-		}
-
-		Class clazz = type.getReturnedClass();
-		if ( columnCount == 1 ) {
-			if ( clazz == Long.class ) {
-				return rs.getLong( 1 );
-			}
-			else if ( clazz == Integer.class ) {
-				return rs.getInt( 1 );
-			}
-			else if ( clazz == Short.class ) {
-				return rs.getShort( 1 );
-			}
-			else if ( clazz == String.class ) {
-				return rs.getString( 1 );
-			}
-			else if ( clazz == BigInteger.class ) {
-				return rs.getBigDecimal( 1 ).setScale( 0, BigDecimal.ROUND_UNNECESSARY ).toBigInteger();
-			}
-			else if ( clazz == BigDecimal.class ) {
-				return rs.getBigDecimal( 1 ).setScale( 0, BigDecimal.ROUND_UNNECESSARY );
-			}
-			else {
-				throw new IdentifierGenerationException(
-						"unrecognized id type : " + type.getName() + " -> " + clazz.getName()
-				);
-			}
-		}
-		else {
-			try {
-				return extractIdentifier( rs, identifier, type, clazz );
-			}
-			catch (SQLException e) {
-				if ( StringHelper.isQuoted( identifier, dialect ) ) {
-					return extractIdentifier( rs, StringHelper.unquote( identifier, dialect ), type, clazz );
-				}
-				throw e;
-			}
-		}
-	}
-
-	private static Serializable extractIdentifier(ResultSet rs, String identifier, Type type, Class clazz)
-			throws SQLException {
-		if ( clazz == Long.class ) {
-			return rs.getLong( identifier );
-		}
-		else if ( clazz == Integer.class ) {
-			return rs.getInt( identifier );
-		}
-		else if ( clazz == Short.class ) {
-			return rs.getShort( identifier );
-		}
-		else if ( clazz == String.class ) {
-			return rs.getString( identifier );
-		}
-		else if ( clazz == BigInteger.class ) {
-			return rs.getBigDecimal( identifier ).setScale( 0, BigDecimal.ROUND_UNNECESSARY ).toBigInteger();
-		}
-		else if ( clazz == BigDecimal.class ) {
-			return rs.getBigDecimal( identifier ).setScale( 0, BigDecimal.ROUND_UNNECESSARY );
-		}
-		else {
-			throw new IdentifierGenerationException(
-					"unrecognized id type : " + type.getName() + " -> " + clazz.getName()
-			);
-		}
-	}
-
-	/**
-	 * Wrap the given value in the given Java numeric class.
-	 *
-	 * @param value The primitive value to wrap.
-	 * @param clazz The Java numeric type in which to wrap the value.
-	 *
-	 * @return The wrapped type.
-	 *
-	 * @throws IdentifierGenerationException Indicates an unhandled 'clazz'.
-	 * @deprecated Use the {@link #getIntegralDataTypeHolder holders} instead.
-	 */
-	@Deprecated
-	public static Number createNumber(long value, Class clazz) throws IdentifierGenerationException {
-		if ( clazz == Long.class ) {
-			return value;
-		}
-		else if ( clazz == Integer.class ) {
-			return (int) value;
-		}
-		else if ( clazz == Short.class ) {
-			return (short) value;
-		}
-		else {
-			throw new IdentifierGenerationException( "unrecognized id type : " + clazz.getName() );
-		}
-	}
-
-	public static IntegralDataTypeHolder getIntegralDataTypeHolder(Class integralType) {
+	public static IntegralDataTypeHolder getIntegralDataTypeHolder(Class<?> integralType) {
 		if ( integralType == Long.class
 				|| integralType == Integer.class
 				|| integralType == Short.class ) {
@@ -226,61 +80,73 @@ public final class IdentifierGeneratorHelper {
 		}
 	}
 
-	public static long extractLong(IntegralDataTypeHolder holder) {
-		if ( holder.getClass() == BasicHolder.class ) {
-			( (BasicHolder) holder ).checkInitialized();
-			return ( (BasicHolder) holder ).value;
+	public static Object getForeignId(
+			String entityName, String propertyName, SharedSessionContractImplementor sessionImplementor, Object object) {
+		final var persister =
+				sessionImplementor.getFactory().getMappingMetamodel()
+						.getEntityDescriptor( entityName );
+		if ( sessionImplementor instanceof SessionImplementor statefulSession
+				&& statefulSession.contains( entityName, object ) ) {
+			//abort the save (the object is already saved by a circular cascade)
+			return SHORT_CIRCUIT_INDICATOR;
+			//throw new IdentifierGenerationException("save associated object first, or disable cascade for inverse association");
 		}
-		else if ( holder.getClass() == BigIntegerHolder.class ) {
-			( (BigIntegerHolder) holder ).checkInitialized();
-			return ( (BigIntegerHolder) holder ).value.longValue();
+		else {
+			return identifier( sessionImplementor, entityType( propertyName, persister ),
+					associatedEntity( entityName, propertyName, object, persister ) );
 		}
-		else if ( holder.getClass() == BigDecimalHolder.class ) {
-			( (BigDecimalHolder) holder ).checkInitialized();
-			return ( (BigDecimalHolder) holder ).value.longValue();
-		}
-		throw new IdentifierGenerationException( "Unknown IntegralDataTypeHolder impl [" + holder + "]" );
 	}
 
-	public static BigInteger extractBigInteger(IntegralDataTypeHolder holder) {
-		if ( holder.getClass() == BasicHolder.class ) {
-			( (BasicHolder) holder ).checkInitialized();
-			return BigInteger.valueOf( ( (BasicHolder) holder ).value );
+	private static Object associatedEntity(
+			String entityName, String propertyName, Object object, EntityPersister entityDescriptor) {
+		final Object associatedObject = entityDescriptor.getPropertyValue( object, propertyName );
+		if ( associatedObject == null ) {
+			throw new IdentifierGenerationException( "Could not assign id from null association '" + propertyName
+					+ "' of entity '" + entityName + "'" );
 		}
-		else if ( holder.getClass() == BigIntegerHolder.class ) {
-			( (BigIntegerHolder) holder ).checkInitialized();
-			return ( (BigIntegerHolder) holder ).value;
-		}
-		else if ( holder.getClass() == BigDecimalHolder.class ) {
-			( (BigDecimalHolder) holder ).checkInitialized();
-			// scale should already be set...
-			return ( (BigDecimalHolder) holder ).value.toBigInteger();
-		}
-		throw new IdentifierGenerationException( "Unknown IntegralDataTypeHolder impl [" + holder + "]" );
+		return associatedObject;
 	}
 
-	public static BigDecimal extractBigDecimal(IntegralDataTypeHolder holder) {
-		if ( holder.getClass() == BasicHolder.class ) {
-			( (BasicHolder) holder ).checkInitialized();
-			return BigDecimal.valueOf( ( (BasicHolder) holder ).value );
+	private static Object identifier(
+			SharedSessionContractImplementor session,
+			EntityType foreignValueSourceType,
+			Object associatedEntity) {
+		final String associatedEntityName = foreignValueSourceType.getAssociatedEntityName();
+		try {
+			return getEntityIdentifierIfNotUnsaved( associatedEntityName, associatedEntity, session );
 		}
-		else if ( holder.getClass() == BigIntegerHolder.class ) {
-			( (BigIntegerHolder) holder ).checkInitialized();
-			return new BigDecimal( ( (BigIntegerHolder) holder ).value );
+		catch (TransientObjectException toe) {
+			if ( session instanceof Session statefulSession ) {
+				statefulSession.persist( associatedEntityName, associatedEntity );
+				return session.getContextEntityIdentifier( associatedEntity );
+			}
+			else if ( session instanceof StatelessSession statelessSession ) {
+				return statelessSession.insert( associatedEntityName, associatedEntity );
+			}
+			else {
+				throw new IdentifierGenerationException("sessionImplementor is neither Session nor StatelessSession");
+			}
 		}
-		else if ( holder.getClass() == BigDecimalHolder.class ) {
-			( (BigDecimalHolder) holder ).checkInitialized();
-			// scale should already be set...
-			return ( (BigDecimalHolder) holder ).value;
-		}
-		throw new IdentifierGenerationException( "Unknown IntegralDataTypeHolder impl [" + holder + "]" );
 	}
 
+	private static EntityType entityType(String propertyName, EntityPersister entityDescriptor) {
+		if ( entityDescriptor.getPropertyType( propertyName ) instanceof EntityType entityType ) {
+			// the normal case
+			return entityType;
+		}
+		else {
+			// try identifier mapper
+			final String mapperPropertyName = IDENTIFIER_MAPPER_PROPERTY + "." + propertyName;
+			return (EntityType) entityDescriptor.getPropertyType( mapperPropertyName );
+		}
+	}
+
+	@Internal
 	public static class BasicHolder implements IntegralDataTypeHolder {
-		private final Class exactType;
+		private final Class<?> exactType;
 		private long value = Long.MIN_VALUE;
 
-		public BasicHolder(Class exactType) {
+		public BasicHolder(Class<?> exactType) {
 			this.exactType = exactType;
 			if ( exactType != Long.class && exactType != Integer.class && exactType != Short.class ) {
 				throw new IdentifierGenerationException( "Invalid type for basic integral holder : " + exactType );
@@ -306,7 +172,7 @@ public final class IdentifierGeneratorHelper {
 
 		public void bind(PreparedStatement preparedStatement, int position) throws SQLException {
 			// TODO : bind it as 'exact type'?  Not sure if that gains us anything...
-			LOG.tracef( "binding parameter [%s] - [%s]", position, value );
+			CORE_LOGGER.tracef( "binding parameter [%s] - [%s]", position, value );
 			preparedStatement.setLong( position, value );
 		}
 
@@ -341,7 +207,7 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		public IntegralDataTypeHolder multiplyBy(IntegralDataTypeHolder factor) {
-			return multiplyBy( extractLong( factor ) );
+			return multiplyBy( factor.toLong() );
 		}
 
 		public IntegralDataTypeHolder multiplyBy(long factor) {
@@ -351,7 +217,7 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		public boolean eq(IntegralDataTypeHolder other) {
-			return eq( extractLong( other ) );
+			return eq( other.toLong() );
 		}
 
 		public boolean eq(long value) {
@@ -360,7 +226,7 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		public boolean lt(IntegralDataTypeHolder other) {
-			return lt( extractLong( other ) );
+			return lt( other.toLong() );
 		}
 
 		public boolean lt(long value) {
@@ -369,7 +235,7 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		public boolean gt(IntegralDataTypeHolder other) {
-			return gt( extractLong( other ) );
+			return gt( other.toLong() );
 		}
 
 		public boolean gt(long value) {
@@ -378,7 +244,7 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		public IntegralDataTypeHolder copy() {
-			BasicHolder copy = new BasicHolder( exactType );
+			final var copy = new BasicHolder( exactType );
 			copy.value = value;
 			return copy;
 		}
@@ -410,27 +276,44 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		@Override
+		public long toLong() {
+			checkInitialized();
+			return value;
+		}
+
+		@Override
+		public BigDecimal toBigDecimal() {
+			checkInitialized();
+			return BigDecimal.valueOf( value );
+		}
+
+		@Override
+		public BigInteger toBigInteger() {
+			checkInitialized();
+			return BigInteger.valueOf( value );
+		}
+
+		@Override
 		public String toString() {
 			return "BasicHolder[" + exactType.getName() + "[" + value + "]]";
 		}
 
 		@Override
-		public boolean equals(Object o) {
-			if ( this == o ) {
+		public boolean equals(Object object) {
+			if ( this == object ) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			else if ( !(object instanceof BasicHolder that) ) {
 				return false;
 			}
-
-			BasicHolder that = (BasicHolder) o;
-
-			return value == that.value;
+			else {
+				return this.value == that.value;
+			}
 		}
 
 		@Override
 		public int hashCode() {
-			return (int) ( value ^ ( value >>> 32 ) );
+			return Long.hashCode(value);
 		}
 	}
 
@@ -443,11 +326,11 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		public IntegralDataTypeHolder initialize(ResultSet resultSet, long defaultValue) throws SQLException {
-			final BigDecimal rsValue = resultSet.getBigDecimal( 1 );
+			final var rsValue = resultSet.getBigDecimal( 1 );
 			if ( resultSet.wasNull() ) {
 				return initialize( defaultValue );
 			}
-			this.value = rsValue.setScale( 0, BigDecimal.ROUND_UNNECESSARY ).toBigInteger();
+			this.value = rsValue.setScale( 0, RoundingMode.UNNECESSARY ).toBigInteger();
 			return this;
 		}
 
@@ -487,7 +370,7 @@ public final class IdentifierGeneratorHelper {
 
 		public IntegralDataTypeHolder multiplyBy(IntegralDataTypeHolder factor) {
 			checkInitialized();
-			value = value.multiply( extractBigInteger( factor ) );
+			value = value.multiply( factor.toBigInteger() );
 			return this;
 		}
 
@@ -499,7 +382,7 @@ public final class IdentifierGeneratorHelper {
 
 		public boolean eq(IntegralDataTypeHolder other) {
 			checkInitialized();
-			return value.compareTo( extractBigInteger( other ) ) == 0;
+			return value.compareTo( other.toBigInteger() ) == 0;
 		}
 
 		public boolean eq(long value) {
@@ -509,7 +392,7 @@ public final class IdentifierGeneratorHelper {
 
 		public boolean lt(IntegralDataTypeHolder other) {
 			checkInitialized();
-			return value.compareTo( extractBigInteger( other ) ) < 0;
+			return value.compareTo( other.toBigInteger() ) < 0;
 		}
 
 		public boolean lt(long value) {
@@ -519,7 +402,7 @@ public final class IdentifierGeneratorHelper {
 
 		public boolean gt(IntegralDataTypeHolder other) {
 			checkInitialized();
-			return value.compareTo( extractBigInteger( other ) ) > 0;
+			return value.compareTo( other.toBigInteger() ) > 0;
 		}
 
 		public boolean gt(long value) {
@@ -528,7 +411,7 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		public IntegralDataTypeHolder copy() {
-			BigIntegerHolder copy = new BigIntegerHolder();
+			final var copy = new BigIntegerHolder();
 			copy.value = value;
 			return copy;
 		}
@@ -551,29 +434,44 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		@Override
+		public long toLong() {
+			checkInitialized();
+			return value.longValue();
+		}
+
+		@Override
+		public BigInteger toBigInteger() {
+			checkInitialized();
+			return value;
+		}
+
+		@Override
+		public BigDecimal toBigDecimal() {
+			checkInitialized();
+			return new BigDecimal( value );
+		}
+
+		@Override
 		public String toString() {
 			return "BigIntegerHolder[" + value + "]";
 		}
 
 		@Override
-		public boolean equals(Object o) {
-			if ( this == o ) {
+		public boolean equals(Object object) {
+			if ( this == object ) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			else if ( !(object instanceof BigIntegerHolder that) ) {
 				return false;
 			}
-
-			BigIntegerHolder that = (BigIntegerHolder) o;
-
-			return this.value == null
-					? that.value == null
-					: value.equals( that.value );
+			else {
+				return Objects.equals( this.value, that.value );
+			}
 		}
 
 		@Override
 		public int hashCode() {
-			return value != null ? value.hashCode() : 0;
+			return Objects.hashCode( value );
 		}
 	}
 
@@ -586,11 +484,11 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		public IntegralDataTypeHolder initialize(ResultSet resultSet, long defaultValue) throws SQLException {
-			final BigDecimal rsValue = resultSet.getBigDecimal( 1 );
+			final var rsValue = resultSet.getBigDecimal( 1 );
 			if ( resultSet.wasNull() ) {
 				return initialize( defaultValue );
 			}
-			this.value = rsValue.setScale( 0, BigDecimal.ROUND_UNNECESSARY );
+			this.value = rsValue.setScale( 0, RoundingMode.UNNECESSARY );
 			return this;
 		}
 
@@ -630,7 +528,7 @@ public final class IdentifierGeneratorHelper {
 
 		public IntegralDataTypeHolder multiplyBy(IntegralDataTypeHolder factor) {
 			checkInitialized();
-			value = value.multiply( extractBigDecimal( factor ) );
+			value = value.multiply( factor.toBigDecimal() );
 			return this;
 		}
 
@@ -642,7 +540,7 @@ public final class IdentifierGeneratorHelper {
 
 		public boolean eq(IntegralDataTypeHolder other) {
 			checkInitialized();
-			return value.compareTo( extractBigDecimal( other ) ) == 0;
+			return value.compareTo( other.toBigDecimal() ) == 0;
 		}
 
 		public boolean eq(long value) {
@@ -652,7 +550,7 @@ public final class IdentifierGeneratorHelper {
 
 		public boolean lt(IntegralDataTypeHolder other) {
 			checkInitialized();
-			return value.compareTo( extractBigDecimal( other ) ) < 0;
+			return value.compareTo( other.toBigDecimal() ) < 0;
 		}
 
 		public boolean lt(long value) {
@@ -662,7 +560,7 @@ public final class IdentifierGeneratorHelper {
 
 		public boolean gt(IntegralDataTypeHolder other) {
 			checkInitialized();
-			return value.compareTo( extractBigDecimal( other ) ) > 0;
+			return value.compareTo( other.toBigDecimal() ) > 0;
 		}
 
 		public boolean gt(long value) {
@@ -671,7 +569,7 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		public IntegralDataTypeHolder copy() {
-			BigDecimalHolder copy = new BigDecimalHolder();
+			final var copy = new BigDecimalHolder();
 			copy.value = value;
 			return copy;
 		}
@@ -694,30 +592,68 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		@Override
+		public long toLong() {
+			checkInitialized();
+			return value.longValue();
+		}
+
+		@Override
+		public BigInteger toBigInteger() {
+			checkInitialized();
+			return value.toBigInteger();
+		}
+
+		@Override
+		public BigDecimal toBigDecimal() {
+			checkInitialized();
+			return value;
+		}
+
+		@Override
 		public String toString() {
 			return "BigDecimalHolder[" + value + "]";
 		}
 
 		@Override
-		public boolean equals(Object o) {
-			if ( this == o ) {
+		public boolean equals(Object object) {
+			if ( this == object ) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			else if ( !(object instanceof BigDecimalHolder that) ) {
 				return false;
 			}
-
-			BigDecimalHolder that = (BigDecimalHolder) o;
-
-			return this.value == null
-					? that.value == null
-					: this.value.equals( that.value );
+			else {
+				return Objects.equals( this.value, that.value );
+			}
 		}
 
 		@Override
 		public int hashCode() {
-			return value != null ? value.hashCode() : 0;
+			return Objects.hashCode( value );
 		}
+	}
+
+	public static ImplicitDatabaseObjectNamingStrategy getNamingStrategy(Properties params, ServiceRegistry serviceRegistry) {
+		final String namingStrategySetting = coalesceSuppliedValues(
+				() -> {
+					final String localSetting = getString( ID_DB_STRUCTURE_NAMING_STRATEGY, params );
+					if ( localSetting != null ) {
+						INCUBATION_LOGGER.incubatingSetting( ID_DB_STRUCTURE_NAMING_STRATEGY );
+					}
+					return localSetting;
+				},
+				() -> {
+					final var settings = serviceRegistry.requireService( ConfigurationService.class ).getSettings();
+					final String globalSetting = getString( ID_DB_STRUCTURE_NAMING_STRATEGY, settings );
+					if ( globalSetting != null ) {
+						INCUBATION_LOGGER.incubatingSetting( ID_DB_STRUCTURE_NAMING_STRATEGY );
+					}
+					return globalSetting;
+				},
+				StandardNamingStrategy.class::getName
+		);
+		return serviceRegistry.requireService( StrategySelector.class )
+				.resolveStrategy( ImplicitDatabaseObjectNamingStrategy.class, namingStrategySetting );
 	}
 
 	/**

@@ -1,31 +1,32 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.spi;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import java.util.List;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
 
 import org.hibernate.engine.jdbc.env.internal.NormalizingIdentifierHelperImpl;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 
 import org.jboss.logging.Logger;
 
+import static java.util.Collections.addAll;
+import static org.hibernate.internal.util.StringHelper.splitAtCommas;
+
 /**
- * Builder for IdentifierHelper instances.  Mainly here to allow progressive
- * building of the immutable (after instantiation) IdentifierHelper.
+ * Builder for {@link IdentifierHelper} instances.  Mainly here to allow progressive
+ * building of the immutable (after instantiation) {@link IdentifierHelper}.
  *
  * @author Steve Ebersole
  */
 public class IdentifierHelperBuilder {
-	private static final Logger log = Logger.getLogger( IdentifierHelperBuilder.class );
+	private static final Logger LOG = Logger.getLogger( IdentifierHelperBuilder.class );
 
 	private final JdbcEnvironment jdbcEnvironment;
 
@@ -38,7 +39,9 @@ public class IdentifierHelperBuilder {
 	private boolean globallyQuoteIdentifiers = false;
 	private boolean skipGlobalQuotingForColumnDefinitions = false;
 	private boolean autoQuoteKeywords = true;
-	private IdentifierCaseStrategy unquotedCaseStrategy = IdentifierCaseStrategy.MIXED;
+	private boolean autoQuoteInitialUnderscore = false;
+	private boolean autoQuoteDollar = false;
+	private IdentifierCaseStrategy unquotedCaseStrategy = IdentifierCaseStrategy.UPPER;
 	private IdentifierCaseStrategy quotedCaseStrategy = IdentifierCaseStrategy.MIXED;
 
 	public static IdentifierHelperBuilder from(JdbcEnvironment jdbcEnvironment) {
@@ -57,72 +60,66 @@ public class IdentifierHelperBuilder {
 	 * @throws SQLException Any access to DatabaseMetaData can case SQLException; just re-throw.
 	 */
 	public void applyReservedWords(DatabaseMetaData metaData) throws SQLException {
-		if ( metaData == null ) {
-			return;
+		if ( metaData != null
+				// Important optimisation: skip loading all keywords
+				// from the DB when autoQuoteKeywords is disabled
+				&& autoQuoteKeywords ) {
+			addAll( reservedWords, splitAtCommas( metaData.getSQLKeywords() ) );
 		}
-
-		this.reservedWords.addAll( parseKeywords( metaData.getSQLKeywords() ) );
-	}
-
-	private static List<String> parseKeywords(String extraKeywordsString) {
-		return StringHelper.parseCommaSeparatedString( extraKeywordsString );
 	}
 
 	public void applyIdentifierCasing(DatabaseMetaData metaData) throws SQLException {
-		if ( metaData == null ) {
-			return;
-		}
+		if ( metaData != null ) {
+			final int unquotedAffirmatives = ArrayHelper.countTrue(
+					metaData.storesLowerCaseIdentifiers(),
+					metaData.storesUpperCaseIdentifiers(),
+					metaData.storesMixedCaseIdentifiers()
+			);
 
-		final int unquotedAffirmatives = ArrayHelper.countTrue(
-				metaData.storesLowerCaseIdentifiers(),
-				metaData.storesUpperCaseIdentifiers(),
-				metaData.storesMixedCaseIdentifiers()
-		);
-
-		if ( unquotedAffirmatives == 0 ) {
-			log.debug( "JDBC driver metadata reported database stores unquoted identifiers in neither upper, lower nor mixed case" );
-		}
-		else {
-			// NOTE : still "dodgy" if more than one is true
-			if ( unquotedAffirmatives > 1 ) {
-				log.debug( "JDBC driver metadata reported database stores unquoted identifiers in more than one case" );
-			}
-
-			if ( metaData.storesUpperCaseIdentifiers() ) {
-				this.unquotedCaseStrategy = IdentifierCaseStrategy.UPPER;
-			}
-			else if ( metaData.storesLowerCaseIdentifiers() ) {
-				this.unquotedCaseStrategy = IdentifierCaseStrategy.LOWER;
+			if ( unquotedAffirmatives == 0 ) {
+				LOG.trace( "JDBC driver metadata reported database stores unquoted identifiers in neither upper, lower nor mixed case" );
 			}
 			else {
-				this.unquotedCaseStrategy = IdentifierCaseStrategy.MIXED;
-			}
-		}
+				// NOTE: still "dodgy" if more than one is true
+				if ( unquotedAffirmatives > 1 ) {
+					LOG.trace( "JDBC driver metadata reported database stores unquoted identifiers in more than one case" );
+				}
 
-
-		final int quotedAffirmatives = ArrayHelper.countTrue(
-				metaData.storesLowerCaseQuotedIdentifiers(),
-				metaData.storesUpperCaseQuotedIdentifiers(),
-				metaData.storesMixedCaseQuotedIdentifiers()
-		);
-
-		if ( quotedAffirmatives == 0 ) {
-			log.debug( "JDBC driver metadata reported database stores quoted identifiers in neither upper, lower nor mixed case" );
-		}
-		else {
-			// NOTE : still "dodgy" if more than one is true
-			if ( quotedAffirmatives > 1 ) {
-				log.debug( "JDBC driver metadata reported database stores quoted identifiers in more than one case" );
+				if ( metaData.storesUpperCaseIdentifiers() ) {
+					unquotedCaseStrategy = IdentifierCaseStrategy.UPPER;
+				}
+				else if ( metaData.storesLowerCaseIdentifiers() ) {
+					unquotedCaseStrategy = IdentifierCaseStrategy.LOWER;
+				}
+				else {
+					unquotedCaseStrategy = IdentifierCaseStrategy.MIXED;
+				}
 			}
 
-			if ( metaData.storesMixedCaseQuotedIdentifiers() ) {
-				this.quotedCaseStrategy = IdentifierCaseStrategy.MIXED;
-			}
-			else if ( metaData.storesLowerCaseQuotedIdentifiers() ) {
-				this.quotedCaseStrategy = IdentifierCaseStrategy.LOWER;
+			final int quotedAffirmatives = ArrayHelper.countTrue(
+					metaData.storesLowerCaseQuotedIdentifiers(),
+					metaData.storesUpperCaseQuotedIdentifiers(),
+					metaData.storesMixedCaseQuotedIdentifiers()
+			);
+
+			if ( quotedAffirmatives == 0 ) {
+				LOG.trace( "JDBC driver metadata reported database stores quoted identifiers in neither upper, lower nor mixed case" );
 			}
 			else {
-				this.quotedCaseStrategy = IdentifierCaseStrategy.UPPER;
+				// NOTE: still "dodgy" if more than one is true
+				if ( quotedAffirmatives > 1 ) {
+					LOG.trace( "JDBC driver metadata reported database stores quoted identifiers in more than one case" );
+				}
+
+				if ( metaData.storesMixedCaseQuotedIdentifiers() ) {
+					quotedCaseStrategy = IdentifierCaseStrategy.MIXED;
+				}
+				else if ( metaData.storesLowerCaseQuotedIdentifiers() ) {
+					quotedCaseStrategy = IdentifierCaseStrategy.LOWER;
+				}
+				else {
+					quotedCaseStrategy = IdentifierCaseStrategy.UPPER;
+				}
 			}
 		}
 	}
@@ -145,6 +142,14 @@ public class IdentifierHelperBuilder {
 
 	public void setAutoQuoteKeywords(boolean autoQuoteKeywords) {
 		this.autoQuoteKeywords = autoQuoteKeywords;
+	}
+
+	public void setAutoQuoteInitialUnderscore(boolean autoQuoteInitialUnderscore) {
+		this.autoQuoteInitialUnderscore = autoQuoteInitialUnderscore;
+	}
+
+	public void setAutoQuoteDollar(boolean autoQuoteDollar) {
+		this.autoQuoteDollar = autoQuoteDollar;
 	}
 
 	public NameQualifierSupport getNameQualifierSupport() {
@@ -175,8 +180,19 @@ public class IdentifierHelperBuilder {
 		this.reservedWords.clear();
 	}
 
+	public void applyReservedWords(String... words) {
+		applyReservedWords( Arrays.asList( words ) );
+	}
+
+	public void applyReservedWords(Collection<String> words) {
+		//No use when autoQuoteKeywords is disabled
+		if ( autoQuoteKeywords ) {
+			reservedWords.addAll( words );
+		}
+	}
+
 	public void applyReservedWords(Set<String> words) {
-		this.reservedWords.addAll( words );
+		applyReservedWords( (Collection<String>) words );
 	}
 
 	public void setReservedWords(Set<String> words) {
@@ -186,7 +202,7 @@ public class IdentifierHelperBuilder {
 
 	public IdentifierHelper build() {
 		if ( unquotedCaseStrategy == quotedCaseStrategy ) {
-			log.debugf(
+			LOG.debugf(
 					"IdentifierCaseStrategy for both quoted and unquoted identifiers was set " +
 							"to the same strategy [%s]; that will likely lead to problems in schema update " +
 							"and validation if using quoted identifiers",
@@ -200,6 +216,8 @@ public class IdentifierHelperBuilder {
 				globallyQuoteIdentifiers,
 				skipGlobalQuotingForColumnDefinitions,
 				autoQuoteKeywords,
+				autoQuoteInitialUnderscore,
+				autoQuoteDollar,
 				reservedWords,
 				unquotedCaseStrategy,
 				quotedCaseStrategy

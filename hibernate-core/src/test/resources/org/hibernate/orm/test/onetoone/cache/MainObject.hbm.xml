@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping default-lazy="false" package="org.hibernate.orm.test.onetoone.cache">
+    <class name="MainObject" table="mainobject">
+        <cache usage="read-write"/>
+
+        <id name="id" column="id" type="java.lang.Long">
+            <generator class="native">
+                <param name="sequence">seq_mainobj</param>
+            </generator>
+        </id>
+
+        <one-to-one name="obj2" class="Object2" cascade="all" outer-join="auto"/>
+
+        <property name="description" type="java.lang.String" update="true" insert="true" column="description" />
+
+    </class>
+
+</hibernate-mapping>

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+
+    <class entity-name="DynamicEntity">
+        <id name="id" type="integer"/>
+        <natural-id>
+            <property name="referenceCode" type="string"/>
+        </natural-id>
+        <property name="data" type="string"/>
+    </class>
+
+
+</hibernate-mapping>

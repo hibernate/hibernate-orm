@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+
+<!-- example of a default persistence.xml -->
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+             version="2.0">
+    <persistence-unit name="excludehbmpar" transaction-type="RESOURCE_LOCAL">
+        <mapping-file>META-INF/orm2.xml</mapping-file>
+        <properties>
+            <property name="hibernate.dialect" value="@db.dialect@"/>
+            <property name="hibernate.connection.driver_class" value="@jdbc.driver@"/>
+            <property name="hibernate.connection.creator_factory_class" value="org.hibernate.testing.jdbc.GradleParallelTestingConnectionCreatorFactoryImpl" />
+            <property name="hibernate.connection.username" value="@jdbc.user@"/>
+            <property name="hibernate.connection.password" value="@jdbc.pass@"/>
+            <property name="hibernate.connection.url" value="@jdbc.url@"/>
+            <property name="hibernate.connection.init_sql" value="@connection.init_sql@"/>
+            <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
+			<property name="hibernate.cache.region.factory_class" value="org.hibernate.testing.cache.CachingRegionFactory" />
+            <property name="hibernate.archive.autodetection" value="class"/>
+        </properties>
+    </persistence-unit>
+</persistence>

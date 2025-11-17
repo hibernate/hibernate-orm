@@ -1,158 +1,260 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.convert.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
-import org.hibernate.AssertionFailure;
-import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.AnnotationException;
+import org.hibernate.HibernateException;
 import org.hibernate.boot.model.convert.spi.AutoApplicableConverterDescriptor;
-import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.RegisteredConversion;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.models.spi.MemberDetails;
 
-import org.jboss.logging.Logger;
+
+
+import static java.util.Collections.emptyList;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+import static org.hibernate.boot.model.convert.internal.ConverterHelper.resolveAttributeType;
+import static org.hibernate.boot.model.convert.internal.ConverterHelper.resolveConverterClassParamTypes;
+import static org.hibernate.internal.util.StringHelper.join;
 
 /**
+ * @implNote It is important that all {@link RegisteredConversion} be registered
+ * prior to attempts to register any {@link ConverterDescriptor}
+ *
  * @author Steve Ebersole
  */
 public class AttributeConverterManager implements ConverterAutoApplyHandler {
-	private static final Logger log = Logger.getLogger( AttributeConverterManager.class );
 
-	private Map<Class, ConverterDescriptor> attributeConverterDescriptorsByClass;
+	private Map<Class<?>, ConverterDescriptor<?,?>> attributeConverterDescriptorsByClass;
+	private Map<Class<?>, RegisteredConversion> registeredConversionsByDomainType;
 
-	public void addConverter(ConverterDescriptor descriptor) {
+	public RegisteredConversion findRegisteredConversion(Class<?> domainType) {
+		return registeredConversionsByDomainType == null ? null : registeredConversionsByDomainType.get( domainType );
+	}
+
+	public void addConverter(ConverterDescriptor<?,?> descriptor) {
+		final var converterClass = descriptor.getAttributeConverterClass();
+		if ( BOOT_LOGGER.isTraceEnabled() ) {
+			BOOT_LOGGER.registeringAttributeConverter( converterClass.getName() );
+		}
+
+		if ( registeredConversionsByDomainType != null ) {
+			final Class<?> domainType = descriptor.getDomainValueResolvedType().getErasedType();
+			final var registeredConversion = registeredConversionsByDomainType.get( domainType );
+			if ( registeredConversion != null ) {
+				// we can skip registering the converter, the RegisteredConversion will always take precedence
+				if ( BOOT_LOGGER.isDebugEnabled() ) {
+					BOOT_LOGGER.skippingRegistrationAttributeConverterForAutoApply( converterClass.getName() );
+				}
+				return;
+			}
+		}
+
 		if ( attributeConverterDescriptorsByClass == null ) {
 			attributeConverterDescriptorsByClass = new ConcurrentHashMap<>();
 		}
 
-		final Object old = attributeConverterDescriptorsByClass.put(
-				descriptor.getAttributeConverterClass(),
-				descriptor
-		);
-
+		final Object old = attributeConverterDescriptorsByClass.put( converterClass, descriptor );
 		if ( old != null ) {
-			throw new AssertionFailure(
+			throw new HibernateException(
 					String.format(
 							Locale.ENGLISH,
 							"AttributeConverter class [%s] registered multiple times",
-							descriptor.getAttributeConverterClass()
+							converterClass
 					)
 			);
 		}
 	}
 
-	private Collection<ConverterDescriptor> converterDescriptors() {
-		if ( attributeConverterDescriptorsByClass == null ) {
-			return Collections.emptyList();
+	public void addRegistration(RegisteredConversion conversion, BootstrapContext context) {
+		if ( registeredConversionsByDomainType == null ) {
+			registeredConversionsByDomainType = new ConcurrentHashMap<>();
 		}
-		return attributeConverterDescriptorsByClass.values();
+
+		final Class<?> domainType = getDomainType( conversion, context );
+		checkNotOverriding( conversion, domainType );
+		// See if we have a matching entry in attributeConverterDescriptorsByClass.
+		// If so, remove it. The conversion being registered will always take precedence.
+		if ( attributeConverterDescriptorsByClass != null ) {
+			final var removed = attributeConverterDescriptorsByClass.remove( conversion.getConverterType() );
+			if ( removed != null && BOOT_LOGGER.isDebugEnabled() ) {
+				BOOT_LOGGER.removedPotentiallyAutoApplicableConverterDueToRegistration(
+						removed.getAttributeConverterClass().getName() );
+			}
+		}
+		registeredConversionsByDomainType.put( domainType, conversion );
+	}
+
+	private void checkNotOverriding(RegisteredConversion conversion, Class<?> domainType) {
+		// make sure we are not overriding a previous conversion registration
+		final var existingRegistration = registeredConversionsByDomainType.get( domainType );
+		if ( existingRegistration != null ) {
+			final String converterTypeName = conversion.getConverterType().getName();
+			if ( !conversion.equals( existingRegistration ) ) {
+				throw new AnnotationException( "Conflicting '@ConverterRegistration' descriptors for attribute converter '"
+												+ converterTypeName + "'" );
+			}
+			else {
+				BOOT_LOGGER.skippingDuplicateConverterRegistration( converterTypeName );
+			}
+		}
+	}
+
+	private static Class<?> getDomainType(RegisteredConversion conversion, BootstrapContext context) {
+		// the registration did not define an explicit domain-type, so inspect the converter
+		return conversion.getExplicitDomainType().equals( void.class )
+				? resolveConverterClassParamTypes( conversion.getConverterType(), context.getClassmateContext() )
+						.get( 0 ).getErasedType()
+				: conversion.getExplicitDomainType();
+	}
+
+	private Collection<ConverterDescriptor<?,?>> converterDescriptors() {
+		return attributeConverterDescriptorsByClass == null
+				? emptyList()
+				: attributeConverterDescriptorsByClass.values();
 	}
 
 	enum ConversionSite {
-		ATTRIBUTE( "basic attribute" ),
-		COLLECTION_ELEMENT( "collection attribute's element" ),
-		MAP_KEY( "map attribute's key" );
-
-		private final String siteDescriptor;
-
-		ConversionSite(String siteDescriptor) {
-			this.siteDescriptor = siteDescriptor;
-		}
+		ATTRIBUTE,
+		COLLECTION_ELEMENT,
+		MAP_KEY;
 
 		public String getSiteDescriptor() {
-			return siteDescriptor;
+			return switch ( this ) {
+				case ATTRIBUTE -> "basic attribute";
+				case COLLECTION_ELEMENT -> "collection attribute's element";
+				case MAP_KEY -> "map attribute's key";
+			};
 		}
 	}
+
 	@Override
-	public ConverterDescriptor findAutoApplyConverterForAttribute(
-			XProperty xProperty,
+	public ConverterDescriptor<?,?> findAutoApplyConverterForAttribute(
+			MemberDetails attributeMember,
 			MetadataBuildingContext context) {
 		return locateMatchingConverter(
-				xProperty,
+				attributeMember,
 				ConversionSite.ATTRIBUTE,
-				(autoApplyDescriptor) -> autoApplyDescriptor.getAutoAppliedConverterDescriptorForAttribute( xProperty, context )
+				(autoApplyDescriptor) ->
+						autoApplyDescriptor.getAutoAppliedConverterDescriptorForAttribute( attributeMember, context ),
+				context
 		);
 	}
 
-	private static StringHelper.Renderer<ConverterDescriptor> RENDERER = value -> value.getAttributeConverterClass().getName();
-
-	private ConverterDescriptor locateMatchingConverter(
-			XProperty xProperty,
+	private ConverterDescriptor<?,?> locateMatchingConverter(
+			MemberDetails memberDetails,
 			ConversionSite conversionSite,
-			Function<AutoApplicableConverterDescriptor, ConverterDescriptor> matcher) {
-		List<ConverterDescriptor> matches = new ArrayList<>();
+			Function<AutoApplicableConverterDescriptor, ConverterDescriptor<?,?>> matcher,
+			MetadataBuildingContext context) {
+		if ( registeredConversionsByDomainType != null ) {
+			// we had registered conversions - see if any of them match and, if so, use that conversion
+			final var resolveAttributeType = resolveAttributeType( memberDetails, context );
+			final var registrationForDomainType =
+					registeredConversionsByDomainType.get( resolveAttributeType.getErasedType() );
+			if ( registrationForDomainType != null ) {
+				return registrationForDomainType.isAutoApply()
+						? registrationForDomainType.getConverterDescriptor()
+						: null;
+			}
+		}
 
-		for ( ConverterDescriptor descriptor : converterDescriptors() ) {
-			log.debugf(
-					"Checking auto-apply AttributeConverter [%s] (domain-type=%s) for match against %s : %s.%s (type=%s)",
-					descriptor.getAttributeConverterClass().getName(),
-					descriptor.getDomainValueResolvedType().getSignature(),
-					conversionSite.getSiteDescriptor(),
-					xProperty.getDeclaringClass().getName(),
-					xProperty.getName(),
-					xProperty.getType().getName()
-			);
+		return pickUniqueMatch( memberDetails, conversionSite,
+				getMatches( memberDetails, conversionSite, matcher ) );
+	}
 
-			final ConverterDescriptor match = matcher.apply( descriptor.getAutoApplyDescriptor() );
+	private static ConverterDescriptor<?,?> pickUniqueMatch(
+			MemberDetails memberDetails,
+			ConversionSite conversionSite,
+			List<ConverterDescriptor<?,?>> matches) {
+		return switch ( matches.size() ) {
+			case 0 -> null;
+			case 1 -> matches.get( 0 );
+			default -> {
+				final var filtered =
+						matches.stream()
+								.filter( match -> !match.overrideable() )
+								.toList();
+				if ( filtered.size() == 1 ) {
+					yield filtered.get( 0 );
+				}
+				else {
+					// otherwise, we had multiple matches
+					throw new HibernateException(
+							String.format(
+									Locale.ROOT,
+									"Multiple auto-apply converters matched %s [%s.%s] : %s",
+									conversionSite.getSiteDescriptor(),
+									memberDetails.getDeclaringType().getName(),
+									memberDetails.getName(),
+									join( matches, value -> value.getAttributeConverterClass().getName() )
+							)
+					);
+				}
+			}
+		};
+	}
 
+	private List<ConverterDescriptor<?,?>> getMatches(
+			MemberDetails memberDetails,
+			ConversionSite conversionSite,
+			Function<AutoApplicableConverterDescriptor,
+			ConverterDescriptor<?,?>> matcher) {
+		final List<ConverterDescriptor<?,?>> matches = new ArrayList<>();
+		for ( var descriptor : converterDescriptors() ) {
+			if ( BOOT_LOGGER.isTraceEnabled() ) {
+				BOOT_LOGGER.checkingAutoApplyAttributeConverter(
+						descriptor.getAttributeConverterClass().getName(),
+						descriptor.getDomainValueResolvedType().getSignature(),
+						conversionSite.getSiteDescriptor(),
+						memberDetails.getDeclaringType().getName(),
+						memberDetails.getName(),
+						memberDetails.getType().getName()
+				);
+			}
+			final var match = matcher.apply( descriptor.getAutoApplyDescriptor() );
 			if ( match != null ) {
 				matches.add( descriptor );
 			}
 		}
-
-		if ( matches.isEmpty() ) {
-			return null;
-		}
-
-		if ( matches.size() == 1 ) {
-			return matches.get( 0 );
-		}
-
-		// otherwise, we had multiple matches
-		throw new RuntimeException(
-				String.format(
-						Locale.ROOT,
-						"Multiple auto-apply converters matched %s [%s.%s] : %s",
-						conversionSite.getSiteDescriptor(),
-						xProperty.getDeclaringClass().getName(),
-						xProperty.getName(),
-						StringHelper.join( matches, RENDERER )
-				)
-		);
+		return matches;
 	}
 
 	@Override
-	public ConverterDescriptor findAutoApplyConverterForCollectionElement(
-			XProperty xProperty,
+	public ConverterDescriptor<?,?> findAutoApplyConverterForCollectionElement(
+			MemberDetails attributeMember,
 			MetadataBuildingContext context) {
 		return locateMatchingConverter(
-				xProperty,
+				attributeMember,
 				ConversionSite.COLLECTION_ELEMENT,
-				(autoApplyDescriptor) -> autoApplyDescriptor.getAutoAppliedConverterDescriptorForCollectionElement( xProperty, context )
+				(autoApplyDescriptor) ->
+						autoApplyDescriptor.getAutoAppliedConverterDescriptorForCollectionElement( attributeMember, context ),
+				context
 		);
 	}
 
 	@Override
-	public ConverterDescriptor findAutoApplyConverterForMapKey(
-			XProperty xProperty,
+	public ConverterDescriptor<?,?> findAutoApplyConverterForMapKey(
+			MemberDetails attributeMember,
 			MetadataBuildingContext context) {
 		return locateMatchingConverter(
-				xProperty,
+				attributeMember,
 				ConversionSite.MAP_KEY,
-				(autoApplyDescriptor) -> autoApplyDescriptor.getAutoAppliedConverterDescriptorForMapKey( xProperty, context )
+				(autoApplyDescriptor) ->
+						autoApplyDescriptor.getAutoAppliedConverterDescriptorForMapKey( attributeMember, context ),
+				context
 		);
 	}
 

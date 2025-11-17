@@ -1,0 +1,24 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+
+plugins {
+    id "local.publishing-java-module"
+    id "local.publishing-group-relocation"
+}
+
+description = 'Hibernate\'s extensions for vector support'
+
+dependencies {
+    api project( ':hibernate-core' )
+
+    compileOnly jdbcLibs.mssql
+
+    testImplementation project( ':hibernate-testing' )
+    testImplementation project( path: ':hibernate-core', configuration: 'tests' )
+}
+
+test {
+    include '**/**'
+}

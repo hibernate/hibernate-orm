@@ -1,16 +1,26 @@
-= Hibernate Getting Started Guide
-:toc:
+:shared-attributes-dir: {doc-main-dir}/asciidoc/shared
+:html-meta-canonical-link: https://docs.hibernate.org/stable/orm/quickstart/html_single/
+
+include::{shared-attributes-dir}/common-attributes.adoc[]
+include::{shared-attributes-dir}/url-attributes.adoc[]
+include::{shared-attributes-dir}/filesystem-attributes.adoc[]
+include::{shared-attributes-dir}/renderer-attributes.adoc[]
+
+= Getting Started with Hibernate
+:description: Quick start guide for Hibernate ORM
+:toc2:
+:toclevels: 3
+:sectanchors:
 :docinfo:
 
 include::preface.adoc[]
 
 :numbered:
+
 include::obtaining.adoc[]
 
-include::tutorial_native.adoc[]
-
 include::tutorial_annotations.adoc[]
-
 include::tutorial_jpa.adoc[]
-
 include::tutorial_envers.adoc[]
+
+include::credits.adoc[]

@@ -1,60 +1,60 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
- * Generates <tt>string</tt> values using the SQL Server NEWID() function.
+ * The legacy id generator named {@code guid}.
+ * <p>
+ * Generates {@code string} values using the SQL Server {@code NEWID()} function.
  *
  * @author Joseph Fifield
+ *
+ * @deprecated use {@link org.hibernate.id.uuid.UuidGenerator}
  */
+@Deprecated(since = "6.0")
 public class GUIDGenerator implements IdentifierGenerator {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( GUIDGenerator.class );
 
 	private static boolean WARNED;
 
 	public GUIDGenerator() {
 		if ( !WARNED ) {
 			WARNED = true;
-			LOG.deprecatedUuidGenerator( UUIDGenerator.class.getName(), UUIDGenerationStrategy.class.getName() );
+			DEPRECATION_LOGGER.deprecatedUuidGenerator(
+					UUIDGenerator.class.getName(),
+					UUIDGenerationStrategy.class.getName() );
 		}
 	}
 
-	public Serializable generate(SharedSessionContractImplementor session, Object obj) throws HibernateException {
+	public Object generate(SharedSessionContractImplementor session, Object obj) throws HibernateException {
 		final String sql = session.getJdbcServices().getJdbcEnvironment().getDialect().getSelectGUIDString();
 		try {
-			PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
+			final var jdbcCoordinator = session.getJdbcCoordinator();
+			final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
+			final var resourceRegistry = jdbcCoordinator.getLogicalConnection().getResourceRegistry();
 			try {
-				ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
-				final String result;
+				final var resultSet = jdbcCoordinator.getResultSetReturn().extract( statement, sql );
 				try {
-					if ( !rs.next() ) {
+					if ( !resultSet.next() ) {
 						throw new HibernateException( "The database returned no GUID identity value" );
 					}
-					result = rs.getString( 1 );
+					return resultSet.getString( 1 );
 				}
 				finally {
-					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, st );
+					resourceRegistry.release( resultSet, statement );
 				}
-				LOG.guidGenerated( result );
-				return result;
 			}
 			finally {
-				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
-				session.getJdbcCoordinator().afterStatementExecution();
+				resourceRegistry.release( statement );
+				jdbcCoordinator.afterStatementExecution();
 			}
 		}
 		catch (SQLException sqle) {

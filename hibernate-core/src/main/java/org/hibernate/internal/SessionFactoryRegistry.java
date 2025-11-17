@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
 
@@ -20,17 +18,19 @@ import org.hibernate.SessionFactory;
 import org.hibernate.engine.jndi.JndiException;
 import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.jndi.spi.JndiService;
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+
+import static org.hibernate.internal.SessionFactoryRegistryMessageLogger.REGISTRY_LOGGER;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
  * A registry of all {@link SessionFactory} instances for the same classloader as this class.
- * <p/>
+ * <p>
  * This registry is used for serialization/deserialization as well as JNDI binding.
  *
  * @author Steve Ebersole
  */
 public class SessionFactoryRegistry {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SessionFactoryRegistry.class );
 
 	/**
 	 * Singleton access
@@ -40,15 +40,15 @@ public class SessionFactoryRegistry {
 	/**
 	 * A map for mapping the UUID of a SessionFactory to the corresponding SessionFactory instance
 	 */
-	private final ConcurrentHashMap<String, SessionFactory> sessionFactoryMap = new ConcurrentHashMap<String, SessionFactory>();
+	private final ConcurrentHashMap<String, SessionFactoryImplementor> sessionFactoryMap = new ConcurrentHashMap<>();
 
 	/**
 	 * A cross-reference for mapping a SessionFactory name to its UUID.  Not all SessionFactories get named,
 	 */
-	private final ConcurrentHashMap<String, String> nameUuidXref = new ConcurrentHashMap<String, String>();
+	private final ConcurrentHashMap<String, String> nameUuidXref = new ConcurrentHashMap<>();
 
 	private SessionFactoryRegistry() {
-		LOG.debugf( "Initializing SessionFactoryRegistry : %s", this );
+		REGISTRY_LOGGER.initializingSessionFactoryRegistry( hashCode() );
 	}
 
 	/**
@@ -56,48 +56,51 @@ public class SessionFactoryRegistry {
 	 *
 	 * @param uuid The uuid under which to register the SessionFactory
 	 * @param name The optional name under which to register the SessionFactory
-	 * @param isNameAlsoJndiName Is name, if provided, also a JNDI name?
+	 * @param jndiName An optional name to use for binding the SessionFactory into JNDI
 	 * @param instance The SessionFactory instance
 	 * @param jndiService The JNDI service, so we can register a listener if name is a JNDI name
 	 */
 	public void addSessionFactory(
 			String uuid,
 			String name,
-			boolean isNameAlsoJndiName,
-			SessionFactory instance,
+			String jndiName,
+			SessionFactoryImplementor instance,
 			JndiService jndiService) {
 		if ( uuid == null ) {
 			throw new IllegalArgumentException( "SessionFactory UUID cannot be null" );
 		}
 
-		LOG.debugf( "Registering SessionFactory: %s (%s)", uuid, name == null ? "<unnamed>" : name );
+		REGISTRY_LOGGER.registeringSessionFactory( uuid, name == null ? "<unnamed>" : name );
 		sessionFactoryMap.put( uuid, instance );
 		if ( name != null ) {
 			nameUuidXref.put( name, uuid );
 		}
 
-		if ( name == null || !isNameAlsoJndiName ) {
-			LOG.debug( "Not binding SessionFactory to JNDI, no JNDI name configured" );
+		if ( jndiName == null ) {
+			REGISTRY_LOGGER.notBindingSessionFactory();
 			return;
 		}
 
-		LOG.debugf( "Attempting to bind SessionFactory [%s] to JNDI", name );
+		bindToJndi( jndiName, instance, jndiService );
+	}
 
+	private void bindToJndi(String jndiName, SessionFactoryImplementor instance, JndiService jndiService) {
 		try {
-			jndiService.bind( name, instance );
-			LOG.factoryBoundToJndiName( name );
+			REGISTRY_LOGGER.attemptingToBindFactoryToJndi( jndiName );
+			jndiService.bind( jndiName, instance );
+			REGISTRY_LOGGER.factoryBoundToJndiName( jndiName );
 			try {
-				jndiService.addListener( name, listener );
+				jndiService.addListener( jndiName, listener );
 			}
 			catch (Exception e) {
-				LOG.couldNotBindJndiListener();
+				REGISTRY_LOGGER.couldNotBindJndiListener();
 			}
 		}
 		catch (JndiNameException e) {
-			LOG.invalidJndiName( name, e );
+			REGISTRY_LOGGER.invalidJndiName( jndiName, e );
 		}
 		catch (JndiException e) {
-			LOG.unableToBindFactoryToJndi( e );
+			REGISTRY_LOGGER.unableToBindFactoryToJndi( e );
 		}
 	}
 
@@ -106,29 +109,29 @@ public class SessionFactoryRegistry {
 	 *
 	 * @param uuid The uuid
 	 * @param name The optional name
-	 * @param isNameAlsoJndiName Is name, if provided, also a JNDI name?
+	 * @param jndiName An optional name to use for binding the SessionFactory nto JNDI
 	 * @param jndiService The JNDI service
 	 */
 	public void removeSessionFactory(
 			String uuid,
 			String name,
-			boolean isNameAlsoJndiName,
+			String jndiName,
 			JndiService jndiService) {
 		if ( name != null ) {
 			nameUuidXref.remove( name );
+		}
 
-			if ( isNameAlsoJndiName ) {
-				try {
-					LOG.tracef( "Unbinding SessionFactory from JNDI : %s", name );
-					jndiService.unbind( name );
-					LOG.factoryUnboundFromJndiName( name );
-				}
-				catch (JndiNameException e) {
-					LOG.invalidJndiName( name, e );
-				}
-				catch (JndiException e) {
-					LOG.unableToUnbindFactoryFromJndi( e );
-				}
+		if ( jndiName != null ) {
+			try {
+				REGISTRY_LOGGER.attemptingToUnbindFactoryFromJndi( jndiName );
+				jndiService.unbind( jndiName );
+				REGISTRY_LOGGER.factoryUnboundFromJndiName( jndiName );
+			}
+			catch (JndiNameException e) {
+				REGISTRY_LOGGER.invalidJndiName( jndiName, e );
+			}
+			catch (JndiException e) {
+				REGISTRY_LOGGER.unableToUnbindFactoryFromJndi( e );
 			}
 		}
 
@@ -142,35 +145,33 @@ public class SessionFactoryRegistry {
 	 *
 	 * @return The SessionFactory
 	 */
-	public SessionFactory getNamedSessionFactory(String name) {
-		LOG.debugf( "Lookup: name=%s", name );
+	public SessionFactoryImplementor getNamedSessionFactory(String name) {
+		REGISTRY_LOGGER.jndiLookupByName( name );
 		final String uuid = nameUuidXref.get( name );
 		// protect against NPE -- see HHH-8428
 		return uuid == null ? null : getSessionFactory( uuid );
 	}
 
-	public SessionFactory getSessionFactory(String uuid) {
-		LOG.debugf( "Lookup: uid=%s", uuid );
-		final SessionFactory sessionFactory = sessionFactoryMap.get( uuid );
-		if ( sessionFactory == null && LOG.isDebugEnabled() ) {
-			LOG.debugf( "Not found: %s", uuid );
-			LOG.debug( sessionFactoryMap.toString() );
+	public SessionFactoryImplementor getSessionFactory(String uuid) {
+		REGISTRY_LOGGER.jndiLookupByUuid( uuid );
+		final var sessionFactory = sessionFactoryMap.get( uuid );
+		if ( sessionFactory == null && REGISTRY_LOGGER.isDebugEnabled() ) {
+			REGISTRY_LOGGER.debugf( "Not found [%s]", uuid );
+			REGISTRY_LOGGER.debug( sessionFactoryMap.toString() );
 		}
 		return sessionFactory;
 	}
 
-	public SessionFactory findSessionFactory(String uuid, String name) {
-		SessionFactory sessionFactory = getSessionFactory( uuid );
-		if ( sessionFactory == null && StringHelper.isNotEmpty( name ) ) {
-			sessionFactory = getNamedSessionFactory( name );
-		}
-		return sessionFactory;
+	public SessionFactoryImplementor findSessionFactory(String uuid, String name) {
+		final var sessionFactory = getSessionFactory( uuid );
+		return sessionFactory == null && isNotEmpty( name )
+				? getNamedSessionFactory( name )
+				: sessionFactory;
+
 	}
 
 	/**
 	 * Does this registry currently contain registrations?
-	 *
-	 * @return true/false
 	 */
 	public boolean hasRegistrations() {
 		return !sessionFactoryMap.isEmpty();
@@ -178,7 +179,7 @@ public class SessionFactoryRegistry {
 
 	public void clearRegistrations() {
 		nameUuidXref.clear();
-		for ( SessionFactory factory : sessionFactoryMap.values() ) {
+		for ( var factory : sessionFactoryMap.values() ) {
 			try {
 				factory.close();
 			}
@@ -189,51 +190,54 @@ public class SessionFactoryRegistry {
 	}
 
 	/**
-	 * Implementation of {@literal JNDI} {@link javax.naming.event.NamespaceChangeListener} contract to listener for context events
+	 * Implementation of {@literal JNDI} {@link NamespaceChangeListener} contract to listener for context events
 	 * and react accordingly if necessary
 	 */
 	private final NamespaceChangeListener listener = new NamespaceChangeListener() {
 		@Override
 		public void objectAdded(NamingEvent evt) {
-			LOG.debugf( "A factory was successfully bound to name: %s", evt.getNewBinding().getName() );
+			if ( REGISTRY_LOGGER.isDebugEnabled() ) {
+				REGISTRY_LOGGER.factoryBoundToJndi( evt.getNewBinding().getName() );
+			}
 		}
 
 		@Override
 		public void objectRemoved(NamingEvent evt) {
 			final String jndiName = evt.getOldBinding().getName();
-			LOG.factoryUnboundFromName( jndiName );
+			REGISTRY_LOGGER.factoryUnboundFromName( jndiName );
 
 			final String uuid = nameUuidXref.remove( jndiName );
+			//noinspection StatementWithEmptyBody
 			if ( uuid == null ) {
 				// serious problem... but not sure what to do yet
 			}
-			sessionFactoryMap.remove( uuid );
+			else {
+				sessionFactoryMap.remove( uuid );
+			}
 		}
 
 		@Override
-		public void objectRenamed(NamingEvent evt) {
-			final String oldJndiName = evt.getOldBinding().getName();
-			final String newJndiName = evt.getNewBinding().getName();
-
-			LOG.factoryJndiRename( oldJndiName, newJndiName );
-
+		public void objectRenamed(NamingEvent namingEvent) {
+			final String oldJndiName = namingEvent.getOldBinding().getName();
+			final String newJndiName = namingEvent.getNewBinding().getName();
+			REGISTRY_LOGGER.factoryJndiRename( oldJndiName, newJndiName );
 			final String uuid = nameUuidXref.remove( oldJndiName );
 			nameUuidXref.put( newJndiName, uuid );
 		}
 
 		@Override
-		public void namingExceptionThrown(NamingExceptionEvent evt) {
-			//noinspection ThrowableResultOfMethodCallIgnored
-			LOG.namingExceptionAccessingFactory( evt.getException() );
+		public void namingExceptionThrown(NamingExceptionEvent namingExceptionEvent) {
+			REGISTRY_LOGGER.namingExceptionAccessingFactory( namingExceptionEvent.getException() );
 		}
 	};
 
 	public static class ObjectFactoryImpl implements ObjectFactory {
 		@Override
 		public Object getObjectInstance(Object reference, Name name, Context nameCtx, Hashtable<?, ?> environment) {
-			LOG.debugf( "JNDI lookup: %s", name );
-			final String uuid = (String) ( (Reference) reference ).get( 0 ).getContent();
-			LOG.tracef( "Resolved to UUID = %s", uuid );
+			REGISTRY_LOGGER.jndiLookupByName( String.valueOf( name ) );
+			final var refAddr = ((Reference) reference).get( 0 );
+			final String uuid = (String) refAddr.getContent();
+			REGISTRY_LOGGER.resolvedToUuid( uuid );
 			return INSTANCE.getSessionFactory( uuid );
 		}
 	}

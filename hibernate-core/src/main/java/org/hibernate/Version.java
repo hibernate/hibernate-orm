@@ -1,18 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.build.AllowSysOut;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
- * Information about the Hibernate version.
+ * Information about the version of Hibernate.
  *
  * @author Steve Ebersole
  */
@@ -41,7 +38,7 @@ public final class Version {
 	 * Logs the Hibernate version (using {@link #getVersionString()}) to the logging system.
 	 */
 	public static void logVersion() {
-		Logger.getMessageLogger( CoreMessageLogger.class, Version.class.getName() ).version( getVersionString() );
+		CORE_LOGGER.version( getVersionString() );
 	}
 
 	/**

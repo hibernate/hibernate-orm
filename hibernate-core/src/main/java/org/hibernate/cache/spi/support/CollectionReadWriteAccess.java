@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.support;
 
@@ -16,18 +14,16 @@ import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 /**
- * Standard support for {@link org.hibernate.cache.spi.access.CollectionDataAccess}
- * using the {@link org.hibernate.cache.spi.access.AccessType#READ_WRITE} access type.
+ * Standard support for {@link CollectionDataAccess}
+ * using the {@link AccessType#READ_WRITE} access type.
  *
  * @author Chris Cranford
  * @author Steve Ebersole
  */
 public class CollectionReadWriteAccess extends AbstractReadWriteAccess implements CollectionDataAccess {
-	private final NavigableRole collectionRole;
-	private final Comparator versionComparator;
+	private final Comparator<?> versionComparator;
 	private final CacheKeysFactory keysFactory;
 
 	public CollectionReadWriteAccess(
@@ -37,7 +33,6 @@ public class CollectionReadWriteAccess extends AbstractReadWriteAccess implement
 			CollectionDataCachingConfig config) {
 		super( region, storageAccess );
 		this.keysFactory = keysFactory;
-		this.collectionRole = config.getNavigableRole();
 		this.versionComparator = config.getOwnerVersionComparator();
 	}
 
@@ -66,7 +61,7 @@ public class CollectionReadWriteAccess extends AbstractReadWriteAccess implement
 	}
 
 	@Override
-	protected Comparator getVersionComparator() {
+	protected Comparator<?> getVersionComparator() {
 		return versionComparator;
 	}
 

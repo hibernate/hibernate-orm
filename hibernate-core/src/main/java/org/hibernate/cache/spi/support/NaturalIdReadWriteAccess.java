@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.support;
 
@@ -18,8 +16,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Standard support for {@link org.hibernate.cache.spi.access.NaturalIdDataAccess}
- * using the {@link org.hibernate.cache.spi.access.AccessType#READ_WRITE} access type.
+ * Standard support for {@link NaturalIdDataAccess}
+ * using the {@link AccessType#READ_WRITE} access type.
  *
  * @author Steve Ebersole
  */
@@ -46,22 +44,26 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 	}
 
 	@Override
-	protected Comparator getVersionComparator() {
-		// natural-id has no comparator
+	protected Comparator<?> getVersionComparator() {
+		// natural id has no comparator
 		return null;
 	}
 
 	@Override
 	public Object generateCacheKey(
-			Object[] naturalIdValues,
+			Object naturalIdValues,
 			EntityPersister rootEntityDescriptor,
 			SharedSessionContractImplementor session) {
 		return keysFactory.createNaturalIdKey( naturalIdValues, rootEntityDescriptor, session );
 	}
 
 	@Override
-	public Object[] getNaturalIdValues(Object cacheKey) {
+	public Object getNaturalIdValues(Object cacheKey) {
 		return keysFactory.getNaturalIdValues( cacheKey );
+	}
+
+	private void put(SharedSessionContractImplementor session, Object key, Object value) {
+		getStorageAccess().putIntoCache( key, new Item( value, null, nextTimestamp() ), session );
 	}
 
 	@Override
@@ -73,13 +75,9 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value) {
 		try {
 			writeLock().lock();
-			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
+			final var item = (Lockable) getStorageAccess().getFromCache( key, session );
 			if ( item == null ) {
-				getStorageAccess().putIntoCache(
-						key,
-						new Item( value, null, getRegion().getRegionFactory().nextTimestamp() ),
-						session
-				);
+				put( session, key, value );
 				return true;
 			}
 			else {
@@ -100,25 +98,20 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 	public boolean afterUpdate(SharedSessionContractImplementor session, Object key, Object value, SoftLock lock) {
 		try {
 			writeLock().lock();
-			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
-
+			final var item = (Lockable) getStorageAccess().getFromCache( key, session );
 			if ( item != null && item.isUnlockable( lock ) ) {
-				SoftLockImpl lockItem = (SoftLockImpl) item;
+				final var lockItem = (SoftLockImpl) item;
 				if ( lockItem.wasLockedConcurrently() ) {
 					decrementLock( session, key, lockItem );
 					return false;
 				}
 				else {
-					getStorageAccess().putIntoCache(
-							key,
-							new Item( value, null, getRegion().getRegionFactory().nextTimestamp() ),
-							session
-					);
+					put( session, key, value );
 					return true;
 				}
 			}
 			else {
-				handleLockExpiry( session, key, item );
+				handleLockExpiry( session, key );
 				return false;
 			}
 		}

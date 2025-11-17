@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.container.spi;
 
 /**
- * Release-able extension to ContainedBean.  We make the split to make it
- * clear that generally speaking the callers to BeanContainer should not perform
- * the release
+ * Releasable extension to {@link ContainedBean}. We make this split to clarify
+ * that clients of {@link BeanContainer} are not usually responsible for calling
+ * {@link #initialize()} and {@link #release()}.
  *
  * @author Steve Ebersole
  */

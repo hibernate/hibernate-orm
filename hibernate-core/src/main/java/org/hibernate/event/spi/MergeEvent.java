@@ -1,22 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
-/** 
- * An event class for merge() and saveOrUpdateCopy()
+/**
+ * Event class for {@link org.hibernate.Session#merge}.
  *
  * @author Gavin King
+ *
+ * @see org.hibernate.Session#merge
  */
-public class MergeEvent extends AbstractEvent {
+public class MergeEvent extends AbstractSessionEvent {
 
 	private Object original;
-	private Serializable requestedId;
+	private Object requestedId;
 	private String entityName;
 	private Object entity;
 	private Object result;
@@ -26,22 +24,18 @@ public class MergeEvent extends AbstractEvent {
 		this.entityName = entityName;
 	}
 
-	public MergeEvent(String entityName, Object original, Serializable id, EventSource source) {
+	public MergeEvent(String entityName, Object original, Object id, EventSource source) {
 		this(entityName, original, source);
 		this.requestedId = id;
 		if ( requestedId == null ) {
-			throw new IllegalArgumentException(
-					"attempt to create merge event with null identifier"
-				);
+			throw new IllegalArgumentException( "Identifier may not be null" );
 		}
 	}
 
 	public MergeEvent(Object object, EventSource source) {
 		super(source);
 		if ( object == null ) {
-			throw new IllegalArgumentException(
-					"attempt to create merge event with null entity"
-				);
+			throw new IllegalArgumentException( "Entity may not be null" );
 		}
 		this.original = object;
 	}
@@ -54,11 +48,11 @@ public class MergeEvent extends AbstractEvent {
 		this.original = object;
 	}
 
-	public Serializable getRequestedId() {
+	public Object getRequestedId() {
 		return requestedId;
 	}
 
-	public void setRequestedId(Serializable requestedId) {
+	public void setRequestedId(Object requestedId) {
 		this.requestedId = requestedId;
 	}
 

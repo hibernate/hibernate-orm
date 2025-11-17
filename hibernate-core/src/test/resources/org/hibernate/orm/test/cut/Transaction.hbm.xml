@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+
+  Demonstrates the use of a CompositeUserType.
+
+-->
+
+<hibernate-mapping package="org.hibernate.orm.test.cut">
+
+    <class name="Transaction" table="Trnsctn">
+		<id name="id">
+			<generator class="native"/>
+		</id>
+		<property name="description" length="100" not-null="true"/>
+		<component name="value"  class="org.hibernate.orm.test.cut.MonetoryAmountUserType">
+			<property name="amount" not-null="true"/>
+			<property name="currency" not-null="true"/>
+		</component>
+	</class>
+	
+    <class name="MutualFund" table="MutualFund">
+		<id name="id">
+			<generator class="native"/>
+		</id>
+		<component name="holdings" class="org.hibernate.orm.test.cut.MonetoryAmountUserType">
+			<property name ="amount">
+			<column name="amount_millions"
+					not-null="true"
+					read="amount_millions * 1000000.0"
+					write="? / 1000000.0"/>
+			</property>
+
+			<property name="currency" not-null="true"/>
+		</component>
+	</class>	
+
+</hibernate-mapping>

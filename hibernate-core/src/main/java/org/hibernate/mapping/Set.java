@@ -1,39 +1,54 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
-import java.util.Iterator;
+import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.engine.spi.Mapping;
+import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.OrderedSetType;
+import org.hibernate.type.SetType;
+import org.hibernate.type.SortedSetType;
+import org.hibernate.type.MappingContext;
+import org.hibernate.usertype.UserCollectionType;
 
 /**
- * A set with no nullable element columns. It will have a primary key
- * consisting of all table columns (ie. key columns + element columns).
+ * A mapping model object representing a collection of type {@link java.util.List}.
+ * A set has no nullable element columns (unless it is a one-to-many association).
+ * It has a primary key consisting of all columns (i.e. key columns + element columns).
+ *
  * @author Gavin King
  */
-public class Set extends Collection {
+public non-sealed class Set extends Collection {
 	/**
-	 * @deprecated Use {@link Set#Set(MetadataBuildingContext, PersistentClass)} instead.
+	 * Used by hbm.xml binding
 	 */
-	@Deprecated
-	public Set(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
-	}
-
 	public Set(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
 	}
 
-	public void validate(Mapping mapping) throws MappingException {
-		super.validate( mapping );
+	/**
+	 * Used by annotation binding
+	 */
+	public Set(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, PersistentClass persistentClass, MetadataBuildingContext buildingContext) {
+		super( customTypeBeanResolver, persistentClass, buildingContext );
+	}
+
+	private Set(Collection original) {
+		super( original );
+	}
+
+	@Override
+	public Set copy() {
+		return new Set( this );
+	}
+
+	public void validate(MappingContext mappingContext) throws MappingException {
+		super.validate( mappingContext );
 		//for backward compatibility, disable this:
 		/*Iterator iter = getElement().getColumnIterator();
 		while ( iter.hasNext() ) {
@@ -51,51 +66,46 @@ public class Set extends Collection {
 
 	public CollectionType getDefaultCollectionType() {
 		if ( isSorted() ) {
-			return getMetadata().getTypeResolver()
-					.getTypeFactory()
-					.sortedSet( getRole(), getReferencedPropertyName(), getComparator() );
+			return new SortedSetType( getRole(), getReferencedPropertyName(), getComparator() );
 		}
 		else if ( hasOrder() ) {
-			return getMetadata().getTypeResolver()
-					.getTypeFactory()
-					.orderedSet( getRole(), getReferencedPropertyName() );
+			return new OrderedSetType( getRole(), getReferencedPropertyName() );
 		}
 		else {
-			return getMetadata().getTypeResolver()
-					.getTypeFactory()
-					.set( getRole(), getReferencedPropertyName() );
+			return new SetType( getRole(), getReferencedPropertyName() );
 		}
 	}
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
-			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
-			pk.addColumns( getKey().getColumnIterator() );
-			Iterator iter = getElement().getColumnIterator();
-			while ( iter.hasNext() ) {
-				Object selectable = iter.next();
-				if ( selectable instanceof Column ) {
-					Column col = (Column) selectable;
-					if ( !col.isNullable() ) {
-						pk.addColumn( col );
-					}
-					else {
-						return;
+			final var collectionTable = getCollectionTable();
+			var primaryKey = collectionTable.getPrimaryKey();
+			if ( primaryKey == null ) {
+				primaryKey = new PrimaryKey( getCollectionTable() );
+				primaryKey.addColumns( getKey() );
+				for ( var selectable : getElement().getSelectables() ) {
+					if ( selectable instanceof Column col ) {
+						if ( !col.isNullable() ) {
+							primaryKey.addColumn( col );
+						}
+						else {
+							return;
+						}
 					}
 				}
-			}
-			if ( pk.getColumnSpan() == getKey().getColumnSpan() ) {
-				//for backward compatibility, allow a set with no not-null
-				//element columns, using all columns in the row locator SQL
-				//TODO: create an implicit not null constraint on all cols?
-			}
-			else {
-				getCollectionTable().setPrimaryKey( pk );
+				if ( primaryKey.getColumnSpan() != getKey().getColumnSpan() ) {
+					collectionTable.setPrimaryKey( primaryKey );
+				}
+//				else {
+					//for backward compatibility, allow a set with no not-null
+					//element columns, using all columns in the row locator SQL
+					//TODO: create an implicit not null constraint on all cols?
+//				}
 			}
 		}
-		else {
+//		else {
 			//create an index on the key columns??
-		}
+//		}
 	}
 
 	public Object accept(ValueVisitor visitor) {

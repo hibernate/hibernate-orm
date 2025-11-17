@@ -1,0 +1,1 @@
+"xmlforest(expressionOrPredicate ("as" identifier)? ("," expressionOrPredicate ("as" identifier)?)* ")"

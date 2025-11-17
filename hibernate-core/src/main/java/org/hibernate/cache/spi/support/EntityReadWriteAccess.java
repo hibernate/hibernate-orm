@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.support;
 
@@ -19,14 +17,14 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Standard support for {@link org.hibernate.cache.spi.access.EntityDataAccess}
- * using the {@link org.hibernate.cache.spi.access.AccessType#READ_WRITE} access type.
+ * Standard support for {@link EntityDataAccess}
+ * using the {@link AccessType#READ_WRITE} access type.
  *
  * @author Steve Ebersole
  */
 public class EntityReadWriteAccess extends AbstractReadWriteAccess implements EntityDataAccess {
 	private final CacheKeysFactory keysFactory;
-	private final Comparator versionComparator;
+	private final Comparator<?> versionComparator;
 
 	public EntityReadWriteAccess(
 			DomainDataRegion domainDataRegion,
@@ -35,9 +33,12 @@ public class EntityReadWriteAccess extends AbstractReadWriteAccess implements En
 			EntityDataCachingConfig entityAccessConfig) {
 		super( domainDataRegion, storageAccess );
 		this.keysFactory = keysFactory;
-		this.versionComparator = entityAccessConfig.getVersionComparatorAccess() == null
-				? null
-				: entityAccessConfig.getVersionComparatorAccess().get();
+		final var versionComparatorAccess =
+				entityAccessConfig.getVersionComparatorAccess();
+		this.versionComparator =
+				versionComparatorAccess == null
+						? null
+						: versionComparatorAccess.get();
 	}
 
 	@Override
@@ -51,7 +52,7 @@ public class EntityReadWriteAccess extends AbstractReadWriteAccess implements En
 	}
 
 	@Override
-	protected Comparator getVersionComparator() {
+	protected Comparator<?> getVersionComparator() {
 		return versionComparator;
 	}
 
@@ -69,6 +70,10 @@ public class EntityReadWriteAccess extends AbstractReadWriteAccess implements En
 		return keysFactory.getEntityId( cacheKey );
 	}
 
+	private void put(SharedSessionContractImplementor session, Object key, Object value, Object version) {
+		getStorageAccess().putIntoCache( key, new Item( value, version, nextTimestamp() ), session );
+	}
+
 	@Override
 	public boolean insert(
 			SharedSessionContractImplementor session,
@@ -82,13 +87,9 @@ public class EntityReadWriteAccess extends AbstractReadWriteAccess implements En
 	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value, Object version) {
 		try {
 			writeLock().lock();
-			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
+			final var item = (Lockable) getStorageAccess().getFromCache( key, session );
 			if ( item == null ) {
-				getStorageAccess().putIntoCache(
-						key,
-						new Item( value, version, getRegion().getRegionFactory().nextTimestamp() ),
-						session
-				);
+				put( session, key, value, version );
 				return true;
 			}
 			else {
@@ -123,22 +124,18 @@ public class EntityReadWriteAccess extends AbstractReadWriteAccess implements En
 			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
 
 			if ( item != null && item.isUnlockable( lock ) ) {
-				SoftLockImpl lockItem = (SoftLockImpl) item;
+				final var lockItem = (SoftLockImpl) item;
 				if ( lockItem.wasLockedConcurrently() ) {
 					decrementLock( session, key, lockItem );
 					return false;
 				}
 				else {
-					getStorageAccess().putIntoCache(
-							key,
-							new Item( value, currentVersion, getRegion().getRegionFactory().nextTimestamp() ),
-							session
-					);
+					put( session, key, value, currentVersion );
 					return true;
 				}
 			}
 			else {
-				handleLockExpiry(session, key, item );
+				handleLockExpiry( session, key );
 				return false;
 			}
 		}

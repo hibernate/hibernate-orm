@@ -1,39 +1,36 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.internal.bytebuddy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-import org.hibernate.bytecode.internal.bytebuddy.BasicProxyFactoryImpl;
-import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
-import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.jupiter.api.Test;
 
-@TestForIssue(jiraKey = "HHH-12786")
 public class ByteBuddyBasicProxyFactoryTest {
 
-	private static final BasicProxyFactoryImpl BASIC_PROXY_FACTORY = new BasicProxyFactoryImpl( Entity.class, new Class[0], new ByteBuddyState() );
+	private static final BasicProxyFactoryImpl BASIC_PROXY_FACTORY = new BasicProxyFactoryImpl( Entity.class, null, new ByteBuddyState() );
 
 	@Test
+	@JiraKey(value = "HHH-12786")
 	public void testEqualsHashCode() {
 		Object entityProxy = BASIC_PROXY_FACTORY.getProxy();
 
 		assertTrue( entityProxy.equals( entityProxy ) );
-		assertNotNull( entityProxy.hashCode() );
+		assertNotEquals(0, entityProxy.hashCode() );
 
 		Object otherEntityProxy = BASIC_PROXY_FACTORY.getProxy();
 		assertFalse( entityProxy.equals( otherEntityProxy ) );
 	}
 
 	@Test
+	@JiraKey(value = "HHH-12786")
 	public void testToString() {
 		Object entityProxy = BASIC_PROXY_FACTORY.getProxy();
 
@@ -41,6 +38,7 @@ public class ByteBuddyBasicProxyFactoryTest {
 	}
 
 	@Test
+	@JiraKey(value = "HHH-12786")
 	public void testGetterSetter() {
 		Entity entityProxy = (Entity) BASIC_PROXY_FACTORY.getProxy();
 
@@ -54,10 +52,21 @@ public class ByteBuddyBasicProxyFactoryTest {
 	}
 
 	@Test
+	@JiraKey(value = "HHH-12786")
 	public void testNonGetterSetterMethod() {
 		Entity entityProxy = (Entity) BASIC_PROXY_FACTORY.getProxy();
 
 		assertNull( entityProxy.otherMethod() );
+	}
+
+	@Test
+	@JiraKey(value = "HHH-13915")
+	public void testProxiesDoNotShareState() {
+		Entity entityAProxy = (Entity) BASIC_PROXY_FACTORY.getProxy();
+		entityAProxy.setString( "John Irving" );
+
+		Entity entityBProxy = (Entity) BASIC_PROXY_FACTORY.getProxy();
+		assertNull( entityBProxy.getString() );
 	}
 
 	public static class Entity {

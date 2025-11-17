@@ -1,48 +1,51 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.Type;
+import org.hibernate.type.OneToOneType;
+import org.hibernate.type.SpecialOneToOneType;
 
 /**
- * A one-to-one association mapping
+ * A mapping model object representing a {@linkplain jakarta.persistence.OneToOne many-to-one association}.
+ *
  * @author Gavin King
  */
-public class OneToOne extends ToOne {
+public final class OneToOne extends ToOne {
 
 	private boolean constrained;
 	private ForeignKeyDirection foreignKeyType;
 	private KeyValue identifier;
 	private String propertyName;
-	private String entityName;
-
-	/**
-	 * @deprecated Use {@link OneToOne#OneToOne(MetadataBuildingContext, Table, PersistentClass)} instead.
-	 */
-	@Deprecated
-	public OneToOne(MetadataImplementor metadata, Table table, PersistentClass owner) throws MappingException {
-		super( metadata, table );
-		this.identifier = owner.getKey();
-		this.entityName = owner.getEntityName();
-	}
+	private final String entityName;
+	private String mappedByProperty;
 
 	public OneToOne(MetadataBuildingContext buildingContext, Table table, PersistentClass owner) throws MappingException {
 		super( buildingContext, table );
 		this.identifier = owner.getKey();
 		this.entityName = owner.getEntityName();
+	}
+
+	private OneToOne(OneToOne original) {
+		super( original );
+		this.constrained = original.constrained;
+		this.foreignKeyType = original.foreignKeyType;
+		this.identifier = original.identifier == null ? null : (KeyValue) original.identifier.copy();
+		this.propertyName = original.propertyName;
+		this.entityName = original.entityName;
+		this.mappedByProperty = original.mappedByProperty;
+	}
+
+	@Override
+	public OneToOne copy() {
+		return new OneToOne( this );
 	}
 
 	public String getPropertyName() {
@@ -52,59 +55,60 @@ public class OneToOne extends ToOne {
 	public void setPropertyName(String propertyName) {
 		this.propertyName = propertyName==null ? null : propertyName.intern();
 	}
-	
+
 	public String getEntityName() {
 		return entityName;
 	}
 
-	public void setEntityName(String propertyName) {
-		this.entityName = entityName==null ? null : entityName.intern();
-	}
-	
-	public Type getType() throws MappingException {
-		if ( getColumnIterator().hasNext() ) {
-			return getMetadata().getTypeResolver().getTypeFactory().specialOneToOne(
-					getReferencedEntityName(), 
-					foreignKeyType,
-					referenceToPrimaryKey, 
-					referencedPropertyName,
+	public OneToOneType getType() throws MappingException {
+		if ( getColumnSpan()>0 ) {
+			return new SpecialOneToOneType(
+					getTypeConfiguration(),
+					getReferencedEntityName(),
+					getForeignKeyType(),
+					isReferenceToPrimaryKey(),
+					getReferencedPropertyName(),
 					isLazy(),
 					isUnwrapProxy(),
-					entityName,
-					propertyName,
-					constrained
+					getEntityName(),
+					getPropertyName(),
+					isConstrained()
 			);
 		}
 		else {
-			return getMetadata().getTypeResolver().getTypeFactory().oneToOne(
-					getReferencedEntityName(), 
-					foreignKeyType,
-					referenceToPrimaryKey, 
-					referencedPropertyName,
+			return new OneToOneType(
+					getTypeConfiguration(),
+					getReferencedEntityName(),
+					getForeignKeyType(),
+					isReferenceToPrimaryKey(),
+					getReferencedPropertyName(),
 					isLazy(),
 					isUnwrapProxy(),
 					entityName,
 					propertyName,
-					constrained
+					isConstrained()
 			);
 		}
 	}
 
-	public void createForeignKey() throws MappingException {
-		if ( constrained && referencedPropertyName==null) {
-			//TODO: handle the case of a foreign key to something other than the pk
-			createForeignKeyOfEntity( ( (EntityType) getType() ).getAssociatedEntityName() );
+	@Override
+	public void createUniqueKey(MetadataBuildingContext context) {
+		if ( !hasFormula() && getColumnSpan()>0  ) {
+			getTable().createUniqueKey( getConstraintColumns(), context );
 		}
 	}
 
-	public java.util.List getConstraintColumns() {
-		ArrayList list = new ArrayList();
-		Iterator iter = identifier.getColumnIterator();
-		while ( iter.hasNext() ) {
-			list.add( iter.next() );
-		}
-		return list;
+	@Override
+	public List<Selectable> getVirtualSelectables() {
+		final var selectables = super.getVirtualSelectables();
+		return selectables.isEmpty() ? identifier.getSelectables() : selectables;
 	}
+
+	public List<Column> getConstraintColumns() {
+		final var columns = super.getColumns();
+		return columns.isEmpty() ? identifier.getColumns() : columns;
+	}
+
 	/**
 	 * Returns the constrained.
 	 * @return boolean
@@ -163,16 +167,24 @@ public class OneToOne extends ToOne {
 
 	@Override
 	public boolean isSame(ToOne other) {
-		return other instanceof OneToOne && isSame( (OneToOne) other );
+		return other instanceof OneToOne oneToOne
+			&& isSame( oneToOne );
 	}
 
 	public boolean isSame(OneToOne other) {
 		return super.isSame( other )
-				&& Objects.equals( foreignKeyType, other.foreignKeyType )
-				&& isSame( identifier, other.identifier )
-				&& Objects.equals( propertyName, other.propertyName )
-				&& Objects.equals( entityName, other.entityName )
-				&& constrained == other.constrained;
+			&& Objects.equals( foreignKeyType, other.foreignKeyType )
+			&& isSame( identifier, other.identifier )
+			&& Objects.equals( propertyName, other.propertyName )
+			&& Objects.equals( entityName, other.entityName )
+			&& constrained == other.constrained;
 	}
-	
+
+	public String getMappedByProperty() {
+		return mappedByProperty;
+	}
+
+	public void setMappedByProperty(String mappedByProperty) {
+		this.mappedByProperty = mappedByProperty;
+	}
 }

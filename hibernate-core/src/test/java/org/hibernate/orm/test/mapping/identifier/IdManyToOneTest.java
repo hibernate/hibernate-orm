@@ -1,0 +1,213 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.orm.test.mapping.identifier;
+
+import java.io.Serializable;
+import java.util.Objects;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+
+import org.hibernate.annotations.processing.Exclude;
+
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+/**
+ * @author Vlad Mihalcea
+ */
+@Exclude
+@Jpa(annotatedClasses = {
+		IdManyToOneTest.Book.class,
+		IdManyToOneTest.Author.class,
+		IdManyToOneTest.Publisher.class
+})
+public class IdManyToOneTest {
+
+	@Test
+	public void test(EntityManagerFactoryScope scope) {
+		Author author = new Author();
+		Publisher publisher = new Publisher();
+
+		scope.inTransaction( entityManager -> {
+			author.setName("Vlad Mihalcea");
+			entityManager.persist(author);
+
+			publisher.setName("Amazon");
+			entityManager.persist(publisher);
+
+			Book book = new Book();
+			book.setAuthor(author);
+			book.setPublisher(publisher);
+			book.setTitle("High-Performance Java Persistence");
+			entityManager.persist(book);
+		});
+
+		scope.inTransaction( entityManager -> {
+			//tag::identifiers-composite-id-fetching-example[]
+			Book book = entityManager.find(Book.class, new Book(
+				author,
+				publisher,
+				"High-Performance Java Persistence"
+			));
+
+			assertEquals("Vlad Mihalcea", book.getAuthor().getName());
+			//end::identifiers-composite-id-fetching-example[]
+		});
+
+	}
+
+	//tag::identifiers-composite-id-mapping-example[]
+	@Entity(name = "Book")
+	public static class Book implements Serializable {
+
+		@Id
+		@ManyToOne(fetch = FetchType.LAZY)
+		private Author author;
+
+		@Id
+		@ManyToOne(fetch = FetchType.LAZY)
+		private Publisher publisher;
+
+		@Id
+		private String title;
+
+		public Book(Author author, Publisher publisher, String title) {
+			this.author = author;
+			this.publisher = publisher;
+			this.title = title;
+		}
+
+		private Book() {
+		}
+
+		//Getters and setters are omitted for brevity
+	//end::identifiers-composite-id-mapping-example[]
+
+		public Author getAuthor() {
+			return author;
+		}
+
+		public void setAuthor(Author author) {
+			this.author = author;
+		}
+
+		public Publisher getPublisher() {
+			return publisher;
+		}
+
+		public void setPublisher(Publisher publisher) {
+			this.publisher = publisher;
+		}
+
+		public String getTitle() {
+			return title;
+		}
+
+		public void setTitle(String title) {
+			this.title = title;
+		}
+		//tag::identifiers-composite-id-mapping-example[]
+
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Book book = (Book) o;
+			return Objects.equals(author, book.author) &&
+					Objects.equals(publisher, book.publisher) &&
+					Objects.equals(title, book.title);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(author, publisher, title);
+		}
+	}
+
+	@Entity(name = "Author")
+	public static class Author implements Serializable {
+
+		@Id
+		private String name;
+
+		//Getters and setters are omitted for brevity
+	//end::identifiers-composite-id-mapping-example[]
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		//tag::identifiers-composite-id-mapping-example[]
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Author author = (Author) o;
+			return Objects.equals(name, author.name);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(name);
+		}
+	}
+
+	@Entity(name = "Publisher")
+	public static class Publisher implements Serializable {
+
+		@Id
+		private String name;
+
+		//Getters and setters are omitted for brevity
+	//end::identifiers-composite-id-mapping-example[]
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+	//tag::identifiers-composite-id-mapping-example[]
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Publisher publisher = (Publisher) o;
+			return Objects.equals(name, publisher.name);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(name);
+		}
+	}
+	//end::identifiers-composite-id-mapping-example[]
+}

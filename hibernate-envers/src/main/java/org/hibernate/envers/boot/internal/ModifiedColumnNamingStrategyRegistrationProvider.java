@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.boot.internal;
 
@@ -21,11 +19,11 @@ import org.hibernate.envers.boot.spi.ModifiedColumnNamingStrategy;
  */
 public class ModifiedColumnNamingStrategyRegistrationProvider implements StrategyRegistrationProvider {
 	@Override
-	public Iterable<StrategyRegistration> getStrategyRegistrations() {
-		final List<StrategyRegistration> registrations = new ArrayList<>();
+	public Iterable<StrategyRegistration<?>> getStrategyRegistrations() {
+		final List<StrategyRegistration<?>> registrations = new ArrayList<>();
 
 		registrations.add(
-				new SimpleStrategyRegistrationImpl(
+				new SimpleStrategyRegistrationImpl<>(
 						ModifiedColumnNamingStrategy.class,
 						LegacyModifiedColumnNamingStrategy.class,
 						"default", "legacy"
@@ -33,7 +31,7 @@ public class ModifiedColumnNamingStrategyRegistrationProvider implements Strateg
 		);
 
 		registrations.add(
-				new SimpleStrategyRegistrationImpl(
+				new SimpleStrategyRegistrationImpl<>(
 						ModifiedColumnNamingStrategy.class,
 						ImprovedModifiedColumnNamingStrategy.class,
 						"improved"

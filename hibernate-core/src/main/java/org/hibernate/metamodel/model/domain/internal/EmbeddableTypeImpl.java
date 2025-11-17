@@ -1,60 +1,117 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
+import java.util.Collection;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.graph.internal.SubGraphImpl;
-import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
-import org.hibernate.type.CompositeType;
+import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
+import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmEmbeddableDomainType;
+import org.hibernate.type.descriptor.java.JavaType;
+
+import static jakarta.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRIBUTE;
+import static jakarta.persistence.metamodel.Type.PersistenceType.EMBEDDABLE;
 
 /**
- * Standard Hibernate implementation of JPA's {@link javax.persistence.metamodel.EmbeddableType}
- * contract
+ * Implementation of {@link jakarta.persistence.metamodel.EmbeddableType}.
  *
  * @author Emmanuel Bernard
- * @author Steve Ebersole`
+ * @author Steve Ebersole
  */
 public class EmbeddableTypeImpl<J>
 		extends AbstractManagedType<J>
-		implements EmbeddedTypeDescriptor<J>, Serializable {
-
-	private final ManagedTypeDescriptor<?> parent;
-	private final CompositeType hibernateType;
+		implements SqmEmbeddableDomainType<J>, Serializable {
+	private final boolean isDynamic;
+	private final EmbeddedDiscriminatorSqmPathSource<?> discriminatorPathSource;
 
 	public EmbeddableTypeImpl(
-			Class<J> javaType,
-			ManagedTypeDescriptor<?> parent,
-			CompositeType hibernateType,
-			SessionFactoryImplementor sessionFactory) {
-		super( javaType, null, null, sessionFactory );
-		this.parent = parent;
-		this.hibernateType = hibernateType;
+			JavaType<J> javaType,
+			ManagedDomainType<? super J> superType,
+			DomainType<?> discriminatorType,
+			boolean isDynamic,
+			JpaMetamodelImplementor domainMetamodel) {
+		super( javaType.getTypeName(), javaType, superType, domainMetamodel );
+		this.isDynamic = isDynamic;
+		discriminatorPathSource =
+				discriminatorType == null ? null
+						: new EmbeddedDiscriminatorSqmPathSource<>( discriminatorType, this );
+	}
+
+	@Override
+	public Class<J> getBindableJavaType() {
+		return getJavaType();
 	}
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return PersistenceType.EMBEDDABLE;
-	}
-
-	public ManagedTypeDescriptor<?> getParent() {
-		return parent;
-	}
-
-	public CompositeType getHibernateType() {
-		return hibernateType;
+		return EMBEDDABLE;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <S extends J> SubGraphImplementor<S> makeSubGraph(Class<S> subType) {
-		return new SubGraphImpl( this, true, sessionFactory() );
+	public int getTupleLength() {
+		int count = 0;
+		for ( var attribute : getSingularAttributes() ) {
+			count += ( (SqmDomainType<?>) attribute.getType() ).getTupleLength();
+		}
+		return count;
+	}
+
+	@Override
+	public Collection<? extends SqmEmbeddableDomainType<? extends J>> getSubTypes() {
+		//noinspection unchecked
+		return (Collection<? extends SqmEmbeddableDomainType<? extends J>>) super.getSubTypes();
+	}
+
+	@Override
+	public String getPathName() {
+		return getTypeName();
+	}
+
+//	@Override
+//	public SqmEmbeddableDomainType<J> getPathType() {
+//		return this;
+//	}
+
+//	@Override
+//	public SqmEmbeddableDomainType<J> getSqmType() {
+//		return this;
+//	}
+
+	@Override
+	public SqmPathSource<?> findSubPathSource(String name) {
+		final var attribute = getPathType().findAttribute( name );
+		if ( attribute != null ) {
+			return (SqmPathSource<?>) attribute;
+		}
+
+		final var subtypeAttribute = findSubTypesAttribute( name );
+		if ( subtypeAttribute != null ) {
+			return (SqmPathSource<?>) subtypeAttribute;
+		}
+
+		if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {
+			return discriminatorPathSource;
+		}
+
+		return null;
+	}
+
+	@Override
+	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+		throw new UnsupportedMappingException( "EmbeddableType cannot be used to create an SqmPath" );
+	}
+
+	@Override
+	public BindableType getBindableType() {
+		return SINGULAR_ATTRIBUTE;
 	}
 }

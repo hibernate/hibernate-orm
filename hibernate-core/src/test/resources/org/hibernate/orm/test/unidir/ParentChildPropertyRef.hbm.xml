@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+	package="org.hibernate.orm.test.unidir">
+
+	<class name="Parent" table="parent_with_prop_ref">
+		<id name="name"/>
+        <property name="ssn" unique="true"/>
+		<list name="children" cascade="persist,merge">
+			<key column="parentSsn" not-null="true" property-ref="ssn"/>
+			<list-index column="sibling"/>
+			<one-to-many class="Child"/>
+		</list>
+	</class>
+	
+	<class name="Child">
+		<id name="name"/>
+		<property name="age" not-null="true"/>
+	</class>
+
+</hibernate-mapping>

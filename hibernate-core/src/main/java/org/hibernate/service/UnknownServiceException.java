@@ -1,26 +1,24 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.service;
-import org.hibernate.HibernateException;
+import org.hibernate.service.spi.ServiceException;
 
 /**
  * Indicates that an unknown service was requested from the registry.
  *
  * @author Steve Ebersole
  */
-public class UnknownServiceException extends HibernateException {
-	public final Class serviceRole;
+public class UnknownServiceException extends ServiceException {
+	public final Class<?> serviceRole;
 
-	public UnknownServiceException(Class serviceRole) {
+	public UnknownServiceException(Class<?> serviceRole) {
 		super( "Unknown service requested [" + serviceRole.getName() + "]" );
 		this.serviceRole = serviceRole;
 	}
 
-	public Class getServiceRole() {
+	public Class<?> getServiceRole() {
 		return serviceRole;
 	}
 }

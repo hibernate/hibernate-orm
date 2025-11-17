@@ -1,53 +1,73 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.naming.ObjectNameNormalizer;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.Table;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
+import org.hibernate.generator.GeneratorCreationContext;
+
+import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHolder;
+import static org.hibernate.id.PersistentIdentifierGenerator.CATALOG;
+import static org.hibernate.id.PersistentIdentifierGenerator.PK;
+import static org.hibernate.id.PersistentIdentifierGenerator.SCHEMA;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.internal.util.StringHelper.splitAtCommas;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 
 /**
- * <b>increment</b><br>
- * <br>
- * An <tt>IdentifierGenerator</tt> that returns a <tt>long</tt>, constructed by
- * counting from the maximum primary key value at startup. Not safe for use in a
- * cluster!<br>
- * <br>
- * Mapping parameters supported, but not usually needed: tables, column.
- * (The tables parameter specified a comma-separated list of table names.)
+ * An {@link IdentifierGenerator} that returns a {@code long}, constructed by counting
+ * from the maximum primary key value obtained by querying the table or tables at startup.
+ * <p>
+ * This id generator is not safe unless a single VM has exclusive access to the database.
+ * <p>
+ * Mapping parameters supported, but not usually needed: {@value #TABLES}, {@value #COLUMN}.
+ * (The {@value #TABLES} parameter specifies a comma-separated list of table names.)
  *
  * @author Gavin King
  * @author Steve Ebersole
  * @author Brett Meyer
+ *
+ * @implNote This also implements the {@code increment} generation type in {@code hbm.xml} mappings.
  */
-public class IncrementGenerator implements IdentifierGenerator, Configurable {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IncrementGenerator.class );
+public class IncrementGenerator implements IdentifierGenerator {
 
-	private Class returnClass;
+	/**
+	 * A parameter identifying the column holding the id.
+	 */
+	public static final String COLUMN = "column";
+	/**
+	 * A parameter specifying a list of tables over which the generated id should be unique.
+	 */
+	public static final String TABLES = "tables";
+
+	private Class<?> returnClass;
+	private String column;
+	private List<QualifiedTableName> physicalTableNames;
 	private String sql;
 
 	private IntegralDataTypeHolder previousValueHolder;
 
+	/**
+	 * @deprecated Exposed for tests only.
+	 */
+	@Deprecated
+	public String[] getAllSqlForTests() {
+		return new String[] { sql };
+	}
+
 	@Override
-	public synchronized Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
+	public synchronized Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
 		if ( sql != null ) {
 			initializePreviousValueHolder( session );
 		}
@@ -55,80 +75,84 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 	}
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		returnClass = type.getReturnedClass();
+	public void configure(GeneratorCreationContext creationContext, Properties parameters) throws MappingException {
+		returnClass = creationContext.getType().getReturnedClass();
 
-		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
-		final ObjectNameNormalizer normalizer =
-				(ObjectNameNormalizer) params.get( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER );
+		final var jdbcEnvironment = creationContext.getDatabase().getJdbcEnvironment();
+		final var identifierHelper = jdbcEnvironment.getIdentifierHelper();
 
-		String column = params.getProperty( "column" );
-		if ( column == null ) {
-			column = params.getProperty( PersistentIdentifierGenerator.PK );
+		column = identifierHelper.normalizeQuoting( identifierHelper.toIdentifier( getString( COLUMN, PK, parameters ) ) )
+				.render( jdbcEnvironment.getDialect() );
+
+		final Identifier catalog = identifierHelper.toIdentifier( getString( CATALOG, parameters ) );
+		final Identifier schema =  identifierHelper.toIdentifier( getString( SCHEMA, parameters ) );
+
+		physicalTableNames = new ArrayList<>();
+		for ( String tableName : splitAtCommas( getString( TABLES, PersistentIdentifierGenerator.TABLES, parameters ) ) ) {
+			physicalTableNames.add( new QualifiedTableName( catalog, schema, identifierHelper.toIdentifier( tableName ) ) );
 		}
-		column = normalizer.normalizeIdentifierQuoting( column ).render( jdbcEnvironment.getDialect() );
+	}
 
-		String tableList = params.getProperty( "tables" );
-		if ( tableList == null ) {
-			tableList = params.getProperty( PersistentIdentifierGenerator.TABLES );
-		}
-		String[] tables = StringHelper.split( ", ", tableList );
-
-		final String schema = normalizer.toDatabaseIdentifierText(
-				params.getProperty( PersistentIdentifierGenerator.SCHEMA )
-		);
-		final String catalog = normalizer.toDatabaseIdentifierText(
-				params.getProperty( PersistentIdentifierGenerator.CATALOG )
-		);
-
-		StringBuilder buf = new StringBuilder();
-		for ( int i = 0; i < tables.length; i++ ) {
-			final String tableName = normalizer.toDatabaseIdentifierText( tables[i] );
-			if ( tables.length > 1 ) {
-				buf.append( "select max(" ).append( column ).append( ") as mx from " );
+	@Override
+	public void initialize(SqlStringGenerationContext context) {
+		final var union = new StringBuilder();
+		for ( int i = 0; i < physicalTableNames.size(); i++ ) {
+			final String tableName = context.format( physicalTableNames.get( i ) );
+			if ( physicalTableNames.size() > 1 ) {
+				union.append( "select max(" ).append( column ).append( ") as mx from " );
 			}
-			buf.append( Table.qualify( catalog, schema, tableName ) );
-			if ( i < tables.length - 1 ) {
-				buf.append( " union " );
+			union.append( tableName );
+			final var dialect = context.getDialect();
+			if ( i < physicalTableNames.size() - 1 ) {
+				union.append( " union " );
+				if ( dialect.supportsUnionAll() ) {
+					union.append( "all " );
+				}
 			}
 		}
-		if ( tables.length > 1 ) {
-			buf.insert( 0, "( " ).append( " ) ids_" );
-			column = "ids_.mx";
+		String maxColumn;
+		if ( physicalTableNames.size() > 1 ) {
+			union.insert( 0, "( " ).append( " ) ids_" );
+			maxColumn = "ids_.mx";
+		}
+		else {
+			maxColumn = column;
 		}
 
-		sql = "select max(" + column + ") from " + buf.toString();
+		sql = "select max(" + maxColumn + ") from " + union;
 	}
 
 	private void initializePreviousValueHolder(SharedSessionContractImplementor session) {
-		previousValueHolder = IdentifierGeneratorHelper.getIntegralDataTypeHolder( returnClass );
+		previousValueHolder = getIntegralDataTypeHolder( returnClass );
 
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Fetching initial value: %s", sql );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.tracef( "Fetching initial value: %s", sql );
 		}
 		try {
-			PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
+			final var jdbcCoordinator = session.getJdbcCoordinator();
+			final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
+			final var resourceRegistry = jdbcCoordinator.getLogicalConnection().getResourceRegistry();
 			try {
-				ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
+				final var resultSet = jdbcCoordinator.getResultSetReturn().extract( statement, sql );
 				try {
-					if ( rs.next() ) {
-						previousValueHolder.initialize( rs, 0L ).increment();
+					if ( resultSet.next() ) {
+						previousValueHolder.initialize( resultSet, 0L ).increment();
 					}
 					else {
 						previousValueHolder.initialize( 1L );
 					}
 					sql = null;
-					if ( LOG.isDebugEnabled() ) {
-						LOG.debugf( "First free id: %s", previousValueHolder.makeValue() );
+					if ( CORE_LOGGER.isTraceEnabled() ) {
+						CORE_LOGGER.tracef( "First free id: %s", previousValueHolder.makeValue() );
 					}
 				}
 				finally {
-					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, st );
+					resourceRegistry.release( resultSet, statement );
 				}
 			}
 			finally {
-				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
-				session.getJdbcCoordinator().afterStatementExecution();
+				resourceRegistry.release( statement );
+				jdbcCoordinator.afterStatementExecution();
 			}
 		}
 		catch (SQLException sqle) {

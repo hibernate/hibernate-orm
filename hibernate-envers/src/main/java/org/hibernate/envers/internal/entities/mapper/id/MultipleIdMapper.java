@@ -1,27 +1,36 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.id;
+
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.envers.internal.entities.PropertyData;
+import org.hibernate.mapping.Component;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.spi.CompositeTypeImplementor;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.Session;
-import org.hibernate.envers.internal.entities.PropertyData;
-import org.hibernate.service.ServiceRegistry;
-
 /**
+ * An implementation of an identifier mapper for {@link jakarta.persistence.IdClass} or multiple
+ * {@link jakarta.persistence.Id} identifier mappings.
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford
  */
 public class MultipleIdMapper extends AbstractCompositeIdMapper implements SimpleIdMapperBuilder {
-	public MultipleIdMapper(Class compositeIdClass, ServiceRegistry serviceRegistry) {
-		super( compositeIdClass, serviceRegistry );
+	public MultipleIdMapper(Component component) {
+		super( component );
+	}
+
+	private MultipleIdMapper(CompositeTypeImplementor compositeType, ServiceRegistry serviceRegistry) {
+		super( serviceRegistry, compositeType );
 	}
 
 	@Override
@@ -30,11 +39,17 @@ public class MultipleIdMapper extends AbstractCompositeIdMapper implements Simpl
 	}
 
 	@Override
-	public void mapToMapFromId(Session session, Map<String, Object> data, Object obj) {
-		if ( compositeIdClass.isInstance( obj ) ) {
-			for ( Map.Entry<PropertyData, SingleIdMapper> entry : ids.entrySet() ) {
+	public void mapToMapFromId(SharedSessionContractImplementor session, Map<String, Object> data, Object obj) {
+		if ( compositeType.getReturnedClass().isInstance( obj ) ) {
+			if ( compositeType.isEmbedded() ) {
+				final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( obj );
+				if ( lazyInitializer != null ) {
+					obj = lazyInitializer.getInternalIdentifier();
+				}
+			}
+			for ( Map.Entry<PropertyData, AbstractIdMapper> entry : ids.entrySet() ) {
 				final PropertyData propertyData = entry.getKey();
-				final SingleIdMapper idMapper = entry.getValue();
+				final AbstractIdMapper idMapper = entry.getValue();
 
 				if ( propertyData.getVirtualReturnClass() == null ) {
 					idMapper.mapToMapFromEntity( data, obj );
@@ -58,6 +73,12 @@ public class MultipleIdMapper extends AbstractCompositeIdMapper implements Simpl
 
 	@Override
 	public void mapToMapFromEntity(Map<String, Object> data, Object obj) {
+		if ( compositeType.isEmbedded() ) {
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( obj );
+			if ( lazyInitializer != null ) {
+				obj = lazyInitializer.getInternalIdentifier();
+			}
+		}
 		for ( IdMapper idMapper : ids.values() ) {
 			idMapper.mapToMapFromEntity( data, obj );
 		}
@@ -75,7 +96,7 @@ public class MultipleIdMapper extends AbstractCompositeIdMapper implements Simpl
 
 	@Override
 	public IdMapper prefixMappedProperties(String prefix) {
-		final MultipleIdMapper ret = new MultipleIdMapper( compositeIdClass, getServiceRegistry() );
+		final MultipleIdMapper ret = new MultipleIdMapper( compositeType, getServiceRegistry() );
 
 		for ( PropertyData propertyData : ids.keySet() ) {
 			final String propertyName = propertyData.getName();
@@ -91,8 +112,8 @@ public class MultipleIdMapper extends AbstractCompositeIdMapper implements Simpl
 			return null;
 		}
 
-		final Object compositeId = instantiateCompositeId();
-		for ( SingleIdMapper mapper : ids.values() ) {
+		final Object compositeId = instantiateCompositeId( null );
+		for ( AbstractIdMapper mapper : ids.values() ) {
 			mapper.mapToEntityFromEntity( compositeId, data );
 		}
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.extract.internal;
 
@@ -16,35 +14,28 @@ import org.hibernate.tool.schema.extract.spi.ForeignKeyInformation;
  * @author Steve Ebersole
  */
 public class ForeignKeyInformationImpl implements ForeignKeyInformation {
-	private final Identifier fkIdentifier;
+	private final Identifier foreignKeyIdentifier;
 	private final List<ColumnReferenceMapping> columnMappingList;
 
 	public ForeignKeyInformationImpl(
-			Identifier fkIdentifier,
+			Identifier foreignKeyIdentifier,
 			List<ColumnReferenceMapping> columnMappingList) {
-		this.fkIdentifier = fkIdentifier;
+		this.foreignKeyIdentifier = foreignKeyIdentifier;
 		this.columnMappingList = columnMappingList;
 	}
 
 	@Override
 	public Identifier getForeignKeyIdentifier() {
-		return fkIdentifier;
+		return foreignKeyIdentifier;
 	}
 
 	@Override
 	public Iterable<ColumnReferenceMapping> getColumnReferenceMappings() {
 		return columnMappingList;
 	}
-	
-	public static class ColumnReferenceMappingImpl implements ColumnReferenceMapping {
-		private final ColumnInformation referencing;
-		private final ColumnInformation referenced;
 
-		public ColumnReferenceMappingImpl(ColumnInformation referencing, ColumnInformation referenced) {
-			this.referencing = referencing;
-			this.referenced = referenced;
-		}
-
+	public record ColumnReferenceMappingImpl(ColumnInformation referencing, ColumnInformation referenced)
+			implements ColumnReferenceMapping {
 		@Override
 		public ColumnInformation getReferencingColumnMetadata() {
 			return referencing;

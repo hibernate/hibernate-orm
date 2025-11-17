@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping default-lazy="false" package="org.hibernate.orm.test.onetoone.cache">
+    <class name="Object2" table="object2">
+        <cache usage="read-write"/>
+
+        <id name="id" column="id" type="java.lang.Long">
+            <generator class="foreign">
+                <param name="property">belongsToMainObj</param>
+            </generator>
+        </id>
+
+        <property name="dummy" type="java.lang.String" update="true" insert="true" column="xdummy"/>
+
+        <one-to-one name="belongsToMainObj" class="MainObject" cascade="none" outer-join="auto" constrained="true"/>
+    </class>
+
+</hibernate-mapping>

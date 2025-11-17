@@ -1,23 +1,27 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.spi;
 
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.TransactionCompletionCallbacks;
 
 /**
  * Contract representing some process that needs to occur during before transaction completion.
  *
  * @author Steve Ebersole
  */
-public interface BeforeTransactionCompletionProcess {
+public interface BeforeTransactionCompletionProcess extends TransactionCompletionCallbacks.BeforeCompletionCallback {
 	/**
 	 * Perform whatever processing is encapsulated here before completion of the transaction.
 	 *
 	 * @param session The session on which the transaction is preparing to complete.
+	 * @deprecated Use {@linkplain #doBeforeTransactionCompletion(SharedSessionContractImplementor)} instead.
 	 */
-	public void doBeforeTransactionCompletion(SessionImplementor session);
+	@Deprecated(since = "7.2", forRemoval = true)
+	default void doBeforeTransactionCompletion(SessionImplementor session) {
+		doBeforeTransactionCompletion( (SharedSessionContractImplementor) session );
+	}
 }

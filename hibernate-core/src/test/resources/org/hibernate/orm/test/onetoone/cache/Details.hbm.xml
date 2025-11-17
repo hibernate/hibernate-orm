@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+
+<hibernate-mapping package="org.hibernate.orm.test.onetoone.cache">
+    <class name="DetailsByFK">
+        <cache usage="read-write"/>
+        <id name="id" unsaved-value="0">
+            <generator class="foreign">
+                <param name="property">person</param>
+            </generator>
+        </id>
+        <one-to-one name="person" class="PersonByFK" constrained="true"/>
+        <property name="data"/>
+    </class>
+
+    <class name="DetailsByRef">
+        <cache usage="read-write"/>
+        <id name="id" unsaved-value="0">
+            <generator class="native"/>
+        </id>
+        <many-to-one name="person" class="PersonByRef" column="personId" unique="true"/>
+        <property name="data"/>
+    </class>
+</hibernate-mapping>

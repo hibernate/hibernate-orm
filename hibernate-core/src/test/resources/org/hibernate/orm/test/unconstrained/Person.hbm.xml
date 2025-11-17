@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+		package="org.hibernate.orm.test.unconstrained"
+		default-access="field">
+	
+	<class name="Person" 
+			dynamic-update="true">
+	
+		<id name="name"/>
+		
+		<property name="employeeId" 
+				unique="true"/>
+				
+		<many-to-one name="employee" 
+				formula="employeeId" 
+				not-found="ignore"
+				cascade="all"/>
+
+	</class>
+
+	<class name="Employee">
+	
+		<id name="id"/>
+
+	</class>
+
+</hibernate-mapping>

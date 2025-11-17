@@ -1,34 +1,30 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.graph.spi;
 
 import org.hibernate.graph.RootGraph;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 
 /**
- * Integration version of the RootGraph contract
+ * Integration version of the {@link RootGraph} contract.
  *
  * @author Steve Ebersole
+ *
+ * @see SubGraphImplementor
  */
 public interface RootGraphImplementor<J> extends RootGraph<J>, GraphImplementor<J> {
-	boolean appliesTo(EntityTypeDescriptor<? super J> entityType);
+
+	boolean appliesTo(EntityDomainType<?> entityType);
 
 	@Override
-	@SuppressWarnings("unchecked")
-	default boolean appliesTo(ManagedTypeDescriptor<? super J> managedType) {
-		assert managedType instanceof EntityTypeDescriptor;
-		return appliesTo( (EntityTypeDescriptor) managedType );
-	}
+	RootGraphImplementor<J> makeCopy(boolean mutable);
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	RootGraphImplementor<J> makeRootGraph(String name, boolean mutable);
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	SubGraphImplementor<J> makeSubGraph(boolean mutable);
 
 	/**
@@ -38,7 +34,5 @@ public interface RootGraphImplementor<J> extends RootGraph<J>, GraphImplementor<
 	 *
 	 * @return The immutable copy
 	 */
-	default RootGraphImplementor<J> makeImmutableCopy(String name) {
-		return makeRootGraph( name, false );
-	}
+	RootGraphImplementor<J> makeImmutableCopy(String name);
 }

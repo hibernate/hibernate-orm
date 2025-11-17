@@ -1,0 +1,32 @@
+"json_table(" expression ("," expression)? passingClause? columnsClause errorClause? ")"
+
+passingClause
+	: "passing" expression "as" identifier ("," expression "as" identifier)*
+
+columnsClause
+    : "columns(" column ("," column)* ")"
+
+column
+    : "nested" "path"? STRING_LITERAL columnsClause
+    | attributeName "json" wrapperClause? ("path" STRING_LITERAL)? queryOnErrorClause? queryOnEmptyClause?
+    | attributeName "for ordinality"
+    | attributeName "exists" ("path" STRING_LITERAL)? existsOnErrorClause?
+    | attributeName castTarget ("path" STRING_LITERAL)? valueOnErrorClause? valueOnEmptyClause?
+
+queryOnErrorClause
+	: ( "error" | "null" | ( "empty" ( "array" | "object" )? ) ) "on error";
+
+queryOnEmptyClause
+	: ( "error" | "null" | ( "empty" ( "array" | "object" )? ) ) "on empty";
+
+existsOnErrorClause
+	: ( "error" | "true" | "false" ) "on error"
+
+valueOnErrorClause
+	: ( "error" | "null" | ( "default" expression ) ) "on error";
+
+valueOnEmptyClause
+	: ( "error" | "null" | ( "default" expression ) ) "on empty";
+
+errorClause
+	: ( "error" | "null" ) "on error"

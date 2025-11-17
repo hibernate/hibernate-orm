@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.boot.jaxb;
 
 /**
@@ -13,23 +10,27 @@ package org.hibernate.boot.jaxb;
  * @author Steve Ebersole
  */
 public enum SourceType {
-	RESOURCE( "resource" ),
-	FILE( "file" ),
-	INPUT_STREAM( "input stream" ),
-	URL( "URL" ),
-	STRING( "string" ),
-	DOM( "xml" ),
-	JAR( "jar" ),
-	ANNOTATION( "annotation" ),
-	OTHER( "other" );
-
-	private final String legacyTypeText;
-
-	SourceType(String legacyTypeText) {
-		this.legacyTypeText = legacyTypeText;
-	}
+	RESOURCE,
+	FILE,
+	INPUT_STREAM,
+	URL,
+	STRING,
+	DOM,
+	JAR,
+	ANNOTATION,
+	OTHER;
 
 	public String getLegacyTypeText() {
-		return legacyTypeText;
+		return switch ( this ) {
+			case RESOURCE -> "resource";
+			case FILE -> "file";
+			case INPUT_STREAM -> "input stream";
+			case URL -> "URL";
+			case STRING -> "string";
+			case DOM -> "xml";
+			case JAR -> "jar";
+			case ANNOTATION -> "annotation";
+			case OTHER -> "other";
+		};
 	}
 }

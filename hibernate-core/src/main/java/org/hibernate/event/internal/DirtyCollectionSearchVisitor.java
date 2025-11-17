@@ -1,66 +1,76 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.type.CollectionType;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+
 /**
  * Do we have a dirty collection here?
- * 1. if it is a new application-instantiated collection, return true (does not occur anymore!)
- * 2. if it is a component, recurse
- * 3. if it is a wrappered collection, ask the collection entry
+ * <ol>
+ * <li>If it's a new application-instantiated collection, return true. (Does not occur anymore!)
+ * <li>If it's an embeddable, recurse.
+ * <li>If it is a wrappered collection, ask the collection entry.
+ * </ol>
  *
  * @author Gavin King
  */
 public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 
+	private final EnhancementAsProxyLazinessInterceptor interceptor;
+	private final boolean[] propertyVersionability;
 	private boolean dirty;
-	private boolean[] propertyVersionability;
 
-	public DirtyCollectionSearchVisitor(EventSource session, boolean[] propertyVersionability) {
+	public DirtyCollectionSearchVisitor(Object entity, EventSource session, boolean[] propertyVersionability) {
 		super( session );
 		this.propertyVersionability = propertyVersionability;
+		this.interceptor =
+				isPersistentAttributeInterceptable( entity )
+					&& asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor()
+							instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor
+						? lazinessInterceptor
+						: null;
 	}
 
 	public boolean wasDirtyCollectionFound() {
 		return dirty;
 	}
 
+	@Override
 	Object processCollection(Object collection, CollectionType type) throws HibernateException {
 		if ( collection != null ) {
-			final SessionImplementor session = getSession();
-			final PersistentCollection persistentCollection;
+			final var session = getSession();
 			if ( type.isArrayType() ) {
-				persistentCollection = session.getPersistenceContextInternal().getCollectionHolder( collection );
-				// if no array holder we found an unwrapped array (this can't occur,
-				// because we now always call wrap() before getting to here)
-				// return (ah==null) ? true : searchForDirtyCollections(ah, type);
-			}
-			else {
-				// if not wrapped yet, its dirty (this can't occur, because
-				// we now always call wrap() before getting to here)
-				// return ( ! (obj instanceof PersistentCollection) ) ?
-				//true : searchForDirtyCollections( (PersistentCollection) obj, type );
-				persistentCollection = (PersistentCollection) collection;
-			}
+				// if no array holder we found an unwrapped array, it's dirty
+				// (this can't occur, because we now always call wrap() before getting to here)
 
-			if ( persistentCollection.isDirty() ) { //we need to check even if it was not initialized, because of delayed adds!
-				dirty = true;
-				return null; //NOTE: EARLY EXIT!
+				// we need to check even if it was not initialized, because of delayed adds!
+				if ( session.getPersistenceContextInternal().getCollectionHolder( collection ).isDirty() ) {
+					dirty = true;
+				}
+			}
+			else if ( interceptor == null || interceptor.isAttributeLoaded( type.getName() ) ) {
+				// if not wrapped yet, it's dirty
+				// (this can't occur, because we now always call wrap() before getting here)
+
+				// we need to check even if it was not initialized, because of delayed adds!
+				if ( ((PersistentCollection<?>) collection).isDirty() ) {
+					dirty = true;
+				}
 			}
 		}
-
 		return null;
 	}
 
+	@Override
 	boolean includeEntityProperty(Object[] values, int i) {
 		return propertyVersionability[i] && super.includeEntityProperty( values, i );
 	}

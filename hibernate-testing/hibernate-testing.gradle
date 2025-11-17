@@ -1,36 +1,63 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
+
+plugins {
+    id "local.publishing-java-module"
+    id "local.publishing-group-relocation"
+}
 
 description = 'Support for testing Hibernate ORM functionality'
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-
-
 dependencies {
-    compile project( ':hibernate-core' )
-    compile( libraries.jta )
-    compile( libraries.junit )
-    compile( libraries.byteman )
-    compile( libraries.byteman_install )
-    compile( libraries.byteman_bmunit )
-    compile( libraries.xapool )
-    compile( libraries.log4j )
-    compile ( libraries.jboss_jta ) {
-        transitive=false;
+    api project( ':hibernate-core' )
+    api project( ':hibernate-community-dialects' )
+
+    api testLibs.junit4
+    api testLibs.junitJupiterApi
+    api testLibs.junitJupiterParams
+
+    api testLibs.hamcrest
+    api testLibs.assertjCore
+
+    api testLibs.mockito
+
+    api testLibs.bytemanBmunit
+
+    api( testLibs.jbossTxSpi ) {
+        transitive=false
     }
-}
+    api( testLibs.jbossJta ) {
+        transitive=false
+    }
 
-// resources inherently exclude sources
-sourceSets.test.resources {
-    setSrcDirs( ['src/test/java'] )
-}
+    api 'javax.money:money-api:1.1'
+    api ( 'org.javamoney.moneta:moneta-core:1.4.4' ) {
+        transitive = false
+    }
 
-// todo : Fold into hibernate-core and publish in separate publications
-// 		once http://issues.gradle.org/browse/GRADLE-2966 is resolved;
-//		that will allow us to keep the same artifactId and publish the pom
-//		with proper dependencies
+    api testLibs.log4j2
+
+    implementation libs.hibernateModels
+    implementation libs.jandex
+    implementation(libs.logging)
+    // See https://hibernate.atlassian.net/browse/HHH-19743
+    // While this dependency isn't explicitly used, removing it will lead to using JBossStandAloneJtaPlatform
+    // by default in tests, which will apparently lead to leaks detected by HibernateClassLoaderLeaksTest,
+    // which will fail.
+    // JBossStandAloneJtaPlatform is old and likely wouldn't work with Jakarta EE anyway,
+    // so I won't try to fix it, but we might want to remove it in the next minor,
+    // and then we can remove the dependency below.
+    implementation(testLibs.wildFlyTxnClient) {
+        // WildFly Elytron includes a whole copy of JBoss Logging, Jackson with its original package,
+        // not even shaded, which causes lots of problems.
+        // Since we don't need WildFly Elytron in our tests, we'll just exclude it.
+        exclude group: 'org.wildfly.security', module: 'wildfly-elytron'
+    }
+    implementation testLibs.junitJupiterEngine
+    implementation testLibs.junitJupiterLauncher
+
+    annotationProcessor project( ':hibernate-processor' )
+}
 

@@ -1,22 +1,28 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.exception;
 
 import java.sql.SQLException;
 
+import org.hibernate.PessimisticLockException;
 import org.hibernate.JDBCException;
 
 /**
- * Implementation of JDBCException indicating a problem acquiring lock
+ * A {@link JDBCException} indicating a problem acquiring a lock
  * on the database.
+ *
+ * @apiNote Some databases make it quite hard to for a client to
+ * distinguish a {@linkplain LockTimeoutException lock timeout}
+ * from other sorts of rejected lock acquisitions, and so
+ * application programs should not over-interpret the distinction
+ * made between {@code LockAcquisitionException} and its subclass
+ * {@link LockTimeoutException} on such platforms.
  *
  * @author Steve Ebersole
  */
-public class LockAcquisitionException extends JDBCException {
+public class LockAcquisitionException extends PessimisticLockException {
 	public LockAcquisitionException(String string, SQLException root) {
 		super( string, root );
 	}

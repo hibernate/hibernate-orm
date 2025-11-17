@@ -1,20 +1,23 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.internal;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
-import org.hibernate.engine.spi.Managed;
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.service.ServiceRegistry;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedType;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.BASIC;
+import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.FIELD;
+import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.MAP;
+import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.MIXED;
 
 /**
  * Standard implementation of PropertyAccessStrategyResolver
@@ -30,40 +33,39 @@ public class PropertyAccessStrategyResolverStandardImpl implements PropertyAcces
 
 	@Override
 	public PropertyAccessStrategy resolvePropertyAccessStrategy(
-			Class containerClass,
+			Class<?> containerClass,
 			String explicitAccessStrategyName,
-			EntityMode entityMode) {
+			RepresentationMode representationMode) {
 
-		if ( BuiltInPropertyAccessStrategies.BASIC.getExternalName().equals( explicitAccessStrategyName )
-				|| BuiltInPropertyAccessStrategies.FIELD.getExternalName().equals( explicitAccessStrategyName )
-				|| BuiltInPropertyAccessStrategies.MIXED.getExternalName().equals( explicitAccessStrategyName ) ) {
-			if ( Managed.class.isAssignableFrom( containerClass ) ) {
-				// PROPERTY (BASIC) and MIXED are not valid for bytecode enhanced entities...
-				return PropertyAccessStrategyEnhancedImpl.INSTANCE;
+		if ( isManagedType( containerClass ) ) {
+			if ( BASIC.getExternalName().equals( explicitAccessStrategyName ) ) {
+				return PropertyAccessStrategyEnhancedImpl.PROPERTY;
+			}
+			else if ( FIELD.getExternalName().equals( explicitAccessStrategyName ) ) {
+				return PropertyAccessStrategyEnhancedImpl.FIELD;
+			}
+			else if ( MIXED.getExternalName().equals( explicitAccessStrategyName ) ) {
+				return PropertyAccessStrategyEnhancedImpl.STANDARD;
 			}
 		}
 
-		if ( StringHelper.isNotEmpty( explicitAccessStrategyName ) ) {
+		if ( isNotEmpty( explicitAccessStrategyName ) ) {
 			return resolveExplicitlyNamedPropertyAccessStrategy( explicitAccessStrategyName );
 		}
-
-		if ( entityMode == EntityMode.MAP ) {
-			return BuiltInPropertyAccessStrategies.MAP.getStrategy();
+		else if ( representationMode == RepresentationMode.MAP ) {
+			return MAP.getStrategy();
 		}
 		else {
-			return BuiltInPropertyAccessStrategies.BASIC.getStrategy();
+			return BASIC.getStrategy();
 		}
 	}
 
 	protected PropertyAccessStrategy resolveExplicitlyNamedPropertyAccessStrategy(String explicitAccessStrategyName) {
-		final BuiltInPropertyAccessStrategies builtInStrategyEnum = BuiltInPropertyAccessStrategies.interpret(
-				explicitAccessStrategyName
-		);
-		if ( builtInStrategyEnum != null ) {
-			return builtInStrategyEnum.getStrategy();
-		}
+		final var builtInStrategyEnum = BuiltInPropertyAccessStrategies.interpret( explicitAccessStrategyName );
+		return builtInStrategyEnum != null
+				? builtInStrategyEnum.getStrategy()
+				: strategySelectorService().resolveStrategy( PropertyAccessStrategy.class, explicitAccessStrategyName );
 
-		return strategySelectorService().resolveStrategy( PropertyAccessStrategy.class, explicitAccessStrategyName );
 	}
 
 	private StrategySelector strategySelectorService;
@@ -73,7 +75,7 @@ public class PropertyAccessStrategyResolverStandardImpl implements PropertyAcces
 			if ( serviceRegistry == null ) {
 				throw new HibernateException( "ServiceRegistry not yet injected; PropertyAccessStrategyResolver not ready for use." );
 			}
-			strategySelectorService = serviceRegistry.getService( StrategySelector.class );
+			strategySelectorService = serviceRegistry.requireService( StrategySelector.class );
 		}
 		return strategySelectorService;
 	}

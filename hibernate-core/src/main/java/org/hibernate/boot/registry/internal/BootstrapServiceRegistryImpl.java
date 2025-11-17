@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry.internal;
 
@@ -18,15 +16,18 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.integrator.internal.IntegratorServiceImpl;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.internal.AbstractServiceRegistryImpl;
 import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.service.internal.ServiceLogger.SERVICE_LOGGER;
 
 /**
  * {@link ServiceRegistry} implementation containing specialized "bootstrap" services, specifically:<ul>
@@ -40,12 +41,10 @@ import org.hibernate.service.spi.Stoppable;
 public class BootstrapServiceRegistryImpl
 		implements ServiceRegistryImplementor, BootstrapServiceRegistry, ServiceBinding.ServiceLifecycleOwner {
 
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BootstrapServiceRegistryImpl.class );
-
 	private final boolean autoCloseRegistry;
 	private boolean active = true;
 
-	private static final LinkedHashSet<Integrator> NO_INTEGRATORS = new LinkedHashSet<Integrator>();
+	private static final LinkedHashSet<Integrator> NO_INTEGRATORS = new LinkedHashSet<>();
 
 	private final ServiceBinding<ClassLoaderService> classLoaderServiceBinding;
 	private final ServiceBinding<StrategySelector> strategySelectorBinding;
@@ -100,20 +99,19 @@ public class BootstrapServiceRegistryImpl
 			LinkedHashSet<Integrator> providedIntegrators) {
 		this.autoCloseRegistry = autoCloseRegistry;
 
-		this.classLoaderServiceBinding = new ServiceBinding<ClassLoaderService>(
+		this.classLoaderServiceBinding = new ServiceBinding<>(
 				this,
 				ClassLoaderService.class,
 				classLoaderService
 		);
 
-		final StrategySelectorImpl strategySelector = new StrategySelectorImpl( classLoaderService );
-		this.strategySelectorBinding = new ServiceBinding<StrategySelector>(
+		this.strategySelectorBinding = new ServiceBinding<>(
 				this,
 				StrategySelector.class,
-				strategySelector
+				new StrategySelectorImpl( classLoaderService )
 		);
 
-		this.integratorServiceBinding = new ServiceBinding<IntegratorService>(
+		this.integratorServiceBinding = new ServiceBinding<>(
 				this,
 				IntegratorService.class,
 				new IntegratorServiceImpl( providedIntegrators, classLoaderService )
@@ -162,19 +160,19 @@ public class BootstrapServiceRegistryImpl
 			IntegratorService integratorService) {
 		this.autoCloseRegistry = autoCloseRegistry;
 
-		this.classLoaderServiceBinding = new ServiceBinding<ClassLoaderService>(
+		this.classLoaderServiceBinding = new ServiceBinding<>(
 				this,
 				ClassLoaderService.class,
 				classLoaderService
 		);
 
-		this.strategySelectorBinding = new ServiceBinding<StrategySelector>(
+		this.strategySelectorBinding = new ServiceBinding<>(
 				this,
 				StrategySelector.class,
 				strategySelector
 		);
 
-		this.integratorServiceBinding = new ServiceBinding<IntegratorService>(
+		this.integratorServiceBinding = new ServiceBinding<>(
 				this,
 				IntegratorService.class,
 				integratorService
@@ -184,8 +182,8 @@ public class BootstrapServiceRegistryImpl
 
 
 	@Override
-	public <R extends Service> R getService(Class<R> serviceRole) {
-		final ServiceBinding<R> binding = locateServiceBinding( serviceRole );
+	public <R extends Service> @Nullable R getService(Class<R> serviceRole) {
+		final var binding = locateServiceBinding( serviceRole );
 		return binding == null ? null : binding.getService();
 	}
 
@@ -207,25 +205,20 @@ public class BootstrapServiceRegistryImpl
 
 	@Override
 	public synchronized void destroy() {
-		if ( !active ) {
-			return;
-		}
-		active = false;
-		destroy( classLoaderServiceBinding );
-		destroy( strategySelectorBinding );
-		destroy( integratorServiceBinding );
-
-		if ( childRegistries != null ) {
-			for(ServiceRegistry serviceRegistry : childRegistries) {
-				if(serviceRegistry instanceof ServiceRegistryImplementor) {
-					ServiceRegistryImplementor serviceRegistryImplementor = (ServiceRegistryImplementor) serviceRegistry;
-					serviceRegistryImplementor.destroy();
+		if ( active ) {
+			active = false;
+			destroy( classLoaderServiceBinding );
+			destroy( strategySelectorBinding );
+			destroy( integratorServiceBinding );
+			if ( childRegistries != null ) {
+				for ( var serviceRegistry : childRegistries ) {
+					serviceRegistry.destroy();
 				}
 			}
 		}
 	}
-	
-	private synchronized void destroy(ServiceBinding serviceBinding) {
+
+	private synchronized void destroy(ServiceBinding<?> serviceBinding) {
 		serviceBinding.getLifecycleOwner().stopService( serviceBinding );
 	}
 
@@ -234,39 +227,39 @@ public class BootstrapServiceRegistryImpl
 	}
 
 	@Override
-	public ServiceRegistry getParentServiceRegistry() {
+	public @Nullable ServiceRegistry getParentServiceRegistry() {
 		return null;
 	}
 
 	@Override
 	public <R extends Service> R initiateService(ServiceInitiator<R> serviceInitiator) {
-		throw new ServiceException( "Boot-strap registry should only contain provided services" );
+		throw new ServiceException( "Bootstrap registry should only contain provided services" );
 	}
 
 	@Override
 	public <R extends Service> void configureService(ServiceBinding<R> binding) {
-		throw new ServiceException( "Boot-strap registry should only contain provided services" );
+		throw new ServiceException( "Bootstrap registry should only contain provided services" );
 	}
 
 	@Override
 	public <R extends Service> void injectDependencies(ServiceBinding<R> binding) {
-		throw new ServiceException( "Boot-strap registry should only contain provided services" );
+		throw new ServiceException( "Bootstrap registry should only contain provided services" );
 	}
 
 	@Override
 	public <R extends Service> void startService(ServiceBinding<R> binding) {
-		throw new ServiceException( "Boot-strap registry should only contain provided services" );
+		throw new ServiceException( "Bootstrap registry should only contain provided services" );
 	}
 
 	@Override
 	public synchronized <R extends Service> void stopService(ServiceBinding<R> binding) {
 		final Service service = binding.getService();
-		if ( Stoppable.class.isInstance( service ) ) {
+		if ( service instanceof Stoppable stoppable ) {
 			try {
-				( (Stoppable) service ).stop();
+				stoppable.stop();
 			}
 			catch ( Exception e ) {
-				LOG.unableToStopService( service.getClass(), e );
+				SERVICE_LOGGER.unableToStopService( binding.getServiceRole().getName(), e );
 			}
 		}
 	}
@@ -274,13 +267,10 @@ public class BootstrapServiceRegistryImpl
 	@Override
 	public synchronized void registerChild(ServiceRegistryImplementor child) {
 		if ( childRegistries == null ) {
-			childRegistries = new HashSet<ServiceRegistryImplementor>();
+			childRegistries = new HashSet<>();
 		}
 		if ( !childRegistries.add( child ) ) {
-			LOG.warnf(
-					"Child ServiceRegistry [%s] was already registered; this will end badly later...",
-					child
-			);
+			SERVICE_LOGGER.childAlreadyRegistered( child );
 		}
 	}
 
@@ -292,18 +282,17 @@ public class BootstrapServiceRegistryImpl
 		childRegistries.remove( child );
 		if ( childRegistries.isEmpty() ) {
 			if ( autoCloseRegistry ) {
-				LOG.debug(
-						"Implicitly destroying Boot-strap registry on de-registration " +
-								"of all child ServiceRegistries"
-				);
+				SERVICE_LOGGER.destroyingBootstrapRegistry();
 				destroy();
 			}
 			else {
-				LOG.debug(
-						"Skipping implicitly destroying Boot-strap registry on de-registration " +
-								"of all child ServiceRegistries"
-				);
+				SERVICE_LOGGER.skippingBootstrapRegistryDestruction();
 			}
 		}
+	}
+
+	@Override
+	public <T extends Service> T fromRegistryOrChildren(Class<T> serviceRole) {
+		return AbstractServiceRegistryImpl.fromRegistryOrChildren( serviceRole, this, childRegistries );
 	}
 }

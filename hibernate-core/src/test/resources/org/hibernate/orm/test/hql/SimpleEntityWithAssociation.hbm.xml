@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping SYSTEM "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.orm.test.hql">
+
+    <!-- *Very* important for the test cases that these entities have identically named columns! -->
+
+    <class name="SimpleEntityWithAssociation" table="SIMPLE_1">
+        <id name="id" column="ID" type="long">
+            <generator class="native"/>
+        </id>
+        <property name="name" column="NAME" type="string"/>
+        <property name="negatedNumber">
+			<column name="negated_num"
+				read="-negated_num"
+				write="0 - ?"/>        
+        </property>
+        <set name="associatedEntities" cascade="all" inverse="true" lazy="true">
+            <key column="SIMPLE_1_ID"/>
+            <one-to-many class="SimpleAssociatedEntity"/>
+        </set>
+        <set name="manyToManyAssociatedEntities" cascade="merge, persist" inverse="false" lazy="true" table="MANY_TO_MANY">
+            <key column="IN_ID"/>
+            <many-to-many class="SimpleEntityWithAssociation" column="OUT_ID"/>
+        </set>
+    </class>
+
+    <class name="SimpleAssociatedEntity" table="SIMPLE_2">
+        <id name="id" column="ID" type="long">
+            <generator class="native"/>
+        </id>
+        <property name="name" column="NAME" type="string" />
+        <many-to-one name="owner" class="SimpleEntityWithAssociation" column="SIMPLE_1_ID"/>
+    </class>
+
+</hibernate-mapping>

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.extract.internal;
 
@@ -37,7 +35,7 @@ public class TableInformationImpl implements TableInformation {
 	private PrimaryKeyInformation primaryKey;
 	private Map<Identifier, ForeignKeyInformation> foreignKeys;
 	private Map<Identifier, IndexInformation> indexes;
-	private Map<Identifier, ColumnInformation> columns = new HashMap<>(  );
+	private final Map<Identifier, ColumnInformation> columns = new HashMap<>();
 
 	private boolean wasPrimaryKeyLoaded = false; // to avoid multiple db reads since primary key can be null.
 
@@ -93,12 +91,11 @@ public class TableInformationImpl implements TableInformation {
 
 	protected Map<Identifier, ForeignKeyInformation> foreignKeys() {
 		if ( foreignKeys == null ) {
-			final Map<Identifier, ForeignKeyInformation> fkMap = new HashMap<>();
-			final Iterable<ForeignKeyInformation> fks = extractor.getForeignKeys( this );
-			for ( ForeignKeyInformation fk : fks ) {
-				fkMap.put( fk.getForeignKeyIdentifier(), fk );
+			final Map<Identifier, ForeignKeyInformation> result = new HashMap<>();
+			for ( var foreignKeyInformation : extractor.getForeignKeys( this ) ) {
+				result.put( foreignKeyInformation.getForeignKeyIdentifier(), foreignKeyInformation );
 			}
-			this.foreignKeys = fkMap;
+			foreignKeys = result;
 		}
 		return foreignKeys;
 	}
@@ -119,8 +116,7 @@ public class TableInformationImpl implements TableInformation {
 	protected Map<Identifier, IndexInformation> indexes() {
 		if ( indexes == null ) {
 			final Map<Identifier, IndexInformation> indexMap = new HashMap<>();
-			final Iterable<IndexInformation> indexes = extractor.getIndexes( this );
-			for ( IndexInformation index : indexes ) {
+			for ( var index : extractor.getIndexes( this ) ) {
 				indexMap.put( index.getIndexIdentifier(), index );
 			}
 			this.indexes = indexMap;

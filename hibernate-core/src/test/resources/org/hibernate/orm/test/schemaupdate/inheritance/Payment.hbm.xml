@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.hibernate.orm.test.schemaupdate.joinedsubclass">
+    <class name="org.hibernate.orm.test.schemaupdate.inheritance.Payment" table="PAYMENT">
+        <id name="id" type="long" column="PAYMENT_ID">
+            <generator class="native"/>
+        </id>
+        <discriminator column="PAYMENT_TYPE" type="string"/>
+        <property name="amount" column="AMOUNT"/>
+        <subclass name="org.hibernate.orm.test.schemaupdate.inheritance.CreditCardPayment" discriminator-value="CREDIT">
+            <join table="CREDIT_PAYMENT">
+                <key column="PAYMENT_ID" foreign-key="FK_CC_PAY"/>
+                <property name="creditCardType" column="CCTYPE"/>
+            </join>
+        </subclass>
+    </class>
+</hibernate-mapping>

@@ -1,10 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.synchronization.work;
+
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.CollectionEntry;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.configuration.Configuration;
+import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -12,30 +18,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.Session;
-import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CollectionEntry;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.boot.internal.EnversService;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
-import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
-
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
 	private final List<PersistentCollectionChangeData> collectionChanges;
 	private final String referencingPropertyName;
 
 	public PersistentCollectionChangeWorkUnit(
-			SessionImplementor sessionImplementor,
+			SharedSessionContractImplementor sessionImplementor,
 			String entityName,
 			EnversService enversService,
 			PersistentCollection collection,
 			CollectionEntry collectionEntry,
 			Serializable snapshot,
-			Serializable id,
+			Object id,
 			String referencingPropertyName) {
 		super(
 				sessionImplementor,
@@ -52,10 +50,10 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 	}
 
 	public PersistentCollectionChangeWorkUnit(
-			SessionImplementor sessionImplementor,
+			SharedSessionContractImplementor sessionImplementor,
 			String entityName,
 			EnversService enversService,
-			Serializable id,
+			Object id,
 			List<PersistentCollectionChangeData> collectionChanges,
 			String referencingPropertyName) {
 		super( sessionImplementor, entityName, enversService, id, RevisionType.MOD );
@@ -75,20 +73,20 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
-	public void perform(Session session, Object revisionData) {
-		final AuditEntitiesConfiguration entitiesCfg = enversService.getAuditEntitiesConfiguration();
+	@SuppressWarnings("unchecked")
+	public void perform(SharedSessionContractImplementor session, Object revisionData) {
+		final Configuration configuration = enversService.getConfig();
 
 		for ( PersistentCollectionChangeData persistentCollectionChangeData : collectionChanges ) {
 			// Setting the revision number
-			( (Map<String, Object>) persistentCollectionChangeData.getData().get( entitiesCfg.getOriginalIdPropName() ) )
-					.put( entitiesCfg.getRevisionFieldName(), revisionData );
+			( (Map<String, Object>) persistentCollectionChangeData.getData().get( configuration.getOriginalIdPropertyName() ) )
+					.put( configuration.getRevisionFieldName(), revisionData );
 
 			auditStrategy.performCollectionChange(
 					session,
 					getEntityName(),
 					referencingPropertyName,
-					enversService,
+					enversService.getConfig(),
 					persistentCollectionChangeData,
 					revisionData
 			);
@@ -158,7 +156,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 				else {
 					// If the changes collide, checking if the first one isn't a DEL, and the second a subsequent ADD
 					// If so, removing the change alltogether.
-					final String revTypePropName = enversService.getAuditEntitiesConfiguration().getRevisionTypePropName();
+					final String revTypePropName = enversService.getConfig().getRevisionTypePropertyName();
 					if ( RevisionType.ADD.equals( newChangesIdMap.get( originalOriginalId ).getData().get( revTypePropName ) )
 							&& RevisionType.DEL.equals( originalCollectionChangeData.getData().get( revTypePropName ) ) ) {
 						newChangesIdMap.remove( originalOriginalId );
@@ -188,7 +186,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 	}
 
 	private Object getOriginalId(PersistentCollectionChangeData persistentCollectionChangeData) {
-		return persistentCollectionChangeData.getData().get( enversService.getAuditEntitiesConfiguration().getOriginalIdPropName() );
+		return persistentCollectionChangeData.getData().get( enversService.getConfig().getOriginalIdPropertyName() );
 	}
 
 	/**
@@ -199,10 +197,10 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 	public static class PersistentCollectionChangeWorkUnitId implements Serializable {
 		private static final long serialVersionUID = -8007831518629167537L;
 
-		private final Serializable ownerId;
+		private final Object ownerId;
 		private final String role;
 
-		public PersistentCollectionChangeWorkUnitId(Serializable ownerId, String role) {
+		public PersistentCollectionChangeWorkUnitId(Object ownerId, String role) {
 			this.ownerId = ownerId;
 			this.role = role;
 		}
@@ -236,7 +234,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 			return result;
 		}
 
-		public Serializable getOwnerId() {
+		public Object getOwnerId() {
 			return ownerId;
 		}
 	}

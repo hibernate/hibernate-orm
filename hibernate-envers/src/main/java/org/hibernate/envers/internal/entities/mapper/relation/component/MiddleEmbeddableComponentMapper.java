@@ -1,17 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.relation.component;
 
-import java.lang.reflect.InvocationTargetException;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Map;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.entities.PropertyData;
@@ -20,16 +15,17 @@ import org.hibernate.envers.internal.entities.mapper.MultiPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.ToOneIdMapper;
 import org.hibernate.envers.internal.tools.query.Parameters;
-import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 
 /**
  * @author Kristoffer Lundberg (kristoffer at cambio dot se)
  */
-public class MiddleEmbeddableComponentMapper implements MiddleComponentMapper, CompositeMapperBuilder {
-	private final MultiPropertyMapper delegate;
-	private final Class componentClass;
+public class MiddleEmbeddableComponentMapper extends AbstractMiddleComponentMapper implements CompositeMapperBuilder {
 
-	public MiddleEmbeddableComponentMapper(MultiPropertyMapper delegate, Class componentClass) {
+	private final MultiPropertyMapper delegate;
+	private final Class<?> componentClass;
+
+	public MiddleEmbeddableComponentMapper(MultiPropertyMapper delegate, Class<?> componentClass) {
 		this.delegate = delegate;
 		this.componentClass = componentClass;
 	}
@@ -65,31 +61,12 @@ public class MiddleEmbeddableComponentMapper implements MiddleComponentMapper, C
 		if ( dataObject != null ) {
 			return dataObject;
 		}
-
-		return AccessController.doPrivileged(
-				new PrivilegedAction<Object>() {
-					@Override
-					public Object run() {
-						try {
-							return ReflectHelper.getDefaultConstructor( componentClass ).newInstance();
-						}
-						catch ( InstantiationException e ) {
-							throw new AuditException( e );
-						}
-						catch ( IllegalAccessException e ) {
-							throw new AuditException( e );
-						}
-						catch ( InvocationTargetException e ) {
-							throw new AuditException( e );
-						}
-					}
-				}
-		);
+		return newObjectInstance( componentClass );
 	}
 
 	@Override
 	public void mapToMapFromObject(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> idData,
 			Map<String, Object> data,
 			Object obj) {
@@ -147,8 +124,10 @@ public class MiddleEmbeddableComponentMapper implements MiddleComponentMapper, C
 	}
 
 	@Override
-	public CompositeMapperBuilder addComponent(PropertyData propertyData, Class componentClass) {
-		return delegate.addComponent( propertyData, componentClass );
+	public CompositeMapperBuilder addComponent(
+			PropertyData propertyData,
+			Class componentClass, EmbeddableInstantiator instantiator) {
+		return delegate.addComponent( propertyData, componentClass, instantiator );
 	}
 
 	@Override

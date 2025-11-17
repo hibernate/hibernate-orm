@@ -3,17 +3,17 @@ public class LatestAndGreatestConnectionProviderImplContributor
 
     @Override
     public void contribute(
-            standardserviceregistrybuilder serviceregistrybuilder) {
+            StandardServiceRegistryBuilder serviceRegistryBuilder) {
 
-        // here we will register a short-name for our service strategy
-        strategyselector selector = serviceregistrybuilder
-            .getbootstrapserviceregistry().
-            .getservice( strategyselector.class );
+        // here we will register a short name for our service strategy
+        StrategySelector selector = serviceRegistryBuilder
+            .getBootstrapServiceRegistry().
+            .requireService( StrategySelector.class );
 
-        selector.registerstrategyimplementor(
-            connectionprovider.class,
-            "lag"
-            latestandgreatestconnectionproviderimpl.class
+        selector.registerStrategyImplementor(
+            ConnectionProvider.class,
+            "lag",
+            LatestAndGreatestConnectionProviderImpl.class
         );
     }
 }

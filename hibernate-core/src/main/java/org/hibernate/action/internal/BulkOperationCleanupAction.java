@@ -1,15 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
 
 import java.io.Serializable;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -20,27 +19,30 @@ import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Queryable;
+import org.hibernate.query.sqm.tree.SqmDmlStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
+
+import static java.util.Collections.addAll;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 
 /**
- * An {@link org.hibernate.engine.spi.ActionQueue} {@link org.hibernate.action.spi.Executable} for ensuring
- * shared cache cleanup in relation to performed bulk HQL queries.
- * <p/>
- * NOTE: currently this executes for <tt>INSERT</tt> queries as well as
- * <tt>UPDATE</tt> and <tt>DELETE</tt> queries.  For <tt>INSERT</tt> it is
+ * An {@link org.hibernate.engine.spi.ActionQueue} {@link Executable} for
+ * ensuring shared cache cleanup in relation to performed bulk HQL queries.
+ *
+ * @implNote Currently this executes for {@code INSERT} queries as well as
+ * {@code UPDATE} and {@code DELETE} queries.  For {@code INSERT} it is
  * really not needed as we'd have no invalid entity/collection data to
- * cleanup (we'd still nee to invalidate the appropriate update-timestamps
+ * clean up (we'd still need to invalidate the appropriate update-timestamps
  * regions) as a result of this query.
  *
  * @author Steve Ebersole
  */
 public class BulkOperationCleanupAction implements Executable, Serializable {
-	private final Serializable[] affectedTableSpaces;
+
+	private final String[] affectedTableSpaces;
 
 	private final Set<EntityCleanup> entityCleanups = new HashSet<>();
 	private final Set<CollectionCleanup> collectionCleanups = new HashSet<>();
@@ -56,89 +58,118 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 * @param session The session to which this request is tied.
 	 * @param affectedQueryables The affected entity persisters.
 	 */
-	public BulkOperationCleanupAction(SharedSessionContractImplementor session, Queryable... affectedQueryables) {
-		final SessionFactoryImplementor factory = session.getFactory();
+	public BulkOperationCleanupAction(SharedSessionContractImplementor session, EntityPersister... affectedQueryables) {
 		final LinkedHashSet<String> spacesList = new LinkedHashSet<>();
-		for ( Queryable persister : affectedQueryables ) {
-			spacesList.addAll( Arrays.asList( (String[]) persister.getQuerySpaces() ) );
+		for ( var persister : affectedQueryables ) {
+			addAll( spacesList, (String[]) persister.getQuerySpaces() );
 
 			if ( persister.canWriteToCache() ) {
-				final EntityDataAccess entityDataAccess = persister.getCacheAccessStrategy();
+				final var entityDataAccess = persister.getCacheAccessStrategy();
 				if ( entityDataAccess != null ) {
 					entityCleanups.add( new EntityCleanup( entityDataAccess, session ) );
 				}
 			}
 
 			if ( persister.hasNaturalIdentifier() && persister.hasNaturalIdCache() ) {
-				naturalIdCleanups.add(
-						new NaturalIdCleanup( persister.getNaturalIdCacheAccessStrategy(), session )
-				);
+				naturalIdCleanups.add( new NaturalIdCleanup( persister.getNaturalIdCacheAccessStrategy(), session ) );
 			}
 
-			final Set<String> roles = factory.getMetamodel().getCollectionRolesByEntityParticipant( persister.getEntityName() );
+			final var mappingMetamodel = session.getFactory().getMappingMetamodel();
+			final var roles = mappingMetamodel.getCollectionRolesByEntityParticipant( persister.getEntityName() );
 			if ( roles != null ) {
 				for ( String role : roles ) {
-					final CollectionPersister collectionPersister = factory.getMetamodel().collectionPersister( role );
+					final var collectionPersister = mappingMetamodel.getCollectionDescriptor( role );
 					if ( collectionPersister.hasCache() ) {
 						collectionCleanups.add(
-								new CollectionCleanup(
-										collectionPersister.getCacheAccessStrategy(),
-										session
-								)
+								new CollectionCleanup( collectionPersister.getCacheAccessStrategy(), session )
 						);
 					}
 				}
 			}
 		}
 
-		this.affectedTableSpaces = spacesList.toArray( new String[ 0 ] );
+		affectedTableSpaces = spacesList.toArray( EMPTY_STRING_ARRAY );
 	}
 
 	/**
 	 * Constructs an action to cleanup "affected cache regions" based on a
-	 * set of affected table spaces.  This differs from {@link #BulkOperationCleanupAction(SharedSessionContractImplementor, Queryable[])}
-	 * in that here we have the affected <strong>table names</strong>.  From those
-	 * we deduce the entity persisters which are affected based on the defined
-	 * {@link EntityPersister#getQuerySpaces() table spaces}; and from there, we
-	 * determine the affected collection regions based on any collections
+	 * set of affected table spaces. This differs from
+	 * {@link #BulkOperationCleanupAction(SharedSessionContractImplementor, EntityPersister[])}
+	 * in that here we have the affected <strong>table names</strong>. From
+	 * those we deduce the entity persisters which are affected based on the
+	 * defined {@link EntityPersister#getQuerySpaces() table spaces}. Finally,
+	 * we determine the affected collection regions based on any collections
 	 * in which those entity persisters participate as elements/keys/etc.
 	 *
 	 * @param session The session to which this request is tied.
 	 * @param tableSpaces The table spaces.
 	 */
-	@SuppressWarnings( { "unchecked", "rawtypes" } )
-	public BulkOperationCleanupAction(SharedSessionContractImplementor session, Set tableSpaces) {
+	public BulkOperationCleanupAction(SharedSessionContractImplementor session, Set<String> tableSpaces) {
 		final LinkedHashSet<String> spacesList = new LinkedHashSet<>( tableSpaces );
 
-		final SessionFactoryImplementor factory = session.getFactory();
-		final MetamodelImplementor metamodel = factory.getMetamodel();
-		for ( EntityPersister persister : metamodel.entityPersisters().values() ) {
-			final String[] entitySpaces = (String[]) persister.getQuerySpaces();
+		final var metamodel = session.getFactory().getMappingMetamodel();
+		metamodel.forEachEntityDescriptor( entityDescriptor -> {
+			final String[] entitySpaces = (String[]) entityDescriptor.getQuerySpaces();
 			if ( affectedEntity( tableSpaces, entitySpaces ) ) {
-				spacesList.addAll( Arrays.asList( entitySpaces ) );
+				addAll( spacesList, entitySpaces );
 
-				if ( persister.canWriteToCache() ) {
-					entityCleanups.add( new EntityCleanup( persister.getCacheAccessStrategy(), session ) );
+				if ( entityDescriptor.canWriteToCache() ) {
+					entityCleanups.add( new EntityCleanup( entityDescriptor.getCacheAccessStrategy(), session ) );
 				}
-				if ( persister.hasNaturalIdentifier() && persister.hasNaturalIdCache() ) {
-					naturalIdCleanups.add( new NaturalIdCleanup( persister.getNaturalIdCacheAccessStrategy(), session ) );
+				if ( entityDescriptor.hasNaturalIdentifier() && entityDescriptor.hasNaturalIdCache() ) {
+					naturalIdCleanups.add( new NaturalIdCleanup( entityDescriptor.getNaturalIdCacheAccessStrategy(), session ) );
 				}
 
-				final Set<String> roles = metamodel.getCollectionRolesByEntityParticipant( persister.getEntityName() );
+				final var roles = metamodel.getCollectionRolesByEntityParticipant( entityDescriptor.getEntityName() );
 				if ( roles != null ) {
 					for ( String role : roles ) {
-						final CollectionPersister collectionPersister = metamodel.collectionPersister( role );
-						if ( collectionPersister.hasCache() ) {
+						final var collectionDescriptor = metamodel.getCollectionDescriptor( role );
+						if ( collectionDescriptor.hasCache() ) {
 							collectionCleanups.add(
-									new CollectionCleanup( collectionPersister.getCacheAccessStrategy(), session )
+									new CollectionCleanup( collectionDescriptor.getCacheAccessStrategy(), session )
 							);
 						}
 					}
 				}
 			}
+		} );
+
+		affectedTableSpaces = spacesList.toArray( EMPTY_STRING_ARRAY );
+	}
+
+	public static void schedule(SharedSessionContractImplementor session, SqmDmlStatement<?> statement) {
+		final List<EntityPersister> entityPersisters = new ArrayList<>( 1 );
+		final var metamodel = session.getFactory().getMappingMetamodel();
+		if ( !( statement instanceof InsertSelectStatement ) ) {
+			entityPersisters.add( metamodel.getEntityDescriptor( statement.getTarget().getEntityName() ) );
+		}
+		for ( var cteStatement : statement.getCteStatements() ) {
+			if ( cteStatement.getCteDefinition() instanceof SqmDmlStatement<?> dmlStatement ) {
+				entityPersisters.add( metamodel.getEntityDescriptor( dmlStatement.getTarget().getEntityName() ) );
+			}
 		}
 
-		this.affectedTableSpaces = spacesList.toArray( new String[ 0 ] );
+		schedule( session, entityPersisters.toArray( new EntityPersister[0] ) );
+	}
+
+	public static void schedule(SharedSessionContractImplementor session, EntityPersister... affectedQueryables) {
+		final var action = new BulkOperationCleanupAction( session, affectedQueryables );
+		if ( session.isEventSource() ) {
+			session.asEventSource().getActionQueue().addAction( action );
+		}
+		else {
+			action.getAfterTransactionCompletionProcess().doAfterTransactionCompletion( true, session );
+		}
+	}
+
+	public static void schedule(SharedSessionContractImplementor session, Set<String> affectedQueryables) {
+		final var action = new BulkOperationCleanupAction( session, affectedQueryables );
+		if ( session.isEventSource() ) {
+			session.asEventSource().getActionQueue().addAction( action );
+		}
+		else {
+			action.getAfterTransactionCompletionProcess().doAfterTransactionCompletion( true, session );
+		}
 	}
 
 
@@ -161,17 +192,18 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		if ( affectedTableSpaces == null || affectedTableSpaces.isEmpty() ) {
 			return true;
 		}
-
-		for ( Serializable checkTableSpace : checkTableSpaces ) {
-			if ( affectedTableSpaces.contains( checkTableSpace ) ) {
-				return true;
+		else {
+			for ( Serializable checkTableSpace : checkTableSpaces ) {
+				if ( affectedTableSpaces.contains( checkTableSpace ) ) {
+					return true;
+				}
 			}
+			return false;
 		}
-		return false;
 	}
 
 	@Override
-	public Serializable[] getPropertySpaces() {
+	public String[] getPropertySpaces() {
 		return affectedTableSpaces;
 	}
 
@@ -182,18 +214,41 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 
 	@Override
 	public AfterTransactionCompletionProcess getAfterTransactionCompletionProcess() {
-		return (success, session) -> {
-			for ( EntityCleanup cleanup : entityCleanups ) {
+		return new BulkOperationCleanUpAfterTransactionCompletionProcess(
+				entityCleanups,
+				collectionCleanups,
+				naturalIdCleanups
+		);
+	}
+
+	public static final class BulkOperationCleanUpAfterTransactionCompletionProcess
+			implements AfterTransactionCompletionProcess {
+		private final Set<EntityCleanup> entityCleanups;
+		private final Set<CollectionCleanup> collectionCleanups;
+		private final Set<NaturalIdCleanup> naturalIdCleanups;
+
+		public BulkOperationCleanUpAfterTransactionCompletionProcess(
+				Set<EntityCleanup> entityCleanups,
+				Set<CollectionCleanup> collectionCleanups,
+				Set<NaturalIdCleanup> naturalIdCleanups) {
+			this.entityCleanups = entityCleanups;
+			this.collectionCleanups = collectionCleanups;
+			this.naturalIdCleanups = naturalIdCleanups;
+		}
+
+		@Override
+		public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
+			for ( var cleanup : entityCleanups ) {
 				cleanup.release();
 			}
 			entityCleanups.clear();
 
-			for ( NaturalIdCleanup cleanup : naturalIdCleanups ) {
+			for ( var cleanup : naturalIdCleanups ) {
 				cleanup.release();
 			}
 			naturalIdCleanups.clear();
 
-			for ( CollectionCleanup cleanup : collectionCleanups ) {
+			for ( var cleanup : collectionCleanups ) {
 				cleanup.release();
 			}
 			collectionCleanups.clear();
@@ -207,7 +262,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 
 	@Override
 	public void execute() throws HibernateException {
-		// nothing to do		
+		// nothing to do
 	}
 
 	private static class EntityCleanup implements Serializable {
@@ -262,7 +317,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	}
 
 	@Override
-	public void afterDeserialize(SharedSessionContractImplementor session) {
+	public void afterDeserialize(EventSource session) {
 		// nop
 	}
 }

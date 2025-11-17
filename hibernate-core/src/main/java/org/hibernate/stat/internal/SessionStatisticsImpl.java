@@ -1,51 +1,49 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat.internal;
 
-import java.util.Collections;
 import java.util.Set;
 
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.stat.SessionStatistics;
+
+import static java.util.Collections.unmodifiableSet;
 
 /**
  * @author Gavin King
  */
 public class SessionStatisticsImpl implements SessionStatistics {
 
-	private final SessionImplementor session;
-	
+	private final PersistenceContext persistenceContext;
+
 	public SessionStatisticsImpl(SessionImplementor session) {
-		this.session = session;
+		persistenceContext = session.getPersistenceContextInternal();
 	}
 
 	public int getEntityCount() {
-		return session.getPersistenceContextInternal().getNumberOfManagedEntities();
+		return persistenceContext.getNumberOfManagedEntities();
 	}
-	
+
 	public int getCollectionCount() {
-		return session.getPersistenceContextInternal().getCollectionEntriesSize();
+		return persistenceContext.getCollectionEntriesSize();
 	}
-	
-	public Set getEntityKeys() {
-		return Collections.unmodifiableSet( session.getPersistenceContextInternal().getEntitiesByKey().keySet() );
+
+	public Set<?> getEntityKeys() {
+		return unmodifiableSet( persistenceContext.getEntitiesByKey().keySet() );
 	}
-	
-	public Set getCollectionKeys() {
-		return Collections.unmodifiableSet( session.getPersistenceContextInternal().getCollectionsByKey().keySet() );
+
+	public Set<?> getCollectionKeys() {
+		return unmodifiableSet( persistenceContext.getCollectionsByKey().keySet() );
 	}
-	
+
 	public String toString() {
-		return new StringBuilder()
-			.append("SessionStatistics[")
-			.append("entity count=").append( getEntityCount() )
-			.append(",collection count=").append( getCollectionCount() )
-			.append(']')
-			.toString();
+		return "SessionStatistics["
+			+ "entity count=" + getEntityCount()
+			+ ",collection count=" + getCollectionCount()
+			+ ']';
 	}
 
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.spi;
 
@@ -13,12 +11,14 @@ import javax.sql.DataSource;
 import org.hibernate.service.UnknownUnwrapTypeException;
 
 /**
- * Basic support for implementations of {@link MultiTenantConnectionProvider} based on DataSources.
+ * Basic support for implementations of {@link MultiTenantConnectionProvider} based on {@link DataSource}s.
+ *
  * @author Steve Ebersole
  */
-public abstract class AbstractDataSourceBasedMultiTenantConnectionProviderImpl implements MultiTenantConnectionProvider {
+public abstract class AbstractDataSourceBasedMultiTenantConnectionProviderImpl<T>
+		implements MultiTenantConnectionProvider<T> {
 	protected abstract DataSource selectAnyDataSource();
-	protected abstract DataSource selectDataSource(String tenantIdentifier);
+	protected abstract DataSource selectDataSource(T tenantIdentifier);
 
 	@Override
 	public Connection getAnyConnection() throws SQLException {
@@ -31,12 +31,12 @@ public abstract class AbstractDataSourceBasedMultiTenantConnectionProviderImpl i
 	}
 
 	@Override
-	public Connection getConnection(String tenantIdentifier) throws SQLException {
+	public Connection getConnection(T tenantIdentifier) throws SQLException {
 		return selectDataSource( tenantIdentifier ).getConnection();
 	}
 
 	@Override
-	public void releaseConnection(String tenantIdentifier, Connection connection) throws SQLException {
+	public void releaseConnection(T tenantIdentifier, Connection connection) throws SQLException {
 		connection.close();
 	}
 
@@ -46,19 +46,18 @@ public abstract class AbstractDataSourceBasedMultiTenantConnectionProviderImpl i
 	}
 
 	@Override
-	public boolean isUnwrappableAs(Class unwrapType) {
-		return
-			DataSource.class.isAssignableFrom( unwrapType ) ||
-			MultiTenantConnectionProvider.class.isAssignableFrom( unwrapType );
+	public boolean isUnwrappableAs(Class<?> unwrapType) {
+		return unwrapType.isInstance( this )
+			|| unwrapType.isAssignableFrom( DataSource.class );
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( MultiTenantConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+		if ( unwrapType.isInstance( this ) ) {
 			return (T) this;
 		}
-		else if ( DataSource.class.isAssignableFrom( unwrapType ) ) {
+		else if ( unwrapType.isAssignableFrom( DataSource.class ) ) {
 			return (T) selectAnyDataSource();
 		}
 		else {

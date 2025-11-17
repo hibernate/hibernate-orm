@@ -1,43 +1,42 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.config.spi;
 
 
+
+import static java.lang.Boolean.parseBoolean;
+import static java.lang.Integer.parseInt;
 import static org.hibernate.engine.config.spi.ConfigurationService.Converter;
 
 /**
- * Standard set of setting converters
+ * Standard set of setting converters.
  *
  * @author Steve Ebersole
  */
 public class StandardConverters {
-	public static final Converter<Boolean> BOOLEAN = new Converter<Boolean>() {
-		@Override
-		public Boolean convert(Object value) {
-			if ( value == null ) {
-				throw new IllegalArgumentException( "Null value passed to convert" );
-			}
+	public static final Converter<Boolean> BOOLEAN = StandardConverters::asBoolean;
 
-			return Boolean.class.isInstance( value )
-					? Boolean.class.cast( value )
-					: Boolean.parseBoolean( value.toString() );
-		}
-	};
+	public static Boolean asBoolean(Object value) {
+		return value instanceof Boolean bool
+				? bool
+				: parseBoolean( value.toString() );
+	}
 
-	public static final Converter<String> STRING = new Converter<String>() {
-		@Override
-		public String convert(Object value) {
-			if ( value == null ) {
-				throw new IllegalArgumentException( "Null value passed to convert" );
-			}
+	public static final Converter<String> STRING = StandardConverters::asString;
 
-			return value.toString();
-		}
-	};
+	public static String asString(Object value) {
+		return value.toString();
+	}
+
+	public static final Converter<Integer> INTEGER = StandardConverters::asInteger;
+
+	public static Integer asInteger(Object value) {
+		return value instanceof Number number
+				? number.intValue()
+				: parseInt( value.toString() );
+	}
 
 	/**
 	 * Disallow direct instantiation

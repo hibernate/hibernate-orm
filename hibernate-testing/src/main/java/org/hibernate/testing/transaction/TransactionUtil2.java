@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.transaction;
 
@@ -30,7 +28,7 @@ public class TransactionUtil2 {
 	public static void inSession(SessionFactoryImplementor sfi, Consumer<SessionImplementor> action) {
 		log.trace( "#inSession(SF,action)" );
 
-		try (SessionImplementor session = (SessionImplementor) sfi.openSession()) {
+		try (SessionImplementor session = sfi.openSession()) {
 			log.trace( "Session opened, calling action" );
 			action.accept( session );
 			log.trace( "called action" );
@@ -41,15 +39,30 @@ public class TransactionUtil2 {
 	}
 
 	public static <R> R fromSession(SessionFactoryImplementor sfi, Function<SessionImplementor,R> action) {
-		log.trace( "#inSession(SF,action)" );
+		log.trace( "#fromSession(SF,action)" );
 
-		try (SessionImplementor session = (SessionImplementor) sfi.openSession()) {
+		try (SessionImplementor session = sfi.openSession()) {
 			log.trace( "Session opened, calling action" );
 			return action.apply( session );
 		}
 		finally {
 			log.trace( "Session closed (AutoCloseable)" );
 		}
+	}
+
+	public static <R> R inSessionReturn(SessionFactoryImplementor sfi, Function<SessionImplementor,R> action) {
+		log.trace( "#inSession(SF,action)" );
+
+		R result = null;
+		try (SessionImplementor session = sfi.openSession()) {
+			log.trace( "Session opened, calling action" );
+			result = action.apply( session );
+			log.trace( "called action" );
+		}
+		finally {
+			log.trace( "Session closed (AutoCloseable)" );
+		}
+		return result;
 	}
 
 
@@ -62,7 +75,7 @@ public class TransactionUtil2 {
 		);
 	}
 	public static <R> R fromTransaction(SessionFactoryImplementor factory, Function<SessionImplementor,R> action) {
-		log.trace( "#inTransaction(factory, action)");
+		log.trace( "#fromTransaction(factory, action)");
 
 		return fromSession(
 				factory,
@@ -120,7 +133,7 @@ public class TransactionUtil2 {
 	}
 
 	public static <R> R fromTransaction(SessionImplementor session, Function<SessionImplementor,R> action) {
-		log.trace( "inTransaction(session,action)" );
+		log.trace( "fromTransaction(session,action)" );
 
 		final Transaction txn = session.beginTransaction();
 		log.trace( "Started transaction" );

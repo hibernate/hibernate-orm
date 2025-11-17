@@ -1,62 +1,203 @@
-import java.nio.charset.StandardCharsets
-
-import groovy.json.JsonSlurper
-
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-apply from: rootProject.file( 'gradle/base-information.gradle' )
 
-apply plugin: 'idea'
-apply plugin: 'distribution'
+plugins {
+    id "local.module"
+    id "org.hibernate.orm.build.jdks"
 
-ext {
-    if ( !project.hasProperty( 'gitRemote' ) ) {
-        gitRemote = 'origin'
-    }
+    id "idea"
 }
 
 idea.module {
 }
 
-final File documentationDir = mkdir( "${project.buildDir}/documentation" );
+// skip building this when `build` task is run from root, as many of our CI jobs do
+tasks.build.dependsOn.clear()
+tasks.build.enabled = false
 
-task releaseChecks() {
-    doFirst {
-        if ( !project.hasProperty('releaseVersion') || !project.hasProperty('developmentVersion')
-                || !project.hasProperty('gitRemote') ||!project.hasProperty('gitBranch') ) {
-            throw new GradleException(
-                    "Release tasks require all of the following properties to be set:"
-                            + "'releaseVersion', 'developmentVersion', 'gitRemote', 'gitBranch'."
-            )
-        }
 
-        logger.lifecycle( "Checking that the working tree is clean..." )
-        String uncommittedFiles = executeGitCommand( 'status', '--porcelain' )
-        if ( !uncommittedFiles.isEmpty() ) {
-            throw new GradleException(
-                    "Cannot release because there are uncommitted or untracked files in the working tree."
-                            + "\nCommit or stash your changes first."
-                            + "\nUncommitted files:\n" + uncommittedFiles
-            );
-        }
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Stage - Release Prepare : see `releasePrepare`
+//
+// This coordinates:
+//		1. assemble documentation (we want this to run here as a "check")
+//		2. generate and place all the artifacts in the staging directory (see local.publishing-java-module)
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-        logger.lifecycle( "Switching to branch '${project.gitBranch}'..." )
-        executeGitCommand( 'checkout', project.gitBranch )
+tasks.register("releasePrepare") {
+    group = "release-prepare"
+    description = "Scripted release 'Release Prepare' stage"
 
-        logger.lifecycle( "Checking that all commits are pushed..." )
-        String diffWithUpstream = executeGitCommand( 'diff', '@{u}' )
-        if ( !diffWithUpstream.isEmpty() ) {
-            throw new GradleException(
-                    "Cannot release because there are commits on the branch to release that haven't been pushed yet."
-                            + "\nPush your commits to the branch to release first."
-            );
-        }
+    dependsOn "assembleDocumentation"
+}
 
-    }
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Assemble documentation as part of Release Prepare
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+def stageIntegrationGuideTask = tasks.register( "stageIntegrationGuide", Copy ) {
+    group = "documentation"
+    description = "Stages the Integration Guide as part of assembling documentation in preparation for release"
+
+    dependsOn ":documentation:renderIntegrationGuides"
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/integrationguide" ) }
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/integrationguide")
+}
+
+def stageQuickstartTask = tasks.register( "stageQuickstart", Copy ) {
+    group = 'documentation'
+    description = "Stages the Getting Started Guide as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:renderGettingStartedGuides'
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/quickstart" ) }
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/quickstart")
+}
+
+def stageTopicalGuideTask = tasks.register( "stageTopicalGuide", Copy ) {
+    group = 'documentation'
+    description = "Stages the Topical Guide as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:renderTopicalGuides'
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/topical" ) }
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/topical")
+}
+
+def stageIntroductionGuideTask = tasks.register( "stageIntroductionGuide", Copy ) {
+    group = 'documentation'
+    description = "Stages the Introduction Guide as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:renderIntroductionGuides'
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/introduction" ) }
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/introduction")
+}
+
+def stageQueryGuideTask = tasks.register( "stageQueryGuide", Copy ) {
+    group = 'documentation'
+    description = "Stages the Query Language Guide as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:renderQueryLanguageGuides'
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/querylanguage" ) }
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/querylanguage")
+}
+
+def stageRepositoriesGuideTask = tasks.register( "stageRepositoriesGuide", Copy ) {
+    group = 'documentation'
+    description = "Stages the Repositories Guide as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:renderRepositories'
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/repositories" ) }
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/repositories")
+}
+
+def stageUserGuideTask = tasks.register( "stageUserGuide", Copy ) {
+    group = 'documentation'
+    description = "Stages the User Guide as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:renderUserGuides'
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/userguide" ) }
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/userguide")
+}
+
+
+def stageMigrationGuideTask = tasks.register( "stageMigrationGuide", Copy ) {
+    group = 'documentation'
+    description = "Stages the Migration Guide as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:renderMigrationGuide'
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/migration-guide" ) }
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/migration-guide")
+}
+
+def stageDialectGuideTask = tasks.register( "stageDialectGuide", Copy ) {
+    group = 'documentation'
+    description = "Stages the Dialect Guide as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:renderDialectGuide'
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/dialect" ) }
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/dialect")
+}
+
+def stageWhatsNewGuideTask = tasks.register( "stageWhatsNewGuide", Copy ) {
+    group = 'documentation'
+    description = "Stages the What's New guide as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:renderWhatsNew'
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/whats-new" ) }
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/whats-new")
+}
+
+def stageIncubationReportTask = tasks.register( "stageIncubationReport", Copy ) { task ->
+    group = 'documentation'
+    description = "Stages ORM @Incubating report as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:generateIncubationReport'
+    tasks.stageOrmReports.dependsOn task
+
+    from project( ":documentation" ).tasks.generateIncubationReport
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/incubating")
+}
+
+def stageInternalsReportTask = tasks.register( "stageInternalsReport", Copy ) { task ->
+    group = 'documentation'
+    description = "Stages the @Internal report as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:generateInternalsReport'
+
+    from project( ":documentation" ).tasks.generateInternalsReport
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/internals")
+}
+
+def stageDeprecationReportTask = tasks.register( "stageDeprecationReport", Copy ) {
+    group = 'documentation'
+    description = "Stages the @Deprecated/@Remove report as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:generateDeprecationReport'
+
+    from project( ":documentation" ).tasks.generateDeprecationReport
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/deprecated")
+}
+
+def stageLoggingReportTask = tasks.register( "stageLoggingReport", Copy ) { task ->
+    group = 'documentation'
+    description = "Stages the logging report as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:renderLoggingReport'
+
+    from project( ":documentation" ).tasks.renderLoggingReport
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/logging")
+}
+
+def stageOrmReportsTask = tasks.register( "stageOrmReports" ) {
+    group = 'documentation'
+    description = "Stages all ORM reports as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:generateReports'
+    dependsOn stageIncubationReportTask
+    dependsOn stageInternalsReportTask
+    dependsOn stageDeprecationReportTask
+    dependsOn stageLoggingReportTask
+}
+
+def stageJavadocsTask = tasks.register( "stageJavadocs", Copy ) {
+    group = 'documentation'
+    description = "Stages the aggregated Javadocs as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:javadoc'
+
+    from project( ":documentation" ).tasks.javadoc
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/javadocs")
 }
 
 /**
@@ -64,412 +205,21 @@ task releaseChecks() {
  *
  * Depends on building the docs
  */
-task assembleDocumentation(type: Task, dependsOn: [rootProject.project( 'documentation' ).tasks.buildDocsForPublishing]) {
+def assembleDocumentationTask = tasks.register( "assembleDocumentation" ) {
+    group = 'documentation'
     description = 'Assembles all documentation into the {buildDir}/documentation directory'
 
-    doLast {
-        // copy documentation outputs into target/documentation.
-        // 		* this is used in building the dist bundles
-		//		* it is also used as a base to build a staged directory for documentation upload
-
-        // Integrations Guide
-        copy {
-            from "${rootProject.project( 'documentation' ).buildDir}/asciidoc/integrationguide"
-            into "${documentationDir}/integrationguide"
-        }
-
-        // Getting-started Guide
-        copy {
-            from "${rootProject.project( 'documentation' ).buildDir}/asciidoc/quickstart"
-            into "${documentationDir}/quickstart"
-        }
-
-        // Topical Guide
-        copy {
-            from "${rootProject.project( 'documentation' ).buildDir}/asciidoc/topical"
-            into "${documentationDir}/topical"
-        }
-
-        // User Guide
-        copy {
-            from "${rootProject.project( 'documentation' ).buildDir}/asciidoc/userguide"
-            into "${documentationDir}/userguide"
-        }
-
-        // Aggregated JavaDoc
-        copy {
-            from "${rootProject.project( 'documentation' ).buildDir}/javadocs"
-            into "${documentationDir}/javadocs"
-        }
-    }
+    dependsOn ':documentation:buildDocsForPublishing'
+    dependsOn stageJavadocsTask
+    dependsOn stageQuickstartTask
+    dependsOn stageIntroductionGuideTask
+    dependsOn stageUserGuideTask
+    dependsOn stageQueryGuideTask
+    dependsOn stageRepositoriesGuideTask
+    dependsOn stageIntegrationGuideTask
+    dependsOn stageTopicalGuideTask
+    dependsOn stageMigrationGuideTask
+    dependsOn stageDialectGuideTask
+    dependsOn stageWhatsNewGuideTask
+    dependsOn stageOrmReportsTask
 }
-
-/**
- * Upload the documentation to the JBoss doc server
- */
-task uploadDocumentation(type:Exec, dependsOn: assembleDocumentation) {
-    description = "Uploads documentation to the JBoss doc server"
-
-    final String url = "filemgmt.jboss.org:/docs_htdocs/hibernate/orm/${rootProject.ormVersion.family}";
-
-    executable 'rsync'
-    args '-avz', '--links', '--protocol=28', "${documentationDir.absolutePath}/", url
-
-    doFirst {
-        if ( rootProject.ormVersion.isSnapshot ) {
-            logger.error( "Cannot perform upload of SNAPSHOT documentation" );
-            throw new RuntimeException( "Cannot perform upload of SNAPSHOT documentation" );
-        }
-        else {
-            logger.lifecycle( "Uploading documentation [{$url}]..." )
-        }
-    }
-
-    doLast {
-        logger.lifecycle( 'Done uploading documentation' )
-    }
-}
-
-
-/**
- * Configuration of the distribution plugin, used to build release bundle as both ZIP and TGZ
- */
-distributions {
-    main {
-        baseName = 'hibernate-release'
-        contents {
-            from rootProject.file( 'lgpl.txt' )
-            from rootProject.file( 'changelog.txt' )
-            from rootProject.file( 'hibernate_logo.gif' )
-
-            into('lib/required') {
-                from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'jta' }
-                from parent.project( 'hibernate-core' ).configurations.runtime
-                from parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                // for now,
-                from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'javassist' }
-            }
-
-//            into( 'lib/jpa' ) {
-//                from parent.project( 'hibernate-entitymanager' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-//            }
-
-            into( 'lib/spatial' ) {
-                from(
-                        ( parent.project( 'hibernate-spatial' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                                + parent.project( 'hibernate-spatial' ).configurations.runtime )
-                                - parent.project( 'hibernate-core' ).configurations.runtime
-                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
-                )
-            }
-
-            into( 'lib/jpa-metamodel-generator' ) {
-                from parent.project( 'hibernate-jpamodelgen' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-            }
-
-            into( 'lib/envers' ) {
-                from(
-                        ( parent.project( 'hibernate-envers' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                                + parent.project( 'hibernate-envers' ).configurations.runtime )
-                                - parent.project( 'hibernate-core' ).configurations.runtime
-                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
-                )
-            }
-
-            into( 'lib/osgi' ) {
-                from(
-                        ( parent.project( 'hibernate-osgi' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                                + parent.project( 'hibernate-osgi' ).configurations.runtime )
-                                - parent.project( 'hibernate-core' ).configurations.runtime
-                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
-                )
-                from(
-                        parent.project( 'hibernate-osgi' ).extensions.karaf.features.outputFile
-                )
-            }
-
-            // todo : this closure is problematic as it does not write into the hibernate-release-$project.version directory
-            // due to http://issues.gradle.org/browse/GRADLE-1450
-            [ 'hibernate-agroal', 'hibernate-c3p0', 'hibernate-ehcache', 'hibernate-hikaricp', 'hibernate-jcache', 'hibernate-proxool', 'hibernate-vibur' ].each { feature ->
-                final String shortName = feature.substring( 'hibernate-'.length() )
-// WORKAROUND http://issues.gradle.org/browse/GRADLE-1450
-//                into('lib/optional/' + shortName) {
-                owner.into('lib/optional/' + shortName) {
-                    from (
-                            ( parent.project( feature ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                                    + parent.project( feature ).configurations.runtime )
-                                    - parent.project( 'hibernate-core' ).configurations.runtime
-                                    - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
-                    )
-                }
-            }
-
-            into('documentation') {
-                from documentationDir
-            }
-
-            into( 'project' ) {
-                from ( rootProject.projectDir ) {
-                    exclude( '.git' )
-                    exclude( '.gitignore' )
-                    exclude( 'changelog.txt' )
-                    exclude( 'lgpl.txt' )
-                    exclude( 'hibernate_logo.gif' )
-                    exclude( 'tagRelease.sh' )
-                    exclude( 'gradlew' )
-                    exclude( 'gradlew.bat' )
-                    exclude( 'wrapper/*' )
-                    exclude( '**/.gradle/**' )
-                    exclude( '**/target/**' )
-                    exclude( '.idea' )
-                    exclude( '**/*.ipr' )
-                    exclude( '**/*.iml' )
-                    exclude( '**/*.iws' )
-                    exclude( '**/atlassian-ide-plugin.xml' )
-                    exclude( '**/.classpath' )
-                    exclude( '**/.project' )
-                    exclude( '**/.settings' )
-                    exclude( '**/.nbattrs' )
-                    exclude( '**/out/**' )
-                    exclude( '**/bin/**' )
-                    exclude( 'build/**' )
-                    exclude( '*/build/**' )
-                }
-            }
-        }
-    }
-}
-
-distZip.dependsOn assembleDocumentation
-distTar.dependsOn assembleDocumentation
-distTar {
-    compression = Compression.GZIP
-}
-
-/**
- * "virtual" task for building both types of dist bundles
- */
-task buildBundles(type: Task, dependsOn: [distZip,distTar]) {
-    description = "Builds all release bundles"
-}
-
-task uploadBundlesSourceForge(type: Exec, dependsOn: buildBundles) {
-    description = "Uploads release bundles to SourceForge"
-
-    final String url = "frs.sourceforge.net:/home/frs/project/hibernate/hibernate-orm/${version}";
-
-    executable 'rsync'
-    args '-vr', '-e ssh', "${project.buildDir}/distributions/", url
-
-    doFirst {
-        if ( rootProject.ormVersion.isSnapshot ) {
-            logger.error( "Cannot perform upload of SNAPSHOT bundles to SourceForge" );
-            throw new RuntimeException( "Cannot perform upload of SNAPSHOT bundles to SourceForge" )
-        }
-        else {
-            logger.lifecycle( "Uploading release bundles to SourceForge..." )
-        }
-    }
-
-    doLast {
-        logger.lifecycle( 'Done uploading release bundles to SourceForge' )
-    }
-}
-
-configurations {
-    bundles {
-        description = 'Configuration used to group the archives output from the distribution plugin.'
-    }
-}
-
-artifacts {
-    bundles distTar
-    bundles distZip
-}
-
-task release( dependsOn: [releaseChecks, uploadDocumentation, uploadBundlesSourceForge] )
-
-task changeLogFile( dependsOn: [releaseChecks] ) {
-    group = "Release"
-    description = "Updates the changelog.txt file"
-
-    doFirst {
-        logger.lifecycle( "Appending version '${project.releaseVersion}' to changelog..." )
-        ChangeLogFile.update( ormVersion.fullName );
-    }
-}
-
-task addVersionCommit( dependsOn: [changeLogFile] ) {
-    group = "Release"
-    description = "Adds a commit for the released version and push the changes to github"
-    doFirst{
-        logger.lifecycle( "Updating version to '${project.releaseVersion}'..." )
-        project.ormVersionFile.text = "hibernateVersion=${project.releaseVersion}"
-
-        logger.lifecycle( "Adding commit to update version to '${project.releaseVersion}'..." )
-        executeGitCommand( 'add', '.' )
-        executeGitCommand( 'commit', '-m', project.ormVersion.fullName )
-    }
-}
-release.mustRunAfter addVersionCommit
-
-rootProject.subprojects.each { Project subProject ->
-    if ( !this.name.equals( subProject.name ) ) {
-        if ( subProject.tasks.findByName( 'release' ) ) {
-            this.tasks.release.dependsOn( subProject.tasks.release )
-            subProject.tasks.release.mustRunAfter( this.tasks.addVersionCommit )
-        }
-    }
-}
-
-task ciRelease( dependsOn: [releaseChecks, addVersionCommit, release] ) {
-    group = "Release"
-    description = "Performs a release: the hibernate version is set and the changelog.txt file updated, the changes are pushed to github, then the release is performed, tagged and the hibernate version is set to the development one."
-    doLast {
-        String tag = null
-        if ( !project.hasProperty( 'noTag' ) ) {
-            tag = project.ormVersion.fullName
-            // the release is tagged and the tag is pushed to github
-            if ( tag.endsWith( ".Final" ) ) {
-                tag = tag.replace( ".Final", "" )
-            }
-            logger.lifecycle( "Tagging '${tag}'..." )
-            executeGitCommand( 'tag', tag )
-        }
-
-        logger.lifecycle( "Adding commit to update version to '${project.developmentVersion}'..." )
-        project.ormVersionFile.text = "hibernateVersion=${project.developmentVersion}"
-        executeGitCommand( 'add', '.')
-        executeGitCommand( 'commit', '-m', project.developmentVersion )
-
-        if ( tag != null ) {
-            logger.lifecycle("Pushing branch and tag to remote '${project.gitRemote}'...")
-            executeGitCommand( 'push', '--atomic', project.gitRemote , project.gitBranch, tag )
-        }
-        else {
-            logger.lifecycle("Pushing branch to remote '${project.gitRemote}'...")
-            executeGitCommand( 'push', project.gitRemote , project.gitBranch )
-        }
-    }
-}
-
-static String executeGitCommand(Object ... subcommand){
-    List<Object> command = ['git']
-    Collections.addAll( command, subcommand )
-    def proc = command.execute()
-    def code = proc.waitFor()
-    def stdout = inputStreamToString( proc.getInputStream() )
-    def stderr = inputStreamToString( proc.getErrorStream() )
-    if ( code != 0 ) {
-        throw new GradleException( "An error occurred while executing " + command + "\n\nstdout:\n" + stdout + "\n\nstderr:\n" + stderr )
-    }
-    return stdout
-}
-
-static String inputStreamToString(InputStream inputStream) {
-    inputStream.withCloseable { ins ->
-        new BufferedInputStream(ins).withCloseable { bis ->
-            new ByteArrayOutputStream().withCloseable { buf ->
-                int result = bis.read();
-                while (result != -1) {
-                    buf.write((byte) result);
-                    result = bis.read();
-                }
-                return buf.toString( StandardCharsets.UTF_8.name());
-            }
-        }
-    }
-}
-
-class ChangeLogFile {
-
-    // Get the Release Notes from Jira and add them to the Hibernate changelog.txt file
-    static void update(String releaseVersion) {
-        def text = ""
-        File changelog = new File( "changelog.txt" )
-        def newReleaseNoteBlock = getNewReleaseNoteBlock(releaseVersion)
-        changelog.eachLine {
-            line ->
-                if ( line.startsWith( "Note:" ) ) {
-                    text += line + System.lineSeparator() + System.lineSeparator() + newReleaseNoteBlock
-                }
-                else {
-                    text += line + System.lineSeparator()
-                }
-        }
-        changelog.text = text
-    }
-
-    // Get the Release Notes from Jira
-    static String getNewReleaseNoteBlock(String releaseVersion) {
-        def restReleaseVersion;
-        if ( releaseVersion.endsWith( ".Final" ) ) {
-            restReleaseVersion = releaseVersion.replace( ".Final", "" )
-        }
-        else {
-            restReleaseVersion = releaseVersion
-        }
-        def apiString = "https://hibernate.atlassian.net/rest/api/2/search/?jql=project=HHH%20AND%20fixVersion=${restReleaseVersion}%20order%20by%20issuetype%20ASC"
-        def apiUrl = new URL( apiString )
-        def jsonReleaseNotes = new JsonSlurper().parse( apiUrl )
-        def releaseDate = new Date().format( 'MMMM dd, YYYY' )
-        def versionId = getVersionId( jsonReleaseNotes, restReleaseVersion )
-
-        ReleaseNote releaseNotes = new ReleaseNote( releaseVersion, releaseDate, versionId )
-
-        def issuetype
-        jsonReleaseNotes.issues.each {
-            issue ->
-                if ( issuetype != issue.fields.issuetype.name ) {
-                    issuetype = issue.fields.issuetype.name
-                    releaseNotes.addEmptyLine();
-                    releaseNotes.addLine( "** ${issue.fields.issuetype.name}" )
-                }
-                releaseNotes.addLine( "    * [" + issue.key + "] - " + issue.fields.summary )
-        }
-        releaseNotes.addEmptyLine()
-        return releaseNotes.notes
-    }
-
-    private static getVersionId(jsonReleaseNotes, String restReleaseVersion) {
-        def fixVersions = jsonReleaseNotes.issues.get( 0 ).fields.fixVersions
-
-        for ( def fixVersion : fixVersions ) {
-            if ( fixVersion.name.equals( restReleaseVersion ) ) {
-                return fixVersion.id
-            }
-        }
-        throw new GradleException( "Unable to determine the version id of the current release." )
-    }
-}
-
-class ReleaseNote {
-    String notes;
-    String notesHeaderSeparator = "------------------------------------------------------------------------------------------------------------------------"
-
-    ReleaseNote(String releaseVersion, String releaseDate, String versionId) {
-        notes = "Changes in ${releaseVersion} (${releaseDate})" + System.lineSeparator()
-        addHeaderSeparator()
-        addEmptyLine()
-        addLine( "https://hibernate.atlassian.net/projects/HHH/versions/${versionId}" )
-    }
-
-    void addLine(String text) {
-        notes += text + System.lineSeparator()
-    }
-
-    void addHeaderSeparator() {
-        addLine( notesHeaderSeparator )
-    }
-
-    void addEmptyLine() {
-        notes += System.lineSeparator()
-    }
-
-    void addEmptyLines(int numberOfLines) {
-        for ( i in 1..numberOfLines ) {
-            notes += System.lineSeparator()
-        }
-    }
-}
-

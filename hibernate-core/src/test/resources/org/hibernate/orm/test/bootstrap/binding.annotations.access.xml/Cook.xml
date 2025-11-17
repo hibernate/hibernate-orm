@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="2.0">
+    <package>org.hibernate.orm.test.bootstrap.binding.annotations.access.xml</package>
+    <entity class="Cook" metadata-complete="false">
+        <attributes>
+            <embedded name="favouriteKnife" access="PROPERTY"/>
+        </attributes>
+    </entity>
+</entity-mappings>

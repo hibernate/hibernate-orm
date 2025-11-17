@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.backend.jdbc.internal;
 
@@ -15,8 +13,10 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
+import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION;
+
 /**
- * Concrete builder for resource-local TransactionCoordinator instances.
+ * Concrete builder for resource-local {@link TransactionCoordinator} instances.
  *
  * @author Steve Ebersole
  */
@@ -26,15 +26,15 @@ public class JdbcResourceLocalTransactionCoordinatorBuilderImpl implements Trans
 	/**
 	 * Singleton access
 	 */
-	public static final JdbcResourceLocalTransactionCoordinatorBuilderImpl INSTANCE = new JdbcResourceLocalTransactionCoordinatorBuilderImpl();
+	public static final TransactionCoordinatorBuilder INSTANCE = new JdbcResourceLocalTransactionCoordinatorBuilderImpl();
 
 	@Override
 	public TransactionCoordinator buildTransactionCoordinator(TransactionCoordinatorOwner owner, Options options) {
-		if ( owner instanceof JdbcResourceTransactionAccess ) {
+		if ( owner instanceof JdbcResourceTransactionAccess transactionAccess ) {
 			return new JdbcResourceLocalTransactionCoordinatorImpl(
 					this,
 					owner,
-					(JdbcResourceTransactionAccess) owner
+					transactionAccess
 			);
 		}
 
@@ -50,7 +50,7 @@ public class JdbcResourceLocalTransactionCoordinatorBuilderImpl implements Trans
 
 	@Override
 	public PhysicalConnectionHandlingMode getDefaultConnectionHandlingMode() {
-		return PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION;
+		return DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION;
 	}
 
 	@Override

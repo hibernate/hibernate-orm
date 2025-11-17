@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.spi;
 
@@ -13,53 +11,49 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyNoopImpl;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
- * Describes the built-in externally-nameable PropertyAccessStrategy implementations.
+ * Describes the built-in externally-nameable {@link PropertyAccessStrategy} implementations.
  *
  * @author Steve Ebersole
  */
 public enum BuiltInPropertyAccessStrategies {
-	BASIC( "property", PropertyAccessStrategyBasicImpl.INSTANCE ),
-	FIELD( "field", PropertyAccessStrategyFieldImpl.INSTANCE ),
-	MIXED( "mixed", PropertyAccessStrategyMixedImpl.INSTANCE ),
-	MAP( "map", PropertyAccessStrategyMapImpl.INSTANCE ),
-	EMBEDDED( "embedded", PropertyAccessStrategyEmbeddedImpl.INSTANCE ),
-	NOOP( "noop", PropertyAccessStrategyNoopImpl.INSTANCE )
-	;
-
-	private final String externalName;
-	private final PropertyAccessStrategy strategy;
-
-	BuiltInPropertyAccessStrategies(String externalName, PropertyAccessStrategy strategy) {
-		this.externalName = externalName;
-		this.strategy = strategy;
-	}
+	BASIC,
+	FIELD,
+	MIXED,
+	MAP,
+	EMBEDDED,
+	NOOP;
 
 	public String getExternalName() {
-		return externalName;
+		return switch ( this ) {
+			case BASIC -> "property";
+			case FIELD -> "field";
+			case MIXED -> "mixed";
+			case MAP -> "map";
+			case EMBEDDED -> "embedded";
+			case NOOP -> "noop";
+		};
 	}
 
 	public PropertyAccessStrategy getStrategy() {
-		return strategy;
+		return switch ( this ) {
+			case BASIC -> PropertyAccessStrategyBasicImpl.INSTANCE;
+			case FIELD -> PropertyAccessStrategyFieldImpl.INSTANCE;
+			case MIXED -> PropertyAccessStrategyMixedImpl.INSTANCE;
+			case MAP -> PropertyAccessStrategyMapImpl.INSTANCE;
+			case EMBEDDED -> PropertyAccessStrategyEmbeddedImpl.INSTANCE;
+			case NOOP -> PropertyAccessStrategyNoopImpl.INSTANCE;
+		};
 	}
 
-	public static BuiltInPropertyAccessStrategies interpret(String name) {
-		if ( BASIC.externalName.equals( name ) ) {
-			return BASIC;
+	public static @Nullable BuiltInPropertyAccessStrategies interpret(String name) {
+		for ( var strategy : values() ) {
+			if ( strategy.getExternalName().equals( name ) ) {
+				return strategy;
+			}
 		}
-		else if ( FIELD.externalName.equals( name ) ) {
-			return FIELD;
-		}
-		else if ( MAP.externalName.equals( name ) ) {
-			return MAP;
-		}
-		else if ( EMBEDDED.externalName.equals( name ) ) {
-			return EMBEDDED;
-		}
-		else if ( NOOP.externalName.equals( name ) ) {
-			return NOOP;
-		}
-
 		return null;
 	}
 }

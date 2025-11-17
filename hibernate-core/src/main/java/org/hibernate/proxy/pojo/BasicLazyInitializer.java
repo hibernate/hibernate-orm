@@ -1,21 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.proxy.pojo;
 
-import java.io.Serializable;
 import java.lang.reflect.Method;
 
+import org.hibernate.LazyInitializationException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.proxy.AbstractLazyInitializer;
 import org.hibernate.type.CompositeType;
 
+import static java.lang.System.identityHashCode;
+
 /**
- * Lazy initializer for POJOs
+ * Lazy initializer for plain Java objects.
  *
  * @author Gavin King
  */
@@ -23,7 +23,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 
 	protected static final Object INVOKE_IMPLEMENTATION = new MarkerObject( "INVOKE_IMPLEMENTATION" );
 
-	protected final Class persistentClass;
+	protected final Class<?> persistentClass;
 	protected final Method getIdentifierMethod;
 	protected final Method setIdentifierMethod;
 	protected final boolean overridesEquals;
@@ -33,8 +33,8 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 
 	protected BasicLazyInitializer(
 			String entityName,
-			Class persistentClass,
-			Serializable id,
+			Class<?> persistentClass,
+			Object id,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
 			CompositeType componentIdType,
@@ -51,32 +51,32 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 	protected abstract Object serializableProxy();
 
 	protected final Object invoke(Method method, Object[] args, Object proxy) throws Throwable {
-		String methodName = method.getName();
-		int params = args.length;
-
-		if ( params == 0 ) {
-			if ( "writeReplace".equals( methodName ) ) {
-				return getReplacement();
-			}
-			else if ( !overridesEquals && "hashCode".equals( methodName ) ) {
-				return System.identityHashCode( proxy );
-			}
-			else if ( isUninitialized() && method.equals( getIdentifierMethod ) ) {
-				return getIdentifier();
-			}
-			else if ( "getHibernateLazyInitializer".equals( methodName ) ) {
-				return this;
-			}
-		}
-		else if ( params == 1 ) {
-			if ( !overridesEquals && "equals".equals( methodName ) ) {
-				return args[0] == proxy;
-			}
-			else if ( method.equals( setIdentifierMethod ) ) {
-				initialize();
-				setIdentifier( (Serializable) args[0] );
-				return INVOKE_IMPLEMENTATION;
-			}
+		final String methodName = method.getName();
+		switch ( args.length ) {
+			case 0:
+				if ( "writeReplace".equals( methodName ) ) {
+					return getReplacement();
+				}
+				else if ( !overridesEquals && "hashCode".equals( methodName ) ) {
+					return identityHashCode( proxy );
+				}
+				else if ( isUninitialized() && method.equals( getIdentifierMethod ) ) {
+					return getIdentifier();
+				}
+				else if ( "getHibernateLazyInitializer".equals( methodName ) ) {
+					return this;
+				}
+				break;
+			case 1:
+				if ( !overridesEquals && "equals".equals( methodName ) ) {
+					return args[0] == proxy;
+				}
+				else if ( method.equals( setIdentifierMethod ) ) {
+					initialize();
+					setIdentifier( args[0] );
+					return INVOKE_IMPLEMENTATION;
+				}
+				break;
 		}
 
 		//if it is a property of an embedded component, invoke on the "identifier"
@@ -86,14 +86,12 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 
 		// otherwise:
 		return INVOKE_IMPLEMENTATION;
-
 	}
 
 	private Object getReplacement() {
-		/*
-		 * If the target has already been loaded somewhere, just not set on the proxy,
-		 * then use it to initialize the proxy so that we will serialize that instead of the proxy.
-		 */
+		// If the target has already been loaded somewhere, just not
+		// set on the proxy, then use it to initialize the proxy so
+		// that we will serialize that instead of the proxy.
 		initializeWithoutLoadIfPossible();
 
 		if ( isUninitialized() ) {
@@ -106,11 +104,27 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 		else {
 			return getTarget();
 		}
-
 	}
 
-	public final Class getPersistentClass() {
+	@Override
+	public final Class<?> getPersistentClass() {
 		return persistentClass;
+	}
+
+	@Override
+	public Class<?> getImplementationClass() {
+		if ( !isUninitialized() ) {
+			return getImplementation().getClass();
+		}
+		else if ( getSession() == null ) {
+			throw new LazyInitializationException( "could not retrieve real entity class ["
+							+ getEntityName() + "#" + getInternalIdentifier() + "] - no Session" );
+		}
+		else {
+			return getEntityDescriptor().hasSubclasses()
+					? getImplementation().getClass()
+					: persistentClass;
+		}
 	}
 
 }

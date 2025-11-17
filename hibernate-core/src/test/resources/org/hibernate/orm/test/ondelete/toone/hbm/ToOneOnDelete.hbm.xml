@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<hibernate-mapping package="org.hibernate.orm.test.ondelete.toone.hbm">
+
+    <class name="Parent">
+        <id name="id" type="long">
+            <generator class="assigned"/>
+        </id>
+    </class>
+
+    <class name="Child">
+        <id name="id" type="long">
+            <generator class="assigned"/>
+        </id>
+
+        <many-to-one name="parent" class="Parent" on-delete="cascade"/>
+    </class>
+
+    <class name="GrandChild">
+        <id name="id" type="long">
+            <generator class="assigned"/>
+        </id>
+
+        <many-to-one name="parent" class="Child" unique="true" not-null="true"
+                     on-delete="cascade"/>
+    </class>
+
+</hibernate-mapping>

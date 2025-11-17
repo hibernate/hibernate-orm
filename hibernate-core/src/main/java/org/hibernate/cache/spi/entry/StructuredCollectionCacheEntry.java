@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.entry;
 
@@ -25,14 +23,14 @@ public class StructuredCollectionCacheEntry implements CacheEntryStructure {
 
 	@Override
 	public Object structure(Object item) {
-		final CollectionCacheEntry entry = (CollectionCacheEntry) item;
+		final var entry = (CollectionCacheEntry) item;
 		return Arrays.asList( entry.getState() );
 	}
 
 	@Override
 	public Object destructure(Object structured, SessionFactoryImplementor factory) {
-		final List list = (List) structured;
-		return new CollectionCacheEntry( list.toArray( new Serializable[list.size()] ) );
+		final var list = (List<?>) structured;
+		return new CollectionCacheEntry( list.toArray( Serializable[]::new ) );
 	}
 
 	private StructuredCollectionCacheEntry() {

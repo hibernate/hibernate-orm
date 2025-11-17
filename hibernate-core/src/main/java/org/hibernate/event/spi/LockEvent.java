@@ -1,45 +1,65 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
+import org.hibernate.Timeouts;
 
 /**
- *  Defines an event class for the locking of an entity.
+ * Event class for {@link org.hibernate.Session#lock}.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.Session#lock
  */
-public class LockEvent extends AbstractEvent {
+public class LockEvent extends AbstractSessionEvent {
+	public static final String ILLEGAL_SKIP_LOCKED = "Skip-locked is not valid option for #lock";
 
 	private Object object;
-	private LockOptions lockOptions;
+	private final LockOptions lockOptions;
 	private String entityName;
 
-	public LockEvent(String entityName, Object original, LockMode lockMode, EventSource source) {
-		this(original, lockMode, source);
-		this.entityName = entityName;
-	}
-
-	public LockEvent(String entityName, Object original, LockOptions lockOptions, EventSource source) {
-		this(original, lockOptions, source);
-		this.entityName = entityName;
-	}
-
-	public LockEvent(Object object, LockMode lockMode, EventSource source) {
+	public LockEvent(String entityName, Object object, LockOptions lockOptions, EventSource source) {
 		super(source);
+
+		if (object == null) {
+			throw new IllegalArgumentException( "Entity may not be null" );
+		}
+		if (lockOptions == null) {
+			throw new IllegalArgumentException( "LockOptions may not be null" );
+		}
+		if ( lockOptions.getLockMode() == LockMode.UPGRADE_SKIPLOCKED
+			|| lockOptions.getTimeout().milliseconds() == Timeouts.SKIP_LOCKED_MILLI ) {
+			throw new IllegalArgumentException( ILLEGAL_SKIP_LOCKED );
+		}
+
+		this.entityName = entityName;
 		this.object = object;
-		this.lockOptions = new LockOptions().setLockMode(lockMode);
+		this.lockOptions = lockOptions;
 	}
 
 	public LockEvent(Object object, LockOptions lockOptions, EventSource source) {
-		super(source);
-		this.object = object;
-		this.lockOptions = lockOptions;
+		this( null, object, lockOptions, source );
+	}
+
+	/**
+	 * @deprecated Use {@linkplain LockEvent#LockEvent(Object, LockOptions, EventSource)} instead.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	public LockEvent(Object object, LockMode lockMode, EventSource source) {
+		this( object, lockMode.toLockOptions(), source );
+	}
+
+	/**
+	 * @deprecated Use {@linkplain LockEvent#LockEvent(String, Object, LockOptions, EventSource)} instead.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	public LockEvent(String entityName, Object object, LockMode lockMode, EventSource source) {
+		this( entityName, object, lockMode.toLockOptions(), source );
 	}
 
 	public Object getObject() {
@@ -54,30 +74,6 @@ public class LockEvent extends AbstractEvent {
 		return lockOptions;
 	}
 
-	public LockMode getLockMode() {
-		return lockOptions.getLockMode();
-	}
-
-	public void setLockMode(LockMode lockMode) {
-		this.lockOptions.setLockMode(lockMode);
-	}
-
-	public void setLockTimeout(int timeout) {
-		this.lockOptions.setTimeOut(timeout);
-	}
-
-	public int getLockTimeout() {
-		return this.lockOptions.getTimeOut();
-	}
-
-	public void setLockScope(boolean cascade) {
-		this.lockOptions.setScope(cascade);
-	}
-
-	public boolean getLockScope() {
-		return this.lockOptions.getScope();
-	}
-
 	public String getEntityName() {
 		return entityName;
 	}
@@ -86,4 +82,28 @@ public class LockEvent extends AbstractEvent {
 		this.entityName = entityName;
 	}
 
+
+	/**
+	 * @deprecated Use {@linkplain #getLockOptions()} instead.
+	 */
+	@Deprecated(since = "7.1")
+	public LockMode getLockMode() {
+		return lockOptions.getLockMode();
+	}
+
+	/**
+	 * @deprecated Use {@linkplain #getLockOptions()} instead.
+	 */
+	@Deprecated(since = "7.1")
+	public int getLockTimeout() {
+		return lockOptions.getTimeOut();
+	}
+
+	/**
+	 * @deprecated Use {@linkplain #getLockOptions()} instead.
+	 */
+	@Deprecated(since = "7.1")
+	public boolean getLockScope() {
+		return lockOptions.getScope() != Locking.Scope.ROOT_ONLY;
+	}
 }

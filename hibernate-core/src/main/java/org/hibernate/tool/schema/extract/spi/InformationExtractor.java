@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.extract.spi;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.tool.schema.extract.internal.TableInformationImpl;
 
 /**
  * Contract for extracting information about objects in the database schema(s).  To an extent, the contract largely
@@ -16,7 +14,7 @@ import org.hibernate.tool.schema.extract.internal.TableInformationImpl;
  * from {@link java.sql.DatabaseMetaData} since on many databases there are better ways to get information from
  * the meta schema.
  *
- * NOTE : Concepts here taken largely from the {@code MetaDataDialect} class in Hibernate Tools.
+ * @apiNote Concepts here taken largely from the {@code MetaDataDialect} class in Hibernate Tools.
  *
  * @author Steve Ebersole
  */
@@ -33,7 +31,7 @@ public interface InformationExtractor {
 	boolean catalogExists(Identifier catalog);
 
 	/**
-	 * The the given schema exist yet?
+	 * Does the given schema exist yet?
 	 *
 	 * @param catalog The name of the catalog to look in.
 	 * @param schema The name of the schema to look for.
@@ -74,7 +72,21 @@ public interface InformationExtractor {
 	 *
 	 * @return The extracted primary key information
 	 */
-	PrimaryKeyInformation getPrimaryKey(TableInformationImpl tableInformation);
+	@Nullable PrimaryKeyInformation getPrimaryKey(TableInformation tableInformation);
+
+	/**
+	 * Extract all the primary keys information.
+	 *
+	 * @param catalog Can be {@code null}, indicating that any catalog may be considered a match.  A
+	 * non-{@code null} value indicates that search should be limited to the passed catalog.
+	 * @param schema Can  be {@code null}, indicating that any schema may be considered a match.  A
+	 * non-{@code null} value indicates that search should be limited to the passed schema .
+	 *
+	 * @return a {@link NameSpacePrimaryKeysInformation}
+	 * @throws SchemaExtractionException when bulk extraction isn't supported
+	 * @since 7.2
+	 */
+	NameSpacePrimaryKeysInformation getPrimaryKeys(Identifier catalog, Identifier schema);
 
 	/**
 	 * Extract information about indexes defined against the given table.  Typically called from the TableInformation
@@ -87,6 +99,20 @@ public interface InformationExtractor {
 	Iterable<IndexInformation> getIndexes(TableInformation tableInformation);
 
 	/**
+	 * Extract all the indexes information.
+	 *
+	 * @param catalog Can be {@code null}, indicating that any catalog may be considered a match.  A
+	 * non-{@code null} value indicates that search should be limited to the passed catalog.
+	 * @param schema Can  be {@code null}, indicating that any schema may be considered a match.  A
+	 * non-{@code null} value indicates that search should be limited to the passed schema .
+	 *
+	 * @return a {@link NameSpaceIndexesInformation}
+	 * @throws SchemaExtractionException when bulk extraction isn't supported
+	 * @since 7.2
+	 */
+	NameSpaceIndexesInformation getIndexes(Identifier catalog, Identifier schema);
+
+	/**
 	 * Extract information about foreign keys defined on the given table (targeting or point-at other tables).
 	 * Typically called from the TableInformation itself as part of on-demand initialization of its state.
 	 *
@@ -95,4 +121,39 @@ public interface InformationExtractor {
 	 * @return The extracted foreign-key information
 	 */
 	Iterable<ForeignKeyInformation> getForeignKeys(TableInformation tableInformation);
+
+	/**
+	 * Extract all the foreign keys information.
+	 *
+	 * @param catalog Can be {@code null}, indicating that any catalog may be considered a match.  A
+	 * non-{@code null} value indicates that search should be limited to the passed catalog.
+	 * @param schema Can  be {@code null}, indicating that any schema may be considered a match.  A
+	 * non-{@code null} value indicates that search should be limited to the passed schema .
+	 *
+	 * @return a {@link NameSpaceForeignKeysInformation}
+	 * @throws SchemaExtractionException when bulk extraction isn't supported
+	 * @since 7.2
+	 */
+	NameSpaceForeignKeysInformation getForeignKeys(Identifier catalog, Identifier schema);
+
+	/**
+	 * Can {@link #getPrimaryKeys(Identifier, Identifier)} be used?
+	 *
+	 * @since 7.2
+	 */
+	boolean supportsBulkPrimaryKeyRetrieval();
+
+	/**
+	 * Can {@link #getForeignKeys(Identifier, Identifier)} be used?
+	 *
+	 * @since 7.2
+	 */
+	boolean supportsBulkForeignKeyRetrieval();
+
+	/**
+	 * Can {@link #getIndexes(Identifier, Identifier)} be used?
+	 *
+	 * @since 7.2
+	 */
+	boolean supportsBulkIndexRetrieval();
 }

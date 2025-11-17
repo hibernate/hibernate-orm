@@ -1,19 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
 
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.OptimisticLockHelper;
 
 /**
- * A BeforeTransactionCompletionProcess impl to verify and increment an entity version as party
- * of before-transaction-completion processing
+ * A {@link BeforeTransactionCompletionProcess} implementation to verify and
+ * increment an entity version as party of before-transaction-completion
+ * processing.
  *
  * @author Scott Marlow
  */
@@ -35,15 +33,11 @@ public class EntityIncrementVersionProcess implements BeforeTransactionCompletio
 	 * @param session The session on which the transaction is preparing to complete.
 	 */
 	@Override
-	public void doBeforeTransactionCompletion(SessionImplementor session) {
-		final EntityEntry entry = session.getPersistenceContext().getEntry( object );
-		// Don't increment version for an entity that is not in the PersistenceContext;
-		if ( entry == null ) {
-			return;
+	public void doBeforeTransactionCompletion(SharedSessionContractImplementor session) {
+		final var entry = session.getPersistenceContext().getEntry( object );
+		// Don't increment the version for an entity that is not in the PersistenceContext;
+		if ( entry != null ) {
+			OptimisticLockHelper.forceVersionIncrement( object, entry, session.asEventSource() );
 		}
-
-		final EntityPersister persister = entry.getPersister();
-		final Object nextVersion = persister.forceVersionIncrement( entry.getId(), entry.getVersion(), session );
-		entry.forceLocked( object, nextVersion );
 	}
 }

@@ -1,61 +1,79 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 import java.sql.Connection;
 import java.util.TimeZone;
+import java.util.function.UnaryOperator;
 
+import org.hibernate.engine.creation.CommonBuilder;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
-/**
- * Represents a consolidation of all session creation options into a builder style delegate.
- * 
- * @author Steve Ebersole
- */
-@SuppressWarnings("UnusedReturnValue")
-public interface SessionBuilder<T extends SessionBuilder> {
-	/**
-	 * Opens a session with the specified options.
-	 *
-	 * @return The session
-	 */
+/// Allows creation of a new [Session] with specific options
+/// overriding the defaults from the [SessionFactory].
+///
+/// ```java
+/// try (var session = sessionFactory.withOptions()
+/// 		.tenantIdentifier(tenantId)
+/// 		.initialCacheMode(CacheMode.PUT)
+/// 		.flushMode(FlushMode.COMMIT)
+/// 		.interceptor(new Interceptor() {
+/// 			@Override
+/// 			public void preFlush(Iterator<Object> entities) {
+/// 				...
+/// 			}
+/// 		})
+/// 		.openSession()) {
+/// 			...
+/// 		}
+/// }
+/// ```
+///
+/// @see SessionFactory#withOptions()
+/// @see SharedSessionBuilder
+///
+/// @author Steve Ebersole
+public interface SessionBuilder extends CommonBuilder {
+	/// Open the session using the specified options.
+	/// @see #open
 	Session openSession();
 
-	/**
-	 * Adds a specific interceptor to the session options.
-	 *
-	 * @param interceptor The interceptor to use.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	T interceptor(Interceptor interceptor);
+	@Override
+	default Session open() {
+		return openSession();
+	}
+
+	@Override
+	SessionBuilder interceptor(Interceptor interceptor);
+
+	@Override
+	SessionBuilder noInterceptor();
+
+	@Override
+	SessionBuilder noSessionInterceptorCreation();
+
+	@Override
+	SessionBuilder noStatementInspector();
+
+	@Override
+	SessionBuilder statementInspector(UnaryOperator<String> operator);
 
 	/**
-	 * Signifies that no {@link Interceptor} should be used.
-	 * <p/>
-	 * By default the {@link Interceptor} associated with the {@link SessionFactory} is passed to the
-	 * {@link Session} whenever we open one without the user having specified a specific interceptor to
-	 * use.
-	 * <p/>
-	 * Calling {@link #interceptor(Interceptor)} with null has the same net effect.
+	 * Applies the given {@link StatementInspector} to the session.
+	 *
+	 * @param statementInspector The {@code StatementInspector} to use.
 	 *
 	 * @return {@code this}, for method chaining
-	 */
-	T noInterceptor();
-
-	/**
-	 * Applies a specific StatementInspector to the session options.
 	 *
-	 * @param statementInspector The StatementInspector to use.
-	 *
-	 * @return {@code this}, for method chaining
+	 * @deprecated This operation exposes the SPI type {@link StatementInspector}
+	 * and is therefore a layer-breaker. Use {@link #statementInspector(UnaryOperator)}
+	 * instead.
 	 */
-	T statementInspector(StatementInspector statementInspector);
+	@Deprecated(since = "7.0")
+	SessionBuilder statementInspector(StatementInspector statementInspector);
 
 	/**
 	 * Adds a specific connection to the session options.
@@ -64,16 +82,36 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T connection(Connection connection);
+	@Override
+	SessionBuilder connection(Connection connection);
 
 	/**
-	 * Signifies that the connection release mode from the original session should be used to create the new session.
+	 * Specifies the connection handling modes for the session.
+	 * <p>
+	 * Note that if {@link ConnectionAcquisitionMode#IMMEDIATELY} is specified,
+	 * then the release mode must be {@link ConnectionReleaseMode#ON_CLOSE}.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @since 7.0
+	 */
+	@Override
+	SessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode);
+
+	/**
+	 * Specifies the {@linkplain PhysicalConnectionHandlingMode connection handling mode}.
 	 *
 	 * @param mode The connection handling mode to use.
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated This operation exposes the SPI type
+	 * {@link PhysicalConnectionHandlingMode} and is therefore a layer-breaker.
+	 * Use {@link #connectionHandling(ConnectionAcquisitionMode, ConnectionReleaseMode)}
+	 * instead.
 	 */
-	T connectionHandlingMode(PhysicalConnectionHandlingMode mode);
+	@Deprecated(since = "7.0")
+	SessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode);
 
 	/**
 	 * Should the session built automatically join in any ongoing JTA transactions.
@@ -82,9 +120,9 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see javax.persistence.SynchronizationType#SYNCHRONIZED
+	 * @see jakarta.persistence.SynchronizationType#SYNCHRONIZED
 	 */
-	T autoJoinTransactions(boolean autoJoinTransactions);
+	SessionBuilder autoJoinTransactions(boolean autoJoinTransactions);
 
 	/**
 	 * Should the session be automatically cleared on a failed transaction?
@@ -93,18 +131,18 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T autoClear(boolean autoClear);
+	SessionBuilder autoClear(boolean autoClear);
 
 	/**
-	 * Specify the initial FlushMode to use for the opened Session
+	 * Specify the initial {@link FlushMode} to use for the opened Session
 	 *
-	 * @param flushMode The initial FlushMode to use for the opened Session
+	 * @param flushMode The initial {@code FlushMode} to use for the opened Session
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see javax.persistence.PersistenceContextType
+	 * @see jakarta.persistence.PersistenceContextType
 	 */
-	T flushMode(FlushMode flushMode);
+	SessionBuilder flushMode(FlushMode flushMode);
 
 	/**
 	 * Define the tenant identifier to be associated with the opened session.
@@ -112,43 +150,54 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 * @param tenantIdentifier The tenant identifier.
 	 *
 	 * @return {@code this}, for method chaining
+	 * @deprecated Use {@link #tenantIdentifier(Object)} instead
 	 */
-	T tenantIdentifier(String tenantIdentifier);
+	@Deprecated(since = "6.4", forRemoval = true)
+	SessionBuilder tenantIdentifier(String tenantIdentifier);
 
 	/**
-	 * Apply one or more SessionEventListener instances to the listeners for the Session to be built.
+	 * Define the tenant identifier to be associated with the opened session.
+	 *
+	 * @param tenantIdentifier The tenant identifier.
+	 *
+	 * @return {@code this}, for method chaining
+	 * @since 6.4
+	 */
+	@Override
+	SessionBuilder tenantIdentifier(Object tenantIdentifier);
+
+	@Override
+	SessionBuilder readOnly(boolean readOnly);
+
+	@Override
+	SessionBuilder initialCacheMode(CacheMode cacheMode);
+
+	/**
+	 * Add one or more {@link SessionEventListener} instances to the list of
+	 * listeners for the new session to be built.
 	 *
 	 * @param listeners The listeners to incorporate into the built Session
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T eventListeners(SessionEventListener... listeners);
+	SessionBuilder eventListeners(SessionEventListener... listeners);
 
 	/**
-	 * Remove all listeners intended for the built Session currently held here, including any auto-apply ones; in other
-	 * words, start with a clean slate.
-	 *
-	 * {@code this}, for method chaining
-	 */
-	T clearEventListeners();
-
-	T jdbcTimeZone(TimeZone timeZone);
-
-	/**
-	 * Should {@link org.hibernate.query.Query#setParameter} perform parameter validation
-	 * when the Session is bootstrapped via JPA {@link javax.persistence.EntityManagerFactory}
-	 *
-	 * @param enabled {@code true} indicates the validation should be performed, {@code false} otherwise
-	 * <p>
-	 * The default value is {@code true}
+	 * Remove all listeners intended for the built session currently held here,
+	 * including any auto-apply ones; in other words, start with a clean slate.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	default T setQueryParameterValidation(boolean enabled) {
-		return (T) this;
-	}
+	SessionBuilder clearEventListeners();
 
-
+	/**
+	 * Specify the {@linkplain org.hibernate.cfg.JdbcSettings#JDBC_TIME_ZONE
+	 * JDBC time zone} for the session.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	@Override
+	SessionBuilder jdbcTimeZone(TimeZone timeZone);
 
 	/**
 	 * Should the session be automatically closed after transaction completion?
@@ -157,44 +206,42 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see javax.persistence.PersistenceContextType
-	 *
-	 * @deprecated Only integrations can specify autoClosing behavior of individual sessions.  See
-	 * {@link org.hibernate.engine.spi.SessionOwner}
+	 * @see jakarta.persistence.PersistenceContextType
 	 */
-	@Deprecated
-	T autoClose(boolean autoClose);
+	SessionBuilder autoClose(boolean autoClose);
 
 	/**
-	 * Use a specific connection release mode for these session options.
-	 *
-	 * @param connectionReleaseMode The connection release mode to use.
+	 * Enable identifier rollback after entity removal for the session.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #connectionHandlingMode} instead
+	 * @see org.hibernate.cfg.AvailableSettings#USE_IDENTIFIER_ROLLBACK
+	 *
+	 * @since 7.0
 	 */
-	@Deprecated
-	T connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode);
+	SessionBuilder identifierRollback(boolean identifierRollback);
 
 	/**
-	 * Should the session be automatically flushed during the "before completion" phase of transaction handling.
-	 *
-	 * @param flushBeforeCompletion Should the session be automatically flushed
+	 * Specify the default batch fetch size for the session.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #flushMode(FlushMode)} instead.
+	 * @see org.hibernate.cfg.FetchSettings#DEFAULT_BATCH_FETCH_SIZE
+	 * @see Session#setFetchBatchSize(int)
+	 *
+	 * @since 7.2
 	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default T flushBeforeCompletion(boolean flushBeforeCompletion) {
-		if ( flushBeforeCompletion ) {
-			flushMode( FlushMode.ALWAYS );
-		}
-		else {
-			flushMode( FlushMode.MANUAL );
-		}
-		return (T) this;
-	}
+	SessionBuilder defaultBatchFetchSize(int defaultBatchFetchSize);
+
+	/**
+	 * Specify whether subselect fetching is enabled for the session.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.FetchSettings#USE_SUBSELECT_FETCH
+	 * @see Session#setSubselectFetchingEnabled(boolean)
+	 *
+	 * @since 7.2
+	 */
+	SessionBuilder subselectFetchEnabled(boolean subselectFetchEnabled);
 }

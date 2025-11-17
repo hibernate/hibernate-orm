@@ -1,0 +1,20 @@
+<project name="example" xmlns:ivy="antlib:org.apache.ivy.ant">
+    [...]
+    <ivy:cachepath
+            organisation="org.hibernate.orm"
+            module="hibernate-ant"
+            revision="${hibernate.version}"
+            pathid="hibernate-ant.path"
+            inline="true"/>
+    [...]
+    <taskdef
+            name="enhance"
+            classname='org.hibernate.tool.enhance.EnhancementTask'
+            classpathref="hibernate-ant.path" />
+    [...]
+    <target name="enhance" depends="compile">
+        <enhance base='${basedir}/dest' dir='${basedir}/dest'/>
+    </target>
+    [...]
+</project>
+

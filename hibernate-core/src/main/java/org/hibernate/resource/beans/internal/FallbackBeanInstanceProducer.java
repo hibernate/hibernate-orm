@@ -1,30 +1,26 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.internal;
 
-import java.lang.reflect.Constructor;
 
 import org.hibernate.InstantiationException;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.resource.beans.internal.BeansMessageLogger.BEANS_MSG_LOGGER;
 
 /**
- * BeanInstanceProducer implementation based on direct instantiation
- *
- * In normal Hibernate use this is used when either:
- * 		* there is no configured back-end container
- * 		* the back-end container did not define a bean for this class
+ * {@link BeanInstanceProducer} implementation based on direct instantiation.
+ * Usually, this is used when either:
+ * <ul>
+ * <li>there is no configured back-end container, or
+ * <li>the back-end container did not define a bean for this class.
+ * </ul>
  *
  * @author Steve Ebersole
  */
 public class FallbackBeanInstanceProducer implements BeanInstanceProducer {
-	private static final Logger log = Logger.getLogger( FallbackBeanInstanceProducer.class );
-
 	/**
 	 * Singleton access
 	 */
@@ -35,9 +31,9 @@ public class FallbackBeanInstanceProducer implements BeanInstanceProducer {
 
 	@Override
 	public <B> B produceBeanInstance(Class<B> beanType) {
-		log.tracef( "Creating ManagedBean(%s) using direct instantiation", beanType.getName() );
+		BEANS_MSG_LOGGER.creatingManagedBeanUsingDirectInstantiation( beanType.getName() );
 		try {
-			Constructor<B> constructor = beanType.getDeclaredConstructor();
+			final var constructor = beanType.getDeclaredConstructor();
 			constructor.setAccessible( true );
 			return constructor.newInstance();
 		}

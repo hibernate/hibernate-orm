@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
@@ -10,7 +8,8 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.event.spi.EntityCopyObserver;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.pretty.MessageHelper;
+
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * @author Gail Badner
@@ -33,26 +32,21 @@ public final class EntityCopyNotAllowedObserver implements EntityCopyObserver {
 			Object mergeEntity2,
 			EventSource session) {
 		if ( mergeEntity1 == managedEntity && mergeEntity2 == managedEntity) {
-			throw new AssertionFailure( "entity1 and entity2 are the same as managedEntity; must be different." );
+			throw new AssertionFailure( "entity1 and entity2 are the same as managedEntity; must be different" );
 		}
-		final String managedEntityString = 	MessageHelper.infoString(
-				session.getEntityName( managedEntity ),
-				session.getIdentifier( managedEntity )
-		);
-		throw new IllegalStateException(
-				"Multiple representations of the same entity " + managedEntityString + " are being merged. " +
-						getManagedOrDetachedEntityString( managedEntity, mergeEntity1 ) + "; " +
-						getManagedOrDetachedEntityString( managedEntity, mergeEntity2 )
-		);
+		throw new IllegalStateException( "Multiple representations of the same entity "
+				+ infoString( session.getEntityName( managedEntity ), session.getIdentifier( managedEntity ) )
+				+ " are being merged: " + managedOrDetachedEntityString( managedEntity, mergeEntity1 )
+				+ "; " + managedOrDetachedEntityString( managedEntity, mergeEntity2 ) );
 	}
 
-	private String getManagedOrDetachedEntityString(Object managedEntity, Object entity ) {
-		if ( entity == managedEntity) {
-			return  "Managed: [" + entity + "]";
-		}
-		else {
-			return "Detached: [" + entity + "]";
-		}
+	private String managedOrDetachedEntityString(Object managedEntity, Object entity ) {
+		return new StringBuilder()
+				.append( entity == managedEntity ? "Managed" : "Detached" )
+				.append( " [" )
+				.append( entity )
+				.append( ']' )
+				.toString();
 	}
 
 	public void clear() {

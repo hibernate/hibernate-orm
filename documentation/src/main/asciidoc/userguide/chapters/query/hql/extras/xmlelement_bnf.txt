@@ -1,0 +1,5 @@
+"xmlelement(name " identifier xmlattributes? ("," expressionOrPredicate)* ")"
+
+xmlattributes
+	: "xmlattributes(" expressionOrPredicate " as " identifier ("," expressionOrPredicate " as " identifier)* ")"
+	;

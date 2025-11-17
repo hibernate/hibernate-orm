@@ -1,10 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.service.spi;
+
+import org.hibernate.service.Service;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -12,7 +13,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Annotation to allow services to request injection of other services
+ * Annotation to allow services to request injection of other services.
  *
  * @author Steve Ebersole
  */
@@ -25,12 +26,12 @@ public @interface InjectService {
 	 *
 	 * @return The service role.
 	 */
-	public Class serviceRole() default Void.class;
+	Class<? extends Service> serviceRole() default Service.class;
 
 	/**
 	 * Is the service to be injected required (not optional)?
 	 *
 	 * @return True if the service is required.
 	 */
-	public boolean required() default true;
+	boolean required() default true;
 }

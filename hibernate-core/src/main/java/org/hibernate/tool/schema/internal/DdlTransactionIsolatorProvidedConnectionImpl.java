@@ -1,21 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.internal.exec.JdbcConnectionAccessProvidedConnectionImpl;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
+
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 
 /**
  * Specialized DdlTransactionIsolator for cases where we have a user provided Connection
@@ -23,8 +20,6 @@ import org.hibernate.tool.schema.spi.SchemaManagementException;
  * @author Steve Ebersole
  */
 class DdlTransactionIsolatorProvidedConnectionImpl implements DdlTransactionIsolator {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DdlTransactionIsolatorProvidedConnectionImpl.class );
 
 	private final JdbcContext jdbcContext;
 
@@ -40,8 +35,17 @@ class DdlTransactionIsolatorProvidedConnectionImpl implements DdlTransactionIsol
 
 	@Override
 	public Connection getIsolatedConnection() {
+		return getIsolatedConnection(true);
+	}
+
+	@Override
+	public Connection getIsolatedConnection(boolean autocommit) {
 		try {
-			return jdbcContext.getJdbcConnectionAccess().obtainConnection();
+			Connection connection = jdbcContext.getJdbcConnectionAccess().obtainConnection();
+			if ( connection.getAutoCommit() != autocommit ) {
+				throw new SchemaManagementException( "User-provided Connection via JdbcConnectionAccessProvidedConnectionImpl has wrong auto-commit mode" );
+			}
+			return connection;
 		}
 		catch (SQLException e) {
 			// should never happen
@@ -50,12 +54,8 @@ class DdlTransactionIsolatorProvidedConnectionImpl implements DdlTransactionIsol
 	}
 
 	@Override
-	public void prepare() {
-	}
-
-	@Override
 	public void release() {
-		JdbcConnectionAccess connectionAccess = jdbcContext.getJdbcConnectionAccess();
+		final var connectionAccess = jdbcContext.getJdbcConnectionAccess();
 		if( !( connectionAccess instanceof JdbcConnectionAccessProvidedConnectionImpl ) ) {
 			throw new IllegalStateException(
 				"DdlTransactionIsolatorProvidedConnectionImpl should always use a JdbcConnectionAccessProvidedConnectionImpl"
@@ -67,8 +67,8 @@ class DdlTransactionIsolatorProvidedConnectionImpl implements DdlTransactionIsol
 			// and we don't have access to it upon releasing via the DdlTransactionIsolatorProvidedConnectionImpl.
 			connectionAccess.releaseConnection( null );
 		}
-		catch (SQLException ignore) {
-			LOG.unableToReleaseIsolatedConnection( ignore );
+		catch (SQLException exception) {
+			JDBC_LOGGER.unableToReleaseIsolatedConnection( exception );
 		}
 	}
 }

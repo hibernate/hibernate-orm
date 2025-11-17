@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.entry;
 
@@ -12,14 +10,10 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.TypeHelper;
 
 /**
  * Standard representation of entity cached data using the "disassembled state".
@@ -50,7 +44,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 			final SharedSessionContractImplementor session,
 			final Object owner) throws HibernateException {
 		// disassembled state gets put in a new array (we write to cache by value!)
-		this.disassembledState = TypeHelper.disassemble(
+		this.disassembledState = CacheEntryHelper.disassemble(
 				state,
 				persister.getPropertyTypes(),
 				persister.isLazyPropertiesCacheable() ? null : persister.getPropertyLaziness(),
@@ -123,16 +117,16 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	 */
 	public Object[] assemble(
 			final Object instance,
-			final Serializable id,
+			final Object id,
 			final EntityPersister persister,
 			final Interceptor interceptor,
-			final EventSource session) throws HibernateException {
+			final SharedSessionContractImplementor session) throws HibernateException {
 		if ( !persister.getEntityName().equals( subclass ) ) {
 			throw new AssertionFailure( "Tried to assemble a different subclass instance" );
 		}
 
-		//assembled state gets put in a new array (we read from cache by value!)
-		final Object[] state = TypeHelper.assemble(
+		// assembled state gets put in a new array (we read from cache by value!)
+		final Object[] state = CacheEntryHelper.assemble(
 				disassembledState,
 				persister.getPropertyTypes(),
 				session, instance
@@ -140,23 +134,22 @@ public class StandardCacheEntryImpl implements CacheEntry {
 
 		//persister.setIdentifier(instance, id); //before calling interceptor, for consistency with normal load
 
-		//TODO: reuse the PreLoadEvent
-		final PreLoadEvent preLoadEvent = new PreLoadEvent( session )
-				.setEntity( instance )
-				.setState( state )
-				.setId( id )
-				.setPersister( persister );
+		if ( session instanceof EventSource eventSource ) {
+			//TODO: reuse the PreLoadEvent
+			final PreLoadEvent preLoadEvent =
+					new PreLoadEvent( eventSource )
+							.setEntity( instance )
+							.setState( state )
+							.setId( id )
+							.setPersister( persister );
+			session.getFactory()
+					.getEventListenerGroups()
+					.eventListenerGroup_PRE_LOAD
+					.fireEventOnEachListener( preLoadEvent, PreLoadEventListener::onPreLoad );
 
-		final EventListenerGroup<PreLoadEventListener> listenerGroup = session
-				.getFactory()
-				.getServiceRegistry()
-				.getService( EventListenerRegistry.class )
-				.getEventListenerGroup( EventType.PRE_LOAD );
-		for ( PreLoadEventListener listener : listenerGroup.listeners() ) {
-			listener.onPreLoad( preLoadEvent );
 		}
 
-		persister.setPropertyValues( instance, state );
+		persister.setValues( instance, state );
 
 		return state;
 	}

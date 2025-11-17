@@ -1,0 +1,170 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+
+plugins {
+	id "local.publishing-java-module"
+	id "local.publishing-group-relocation"
+    id "org.hibernate.build.version-injection"
+}
+
+description = 'Hibernate compile-time tooling'
+
+sourceSets {
+	quarkusOrmPanache {
+		java {
+			srcDirs = ['src/quarkusOrmPanache/java']
+		}
+		resources {
+			srcDirs sourceSets.main.resources
+		}
+		compileClasspath += sourceSets.main.output + sourceSets.test.output
+		runtimeClasspath += sourceSets.main.output + sourceSets.test.output
+	}
+	quarkusHrPanache {
+		java {
+			srcDirs = ['src/quarkusHrPanache/java']
+		}
+		resources {
+			srcDirs sourceSets.main.resources
+		}
+		compileClasspath += sourceSets.main.output + sourceSets.test.output
+		runtimeClasspath += sourceSets.main.output + sourceSets.test.output
+	}
+    jakartaData {
+        java {
+            srcDirs = ['src/jakartaData/java']
+        }
+        resources {
+			srcDirs sourceSets.main.resources
+        }
+        compileClasspath += sourceSets.main.output + sourceSets.test.output
+        runtimeClasspath += sourceSets.main.output + sourceSets.test.output
+    }
+}
+
+dependencies {
+    // api - ewww... but Maven needs them this way
+    api project( ':hibernate-core' )
+	api libs.hibernateModels
+	api libs.jandex
+    api jakartaLibs.jaxbApi
+    api jakartaLibs.jaxb
+    api jakartaLibs.validation
+    api jakartaLibs.annotation
+    api libs.antlrRuntime
+    api libs.byteBuddy
+	api libs.logging
+
+	quarkusOrmPanacheImplementation "io.quarkus:quarkus-hibernate-orm-panache:3.24.1"
+	quarkusHrPanacheImplementation "io.quarkus:quarkus-hibernate-reactive-panache:3.24.1"
+    jakartaDataImplementation "jakarta.data:jakarta.data-api:1.0.0"
+	jakartaDataImplementation "org.hibernate.reactive:hibernate-reactive-core:3.0.1.Final"
+	jakartaDataImplementation "io.quarkus:quarkus-hibernate-orm-panache:3.24.1"
+}
+
+// The source set gets a custom configuration which extends the normal test implementation config
+configurations {
+	quarkusOrmPanacheImplementation.extendsFrom(testImplementation)
+	quarkusOrmPanacheRuntimeOnly.extendsFrom(testRuntimeOnly)
+	quarkusOrmPanacheCompileOnly.extendsFrom(testCompileOnly)
+	quarkusHrPanacheImplementation.extendsFrom(testImplementation)
+	quarkusHrPanacheRuntimeOnly.extendsFrom(testRuntimeOnly)
+	quarkusHrPanacheCompileOnly.extendsFrom(testCompileOnly)
+    jakartaDataImplementation.extendsFrom(testImplementation)
+    jakartaDataRuntimeOnly.extendsFrom(testRuntimeOnly)
+    jakartaDataCompileOnly.extendsFrom(testCompileOnly)
+}
+
+versionInjection {
+    into( 'org.hibernate.processor.Version', 'initVersion' )
+}
+
+def quarkusOrmPanacheTestTask = tasks.register( 'quarkusOrmPanacheTest', Test ) {
+	description = 'Runs the Quarkus ORM Panache tests.'
+	group = 'verification'
+	useJUnitPlatform()
+
+	testClassesDirs = sourceSets.quarkusOrmPanache.output.classesDirs
+	classpath = sourceSets.quarkusOrmPanache.runtimeClasspath
+	shouldRunAfter test
+}
+
+def quarkusHrPanacheTestTask = tasks.register( 'quarkusHrPanacheTest', Test ) {
+	description = 'Runs the Quarkus HR Panache tests.'
+	group = 'verification'
+	useJUnitPlatform()
+
+	testClassesDirs = sourceSets.quarkusHrPanache.output.classesDirs
+	classpath = sourceSets.quarkusHrPanache.runtimeClasspath
+	shouldRunAfter test
+}
+
+def jakartaDataTestTask = tasks.register( 'jakartaDataTest', Test ) {
+    description = 'Runs the Jakarta Data tests.'
+    group = 'verification'
+	useJUnitPlatform()
+
+    testClassesDirs = sourceSets.jakartaData.output.classesDirs
+    classpath = sourceSets.jakartaData.runtimeClasspath
+    shouldRunAfter test
+}
+
+check.dependsOn quarkusHrPanacheTestTask
+check.dependsOn quarkusOrmPanacheTestTask
+check.dependsOn jakartaDataTestTask
+test.dependsOn quarkusHrPanacheTestTask
+test.dependsOn quarkusOrmPanacheTestTask
+test.dependsOn jakartaDataTestTask
+
+tasks.sourcesJar.dependsOn ':hibernate-core:generateHqlParser'
+tasks.sourcesJar.dependsOn ':hibernate-core:generateSqlScriptParser'
+
+compileTestJava {
+	options.compilerArgs += [
+			"-proc:none",
+			"-AsuppressJakartaDataMetamodel=true"
+	]
+}
+
+var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
+def oldGroupId = "org.hibernate"
+def oldArtifactId = "hibernate-jpamodelgen"
+
+publishingExtension.publications.named("groupRelocation", MavenPublication) {
+	artifactId = oldArtifactId
+	pom {
+		name = "Relocation : ${oldGroupId}:${oldArtifactId} -> ${project.group}:${project.name}"
+		description = "The `${oldArtifactId}` module has been renamed `${project.name}` and moved to the `${project.group}` group-id"
+	}
+}
+
+publishingExtension.publications.register("renameRelocation", MavenPublication) {
+	artifactId = oldArtifactId
+	pom {
+		name = "Relocation : ${project.group}:${oldArtifactId} -> ${project.group}:${project.name}"
+		description = "The `${oldArtifactId}` module has been renamed `${project.name}`"
+
+		distributionManagement {
+			relocation {
+				groupId = project.group
+				artifactId = project.name
+				version = project.version
+			}
+		}
+	}
+}
+
+
+tasks.forbiddenApisJakartaData {
+	enabled = false
+}
+
+tasks.forbiddenApisQuarkusOrmPanache {
+	enabled = false
+}
+
+tasks.forbiddenApisQuarkusHrPanache {
+	enabled = false
+}

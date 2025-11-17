@@ -1,17 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.archive.internal;
 
 import java.net.URL;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.archive.spi.ArchiveContext;
 import org.hibernate.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
+import org.hibernate.boot.archive.spi.ArchiveEntry;
 
 /**
  * An ArchiveDescriptor implementation for handling archives whose url reported a JAR protocol (i.e., jar://).
@@ -39,7 +39,7 @@ public class JarProtocolArchiveDescriptor implements ArchiveDescriptor {
 		final String urlFile = url.getFile();
 		final int subEntryIndex = urlFile.lastIndexOf( '!' );
 		if ( subEntryIndex == -1 ) {
-			throw new AssertionFailure( "JAR URL does not contain '!/' :" + url );
+			throw new AssertionFailure( "JAR URL does not contain '!/' : " + url );
 		}
 
 		final String subEntry;
@@ -57,5 +57,10 @@ public class JarProtocolArchiveDescriptor implements ArchiveDescriptor {
 	@Override
 	public void visitArchive(ArchiveContext context) {
 		delegateDescriptor.visitArchive( context );
+	}
+
+	@Override
+	public @Nullable ArchiveEntry findEntry(String path) {
+		return delegateDescriptor.findEntry( path );
 	}
 }

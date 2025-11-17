@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.event.spi;
 
-import java.io.Serializable;
 import java.util.Set;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.RelationDescription;
@@ -20,6 +17,7 @@ import org.hibernate.envers.internal.synchronization.work.CollectionChangeWorkUn
 import org.hibernate.envers.internal.tools.EntityTools;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 
 /**
  * Base class for all Envers event listeners
@@ -28,6 +26,7 @@ import org.hibernate.proxy.HibernateProxy;
  * @author HernпїЅn Chanfreau
  * @author Steve Ebersole
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 public abstract class BaseEnversEventListener implements EnversListener {
 	private final EnversService enversService;
@@ -46,14 +45,14 @@ public abstract class BaseEnversEventListener implements EnversListener {
 			String entityName,
 			Object[] newState,
 			Object[] oldState,
-			SessionImplementor session) {
+			SharedSessionContractImplementor session) {
 		// Checking if this is enabled in configuration ...
-		if ( !enversService.getGlobalConfiguration().isGenerateRevisionsForCollections() ) {
+		if ( !enversService.getConfig().isGenerateRevisionsForCollections() ) {
 			return;
 		}
 
 		// Checks every property of the entity, if it is an "owned" to-one relation to another entity.
-		// If the value of that property changed, and the relation is bi-directional, a new revision
+		// If the value of that property changed, and the relation is bidirectional, a new revision
 		// for the related entity is generated.
 		final String[] propertyNames = entityPersister.getPropertyNames();
 
@@ -85,18 +84,21 @@ public abstract class BaseEnversEventListener implements EnversListener {
 	}
 
 	private void addCollectionChangeWorkUnit(
-			AuditProcess auditProcess, SessionImplementor session,
-			String fromEntityName, RelationDescription relDesc, Object value) {
+			AuditProcess auditProcess,
+			SharedSessionContractImplementor session,
+			String fromEntityName,
+			RelationDescription relDesc,
+			Object value) {
 		// relDesc.getToEntityName() doesn't always return the entity name of the value - in case
 		// of subclasses, this will be root class, no the actual class. So it can't be used here.
 		String toEntityName;
-		Serializable id;
+		Object id;
 
-		if ( value instanceof HibernateProxy ) {
-			final HibernateProxy hibernateProxy = (HibernateProxy) value;
-			id = hibernateProxy.getHibernateLazyInitializer().getIdentifier();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( value );
+		if ( lazyInitializer != null ) {
+			id = lazyInitializer.getInternalIdentifier();
 			// We've got to initialize the object from the proxy to later read its state.
-			value = EntityTools.getTargetFromProxy( session.getFactory(), hibernateProxy );
+			value = EntityTools.getTargetFromProxy( session.getFactory(), lazyInitializer );
 			// HHH-7249
 			// This call must occur after the proxy has been initialized or the returned name will
 			// be to the base class which will impact the discriminator value chosen when using an
@@ -107,7 +109,7 @@ public abstract class BaseEnversEventListener implements EnversListener {
 			toEntityName = session.guessEntityName( value );
 
 			final IdMapper idMapper = enversService.getEntitiesConfigurations().get( toEntityName ).getIdMapper();
-			id = (Serializable) idMapper.mapToIdFromEntity( value );
+			id = idMapper.mapToIdFromEntity( value );
 		}
 
 		final Set<String> toPropertyNames = enversService.getEntitiesConfigurations().getToPropertyNames(
@@ -129,9 +131,9 @@ public abstract class BaseEnversEventListener implements EnversListener {
 		);
 	}
 
-	protected void checkIfTransactionInProgress(SessionImplementor session) {
+	protected void checkIfTransactionInProgress(SharedSessionContractImplementor session) {
 		if ( !session.isTransactionInProgress() ) {
-			// Historical data would not be flushed to audit tables if outside of active transaction
+			// Historical data would not be flushed to audit tables if we are outside an active transaction
 			// (AuditProcess#doBeforeTransactionCompletion(SessionImplementor) not executed).
 			throw new AuditException( "Unable to create revision because of non-active transaction" );
 		}

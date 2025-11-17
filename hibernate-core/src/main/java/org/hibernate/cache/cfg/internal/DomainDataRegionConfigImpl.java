@@ -1,18 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.cfg.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
 import org.hibernate.cache.cfg.spi.DomainDataCachingConfig;
@@ -24,7 +19,10 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.type.VersionType;
+import org.hibernate.type.BasicType;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 
 /**
  * DomainDataRegionConfig implementation
@@ -93,25 +91,27 @@ public class DomainDataRegionConfigImpl implements DomainDataRegionConfig {
 
 			// todo (5.3) : this is another place where having `BootstrapContext` / `TypeConfiguration` helps
 			//		would allow us to delay the attempt to resolve the comparator (usual timing issues wrt Type resolution)
-			final NavigableRole rootEntityName = new NavigableRole( bootEntityDescriptor.getRootClass().getEntityName() );
-			final EntityDataCachingConfigImpl entityDataCachingConfig = entityConfigsByRootName.computeIfAbsent(
+			final var rootEntityName = new NavigableRole( bootEntityDescriptor.getRootClass().getEntityName() );
+			final var entityDataCachingConfig = entityConfigsByRootName.computeIfAbsent(
 					rootEntityName,
 					x -> new EntityDataCachingConfigImpl(
 							rootEntityName,
 							bootEntityDescriptor.isVersioned()
-									? (Supplier<Comparator>) () -> ( (VersionType) bootEntityDescriptor.getVersion().getType() ).getComparator()
+									? () -> {
+										final var type = (BasicType<?>) bootEntityDescriptor.getVersion().getType();
+										return type.getJavaTypeDescriptor().getComparator();
+									}
 									: null,
 							bootEntityDescriptor.isMutable(),
 							accessType
 					)
 			);
 
-			if ( bootEntityDescriptor == bootEntityDescriptor.getRootClass() ) {
-				entityDataCachingConfig.addCachedType( rootEntityName );
-			}
-			else {
-				entityDataCachingConfig.addCachedType( new NavigableRole( bootEntityDescriptor.getEntityName() ) );
-			}
+			final var cachedRole =
+					bootEntityDescriptor == bootEntityDescriptor.getRootClass()
+							? rootEntityName
+							: new NavigableRole( bootEntityDescriptor.getEntityName() );
+			entityDataCachingConfig.addCachedType( cachedRole );
 
 			return this;
 		}
@@ -127,7 +127,6 @@ public class DomainDataRegionConfigImpl implements DomainDataRegionConfig {
 			if ( naturalIdConfigs == null ) {
 				naturalIdConfigs = new ArrayList<>();
 			}
-
 			naturalIdConfigs.add( new NaturalIdDataCachingConfigImpl( rootEntityDescriptor, accessType ) );
 			return this;
 		}
@@ -137,7 +136,6 @@ public class DomainDataRegionConfigImpl implements DomainDataRegionConfig {
 			if ( collectionConfigs == null ) {
 				collectionConfigs = new ArrayList<>();
 			}
-
 			collectionConfigs.add( new CollectionDataCachingConfigImpl( collectionDescriptor, accessType ) );
 			return this;
 		}
@@ -151,17 +149,16 @@ public class DomainDataRegionConfigImpl implements DomainDataRegionConfig {
 			);
 		}
 
-		@SuppressWarnings("unchecked")
-		private <T extends DomainDataCachingConfig> List<T> finalize(Map configs) {
+		private <T extends DomainDataCachingConfig> List<T> finalize(Map<?,? extends T> configs) {
 			return configs == null
-					? Collections.emptyList()
-					: Collections.unmodifiableList( new ArrayList( configs.values() ) );
+					? emptyList()
+					: unmodifiableList( new ArrayList<>( configs.values() ) );
 		}
 
 		private <T extends DomainDataCachingConfig> List<T> finalize(List<T> configs) {
 			return configs == null
-					? Collections.emptyList()
-					: Collections.unmodifiableList( configs );
+					? emptyList()
+					: unmodifiableList( configs );
 		}
 	}
 

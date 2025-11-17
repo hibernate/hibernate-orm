@@ -1,0 +1,199 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.orm.test.envers.integration.manytomany.biowned;
+
+import java.util.Arrays;
+
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.orm.test.envers.entities.manytomany.biowned.ListBiowning1Entity;
+import org.hibernate.orm.test.envers.entities.manytomany.biowned.ListBiowning2Entity;
+import org.hibernate.orm.test.envers.tools.TestTools;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+/**
+ * @author Adam Warski (adam at warski dot org)
+ */
+@EnversTest
+@Jpa(annotatedClasses = {ListBiowning1Entity.class, ListBiowning2Entity.class})
+public class BasicBiowned {
+	private Integer o1_1_id;
+	private Integer o1_2_id;
+	private Integer o2_1_id;
+	private Integer o2_2_id;
+
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			ListBiowning1Entity o1_1 = new ListBiowning1Entity( "o1_1" );
+			ListBiowning1Entity o1_2 = new ListBiowning1Entity( "o1_2" );
+			ListBiowning2Entity o2_1 = new ListBiowning2Entity( "o2_1" );
+			ListBiowning2Entity o2_2 = new ListBiowning2Entity( "o2_2" );
+
+			// Revision 1
+			em.persist( o1_1 );
+			em.persist( o1_2 );
+			em.persist( o2_1 );
+			em.persist( o2_2 );
+
+			o1_1_id = o1_1.getId();
+			o1_2_id = o1_2.getId();
+			o2_1_id = o2_1.getId();
+			o2_2_id = o2_2.getId();
+		} );
+
+		// Revision 2 (1_1 <-> 2_1; 1_2 <-> 2_2)
+		scope.inTransaction( em -> {
+			ListBiowning1Entity o1_1 = em.find( ListBiowning1Entity.class, o1_1_id );
+			ListBiowning1Entity o1_2 = em.find( ListBiowning1Entity.class, o1_2_id );
+			ListBiowning2Entity o2_1 = em.find( ListBiowning2Entity.class, o2_1_id );
+			ListBiowning2Entity o2_2 = em.find( ListBiowning2Entity.class, o2_2_id );
+
+			o1_1.getReferences().add( o2_1 );
+			o1_2.getReferences().add( o2_2 );
+		} );
+
+		// Revision 3 (1_1 <-> 2_1, 2_2; 1_2 <-> 2_2)
+		scope.inTransaction( em -> {
+			ListBiowning1Entity o1_1 = em.find( ListBiowning1Entity.class, o1_1_id );
+			ListBiowning2Entity o2_2 = em.find( ListBiowning2Entity.class, o2_2_id );
+
+			o1_1.getReferences().add( o2_2 );
+		} );
+
+		// Revision 4 (1_2 <-> 2_1, 2_2)
+		scope.inTransaction( em -> {
+			ListBiowning1Entity o1_1 = em.find( ListBiowning1Entity.class, o1_1_id );
+			ListBiowning1Entity o1_2 = em.find( ListBiowning1Entity.class, o1_2_id );
+			ListBiowning2Entity o2_1 = em.find( ListBiowning2Entity.class, o2_1_id );
+			ListBiowning2Entity o2_2 = em.find( ListBiowning2Entity.class, o2_2_id );
+
+			o2_2.getReferences().remove( o1_1 );
+			o2_1.getReferences().remove( o1_1 );
+			o2_1.getReferences().add( o1_2 );
+		} );
+
+		// Revision 5 (1_1 <-> 2_2, 1_2 <-> 2_2)
+		scope.inTransaction( em -> {
+			ListBiowning1Entity o1_1 = em.find( ListBiowning1Entity.class, o1_1_id );
+			ListBiowning1Entity o1_2 = em.find( ListBiowning1Entity.class, o1_2_id );
+			ListBiowning2Entity o2_1 = em.find( ListBiowning2Entity.class, o2_1_id );
+			ListBiowning2Entity o2_2 = em.find( ListBiowning2Entity.class, o2_2_id );
+
+			o1_2.getReferences().remove( o2_1 );
+			o1_1.getReferences().add( o2_2 );
+		} );
+	}
+
+	@Test
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			// Although it would seem that when modifying references both entities should be marked as modified, because
+			// ownly the owning side is notified (because of the bi-owning mapping), a revision is created only for
+			// the entity where the collection was directly modified.
+
+			assertEquals(
+					Arrays.asList( 1, 2, 3, 5 ), AuditReaderFactory.get( em ).getRevisions(
+					ListBiowning1Entity.class,
+					o1_1_id
+			)
+			);
+			assertEquals( Arrays.asList( 1, 2, 5 ), AuditReaderFactory.get( em ).getRevisions( ListBiowning1Entity.class, o1_2_id ) );
+
+			assertEquals( Arrays.asList( 1, 4 ), AuditReaderFactory.get( em ).getRevisions( ListBiowning2Entity.class, o2_1_id ) );
+			assertEquals( Arrays.asList( 1, 4 ), AuditReaderFactory.get( em ).getRevisions( ListBiowning2Entity.class, o2_2_id ) );
+		} );
+	}
+
+	@Test
+	public void testHistoryOfO1_1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			ListBiowning2Entity o2_1 = em.find( ListBiowning2Entity.class, o2_1_id );
+			ListBiowning2Entity o2_2 = em.find( ListBiowning2Entity.class, o2_2_id );
+
+			var auditReader = AuditReaderFactory.get( em );
+			ListBiowning1Entity rev1 = auditReader.find( ListBiowning1Entity.class, o1_1_id, 1 );
+			ListBiowning1Entity rev2 = auditReader.find( ListBiowning1Entity.class, o1_1_id, 2 );
+			ListBiowning1Entity rev3 = auditReader.find( ListBiowning1Entity.class, o1_1_id, 3 );
+			ListBiowning1Entity rev4 = auditReader.find( ListBiowning1Entity.class, o1_1_id, 4 );
+			ListBiowning1Entity rev5 = auditReader.find( ListBiowning1Entity.class, o1_1_id, 5 );
+
+			assert TestTools.checkCollection( rev1.getReferences() );
+			assert TestTools.checkCollection( rev2.getReferences(), o2_1 );
+			assert TestTools.checkCollection( rev3.getReferences(), o2_1, o2_2 );
+			assert TestTools.checkCollection( rev4.getReferences() );
+			assert TestTools.checkCollection( rev5.getReferences(), o2_2 );
+		} );
+	}
+
+	@Test
+	public void testHistoryOfO1_2(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			ListBiowning2Entity o2_1 = em.find( ListBiowning2Entity.class, o2_1_id );
+			ListBiowning2Entity o2_2 = em.find( ListBiowning2Entity.class, o2_2_id );
+
+			var auditReader = AuditReaderFactory.get( em );
+			ListBiowning1Entity rev1 = auditReader.find( ListBiowning1Entity.class, o1_2_id, 1 );
+			ListBiowning1Entity rev2 = auditReader.find( ListBiowning1Entity.class, o1_2_id, 2 );
+			ListBiowning1Entity rev3 = auditReader.find( ListBiowning1Entity.class, o1_2_id, 3 );
+			ListBiowning1Entity rev4 = auditReader.find( ListBiowning1Entity.class, o1_2_id, 4 );
+			ListBiowning1Entity rev5 = auditReader.find( ListBiowning1Entity.class, o1_2_id, 5 );
+
+			assert TestTools.checkCollection( rev1.getReferences() );
+			assert TestTools.checkCollection( rev2.getReferences(), o2_2 );
+			assert TestTools.checkCollection( rev3.getReferences(), o2_2 );
+			assert TestTools.checkCollection( rev4.getReferences(), o2_1, o2_2 );
+			assert TestTools.checkCollection( rev5.getReferences(), o2_2 );
+		} );
+	}
+
+	@Test
+	public void testHistoryOfO2_1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			ListBiowning1Entity o1_1 = em.find( ListBiowning1Entity.class, o1_1_id );
+			ListBiowning1Entity o1_2 = em.find( ListBiowning1Entity.class, o1_2_id );
+
+			var auditReader = AuditReaderFactory.get( em );
+			ListBiowning2Entity rev1 = auditReader.find( ListBiowning2Entity.class, o2_1_id, 1 );
+			ListBiowning2Entity rev2 = auditReader.find( ListBiowning2Entity.class, o2_1_id, 2 );
+			ListBiowning2Entity rev3 = auditReader.find( ListBiowning2Entity.class, o2_1_id, 3 );
+			ListBiowning2Entity rev4 = auditReader.find( ListBiowning2Entity.class, o2_1_id, 4 );
+			ListBiowning2Entity rev5 = auditReader.find( ListBiowning2Entity.class, o2_1_id, 5 );
+
+			assert TestTools.checkCollection( rev1.getReferences() );
+			assert TestTools.checkCollection( rev2.getReferences(), o1_1 );
+			assert TestTools.checkCollection( rev3.getReferences(), o1_1 );
+			assert TestTools.checkCollection( rev4.getReferences(), o1_2 );
+			assert TestTools.checkCollection( rev5.getReferences() );
+		} );
+	}
+
+	@Test
+	public void testHistoryOfO2_2(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			ListBiowning1Entity o1_1 = em.find( ListBiowning1Entity.class, o1_1_id );
+			ListBiowning1Entity o1_2 = em.find( ListBiowning1Entity.class, o1_2_id );
+
+			var auditReader = AuditReaderFactory.get( em );
+			ListBiowning2Entity rev1 = auditReader.find( ListBiowning2Entity.class, o2_2_id, 1 );
+			ListBiowning2Entity rev2 = auditReader.find( ListBiowning2Entity.class, o2_2_id, 2 );
+			ListBiowning2Entity rev3 = auditReader.find( ListBiowning2Entity.class, o2_2_id, 3 );
+			ListBiowning2Entity rev4 = auditReader.find( ListBiowning2Entity.class, o2_2_id, 4 );
+			ListBiowning2Entity rev5 = auditReader.find( ListBiowning2Entity.class, o2_2_id, 5 );
+
+			assert TestTools.checkCollection( rev1.getReferences() );
+			assert TestTools.checkCollection( rev2.getReferences(), o1_2 );
+			assert TestTools.checkCollection( rev3.getReferences(), o1_1, o1_2 );
+			assert TestTools.checkCollection( rev4.getReferences(), o1_2 );
+			assert TestTools.checkCollection( rev5.getReferences(), o1_1, o1_2 );
+		} );
+	}
+}

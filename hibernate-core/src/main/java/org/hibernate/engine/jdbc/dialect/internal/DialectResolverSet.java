@@ -1,21 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.dialect.internal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.exception.JDBCConnectionException;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * A {@link DialectResolver} implementation which coordinates resolution by delegating to sub-resolvers.
@@ -24,12 +23,11 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Steve Ebersole
  */
 public class DialectResolverSet implements DialectResolver {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DialectResolverSet.class );
 
-	private List<DialectResolver> resolvers;
+	private final List<DialectResolver> resolvers;
 
 	public DialectResolverSet() {
-		this( new ArrayList<DialectResolver>() );
+		this( new ArrayList<>() );
 	}
 
 	public DialectResolverSet(List<DialectResolver> resolvers) {
@@ -53,30 +51,22 @@ public class DialectResolverSet implements DialectResolver {
 				throw e;
 			}
 			catch ( Exception e ) {
-				LOG.exceptionInSubResolver( e.getMessage() );
+				CORE_LOGGER.exceptionInSubResolver( e.getMessage() );
 			}
 		}
 
 		return null;
 	}
 
-	/**
-	 * Add a resolver at the end of the underlying resolver list.  The resolver added by this method is at lower
-	 * priority than any other existing resolvers.
-	 *
-	 * @param resolver The resolver to add.
-	 */
-	public void addResolver(DialectResolver resolver) {
-		resolvers.add( resolver );
+	public void addResolver(DialectResolver... resolvers) {
+		this.resolvers.addAll( Arrays.asList( resolvers ) );
 	}
 
-	/**
-	 * Add a resolver at the beginning of the underlying resolver list.  The resolver added by this method is at higher
-	 * priority than any other existing resolvers.
-	 *
-	 * @param resolver The resolver to add.
-	 */
-	public void addResolverAtFirst(DialectResolver resolver) {
-		resolvers.add( 0, resolver );
+	public void addResolverAtFirst(DialectResolver... resolvers) {
+		this.resolvers.addAll( 0, Arrays.asList( resolvers ) );
+	}
+
+	public void addDiscoveredResolvers(Collection<DialectResolver> resolvers) {
+		this.resolvers.addAll( 0, resolvers );
 	}
 }

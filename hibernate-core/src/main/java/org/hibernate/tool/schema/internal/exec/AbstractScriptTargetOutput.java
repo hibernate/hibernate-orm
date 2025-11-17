@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal.exec;
 
@@ -26,9 +24,10 @@ public abstract class AbstractScriptTargetOutput implements ScriptTargetOutput {
 	@Override
 	public void accept(String command) {
 		try {
-			writer().write( command );
-			writer().write( System.lineSeparator() );
-			writer().flush();
+			final var writer = writer();
+			writer.write( command );
+			writer.write( System.lineSeparator() );
+			writer.flush();
 		}
 		catch (IOException e) {
 			throw new CommandAcceptanceException( "Could not write \"" + command + "\" to target script file", e );

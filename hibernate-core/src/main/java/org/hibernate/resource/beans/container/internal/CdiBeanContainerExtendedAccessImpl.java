@@ -1,13 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.container.internal;
 
-import javax.enterprise.inject.spi.BeanManager;
-
+import jakarta.enterprise.inject.spi.BeanManager;
+import org.hibernate.Internal;
 import org.hibernate.resource.beans.container.spi.AbstractCdiBeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
@@ -15,25 +13,22 @@ import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.resource.beans.internal.BeansMessageLogger.BEANS_MSG_LOGGER;
 
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("unused")
 public class CdiBeanContainerExtendedAccessImpl
 		extends AbstractCdiBeanContainer
 		implements ExtendedBeanManager.LifecycleListener {
 
-	// NOTE : we continue to use the deprecated form for now since that is what WildFly needs for the time being still
-
-	private static final Logger log = Logger.getLogger( CdiBeanContainerExtendedAccessImpl.class );
+	// NOTE : we continue to use the deprecated form for now since that is what WildFly needs for the time being
 
 	private BeanManager usableBeanManager;
 
-	private CdiBeanContainerExtendedAccessImpl(ExtendedBeanManager beanManager) {
+	CdiBeanContainerExtendedAccessImpl(ExtendedBeanManager beanManager) {
 		beanManager.registerLifecycleListener( this );
-		log.debugf( "Extended access requested to CDI BeanManager : " + beanManager );
+		BEANS_MSG_LOGGER.extendedAccessToBeanManager();
 	}
 
 	@Override
@@ -88,6 +83,11 @@ public class CdiBeanContainerExtendedAccessImpl
 		return usableBeanManager;
 	}
 
+	@Internal
+	public BeanManager getBeanManager() {
+		return usableBeanManager;
+	}
+
 	private class BeanImpl<B> implements ContainedBeanImplementor<B> {
 		private final Class<B> beanType;
 		private final BeanLifecycleStrategy lifecycleStrategy;
@@ -104,6 +104,10 @@ public class CdiBeanContainerExtendedAccessImpl
 			this.fallbackProducer = fallbackProducer;
 		}
 
+		@Override
+		public Class<B> getBeanClass() {
+			return beanType;
+		}
 
 		@Override
 		public void initialize() {
@@ -139,7 +143,7 @@ public class CdiBeanContainerExtendedAccessImpl
 		private NamedBeanImpl(
 				String name,
 				Class<B> beanType,
-				BeanLifecycleStrategy lifecycleStrategy, 
+				BeanLifecycleStrategy lifecycleStrategy,
 				BeanInstanceProducer fallbackProducer) {
 			this.name = name;
 			this.beanType = beanType;
@@ -148,14 +152,15 @@ public class CdiBeanContainerExtendedAccessImpl
 		}
 
 		@Override
+		public Class<B> getBeanClass() {
+			return beanType;
+		}
+
+		@Override
 		public void initialize() {
 			if ( delegateContainedBean == null ) {
-				delegateContainedBean = lifecycleStrategy.createBean(
-						name,
-						beanType,
-						fallbackProducer,
-						DUMMY_BEAN_CONTAINER
-				);
+				delegateContainedBean =
+						lifecycleStrategy.createBean( name, beanType, fallbackProducer, DUMMY_BEAN_CONTAINER );
 				delegateContainedBean.initialize();
 			}
 		}

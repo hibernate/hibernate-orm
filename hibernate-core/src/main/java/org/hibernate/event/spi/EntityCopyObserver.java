@@ -1,13 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
 /**
  * An observer for detection of multiple entity representations for a persistent entity being merged.
+ *
+ * @see MergeContext
  *
  * @author Gail Badner
  */
@@ -24,14 +24,14 @@ public interface EntityCopyObserver {
 	void entityCopyDetected(Object managedEntity, Object mergeEntity1, Object mergeEntity2, EventSource session);
 
 	/**
-	 * Called when the top-level merge operation is complete.
+	 * Called when the toplevel merge operation is complete.
 	 *
 	 * @param session The session
 	 */
 	void topLevelMergeComplete(EventSource session);
 
 	/**
-	 * Called to clear any data stored in this EntityCopyObserver.
+	 * Called to clear any data stored in this {@code EntityCopyObserver}.
 	 */
 	void clear();
 }

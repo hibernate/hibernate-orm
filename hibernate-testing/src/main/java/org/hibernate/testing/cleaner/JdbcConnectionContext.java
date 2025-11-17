@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.cleaner;
 
@@ -12,6 +10,8 @@ import java.sql.Driver;
 import java.util.Properties;
 
 import org.hibernate.cfg.AvailableSettings;
+
+import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.*;
 
 /**
  * @author Christian Beikov
@@ -28,18 +28,19 @@ public final class JdbcConnectionContext {
 				.getContextClassLoader()
 				.getResourceAsStream( "hibernate.properties" )) {
 			connectionProperties.load( inputStream );
-			final String driverClassName = connectionProperties.getProperty(
-					AvailableSettings.DRIVER );
+			final String driverClassName = connectionProperties.getProperty( AvailableSettings.DRIVER );
 			driver = (Driver) Class.forName( driverClassName ).newInstance();
-			url = connectionProperties.getProperty(
-					AvailableSettings.URL );
-			user = connectionProperties.getProperty(
-					AvailableSettings.USER );
-			password = connectionProperties.getProperty(
-					AvailableSettings.PASS );
-			Properties p = new Properties();
-			p.put( "user", user );
-			p.put( "password", password );
+			url = resolveUrl( connectionProperties.getProperty( AvailableSettings.URL ) );
+			resolveFromSettings(connectionProperties);
+			user = connectionProperties.getProperty( AvailableSettings.USER );
+			password = connectionProperties.getProperty( AvailableSettings.PASS );
+			final Properties p = new Properties();
+			if ( user != null ) {
+				p.put( "user", user );
+			}
+			if ( password != null ) {
+				p.put( "password", password );
+			}
 			properties = p;
 		}
 		catch (Exception e) {

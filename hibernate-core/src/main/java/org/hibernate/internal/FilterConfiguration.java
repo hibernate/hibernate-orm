@@ -1,18 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.persister.entity.Joinable;
+
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 
 /**
  * @author Rob Worsnop
@@ -53,36 +52,36 @@ public class FilterConfiguration {
 	}
 
 	public Map<String, String> getAliasTableMap(SessionFactoryImplementor factory) {
-		Map<String, String> mergedAliasTableMap = mergeAliasMaps( factory );
+		final var mergedAliasTableMap = mergeAliasMaps( factory );
 		if ( !mergedAliasTableMap.isEmpty() ) {
 			return mergedAliasTableMap;
 		}
 		else if ( persistentClass != null ) {
-			String table = persistentClass.getTable().getQualifiedName(
-					factory.getDialect(),
-					factory.getSettings().getDefaultCatalogName(),
-					factory.getSettings().getDefaultSchemaName()
-			);
-			return Collections.singletonMap( null, table );
+			final String tableName =
+					persistentClass.getTable()
+							.getQualifiedName( factory.getSqlStringGenerationContext() );
+			return singletonMap( null, tableName );
 		}
 		else {
-			return Collections.emptyMap();
+			return emptyMap();
 		}
 	}
 
 	private Map<String, String> mergeAliasMaps(SessionFactoryImplementor factory) {
-		Map<String, String> ret = new HashMap<String, String>();
+		final Map<String, String> result = new HashMap<>();
 		if ( aliasTableMap != null ) {
-			ret.putAll( aliasTableMap );
+			result.putAll( aliasTableMap );
 		}
+
 		if ( aliasEntityMap != null ) {
-			for ( Map.Entry<String, String> entry : aliasEntityMap.entrySet() ) {
-				ret.put(
-						entry.getKey(),
-						Joinable.class.cast( factory.getEntityPersister( entry.getValue() ) ).getTableName()
-				);
+			for ( var entry : aliasEntityMap.entrySet() ) {
+				final var joinable =
+						factory.getMappingMetamodel()
+								.getEntityDescriptor( entry.getValue() );
+				result.put( entry.getKey(), joinable.getTableName() );
 			}
 		}
-		return ret;
+
+		return result;
 	}
 }

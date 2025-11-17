@@ -1,15 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
 import static net.bytebuddy.matcher.ElementMatchers.hasDescriptor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static org.hibernate.bytecode.enhance.internal.BytecodeEnhancementLogging.ENHANCEMENT_LOGGER;
 
-import javax.persistence.Id;
+import jakarta.persistence.Id;
 
 import net.bytebuddy.description.NamedElement;
 import net.bytebuddy.description.type.TypeDefinition;
@@ -18,8 +17,6 @@ import net.bytebuddy.utility.OpenedClassReader;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 
 import net.bytebuddy.asm.AsmVisitorWrapper;
 import net.bytebuddy.description.field.FieldList;
@@ -34,8 +31,6 @@ import net.bytebuddy.pool.TypePool;
 import java.util.Objects;
 
 final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.MethodVisitorWrapper {
-
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( FieldAccessEnhancer.class );
 
 	private final TypeDescription managedCtClass;
 
@@ -68,6 +63,8 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 
 				TypeDescription declaredOwnerType = findDeclaredType( owner );
 				AnnotatedFieldDescription field = findField( declaredOwnerType, name, desc );
+				// try to discover composite types on the fly to support some testing scenarios
+				enhancementContext.discoverCompositeTypes( declaredOwnerType, typePool );
 
 				if ( ( enhancementContext.isEntityClass( declaredOwnerType.asErasure() )
 						|| enhancementContext.isCompositeClass( declaredOwnerType.asErasure() ) )
@@ -76,12 +73,11 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 						&& !field.hasAnnotation( Id.class )
 						&& !field.getName().equals( "this$0" ) ) {
 
-					log.debugf(
-							"Extended enhancement: Transforming access to field [%s.%s] from method [%s#%s]",
-							field.getType().asErasure(),
+					ENHANCEMENT_LOGGER.extendedTransformingFieldAccess(
+							declaredOwnerType.getName(),
 							field.getName(),
-							field.getName(),
-							name
+							instrumentedType.getName(),
+							instrumentedMethod.getName()
 					);
 
 					switch ( opcode ) {
@@ -95,6 +91,11 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 							);
 							return;
 						case Opcodes.PUTFIELD:
+							if ( field.getFieldDescription().isFinal() ) {
+								// Final fields will only be written to from the constructor,
+								// so there's no point trying to replace final field writes with a method call.
+								break;
+							}
 							methodVisitor.visitMethodInsn(
 									Opcodes.INVOKEVIRTUAL,
 									owner,
@@ -107,9 +108,7 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 							throw new EnhancementException( "Unexpected opcode: " + opcode );
 					}
 				}
-				else {
-					super.visitFieldInsn( opcode, owner, name, desc );
-				}
+				super.visitFieldInsn( opcode, owner, name, desc );
 			}
 		};
 	}

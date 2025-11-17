@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
@@ -18,7 +16,7 @@ public class PreCollectionRecreateEvent extends AbstractCollectionEvent {
 
 	public PreCollectionRecreateEvent(
 			CollectionPersister collectionPersister,
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			EventSource source) {
 		super(
 				collectionPersister,
@@ -27,5 +25,14 @@ public class PreCollectionRecreateEvent extends AbstractCollectionEvent {
 				collection.getOwner(),
 				getOwnerIdOrNull( collection.getOwner(), source )
 		);
+	}
+
+
+	public PreCollectionRecreateEvent(
+			PersistentCollection<?> collection,
+			Object id,
+			String entityName,
+			Object loadedOwner) {
+		super( collection, entityName, loadedOwner, id );
 	}
 }

@@ -1,7 +1,0 @@
- Bundle-SymbolicName: jandex
- Bundle-Version: 1.1.0
-
- Include-Resource: @../jandex-1.1.0.Final.jar
- 
- Import-Package: org.apache.tools.ant;resolution:=optional, org.apache.tools.ant.types;resolution:=optional, *
--exportcontents: *

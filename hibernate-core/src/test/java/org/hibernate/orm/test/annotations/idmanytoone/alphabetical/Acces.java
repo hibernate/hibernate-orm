@@ -1,0 +1,19 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.orm.test.annotations.idmanytoone.alphabetical;
+import java.io.Serializable;
+import java.math.BigInteger;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+
+@Entity
+public class Acces implements Serializable {
+	@Id
+	private BigInteger idpk;
+
+	@ManyToOne
+	private Droitacces idpkdracc;
+}

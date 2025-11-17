@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.collection.backref.map.compkey</package>
+    <access>FIELD</access>
+
+    <entity class="Product">
+        <table name="t_product"/>
+        <attributes>
+            <id name="name"/>
+            <one-to-many name="parts" orphan-removal="true" fetch="EAGER" fetch-mode="JOIN" target-entity="Part">
+                <map-key-class class="MapKey"/>
+                <join-column name="product_fk"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="Part">
+        <table name="t_part"/>
+        <attributes>
+            <id name="name"/>
+            <basic name="description" optional="false"/>
+        </attributes>
+    </entity>
+
+    <embeddable class="MapKey">
+        <attributes>
+            <basic name="role">
+                <column name="role_"/>
+            </basic>
+        </attributes>
+    </embeddable>
+</entity-mappings>

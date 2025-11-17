@@ -1,92 +1,84 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import javax.xml.bind.JAXBElement;
 
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterDefinitionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterParameterType;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 
-import org.jboss.logging.Logger;
+import jakarta.xml.bind.JAXBElement;
+
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+import static org.hibernate.internal.util.StringHelper.isNotBlank;
 
 /**
  * @author Steve Ebersole
  */
-public class FilterDefinitionBinder {
-	private static final Logger log = Logger.getLogger( FilterDefinitionBinder.class );
+class FilterDefinitionBinder {
 
 	/**
 	 * Handling for a {@code <filter-def/>} declaration.
 	 *
 	 * @param context Access to information relative to the mapping document containing this binding
-	 * @param jaxbFilterDefinitionMapping The {@code <filter-def/>} JAXB mapping
+	 * @param filterDefinitionMapping The {@code <filter-def/>} JAXB mapping
 	 */
-	@SuppressWarnings("unchecked")
-	public static void processFilterDefinition(
+	static void processFilterDefinition(
 			HbmLocalMetadataBuildingContext context,
-			JaxbHbmFilterDefinitionType jaxbFilterDefinitionMapping) {
-		Map<String,Type> parameterMap = null;
-		String condition = jaxbFilterDefinitionMapping.getCondition();
+			JaxbHbmFilterDefinitionType filterDefinitionMapping) {
+		Map<String, JdbcMapping> parameterMap = null;
+		final String condition = filterDefinitionMapping.getCondition();
 
-		for ( Serializable content : jaxbFilterDefinitionMapping.getContent() ) {
-			if ( String.class.isInstance( content ) ) {
-				final String contentString = content.toString().trim();
-				if ( StringHelper.isNotEmpty( contentString ) ) {
-					if ( condition != null ) {
-						log.debugf(
-								"filter-def [name=%s, origin=%s] defined multiple conditions, accepting arbitrary one",
-								jaxbFilterDefinitionMapping.getName(),
+		final var collector = context.getMetadataCollector();
+		final var basicTypeRegistry = collector.getTypeConfiguration().getBasicTypeRegistry();
+
+		for ( var content : filterDefinitionMapping.getContent() ) {
+			if ( content instanceof String string ) {
+				if ( isNotBlank( string ) ) {
+					if ( condition != null && BOOT_LOGGER.isDebugEnabled() ) {
+						BOOT_LOGGER.filterDefDefinedMultipleConditions(
+								filterDefinitionMapping.getName(),
 								context.getOrigin().toString()
 						);
 					}
 				}
 			}
 			else {
-				final JaxbHbmFilterParameterType jaxbParameterMapping;
-				if ( JaxbHbmFilterParameterType.class.isInstance( content ) ) {
-					jaxbParameterMapping = (JaxbHbmFilterParameterType) content;
-				}
-				else if ( JAXBElement.class.isInstance( content ) ) {
-					final JAXBElement<JaxbHbmFilterParameterType> jaxbElement = (JAXBElement<JaxbHbmFilterParameterType>) content;
-					jaxbParameterMapping = jaxbElement.getValue();
-				}
-				else {
-					throw new MappingException(
-							"Unable to decipher filter-def content type [" + content.getClass().getName() + "]",
-							context.getOrigin()
-					);
-				}
-
+				final var parameterMapping = filterParameterType( context, content );
 				if ( parameterMap == null ) {
-					parameterMap = new HashMap<String, Type>();
+					parameterMap = new HashMap<>();
 				}
-
-				parameterMap.put(
-						jaxbParameterMapping.getParameterName(),
-						context.getMetadataCollector().getTypeResolver().heuristicType( jaxbParameterMapping.getParameterValueTypeName() )
-				);
+				parameterMap.put( parameterMapping.getParameterName(),
+						basicTypeRegistry.getRegisteredType( parameterMapping.getParameterValueTypeName() ) );
 			}
 		}
 
-		context.getMetadataCollector().addFilterDefinition(
-				new FilterDefinition(
-						jaxbFilterDefinitionMapping.getName(),
-						condition,
-						parameterMap
-				)
-		);
+		collector.addFilterDefinition( new FilterDefinition( filterDefinitionMapping.getName(), condition, parameterMap ) );
 
-		log.debugf( "Processed filter definition : %s", jaxbFilterDefinitionMapping.getName() );
+		BOOT_LOGGER.processedFilterDefinition( filterDefinitionMapping.getName() );
+	}
+
+	private static JaxbHbmFilterParameterType filterParameterType(
+			HbmLocalMetadataBuildingContext context, Serializable content) {
+		if ( content instanceof JaxbHbmFilterParameterType filterParameterType ) {
+			return filterParameterType;
+		}
+		else if ( content instanceof JAXBElement ) {
+			final var jaxbElement = (JAXBElement<JaxbHbmFilterParameterType>) content;
+			return jaxbElement.getValue();
+		}
+		else {
+			throw new MappingException(
+					"Unable to decipher filter-def content type [" + content.getClass().getName() + "]",
+					context.getOrigin()
+			);
+		}
 	}
 }

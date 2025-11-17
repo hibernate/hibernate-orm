@@ -1,171 +1,131 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.enhanced;
 
-import java.io.Serializable;
-import java.util.Objects;
 import java.util.Properties;
+import java.util.function.BiConsumer;
 
-import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
-import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.SequenceMismatchStrategy;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
+import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 import org.hibernate.type.Type;
 
-import org.jboss.logging.Logger;
+
+import jakarta.persistence.SequenceGenerator;
+
+import static java.util.Collections.singleton;
+import static org.hibernate.cfg.MappingSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY;
+import static org.hibernate.id.IdentifierGeneratorHelper.getNamingStrategy;
+import static org.hibernate.id.enhanced.OptimizerFactory.determineImplicitOptimizerName;
+import static org.hibernate.id.enhanced.SequenceGeneratorLogger.SEQUENCE_GENERATOR_LOGGER;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 
 /**
  * Generates identifier values based on a sequence-style database structure.
  * Variations range from actually using a sequence to using a table to mimic
  * a sequence.  These variations are encapsulated by the {@link DatabaseStructure}
  * interface internally.
- * <p/>
- * <b>NOTE</b> that by default we utilize a single database sequence for all
- * generators.  The configuration parameter {@link #CONFIG_PREFER_SEQUENCE_PER_ENTITY}
- * can be used to create dedicated sequence for each entity based on its name.
- * Sequence suffix can be controlled with {@link #CONFIG_SEQUENCE_PER_ENTITY_SUFFIX}
- * option.
- * <p/>
- * General configuration parameters:
+ * <p>
  * <table>
+ * <caption>General configuration parameters</caption>
  * 	 <tr>
- *     <td><b>NAME</b></td>
- *     <td><b>DEFAULT</b></td>
- *     <td><b>DESCRIPTION</b></td>
+ *     <td><b>Parameter name</b></td>
+ *     <td><b>Default value</b></td>
+ *     <td><b>Interpretation</b></td>
  *   </tr>
  *   <tr>
- *     <td>{@link #SEQUENCE_PARAM}</td>
- *     <td>{@link #DEF_SEQUENCE_NAME}</td>
+ *     <td>{@value #SEQUENCE_PARAM}</td>
+ *     <td></td>
  *     <td>The name of the sequence/table to use to store/retrieve values</td>
  *   </tr>
  *   <tr>
- *     <td>{@link #INITIAL_PARAM}</td>
- *     <td>{@link #DEFAULT_INITIAL_VALUE}</td>
- *     <td>The initial value to be stored for the given segment; the effect in terms of storage varies based on {@link Optimizer} and {@link DatabaseStructure}</td>
+ *     <td>{@value #INITIAL_PARAM}</td>
+ *     <td>{@value #DEFAULT_INITIAL_VALUE}</td>
+ *     <td>The initial value to be stored for the given segment;
+ *         the effect in terms of storage varies based on {@link Optimizer}
+ *         and {@link DatabaseStructure}</td>
  *   </tr>
  *   <tr>
- *     <td>{@link #INCREMENT_PARAM}</td>
- *     <td>{@link #DEFAULT_INCREMENT_SIZE}</td>
- *     <td>The increment size for the underlying segment; the effect in terms of storage varies based on {@link Optimizer} and {@link DatabaseStructure}</td>
+ *     <td>{@value #INCREMENT_PARAM}</td>
+ *     <td>{@value #DEFAULT_INCREMENT_SIZE}</td>
+ *     <td>The increment size for the underlying segment;
+ *         the effect in terms of storage varies based on {@link Optimizer}
+ *         and {@link DatabaseStructure}</td>
  *   </tr>
  *   <tr>
- *     <td>{@link #OPT_PARAM}</td>
- *     <td><i>depends on defined increment size</i></td>
+ *     <td>{@value #OPT_PARAM}</td>
+ *     <td><em>depends on defined increment size</em></td>
  *     <td>Allows explicit definition of which optimization strategy to use</td>
  *   </tr>
  *   <tr>
- *     <td>{@link #FORCE_TBL_PARAM}</td>
- *     <td><b><i>false</i></b></td>
+ *     <td>{@value #FORCE_TBL_PARAM}</td>
+ *     <td>{@code false}</td>
  *     <td>Allows explicit definition of which optimization strategy to use</td>
  *   </tr>
  * </table>
- * <p/>
+ * <p>
  * Configuration parameters used specifically when the underlying structure is a table:
  * <table>
+ * <caption>Table configuration parameters</caption>
  * 	 <tr>
- *     <td><b>NAME</b></td>
- *     <td><b>DEFAULT</b></td>
- *     <td><b>DESCRIPTION</b></td>
+ *     <td><b>Parameter name</b></td>
+ *     <td><b>Default value</b></td>
+ *     <td><b>Interpretation</b></td>
  *   </tr>
  *   <tr>
- *     <td>{@link #VALUE_COLUMN_PARAM}</td>
- *     <td>{@link #DEF_VALUE_COLUMN}</td>
- *     <td>The name of column which holds the sequence value for the given segment</td>
+ *     <td>{@value #VALUE_COLUMN_PARAM}</td>
+ *     <td>{@value #DEF_VALUE_COLUMN}</td>
+ *     <td>The name of the column which holds the sequence value for the given segment</td>
  *   </tr>
  * </table>
  *
  * @author Steve Ebersole
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 public class SequenceStyleGenerator
-		implements PersistentIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, Configurable {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			SequenceStyleGenerator.class.getName()
-	);
-
+		implements PersistentIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, BeforeExecutionGenerator {
 
 	// general purpose parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Indicates the name of the sequence (or table) to use.  The default value is {@link #DEF_SEQUENCE_NAME},
-	 * although {@link #CONFIG_PREFER_SEQUENCE_PER_ENTITY} effects the default as well.
+	 * Indicates the name of the sequence (or table) to use.  The implicit value is
+	 * based on the entity / collection-role name
 	 */
 	public static final String SEQUENCE_PARAM = "sequence_name";
+	public static final String ALT_SEQUENCE_PARAM = "sequence";
 
 	/**
-	 * The default value for {@link #SEQUENCE_PARAM}, in the absence of any {@link #CONFIG_PREFER_SEQUENCE_PER_ENTITY}
-	 * setting.
+	 * Specifies the suffix to use for an implicit sequence name - appended to the entity-name / collection-role
 	 */
-	public static final String DEF_SEQUENCE_NAME = "hibernate_sequence";
-
-	/**
-	 * Indicates the initial value to use.  The default value is {@link #DEFAULT_INITIAL_VALUE}
-	 */
-	public static final String INITIAL_PARAM = "initial_value";
-
-	/**
-	 * The default value for {@link #INITIAL_PARAM}
-	 */
-	public static final int DEFAULT_INITIAL_VALUE = 1;
-
-	/**
-	 * Indicates the increment size to use.  The default value is {@link #DEFAULT_INCREMENT_SIZE}
-	 */
-	public static final String INCREMENT_PARAM = "increment_size";
-
-	/**
-	 * The default value for {@link #INCREMENT_PARAM}
-	 */
-	public static final int DEFAULT_INCREMENT_SIZE = 1;
-
-	/**
-	 * Used to create dedicated sequence for each entity based on the entity name.  Sequence suffix can be
-	 * controlled with {@link #CONFIG_SEQUENCE_PER_ENTITY_SUFFIX} option.
-	 */
-	@SuppressWarnings("WeakerAccess")
-	public static final String CONFIG_PREFER_SEQUENCE_PER_ENTITY = "prefer_sequence_per_entity";
-
-	/**
-	 * Indicates the suffix to use in naming the identifier sequence/table name, by appending the suffix to
-	 * the name of the entity.  Used in conjunction with {@link #CONFIG_PREFER_SEQUENCE_PER_ENTITY}.
-	 */
-	@SuppressWarnings("WeakerAccess")
 	public static final String CONFIG_SEQUENCE_PER_ENTITY_SUFFIX = "sequence_per_entity_suffix";
 
 	/**
 	 * The default value for {@link #CONFIG_SEQUENCE_PER_ENTITY_SUFFIX}
 	 */
 	public static final String DEF_SEQUENCE_SUFFIX = "_SEQ";
-
-	/**
-	 * Indicates the optimizer to use, either naming a {@link Optimizer} implementation class or naming
-	 * a {@link StandardOptimizerDescriptor} by name
-	 */
-	public static final String OPT_PARAM = "optimizer";
 
 	/**
 	 * A flag to force using a table as the underlying structure rather than a sequence.
@@ -176,15 +136,14 @@ public class SequenceStyleGenerator
 	// table-specific parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Indicates the name of the column holding the identifier values.  The default value is {@link #DEF_VALUE_COLUMN}
+	 * Indicates the name of the column holding the identifier values.
+	 * The default value is {@value #DEF_VALUE_COLUMN}
 	 */
-	@SuppressWarnings("WeakerAccess")
 	public static final String VALUE_COLUMN_PARAM = "value_column";
 
 	/**
 	 * The default value for {@link #VALUE_COLUMN_PARAM}
 	 */
-	@SuppressWarnings("WeakerAccess")
 	public static final String DEF_VALUE_COLUMN = "next_val";
 
 
@@ -192,6 +151,7 @@ public class SequenceStyleGenerator
 	private DatabaseStructure databaseStructure;
 	private Optimizer optimizer;
 	private Type identifierType;
+	private Table table;
 
 	/**
 	 * Getter for property 'databaseStructure'.
@@ -207,6 +167,7 @@ public class SequenceStyleGenerator
 	 *
 	 * @return Value for property 'optimizer'.
 	 */
+	@Override
 	public Optimizer getOptimizer() {
 		return optimizer;
 	}
@@ -224,150 +185,215 @@ public class SequenceStyleGenerator
 	// Configurable implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
-		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+	public void configure(GeneratorCreationContext creationContext, Properties parameters) throws MappingException {
+		final var serviceRegistry = creationContext.getServiceRegistry();
+		final var jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
+		final var dialect = jdbcEnvironment.getDialect();
 
-		final Dialect dialect = jdbcEnvironment.getDialect();
+		identifierType = creationContext.getType();
+		table = creationContext.getValue().getTable();
 
-		this.identifierType = type;
-		boolean forceTableUse = ConfigurationHelper.getBoolean( FORCE_TBL_PARAM, params, false );
+		final var sequenceName = determineSequenceName( parameters, jdbcEnvironment, serviceRegistry );
+		final int initialValue = determineInitialValue( parameters );
+		int incrementSize = determineIncrementSize( parameters );
+		final var optimizationStrategy = determineOptimizationStrategy( parameters, incrementSize );
 
-		final QualifiedName sequenceName = determineSequenceName( params, dialect, jdbcEnvironment, serviceRegistry );
+		boolean forceTableUse = getBoolean( FORCE_TBL_PARAM, parameters );
+		final boolean physicalSequence = isPhysicalSequence( jdbcEnvironment, forceTableUse );
 
-		final int initialValue = determineInitialValue( params );
-		int incrementSize = determineIncrementSize( params );
+		incrementSize = adjustIncrementSize(
+				jdbcEnvironment,
+				sequenceName,
+				incrementSize,
+				physicalSequence,
+				optimizationStrategy,
+				serviceRegistry,
+				determineContributor( parameters ),
+				creationContext
+		);
 
-		final String optimizationStrategy = determineOptimizationStrategy( params, incrementSize );
-
-		final boolean isPooledOptimizer = OptimizerFactory.isPooledOptimizer( optimizationStrategy );
-
-		if ( isPooledOptimizer && isPhysicalSequence( jdbcEnvironment, forceTableUse ) ) {
-			String databaseSequenceName = sequenceName.getObjectName().getText();
-			Long databaseIncrementValue = getSequenceIncrementValue( jdbcEnvironment, databaseSequenceName );
-
-			if ( databaseIncrementValue != null && !databaseIncrementValue.equals( (long) incrementSize ) ) {
-				int dbIncrementValue = databaseIncrementValue.intValue();
-
-				SequenceMismatchStrategy sequenceMismatchStrategy = configurationService.getSetting(
-						AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY,
-						SequenceMismatchStrategy::interpret,
-						SequenceMismatchStrategy.EXCEPTION
-				);
-
-				switch ( sequenceMismatchStrategy ) {
-					case EXCEPTION:
-						throw new MappingException(
-								String.format(
-										"The increment size of the [%s] sequence is set to [%d] in the entity mapping " +
-												"while the associated database sequence increment size is [%d].",
-										databaseSequenceName, incrementSize, dbIncrementValue
-								)
-						);
-					case FIX:
-						incrementSize = dbIncrementValue;
-					case LOG:
-						LOG.sequenceIncrementSizeMismatch( databaseSequenceName, incrementSize, dbIncrementValue );
-						break;
-				}
-			}
+		if ( physicalSequence
+				&& optimizationStrategy.isPooled()
+				&& !dialect.getSequenceSupport().supportsPooledSequences() ) {
+			forceTableUse = true;
+			SEQUENCE_GENERATOR_LOGGER.forcingTableUse();
 		}
 
-		incrementSize = determineAdjustedIncrementSize( optimizationStrategy, incrementSize );
-
-		if ( dialect.supportsSequences() && !forceTableUse ) {
-			if ( !dialect.supportsPooledSequences() && isPooledOptimizer ) {
-				forceTableUse = true;
-				LOG.forcingTableUse();
-			}
-		}
-
-		this.databaseStructure = buildDatabaseStructure(
-				type,
-				params,
+		databaseStructure = buildDatabaseStructure(
+				identifierType,
+				parameters,
 				jdbcEnvironment,
 				forceTableUse,
 				sequenceName,
 				initialValue,
 				incrementSize
 		);
-		this.optimizer = OptimizerFactory.buildOptimizer(
+		optimizer = OptimizerFactory.buildOptimizer(
 				optimizationStrategy,
 				identifierType.getReturnedClass(),
 				incrementSize,
-				ConfigurationHelper.getInt( INITIAL_PARAM, params, -1 )
+				getInt( INITIAL_PARAM, parameters, -1 )
 		);
-		this.databaseStructure.prepare( optimizer );
+		databaseStructure.configure( optimizer );
+	}
+
+	private int adjustIncrementSize(
+			JdbcEnvironment jdbcEnvironment,
+			QualifiedName sequenceName,
+			int incrementSize,
+			boolean physicalSequence,
+			OptimizerDescriptor optimizationStrategy,
+			ServiceRegistry serviceRegistry,
+			String contributor,
+			GeneratorCreationContext creationContext) {
+		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
+		final var sequenceMismatchStrategy = configurationService.getSetting(
+				SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY,
+				SequenceMismatchStrategy::interpret,
+				SequenceMismatchStrategy.EXCEPTION
+		);
+
+		if ( sequenceMismatchStrategy != SequenceMismatchStrategy.NONE
+				&& optimizationStrategy.isPooled()
+				&& physicalSequence ) {
+			incrementSize =
+					validatedIncrementSize(
+							jdbcEnvironment,
+							sequenceName,
+							incrementSize,
+							contributor,
+							creationContext,
+							configurationService,
+							sequenceMismatchStrategy
+					);
+		}
+		return determineAdjustedIncrementSize( optimizationStrategy, incrementSize );
+	}
+
+	private int validatedIncrementSize(
+			JdbcEnvironment jdbcEnvironment,
+			QualifiedName sequenceName,
+			int incrementSize,
+			String contributor,
+			GeneratorCreationContext creationContext,
+			ConfigurationService configurationService,
+			SequenceMismatchStrategy sequenceMismatchStrategy) {
+		final var database = creationContext.getDatabase();
+		final Identifier databaseSequenceIdentifier =
+				database != null
+						? database.getPhysicalNamingStrategy()
+								.toPhysicalSequenceName( sequenceName.getObjectName(), jdbcEnvironment )
+						: sequenceName.getObjectName();
+		final String databaseSequenceName = databaseSequenceIdentifier.getText();
+		final Number databaseIncrementValue =
+				isSchemaToBeRecreated( contributor, configurationService ) ? null
+						: getSequenceIncrementValue( jdbcEnvironment, databaseSequenceName );
+		if ( databaseIncrementValue != null && databaseIncrementValue.intValue() != incrementSize ) {
+			final int dbIncrementValue = databaseIncrementValue.intValue();
+			return switch ( sequenceMismatchStrategy ) {
+				case NONE -> incrementSize;
+				case FIX -> {
+					// log at TRACE level
+					SEQUENCE_GENERATOR_LOGGER.sequenceIncrementSizeMismatchFixed(
+							databaseSequenceName, incrementSize, dbIncrementValue );
+					yield dbIncrementValue;
+				}
+				case LOG -> {
+					// log at WARN level
+					SEQUENCE_GENERATOR_LOGGER.sequenceIncrementSizeMismatch(
+							databaseSequenceName, incrementSize, dbIncrementValue );
+					yield incrementSize;
+				}
+				case EXCEPTION -> throw new MappingException(
+						String.format(
+								"The increment size of the [%s] sequence is set to [%d] in the entity mapping "
+									+ "but the mapped database sequence increment size is [%d]",
+								databaseSequenceName, incrementSize, dbIncrementValue
+						)
+				);
+			};
+		}
+		else {
+			return incrementSize;
+		}
+	}
+
+	private boolean isSchemaToBeRecreated(String contributor, ConfigurationService configurationService) {
+		final var actions =
+				ActionGrouping.interpret( singleton( contributor ),
+						configurationService.getSettings() );
+		// We know this will only contain at most 1 action
+		final var iterator = actions.iterator();
+		final var action = iterator.hasNext() ? iterator.next().databaseAction() : null;
+		return action == Action.CREATE || action == Action.CREATE_DROP;
+	}
+
+	@Override
+	public void registerExportables(Database database) {
+		databaseStructure.registerExportables( database );
+		databaseStructure.registerExtraExportables( table, optimizer );
+	}
+
+	@Override
+	public void initialize(SqlStringGenerationContext context) {
+		databaseStructure.initialize( context );
 	}
 
 	/**
 	 * Determine the name of the sequence (or table if this resolves to a physical table)
 	 * to use.
-	 * <p/>
-	 * Called during {@link #configure configuration}.
+	 * <p>
+	 * Called during {@linkplain #configure configuration}.
 	 *
-	 * @param params The params supplied in the generator config (plus some standard useful extras).
-	 * @param dialect The dialect in effect
+	 * @param params  The params supplied in the generator config (plus some standard useful extras).
 	 * @param jdbcEnv The JdbcEnvironment
 	 * @return The sequence name
 	 */
-	@SuppressWarnings({"UnusedParameters", "WeakerAccess"})
 	protected QualifiedName determineSequenceName(
 			Properties params,
-			Dialect dialect,
 			JdbcEnvironment jdbcEnv,
 			ServiceRegistry serviceRegistry) {
-		final String sequencePerEntitySuffix = ConfigurationHelper.getString( CONFIG_SEQUENCE_PER_ENTITY_SUFFIX, params, DEF_SEQUENCE_SUFFIX );
+		final var identifierHelper = jdbcEnv.getIdentifierHelper();
+		final Identifier catalog = identifierHelper.toIdentifier( getString( CATALOG, params ) );
+		final Identifier schema =  identifierHelper.toIdentifier( getString( SCHEMA, params ) );
+		final String sequenceName = getString( SEQUENCE_PARAM, params, () -> getString( ALT_SEQUENCE_PARAM, params ) );
+		return sequenceName( params, serviceRegistry, sequenceName, catalog, schema, identifierHelper );
+	}
 
-		String fallbackSequenceName = DEF_SEQUENCE_NAME;
-		final Boolean preferGeneratorNameAsDefaultName = serviceRegistry.getService( ConfigurationService.class )
-				.getSetting( AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME, StandardConverters.BOOLEAN, true );
-		if ( preferGeneratorNameAsDefaultName ) {
-			final String generatorName = params.getProperty( IdentifierGenerator.GENERATOR_NAME );
-			if ( StringHelper.isNotEmpty( generatorName ) ) {
-				fallbackSequenceName = generatorName;
-			}
-		}
-
-		// JPA_ENTITY_NAME value honors <class ... entity-name="..."> (HBM) and @Entity#name (JPA) overrides.
-		final String defaultSequenceName = ConfigurationHelper.getBoolean( CONFIG_PREFER_SEQUENCE_PER_ENTITY, params, false )
-				? params.getProperty( JPA_ENTITY_NAME ) + sequencePerEntitySuffix
-				: fallbackSequenceName;
-
-		final String sequenceName = ConfigurationHelper.getString( SEQUENCE_PARAM, params, defaultSequenceName );
-		if ( sequenceName.contains( "." ) ) {
-			return QualifiedNameParser.INSTANCE.parse( sequenceName );
+	private static QualifiedName sequenceName(
+			Properties params,
+			ServiceRegistry serviceRegistry,
+			String explicitSequenceName,
+			Identifier catalog, Identifier schema,
+			IdentifierHelper identifierHelper) {
+		if ( isNotEmpty( explicitSequenceName ) ) {
+			// we have an explicit name, use it
+			return explicitSequenceName.contains(".")
+					? QualifiedNameParser.INSTANCE.parse( explicitSequenceName )
+					: new QualifiedNameParser.NameParts( catalog, schema,
+							identifierHelper.toIdentifier( explicitSequenceName ) );
 		}
 		else {
-			// todo : need to incorporate implicit catalog and schema names
-			final Identifier catalog = jdbcEnv.getIdentifierHelper().toIdentifier(
-					ConfigurationHelper.getString( CATALOG, params )
-			);
-			final Identifier schema =  jdbcEnv.getIdentifierHelper().toIdentifier(
-					ConfigurationHelper.getString( SCHEMA, params )
-			);
-			return new QualifiedNameParser.NameParts(
-					catalog,
-					schema,
-					jdbcEnv.getIdentifierHelper().toIdentifier( sequenceName )
-			);
+			// otherwise, determine an implicit name to use
+			return getNamingStrategy( params, serviceRegistry )
+					.determineSequenceName( catalog, schema, params, serviceRegistry );
 		}
 	}
 
+
 	/**
 	 * Determine the name of the column used to store the generator value in
-	 * the db.
-	 * <p/>
-	 * Called during {@link #configure configuration} <b>when resolving to a
+	 * the database.
+	 * <p>
+	 * Called during {@linkplain #configure configuration} <b>when resolving to a
 	 * physical table</b>.
 	 *
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @param jdbcEnvironment The JDBC environment
 	 * @return The value column name
 	 */
-	@SuppressWarnings({"UnusedParameters", "WeakerAccess"})
 	protected Identifier determineValueColumnName(Properties params, JdbcEnvironment jdbcEnvironment) {
-		final String name = ConfigurationHelper.getString( VALUE_COLUMN_PARAM, params, DEF_VALUE_COLUMN );
+		final String name = getString( VALUE_COLUMN_PARAM, params, DEF_VALUE_COLUMN );
 		return jdbcEnvironment.getIdentifierHelper().toIdentifier( name );
 	}
 
@@ -375,88 +401,81 @@ public class SequenceStyleGenerator
 	 * Determine the initial sequence value to use.  This value is used when
 	 * initializing the {@link #getDatabaseStructure() database structure}
 	 * (i.e. sequence/table).
-	 * <p/>
-	 * Called during {@link #configure configuration}.
+	 * <p>
+	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @return The initial value
 	 */
-	@SuppressWarnings({"WeakerAccess"})
 	protected int determineInitialValue(Properties params) {
-		return ConfigurationHelper.getInt( INITIAL_PARAM, params, DEFAULT_INITIAL_VALUE );
+		return getInt( INITIAL_PARAM, params, DEFAULT_INITIAL_VALUE );
 	}
 
 	/**
-	 * Determine the increment size to be applied.  The exact implications of
-	 * this value depends on the {@link #getOptimizer() optimizer} being used.
-	 * <p/>
-	 * Called during {@link #configure configuration}.
+	 * Determine the increment size to be applied. The exact implications of
+	 * this value depend on the {@linkplain #getOptimizer() optimizer} in use.
+	 * <p>
+	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @return The increment size
 	 */
-	@SuppressWarnings("WeakerAccess")
 	protected int determineIncrementSize(Properties params) {
-		return ConfigurationHelper.getInt( INCREMENT_PARAM, params, DEFAULT_INCREMENT_SIZE );
+		return getInt( INCREMENT_PARAM, params, DEFAULT_INCREMENT_SIZE );
 	}
 
 	/**
 	 * Determine the optimizer to use.
-	 * <p/>
-	 * Called during {@link #configure configuration}.
+	 * <p>
+	 * Called during {@linkplain #configure configuration}.
 	 *
-	 * @param params The params supplied in the generator config (plus some standard useful extras).
+	 * @param params        The params supplied in the generator config (plus some standard useful extras).
 	 * @param incrementSize The {@link #determineIncrementSize determined increment size}
 	 * @return The optimizer strategy (name)
 	 */
-	@SuppressWarnings("WeakerAccess")
-	protected String determineOptimizationStrategy(Properties params, int incrementSize) {
-		return ConfigurationHelper.getString(
-				OPT_PARAM,
-				params,
-				OptimizerFactory.determineImplicitOptimizerName( incrementSize, params )
+	protected OptimizerDescriptor determineOptimizationStrategy(Properties params, int incrementSize) {
+		return StandardOptimizerDescriptor.fromExternalName(
+				getString( OPT_PARAM, params, determineImplicitOptimizerName( incrementSize, params ) )
 		);
 	}
 
 	/**
 	 * In certain cases we need to adjust the increment size based on the
-	 * selected optimizer.  This is the hook to achieve that.
+	 * selected optimizer. This is the hook to achieve that.
 	 *
 	 * @param optimizationStrategy The optimizer strategy (name)
-	 * @param incrementSize The {@link #determineIncrementSize determined increment size}
+	 * @param incrementSize The {@linkplain #determineIncrementSize determined increment size}
 	 * @return The adjusted increment size.
 	 */
-	@SuppressWarnings("WeakerAccess")
-	protected int determineAdjustedIncrementSize(String optimizationStrategy, int incrementSize) {
-		final int resolvedIncrementSize;
-		if ( Math.abs( incrementSize ) > 1 &&
-				StandardOptimizerDescriptor.NONE.getExternalName().equals( optimizationStrategy ) ) {
+	protected int determineAdjustedIncrementSize(OptimizerDescriptor optimizationStrategy, int incrementSize) {
+		if ( optimizationStrategy == StandardOptimizerDescriptor.NONE  ) {
 			if ( incrementSize < -1 ) {
-				resolvedIncrementSize = -1;
-				LOG.honoringOptimizerSetting(
+				SEQUENCE_GENERATOR_LOGGER.honoringOptimizerSetting(
 						StandardOptimizerDescriptor.NONE.getExternalName(),
 						INCREMENT_PARAM,
 						incrementSize,
 						"negative",
-						resolvedIncrementSize
+						-1
 				);
+				return -1;
 			}
-			else {
-				// incrementSize > 1
-				resolvedIncrementSize = 1;
-				LOG.honoringOptimizerSetting(
+			else if ( incrementSize > 1 ) {
+				SEQUENCE_GENERATOR_LOGGER.honoringOptimizerSetting(
 						StandardOptimizerDescriptor.NONE.getExternalName(),
 						INCREMENT_PARAM,
 						incrementSize,
 						"positive",
-						resolvedIncrementSize
+						1
 				);
+				return 1;
+			}
+			else {
+				return incrementSize;
 			}
 		}
 		else {
-			resolvedIncrementSize = incrementSize;
+			return incrementSize;
 		}
-		return resolvedIncrementSize;
 	}
 
 	/**
@@ -472,7 +491,6 @@ public class SequenceStyleGenerator
 	 *
 	 * @return An abstraction for the actual database structure in use (table vs. sequence).
 	 */
-	@SuppressWarnings("WeakerAccess")
 	protected DatabaseStructure buildDatabaseStructure(
 			Type type,
 			Properties params,
@@ -481,16 +499,14 @@ public class SequenceStyleGenerator
 			QualifiedName sequenceName,
 			int initialValue,
 			int incrementSize) {
-		if ( isPhysicalSequence( jdbcEnvironment, forceTableUse ) ) {
-			return buildSequenceStructure( type, params, jdbcEnvironment, sequenceName, initialValue, incrementSize );
-		}
-		else {
-			return buildTableStructure( type, params, jdbcEnvironment, sequenceName, initialValue, incrementSize );
-		}
+		return isPhysicalSequence( jdbcEnvironment, forceTableUse )
+				? buildSequenceStructure( type, params, jdbcEnvironment, sequenceName, initialValue, incrementSize )
+				: buildTableStructure( type, params, jdbcEnvironment, sequenceName, initialValue, incrementSize );
 	}
 
 	protected boolean isPhysicalSequence(JdbcEnvironment jdbcEnvironment, boolean forceTableUse) {
-		return jdbcEnvironment.getDialect().supportsSequences() && !forceTableUse;
+		return jdbcEnvironment.getDialect().getSequenceSupport().supportsSequences()
+			&& !forceTableUse;
 	}
 
 	protected DatabaseStructure buildSequenceStructure(
@@ -500,10 +516,16 @@ public class SequenceStyleGenerator
 			QualifiedName sequenceName,
 			int initialValue,
 			int incrementSize) {
-		return new SequenceStructure( jdbcEnvironment, sequenceName, initialValue, incrementSize, type.getReturnedClass() );
+		return new SequenceStructure(
+				determineContributor( params ),
+				sequenceName,
+				initialValue,
+				incrementSize,
+				params.getProperty( OPTIONS ),
+				type.getReturnedClass()
+		);
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected DatabaseStructure buildTableStructure(
 			Type type,
 			Properties params,
@@ -511,56 +533,43 @@ public class SequenceStyleGenerator
 			QualifiedName sequenceName,
 			int initialValue,
 			int incrementSize) {
-		final Identifier valueColumnName = determineValueColumnName( params, jdbcEnvironment );
-		return new TableStructure( jdbcEnvironment, sequenceName, valueColumnName, initialValue, incrementSize, type.getReturnedClass() );
+
+		return new TableStructure(
+				determineContributor( params ),
+				sequenceName,
+				determineValueColumnName( params, jdbcEnvironment ),
+				initialValue,
+				incrementSize,
+				params.getProperty( OPTIONS ),
+				type.getReturnedClass()
+		);
+	}
+
+	private String determineContributor(Properties params) {
+		final String contributor = params.getProperty( IdentifierGenerator.CONTRIBUTOR_NAME );
+		return contributor == null ? "orm" : contributor;
 	}
 
 
 	// IdentifierGenerator implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
+	public Object generate(SharedSessionContractImplementor session, Object object) {
 		return optimizer.generate( databaseStructure.buildCallback( session ) );
 	}
-
-
-	// PersistentIdentifierGenerator implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public Object generatorKey() {
-		return databaseStructure.getName();
-	}
-
-	@Override
-	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		return databaseStructure.sqlCreateStrings( dialect );
-	}
-
-	@Override
-	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		return databaseStructure.sqlDropStrings( dialect );
-	}
-
 
 	// BulkInsertionCapableIdentifierGenerator implementation ~~~~~~~~~~~~~~~~~
 
 	@Override
 	public boolean supportsBulkInsertionIdentifierGeneration() {
-		// it does, as long as
-		// 		1) there is no (non-noop) optimizer in use
-		//		2) the underlying structure is a sequence
-		return NoopOptimizer.class.isInstance( getOptimizer() )
-				&& getDatabaseStructure().isPhysicalSequence();
+		// it does, as long as the underlying structure is a sequence
+		return getDatabaseStructure().isPhysicalSequence();
 	}
 
 	@Override
-	public String determineBulkInsertionIdentifierGenerationSelectFragment(Dialect dialect) {
-		return dialect.getSelectSequenceNextValString( getDatabaseStructure().getName() );
-	}
-
-	@Override
-	public void registerExportables(Database database) {
-		databaseStructure.registerExportables( database );
+	public String determineBulkInsertionIdentifierGenerationSelectFragment(SqlStringGenerationContext context) {
+		return context.getDialect().getSequenceSupport()
+				.getSelectSequenceNextValString( context.format( getDatabaseStructure().getPhysicalName() ) );
 	}
 
 	/**
@@ -571,21 +580,45 @@ public class SequenceStyleGenerator
 	 *
 	 * @return sequence increment value
 	 */
-	private Long getSequenceIncrementValue(JdbcEnvironment jdbcEnvironment, String sequenceName) {
-		return jdbcEnvironment.getExtractedDatabaseMetaData().getSequenceInformationList()
-				.stream()
-				.filter(
-					sequenceInformation -> {
-						Identifier catalog = sequenceInformation.getSequenceName().getCatalogName();
-						Identifier schema = sequenceInformation.getSequenceName().getSchemaName();
-						return sequenceName.equalsIgnoreCase( sequenceInformation.getSequenceName().getSequenceName().getText() ) &&
-								( catalog == null || catalog.equals( jdbcEnvironment.getCurrentCatalog() ) ) &&
-								( schema == null || schema.equals( jdbcEnvironment.getCurrentSchema() ) );
-					}
-				)
-				.map( SequenceInformation::getIncrementValue )
-				.filter( Objects::nonNull )
-				.findFirst()
-				.orElse( null );
+	private Number getSequenceIncrementValue(JdbcEnvironment jdbcEnvironment, String sequenceName) {
+		for ( var information : jdbcEnvironment.getExtractedDatabaseMetaData().getSequenceInformationList() ) {
+			final var name = information.getSequenceName();
+			if ( sequenceName.equalsIgnoreCase( name.getSequenceName().getText() )
+					&& isDefaultSchema( jdbcEnvironment, name.getCatalogName(), name.getSchemaName() ) ) {
+				final Number incrementValue = information.getIncrementValue();
+				if ( incrementValue != null ) {
+					return incrementValue;
+				}
+			}
+		}
+		return null;
+	}
+
+	private static boolean isDefaultSchema(JdbcEnvironment jdbcEnvironment, Identifier catalog, Identifier schema) {
+		return ( catalog == null || catalog.equals( jdbcEnvironment.getCurrentCatalog() ) )
+			&& ( schema == null || schema.equals( jdbcEnvironment.getCurrentSchema() ) );
+	}
+
+	public static void applyConfiguration(SequenceGenerator generatorConfig, BiConsumer<String,String> configCollector) {
+		if ( !generatorConfig.sequenceName().isEmpty() ) {
+			configCollector.accept( SEQUENCE_PARAM, generatorConfig.sequenceName() );
+		}
+		if ( !generatorConfig.catalog().isEmpty() ) {
+			configCollector.accept( CATALOG, generatorConfig.catalog() );
+		}
+		if ( !generatorConfig.schema().isEmpty() ) {
+			configCollector.accept( SCHEMA, generatorConfig.schema() );
+		}
+		if ( !generatorConfig.options().isEmpty() ) {
+			configCollector.accept( OPTIONS, generatorConfig.options() );
+		}
+
+		configCollector.accept( INITIAL_PARAM, Integer.toString( generatorConfig.initialValue() ) );
+		if ( generatorConfig.allocationSize() == 50 ) {
+			// don't do anything - assuming a proper default is already set
+		}
+		else {
+			configCollector.accept( INCREMENT_PARAM, Integer.toString( generatorConfig.allocationSize() ) );
+		}
 	}
 }

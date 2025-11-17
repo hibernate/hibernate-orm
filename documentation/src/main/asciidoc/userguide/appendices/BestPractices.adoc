@@ -10,7 +10,7 @@ Hibernate comes with a great variety of features that can help you tune the data
 Although Hibernate provides the `update` option for the `hibernate.hbm2ddl.auto` configuration property,
 this feature is not suitable for a production environment.
 
-An automated schema migration tool (e.g. https://flywaydb.org/[Flyway], http://www.liquibase.org/[Liquibase]) allows you to use any database-specific DDL feature (e.g. Rules, Triggers, Partitioned Tables).
+An automated schema migration tool (e.g. https://flywaydb.org/[Flyway], https://www.liquibase.org/[Liquibase]) allows you to use any database-specific DDL feature (e.g. Rules, Triggers, Partitioned Tables).
 Every migration should have an associated script, which is stored on the Version Control System, along with the application source code.
 
 When the application is deployed on a production-like QA environment, and the deployment worked as expected, then pushing the deployment to a production environment should be straightforward since the latest schema migration was already tested.
@@ -34,9 +34,10 @@ For Log4j, you can use the following appenders:
 ### log just the SQL
 log4j.logger.org.hibernate.SQL=debug
 
-### log JDBC bind parameters ###
+### log JDBC bind parameters and extracted values ###
 log4j.logger.org.hibernate.type=trace
-log4j.logger.org.hibernate.type.descriptor.sql=trace
+log4j.logger.org.hibernate.orm.jdbc.bind=trace
+log4j.logger.org.hibernate.orm.jdbc.extract=trace
 ----
 
 However, there are some other alternatives like using datasource-proxy or p6spy.
@@ -58,7 +59,7 @@ While simple statement logging is fine, using https://github.com/ttddyy/datasour
 === JDBC batching
 
 JDBC allows us to batch multiple SQL statements and to send them to the database server into a single request.
-This saves database roundtrips, and so it https://leanpub.com/high-performance-java-persistence/read#jdbc-batch-updates[reduces response time significantly].
+This saves database round trips, and so it https://leanpub.com/high-performance-java-persistence/read#jdbc-batch-updates[reduces response time significantly].
 
 Not only `INSERT` and `UPDATE` statements, but even `DELETE` statements can be batched as well.
 For `INSERT` and `UPDATE` statements, make sure that you have all the right configuration properties in place, like ordering inserts and updates and activating batching for versioned data.
@@ -100,12 +101,12 @@ However, you should keep in mind that the `IDENTITY` generators disables JDBC ba
 ====
 
 If you're using the `SEQUENCE` generator, then you should be using the enhanced identifier generators that were enabled by default in Hibernate 5.
-The *pooled* and the *pooled-lo* optimizers are very useful to reduce the number of database roundtrips when writing multiple entities per database transaction.
+The *pooled* and the *pooled-lo* optimizers are very useful to reduce the number of database round trips when writing multiple entities per database transaction.
 
 [[best-practices-mapping-associations]]
 ==== Associations
 
-JPA offers four entity association types:
+Jakarta Persistence offers four entity association types:
 
 - `@ManyToOne`
 - `@OneToOne`
@@ -160,7 +161,7 @@ Sometimes, a `@ManyToOne` association is sufficient, and the collection can be s
 [[best-practices-inheritance]]
 === Inheritance
 
-JPA offers `SINGLE_TABLE`, `JOINED`, and `TABLE_PER_CLASS` to deal with inheritance mapping, and each of these strategies has advantages and disadvantages.
+Jakarta Persistence offers `SINGLE_TABLE`, `JOINED`, and `TABLE_PER_CLASS` to deal with inheritance mapping, and each of these strategies has advantages and disadvantages.
 
 - `SINGLE_TABLE` performs the best in terms of executed SQL statements. However, you cannot use `NOT NULL` constraints on the column-level. You can still use triggers and rules to enforce such constraints, but it's not as straightforward.
 - `JOINED` addresses the data integrity concerns because every subclass is associated with a different table.
@@ -173,7 +174,7 @@ JPA offers `SINGLE_TABLE`, `JOINED`, and `TABLE_PER_CLASS` to deal with inherita
 
 [TIP]
 ====
-Fetching too much data is the number one performance issue for the vast majority of JPA applications.
+Fetching too much data is the number one performance issue for the vast majority of Jakarta Persistence applications.
 ====
 
 Hibernate supports both entity queries (JPQL/HQL and Criteria API) and native SQL statements.
@@ -194,8 +195,8 @@ Related to associations, there are two major fetch strategies:
 
 [TIP]
 ====
-Prior to JPA, Hibernate used to have all associations as `LAZY` by default.
-However, when JPA 1.0 specification emerged, it was thought that not all providers would use Proxies. Hence, the `@ManyToOne` and the `@OneToOne` associations are now `EAGER` by default.
+Prior to Jakarta Persistence, Hibernate used to have all associations as `LAZY` by default.
+However, when Java Persistence 1.0 specification emerged, it was thought that not all providers would use Proxies. Hence, the `@ManyToOne` and the `@OneToOne` associations are now `EAGER` by default.
 
 The `EAGER` fetching strategy cannot be overwritten on a per query basis, so the association is always going to be retrieved even if you don't need it.
 Moreover, if you forget to `JOIN FETCH` an `EAGER` association in a JPQL query, Hibernate will initialize it with a secondary statement, which in turn can lead to N+1 query issues.
@@ -233,7 +234,7 @@ and you should consider these alternatives prior to jumping to a second-level ca
 
 After properly tuning the database, to further reduce the average response time and increase the system throughput, application-level caching becomes inevitable.
 
-Typically, a key-value application-level cache like https://memcached.org/[Memcached] or http://redis.io/[Redis] is a common choice to store data aggregates.
+Typically, a key-value application-level cache like https://memcached.org/[Memcached] or https://redis.io/[Redis] is a common choice to store data aggregates.
 If you can duplicate all data in the key-value store, you have the option of taking down the database system for maintenance without completely losing availability since read-only traffic can still be served from the cache.
 
 One of the main challenges of using an application-level cache is ensuring data consistency across entity aggregates.
@@ -257,8 +258,3 @@ For this reason, `NONSTRICT_READ_WRITE` is not very suitable if entities are cha
 When using clustering, the second-level cache entries are spread across multiple nodes.
 When using https://infinispan.org/blog/2015/10/01/hibernate-second-level-cache/[Infinispan distributed cache], only `READ_WRITE` and `NONSTRICT_READ_WRITE` are available for read-write caches.
 Bear in mind that `NONSTRICT_READ_WRITE` offers a weaker consistency guarantee since stale updates are possible.
-
-[NOTE]
-====
-For more about Hibernate Performance Tuning, check out the https://www.youtube.com/watch?v=BTdTEe9QL5k&amp;t=1s[High-Performance Hibernate] presentation from Devoxx France.
-====

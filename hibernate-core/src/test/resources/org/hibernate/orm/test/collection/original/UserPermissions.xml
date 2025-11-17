@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				 version="7.0">
+	<package>org.hibernate.orm.test.collection.original</package>
+
+	<entity class="User">
+		<table name="`users`"/>
+		<attributes>
+			<id name="userName"/>
+			<element-collection name="permissions" >
+				<order-column name="display_order"/>
+				<list-index-base>1</list-index-base>
+				<collection-table name="user_permissions">
+					<join-column name="user_fk"/>
+				</collection-table>
+			</element-collection>
+			<element-collection name="emailAddresses" fetch="EAGER" fetch-mode="JOIN">
+				<order-column name="display_order"/>
+				<list-index-base>1</list-index-base>
+				<collection-table name="user_email_addresses">
+					<join-column name="user_fk"/>
+				</collection-table>
+			</element-collection>
+			<element-collection name="sessionData">
+				<order-by>lower(`attr_name`) asc</order-by>
+				<map-key-column name="`attr_name`"/>
+				<column name="`attr_value`" nullable="false"/>
+				<collection-table name="user_session_datum">
+					<join-column name="user_fk"/>
+				</collection-table>
+			</element-collection>
+			<element-collection name="sessionAttributeNames">
+				<column name="`attr_name`"/>
+				<collection-table name="user_session_attr_names">
+					<join-column name="user_fk"/>
+				</collection-table>
+			</element-collection>
+		</attributes>
+	</entity>
+
+	<embeddable class="Permission">
+		<attributes>
+			<basic name="type">
+				<column name="permission_type"/>
+			</basic>
+		</attributes>
+	</embeddable>
+
+	<embeddable class="Email">
+		<attributes>
+			<basic name="address"/>
+		</attributes>
+	</embeddable>
+
+<!--	<import class="org.hibernate.orm.test.collection.original.Permission" rename="Permission"/>-->
+</entity-mappings>

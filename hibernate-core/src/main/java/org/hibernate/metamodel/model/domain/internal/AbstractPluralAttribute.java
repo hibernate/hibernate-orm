@@ -1,16 +1,25 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
 import java.util.Collection;
 
-import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
+import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.model.domain.SimpleDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmPluralPersistentAttribute;
+import org.hibernate.spi.NavigablePath;
+import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
+import org.hibernate.type.descriptor.java.JavaType;
+
+import static jakarta.persistence.metamodel.Bindable.BindableType.PLURAL_ATTRIBUTE;
+import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildSubNavigablePath;
 
 /**
  * @param <D> The (D)eclaring type
@@ -21,51 +30,102 @@ import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
  * @author Steve Ebersole
  */
 public abstract class AbstractPluralAttribute<D, C, E>
-		extends AbstractAttribute<D,C>
-		implements PluralPersistentAttribute<D,C,E>, Serializable {
+		extends AbstractAttribute<D, C, E>
+		implements SqmPluralPersistentAttribute<D, C, E>, Serializable {
 
-	private final Class<C> collectionClass;
+	private final CollectionClassification classification;
+	private final SqmPathSource<E> elementPathSource;
 
 	protected AbstractPluralAttribute(PluralAttributeBuilder<D,C,E,?> builder) {
 		super(
 				builder.getDeclaringType(),
 				builder.getProperty().getName(),
-				builder.getAttributeNature(),
+				builder.getCollectionJavaType(),
+				builder.getAttributeClassification(),
 				builder.getValueType(),
 				builder.getMember()
 		);
 
-		this.collectionClass = builder.getCollectionClass();
-	}
+		this.classification = builder.getCollectionClassification();
 
-	public static <X,C,E,K> PluralAttributeBuilder<X,C,E,K> create(
-			AbstractManagedType<X> ownerType,
-			SimpleTypeDescriptor<E> attrType,
-			Class<C> collectionClass,
-			SimpleTypeDescriptor<K> keyType) {
-		return new PluralAttributeBuilder<>( ownerType, attrType, collectionClass, keyType );
+		this.elementPathSource = SqmMappingModelHelper.resolveSqmPathSource(
+				CollectionPart.Nature.ELEMENT.getName(),
+				builder.getValueType(),
+				PLURAL_ATTRIBUTE,
+				builder.isGeneric()
+		);
 	}
 
 	@Override
-	public SimpleTypeDescriptor<E> getElementType() {
+	public String getPathName() {
+		return getName();
+	}
+
+	@Override
+	public CollectionClassification getCollectionClassification() {
+		return classification;
+	}
+
+	@Override
+	public SqmPathSource<E> getElementPathSource() {
+		return elementPathSource;
+	}
+
+	@Override
+	public SqmPathSource<?> findSubPathSource(String name) {
+		if ( CollectionPart.Nature.ELEMENT.getName().equals( name ) ) {
+			return elementPathSource;
+		}
+		return elementPathSource.findSubPathSource( name );
+	}
+
+	@Override
+	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
+		return CollectionPart.Nature.ELEMENT.getName().equals( name )
+				? elementPathSource
+				: elementPathSource.findSubPathSource( name, includeSubtypes );
+	}
+
+	@Override
+	public SqmPathSource<?> getIntermediatePathSource(SqmPathSource<?> pathSource) {
+		return pathSource.getPathName().equals( elementPathSource.getPathName() ) ? null : elementPathSource;
+	}
+
+	@Override
+	public CollectionType getCollectionType() {
+		return getCollectionClassification().toJpaClassification();
+	}
+
+	@Override
+	public JavaType<E> getExpressibleJavaType() {
+		return getElementType().getExpressibleJavaType();
+	}
+
+	@Override
+	public SimpleDomainType<E> getElementType() {
 		return getValueGraphType();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SimpleTypeDescriptor<E> getValueGraphType() {
-		return (SimpleTypeDescriptor<E>) super.getValueGraphType();
+	public Class<C> getJavaType() {
+		return getAttributeJavaType().getJavaTypeClass();
 	}
 
 	@Override
-	public SimpleTypeDescriptor<?> getKeyGraphType() {
+	@SuppressWarnings("unchecked")
+	public SimpleDomainType<E> getValueGraphType() {
+		return (SimpleDomainType<E>) super.getValueGraphType();
+	}
+
+	@Override
+	public SimpleDomainType<?> getKeyGraphType() {
 		return null;
 	}
 
 	@Override
 	public boolean isAssociation() {
 		return getPersistentAttributeType() == PersistentAttributeType.ONE_TO_MANY
-				|| getPersistentAttributeType() == PersistentAttributeType.MANY_TO_MANY;
+			|| getPersistentAttributeType() == PersistentAttributeType.MANY_TO_MANY;
 	}
 
 	@Override
@@ -75,7 +135,7 @@ public abstract class AbstractPluralAttribute<D, C, E>
 
 	@Override
 	public BindableType getBindableType() {
-		return BindableType.PLURAL_ATTRIBUTE;
+		return PLURAL_ATTRIBUTE;
 	}
 
 	@Override
@@ -83,10 +143,31 @@ public abstract class AbstractPluralAttribute<D, C, E>
 		return getElementType().getJavaType();
 	}
 
-
+	@SuppressWarnings("unchecked")
 	@Override
-	public Class<C> getJavaType() {
-		return collectionClass;
+	public SqmPath<E> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+		// We need an unchecked cast here : PluralPersistentAttribute implements path source with its element type
+		//  but resolving paths from it must produce collection-typed expressions.
+		return (SqmPath<E>) new SqmPluralValuedSimplePath<>(
+				PathHelper.append( lhs, this, intermediatePathSource ),
+				this,
+				lhs,
+				lhs.nodeBuilder()
+		);
 	}
 
+	@Override
+	public NavigablePath createNavigablePath(SqmPath<?> parent, String alias) {
+		if ( parent == null ) {
+			throw new IllegalArgumentException(
+					"`lhs` cannot be null for a sub-navigable reference - " + getName()
+			);
+		}
+		return buildSubNavigablePath( getParentNavigablePath( parent ), getName(), alias );
+	}
+
+	@Override
+	public boolean isGeneric() {
+		return elementPathSource.isGeneric();
+	}
 }

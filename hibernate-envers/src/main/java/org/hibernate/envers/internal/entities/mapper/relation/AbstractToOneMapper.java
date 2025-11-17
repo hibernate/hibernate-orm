@@ -1,19 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
-import java.io.Serializable;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.List;
-import java.util.Map;
-
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
 import org.hibernate.envers.internal.entities.PropertyData;
@@ -21,8 +13,11 @@ import org.hibernate.envers.internal.entities.mapper.AbstractPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
-import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Base class for property mappers that manage to-one relation.
@@ -41,7 +36,7 @@ public abstract class AbstractToOneMapper extends AbstractPropertyMapper {
 
 	@Override
 	public boolean mapToMapFromEntity(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
@@ -62,12 +57,22 @@ public abstract class AbstractToOneMapper extends AbstractPropertyMapper {
 	}
 
 	@Override
+	public Object mapToEntityFromMap(
+			EnversService enversService,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision) {
+		return nullSafeMapToEntityFromMap( enversService, data, primaryKey, versionsReader, revision );
+	}
+
+	@Override
 	public List<PersistentCollectionChangeData> mapCollectionChanges(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			String referencingPropertyName,
 			PersistentCollection newColl,
 			Serializable oldColl,
-			Serializable id) {
+			Object id) {
 		return null;
 	}
 
@@ -96,21 +101,7 @@ public abstract class AbstractToOneMapper extends AbstractPropertyMapper {
 			map.put( propertyData.getBeanName(), value );
 		}
 		else {
-			AccessController.doPrivileged(
-					new PrivilegedAction<Object>() {
-						@Override
-						public Object run() {
-							final Setter setter = ReflectionTools.getSetter(
-									targetObject.getClass(),
-									propertyData,
-									serviceRegistry
-							);
-							setter.set( targetObject, value, null );
-
-							return null;
-						}
-					}
-			);
+			setValueOnObject( propertyData, targetObject, value, serviceRegistry );
 		}
 	}
 
@@ -127,6 +118,13 @@ public abstract class AbstractToOneMapper extends AbstractPropertyMapper {
 	public abstract void nullSafeMapToEntityFromMap(
 			EnversService enversService,
 			Object obj,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision);
+
+	public abstract Object nullSafeMapToEntityFromMap(
+			EnversService enversService,
 			Map data,
 			Object primaryKey,
 			AuditReaderImplementor versionsReader,

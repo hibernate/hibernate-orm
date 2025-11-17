@@ -1,0 +1,14 @@
+= Hibernate ORM Integration Guide
+:toc2:
+:toclevels: 3
+:sectanchors:
+:html-meta-canonical-link: https://docs.hibernate.org/stable/orm/integrationguide/html_single/
+
+include::preface.adoc[]
+
+:numbered:
+
+include::chapters/services/Services.adoc[]
+
+include::credits.adoc[]
+

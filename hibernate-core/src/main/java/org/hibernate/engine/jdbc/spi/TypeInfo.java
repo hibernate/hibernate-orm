@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.spi;
 
@@ -11,22 +9,20 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedHashSet;
 
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.ArrayHelper;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.internal.util.StringHelper.split;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 
 /**
- * Models type info extracted from {@link java.sql.DatabaseMetaData#getTypeInfo()}
+ * Models type info extracted from {@link DatabaseMetaData#getTypeInfo()}
  *
  * @author Steve Ebersole
+ *
+ * @deprecated This class is no longer used and will be removed
  */
-@SuppressWarnings("UnusedDeclaration")
+@Deprecated(since = "7.0", forRemoval = true)
 public class TypeInfo {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			TypeInfo.class.getName()
-	);
 
 	private final String typeName;
 	private final int jdbcTypeCode;
@@ -79,7 +75,7 @@ public class TypeInfo {
 	 * @return The extracted type info
 	 */
 	public static LinkedHashSet<TypeInfo> extractTypeInfo(DatabaseMetaData metaData) {
-		final LinkedHashSet<TypeInfo> typeInfoSet = new LinkedHashSet<TypeInfo>();
+		final LinkedHashSet<TypeInfo> typeInfoSet = new LinkedHashSet<>();
 		try {
 			final ResultSet resultSet = metaData.getTypeInfo();
 			try {
@@ -104,29 +100,28 @@ public class TypeInfo {
 				}
 			}
 			catch ( SQLException e ) {
-				LOG.unableToAccessTypeInfoResultSet( e.toString() );
+				CORE_LOGGER.unableToAccessTypeInfoResultSet( e.toString() );
 			}
 			finally {
 				try {
 					resultSet.close();
 				}
 				catch ( SQLException e ) {
-					LOG.unableToReleaseTypeInfoResultSet();
+					CORE_LOGGER.unableToReleaseTypeInfoResultSet();
 				}
 			}
 		}
 		catch ( SQLException e ) {
-			LOG.unableToRetrieveTypeInfoResultSet( e.toString() );
+			CORE_LOGGER.unableToRetrieveTypeInfoResultSet( e.toString() );
 		}
 
 		return typeInfoSet;
 	}
 
 	private static String[] interpretCreateParams(String value) {
-		if ( value == null || value.length() == 0 ) {
-			return ArrayHelper.EMPTY_STRING_ARRAY;
-		}
-		return value.split( "," );
+		return value == null || value.isEmpty()
+				? EMPTY_STRING_ARRAY
+				: split( ",", value );
 	}
 
 	public String getTypeName() {

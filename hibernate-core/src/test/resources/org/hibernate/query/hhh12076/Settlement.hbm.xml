@@ -1,15 +1,13 @@
 <?xml version="1.0"?>
 <!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
-  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
   -->
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
     <class
-            name="org.hibernate.query.hhh12076.Settlement"
+            name="org.hibernate.orm.test.query.hhh12076.Settlement"
             table="claim_settlement"
             lazy="false">
 
@@ -36,15 +34,15 @@
         </property>
         <property name="status">
             <column name="status" not-null="true"/>
-            <type name="org.hibernate.type.EnumType">
+            <type name="org.hibernate.orm.test.EnumType">
                 <param name="type">12</param>
-                <param name="enumClass">org.hibernate.query.hhh12076.SettlementStatus</param>
+                <param name="enumClass">org.hibernate.orm.test.query.hhh12076.SettlementStatus</param>
             </type>
         </property>
 
         <many-to-one
                 name="claim"
-                class="org.hibernate.query.hhh12076.Claim"
+                class="org.hibernate.orm.test.query.hhh12076.Claim"
                 fetch="select">
             <column name="claim_id" not-null="true"/>
         </many-to-one>
@@ -57,7 +55,7 @@
                 batch-size="10"
                 order-by="order_index">
             <key column="settlement_id" not-null="true"/>
-            <one-to-many class="org.hibernate.query.hhh12076.SettlementExtension"/>
+            <one-to-many class="org.hibernate.orm.test.query.hhh12076.SettlementExtension"/>
         </set>
 
     </class>

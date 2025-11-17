@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.synchronization.work;
 
@@ -13,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.RelationDescription;
@@ -183,7 +182,7 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
 			return revisionType;
 		}
 
-		public void generateData(SessionImplementor sessionImplementor, Map<String, Object> data) {
+		public void generateData(SharedSessionContractImplementor sessionImplementor, Map<String, Object> data) {
 			// If the revision type is "DEL", it means that the object is removed from the collection. Then the
 			// new owner will in fact be null.
 			rd.getFakeBidirectionalRelationMapper().mapToMapFromEntity(
@@ -216,13 +215,13 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
 				return first;
 			}
 
-            /*
+			/*
 			 * The merging rules are the following (revision types of the first and second changes):
-             * - DEL, DEL - return any (the work units are the same)
-             * - DEL, ADD - return ADD (points to new owner)
-             * - ADD, DEL - return ADD (points to new owner)
-             * - ADD, ADD - return second (points to newer owner)
-             */
+			 * - DEL, DEL - return any (the work units are the same)
+			 * - DEL, ADD - return ADD (points to new owner)
+			 * - ADD, DEL - return ADD (points to new owner)
+			 * - ADD, ADD - return second (points to newer owner)
+			 */
 			if ( first.getRevisionType() == RevisionType.DEL || second.getRevisionType() == RevisionType.ADD ) {
 				return second;
 			}

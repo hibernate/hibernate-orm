@@ -1,112 +1,124 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.hibernate.AssertionFailure;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.annotations.common.reflection.java.JavaReflectionManager;
-import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.models.internal.ClassLoaderServiceLoading;
+import org.hibernate.boot.models.internal.ModelsHelper;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
+import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
+import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
+import org.hibernate.models.spi.ModelsConfiguration;
+import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.jboss.jandex.IndexView;
-import org.jboss.logging.Logger;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
-import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+import static org.hibernate.cfg.PersistenceSettings.SCANNER;
+import static org.hibernate.cfg.PersistenceSettings.SCANNER_ARCHIVE_INTERPRETER;
 
 /**
  * @author Andrea Boriero
  */
 public class BootstrapContextImpl implements BootstrapContext {
-	private static final Logger log = Logger.getLogger( BootstrapContextImpl.class );
 
 	private final StandardServiceRegistry serviceRegistry;
-
-	private final MutableJpaCompliance jpaCompliance;
-
-	private final TypeConfiguration typeConfiguration;
-
-	private final ClassLoaderAccessImpl classLoaderAccess;
-
-	private final JavaReflectionManager hcannReflectionManager;
-	private final ClassmateContext classmateContext;
 	private final MetadataBuildingOptions metadataBuildingOptions;
 
+	private final TypeConfiguration typeConfiguration;
+	private final SqmFunctionRegistry sqmFunctionRegistry;
+	private final MutableJpaCompliance jpaCompliance;
+
+	private final ClassLoaderService classLoaderService;
+	private final ClassLoaderAccessImpl classLoaderAccess;
+	private final BeanInstanceProducer beanInstanceProducer;
+	private final ManagedBeanRegistry managedBeanRegistry;
+
 	private boolean isJpaBootstrap;
+
+	private final ClassmateContext classmateContext;
 
 	private ScanOptions scanOptions;
 	private ScanEnvironment scanEnvironment;
 	private Object scannerSetting;
 	private ArchiveDescriptorFactory archiveDescriptorFactory;
 
-	private IndexView jandexView;
-
-	private HashMap<String,SQLFunction> sqlFunctionMap;
+	private HashMap<String,SqmFunctionDescriptor> sqlFunctionMap;
 	private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
-	private HashMap<Class,AttributeConverterInfo> attributeConverterInfoMap;
+	private HashMap<Class<?>, ConverterDescriptor<?,?>> attributeConverterDescriptorMap;
 	private ArrayList<CacheRegionDefinition> cacheRegionDefinitions;
+	private final ManagedTypeRepresentationResolver representationStrategySelector;
+	private final ConfigurationService configurationService;
+
+	private final ModelsContext modelsContext;
 
 	public BootstrapContextImpl(
 			StandardServiceRegistry serviceRegistry,
 			MetadataBuildingOptions metadataBuildingOptions) {
 		this.serviceRegistry = serviceRegistry;
-		this.classmateContext = new ClassmateContext();
 		this.metadataBuildingOptions = metadataBuildingOptions;
 
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		this.classLoaderAccess = new ClassLoaderAccessImpl( classLoaderService );
-		this.hcannReflectionManager = generateHcannReflectionManager();
+		classmateContext = new ClassmateContext();
+		classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
+		classLoaderAccess = new ClassLoaderAccessImpl( classLoaderService );
 
-		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
-		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+		final var strategySelector = serviceRegistry.requireService( StrategySelector.class );
+		final var configService = serviceRegistry.requireService( ConfigurationService.class );
 
-		this.jpaCompliance = new MutableJpaComplianceImpl( configService.getSettings(), false );
-		this.scanOptions = new StandardScanOptions(
-				(String) configService.getSettings().get( AvailableSettings.SCANNER_DISCOVERY ),
+		jpaCompliance = new MutableJpaComplianceImpl( configService.getSettings() );
+		scanOptions = new StandardScanOptions(
+				(String) configService.getSettings().get( PersistenceSettings.SCANNER_DISCOVERY ),
 				false
 		);
 
 		// ScanEnvironment must be set explicitly
-		this.scannerSetting = configService.getSettings().get( AvailableSettings.SCANNER );
-		if ( this.scannerSetting == null ) {
-			this.scannerSetting = configService.getSettings().get( AvailableSettings.SCANNER_DEPRECATED );
-			if ( this.scannerSetting != null ) {
-				DEPRECATION_LOGGER.logDeprecatedScannerSetting();
-			}
-		}
-		this.archiveDescriptorFactory = strategySelector.resolveStrategy(
+		scannerSetting = configService.getSettings().get( SCANNER );
+		archiveDescriptorFactory = strategySelector.resolveStrategy(
 				ArchiveDescriptorFactory.class,
-				configService.getSettings().get( AvailableSettings.SCANNER_ARCHIVE_INTERPRETER )
+				configService.getSettings().get( SCANNER_ARCHIVE_INTERPRETER )
 		);
-		this.typeConfiguration = new TypeConfiguration();
+
+		representationStrategySelector = ManagedTypeRepresentationResolverStandard.INSTANCE;
+
+		typeConfiguration = new TypeConfiguration();
+		beanInstanceProducer = new TypeBeanInstanceProducer( configService, serviceRegistry );
+		sqmFunctionRegistry = new SqmFunctionRegistry();
+
+		managedBeanRegistry = serviceRegistry.requireService( ManagedBeanRegistry.class );
+		configurationService = serviceRegistry.requireService( ConfigurationService.class );
+
+		modelsContext = createModelBuildingContext( classLoaderService, configService );
 	}
 
 	@Override
@@ -125,8 +137,38 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
+	public ModelsContext getModelsContext() {
+		return modelsContext;
+	}
+
+	@Override
+	public SqmFunctionRegistry getFunctionRegistry() {
+		return sqmFunctionRegistry;
+	}
+
+	@Override
+	public BeanInstanceProducer getCustomTypeProducer() {
+		return beanInstanceProducer;
+	}
+
+	@Override
 	public MetadataBuildingOptions getMetadataBuildingOptions() {
 		return metadataBuildingOptions;
+	}
+
+	@Override
+	public ClassLoaderService getClassLoaderService() {
+		return classLoaderService;
+	}
+
+	@Override
+	public ManagedBeanRegistry getManagedBeanRegistry() {
+		return managedBeanRegistry;
+	}
+
+	@Override
+	public ConfigurationService getConfigurationService() {
+		return configurationService;
 	}
 
 	@Override
@@ -175,35 +217,43 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public ReflectionManager getReflectionManager() {
-		return hcannReflectionManager;
+	public Object getJandexView() {
+		return null;
 	}
 
 	@Override
-	public IndexView getJandexView() {
-		return jandexView;
-	}
-
-	@Override
-	public Map<String, SQLFunction> getSqlFunctions() {
-		return sqlFunctionMap == null ? Collections.emptyMap() : sqlFunctionMap;
+	public Map<String, SqmFunctionDescriptor> getSqlFunctions() {
+		return sqlFunctionMap == null ? emptyMap() : sqlFunctionMap;
 	}
 
 	@Override
 	public Collection<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList() {
-		return auxiliaryDatabaseObjectList == null ? Collections.emptyList() : auxiliaryDatabaseObjectList;
+		return auxiliaryDatabaseObjectList == null ? emptyList() : auxiliaryDatabaseObjectList;
 	}
 
 	@Override
-	public Collection<AttributeConverterInfo> getAttributeConverters() {
-		return attributeConverterInfoMap != null
-				? new ArrayList<>( attributeConverterInfoMap.values() )
-				: Collections.emptyList();
+	public Collection<ConverterDescriptor<?, ?>> getAttributeConverters() {
+		return attributeConverterDescriptorMap != null
+				? attributeConverterDescriptorMap.values()
+				: emptyList();
 	}
 
 	@Override
 	public Collection<CacheRegionDefinition> getCacheRegionDefinitions() {
-		return cacheRegionDefinitions == null ? Collections.emptyList() : cacheRegionDefinitions;
+		return cacheRegionDefinitions == null ? emptyList() : cacheRegionDefinitions;
+	}
+
+	private final Map<String,BasicType<?>> adHocBasicTypeRegistrations = new HashMap<>();
+
+	@Override
+	public void registerAdHocBasicType(BasicType<?> basicType) {
+		adHocBasicTypeRegistrations.put( basicType.getName(), basicType );
+	}
+
+	@Override
+	public <T> BasicType<T> resolveAdHocBasicType(String key) {
+		//noinspection unchecked
+		return (BasicType<T>) adHocBasicTypeRegistrations.get( key );
 	}
 
 	@Override
@@ -215,7 +265,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 		scanEnvironment = null;
 		scannerSetting = null;
 		archiveDescriptorFactory = null;
-		jandexView = null;
 
 		if ( sqlFunctionMap != null ) {
 			sqlFunctionMap.clear();
@@ -225,8 +274,8 @@ public class BootstrapContextImpl implements BootstrapContext {
 			auxiliaryDatabaseObjectList.clear();
 		}
 
-		if ( attributeConverterInfoMap != null ) {
-			attributeConverterInfoMap.clear();
+		if ( attributeConverterDescriptorMap != null ) {
+			attributeConverterDescriptorMap.clear();
 		}
 
 		if ( cacheRegionDefinitions != null ) {
@@ -234,69 +283,79 @@ public class BootstrapContextImpl implements BootstrapContext {
 		}
 	}
 
+	@Override
+	public ManagedTypeRepresentationResolver getRepresentationStrategySelector() {
+		return representationStrategySelector;
+	}
+
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Mutations
 
-
-	public void addAttributeConverterInfo(AttributeConverterInfo info) {
-		if ( this.attributeConverterInfoMap == null ) {
-			this.attributeConverterInfoMap = new HashMap<>();
+	public void addAttributeConverterDescriptor(ConverterDescriptor<?,?> descriptor) {
+		if ( attributeConverterDescriptorMap == null ) {
+			attributeConverterDescriptorMap = new HashMap<>();
 		}
 
-		final Object old = this.attributeConverterInfoMap.put( info.getConverterClass(), info );
-
+		final var attributeConverterClass = descriptor.getAttributeConverterClass();
+		final Object old = attributeConverterDescriptorMap.put( attributeConverterClass, descriptor );
 		if ( old != null ) {
 			throw new AssertionFailure(
 					String.format(
 							"AttributeConverter class [%s] registered multiple times",
-							info.getConverterClass()
+							attributeConverterClass
 					)
 			);
 		}
 	}
 
-	void injectJpaTempClassLoader(ClassLoader jpaTempClassLoader) {
-		log.debugf( "Injecting JPA temp ClassLoader [%s] into BootstrapContext; was [%s]", jpaTempClassLoader, this.getJpaTempClassLoader() );
-		this.classLoaderAccess.injectTempClassLoader( jpaTempClassLoader );
+	void injectJpaTempClassLoader(ClassLoader classLoader) {
+		if ( BOOT_LOGGER.isTraceEnabled() && classLoader != getJpaTempClassLoader() ) {
+			BOOT_LOGGER.injectingJpaTempClassLoader( classLoader, getJpaTempClassLoader() );
+		}
+		this.classLoaderAccess.injectTempClassLoader( classLoader );
 	}
 
 	void injectScanOptions(ScanOptions scanOptions) {
-		log.debugf( "Injecting ScanOptions [%s] into BootstrapContext; was [%s]", scanOptions, this.scanOptions );
+		if ( scanOptions != this.scanOptions ) {
+			BOOT_LOGGER.injectingScanOptions(scanOptions, this.scanOptions);
+		}
 		this.scanOptions = scanOptions;
 	}
 
 	void injectScanEnvironment(ScanEnvironment scanEnvironment) {
-		log.debugf( "Injecting ScanEnvironment [%s] into BootstrapContext; was [%s]", scanEnvironment, this.scanEnvironment );
+		if ( scanEnvironment != this.scanEnvironment ) {
+			BOOT_LOGGER.injectingScanEnvironment( scanEnvironment, this.scanEnvironment );
+		}
 		this.scanEnvironment = scanEnvironment;
 	}
 
 	void injectScanner(Scanner scanner) {
-		log.debugf( "Injecting Scanner [%s] into BootstrapContext; was [%s]", scanner, this.scannerSetting );
+		if ( scanner != this.scannerSetting ) {
+			BOOT_LOGGER.injectingScanner( scanner, scannerSetting );
+		}
 		this.scannerSetting = scanner;
 	}
 
 	void injectArchiveDescriptorFactory(ArchiveDescriptorFactory factory) {
-		log.debugf( "Injecting ArchiveDescriptorFactory [%s] into BootstrapContext; was [%s]", factory, this.archiveDescriptorFactory );
+		if ( factory != archiveDescriptorFactory ) {
+			BOOT_LOGGER.injectingArchiveDescriptorFactory( factory, archiveDescriptorFactory );
+		}
 		this.archiveDescriptorFactory = factory;
 	}
 
-	void injectJandexView(IndexView jandexView) {
-		log.debugf( "Injecting Jandex IndexView [%s] into BootstrapContext; was [%s]", jandexView, this.jandexView );
-		this.jandexView = jandexView;
-	}
-
-	public void addSqlFunction(String functionName, SQLFunction function) {
-		if ( this.sqlFunctionMap == null ) {
-			this.sqlFunctionMap = new HashMap<>();
+	public void addSqlFunction(String functionName, SqmFunctionDescriptor function) {
+		if ( sqlFunctionMap == null ) {
+			sqlFunctionMap = new HashMap<>();
 		}
-		this.sqlFunctionMap.put( functionName, function );
+		sqlFunctionMap.put( functionName, function );
 	}
 
 	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
-		if ( this.auxiliaryDatabaseObjectList == null ) {
-			this.auxiliaryDatabaseObjectList = new ArrayList<>();
+		if ( auxiliaryDatabaseObjectList == null ) {
+			auxiliaryDatabaseObjectList = new ArrayList<>();
 		}
-		this.auxiliaryDatabaseObjectList.add( auxiliaryDatabaseObject );
+		auxiliaryDatabaseObjectList.add( auxiliaryDatabaseObject );
 	}
 
 
@@ -307,10 +366,18 @@ public class BootstrapContextImpl implements BootstrapContext {
 		cacheRegionDefinitions.add( cacheRegionDefinition );
 	}
 
-	private JavaReflectionManager generateHcannReflectionManager() {
-		final JavaReflectionManager reflectionManager = new JavaReflectionManager();
-		reflectionManager.setMetadataProvider( new JPAMetadataProvider( this ) );
-		return reflectionManager;
+	public static ModelsContext createModelBuildingContext(
+			ClassLoaderService classLoaderService,
+			ConfigurationService configService) {
+		final var classLoading = new ClassLoaderServiceLoading( classLoaderService );
+		final var modelsConfiguration = new ModelsConfiguration();
+		modelsConfiguration.setClassLoading( classLoading );
+		modelsConfiguration.setRegistryPrimer( ModelsHelper::preFillRegistries );
+		configService.getSettings().forEach( (key, value) -> {
+			if ( key.startsWith( "hibernate.models." ) ) {
+				modelsConfiguration.configValue( key, value );
+			}
+		} );
+		return modelsConfiguration.bootstrap();
 	}
-
 }

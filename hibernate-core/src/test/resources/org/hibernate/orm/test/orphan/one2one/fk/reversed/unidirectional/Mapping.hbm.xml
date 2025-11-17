@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        '-//Hibernate/Hibernate Mapping DTD 3.0//EN'
+        'http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd'>
+
+<hibernate-mapping package="org.hibernate.orm.test.orphan.one2one.fk.reversed.unidirectional" >
+
+    <class name="Employee">
+        <id name="id" type="long" column="id">
+            <generator class="increment" />
+        </id>
+         <many-to-one name="info"
+                    column="info_id"
+                    unique="true"
+                    cascade="all,delete-orphan"/>
+    </class>
+
+    <class name="EmployeeInfo">
+        <id name="id" type="long" column="id">
+            <generator class="increment" />
+        </id>
+    </class>
+
+</hibernate-mapping>

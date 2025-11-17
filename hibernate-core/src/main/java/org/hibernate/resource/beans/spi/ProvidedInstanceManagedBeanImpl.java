@@ -1,13 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.spi;
 
+import org.hibernate.internal.util.ReflectHelper;
+
 /**
- * ManagedBean implementation for cases where we have been handed an actual
+ * {@link ManagedBean} implementation for cases where we have been handed an actual
  * instance to use.
  *
  * @author Steve Ebersole
@@ -19,14 +19,12 @@ public class ProvidedInstanceManagedBeanImpl<T> implements ManagedBean<T> {
 		if ( instance == null ) {
 			throw new IllegalArgumentException( "Bean instance cannot be null" );
 		}
-
 		this.instance = instance;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Class<T> getBeanClass() {
-		return (Class<T>) instance.getClass();
+		return ReflectHelper.getClass( instance );
 	}
 
 	@Override

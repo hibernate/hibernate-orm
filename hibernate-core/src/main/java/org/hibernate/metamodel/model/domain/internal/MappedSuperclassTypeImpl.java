@@ -1,46 +1,142 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.mapping.MappedSuperclass;
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.MappedSuperclassTypeDescriptor;
+import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
+import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmMappedSuperclassDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmPersistentAttribute;
+import org.hibernate.type.descriptor.java.JavaType;
+
+import static jakarta.persistence.metamodel.Bindable.BindableType.ENTITY_TYPE;
+import static jakarta.persistence.metamodel.Type.PersistenceType.MAPPED_SUPERCLASS;
 
 /**
+ * Implementation of {@link jakarta.persistence.metamodel.MappedSuperclassType}.
+ *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-public class MappedSuperclassTypeImpl<X> extends AbstractIdentifiableType<X> implements MappedSuperclassTypeDescriptor<X> {
+public class MappedSuperclassTypeImpl<J>
+		extends AbstractIdentifiableType<J>
+		implements SqmMappedSuperclassDomainType<J>, SqmPathSource<J> {
+
 	public MappedSuperclassTypeImpl(
-			Class<X> javaType,
-			MappedSuperclass mappedSuperclass,
-			IdentifiableTypeDescriptor<? super X> superType,
-			SessionFactoryImplementor sessionFactory) {
+			String name,
+			boolean hasIdClass,
+			boolean hasIdProperty,
+			boolean hasVersion,
+			JavaType<J> javaType,
+			IdentifiableDomainType<? super J> superType,
+			JpaMetamodelImplementor jpaMetamodel) {
 		super(
+				name,
 				javaType,
-				javaType.getName(),
 				superType,
-				mappedSuperclass.getDeclaredIdentifierMapper() != null || ( superType != null && superType.hasIdClass() ),
+				hasIdClass,
+				hasIdProperty,
+				hasVersion,
+				jpaMetamodel
+		);
+	}
+
+	public MappedSuperclassTypeImpl(
+			JavaType<J> javaType,
+			MappedSuperclass mappedSuperclass,
+			IdentifiableDomainType<? super J> superType,
+			JpaMetamodelImplementor jpaMetamodel) {
+		this(
+				javaType.getTypeName(),
+				mappedSuperclass.getDeclaredIdentifierMapper() != null
+						|| superType != null && superType.hasIdClass(),
 				mappedSuperclass.hasIdentifierProperty(),
 				mappedSuperclass.isVersioned(),
-				sessionFactory
+				javaType,
+				superType,
+				jpaMetamodel
 		);
 	}
 
 	@Override
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.MAPPED_SUPERCLASS;
+	public Class<J> getBindableJavaType() {
+		return getJavaType();
 	}
 
 	@Override
-	public <S extends X> SubGraphImplementor<S> makeSubGraph(Class<S> subType) {
-		throw new NotYetImplementedException(  );
+	public SqmMappedSuperclassDomainType<J> getSqmType() {
+		return this;
+	}
+
+	@Override
+	public String getPathName() {
+		return getTypeName();
+	}
+
+	@Override
+	public SqmMappedSuperclassDomainType<J> getPathType() {
+		return this;
+	}
+
+	@Override
+	public SqmPathSource<?> findSubPathSource(String name) {
+		final PersistentAttribute<?,?> attribute = findAttribute( name );
+		if ( attribute != null ) {
+			return (SqmPathSource<?>) attribute;
+		}
+		else if ( "id".equalsIgnoreCase( name ) ) {
+			return hasIdClass() ? getIdentifierDescriptor() : null;
+		}
+		else {
+			return null;
+		}
+	}
+
+	@Override
+	public SqmPathSource<?> getIdentifierDescriptor() {
+		return (SqmPathSource<?>) super.getIdentifierDescriptor();
+	}
+
+	@Override
+	public SqmPersistentAttribute<? super J, ?> findAttribute(String name) {
+		final var attribute = super.findAttribute( name );
+		if ( attribute != null ) {
+			return attribute;
+		}
+		else if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
+			return findIdAttribute();
+		}
+		else {
+			return null;
+		}
+	}
+
+	@Override
+	public BindableType getBindableType() {
+		return ENTITY_TYPE;
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return MAPPED_SUPERCLASS;
+	}
+
+	@Override
+	protected boolean isIdMappingRequired() {
+		return false;
+	}
+
+	@Override
+	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+		throw new UnsupportedMappingException(
+				"MappedSuperclassType cannot be used to create an SqmPath - that would be an SqmFrom which are created directly"
+		);
 	}
 }

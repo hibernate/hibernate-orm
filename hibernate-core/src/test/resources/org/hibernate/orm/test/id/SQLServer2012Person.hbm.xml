@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.orm.test.id">
+
+	<class name="Person">
+		<id name="id" column="id">
+			<generator class="org.hibernate.id.enhanced.SequenceStyleGenerator">
+                <param name="initial_value">10</param>
+            </generator>
+		</id>
+	</class>
+
+</hibernate-mapping>

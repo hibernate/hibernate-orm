@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.orm.test.stateless.fetching">
+
+	<class name="User">
+		<id name="id" type="long">
+            <generator class="increment" />
+		</id>
+        <property name="name" type="string"/>
+	</class>
+
+    <class name="Resource">
+		<id name="id" type="long">
+            <generator class="increment" />
+		</id>
+        <property name="name" type="string"/>
+        <many-to-one name="owner"/>
+    </class>
+
+    <class name="Task">
+		<id name="id" type="long">
+            <generator class="increment" />
+		</id>
+        <property name="description" type="string"/>
+        <many-to-one name="user" column="`user`"/>
+        <many-to-one name="resource" column="`resource`"/>
+        <property name="dueDate" type="timestamp"/>
+        <property name="startDate" type="timestamp"/>
+        <property name="completionDate" type="timestamp"/>
+	</class>
+
+</hibernate-mapping>

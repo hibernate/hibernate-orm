@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.archive.internal;
 
@@ -12,6 +10,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.boot.archive.spi.AbstractArchiveDescriptor;
 import org.hibernate.boot.archive.spi.ArchiveContext;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
@@ -19,11 +18,12 @@ import org.hibernate.boot.archive.spi.ArchiveEntry;
 import org.hibernate.boot.archive.spi.ArchiveException;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 
-import static org.hibernate.internal.log.UrlMessageBundle.URL_LOGGER;
+import static org.hibernate.internal.log.UrlMessageBundle.URL_MESSAGE_LOGGER;
 
 /**
- * An ArchiveDescriptor implementation that works on archives accessible through a {@link java.util.jar.JarInputStream}.
- * NOTE : This is less efficient implementation than {@link JarFileBasedArchiveDescriptor}
+ * An {@code ArchiveDescriptor} that works on archives accessible through a {@link JarInputStream}.
+ *
+ * @implNote This is less efficient implementation than {@link JarFileBasedArchiveDescriptor}.
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
@@ -52,7 +52,7 @@ public class JarInputStreamBasedArchiveDescriptor extends AbstractArchiveDescrip
 		}
 		catch (Exception e) {
 			//really should catch IOException but Eclipse is buggy and raise NPE...
-			URL_LOGGER.logUnableToFindFileByUrl( getArchiveUrl(), e );
+			URL_MESSAGE_LOGGER.logUnableToFindFileByUrl( getArchiveUrl(), e );
 			return;
 		}
 
@@ -148,5 +148,120 @@ public class JarInputStreamBasedArchiveDescriptor extends AbstractArchiveDescrip
 					ioe
 			);
 		}
+	}
+
+	@Override
+	public @Nullable ArchiveEntry findEntry(String path) {
+		final JarInputStream jarInputStream;
+		try {
+			jarInputStream = new JarInputStream( getArchiveUrl().openStream() );
+		}
+		catch (Exception e) {
+			//really should catch IOException but Eclipse is buggy and raise NPE...
+			URL_MESSAGE_LOGGER.logUnableToFindFileByUrl( getArchiveUrl(), e );
+			return null;
+		}
+
+		try {
+			JarEntry jarEntry;
+			while ( ( jarEntry = jarInputStream.getNextJarEntry() ) != null ) {
+				final String jarEntryName = jarEntry.getName();
+				if ( getEntryBasePrefix() != null && ! jarEntryName.startsWith( getEntryBasePrefix() ) ) {
+					continue;
+				}
+
+				if ( jarEntry.isDirectory() ) {
+					continue;
+				}
+
+				if ( jarEntryName.equals( getEntryBasePrefix() ) ) {
+					// exact match, might be a nested jar entry (ie from jar:file:..../foo.ear!/bar.jar)
+					//
+					// This algorithm assumes that the zipped file is only the URL root (including entry), not
+					// just any random entry
+					try {
+						final JarInputStream subJarInputStream = new JarInputStream( jarInputStream );
+						try {
+							ZipEntry subZipEntry = jarInputStream.getNextEntry();
+							while (subZipEntry != null) {
+								if ( ! subZipEntry.isDirectory() ) {
+									final String subName = extractName( subZipEntry );
+									if ( path.equals( subName ) ) {
+										final InputStreamAccess inputStreamAccess = buildByteBasedInputStreamAccess(
+												subName,
+												subJarInputStream
+										);
+
+										return new ArchiveEntry() {
+											@Override
+											public String getName() {
+												return subName;
+											}
+
+											@Override
+											public String getNameWithinArchive() {
+												return subName;
+											}
+
+											@Override
+											public InputStreamAccess getStreamAccess() {
+												return inputStreamAccess;
+											}
+										};
+									}
+								}
+								subZipEntry = jarInputStream.getNextJarEntry();
+							}
+						}
+						finally {
+							subJarInputStream.close();
+						}
+					}
+					catch (Exception e) {
+						throw new ArchiveException( "Error accessing nested jar", e );
+					}
+				}
+				else if ( path.equals( jarEntryName ) ) {
+					final String entryName = extractName( jarEntry );
+					final InputStreamAccess inputStreamAccess
+							= buildByteBasedInputStreamAccess( entryName, jarInputStream );
+
+					final String relativeName = extractRelativeName( jarEntry );
+
+					return new ArchiveEntry() {
+						@Override
+						public String getName() {
+							return entryName;
+						}
+
+						@Override
+						public String getNameWithinArchive() {
+							return relativeName;
+						}
+
+						@Override
+						public InputStreamAccess getStreamAccess() {
+							return inputStreamAccess;
+						}
+					};
+				}
+			}
+
+		}
+		catch (IOException ioe) {
+			throw new ArchiveException(
+					String.format( "Error accessing JarInputStream [%s]", getArchiveUrl() ),
+					ioe
+			);
+		}
+		finally {
+			try {
+				jarInputStream.close();
+			}
+			catch (IOException e) {
+				// Ignore
+			}
+		}
+		return null;
 	}
 }

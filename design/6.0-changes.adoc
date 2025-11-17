@@ -1,0 +1,25 @@
+= Changes
+
+Changes in 6.0 worth documenting in various places
+
+
+== New features
+
+Document in release-notes:
+
+* `@JdbcTypeCode`
+* `@JdbcType`
+* `@JdbcTypeRegistration`
+* `@JavaType`
+* `@JavaTypeRegistration`
+* `NativeQuery#addScalar(Class)`
+* `NativeQuery#addScalar(Class,AttributeConverter)`
+* `NativeQuery#addScalar(Class,Class<AttributeConverter>)`
+* `NativeQuery#addAttributeResult(String,Class,String)`
+* `NativeQuery#addAttributeResult(String,String,String)`
+* `NativeQuery#addAttributeResult(String,Attribute)`
+
+
+== Changes
+
+Document in migration-guide.

@@ -1,11 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 
 /**
- * Support for Dialect-specific pagination strategies
+ * Support for {@link org.hibernate.dialect.Dialect}-specific pagination strategies.
+ *
+ * @see org.hibernate.dialect.pagination.LimitHandler
  */
 package org.hibernate.dialect.pagination;

@@ -1,10 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.proxy.map;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
@@ -18,108 +18,113 @@ import org.hibernate.proxy.LazyInitializer;
  *
  * @author Gavin King
  */
+@SuppressWarnings("rawtypes")
 public class MapProxy implements HibernateProxy, Map, Serializable {
 
-	private MapLazyInitializer li;
+	private final MapLazyInitializer lazyInitializer;
 
 	private Object replacement;
 
-	MapProxy(MapLazyInitializer li) {
-		this.li = li;
+	MapProxy(MapLazyInitializer lazyInitializer) {
+		this.lazyInitializer = lazyInitializer;
 	}
 
 	@Override
 	public LazyInitializer getHibernateLazyInitializer() {
-		return li;
+		return lazyInitializer;
 	}
 
 	@Override
 	public int size() {
-		return li.getMap().size();
+		return lazyInitializer.getMap().size();
 	}
 
 	@Override
 	public void clear() {
-		li.getMap().clear();
+		lazyInitializer.getMap().clear();
 	}
 
 	@Override
 	public boolean isEmpty() {
-		return li.getMap().isEmpty();
+		return lazyInitializer.getMap().isEmpty();
 	}
 
 	@Override
 	public boolean containsKey(Object key) {
-		return li.getMap().containsKey(key);
+		return lazyInitializer.getMap().containsKey(key);
 	}
 
 	@Override
 	public boolean containsValue(Object value) {
-		return li.getMap().containsValue(value);
+		return lazyInitializer.getMap().containsValue(value);
 	}
 
 	@Override
-	public Collection values() {
-		return li.getMap().values();
+	public Collection<?> values() {
+		return lazyInitializer.getMap().values();
+	}
+
+	@Override @SuppressWarnings("unchecked")
+	public void putAll(Map map) {
+		lazyInitializer.getMap().putAll(map);
 	}
 
 	@Override
-	public void putAll(Map t) {
-		li.getMap().putAll(t);
+	public Set<?> entrySet() {
+		return lazyInitializer.getMap().entrySet();
 	}
 
 	@Override
-	public Set entrySet() {
-		return li.getMap().entrySet();
-	}
-
-	@Override
-	public Set keySet() {
-		return li.getMap().keySet();
+	public Set<?> keySet() {
+		return lazyInitializer.getMap().keySet();
 	}
 
 	@Override
 	public Object get(Object key) {
-		return li.getMap().get(key);
+		return lazyInitializer.getMap().get(key);
 	}
 
 	@Override
 	public Object remove(Object key) {
-		return li.getMap().remove(key);
+		return lazyInitializer.getMap().remove(key);
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	public Object put(Object key, Object value) {
-		return li.getMap().put(key, value);
+		return lazyInitializer.getMap().put(key, value);
 	}
 
+	@Serial
 	@Override
 	public Object writeReplace() {
 		/*
 		 * If the target has already been loaded somewhere, just not set on the proxy,
 		 * then use it to initialize the proxy so that we will serialize that instead of the proxy.
 		 */
-		li.initializeWithoutLoadIfPossible();
+		lazyInitializer.initializeWithoutLoadIfPossible();
 
-		if ( li.isUninitialized() ) {
+		if ( lazyInitializer.isUninitialized() ) {
 			if ( replacement == null ) {
-				li.prepareForPossibleLoadingOutsideTransaction();
+				lazyInitializer.prepareForPossibleLoadingOutsideTransaction();
 				replacement = serializableProxy();
 			}
 			return replacement;
 		}
 		else {
-			return li.getImplementation();
+			return lazyInitializer.getImplementation();
 		}
 	}
 
 	private Object serializableProxy() {
 		return new SerializableMapProxy(
-				li.getEntityName(),
-				li.getIdentifier(),
-				( li.isReadOnlySettingAvailable() ? Boolean.valueOf( li.isReadOnly() ) : li.isReadOnlyBeforeAttachedToSession() ),
-				li.getSessionFactoryUuid(),
-				li.isAllowLoadOutsideTransaction()
+				lazyInitializer.getEntityName(),
+				lazyInitializer.getInternalIdentifier(),
+				lazyInitializer.isReadOnlySettingAvailable()
+						? Boolean.valueOf( lazyInitializer.isReadOnly() )
+						: lazyInitializer.isReadOnlyBeforeAttachedToSession(),
+				lazyInitializer.getSessionFactoryUuid(),
+				lazyInitializer.getSessionFactoryName(),
+				lazyInitializer.isAllowLoadOutsideTransaction()
 		);
 	}
 

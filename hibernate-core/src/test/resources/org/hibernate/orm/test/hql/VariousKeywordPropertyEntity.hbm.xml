@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping SYSTEM "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.orm.test.hql">
+
+    <class name="VariousKeywordPropertyEntity">
+        <id name="id" type="long">
+            <generator class="increment"/>
+        </id>
+        <property name="type" type="string" column="`type`"/>
+        <property name="value" type="string" column="`value`"/>
+        <property name="key" type="string" column="`key`"/>
+        <property name="entry" type="string" />
+    </class>
+
+</hibernate-mapping>

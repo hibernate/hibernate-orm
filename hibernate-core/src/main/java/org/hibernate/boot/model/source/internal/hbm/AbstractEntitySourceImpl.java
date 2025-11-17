@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -13,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.EntityMode;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.hbm.spi.EntityInfo;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmEntityBaseDefinition;
@@ -23,10 +20,8 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSecondaryTableType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTuplizerType;
 import org.hibernate.boot.jaxb.hbm.spi.SecondaryTableContainer;
 import org.hibernate.boot.model.CustomSql;
-import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.model.source.spi.AttributeRole;
 import org.hibernate.boot.model.source.spi.AttributeSource;
@@ -45,6 +40,8 @@ import org.hibernate.boot.model.source.spi.ToolingHintContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
+import static java.util.Collections.emptyMap;
+
 /**
  * @author Steve Ebersole
  * @author Hardy Ferentschik
@@ -62,7 +59,7 @@ public abstract class AbstractEntitySourceImpl
 	private final AttributeRole attributeRoleBase;
 	private final AttributePath attributePathBase;
 
-	private List<IdentifiableTypeSource> subclassEntitySources = new ArrayList<IdentifiableTypeSource>();
+	private final List<IdentifiableTypeSource> subclassEntitySources = new ArrayList<>();
 
 	private int inLineViewCount = 0;
 
@@ -70,8 +67,6 @@ public abstract class AbstractEntitySourceImpl
 	private List<AttributeSource> attributeSources;
 	private Map<String,SecondaryTableSource> secondaryTableMap;
 	private final FilterSource[] filterSources;
-
-	private final Map<EntityMode, String> tuplizerClassMap;
 
 	private final ToolingHintContext toolingHintContext;
 
@@ -83,8 +78,6 @@ public abstract class AbstractEntitySourceImpl
 
 		this.attributePathBase = new AttributePath();
 		this.attributeRoleBase = new AttributeRole( entityNamingSource.getEntityName() );
-
-		this.tuplizerClassMap = extractTuplizers( jaxbEntityMapping );
 
 		this.filterSources = buildFilterSources();
 
@@ -121,25 +114,9 @@ public abstract class AbstractEntitySourceImpl
 		return new EntityNamingSourceImpl( entityName, className, jpaEntityName );
 	}
 
-	private static Map<EntityMode, String> extractTuplizers(JaxbHbmEntityBaseDefinition entityElement) {
-		if ( entityElement.getTuplizer() == null ) {
-			return Collections.emptyMap();
-		}
-
-		final Map<EntityMode, String> tuplizers = new HashMap<EntityMode, String>();
-		for ( JaxbHbmTuplizerType tuplizerElement : entityElement.getTuplizer() ) {
-			tuplizers.put(
-					tuplizerElement.getEntityMode(),
-					tuplizerElement.getClazz()
-			);
-		}
-		return tuplizers;
-	}
-
 	private FilterSource[] buildFilterSources() {
 		//todo for now, i think all EntityElement should support this.
-		if ( JaxbHbmRootEntityType.class.isInstance( jaxbEntityMapping() ) ) {
-			final JaxbHbmRootEntityType jaxbClassElement = (JaxbHbmRootEntityType) jaxbEntityMapping();
+		if ( jaxbEntityMapping() instanceof JaxbHbmRootEntityType jaxbClassElement ) {
 			final int size = jaxbClassElement.getFilter().size();
 			if ( size == 0 ) {
 				return NO_FILTER_SOURCES;
@@ -204,7 +181,7 @@ public abstract class AbstractEntitySourceImpl
 	}
 
 	protected List<AttributeSource> buildAttributeSources() {
-		final List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
+		final List<AttributeSource> attributeSources = new ArrayList<>();
 
 		AttributesHelper.Callback attributeBuildingCallback = new AttributesHelper.Callback() {
 			@Override
@@ -233,14 +210,13 @@ public abstract class AbstractEntitySourceImpl
 	}
 
 	private Map<String,SecondaryTableSource> buildSecondaryTableMap() {
-		if ( !SecondaryTableContainer.class.isInstance( jaxbEntityMapping ) ) {
-			return Collections.emptyMap();
+		if ( !(jaxbEntityMapping instanceof SecondaryTableContainer secondaryTableContainer) ) {
+			return emptyMap();
 		}
 
-		final HashMap<String,SecondaryTableSource> secondaryTableSourcesMap =
-				new HashMap<String, SecondaryTableSource>();
+		final HashMap<String,SecondaryTableSource> secondaryTableSourcesMap = new HashMap<>();
 
-		for ( final JaxbHbmSecondaryTableType joinElement :  ( (SecondaryTableContainer) jaxbEntityMapping ).getJoin() ) {
+		for ( final JaxbHbmSecondaryTableType joinElement :  secondaryTableContainer.getJoin() ) {
 			final SecondaryTableSourceImpl secondaryTableSource = new SecondaryTableSourceImpl(
 					sourceMappingDocument(),
 					joinElement,
@@ -294,7 +270,7 @@ public abstract class AbstractEntitySourceImpl
 	@Override
 	public boolean isLazy() {
 		if ( jaxbEntityMapping.isLazy() == null ) {
-			return metadataBuildingContext().getMappingDefaults().areEntitiesImplicitlyLazy();
+			return metadataBuildingContext().getEffectiveDefaults().isDefaultEntityLaziness();
 		}
 		return jaxbEntityMapping().isLazy();
 	}
@@ -322,15 +298,6 @@ public abstract class AbstractEntitySourceImpl
 	@Override
 	public boolean isSelectBeforeUpdate() {
 		return jaxbEntityMapping.isSelectBeforeUpdate();
-	}
-
-	protected EntityMode determineEntityMode() {
-		return StringHelper.isNotEmpty( entityNamingSource.getClassName() ) ? EntityMode.POJO : EntityMode.MAP;
-	}
-
-	@Override
-	public Map<EntityMode, String> getTuplizerClassMap() {
-		return tuplizerClassMap;
 	}
 
 	@Override
@@ -422,12 +389,6 @@ public abstract class AbstractEntitySourceImpl
 	@Override
 	public List<JaxbHbmNamedNativeQueryType> getNamedNativeQueries() {
 		return jaxbEntityMapping.getSqlQuery();
-	}
-
-	@Override
-	public TruthValue quoteIdentifiersLocalToEntity() {
-		// HBM does not allow for this
-		return TruthValue.UNKNOWN;
 	}
 
 }

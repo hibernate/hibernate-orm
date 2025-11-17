@@ -1,29 +1,23 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
+import org.hibernate.processor.test.util.CompilationTest;
+import org.hibernate.processor.test.util.TestForIssue;
+import org.hibernate.processor.test.util.WithClasses;
+import org.junit.jupiter.api.Test;
 
-
-
-import org.hibernate.jpamodelgen.test.util.CompilationTest;
-import org.hibernate.jpamodelgen.test.util.TestForIssue;
-import org.hibernate.jpamodelgen.test.util.WithClasses;
-import org.junit.Test;
-
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
+import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 
 /**
  * @author Hardy Ferentschik
  */
+@CompilationTest
 @TestForIssue(jiraKey = "METAGEN-40")
 @WithClasses(DefaultPackageEntity.class)
-public class DefaultPackageTest extends CompilationTest {
+class DefaultPackageTest {
 	@Test
-	public void testMetaModelGeneratedForEntitiesInDefaultPackage() {
+	void testMetaModelGeneratedForEntitiesInDefaultPackage() {
 		assertMetamodelClassGeneratedFor( DefaultPackageEntity.class );
 	}
 }
-
-

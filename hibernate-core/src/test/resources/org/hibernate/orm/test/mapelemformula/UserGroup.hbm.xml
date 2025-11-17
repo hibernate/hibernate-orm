@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+     
+-->
+
+<hibernate-mapping package="org.hibernate.orm.test.mapelemformula">
+	
+	<class name="Group" table="groups_">
+		<id name="name"/>
+		<map name="users" cascade="persist" table="group_user">
+			<key column="groupName"/>
+			<map-key column="personName" type="string"/>
+			<many-to-many formula="lower(personName)" class="User" fetch="select"/>
+		</map>
+	</class>
+	
+	<class name="User" table="users">
+		<id name="name"/>
+		<property name="password" column="`password`"/>
+	</class>
+
+</hibernate-mapping>

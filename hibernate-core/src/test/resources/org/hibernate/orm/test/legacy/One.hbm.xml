@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping default-lazy="false">
+	<class name="org.hibernate.orm.test.legacy.One" table="one">
+		<id name="key" column="one_key">
+			<generator class="native" />
+		</id>
+		<property name="x"/>
+		<property column="one_value" name="value"/>
+		<set name="manies" inverse="true" lazy="true">
+			<key column="one_key"/>
+			<one-to-many class="org.hibernate.orm.test.legacy.Many"/>
+		</set>
+	</class>
+</hibernate-mapping>
+

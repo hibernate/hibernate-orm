@@ -1,49 +1,46 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 import java.sql.ResultSet;
 
 /**
- * Specifies the type of JDBC scrollable result set to use underneath a {@link ScrollableResults}.
+ * Specifies the type of JDBC scrollable {@linkplain ResultSet result set}
+ * to use underneath a {@link ScrollableResults}.
  *
  * @author Gavin King
+ *
+ * @see org.hibernate.query.SelectionQuery#scroll(ScrollMode)
  */
 public enum ScrollMode {
 	/**
 	 * Requests a scrollable result that is only scrollable forwards.
 	 *
-	 * @see java.sql.ResultSet#TYPE_FORWARD_ONLY
+	 * @see ResultSet#TYPE_FORWARD_ONLY
 	 */
-	FORWARD_ONLY( ResultSet.TYPE_FORWARD_ONLY ),
+	FORWARD_ONLY,
 
 	/**
-	 * Requests a scrollable result which is sensitive to changes in the underlying data.
+	 * Requests a scrollable result which is sensitive to changes
+	 * in the underlying data.
 	 *
-	 * @see java.sql.ResultSet#TYPE_SCROLL_SENSITIVE
+	 * @see ResultSet#TYPE_SCROLL_SENSITIVE
 	 */
-	SCROLL_SENSITIVE( ResultSet.TYPE_SCROLL_SENSITIVE ),
+	SCROLL_SENSITIVE,
 
 	/**
-	 * Requests a scrollable result which is insensitive to changes in the underlying data.
-	 *
+	 * Requests a scrollable result which is insensitive to changes
+	 * in the underlying data.
+	 * <p>
 	 * Note that since the Hibernate session acts as a cache, you
 	 * might need to explicitly evict objects, if you need to see
 	 * changes made by other transactions.
 	 *
-	 * @see java.sql.ResultSet#TYPE_SCROLL_INSENSITIVE
+	 * @see ResultSet#TYPE_SCROLL_INSENSITIVE
 	 */
-	SCROLL_INSENSITIVE( ResultSet.TYPE_SCROLL_INSENSITIVE );
-
-	private final int resultSetType;
-
-	private ScrollMode(int level) {
-		this.resultSetType = level;
-	}
+	SCROLL_INSENSITIVE;
 
 	/**
 	 * Get the corresponding JDBC scroll type code constant value.
@@ -51,7 +48,11 @@ public enum ScrollMode {
 	 * @return the JDBC result set type code
 	 */
 	public int toResultSetType() {
-		return resultSetType;
+		return switch (this) {
+			case FORWARD_ONLY -> ResultSet.TYPE_FORWARD_ONLY;
+			case SCROLL_SENSITIVE -> ResultSet.TYPE_SCROLL_SENSITIVE;
+			case SCROLL_INSENSITIVE -> ResultSet.TYPE_SCROLL_INSENSITIVE;
+		};
 	}
 
 	/**
@@ -62,7 +63,6 @@ public enum ScrollMode {
 	 * @return {@code true} if this mode is less than the other.
 	 */
 	public boolean lessThan(ScrollMode other) {
-		return this.resultSetType < other.resultSetType;
+		return this.toResultSetType() < other.toResultSetType();
 	}
-
 }

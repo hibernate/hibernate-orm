@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
@@ -14,11 +12,14 @@ import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * @author Kabir Khan
  * @author Steve Ebersole
  */
 public class PostInsertEventListenerStandardImpl implements PostInsertEventListener, CallbackRegistryConsumer {
 	private CallbackRegistry callbackRegistry;
+
+	public PostInsertEventListenerStandardImpl() {
+	}
 
 	@Override
 	public void injectCallbackRegistry(CallbackRegistry callbackRegistry) {
@@ -32,7 +33,7 @@ public class PostInsertEventListenerStandardImpl implements PostInsertEventListe
 	}
 
 	@Override
-	public boolean requiresPostCommitHanding(EntityPersister persister) {
+	public boolean requiresPostCommitHandling(EntityPersister persister) {
 		return callbackRegistry.hasRegisteredCallbacks( persister.getMappedClass(), CallbackType.POST_PERSIST );
 	}
 }

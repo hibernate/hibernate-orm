@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="https://jakarta.ee/xml/ns/persistence/orm" version="3.0">
+    <persistence-unit-metadata>
+        <persistence-unit-defaults>
+            <entity-listeners>
+                <entity-listener class="org.hibernate.jpa.test.pack.defaultpar.IncrementListener">
+                    <pre-persist method-name="increment"/>
+                </entity-listener>
+            </entity-listeners>
+        </persistence-unit-defaults>
+    </persistence-unit-metadata>
+    <package>org.hibernate.jpa.test.pack.defaultpar</package>
+    <entity class="Lighter" access="FIELD" metadata-complete="true">
+        <attributes>
+            <id name="name">
+                <column name="fld_id"/>
+            </id>
+            <basic name="power"></basic>
+        </attributes>
+    </entity>
+    <entity class="ApplicationServer">
+        <entity-listeners>
+            <entity-listener class="OtherIncrementListener">
+                <pre-persist method-name="increment"/>
+            </entity-listener>
+        </entity-listeners>
+    </entity>
+</entity-mappings>

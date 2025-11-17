@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.relational;
 
@@ -11,6 +9,7 @@ import java.util.Objects;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.IllegalIdentifierException;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Parses a qualified name.
@@ -31,23 +30,23 @@ public class QualifiedNameParser {
 		private final String qualifiedText;
 
 		public NameParts(Identifier catalogName, Identifier schemaName, Identifier objectName) {
-			if ( objectName == null ) {
-				throw new IllegalArgumentException( "Name cannot be null" );
-			}
-
+			Objects.requireNonNull( objectName, "Name cannot be null" );
 			this.catalogName = catalogName;
 			this.schemaName = schemaName;
 			this.objectName = objectName;
+			qualifiedText = toQualifiedText( catalogName, schemaName, objectName );
+		}
 
-			StringBuilder buff = new StringBuilder();
+		private static String toQualifiedText(Identifier catalogName, Identifier schemaName, Identifier objectName) {
+			final var qualified = new StringBuilder();
 			if ( catalogName != null ) {
-				buff.append( catalogName.toString() ).append( '.' );
+				qualified.append( catalogName ).append( '.' );
 			}
 			if ( schemaName != null ) {
-				buff.append( schemaName.toString() ).append( '.' );
+				qualified.append( schemaName ).append( '.' );
 			}
-			buff.append( objectName.toString() );
-			qualifiedText = buff.toString();
+			qualified.append( objectName );
+			return qualified.toString();
 		}
 
 		@Override
@@ -76,28 +75,23 @@ public class QualifiedNameParser {
 		}
 
 		@Override
-		@SuppressWarnings("SimplifiableIfStatement")
 		public boolean equals(Object o) {
 			if ( this == o ) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			else if ( !(o instanceof NameParts that) ) {
 				return false;
 			}
-
-			NameParts that = (NameParts) o;
-
-			return Objects.equals( this.getCatalogName(), that.getCatalogName() )
-					&& Objects.equals( this.getSchemaName(), that.getSchemaName() )
-					&& Objects.equals( this.getObjectName(), that.getObjectName() );
+			else {
+				return Objects.equals( this.catalogName, that.catalogName )
+					&& Objects.equals( this.schemaName, that.schemaName )
+					&& Objects.equals( this.objectName, that.objectName );
+			}
 		}
 
 		@Override
 		public int hashCode() {
-			int result = getCatalogName() != null ? getCatalogName().hashCode() : 0;
-			result = 31 * result + ( getSchemaName() != null ? getSchemaName().hashCode() : 0);
-			result = 31 * result + getObjectName().hashCode();
-			return result;
+			return Objects.hash( catalogName, schemaName, objectName );
 		}
 	}
 
@@ -114,6 +108,11 @@ public class QualifiedNameParser {
 			throw new IllegalIdentifierException( "Object name to parse must be specified, but found null" );
 		}
 
+		if ( isQuotedInEntirety( text ) ) {
+			return new NameParts( defaultCatalog, defaultSchema,
+					Identifier.toIdentifier( unquote( text ), true ) );
+		}
+
 		String catalogName = null;
 		String schemaName = null;
 		String name;
@@ -122,16 +121,7 @@ public class QualifiedNameParser {
 		boolean schemaWasQuoted = false;
 		boolean nameWasQuoted;
 
-		// Note that we try to handle both forms of quoting,
-		//		1) where the entire string was quoted
-		//		2) where  one or more individual parts were quoted
-
-		boolean wasQuotedInEntirety = text.startsWith( "`" ) && text.endsWith( "`" );
-		if ( wasQuotedInEntirety ) {
-			text = unquote( text );
-		}
-
-		final String[] tokens = text.split( "\\." );
+		final String[] tokens = StringHelper.split( ".", text );
 		if ( tokens.length == 0 || tokens.length == 1 ) {
 			// we have just a local name...
 			name = text;
@@ -141,8 +131,8 @@ public class QualifiedNameParser {
 			name = tokens[1];
 		}
 		else if ( tokens.length == 3 ) {
-			schemaName = tokens[0];
-			catalogName = tokens[1];
+			catalogName = tokens[0];
+			schemaName = tokens[1];
 			name = tokens[2];
 		}
 		else {
@@ -177,10 +167,16 @@ public class QualifiedNameParser {
 		}
 
 		return new NameParts(
-				Identifier.toIdentifier( catalogName, wasQuotedInEntirety||catalogWasQuoted ),
-				Identifier.toIdentifier( schemaName, wasQuotedInEntirety||schemaWasQuoted ),
-				Identifier.toIdentifier( name, wasQuotedInEntirety||nameWasQuoted )
+				Identifier.toIdentifier( catalogName, catalogWasQuoted ),
+				Identifier.toIdentifier( schemaName, schemaWasQuoted ),
+				Identifier.toIdentifier( name, nameWasQuoted )
 		);
+	}
+
+	private static boolean isQuotedInEntirety(String text) {
+		return StringHelper.count( text, "`" ) == 2
+			&& text.startsWith( "`" )
+			&& text.endsWith( "`" );
 	}
 
 	private static String unquote(String text) {

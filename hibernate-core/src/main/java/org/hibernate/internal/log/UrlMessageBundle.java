@@ -1,14 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.log;
 
+import java.lang.invoke.MethodHandles;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import org.hibernate.Internal;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.Cause;
 import org.jboss.logging.annotations.LogMessage;
@@ -19,7 +19,7 @@ import org.jboss.logging.annotations.ValidIdRange;
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
- * Acts as the {@link org.jboss.logging.annotations.MessageLogger} and
+ * Acts as the {@link MessageLogger} and
  * {@link org.jboss.logging.annotations.MessageBundle} for messages related to
  * processing URLs.
  *
@@ -27,16 +27,21 @@ import static org.jboss.logging.Logger.Level.WARN;
  */
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 10000001, max = 10001000 )
+@SubSystemLogging(
+		name = UrlMessageBundle.LOGGER_NAME,
+		description = "Logging related to URL handling"
+)
+@Internal
 public interface UrlMessageBundle {
-	public static final UrlMessageBundle URL_LOGGER = Logger.getMessageLogger(
-			UrlMessageBundle.class,
-			"org.hibernate.orm.url"
-	);
+	String LOGGER_NAME = SubSystemLogging.BASE + ".url";
+
+	Logger URL_LOGGER = Logger.getLogger( LOGGER_NAME );
+	UrlMessageBundle URL_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), UrlMessageBundle.class, LOGGER_NAME );
 
 	/**
-	 * Logs a warning about a malformed URL, caused by a {@link java.net.URISyntaxException}
+	 * Logs a warning about a malformed URL, caused by a {@link URISyntaxException}
 	 *
-	 * @param jarUrl The URL that lead to the {@link java.net.URISyntaxException}
+	 * @param jarUrl The URL that lead to the {@link URISyntaxException}
 	 * @param e The underlying URISyntaxException
 	 */
 	@LogMessage( level = WARN )
@@ -80,7 +85,7 @@ public interface UrlMessageBundle {
 
 	/**
 	 * Access to the exception message used when a URL references names a file that does not exist.
-	 * <p/>
+	 * <p>
 	 * TODO : detail when this is a warning {@link #logFileDoesNotExist} versus an exception...
 	 *
 	 * @param filePart The "file part" that we gleaned from the URL

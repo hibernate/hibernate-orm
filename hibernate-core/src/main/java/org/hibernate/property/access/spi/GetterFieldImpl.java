@@ -1,73 +1,53 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.spi;
 
 import java.io.ObjectStreamException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.Locale;
 import java.util.Map;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.internal.AbstractFieldSerialForm;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.util.ReflectHelper.findGetterMethodForFieldAccess;
 
 /**
  * Field-based implementation of Getter
  *
  * @author Steve Ebersole
  */
+@Internal
 public class GetterFieldImpl implements Getter {
-	private final Class containerClass;
+	private final Class<?> containerClass;
 	private final String propertyName;
 	private final Field field;
-	private final Method getterMethod;
+	private final @Nullable Method getterMethod;
 
-	public GetterFieldImpl(Class containerClass, String propertyName, Field field) {
+	public GetterFieldImpl(Class<?> containerClass, String propertyName, Field field) {
+		this ( containerClass, propertyName, field, findGetterMethodForFieldAccess( field, propertyName ) );
+	}
+
+	GetterFieldImpl(Class<?> containerClass, String propertyName, Field field, Method getterMethod) {
 		this.containerClass = containerClass;
 		this.propertyName = propertyName;
 		this.field = field;
-
-		this.getterMethod = ReflectHelper.findGetterMethodForFieldAccess( field, propertyName );
+		this.getterMethod = getterMethod;
 	}
 
 	@Override
-	public Object get(Object owner) {
+	public @Nullable Object get(Object owner) {
 		try {
-			// This is needed because until JDK 9 the Reflection API
-			// does not use the same caching as used for auto-boxing.
-			// See https://bugs.openjdk.java.net/browse/JDK-5043030 for details.
-			// The code below can be removed when we move to JDK 9.
-			// double and float are intentionally not handled here because
-			// the JLS § 5.1.7 does not define caching for boxed values of
-			// this types.
-			Class<?> type = field.getType();
-			if ( type.isPrimitive() ) {
-				if ( type == Boolean.TYPE ) {
-					return Boolean.valueOf( field.getBoolean( owner ) );
-				}
-				else if ( type == Byte.TYPE ) {
-					return Byte.valueOf( field.getByte( owner ) );
-				}
-				else if ( type == Character.TYPE ) {
-					return Character.valueOf( field.getChar( owner ) );
-				}
-				else if ( type == Integer.TYPE ) {
-					return Integer.valueOf( field.getInt( owner ) );
-				}
-				else if ( type == Long.TYPE ) {
-					return Long.valueOf( field.getLong( owner ) );
-				}
-				else if ( type == Short.TYPE ) {
-					return Short.valueOf( field.getShort( owner ) );
-				}
-			}
 			return field.get( owner );
 		}
 		catch (Exception e) {
@@ -86,44 +66,55 @@ public class GetterFieldImpl implements Getter {
 	}
 
 	@Override
-	public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
+	public @Nullable Object getForInsert(Object owner, Map<Object, Object> mergeMap, SharedSessionContractImplementor session) {
 		return get( owner );
 	}
 
 	@Override
-	public Class getReturnType() {
+	public Class<?> getReturnTypeClass() {
 		return field.getType();
 	}
 
 	@Override
-	public Member getMember() {
+	public Type getReturnType() {
+		return field.getGenericType();
+	}
+
+	public Field getField() {
 		return field;
 	}
 
 	@Override
-	public String getMethodName() {
+	public Member getMember() {
+		return getField();
+	}
+
+	@Override
+	public @Nullable String getMethodName() {
 		return getterMethod != null ? getterMethod.getName() : null;
 	}
 
 	@Override
-	public Method getMethod() {
+	public @Nullable Method getMethod() {
 		return getterMethod;
 	}
 
+	@Serial
 	private Object writeReplace() throws ObjectStreamException {
 		return new SerialForm( containerClass, propertyName, field );
 	}
 
 	private static class SerialForm extends AbstractFieldSerialForm implements Serializable {
-		private final Class containerClass;
+		private final Class<?> containerClass;
 		private final String propertyName;
 
-		private SerialForm(Class containerClass, String propertyName, Field field) {
+		private SerialForm(Class<?> containerClass, String propertyName, Field field) {
 			super( field );
 			this.containerClass = containerClass;
 			this.propertyName = propertyName;
 		}
 
+		@Serial
 		private Object readResolve() {
 			return new GetterFieldImpl( containerClass, propertyName, resolveField() );
 		}

@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="7.0">
+    <package>org.hibernate.orm.test.any.xml2</package>
+    <access>FIELD</access>
+
+    <entity class="NamedAnyContainer">
+        <table name="container"/>
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+            <any name="specificProperty" fetch="LAZY">
+                <discriminator>
+                    <type>STRING</type>
+                    <column name="prop_type"/>
+                    <mapping value="I">NamedIntegerProperty</mapping>
+                    <mapping value="S">NamedStringProperty</mapping>
+                </discriminator>
+                <key>
+                    <java-class>Integer</java-class>
+                    <column name="prop_fk"/>
+                </key>
+                <cascade>
+                    <cascade-persist/>
+                </cascade>
+            </any>
+            <many-to-any name="generalProperties" fetch="LAZY">
+                <discriminator>
+                    <type>STRING</type>
+                    <column name="prop_type"/>
+                    <mapping value="I">NamedIntegerProperty</mapping>
+                    <mapping value="S">NamedStringProperty</mapping>
+                </discriminator>
+                <key>
+                    <java-class>Integer</java-class>
+                    <column name="prop_fk"/>
+                </key>
+                <cascade>
+                    <cascade-persist/>
+                </cascade>
+                <join-table name="contained_props">
+                    <join-column name="container_fk"/>
+                    <inverse-join-column name="assoc_fk"/>
+                </join-table>
+            </many-to-any>
+        </attributes>
+    </entity>
+
+</entity-mappings>

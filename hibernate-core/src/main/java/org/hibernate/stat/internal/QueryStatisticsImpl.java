@@ -1,22 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat.internal;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.hibernate.query.Query;
 import org.hibernate.stat.QueryStatistics;
 
 /**
  * Query statistics (HQL and SQL)
- * <p/>
+ * <p>
  * Note that for a cached query, the cache miss is equals to the db count
  *
  * @author Alex Snaps
@@ -41,11 +39,11 @@ public class QueryStatisticsImpl implements QueryStatistics {
 	private final Lock readLock;
 	private final Lock writeLock;
 
-	QueryStatisticsImpl(String query) {
+	public QueryStatisticsImpl(String query) {
 		this.query = query;
-		ReadWriteLock lock = new ReentrantReadWriteLock();
-		this.readLock = lock.readLock();
-		this.writeLock = lock.writeLock();
+		final var lock = new ReentrantReadWriteLock();
+		readLock = lock.readLock();
+		writeLock = lock.writeLock();
 	}
 
 	/**
@@ -72,10 +70,10 @@ public class QueryStatisticsImpl implements QueryStatistics {
 
 	/**
 	 * Number of lines returned by all the executions of this query (from DB)
-	 * For now, {@link org.hibernate.Query#iterate()}
-	 * and {@link org.hibernate.Query#scroll()} do not fill this statistic
+	 * For now, {@link Query#stream()}}
+	 * and {@link Query#scroll()} do not fill this statistic
 	 *
-	 * @return The number of rows cumulatively returned by the given query; iterate
+	 * @return The number of rows cumulatively returned by the given query; stream
 	 *         and scroll queries do not effect this total as their number of returned rows
 	 *         is not known at execution time.
 	 */
@@ -159,7 +157,7 @@ public class QueryStatisticsImpl implements QueryStatistics {
 	 * @param rows rows count returned
 	 * @param time time taken
 	 */
-	void executed(long rows, long time) {
+	public void executed(long rows, long time) {
 		// read lock is enough, concurrent updates are supported by the underlying type AtomicLong
 		// this only guards executed(long, long) to be called, when another thread is executing getExecutionAvgTime()
 		readLock.lock();
@@ -202,19 +200,23 @@ public class QueryStatisticsImpl implements QueryStatistics {
 		planCacheHitCount.increment();
 	}
 
+	void incrementPlanCacheMissCount() {
+		planCacheMissCount.increment();
+	}
+
 	public String toString() {
 		return "QueryStatistics"
-				+ "[query=" + query
-				+ ",cacheHitCount=" + this.cacheHitCount
-				+ ",cacheMissCount=" + this.cacheMissCount
-				+ ",cachePutCount=" + this.cachePutCount
-				+ ",planCacheHitCount=" + this.planCacheHitCount
-				+ ",planCacheMissCount=" + this.planCacheMissCount
-				+ ",executionCount=" + this.executionCount
-				+ ",executionRowCount=" + this.executionRowCount
-				+ ",executionAvgTime=" + this.getExecutionAvgTime()
-				+ ",executionMaxTime=" + this.executionMaxTime
-				+ ",executionMinTime=" + this.executionMinTime
-				+ ']';
+			+ "[query=" + query
+			+ ",cacheHitCount=" + cacheHitCount
+			+ ",cacheMissCount=" + cacheMissCount
+			+ ",cachePutCount=" + cachePutCount
+			+ ",planCacheHitCount=" + planCacheHitCount
+			+ ",planCacheMissCount=" + planCacheMissCount
+			+ ",executionCount=" + executionCount
+			+ ",executionRowCount=" + executionRowCount
+			+ ",executionAvgTime=" + getExecutionAvgTime()
+			+ ",executionMaxTime=" + executionMaxTime
+			+ ",executionMinTime=" + executionMinTime
+			+ ']';
 	}
 }

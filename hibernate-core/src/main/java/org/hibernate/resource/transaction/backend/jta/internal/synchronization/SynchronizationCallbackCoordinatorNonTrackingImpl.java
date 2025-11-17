@@ -1,24 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
-import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+import static org.hibernate.engine.transaction.internal.jta.JtaStatusHelper.isCommitted;
+import static org.hibernate.resource.transaction.backend.jta.internal.JtaLogging.JTA_LOGGER;
 
 /**
- * Manages callbacks from the {@link javax.transaction.Synchronization} registered by Hibernate.
- * 
+ * Manages callbacks from the {@link jakarta.transaction.Synchronization} registered by Hibernate.
+ *
  * @author Steve Ebersole
  */
 public class SynchronizationCallbackCoordinatorNonTrackingImpl implements SynchronizationCallbackCoordinator {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger(
-			SynchronizationCallbackCoordinatorNonTrackingImpl.class
-	);
 
 	private final SynchronizationCallbackTarget target;
 
@@ -39,23 +33,20 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 
 	@Override
 	public void beforeCompletion() {
-		log.trace( "Synchronization coordinator: beforeCompletion()" );
-
-		if ( !target.isActive() ) {
-			return;
+		JTA_LOGGER.synchronizationCoordinatorBeforeCompletion();
+		if ( target.isActive() ) {
+			target.beforeCompletion();
 		}
-		target.beforeCompletion();
 	}
 
 	@Override
 	public void afterCompletion(int status) {
-		log.tracef( "Synchronization coordinator: afterCompletion(status=%s)", status );
-		doAfterCompletion( JtaStatusHelper.isCommitted( status ), false );
+		JTA_LOGGER.synchronizationCoordinatorAfterCompletion( status );
+		doAfterCompletion( isCommitted( status ), false );
 	}
 
 	protected void doAfterCompletion(boolean successful, boolean delayed) {
-		log.tracef( "Synchronization coordinator: doAfterCompletion(successful=%s, delayed=%s)", successful, delayed );
-
+		JTA_LOGGER.synchronizationCoordinatorDoAfterCompletion( successful, delayed );
 		try {
 			target.afterCompletion( successful, delayed );
 		}

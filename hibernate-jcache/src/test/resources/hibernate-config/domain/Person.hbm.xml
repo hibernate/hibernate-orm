@@ -1,9 +1,7 @@
 <?xml version="1.0"?>
 <!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
-  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
   -->
 <!DOCTYPE hibernate-mapping PUBLIC
         "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
@@ -11,7 +9,7 @@
 
 <hibernate-mapping>
 
-    <class name="org.hibernate.jcache.test.domain.Person" table="PERSON" lazy="true">
+    <class name="org.hibernate.orm.test.jcache.domain.Person" table="PERSON" lazy="true">
         <id name="id" column="PERSON_ID">
             <generator class="native"/>
         </id>
@@ -22,7 +20,7 @@
         <list name="events" table="PERSON_EVENT" lazy="true">
             <key column="PERSON_ID"/>
             <list-index column="EVENT_ORDER"/>
-            <many-to-many column="EVENT_ID" class="org.hibernate.jcache.test.domain.Event"/>
+            <many-to-many column="EVENT_ID" class="org.hibernate.orm.test.jcache.domain.Event"/>
         </list>
 
         <bag name="talismans" table="PERSON_TALISMAN" lazy="true">
@@ -37,7 +35,7 @@
 
         <set name="phoneNumbers" cascade="all" lazy="true">
             <key column="PERSON_ID"/>
-            <one-to-many class="org.hibernate.jcache.test.domain.PhoneNumber"/>
+            <one-to-many class="org.hibernate.orm.test.jcache.domain.PhoneNumber"/>
         </set>
 
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.result;
 
@@ -17,8 +15,8 @@ public interface Output {
 	 * Determine if this return is a result (castable to {@link ResultSetOutput}).  The alternative is that it is
 	 * an update count (castable to {@link UpdateCountOutput}).
 	 *
-	 * @return {@code true} indicates that {@code this} can be safely cast to {@link ResultSetOutput}), other wise
+	 * @return {@code true} indicates that {@code this} can be safely cast to {@link ResultSetOutput}), otherwise
 	 * it can be cast to {@link UpdateCountOutput}.
 	 */
-	public boolean isResultSet();
+	boolean isResultSet();
 }

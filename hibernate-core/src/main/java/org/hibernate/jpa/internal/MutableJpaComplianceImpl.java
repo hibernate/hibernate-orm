@@ -1,66 +1,86 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.internal;
 
 import java.util.Map;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
+
+import static org.hibernate.cfg.JpaComplianceSettings.JPAQL_STRICT_COMPLIANCE;
+import static org.hibernate.cfg.JpaComplianceSettings.JPA_CACHING_COMPLIANCE;
+import static org.hibernate.cfg.JpaComplianceSettings.JPA_CLOSED_COMPLIANCE;
+import static org.hibernate.cfg.JpaComplianceSettings.JPA_COMPLIANCE;
+import static org.hibernate.cfg.JpaComplianceSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE;
+import static org.hibernate.cfg.JpaComplianceSettings.JPA_LOAD_BY_ID_COMPLIANCE;
+import static org.hibernate.cfg.JpaComplianceSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE;
+import static org.hibernate.cfg.JpaComplianceSettings.JPA_PROXY_COMPLIANCE;
+import static org.hibernate.cfg.JpaComplianceSettings.JPA_QUERY_COMPLIANCE;
+import static org.hibernate.cfg.JpaComplianceSettings.JPA_TRANSACTION_COMPLIANCE;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
+import static org.hibernate.internal.util.config.ConfigurationHelper.toBoolean;
 
 /**
  * @author Steve Ebersole
  */
 public class MutableJpaComplianceImpl implements MutableJpaCompliance {
+	private boolean orderByMappingCompliance;
+	private boolean proxyCompliance;
+	private boolean generatorNameScopeCompliance;
 	private boolean queryCompliance;
 	private boolean transactionCompliance;
-	private boolean listCompliance;
 	private boolean closedCompliance;
-	private boolean proxyCompliance;
 	private boolean cachingCompliance;
-	private final boolean globalGeneratorNameScopeCompliance;
+	private boolean loadByIdCompliance;
+
+	public MutableJpaComplianceImpl(Map<?,?> configurationSettings) {
+		this( configurationSettings,
+				getBoolean( JPA_COMPLIANCE, configurationSettings ) );
+	}
 
 	@SuppressWarnings("ConstantConditions")
-	public MutableJpaComplianceImpl(Map configurationSettings, boolean jpaByDefault) {
-		final Object legacyQueryCompliance = configurationSettings.get( AvailableSettings.JPAQL_STRICT_COMPLIANCE );
+	public MutableJpaComplianceImpl(Map<?,?> configurationSettings, boolean jpaByDefault) {
+		final Object legacyQueryCompliance = configurationSettings.get( JPAQL_STRICT_COMPLIANCE );
 
-		queryCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_QUERY_COMPLIANCE,
-				configurationSettings,
-				ConfigurationHelper.toBoolean( legacyQueryCompliance, jpaByDefault )
-		);
-		transactionCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_TRANSACTION_COMPLIANCE,
+		proxyCompliance = getBoolean(
+				JPA_PROXY_COMPLIANCE,
 				configurationSettings,
 				jpaByDefault
 		);
-		listCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_LIST_COMPLIANCE,
+		generatorNameScopeCompliance = getBoolean(
+				JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE,
 				configurationSettings,
 				jpaByDefault
 		);
-		closedCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_CLOSED_COMPLIANCE,
+		orderByMappingCompliance = getBoolean(
+				JPA_ORDER_BY_MAPPING_COMPLIANCE,
 				configurationSettings,
 				jpaByDefault
 		);
-		proxyCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_PROXY_COMPLIANCE,
+		queryCompliance = getBoolean(
+				JPA_QUERY_COMPLIANCE,
+				configurationSettings,
+				toBoolean( legacyQueryCompliance, jpaByDefault )
+		);
+		transactionCompliance = getBoolean(
+				JPA_TRANSACTION_COMPLIANCE,
 				configurationSettings,
 				jpaByDefault
 		);
-		cachingCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_CACHING_COMPLIANCE,
+		closedCompliance = getBoolean(
+				JPA_CLOSED_COMPLIANCE,
 				configurationSettings,
 				jpaByDefault
 		);
-		globalGeneratorNameScopeCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE,
+		cachingCompliance = getBoolean(
+				JPA_CACHING_COMPLIANCE,
+				configurationSettings,
+				jpaByDefault
+		);
+		loadByIdCompliance = getBoolean(
+				JPA_LOAD_BY_ID_COMPLIANCE,
 				configurationSettings,
 				jpaByDefault
 		);
@@ -76,9 +96,8 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 		return transactionCompliance;
 	}
 
-	@Override
-	public boolean isJpaListComplianceEnabled() {
-		return listCompliance;
+	public boolean isJpaCascadeComplianceEnabled() {
+		return true;
 	}
 
 	@Override
@@ -98,46 +117,76 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 
 	@Override
 	public boolean isGlobalGeneratorScopeEnabled() {
-		return globalGeneratorNameScopeCompliance;
+		return generatorNameScopeCompliance;
+	}
+
+	@Override
+	public boolean isJpaOrderByMappingComplianceEnabled() {
+		return orderByMappingCompliance;
+	}
+
+	@Override
+	public boolean isLoadByIdComplianceEnabled() {
+		return loadByIdCompliance;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Mutators
 
-	public void setQueryCompliance(boolean queryCompliance) {
-		this.queryCompliance = queryCompliance;
+	@Override
+	public void setCascadeCompliance(boolean cascadeCompliance) {
 	}
 
-	public void setTransactionCompliance(boolean transactionCompliance) {
-		this.transactionCompliance = transactionCompliance;
+	@Override
+	public void setOrderByMappingCompliance(boolean orderByMappingCompliance) {
+		this.orderByMappingCompliance = orderByMappingCompliance;
 	}
 
-	public void setListCompliance(boolean listCompliance) {
-		this.listCompliance = listCompliance;
-	}
-
-	public void setClosedCompliance(boolean closedCompliance) {
-		this.closedCompliance = closedCompliance;
-	}
-
+	@Override
 	public void setProxyCompliance(boolean proxyCompliance) {
 		this.proxyCompliance = proxyCompliance;
 	}
 
+	@Override
+	public void setGeneratorNameScopeCompliance(boolean enabled) {
+		this.generatorNameScopeCompliance = enabled;
+	}
+
+	public void setQueryCompliance(boolean queryCompliance) {
+		this.queryCompliance = queryCompliance;
+	}
+
+	@Override
+	public void setTransactionCompliance(boolean transactionCompliance) {
+		this.transactionCompliance = transactionCompliance;
+	}
+
+	@Override
+	public void setClosedCompliance(boolean closedCompliance) {
+		this.closedCompliance = closedCompliance;
+	}
+
+	@Override
 	public void setCachingCompliance(boolean cachingCompliance) {
 		this.cachingCompliance = cachingCompliance;
 	}
 
 	@Override
+	public void setLoadByIdCompliance(boolean enabled) {
+		this.loadByIdCompliance = enabled;
+	}
+
+	@Override
 	public JpaCompliance immutableCopy() {
-		JpaComplianceImpl.JpaComplianceBuilder builder = new JpaComplianceImpl.JpaComplianceBuilder();
-		builder.setQueryCompliance( queryCompliance )
-				.setTransactionCompliance( transactionCompliance )
-				.setListCompliance( listCompliance )
-				.setClosedCompliance( closedCompliance )
+		return new JpaComplianceImpl.JpaComplianceBuilder()
 				.setProxyCompliance( proxyCompliance )
+				.setOrderByMappingCompliance( orderByMappingCompliance )
+				.setGlobalGeneratorNameCompliance( generatorNameScopeCompliance )
+				.setQueryCompliance( queryCompliance )
+				.setTransactionCompliance( transactionCompliance )
+				.setClosedCompliance( closedCompliance )
 				.setCachingCompliance( cachingCompliance )
-				.setGlobalGeneratorNameCompliance( globalGeneratorNameScopeCompliance );
-		return builder.createJpaCompliance();
+				.setLoadByIdCompliance( loadByIdCompliance )
+				.createJpaCompliance();
 	}
 }

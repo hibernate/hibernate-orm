@@ -1,57 +1,56 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.tools;
 
-import java.util.Objects;
-
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
+
+import java.util.Objects;
+
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public abstract class EntityTools {
-	public static boolean entitiesEqual(SessionImplementor session, String entityName, Object obj1, Object obj2) {
+	public static boolean entitiesEqual(SharedSessionContractImplementor session, String entityName, Object obj1, Object obj2) {
 		final Object id1 = getIdentifier( session, entityName, obj1 );
 		final Object id2 = getIdentifier( session, entityName, obj2 );
 
 		return Objects.deepEquals( id1, id2 );
 	}
 
-	public static Object getIdentifier(SessionImplementor session, String entityName, Object obj) {
+	public static Object getIdentifier(SharedSessionContractImplementor session, String entityName, Object obj) {
 		if ( obj == null ) {
 			return null;
 		}
 
-		if ( obj instanceof HibernateProxy ) {
-			final HibernateProxy hibernateProxy = (HibernateProxy) obj;
-			return hibernateProxy.getHibernateLazyInitializer().getIdentifier();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( obj );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getInternalIdentifier();
 		}
 
 		return session.getEntityPersister( entityName, obj ).getIdentifier( obj, session );
 	}
 
-	public static Object getTargetFromProxy(SessionFactoryImplementor sessionFactoryImplementor, HibernateProxy proxy) {
-		if ( !proxy.getHibernateLazyInitializer().isUninitialized() || activeProxySession( proxy ) ) {
-			return proxy.getHibernateLazyInitializer().getImplementation();
+	public static Object getTargetFromProxy(final SessionFactoryImplementor sessionFactoryImplementor, final LazyInitializer lazyInitializer) {
+		if ( !lazyInitializer.isUninitialized() || activeProxySession( lazyInitializer ) ) {
+			return lazyInitializer.getImplementation();
 		}
 
-		final SharedSessionContractImplementor sessionImplementor = proxy.getHibernateLazyInitializer().getSession();
+		final SharedSessionContractImplementor sessionImplementor = lazyInitializer.getSession();
 		final Session tempSession = sessionImplementor == null
 				? sessionFactoryImplementor.openTemporarySession()
 				: sessionImplementor.getFactory().openTemporarySession();
 		try {
 			return tempSession.get(
-					proxy.getHibernateLazyInitializer().getEntityName(),
-					proxy.getHibernateLazyInitializer().getIdentifier()
+					lazyInitializer.getEntityName(),
+					lazyInitializer.getInternalIdentifier()
 			);
 		}
 		finally {
@@ -59,8 +58,8 @@ public abstract class EntityTools {
 		}
 	}
 
-	private static boolean activeProxySession(HibernateProxy proxy) {
-		final Session session = (Session) proxy.getHibernateLazyInitializer().getSession();
+	private static boolean activeProxySession(final LazyInitializer lazyInitializer) {
+		final Session session = (Session) lazyInitializer.getSession();
 		return session != null && session.isOpen() && session.isConnected();
 	}
 
@@ -71,13 +70,13 @@ public abstract class EntityTools {
 	 * @return Returns target class in case it has been wrapped with a proxy. If {@code null} reference is passed,
 	 *         method returns {@code null}.
 	 */
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public static <T> Class<T> getTargetClassIfProxied(Class<T> clazz) {
 		if ( clazz == null ) {
 			return null;
 		}
 		else if ( HibernateProxy.class.isAssignableFrom( clazz ) ) {
-			// Get the source class of Javassist proxy instance.
+			// Get the source class of the proxy instance.
 			return (Class<T>) clazz.getSuperclass();
 		}
 		return clazz;
@@ -86,8 +85,10 @@ public abstract class EntityTools {
 	/**
 	 * @return Java class mapped to specified entity name.
 	 */
-	public static Class getEntityClass(SessionImplementor sessionImplementor, String entityName) {
-		final EntityPersister entityPersister = sessionImplementor.getFactory().getMetamodel().entityPersister( entityName );
+	public static Class getEntityClass(SharedSessionContractImplementor sessionImplementor, String entityName) {
+		final EntityPersister entityPersister = sessionImplementor.getFactory()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
 		return entityPersister.getMappedClass();
 	}
 }

@@ -1,51 +1,100 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.ActionQueue;
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityHolder;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.DirtyCheckEvent;
 import org.hibernate.event.spi.DirtyCheckEventListener;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.persister.collection.CollectionPersister;
 
 /**
- * Defines the default dirty-check event listener used by hibernate for
- * checking the session for dirtiness in response to generated dirty-check
- * events.
+ * Determines if the current session holds modified state which
+ * would be synchronized with the database if the session were
+ * flushed. Approximately reproduces the logic that is executed
+ * on an {@link org.hibernate.event.spi.AutoFlushEvent}.
  *
- * @author Steve Ebersole
+ * @implNote Historically, {@link org.hibernate.Session#isDirty}
+ * was implemented to actually execute a partial flush and then
+ * return {@code true} if there were any resulting operations to
+ * be executed. This was extremely inefficient and side-effecty.
+ * The new implementation below is non-perfect and probably
+ * misses some subtleties, but it's I guess OK to view it as an
+ * approximation.
+ *
+ * @author Gavin King
  */
-public class DefaultDirtyCheckEventListener extends AbstractFlushingEventListener implements DirtyCheckEventListener {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultDirtyCheckEventListener.class );
+public class DefaultDirtyCheckEventListener implements DirtyCheckEventListener {
 
-	/**
-	 * Handle the given dirty-check event.
-	 * 
-	 * @param event The dirty-check event to be handled.
-	 * @throws HibernateException
-	 */
+	@Override
 	public void onDirtyCheck(DirtyCheckEvent event) throws HibernateException {
-		final ActionQueue actionQueue = event.getSession().getActionQueue();
-		int oldSize = actionQueue.numberOfCollectionRemovals();
+		final var session = event.getSession();
+		final var persistenceContext = session.getPersistenceContextInternal();
+		final var holdersByKey = persistenceContext.getEntityHoldersByKey();
+		if ( holdersByKey != null ) {
+			for ( var holder : holdersByKey.values() ) {
+				if ( isEntityDirty( holder, session ) ) {
+					event.setDirty( true );
+					return;
+				}
+			}
+		}
+		final var entriesByCollection = persistenceContext.getCollectionEntries();
+		if ( entriesByCollection != null ) {
+			for ( var entry : entriesByCollection.entrySet() ) {
+				if ( isCollectionDirty( entry.getKey(), entry.getValue().getLoadedPersister() ) ) {
+					event.setDirty( true );
+					return;
+				}
+			}
+		}
+	}
 
-		try {
-			flushEverythingToExecutions(event);
-			boolean wasNeeded = actionQueue.hasAnyQueuedActions();
-			if ( wasNeeded ) {
-				LOG.debug( "Session dirty" );
-			}
-			else {
-				LOG.debug( "Session not dirty" );
-			}
-			event.setDirty( wasNeeded );
+	private static boolean isEntityDirty(EntityHolder holder, EventSource session) {
+		final var entityEntry = holder.getEntityEntry();
+		if ( entityEntry == null ) {
+			// holders with no entity entry yet cannot contain dirty entities
+			return false;
 		}
-		finally {
-			actionQueue.clearFromFlushNeededCheck( oldSize );
+		final Status status = entityEntry.getStatus();
+		return switch ( status ) {
+			case GONE, READ_ONLY -> false;
+			case DELETED -> true;
+			case MANAGED -> isManagedEntityDirty( holder.getEntity(), entityEntry, session );
+			case SAVING, LOADING -> throw new AssertionFailure( "Unexpected status: " + status );
+		};
+	}
+
+	private static boolean isManagedEntityDirty(Object entity, EntityEntry entityEntry, EventSource session) {
+		if ( entityEntry.requiresDirtyCheck( entity ) ) { // takes into account CustomEntityDirtinessStrategy
+			final var persister = entityEntry.getPersister();
+			final var propertyValues =
+					entityEntry.getStatus() == Status.DELETED
+							? entityEntry.getDeletedState()
+							: persister.getValues( entity );
+			final var dirty =
+					persister.findDirty( propertyValues, entityEntry.getLoadedState(), entity, session );
+			return dirty != null;
 		}
+		else {
+			return false;
+		}
+	}
+
+	private static boolean isCollectionDirty(PersistentCollection<?> collection, CollectionPersister loadedPersister) {
+		return collection.isDirty()
+			|| collection.wasInitialized()
+				&& loadedPersister != null
+				&& loadedPersister.isMutable() //optimization
+//				&& !loadedPersister.isInverse() // even if it's inverse, could still result in a cache update
+				&& ( collection.isDirectlyAccessible() || loadedPersister.getElementType().isMutable() ) //optimization
+				&& !collection.equalsSnapshot( loadedPersister );
 	}
 }

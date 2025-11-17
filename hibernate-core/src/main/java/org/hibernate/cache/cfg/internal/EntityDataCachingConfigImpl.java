@@ -1,15 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.cfg.internal;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -24,14 +20,14 @@ public class EntityDataCachingConfigImpl
 		extends AbstractDomainDataCachingConfig
 		implements EntityDataCachingConfig {
 	private final NavigableRole navigableRole;
-	private final Supplier<Comparator> versionComparatorAccess;
+	private final Supplier<Comparator<?>> versionComparatorAccess;
 	private final boolean isEntityMutable;
 
 	private final Set<NavigableRole> cachedTypes = new HashSet<>();
 
 	public EntityDataCachingConfigImpl(
 			NavigableRole rootEntityName,
-			Supplier<Comparator> versionComparatorAccess,
+			Supplier<Comparator<?>> versionComparatorAccess,
 			boolean isEntityMutable,
 			AccessType accessType) {
 		super( accessType );
@@ -41,7 +37,7 @@ public class EntityDataCachingConfigImpl
 	}
 
 	@Override
-	public Supplier<Comparator> getVersionComparatorAccess() {
+	public Supplier<Comparator<?>> getVersionComparatorAccess() {
 		return versionComparatorAccess;
 	}
 

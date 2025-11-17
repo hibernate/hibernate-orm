@@ -1,15 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -20,18 +16,17 @@ import java.util.Set;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.entities.mapper.AbstractPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
-import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.property.access.spi.Setter;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -39,6 +34,7 @@ import org.hibernate.property.access.spi.Setter;
  * @author Chris Cranford
  */
 public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper {
+	protected final Configuration configuration;
 	protected final CommonCollectionMapperData commonCollectionMapperData;
 	protected final Class<? extends T> collectionClass;
 	protected final boolean ordinalInId;
@@ -47,11 +43,13 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 	private final Constructor<? extends T> proxyConstructor;
 
 	protected AbstractCollectionMapper(
+			Configuration configuration,
 			CommonCollectionMapperData commonCollectionMapperData,
 			Class<? extends T> collectionClass,
 			Class<? extends T> proxyClass,
 			boolean ordinalInId,
 			boolean revisionTypeInId) {
+		this.configuration = configuration;
 		this.commonCollectionMapperData = commonCollectionMapperData;
 		this.collectionClass = collectionClass;
 		this.ordinalInId = ordinalInId;
@@ -79,7 +77,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 	 * @param changed The changed collection element to map.
 	 */
 	protected abstract void mapToMapFromObject(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> idData,
 			Map<String, Object> data,
 			Object changed);
@@ -95,23 +93,23 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 	protected Map<String, Object> createIdMap(int ordinal) {
 		final Map<String, Object> idMap = new HashMap<>();
 		if ( ordinalInId ) {
-			idMap.put( commonCollectionMapperData.getVerEntCfg().getEmbeddableSetOrdinalPropertyName(), ordinal );
+			idMap.put( configuration.getEmbeddableSetOrdinalPropertyName(), ordinal );
 		}
 		return idMap;
 	}
 
 	protected void addCollectionChanges(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			List<PersistentCollectionChangeData> collectionChanges,
 			Set<Object> changed,
 			RevisionType revisionType,
-			Serializable id) {
+			Object id) {
 		int ordinal = 0;
 
 		for ( Object changedObj : changed ) {
 			final Map<String, Object> entityData = new HashMap<>();
 			final Map<String, Object> originalId = createIdMap( ordinal++ );
-			entityData.put( commonCollectionMapperData.getVerEntCfg().getOriginalIdPropName(), originalId );
+			entityData.put( configuration.getOriginalIdPropertyName(), originalId );
 
 			collectionChanges.add(
 					new PersistentCollectionChangeData(
@@ -124,21 +122,19 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 			// Mapping collection element and index (if present).
 			mapToMapFromObject( session, originalId, entityData, changedObj );
 
-			( revisionTypeInId ? originalId : entityData ).put(
-					commonCollectionMapperData.getVerEntCfg()
-							.getRevisionTypePropName(), revisionType
-			);
+			final Map<String, Object> dataMap = revisionTypeInId ? originalId : entityData;
+			dataMap.put( configuration.getRevisionTypePropertyName(), revisionType );
 		}
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public List<PersistentCollectionChangeData> mapCollectionChanges(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			String referencingPropertyName,
 			PersistentCollection newColl,
 			Serializable oldColl,
-			Serializable id) {
+			Object id) {
 		final PropertyData propertyData = commonCollectionMapperData.getCollectionReferencingPropertyData();
 		if ( !propertyData.getName().equals( referencingPropertyName ) ) {
 			return null;
@@ -149,7 +145,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 
 	@Override
 	public boolean mapToMapFromEntity(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
@@ -159,7 +155,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 
 	@Override
 	public void mapModifiedFlagsToMapFromEntity(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
@@ -225,7 +221,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 			boolean removed);
 
 	protected CollectionPersister resolveCollectionPersister(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			PersistentCollection collection) {
 		// First attempt to resolve the persister from the collection entry
 		if ( collection != null ) {
@@ -240,8 +236,8 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 
 		// Fallback to resolving the persister from the collection role
 		final CollectionPersister collectionPersister = session.getFactory()
-				.getMetamodel()
-				.collectionPersister( commonCollectionMapperData.getRole() );
+				.getMappingMetamodel()
+				.getCollectionDescriptor( commonCollectionMapperData.getRole() );
 
 		if ( collectionPersister == null ) {
 			throw new AuditException(
@@ -278,7 +274,26 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 			final Object primaryKey,
 			final AuditReaderImplementor versionsReader,
 			final Number revision) {
-		final String revisionTypePropertyName = enversService.getAuditEntitiesConfiguration().getRevisionTypePropName();
+		final Object collectionProxy = mapToEntityFromMap( enversService, data, primaryKey, versionsReader, revision );
+		final PropertyData collectionPropertyData = commonCollectionMapperData.getCollectionReferencingPropertyData();
+
+		if ( isDynamicComponentMap() ) {
+			final Map<String, Object> map = (Map<String, Object>) obj;
+			map.put( collectionPropertyData.getBeanName(), collectionProxy );
+		}
+		else {
+			setValueOnObject( collectionPropertyData, obj, collectionProxy, enversService.getServiceRegistry() );
+		}
+	}
+
+	@Override
+	public Object mapToEntityFromMap(
+			EnversService enversService,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision) {
+		final String revisionTypePropertyName = enversService.getConfig().getRevisionTypePropertyName();
 
 		// construct the collection proxy
 		final Object collectionProxy;
@@ -296,31 +311,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 		catch ( Exception e ) {
 			throw new AuditException( "Failed to construct collection proxy", e );
 		}
-
-		final PropertyData collectionPropertyData = commonCollectionMapperData.getCollectionReferencingPropertyData();
-
-		if ( isDynamicComponentMap() ) {
-			final Map<String, Object> map = (Map<String, Object>) obj;
-			map.put( collectionPropertyData.getBeanName(), collectionProxy );
-		}
-		else {
-			AccessController.doPrivileged(
-					new PrivilegedAction<Object>() {
-						@Override
-						public Object run() {
-							final Setter setter = ReflectionTools.getSetter(
-									obj.getClass(),
-									collectionPropertyData,
-									enversService.getServiceRegistry()
-							);
-
-							setter.set( obj, collectionProxy, null );
-
-							return null;
-						}
-					}
-			);
-		}
+		return collectionProxy;
 	}
 
 	/**
@@ -333,10 +324,10 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 	 * @return the persistent collection changes.
 	 */
 	protected abstract List<PersistentCollectionChangeData> mapCollectionChanges(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			PersistentCollection newColl,
 			Serializable oldColl,
-			Serializable id);
+			Object id);
 
 	@Override
 	public boolean hasPropertiesWithModifiedFlag() {

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal.exec;
 
@@ -11,6 +9,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
@@ -22,9 +21,8 @@ import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 public class ImprovedExtractionContextImpl implements ExtractionContext {
 	private final ServiceRegistry serviceRegistry;
 	private final JdbcEnvironment jdbcEnvironment;
+	private final SqlStringGenerationContext context;
 	private final DdlTransactionIsolator ddlTransactionIsolator;
-	private final Identifier defaultCatalog;
-	private final Identifier defaultSchema;
 
 	private final DatabaseObjectAccess databaseObjectAccess;
 
@@ -33,15 +31,13 @@ public class ImprovedExtractionContextImpl implements ExtractionContext {
 	public ImprovedExtractionContextImpl(
 			ServiceRegistry serviceRegistry,
 			JdbcEnvironment jdbcEnvironment,
+			SqlStringGenerationContext context,
 			DdlTransactionIsolator ddlTransactionIsolator,
-			Identifier defaultCatalog,
-			Identifier defaultSchema,
 			DatabaseObjectAccess databaseObjectAccess) {
 		this.serviceRegistry = serviceRegistry;
 		this.jdbcEnvironment = jdbcEnvironment;
+		this.context = context;
 		this.ddlTransactionIsolator = ddlTransactionIsolator;
-		this.defaultCatalog = defaultCatalog;
-		this.defaultSchema = defaultSchema;
 		this.databaseObjectAccess = databaseObjectAccess;
 	}
 
@@ -56,6 +52,11 @@ public class ImprovedExtractionContextImpl implements ExtractionContext {
 	}
 
 	@Override
+	public SqlStringGenerationContext getSqlStringGenerationContext() {
+		return context;
+	}
+
+	@Override
 	public Connection getJdbcConnection() {
 		return ddlTransactionIsolator.getIsolatedConnection();
 	}
@@ -67,10 +68,8 @@ public class ImprovedExtractionContextImpl implements ExtractionContext {
 				jdbcDatabaseMetaData = getJdbcConnection().getMetaData();
 			}
 			catch (SQLException e) {
-				throw jdbcEnvironment.getSqlExceptionHelper().convert(
-						e,
-						"Unable to obtain JDBC DatabaseMetaData"
-				);
+				throw jdbcEnvironment.getSqlExceptionHelper()
+						.convert( e, "Unable to obtain JDBC DatabaseMetaData" );
 			}
 		}
 		return jdbcDatabaseMetaData;
@@ -78,12 +77,12 @@ public class ImprovedExtractionContextImpl implements ExtractionContext {
 
 	@Override
 	public Identifier getDefaultCatalog() {
-		return defaultCatalog;
+		return context.getDefaultCatalog();
 	}
 
 	@Override
 	public Identifier getDefaultSchema() {
-		return defaultSchema;
+		return context.getDefaultSchema();
 	}
 
 	@Override

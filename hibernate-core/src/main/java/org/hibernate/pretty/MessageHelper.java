@@ -1,20 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.pretty;
 
-import java.io.Serializable;
-
+import org.hibernate.Internal;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * MessageHelper methods for rendering log messages relating to managed
@@ -23,6 +24,7 @@ import org.hibernate.type.Type;
  *
  * @author Max Andersen, Gavin King
  */
+@Internal
 public final class MessageHelper {
 
 	private MessageHelper() {
@@ -39,26 +41,24 @@ public final class MessageHelper {
 	 * @param id The entity id value.
 	 * @return An info string, in the form [FooBar#1].
 	 */
-	public static String infoString(String entityName, Serializable id) {
-		StringBuilder s = new StringBuilder();
-		s.append( '[' );
-		if( entityName == null ) {
-			s.append( "<null entity name>" );
+	public static String infoString(@Nullable String entityName, @Nullable Object id) {
+		final StringBuilder info = new StringBuilder();
+		info.append( '[' );
+		if ( entityName == null ) {
+			info.append( "unknown entity name" );
 		}
 		else {
-			s.append( entityName );
+			info.append( entityName );
 		}
-		s.append( '#' );
 
 		if ( id == null ) {
-			s.append( "<null>" );
+			info.append( " with null id" );
 		}
 		else {
-			s.append( id );
+			info.append( " with id '" ).append( id ).append( "'" );
 		}
-		s.append( ']' );
-
-		return s.toString();
+		info.append( ']' );
+		return info.toString();
 	}
 
 	/**
@@ -70,41 +70,40 @@ public final class MessageHelper {
 	 * @return An info string, in the form [FooBar#1]
 	 */
 	public static String infoString(
-			EntityPersister persister,
-			Object id, 
-			SessionFactoryImplementor factory) {
-		StringBuilder s = new StringBuilder();
-		s.append( '[' );
+			@Nullable EntityPersister persister,
+			@Nullable Object id,
+			@Nullable SessionFactoryImplementor factory) {
+		final StringBuilder info = new StringBuilder();
+		info.append( '[' );
 		Type idType;
 		if( persister == null ) {
-			s.append( "<null EntityPersister>" );
+			info.append( "unknown entity" );
 			idType = null;
 		}
 		else {
-			s.append( persister.getEntityName() );
+			info.append( persister.getEntityName() );
 			idType = persister.getIdentifierType();
 		}
-		s.append( '#' );
 
 		if ( id == null ) {
-			s.append( "<null>" );
+			info.append( " with null id" );
 		}
 		else {
+			info.append( " with id '" );
 			if ( idType == null ) {
-				s.append( id );
+				info.append( id );
+			}
+			else if ( factory != null ) {
+				info.append( idType.toLoggableString( id, factory ) );
 			}
 			else {
-				if ( factory != null ) {
-					s.append( idType.toLoggableString( id, factory ) );
-				}
-				else {
-					s.append( "<not loggable>" );
-				}
+				info.append( "<not loggable>" );
 			}
+			info.append( "'" );
 		}
-		s.append( ']' );
+		info.append( ']' );
 
-		return s.toString();
+		return info.toString();
 
 	}
 
@@ -118,29 +117,28 @@ public final class MessageHelper {
 	 * @return An info string, in the form [FooBar#1]
 	 */
 	public static String infoString(
-			EntityPersister persister, 
-			Object id, 
+			@Nullable EntityPersister persister,
+			@Nullable Object id,
 			Type identifierType,
 			SessionFactoryImplementor factory) {
-		StringBuilder s = new StringBuilder();
-		s.append( '[' );
+		final StringBuilder info = new StringBuilder();
+		info.append( '[' );
 		if( persister == null ) {
-			s.append( "<null EntityPersister>" );
+			info.append( "unknown entity" );
 		}
 		else {
-			s.append( persister.getEntityName() );
+			info.append( persister.getEntityName() );
 		}
-		s.append( '#' );
 
 		if ( id == null ) {
-			s.append( "<null>" );
+			info.append( " with null id" );
 		}
 		else {
-			s.append( identifierType.toLoggableString( id, factory ) );
+			info.append( " with id '" ).append( identifierType.toLoggableString( id, factory ) ).append( "'" );
 		}
-		s.append( ']' );
+		info.append( ']' );
 
-		return s.toString();
+		return info.toString();
 	}
 
 	/**
@@ -149,31 +147,31 @@ public final class MessageHelper {
 	 * @param persister The persister for the entities
 	 * @param ids The entity id values
 	 * @param factory The session factory
-	 * @return An info string, in the form [FooBar#<1,2,3>]
+	 * @return An info string, in the form [FooBar#&lt;1,2,3&gt;]
 	 */
 	public static String infoString(
-			EntityPersister persister, 
-			Serializable[] ids, 
+			@Nullable EntityPersister persister,
+			Object[] ids,
 			SessionFactoryImplementor factory) {
-		StringBuilder s = new StringBuilder();
-		s.append( '[' );
-		if( persister == null ) {
-			s.append( "<null EntityPersister>" );
+		final StringBuilder info = new StringBuilder();
+		info.append( '[' );
+		if ( persister == null ) {
+			info.append( "unknown entity" );
 		}
 		else {
-			s.append( persister.getEntityName() );
-			s.append( "#<" );
+			info.append( persister.getEntityName() );
+			info.append( " with ids " );
 			for ( int i=0; i<ids.length; i++ ) {
-				s.append( persister.getIdentifierType().toLoggableString( ids[i], factory ) );
+				info.append( "'" )
+					.append( persister.getIdentifierType().toLoggableString( ids[i], factory ) )
+					.append( "'" );
 				if ( i < ids.length-1 ) {
-					s.append( ", " );
+					info.append( ", " );
 				}
 			}
-			s.append( '>' );
 		}
-		s.append( ']' );
-
-		return s.toString();
+		info.append( ']' );
+		return info.toString();
 
 	}
 
@@ -183,17 +181,17 @@ public final class MessageHelper {
 	 * @param persister The persister.
 	 * @return An info string, in the form [FooBar]
 	 */
-	public static String infoString(EntityPersister persister) {
-		StringBuilder s = new StringBuilder();
-		s.append( '[' );
+	public static String infoString(@Nullable EntityPersister persister) {
+		final StringBuilder info = new StringBuilder();
+		info.append( '[' );
 		if ( persister == null ) {
-			s.append( "<null EntityPersister>" );
+			info.append( "unknown entity" );
 		}
 		else {
-			s.append( persister.getEntityName() );
+			info.append( persister.getEntityName() );
 		}
-		s.append( ']' );
-		return s.toString();
+		info.append( ']' );
+		return info.toString();
 	}
 
 	/**
@@ -205,27 +203,26 @@ public final class MessageHelper {
 	 * @param key The property value.
 	 * @return An info string, in the form [Foo.bars#1]
 	 */
-	public static String infoString(String entityName, String propertyName, Object key) {
-		StringBuilder s = new StringBuilder()
+	public static String infoString(String entityName, String propertyName, @Nullable Object key) {
+		final StringBuilder info = new StringBuilder()
 				.append( '[' )
 				.append( entityName )
 				.append( '.' )
-				.append( propertyName )
-				.append( '#' );
+				.append( propertyName );
 
 		if ( key == null ) {
-			s.append( "<null>" );
+			info.append( " with null owner id" );
 		}
 		else {
-			s.append( key );
+			info.append( " with owner id '" ).append( key ).append( "'" );
 		}
-		s.append( ']' );
-		return s.toString();
+		info.append( ']' );
+		return info.toString();
 	}
 
 
 	// collections ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	
+
 	/**
 	 * Generate an info message string relating to a particular managed
 	 * collection.  Attempts to intelligently handle property-refs issues
@@ -237,41 +234,40 @@ public final class MessageHelper {
 	 * @param session The session
 	 * @return An info string, in the form [Foo.bars#1]
 	 */
-	public static String collectionInfoString( 
-			CollectionPersister persister,
-			PersistentCollection collection,
-			Serializable collectionKey,
+	public static String collectionInfoString(
+			@Nullable CollectionPersister persister,
+			@Nullable PersistentCollection<?> collection,
+			Object collectionKey,
 			SharedSessionContractImplementor session ) {
-		
-		StringBuilder s = new StringBuilder();
-		s.append( '[' );
+		final StringBuilder info = new StringBuilder();
+		info.append( '[' );
 		if ( persister == null ) {
-			s.append( "<unreferenced>" );
+			info.append( "unreferenced collection" );
 		}
 		else {
-			s.append( persister.getRole() );
-			s.append( '#' );
-			
-			Type ownerIdentifierType = persister.getOwnerEntityPersister()
-					.getIdentifierType();
-			Serializable ownerKey;
+			info.append( persister.getRole() );
+			final Type ownerIdentifierType =
+					persister.getOwnerEntityPersister().getIdentifierType();
+			final Object ownerKey;
 			// TODO: Is it redundant to attempt to use the collectionKey,
 			// or is always using the owner id sufficient?
-			if ( collectionKey.getClass().isAssignableFrom( 
+			if ( collectionKey.getClass().isAssignableFrom(
 					ownerIdentifierType.getReturnedClass() ) ) {
 				ownerKey = collectionKey;
 			}
 			else {
-				Object collectionOwner = collection == null ? null : collection.getOwner();
-				EntityEntry entry = collectionOwner == null ? null : session.getPersistenceContextInternal().getEntry(collectionOwner);
+				final Object collectionOwner = collection == null ? null
+						: collection.getOwner();
+				final EntityEntry entry = collectionOwner == null ? null
+						: session.getPersistenceContextInternal().getEntry( collectionOwner );
 				ownerKey = entry == null ? null : entry.getId();
 			}
-			s.append( ownerIdentifierType.toLoggableString( 
-					ownerKey, session.getFactory() ) );
+			info.append( " with owner id '" )
+					.append( ownerIdentifierType.toLoggableString( ownerKey, session.getFactory() ) )
+					.append( "'" );
 		}
-		s.append( ']' );
-
-		return s.toString();
+		info.append( ']' );
+		return info.toString();
 	}
 
 	/**
@@ -281,30 +277,31 @@ public final class MessageHelper {
 	 * @param persister The persister for the collections
 	 * @param ids The id values of the owners
 	 * @param factory The session factory
-	 * @return An info string, in the form [Foo.bars#<1,2,3>]
+	 * @return An info string, in the form [Foo.bars#&lt;1,2,3&gt;]
 	 */
 	public static String collectionInfoString(
-			CollectionPersister persister, 
-			Serializable[] ids, 
+			@Nullable CollectionPersister persister,
+			Object[] ids,
 			SessionFactoryImplementor factory) {
-		StringBuilder s = new StringBuilder();
-		s.append( '[' );
+		final StringBuilder info = new StringBuilder();
+		info.append( '[' );
 		if ( persister == null ) {
-			s.append( "<unreferenced>" );
+			info.append( "unreferenced collection" );
 		}
 		else {
-			s.append( persister.getRole() );
-			s.append( "#<" );
+			info.append( persister.getRole() );
+			info.append( " with owner ids " );
 			for ( int i = 0; i < ids.length; i++ ) {
-				addIdToCollectionInfoString( persister, ids[i], factory, s );
+				info.append( "'" );
+				addIdToCollectionInfoString( persister, ids[i], factory, info );
+				info.append( "'" );
 				if ( i < ids.length-1 ) {
-					s.append( ", " );
+					info.append( ", " );
 				}
 			}
-			s.append( '>' );
 		}
-		s.append( ']' );
-		return s.toString();
+		info.append( ']' );
+		return info.toString();
 	}
 
 	/**
@@ -317,33 +314,32 @@ public final class MessageHelper {
 	 * @return An info string, in the form [Foo.bars#1]
 	 */
 	public static String collectionInfoString(
-			CollectionPersister persister, 
-			Serializable id, 
+			@Nullable CollectionPersister persister,
+			@Nullable Object id,
 			SessionFactoryImplementor factory) {
-		StringBuilder s = new StringBuilder();
-		s.append( '[' );
+		final StringBuilder info = new StringBuilder();
+		info.append( '[' );
 		if ( persister == null ) {
-			s.append( "<unreferenced>" );
+			info.append( "unreferenced collection" );
 		}
 		else {
-			s.append( persister.getRole() );
-			s.append( '#' );
-
+			info.append( persister.getRole() );
 			if ( id == null ) {
-				s.append( "<null>" );
+				info.append( " with null owner id" );
 			}
 			else {
-				addIdToCollectionInfoString( persister, id, factory, s );
+				info.append( " with owner id '" );
+				addIdToCollectionInfoString( persister, id, factory, info );
+				info.append( "'" );
 			}
 		}
-		s.append( ']' );
-
-		return s.toString();
+		info.append( ']' );
+		return info.toString();
 	}
-	
+
 	private static void addIdToCollectionInfoString(
 			CollectionPersister persister,
-			Serializable id,
+			Object id,
 			SessionFactoryImplementor factory,
 			StringBuilder s ) {
 		// Need to use the identifier type of the collection owner
@@ -353,16 +349,16 @@ public final class MessageHelper {
 		// Also need to check that the expected identifier type matches
 		// the given ID.  Due to property-ref keys, the collection key
 		// may not be the owner key.
-		Type ownerIdentifierType = persister.getOwnerEntityPersister()
-				.getIdentifierType();
-		if ( id.getClass().isAssignableFrom( 
+		final Type ownerIdentifierType =
+				persister.getOwnerEntityPersister().getIdentifierType();
+		if ( id.getClass().isAssignableFrom(
 				ownerIdentifierType.getReturnedClass() ) ) {
 			s.append( ownerIdentifierType.toLoggableString( id, factory ) );
 		}
 		else {
 			// TODO: This is a crappy backup if a property-ref is used.
 			// If the reference is an object w/o toString(), this isn't going to work.
-			s.append( id.toString() );
+			s.append( id );
 		}
 	}
 
@@ -374,25 +370,32 @@ public final class MessageHelper {
 	 * @param id The id value of the owner
 	 * @return An info string, in the form [Foo.bars#1]
 	 */
-	public static String collectionInfoString(String role, Serializable id) {
-		StringBuilder s = new StringBuilder();
-		s.append( '[' );
+	public static String collectionInfoString(@Nullable String role, @Nullable Object id) {
+		final StringBuilder info = new StringBuilder();
+		info.append( '[' );
 		if( role == null ) {
-			s.append( "<unreferenced>" );
+			info.append( "unreferenced collection" );
 		}
 		else {
-			s.append( role );
-			s.append( '#' );
-
+			info.append( role );
 			if ( id == null ) {
-				s.append( "<null>" );
+				info.append( " with null owner id" );
 			}
 			else {
-				s.append( id );
+				info.append( " with owner id '" ).append( id ).append( "'" );
 			}
 		}
-		s.append( ']' );
-		return s.toString();
+		info.append( ']' );
+		return info.toString();
 	}
 
+	public static String collectionInfoString(PluralAttributeMapping loadable, Object key) {
+		final CollectionPersister collectionDescriptor = loadable.getCollectionDescriptor();
+		return collectionInfoString( collectionDescriptor, key, collectionDescriptor.getFactory() );
+	}
+
+	public static String infoString(EntityMappingType loadable, Object id) {
+		final EntityPersister persister = loadable.getEntityPersister();
+		return infoString( persister, id, persister.getFactory() );
+	}
 }

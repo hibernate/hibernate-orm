@@ -1,14 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 
 import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.description.field.FieldDescription;
@@ -27,17 +24,20 @@ abstract class FieldWriterAppender implements ByteCodeAppender {
 
 	protected final FieldDescription.InDefinedShape persistentFieldAsDefined;
 
-	private FieldWriterAppender(TypeDescription managedCtClass, FieldDescription.InDefinedShape persistentFieldAsDefined) {
+	protected final EnhancerImplConstants constants;
+
+	private FieldWriterAppender(TypeDescription managedCtClass, FieldDescription.InDefinedShape persistentFieldAsDefined, EnhancerImplConstants constants) {
 		this.managedCtClass = managedCtClass;
 		this.persistentFieldAsDefined = persistentFieldAsDefined;
+		this.constants = constants;
 	}
 
-	static ByteCodeAppender of(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField) {
+	static ByteCodeAppender of(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField, EnhancerImplConstants constants) {
 		if ( !persistentField.isVisibleTo( managedCtClass ) ) {
-			return new MethodDispatching( managedCtClass, persistentField.asDefined() );
+			return new MethodDispatching( managedCtClass, persistentField.asDefined(), constants );
 		}
 		else {
-			return new FieldWriting( managedCtClass, persistentField.asDefined() );
+			return new FieldWriting( managedCtClass, persistentField.asDefined(), constants );
 		}
 	}
 
@@ -55,7 +55,7 @@ abstract class FieldWriterAppender implements ByteCodeAppender {
 				Opcodes.INVOKEVIRTUAL,
 				managedCtClass.getInternalName(),
 				EnhancerConstants.INTERCEPTOR_GETTER_NAME,
-				Type.getMethodDescriptor( Type.getType( PersistentAttributeInterceptor.class ) ),
+				constants.methodDescriptor_getInterceptor,
 				false
 		);
 		Label noInterceptor = new Label();
@@ -68,7 +68,7 @@ abstract class FieldWriterAppender implements ByteCodeAppender {
 				Opcodes.INVOKEVIRTUAL,
 				managedCtClass.getInternalName(),
 				EnhancerConstants.INTERCEPTOR_GETTER_NAME,
-				Type.getMethodDescriptor( Type.getType( PersistentAttributeInterceptor.class ) ),
+				constants.methodDescriptor_getInterceptor,
 				false
 		);
 		// .writeXXX( self, fieldName, field, arg1 );
@@ -79,7 +79,7 @@ abstract class FieldWriterAppender implements ByteCodeAppender {
 		methodVisitor.visitVarInsn( Type.getType( dispatcherType.getDescriptor() ).getOpcode( Opcodes.ILOAD ), 1 );
 		methodVisitor.visitMethodInsn(
 				Opcodes.INVOKEINTERFACE,
-				Type.getInternalName( PersistentAttributeInterceptor.class ),
+				constants.internalName_PersistentAttributeInterceptor,
 				"write" + EnhancerImpl.capitalize( dispatcherType.getSimpleName() ),
 				Type.getMethodDescriptor(
 						Type.getType( dispatcherType.getDescriptor() ),
@@ -121,8 +121,8 @@ abstract class FieldWriterAppender implements ByteCodeAppender {
 
 	private static class FieldWriting extends FieldWriterAppender {
 
-		private FieldWriting(TypeDescription managedCtClass, FieldDescription.InDefinedShape persistentFieldAsDefined) {
-			super( managedCtClass, persistentFieldAsDefined );
+		private FieldWriting(TypeDescription managedCtClass, FieldDescription.InDefinedShape persistentFieldAsDefined, EnhancerImplConstants constants) {
+			super( managedCtClass, persistentFieldAsDefined, constants );
 		}
 
 		@Override
@@ -148,8 +148,8 @@ abstract class FieldWriterAppender implements ByteCodeAppender {
 
 	private static class MethodDispatching extends FieldWriterAppender {
 
-		private MethodDispatching(TypeDescription managedCtClass, FieldDescription.InDefinedShape persistentFieldAsDefined) {
-			super( managedCtClass, persistentFieldAsDefined );
+		private MethodDispatching(TypeDescription managedCtClass, FieldDescription.InDefinedShape persistentFieldAsDefined, EnhancerImplConstants constants) {
+			super( managedCtClass, persistentFieldAsDefined, constants );
 		}
 
 		@Override

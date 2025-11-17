@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.cfgxml.internal;
 
@@ -16,13 +14,14 @@ import java.util.Properties;
 
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.jaxb.Origin;
-import org.hibernate.boot.jaxb.SourceType;
-import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgHibernateConfiguration;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.config.ConfigurationException;
-import org.jboss.logging.Logger;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+import static org.hibernate.boot.jaxb.SourceType.FILE;
+import static org.hibernate.boot.jaxb.SourceType.RESOURCE;
+import static org.hibernate.boot.jaxb.SourceType.URL;
 
 /**
  * Loads {@code cfg.xml} files.
@@ -30,12 +29,11 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ConfigLoader {
-	private static final Logger log = Logger.getLogger( ConfigLoader.class );
 
 	private final BootstrapServiceRegistry bootstrapServiceRegistry;
 
-	private ValueHolder<JaxbCfgProcessor> jaxbProcessorHolder = new ValueHolder<JaxbCfgProcessor>(
-			new ValueHolder.DeferredInitializer<JaxbCfgProcessor>() {
+	private final ValueHolder<JaxbCfgProcessor> jaxbProcessorHolder = new ValueHolder<>(
+			new ValueHolder.DeferredInitializer<>() {
 				@Override
 				public JaxbCfgProcessor initialize() {
 					return new JaxbCfgProcessor( bootstrapServiceRegistry.getService( ClassLoaderService.class ) );
@@ -47,38 +45,37 @@ public class ConfigLoader {
 		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
 	}
 
+	private InputStream locateStream(String cfgXmlResourceName) {
+		return bootstrapServiceRegistry.requireService( ClassLoaderService.class )
+				.locateResourceStream( cfgXmlResourceName );
+	}
+
 	public LoadedConfig loadConfigXmlResource(String cfgXmlResourceName) {
-		final InputStream stream = bootstrapServiceRegistry.getService( ClassLoaderService.class ).locateResourceStream( cfgXmlResourceName );
+		final var stream = locateStream( cfgXmlResourceName );
 		if ( stream == null ) {
 			throw new ConfigurationException( "Could not locate cfg.xml resource [" + cfgXmlResourceName + "]" );
 		}
 
 		try {
-			final JaxbCfgHibernateConfiguration jaxbCfg = jaxbProcessorHolder.getValue().unmarshal(
-					stream,
-					new Origin( SourceType.RESOURCE, cfgXmlResourceName )
-			);
-
-			return LoadedConfig.consume( jaxbCfg );
+			return LoadedConfig.consume( jaxbProcessorHolder.getValue()
+					.unmarshal( stream, new Origin( RESOURCE, cfgXmlResourceName ) ) );
 		}
 		finally {
 			try {
 				stream.close();
 			}
 			catch (IOException e) {
-				log.debug( "Unable to close cfg.xml resource stream", e );
+				BOOT_LOGGER.unableToCloseCfgXmlResourceStream( e );
 			}
 		}
 	}
 
 	public LoadedConfig loadConfigXmlFile(File cfgXmlFile) {
 		try {
-			final JaxbCfgHibernateConfiguration jaxbCfg = jaxbProcessorHolder.getValue().unmarshal(
-					new FileInputStream( cfgXmlFile ),
-					new Origin( SourceType.FILE, cfgXmlFile.getAbsolutePath() )
-			);
 
-			return LoadedConfig.consume( jaxbCfg );
+			return LoadedConfig.consume( jaxbProcessorHolder.getValue()
+					.unmarshal( new FileInputStream( cfgXmlFile ),
+							new Origin( FILE, cfgXmlFile.getAbsolutePath() ) ) );
 		}
 		catch (FileNotFoundException e) {
 			throw new ConfigurationException(
@@ -89,21 +86,17 @@ public class ConfigLoader {
 
 	public LoadedConfig loadConfigXmlUrl(URL url) {
 		try {
-			final InputStream stream = url.openStream();
+			final var stream = url.openStream();
 			try {
-				final JaxbCfgHibernateConfiguration  jaxbCfg = jaxbProcessorHolder.getValue().unmarshal(
-						stream,
-						new Origin( SourceType.URL, url.toExternalForm() )
-				);
-
-				return LoadedConfig.consume( jaxbCfg );
+				return LoadedConfig.consume( jaxbProcessorHolder.getValue()
+						.unmarshal( stream, new Origin( URL, url.toExternalForm() ) ) );
 			}
 			finally {
 				try {
 					stream.close();
 				}
 				catch (IOException e) {
-					log.debug( "Unable to close cfg.xml URL stream", e );
+					BOOT_LOGGER.unableToCloseCfgXmlUrlStream( e );
 				}
 			}
 		}
@@ -113,16 +106,13 @@ public class ConfigLoader {
 	}
 
 	public Properties loadProperties(String resourceName) {
-		final InputStream stream = bootstrapServiceRegistry.getService( ClassLoaderService.class ).locateResourceStream( resourceName );
-
+		final var stream = locateStream( resourceName );
 		if ( stream == null ) {
 			throw new ConfigurationException( "Unable to apply settings from properties file [" + resourceName + "]" );
 		}
 
 		try {
-			Properties properties = new Properties();
-			properties.load( stream );
-			return properties;
+			return loadProperties( stream );
 		}
 		catch (IOException e) {
 			throw new ConfigurationException( "Unable to apply settings from properties file [" + resourceName + "]", e );
@@ -132,21 +122,16 @@ public class ConfigLoader {
 				stream.close();
 			}
 			catch (IOException e) {
-				log.debug(
-						String.format( "Unable to close properties file [%s] stream", resourceName ),
-						e
-				);
+				BOOT_LOGGER.unableToClosePropertiesFileStream( resourceName, e );
 			}
 		}
 	}
 
 	public Properties loadProperties(File file) {
 		try {
-			final InputStream stream = new FileInputStream( file );
+			final var stream = new FileInputStream( file );
 			try {
-				Properties properties = new Properties();
-				properties.load( stream );
-				return properties;
+				return loadProperties( stream );
 			}
 			catch (IOException e) {
 				throw new ConfigurationException(
@@ -159,19 +144,21 @@ public class ConfigLoader {
 					stream.close();
 				}
 				catch (IOException e) {
-					log.debug(
-							String.format( "Unable to close properties file [%s] stream", file.getAbsolutePath() ),
-							e
-					);
+					BOOT_LOGGER.unableToClosePropertiesFileStream( file.getAbsolutePath(), e );
 				}
 			}
 		}
 		catch (FileNotFoundException e) {
 			throw new ConfigurationException(
-					"Unable locate specified properties file [" + file.getAbsolutePath() + "]",
+					"Unable to locate specified properties file [" + file.getAbsolutePath() + "]",
 					e
 			);
 		}
 	}
 
+	private static Properties loadProperties(InputStream stream) throws IOException {
+		final var properties = new Properties();
+		properties.load( stream );
+		return properties;
+	}
 }

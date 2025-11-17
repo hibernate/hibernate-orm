@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -16,10 +14,11 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 
 import org.jboss.logging.Logger;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
- * Think of this as the composite modeling of a graph
- * and the semantic.
- *
+ * Think of this as the composite modeling of a graph and the semantic.
+ * <p>
  * Its graph and semantic can be obtained by {@link #getGraph()} and
  * {@link #getSemantic()}
  *
@@ -29,12 +28,12 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class EffectiveEntityGraph implements AppliedGraph, Serializable {
-	private static final Logger log = Logger.getLogger( EffectiveEntityGraph.class );
+	private static final Logger LOG = Logger.getLogger( EffectiveEntityGraph.class );
 
 	private final boolean allowOverwrite;
 
-	private GraphSemantic semantic;
-	private RootGraphImplementor<?> graph;
+	private @Nullable GraphSemantic semantic;
+	private @Nullable RootGraphImplementor<?> graph;
 
 	/**
 	 * @implSpec I explicitly made this constructor package protected
@@ -54,18 +53,17 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	 * @implSpec See {@link #EffectiveEntityGraph}
 	 */
 	@Incubating
-	@SuppressWarnings("WeakerAccess")
 	public EffectiveEntityGraph(boolean allowOverwrite) {
 		this.allowOverwrite = allowOverwrite;
 	}
 
 	@Override
-	public GraphSemantic getSemantic() {
+	public @Nullable GraphSemantic getSemantic() {
 		return semantic;
 	}
 
 	@Override
-	public RootGraphImplementor<?> getGraph() {
+	public @Nullable RootGraphImplementor<?> getGraph() {
 		return graph;
 	}
 
@@ -80,11 +78,8 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 		if ( semantic == null ) {
 			throw new IllegalArgumentException( "Graph semantic cannot be null" );
 		}
-
 		verifyWriteability();
-
-		log.debugf( "Setting effective graph state [%s] : %s", semantic.name(), graph );
-
+		LOG.tracef( "Setting effective graph state [%s] : %s", semantic.name(), graph );
 		this.semantic = semantic;
 		this.graph = graph;
 	}
@@ -101,44 +96,42 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	 * Apply a graph and semantic based on configuration properties or hints
 	 * based on {@link GraphSemantic#getJpaHintName()} for {@link GraphSemantic#LOAD} or
 	 * {@link GraphSemantic#FETCH}.
-	 *
+	 * <p>
 	 * The semantic is required.  The graph
 	 * may be null, but that should generally be considered mis-use.
 	 *
 	 * @throws IllegalArgumentException If both kinds of graphs were present in the properties/hints
 	 * @throws IllegalStateException If previous state is still available (hasn't been cleared).
 	 */
-	public void applyConfiguredGraph(Map<String,?> properties) {
-		if ( properties == null || properties.isEmpty() ) {
-			return;
-		}
-
-		final RootGraphImplementor fetchHint = (RootGraphImplementor) properties.get( GraphSemantic.FETCH.getJpaHintName() );
-		final RootGraphImplementor loadHint = (RootGraphImplementor) properties.get( GraphSemantic.LOAD.getJpaHintName() );
-
-		if ( fetchHint == null && loadHint == null ) {
-			log.debugf( "Neither LOAD nor FETCH graph were found in properties" );
-			return;
-		}
-
-		if ( fetchHint != null ) {
-			if ( loadHint != null ) {
-				// can't have both
-				throw new IllegalArgumentException(
-						"Passed properties contained both a LOAD and a FETCH graph which is illegal - " +
-								"only one should be passed"
-				);
+	public void applyConfiguredGraph(@Nullable Map<String,?> properties) {
+		if ( properties != null && !properties.isEmpty() ) {
+			var fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJpaHintName() );
+			var loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJpaHintName() );
+			if ( fetchHint == null ) {
+				fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJakartaHintName() );
+			}
+			if ( loadHint == null ) {
+				loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJakartaHintName() );
 			}
 
-			applyGraph( fetchHint, GraphSemantic.FETCH );
-		}
-		else {
-			applyGraph( loadHint, GraphSemantic.LOAD );
+			if ( fetchHint != null ) {
+				if ( loadHint != null ) {
+					// can't have both
+					throw new IllegalArgumentException(
+							"Passed properties contained both a LOAD and a FETCH graph which is illegal - " +
+							"only one should be passed"
+					);
+				}
+				applyGraph( fetchHint, GraphSemantic.FETCH );
+			}
+			else if ( loadHint != null ) {
+				applyGraph( loadHint, GraphSemantic.LOAD );
+			}
 		}
 	}
 
 	public void clear() {
-		this.semantic = null;
-		this.graph = null;
+		semantic = null;
+		graph = null;
 	}
 }

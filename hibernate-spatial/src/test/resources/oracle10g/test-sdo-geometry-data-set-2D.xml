@@ -1,8 +1,6 @@
 <!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
-  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
   -->
 
 <!--
@@ -18,6 +16,13 @@
         <type>POINT</type>
         <sdo>SDO_GEOMETRY(2001, 4326, NULL, SDO_ELEM_INFO_ARRAY(1,1,1), SDO_ORDINATE_ARRAY(10.0, 5.0))</sdo>
         <wkt>SRID=4326;POINT(10 5)</wkt>
+    </Element>
+
+    <Element>
+        <id>22</id>
+        <type>POINT</type>
+        <sdo>SDO_GEOMETRY(2001, 4326, NULL, SDO_ELEM_INFO_ARRAY(1,1,1), SDO_ORDINATE_ARRAY(5.0, 5.0))</sdo>
+        <wkt>SRID=4326;POINT(5 5)</wkt>
     </Element>
 
     <Element>

@@ -1,0 +1,72 @@
+= Mapping model
+
+The mapping model encompasses the complete mapping of objects to/from database.  It is the
+model used to drive read and write operations.
+
+[NOTE]
+----
+As of 6.0, only read operations are implemented to use this mapping model.  Future versions will hopefully
+move writing to use this mapping model as well
+----
+
+[plantuml,MasppingTypeSystem,png]
+.Mapping type model (org.hibernate.metamodel.mapping)
+....
+@startuml
+skinparam handwritten true
+
+interface MappingType
+interface ManagedMappingType
+
+interface MappingModelExpressible
+interface ValueMapping
+interface BasicType
+interface ModelPart
+interface ModelPartContainer
+
+MappingType <|-- BasicType
+MappingType <|-- JdbcMapping
+MappingType <|-- ManagedMappingType
+MappingType <|-- CollectionMappingType
+
+ManagedMappingType <|-- EmbeddableMappingType
+ManagedMappingType <|-- EntityMappingType
+
+MappingModelExpressible <|-- ValueMapping
+MappingModelExpressible <|-- ModelPart
+
+ValueMapping <|-- BasicType
+
+ModelPart <|-- BasicValuedModelPart
+ModelPart <|-- EmbeddableValuedModelPart
+ModelPart <|-- EntityValuedModelPart
+ModelPart <|-- AttributeMapping
+ModelPart <|-- EntityIdentifierMapping
+ModelPart <|-- EntityVersionMapping
+ModelPart <|-- EntityDiscriminatorMapping
+ModelPart <|-- CollectionPart
+
+ModelPartContainer <|-- EntityMappingType
+ModelPartContainer <|-- EmbeddableMappingType
+
+@enduml
+....
+
+== Relationship with legacy "persister walking" SPI
+
+`org.hibernate.metamodel.model.mapping` contract corollaries in `org.hibernate.persister.walking`:
+
+EntityMapping::EntityDefinition
+EmbeddableMapping::CompositionDefinition
+AttributeMapping::AttributeDefinition
+EntityIdentifierMapping::EntityIdentifierDefinition
+
+
+== AllowableParameterType
+
+`BindableType` is a contract that defines types that are valid for parameter binding in terms of an SQM query.
+
+AT some point this needs to be "resolved" to a ValueMapping/Type/Bindable when generating the SQL AST and executing.
+
+One option is to have the `BindableType` be resolved first to a `SqmExpressible`
+`SqmExpressibleAllowableParameterType#resolveSqmExpressible`

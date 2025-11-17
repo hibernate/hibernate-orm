@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -17,6 +15,8 @@ import org.hibernate.boot.model.source.spi.FilterSource;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.StringHelper;
 
+import static org.hibernate.internal.util.StringHelper.isBlank;
+
 /**
  * @author Steve Ebersole
  */
@@ -26,8 +26,8 @@ public class FilterSourceImpl
 	private final String name;
 	private final String condition;
 	private final boolean autoAliasInjection;
-	private final Map<String, String> aliasTableMap = new HashMap<String, String>();
-	private final Map<String, String> aliasEntityMap = new HashMap<String, String>();
+	private final Map<String, String> aliasTableMap = new HashMap<>();
+	private final Map<String, String> aliasEntityMap = new HashMap<>();
 
 	public FilterSourceImpl(
 			MappingDocument mappingDocument,
@@ -41,10 +41,9 @@ public class FilterSourceImpl
 		String conditionContent = null;
 
 		for ( Serializable content : filterElement.getContent() ) {
-			if ( String.class.isInstance( content ) ) {
-				final String str = content.toString();
-				if ( !StringHelper.isBlank( str ) ) {
-					conditionContent = str.trim();
+			if ( content instanceof String string ) {
+				if ( !isBlank( string ) ) {
+					conditionContent = string.trim();
 				}
 			}
 			else {

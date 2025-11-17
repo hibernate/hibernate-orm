@@ -1,6 +1,7 @@
 [[mapping-types]]
 === Mapping types
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-mapping: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping
 :extrasdir: extras/types
 
 Hibernate understands both the Java and JDBC representations of application data.
@@ -22,14 +23,14 @@ To help understand the type categorizations, let's look at a simple table and do
 [[mapping-types-basic-example]]
 .A simple table and domain model
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/mapping-types-basic-example.sql[]
 ----
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/TypeCategoryTest.java[tags=mapping-types-basic-example]
+include::{example-dir-mapping}/basic/TypeCategoryTest.java[tags=mapping-types-basic-example]
 ----
 ====
 

@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+
+  This mapping illustrates use of <natural-id mutable="true"/>
+
+-->
+
+<hibernate-mapping
+	package="org.hibernate.orm.test.mapping.naturalid.nullable"
+	default-access="field">
+
+	<class name="User" table="SystemUserInfo">
+		<id name="id" />
+		<natural-id mutable="true">
+			<property name="name" not-null="false"/>
+			<property name="org" not-null="false"/>
+			<property name="intVal" not-null="false"/>
+		</natural-id>
+		<property name="password" column="`password`"/>
+	</class>
+
+</hibernate-mapping>

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -10,31 +8,25 @@ import java.util.Set;
 
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.hbm.spi.EntityInfo;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmAuxiliaryDatabaseObjectType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmClassRenameType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFetchProfileType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterDefinitionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmIdentifierGeneratorDefinitionType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTypeDefinitionType;
-import org.hibernate.boot.jaxb.hbm.spi.ResultSetMappingBindingDefinition;
+import org.hibernate.boot.model.TypeDefinitionRegistry;
+import org.hibernate.boot.internal.TypeDefinitionRegistryStandardImpl;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.source.internal.OverriddenMappingDefaults;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
+import org.hibernate.boot.query.HbmResultSetMappingDescriptor;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PersistentClass;
 
-import org.jboss.logging.Logger;
+
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+import static org.hibernate.boot.model.source.internal.hbm.Helper.collectToolingHints;
 
 /**
  * Aggregates together information about a mapping document.
@@ -42,38 +34,46 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class MappingDocument implements HbmLocalMetadataBuildingContext, MetadataSourceProcessor {
-	private static final Logger log = Logger.getLogger( MappingDocument.class );
 
 	private final JaxbHbmHibernateMapping documentRoot;
 	private final Origin origin;
 	private final MetadataBuildingContext rootBuildingContext;
-	private final MappingDefaults mappingDefaults;
+	private final EffectiveMappingDefaults mappingDefaults;
 
 	private final ToolingHintContext toolingHintContext;
 
+	private final TypeDefinitionRegistry typeDefinitionRegistry;
+
+	private final String contributor;
 
 	public MappingDocument(
+			String contributor,
 			JaxbHbmHibernateMapping documentRoot,
 			Origin origin,
 			MetadataBuildingContext rootBuildingContext) {
+		this.contributor = contributor;
 		this.documentRoot = documentRoot;
 		this.origin = origin;
 		this.rootBuildingContext = rootBuildingContext;
 
 		// todo : allow for a split in default-lazy for singular/plural
 
-		this.mappingDefaults = new OverriddenMappingDefaults.Builder( rootBuildingContext.getMappingDefaults() )
-				.setImplicitSchemaName( documentRoot.getSchema() )
-				.setImplicitCatalogName( documentRoot.getCatalog() )
-				.setImplicitPackageName( documentRoot.getPackage() )
-				.setImplicitPropertyAccessorName( documentRoot.getDefaultAccess() )
-				.setImplicitCascadeStyleName( documentRoot.getDefaultCascade() )
-				.setEntitiesImplicitlyLazy( documentRoot.isDefaultLazy() )
-				.setAutoImportEnabled( documentRoot.isAutoImport() )
-				.setPluralAttributesImplicitlyLazy( documentRoot.isDefaultLazy() )
-				.build();
+		mappingDefaults =
+				new OverriddenMappingDefaults.Builder( rootBuildingContext.getEffectiveDefaults() )
+						.setImplicitSchemaName( documentRoot.getSchema() )
+						.setImplicitCatalogName( documentRoot.getCatalog() )
+						.setImplicitPackageName( documentRoot.getPackage() )
+						.setImplicitPropertyAccessorName( documentRoot.getDefaultAccess() )
+//						.setImplicitCascadeStyleName( documentRoot.getDefaultCascade() )
+						.setEntitiesImplicitlyLazy( documentRoot.isDefaultLazy() )
+						.setAutoImportEnabled( documentRoot.isAutoImport() )
+						.setPluralAttributesImplicitlyLazy( documentRoot.isDefaultLazy() )
+						.build();
 
-		this.toolingHintContext = Helper.collectToolingHints( null, documentRoot );
+		toolingHintContext = collectToolingHints( null, documentRoot );
+
+		typeDefinitionRegistry =
+				new TypeDefinitionRegistryStandardImpl( rootBuildingContext.getTypeDefinitionRegistry() );
 	}
 
 	public JaxbHbmHibernateMapping getDocumentRoot() {
@@ -98,19 +98,21 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 		if ( name.indexOf( '.' ) < 0 && implicitPackageName != null ) {
 			return implicitPackageName + '.' + name;
 		}
-		return name;
+		else {
+			return name;
+		}
 	}
 
 	@Override
 	public String determineEntityName(String entityName, String clazz) {
 		return entityName != null
 				? entityName
-				: qualifyIfNeeded( clazz, mappingDefaults.getImplicitPackageName() );
+				: qualifyIfNeeded( clazz, mappingDefaults.getDefaultPackageName() );
 	}
 
 	@Override
 	public String qualifyClassName(String name) {
-		return qualifyIfNeeded( name, mappingDefaults.getImplicitPackageName() );
+		return qualifyIfNeeded( name, mappingDefaults.getDefaultPackageName() );
 	}
 
 	@Override
@@ -134,7 +136,7 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 	}
 
 	@Override
-	public MappingDefaults getMappingDefaults() {
+	public EffectiveMappingDefaults getEffectiveDefaults() {
 		return mappingDefaults;
 	}
 
@@ -144,13 +146,18 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 	}
 
 	@Override
-	public ClassLoaderAccess getClassLoaderAccess() {
-		return rootBuildingContext.getClassLoaderAccess();
+	public ObjectNameNormalizer getObjectNameNormalizer() {
+		return rootBuildingContext.getObjectNameNormalizer();
 	}
 
 	@Override
-	public ObjectNameNormalizer getObjectNameNormalizer() {
-		return rootBuildingContext.getObjectNameNormalizer();
+	public TypeDefinitionRegistry getTypeDefinitionRegistry() {
+		return typeDefinitionRegistry;
+	}
+
+	@Override
+	public String getCurrentContributorName() {
+		return contributor;
 	}
 
 	@Override
@@ -160,57 +167,57 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 
 	@Override
 	public void processTypeDefinitions() {
-		for ( JaxbHbmTypeDefinitionType typeDef : documentRoot.getTypedef() ) {
+		for ( var typeDef : documentRoot.getTypedef() ) {
 			TypeDefinitionBinder.processTypeDefinition( this, typeDef );
 		}
 	}
 
 	@Override
 	public void processQueryRenames() {
-		for ( JaxbHbmClassRenameType renameBinding : documentRoot.getImport() ) {
+		for ( var renameBinding : documentRoot.getImport() ) {
 			final String name = qualifyClassName( renameBinding.getClazz() );
 			final String rename = renameBinding.getRename() == null
 					? StringHelper.unqualify( name )
 					: renameBinding.getRename();
 			getMetadataCollector().addImport( rename, name );
-			log.debugf( "Import (query rename): %s -> %s", rename, name );
+			BOOT_LOGGER.importEntry( rename, name );
 		}
 	}
 
 	@Override
 	public void processFilterDefinitions() {
-		for ( JaxbHbmFilterDefinitionType filterDefinitionBinding : documentRoot.getFilterDef() ) {
+		for ( var filterDefinitionBinding : documentRoot.getFilterDef() ) {
 			FilterDefinitionBinder.processFilterDefinition( this, filterDefinitionBinding );
 		}
 	}
 
 	@Override
 	public void processFetchProfiles() {
-		for ( JaxbHbmFetchProfileType fetchProfileBinding : documentRoot.getFetchProfile() ) {
+		for ( var fetchProfileBinding : documentRoot.getFetchProfile() ) {
 			FetchProfileBinder.processFetchProfile( this, fetchProfileBinding );
 		}
 	}
 
 	@Override
 	public void processAuxiliaryDatabaseObjectDefinitions() {
-		for ( JaxbHbmAuxiliaryDatabaseObjectType auxDbObjectBinding : documentRoot.getDatabaseObject() ) {
+		for ( var auxDbObjectBinding : documentRoot.getDatabaseObject() ) {
 			AuxiliaryDatabaseObjectBinder.processAuxiliaryDatabaseObject( this, auxDbObjectBinding );
 		}
 	}
 
 	@Override
 	public void processNamedQueries() {
-		for ( JaxbHbmNamedQueryType namedQuery : documentRoot.getQuery() ) {
+		for ( var namedQuery : documentRoot.getQuery() ) {
 			NamedQueryBinder.processNamedQuery( this, namedQuery );
 		}
-		for ( JaxbHbmNamedNativeQueryType namedQuery : documentRoot.getSqlQuery() ) {
+		for ( var namedQuery : documentRoot.getSqlQuery() ) {
 			NamedQueryBinder.processNamedNativeQuery( this, namedQuery );
 		}
 	}
 
 	@Override
 	public void processIdentifierGenerators() {
-		for ( JaxbHbmIdentifierGeneratorDefinitionType identifierGenerator : documentRoot.getIdentifierGenerator() ) {
+		for ( var identifierGenerator : documentRoot.getIdentifierGenerator() ) {
 			IdentifierGeneratorDefinitionBinder.processIdentifierGeneratorDefinition( this, identifierGenerator );
 		}
 	}
@@ -232,10 +239,10 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 
 	@Override
 	public void processResultSetMappings() {
-		for ( ResultSetMappingBindingDefinition resultSetMappingBinding : documentRoot.getResultset() ) {
-			final ResultSetMappingDefinition binding = ResultSetMappingBinder.bind( resultSetMappingBinding, this );
-			getMetadataCollector().addResultSetMapping( binding );
-		}
+		documentRoot.getResultset()
+				.forEach( hbmResultSetMapping ->
+						getMetadataCollector().addResultSetMapping(
+								new HbmResultSetMappingDescriptor( hbmResultSetMapping, rootBuildingContext ) ) );
 	}
 
 	@Override

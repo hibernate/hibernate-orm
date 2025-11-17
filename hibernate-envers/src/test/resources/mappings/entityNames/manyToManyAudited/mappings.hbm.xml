@@ -1,14 +1,12 @@
 <?xml version="1.0"?>
 <!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
-  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
   -->
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
 
-	<class name="org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Person"
+	<class name="org.hibernate.orm.test.envers.integration.entityNames.manyToManyAudited.Person"
 		entity-name="Personaje">
 
 		<id name="id" column="ID_PERSON" type="long">
@@ -23,12 +21,12 @@
 		<bag name="cars" inverse="true" table="PERSON_CAR" >
 			<key column="ID_CAR" />
 			<many-to-many
-				class="org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Car" column="ID_PERSON"/>
+                    class="org.hibernate.orm.test.envers.integration.entityNames.manyToManyAudited.Car" column="ID_PERSON"/>
 		</bag>
 
 	</class>
 
-	<class name="org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Car">
+	<class name="org.hibernate.orm.test.envers.integration.entityNames.manyToManyAudited.Car">
 
 		<id name="id" column="ID_CAR" type="long">
 			<generator class="native" />

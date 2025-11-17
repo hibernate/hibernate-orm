@@ -1,0 +1,6 @@
+= Dialects
+
+The content of this file has moved to link:./documentation/src/main/asciidoc/dialect/index.adoc.
+Going forward, it will be published in rendered form at https://docs.hibernate.org/stable/orm/dialect/.
+
+If you ended up here following a link, please ask whoever published that link to update it.

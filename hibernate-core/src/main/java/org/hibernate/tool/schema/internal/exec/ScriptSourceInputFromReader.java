@@ -1,21 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal.exec;
 
 import java.io.Reader;
 
-import org.hibernate.tool.schema.spi.ScriptSourceInput;
-
 /**
- * ScriptSourceInput implementation for explicitly given Readers.  The readers are not released by this class.
+ * ScriptSourceInput implementation for explicitly given Readers.
  *
  * @author Steve Ebersole
  */
-public class ScriptSourceInputFromReader extends AbstractScriptSourceInput implements ScriptSourceInput {
+public class ScriptSourceInputFromReader extends AbstractScriptSourceInput {
 	private final Reader reader;
 
 	/**
@@ -28,13 +24,18 @@ public class ScriptSourceInputFromReader extends AbstractScriptSourceInput imple
 	}
 
 	@Override
-	protected Reader reader() {
+	public String getScriptDescription() {
+		return "[injected ScriptSourceInputFromReader script]";
+	}
+
+	@Override
+	protected Reader prepareReader() {
 		return reader;
 	}
 
 	@Override
-	protected String getScriptDescription() {
-		return "[injected ScriptSourceInputFromReader script]";
+	protected void releaseReader(Reader reader) {
+		// nothing to do
 	}
 
 	@Override

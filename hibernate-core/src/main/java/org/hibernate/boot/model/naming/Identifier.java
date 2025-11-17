@@ -1,15 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.naming;
 
 import java.util.Locale;
+import java.util.Objects;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.StringHelper;
+
+import static java.lang.Character.isLetter;
+import static java.lang.Character.isLetterOrDigit;
+import static java.lang.Character.isWhitespace;
+import static org.hibernate.internal.util.StringHelper.isBlank;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
  * Models an identifier (name), which may or may not be quoted.
@@ -22,39 +26,35 @@ public class Identifier implements Comparable<Identifier> {
 
 	/**
 	 * Means to generate an {@link Identifier} instance from its simple text form.
-	 * <p/>
+	 * <p>
 	 * If passed text is {@code null}, {@code null} is returned.
-	 * <p/>
+	 * <p>
 	 * If passed text is surrounded in quote markers, the generated Identifier
-	 * is considered quoted.  Quote markers include back-ticks (`), and
-	 * double-quotes (").
+	 * is considered quoted.  Quote markers include back-ticks (`),
+	 * double-quotes (") and brackets ([ and ]).
+	 *
+	 * If the text, after trimming, contains a character that is not a valid identifier character,
+	 * the identifier is treated as quoted.
 	 *
 	 * @param text The text form
 	 *
 	 * @return The identifier form, or {@code null} if text was {@code null}
 	 */
 	public static Identifier toIdentifier(String text) {
-		if ( StringHelper.isEmpty( text ) ) {
-			return null;
-		}
-		final String trimmedText = text.trim();
-		if ( isQuoted( trimmedText ) ) {
-			final String bareName = trimmedText.substring( 1, trimmedText.length() - 1 );
-			return new Identifier( bareName, true );
-		}
-		else {
-			return new Identifier( trimmedText, false );
-		}
+		return toIdentifier( text, false );
 	}
 
 	/**
 	 * Means to generate an {@link Identifier} instance from its simple text form.
-	 * <p/>
+	 * <p>
 	 * If passed text is {@code null}, {@code null} is returned.
-	 * <p/>
+	 * <p>
 	 * If passed text is surrounded in quote markers, the generated Identifier
-	 * is considered quoted.  Quote markers include back-ticks (`), and
-	 * double-quotes (").
+	 * is considered quoted.  Quote markers include back-ticks (`),
+	 * double-quotes (") and brackets ([ and ]).
+	 *
+	 * If the text, after trimming, contains a character that is not a valid identifier character,
+	 * the identifier is treated as quoted.
 	 *
 	 * @param text The text form
 	 * @param quote Whether to quote unquoted text forms
@@ -62,17 +62,81 @@ public class Identifier implements Comparable<Identifier> {
 	 * @return The identifier form, or {@code null} if text was {@code null}
 	 */
 	public static Identifier toIdentifier(String text, boolean quote) {
-		if ( StringHelper.isEmpty( text ) ) {
+		return toIdentifier( text, quote, true );
+	}
+
+	/**
+	 * Means to generate an {@link Identifier} instance from its simple text form.
+	 * <p>
+	 * If passed {@code text} is {@code null}, {@code null} is returned.
+	 * <p>
+	 * If passed {@code text} is surrounded in quote markers, the returned Identifier
+	 * is considered quoted. Quote markers include back-ticks (`), double-quotes ("),
+	 * and brackets ([ and ]).
+	 *
+	 * @param text The text form
+	 * @param quote Whether to quote unquoted text forms
+	 * @param autoquote Whether to quote the result if it contains special characters
+	 *
+	 * @return The identifier form, or {@code null} if text was {@code null}
+	 */
+	public static Identifier toIdentifier(String text, boolean quote, boolean autoquote) {
+		if ( isBlank( text ) ) {
 			return null;
 		}
-		final String trimmedText = text.trim();
-		if ( isQuoted( trimmedText ) ) {
-			final String bareName = trimmedText.substring( 1, trimmedText.length() - 1 );
-			return new Identifier( bareName, true );
+		int start = 0;
+		int end = text.length();
+		while ( start < end ) {
+			if ( !isWhitespace( text.charAt( start ) ) ) {
+				break;
+			}
+			start++;
+		}
+		while ( start < end ) {
+			if ( !isWhitespace( text.charAt( end - 1 ) ) ) {
+				break;
+			}
+			end--;
+		}
+		if ( isQuoted( text, start, end ) ) {
+			start++;
+			end--;
+			quote = true;
+		}
+		else if ( autoquote && !quote ) {
+			quote = autoquote( text, start, end );
+		}
+		return new Identifier( text.substring( start, end ), quote );
+	}
+
+	private static boolean autoquote(String text, int start, int end) {
+		// Check the letters to determine if we must quote the text
+		if ( !isLegalFirstChar( text.charAt( start ) ) ) {
+			// SQL identifiers must begin with a letter or underscore
+			return true;
 		}
 		else {
-			return new Identifier( trimmedText, quote );
+			for ( int i = start + 1; i < end; i++ ) {
+				if ( !isLegalChar( text.charAt( i ) ) ) {
+					return true;
+				}
+			}
 		}
+		return false;
+	}
+
+	private static boolean isLegalChar(char current) {
+		return isLetterOrDigit( current )
+			// every database also allows _ here
+			|| current == '_'
+			// every database except HSQLDB also allows $ here
+			|| current == '$';
+	}
+
+	private static boolean isLegalFirstChar(char first) {
+		return isLetter( first )
+			// many databases also allow _ here
+			|| first == '_';
 	}
 
 	/**
@@ -82,18 +146,35 @@ public class Identifier implements Comparable<Identifier> {
 	 *     <li>{@code [name]}</li>
 	 *     <li>{@code "name"}</li>
 	 * </ul>
-	 * <p/>
+	 * <p>
 	 * That final form using double-quote (") is the JPA-defined quoting pattern.  Although
 	 * it is the standard, it makes for ugly declarations.
-	 *
-	 * @param name
 	 *
 	 * @return {@code true} if the given identifier text is considered quoted; {@code false} otherwise.
 	 */
 	public static boolean isQuoted(String name) {
-		return ( name.startsWith( "`" ) && name.endsWith( "`" ) )
-				|| ( name.startsWith( "[" ) && name.endsWith( "]" ) )
-				|| ( name.startsWith( "\"" ) && name.endsWith( "\"" ) );
+		return isQuoted( name, 0, name.length() );
+	}
+
+	public static boolean isQuoted(String name, int start, int end) {
+		if ( start + 2 < end ) {
+			final char first = name.charAt( start );
+			final char last = name.charAt( end - 1 );
+			return switch ( first ) {
+				case '`' -> last == '`';
+				case '[' -> last == ']';
+				case '"' -> last == '"';
+				default -> false;
+			};
+		}
+		else {
+			return false;
+		}
+	}
+
+	public static String unQuote(String name) {
+		assert isQuoted( name );
+		return name.substring( 1, name.length() - 1 );
 	}
 
 	/**
@@ -103,7 +184,7 @@ public class Identifier implements Comparable<Identifier> {
 	 * @param quoted Is this a quoted identifier?
 	 */
 	public Identifier(String text, boolean quoted) {
-		if ( StringHelper.isEmpty( text ) ) {
+		if ( isEmpty( text ) ) {
 			throw new IllegalIdentifierException( "Identifier text cannot be null" );
 		}
 		if ( isQuoted( text ) ) {
@@ -142,6 +223,13 @@ public class Identifier implements Comparable<Identifier> {
 	}
 
 	/**
+	 * A quoted form of this identifier.
+	 */
+	public Identifier quoted() {
+		return isQuoted ? this : toIdentifier( text, true );
+	}
+
+	/**
 	 * If this is a quoted identifier, then return the identifier name
 	 * enclosed in dialect-specific open- and end-quotes; otherwise,
 	 * simply return the unquoted identifier.
@@ -153,7 +241,7 @@ public class Identifier implements Comparable<Identifier> {
 	 */
 	public String render(Dialect dialect) {
 		return isQuoted
-				? String.valueOf( dialect.openQuote() ) + getText() + dialect.closeQuote()
+				? dialect.toQuotedIdentifier( getText() )
 				: getText();
 	}
 
@@ -173,37 +261,38 @@ public class Identifier implements Comparable<Identifier> {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( !(o instanceof Identifier) ) {
-			return false;
-		}
+	public boolean equals(Object object) {
+		return object instanceof Identifier that
+			&& getCanonicalName().equals( that.getCanonicalName() );
+	}
 
-		final Identifier that = (Identifier) o;
-		return getCanonicalName().equals( that.getCanonicalName() );
+	public boolean matches(String name) {
+		return isQuoted()
+				? text.equals( name )
+				: text.equalsIgnoreCase( name );
 	}
 
 	@Override
 	public int hashCode() {
-		return isQuoted ? text.hashCode() : text.toLowerCase( Locale.ENGLISH ).hashCode();
-	}
-
-	public static boolean areEqual(Identifier id1, Identifier id2) {
-		if ( id1 == null ) {
-			return id2 == null;
-		}
-		else {
-			return id1.equals( id2 );
-		}
-	}
-
-	public static Identifier quote(Identifier identifier) {
-		return identifier.isQuoted()
-				? identifier
-				: Identifier.toIdentifier( identifier.getText(), true );
+		return isQuoted
+				? text.hashCode()
+				: text.toLowerCase( Locale.ENGLISH ).hashCode();
 	}
 
 	@Override
-	public int compareTo(Identifier o) {
-		return getCanonicalName().compareTo( o.getCanonicalName() );
+	public int compareTo(Identifier identifier) {
+		return getCanonicalName().compareTo( identifier.getCanonicalName() );
+	}
+
+	public static boolean areEqual(Identifier id1, Identifier id2) {
+		return Objects.equals( id1, id2 );
+	}
+
+	/**
+	 * @deprecated Use {@link #quoted()}.
+	 */
+	@Deprecated(since = "7.1", forRemoval = true)
+	public static Identifier quote(Identifier identifier) {
+		return identifier.quoted();
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.internal;
 
@@ -18,8 +16,8 @@ import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 
 /**
- * Standard implementation of QualifiedObjectNameFormatter which uses information reported
- * by {@link java.sql.DatabaseMetaData} to render qualified names.
+ * Standard implementation of {@link QualifiedObjectNameFormatter} which uses information reported
+ * by {@link DatabaseMetaData} to render qualified names.
  *
  * @author Steve Ebersole
  */
@@ -37,29 +35,21 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 			NameQualifierSupport nameQualifierSupport,
 			String catalogSeparator,
 			boolean catalogAtEnd) {
-		switch ( nameQualifierSupport ) {
-			case NONE: {
-				return NoQualifierSupportFormat.INSTANCE;
-			}
-			case CATALOG: {
-				return catalogAtEnd
-						? new NameCatalogFormat( catalogSeparator )
-						: new CatalogNameFormat( catalogSeparator );
-			}
-			case SCHEMA: {
-				return SchemaNameFormat.INSTANCE;
-			}
-			default: {
-				return catalogAtEnd
-						? new SchemaNameCatalogFormat( catalogSeparator )
-						: new CatalogSchemaNameFormat( catalogSeparator );
-			}
-		}
+		return switch ( nameQualifierSupport ) {
+			case NONE -> NoQualifierSupportFormat.INSTANCE;
+			case CATALOG -> catalogAtEnd
+					? new NameCatalogFormat( catalogSeparator )
+					: new CatalogNameFormat( catalogSeparator );
+			case SCHEMA -> SchemaNameFormat.INSTANCE;
+			default -> catalogAtEnd
+					? new SchemaNameCatalogFormat( catalogSeparator )
+					: new CatalogSchemaNameFormat( catalogSeparator );
+		};
 	}
 
-	public QualifiedObjectNameFormatterStandardImpl(NameQualifierSupport nameQualifierSupport) {
+	public QualifiedObjectNameFormatterStandardImpl(NameQualifierSupport nameQualifierSupport, String catalogSeparator) {
 		// most dbs simply do <catalog>.<schema>.<name>
-		this( nameQualifierSupport, ".", false );
+		this( nameQualifierSupport, catalogSeparator, false );
 	}
 
 	public QualifiedObjectNameFormatterStandardImpl(
@@ -110,130 +100,86 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 		);
 	}
 
-	private static interface Format {
-		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect);
+	private interface Format {
+		String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect);
 	}
 
-	private static class NoQualifierSupportFormat implements Format {
-		/**
-		 * Singleton access
-		 */
+	private record NoQualifierSupportFormat() implements Format {
 		public static final NoQualifierSupportFormat INSTANCE = new NoQualifierSupportFormat();
-
 		@Override
 		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
 			return render( name, dialect );
 		}
 	}
 
-	private static class SchemaNameCatalogFormat implements Format {
-		private final String catalogSeparator;
-
-		public SchemaNameCatalogFormat(String catalogSeparator) {
-			this.catalogSeparator = catalogSeparator;
-		}
-
+	private record SchemaNameCatalogFormat(String catalogSeparator) implements Format {
 		@Override
 		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
-			StringBuilder buff = new StringBuilder();
+			final var formatted = new StringBuilder();
 			if ( schema != null ) {
-				buff.append( render( schema, dialect ) ).append( '.' );
+				formatted.append( render( schema, dialect ) ).append( '.' );
 			}
-
-			buff.append( render( name, dialect ) );
-
+			formatted.append( render( name, dialect ) );
 			if ( catalog != null ) {
-				buff.append( catalogSeparator ).append( render( catalog, dialect ) );
+				formatted.append( catalogSeparator ).append( render( catalog, dialect ) );
 			}
-
-			return buff.toString();
+			return formatted.toString();
 		}
 	}
 
-	private static class CatalogSchemaNameFormat implements Format {
-		private final String catalogSeparator;
-
-		public CatalogSchemaNameFormat(String catalogSeparator) {
-			this.catalogSeparator = catalogSeparator;
-		}
+	private record CatalogSchemaNameFormat(String catalogSeparator) implements Format {
 
 		@Override
 		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
-			StringBuilder buff = new StringBuilder();
-
+			final var formatted = new StringBuilder();
 			if ( catalog != null ) {
-				buff.append( render( catalog, dialect ) ).append( catalogSeparator );
+				formatted.append( render( catalog, dialect ) ).append( catalogSeparator );
 			}
-
 			if ( schema != null ) {
-				buff.append( render( schema, dialect ) ).append( '.' );
+				formatted.append( render( schema, dialect ) ).append( '.' );
 			}
-
-			buff.append( render( name, dialect ) );
-
-			return buff.toString();
+			formatted.append( render( name, dialect ) );
+			return formatted.toString();
 		}
 	}
 
-	private static class NameCatalogFormat implements Format {
-		private final String catalogSeparator;
-
-		public NameCatalogFormat(String catalogSeparator) {
-			this.catalogSeparator = catalogSeparator;
-		}
-
+	private record NameCatalogFormat(String catalogSeparator) implements Format {
 		@Override
 		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
-			StringBuilder buff = new StringBuilder();
-
-			buff.append( render( name, dialect ) );
-
+			final var formatted = new StringBuilder();
+			formatted.append( render( name, dialect ) );
 			if ( catalog != null ) {
-				buff.append( catalogSeparator ).append( render( catalog, dialect ) );
+				formatted.append( catalogSeparator ).append( render( catalog, dialect ) );
 			}
-
-			return buff.toString();
+			return formatted.toString();
 		}
 	}
 
-	private static class CatalogNameFormat implements Format {
-		private final String catalogSeparator;
-
-		public CatalogNameFormat(String catalogSeparator) {
-			this.catalogSeparator = catalogSeparator;
-		}
-
+	private record CatalogNameFormat(String catalogSeparator) implements Format {
 		@Override
-		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
-			StringBuilder buff = new StringBuilder();
-
-			if ( catalog != null ) {
-				buff.append( render( catalog, dialect ) ).append( catalogSeparator );
+			public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
+				final var formatted = new StringBuilder();
+				if ( catalog != null ) {
+					formatted.append( render( catalog, dialect ) ).append( catalogSeparator );
+				}
+				formatted.append( render( name, dialect ) );
+				return formatted.toString();
 			}
-
-			buff.append( render( name, dialect ) );
-
-			return buff.toString();
 		}
-	}
 
-	private static class SchemaNameFormat implements Format {
+	private record SchemaNameFormat() implements Format {
 		/**
 		 * Singleton access
 		 */
 		public static final SchemaNameFormat INSTANCE = new SchemaNameFormat();
-
 		@Override
 		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
-			StringBuilder buff = new StringBuilder();
-
+			final var formatted = new StringBuilder();
 			if ( schema != null ) {
-				buff.append( render( schema, dialect ) ).append( '.' );
+				formatted.append( render( schema, dialect ) ).append( '.' );
 			}
-
-			buff.append( render( name, dialect ) );
-
-			return buff.toString();
+			formatted.append( render( name, dialect ) );
+			return formatted.toString();
 		}
 	}
 }

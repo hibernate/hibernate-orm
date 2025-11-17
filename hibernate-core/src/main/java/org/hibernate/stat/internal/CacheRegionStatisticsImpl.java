@@ -1,38 +1,42 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat.internal;
 
 import java.io.Serializable;
 import java.util.concurrent.atomic.LongAdder;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.cache.spi.ExtendedStatisticsSupport;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.stat.CacheRegionStatistics;
-import org.hibernate.stat.SecondLevelCacheStatistics;
 
 /**
  * Second level cache statistics of a specific region
  *
  * @author Alex Snaps
  */
-public class CacheRegionStatisticsImpl implements CacheRegionStatistics, SecondLevelCacheStatistics, Serializable {
-	private final transient Region region;
+public class CacheRegionStatisticsImpl implements CacheRegionStatistics, Serializable {
+	private final String regionName;
+	private final transient @Nullable ExtendedStatisticsSupport extendedStatisticsSupport;
 
 	private final LongAdder hitCount = new LongAdder();
 	private final LongAdder missCount = new LongAdder();
 	private final LongAdder putCount = new LongAdder();
+	private final LongAdder removeCount = new LongAdder();
 
 	CacheRegionStatisticsImpl(Region region) {
-		this.region = region;
+		regionName = region.getName();
+		extendedStatisticsSupport =
+				region instanceof ExtendedStatisticsSupport extended
+						? extended
+						: null;
 	}
 
 	@Override
 	public String getRegionName() {
-		return region.getName();
+		return regionName;
 	}
 
 	@Override
@@ -51,27 +55,29 @@ public class CacheRegionStatisticsImpl implements CacheRegionStatistics, SecondL
 	}
 
 	@Override
+	public long getRemoveCount() {
+		return removeCount.sum();
+	}
+
+	@Override
 	public long getElementCountInMemory() {
-		if ( region instanceof ExtendedStatisticsSupport ) {
-			return ( (ExtendedStatisticsSupport) region ).getElementCountInMemory();
-		}
-		return NO_EXTENDED_STAT_SUPPORT_RETURN;
+		return extendedStatisticsSupport == null
+				? NO_EXTENDED_STAT_SUPPORT_RETURN
+				: extendedStatisticsSupport.getElementCountInMemory();
 	}
 
 	@Override
 	public long getElementCountOnDisk() {
-		if ( region instanceof ExtendedStatisticsSupport ) {
-			return ( (ExtendedStatisticsSupport) region ).getElementCountOnDisk();
-		}
-		return NO_EXTENDED_STAT_SUPPORT_RETURN;
+		return extendedStatisticsSupport == null
+				? NO_EXTENDED_STAT_SUPPORT_RETURN
+				: extendedStatisticsSupport.getElementCountOnDisk();
 	}
 
 	@Override
 	public long getSizeInMemory() {
-		if ( region instanceof ExtendedStatisticsSupport ) {
-			return ( (ExtendedStatisticsSupport) region ).getSizeInMemory();
-		}
-		return NO_EXTENDED_STAT_SUPPORT_RETURN;
+		return extendedStatisticsSupport == null
+				? NO_EXTENDED_STAT_SUPPORT_RETURN
+				: extendedStatisticsSupport.getSizeInMemory();
 	}
 
 	void incrementHitCount() {
@@ -86,17 +92,25 @@ public class CacheRegionStatisticsImpl implements CacheRegionStatistics, SecondL
 		putCount.increment();
 	}
 
+
+	public void incrementRemoveCount() {
+		removeCount.increment();
+	}
+
 	@Override
 	public String toString() {
-		StringBuilder buf = new StringBuilder().append( "CacheRegionStatistics" )
-				.append( "[region=").append( region.getName() )
-				.append( ",hitCount=").append( this.hitCount )
-				.append( ",missCount=").append( this.missCount )
-				.append( ",putCount=").append( this.putCount )
-				.append( ",elementCountInMemory=" ).append( this.getElementCountInMemory() )
-				.append( ",elementCountOnDisk=" ).append( this.getElementCountOnDisk() )
-				.append( ",sizeInMemory=" ).append( this.getSizeInMemory() )
-				.append( ']' );
-		return buf.toString();
+		final var string =
+				new StringBuilder("CacheRegionStatistics")
+						.append( "[region=" ).append( regionName )
+						.append( ",hitCount=" ).append( hitCount )
+						.append( ",missCount=" ).append( missCount )
+						.append( ",putCount=" ).append( putCount )
+						.append( ",removeCount=" ).append( removeCount );
+		if ( extendedStatisticsSupport != null ) {
+			string.append( ",elementCountInMemory=" ).append( getElementCountInMemory() )
+					.append( ",elementCountOnDisk=" ).append( getElementCountOnDisk() )
+					.append( ",sizeInMemory=" ).append( getSizeInMemory() );
+		}
+		return string.append( ']' ).toString();
 	}
 }

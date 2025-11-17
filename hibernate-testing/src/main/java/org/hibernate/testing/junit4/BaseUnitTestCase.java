@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.junit4;
 
@@ -11,12 +9,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import javax.transaction.SystemException;
+import jakarta.transaction.SystemException;
 
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 
 import org.hibernate.testing.AfterClassOnce;
-import org.hibernate.testing.cleaner.DatabaseCleaner;
 import org.hibernate.testing.jdbc.leak.ConnectionLeakUtil;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.junit.After;
@@ -31,13 +28,12 @@ import org.jboss.logging.Logger;
  * The base unit test adapter.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use JUnit 5/6
  */
+@Deprecated
 @RunWith( CustomRunner.class )
 public abstract class BaseUnitTestCase {
-
-	static {
-		DatabaseCleaner.clearSchemas();
-	}
 
 	protected final Logger log = Logger.getLogger( getClass() );
 

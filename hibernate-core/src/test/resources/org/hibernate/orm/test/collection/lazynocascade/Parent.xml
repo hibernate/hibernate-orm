@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.collection.lazynocascade</package>
+
+    <entity class="Parent">
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+            </id>
+            <one-to-many name="children">
+                <join-column name="parent_fk"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="BaseChild">
+        <inheritance strategy="SINGLE_TABLE"/>
+        <discriminator-column/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+            </id>
+            <many-to-one name="dependency">
+                <join-column name="dependency_fk"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+    <entity class="Child">
+        <attributes>
+            <basic name="name"/>
+        </attributes>
+    </entity>
+</entity-mappings>
+
+

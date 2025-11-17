@@ -1,32 +1,30 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.internal;
 
 import java.util.Map;
 
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
 import org.hibernate.engine.jdbc.connections.spi.DataSourceBasedMultiTenantConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_CONNECTION_PROVIDER;
 
 /**
- * A service initiator for the MultiTenantConnectionProvider service
+ * A service initiator for the {@link MultiTenantConnectionProvider} service.
  *
  * @author Steve Ebersole
  */
-public class MultiTenantConnectionProviderInitiator implements StandardServiceInitiator<MultiTenantConnectionProvider> {
-	private static final Logger log = Logger.getLogger( MultiTenantConnectionProviderInitiator.class );
+public class MultiTenantConnectionProviderInitiator implements StandardServiceInitiator<MultiTenantConnectionProvider<?>> {
 
 	/**
 	 * Singleton access
@@ -34,57 +32,65 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 	public static final MultiTenantConnectionProviderInitiator INSTANCE = new MultiTenantConnectionProviderInitiator();
 
 	@Override
-	public Class<MultiTenantConnectionProvider> getServiceInitiated() {
-		return MultiTenantConnectionProvider.class;
+	public Class<MultiTenantConnectionProvider<?>> getServiceInitiated() {
+		//noinspection unchecked
+		return (Class<MultiTenantConnectionProvider<?>>) (Class<?>) MultiTenantConnectionProvider.class;
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
-	public MultiTenantConnectionProvider initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		final MultiTenancyStrategy strategy = MultiTenancyStrategy.determineMultiTenancyStrategy(  configurationValues );
-		if ( !strategy.requiresMultiTenantConnectionProvider() ) {
-			// nothing to do, but given the separate hierarchies have to handle this here.
-			return null;
+	public MultiTenantConnectionProvider<?> initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+		if ( !configurationValues.containsKey( MULTI_TENANT_CONNECTION_PROVIDER ) ) {
+			return Helper.getBean(
+				Helper.getBeanContainer( registry ),
+				MultiTenantConnectionProvider.class,
+				true,
+				true,
+				null
+			);
 		}
 
-		final Object configValue = configurationValues.get( AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER );
+		final Object configValue = configurationValues.get( MULTI_TENANT_CONNECTION_PROVIDER );
 		if ( configValue == null ) {
-			// if they also specified the data source *name*, then lets assume they want
+			// if they also specified the data source *name*, then let's assume they want
 			// DataSourceBasedMultiTenantConnectionProviderImpl
-			final Object dataSourceConfigValue = configurationValues.get( AvailableSettings.DATASOURCE );
-			if ( dataSourceConfigValue != null && String.class.isInstance( dataSourceConfigValue ) ) {
-				return new DataSourceBasedMultiTenantConnectionProviderImpl();
-			}
-
-			return null;
+			final Object dataSourceConfigValue = configurationValues.get( JdbcSettings.DATASOURCE );
+			return dataSourceConfigValue instanceof String
+					? new DataSourceBasedMultiTenantConnectionProviderImpl<>()
+					: null;
 		}
-
-		if ( MultiTenantConnectionProvider.class.isInstance( configValue ) ) {
-			return (MultiTenantConnectionProvider) configValue;
+		else if ( configValue instanceof MultiTenantConnectionProvider<?> multiTenantConnectionProvider ) {
+			return multiTenantConnectionProvider;
 		}
 		else {
-			final Class<MultiTenantConnectionProvider> implClass;
-			if ( Class.class.isInstance( configValue ) ) {
-				implClass = (Class) configValue;
-			}
-			else {
-				final String className = configValue.toString();
-				final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
-				try {
-					implClass = classLoaderService.classForName( className );
-				}
-				catch (ClassLoadingException cle) {
-					log.warn( "Unable to locate specified class [" + className + "]", cle );
-					throw new ServiceException( "Unable to locate specified multi-tenant connection provider [" + className + "]" );
-				}
-			}
-
+			final var providerClass = providerClass( registry, configValue );
 			try {
-				return implClass.newInstance();
+				return providerClass.newInstance();
 			}
 			catch (Exception e) {
-				log.warn( "Unable to instantiate specified class [" + implClass.getName() + "]", e );
-				throw new ServiceException( "Unable to instantiate specified multi-tenant connection provider [" + implClass.getName() + "]" );
+				throw new ServiceException( "Unable to instantiate specified multi-tenant connection provider [" + providerClass.getName() + "]", e );
+			}
+		}
+	}
+
+	private static Class<? extends MultiTenantConnectionProvider<?>> providerClass(
+			ServiceRegistryImplementor registry, Object configValue) {
+		if ( configValue instanceof Class<?> configType ) {
+			if ( !MultiTenantConnectionProvider.class.isAssignableFrom( configType ) ) {
+				throw new ConnectionProviderConfigurationException( "Class '" + configType.getName()
+								+ "' does not implement 'MultiTenantConnectionProvider'" );
+			}
+			@SuppressWarnings("unchecked") // Safe, we just checked
+			final var providerClass = (Class<? extends MultiTenantConnectionProvider<?>>) configType;
+			return providerClass;
+		}
+		else {
+			final String className = configValue.toString();
+			final var classLoaderService = registry.requireService( ClassLoaderService.class );
+			try {
+				return classLoaderService.classForName( className );
+			}
+			catch (ClassLoadingException cle) {
+				throw new ServiceException( "Unable to locate specified multi-tenant connection provider [" + className + "]", cle );
 			}
 		}
 	}

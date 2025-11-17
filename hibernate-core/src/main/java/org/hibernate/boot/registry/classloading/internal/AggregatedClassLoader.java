@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry.classloading.internal;
 
@@ -11,6 +9,7 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+
 
 public class AggregatedClassLoader extends ClassLoader {
 	private final ClassLoader[] individualClassLoaders;
@@ -122,7 +121,7 @@ public class AggregatedClassLoader extends ClassLoader {
 
 	private Iterator<ClassLoader> newTcclNeverIterator() {
 		final ClassLoader systemClassLoader = locateSystemClassLoader();
-		return new Iterator<ClassLoader>() {
+		return new Iterator<>() {
 			private int currentIndex = 0;
 			private boolean sysCLReturned = false;
 
@@ -155,7 +154,7 @@ public class AggregatedClassLoader extends ClassLoader {
 
 	@Override
 	public Enumeration<URL> getResources(String name) throws IOException {
-		final LinkedHashSet<URL> resourceUrls = new LinkedHashSet<URL>();
+		final LinkedHashSet<URL> resourceUrls = new LinkedHashSet<>();
 		final Iterator<ClassLoader> clIterator = newClassLoaderIterator();
 		while ( clIterator.hasNext() ) {
 			final ClassLoader classLoader = clIterator.next();
@@ -182,7 +181,7 @@ public class AggregatedClassLoader extends ClassLoader {
 
 	@Override
 	protected URL findResource(String name) {
-		final Iterator<ClassLoader> clIterator = newClassLoaderIterator();
+		final var clIterator = newClassLoaderIterator();
 		while ( clIterator.hasNext() ) {
 			final ClassLoader classLoader = clIterator.next();
 			final URL resource = classLoader.getResource( name );
@@ -195,19 +194,18 @@ public class AggregatedClassLoader extends ClassLoader {
 
 	@Override
 	protected Class<?> findClass(String name) throws ClassNotFoundException {
-		final Iterator<ClassLoader> clIterator = newClassLoaderIterator();
+		final var clIterator = newClassLoaderIterator();
+		final var exception = new ClassNotFoundException( "Could not load requested class: " + name );
 		while ( clIterator.hasNext() ) {
 			final ClassLoader classLoader = clIterator.next();
 			try {
 				return classLoader.loadClass( name );
 			}
-			catch (Exception ignore) {
-			}
-			catch (LinkageError ignore) {
+			catch (Exception|LinkageError ex) {
+				exception.addSuppressed( ex );
 			}
 		}
-
-		throw new ClassNotFoundException( "Could not load requested class : " + name );
+		throw exception;
 	}
 
 	private static ClassLoader locateSystemClassLoader() {

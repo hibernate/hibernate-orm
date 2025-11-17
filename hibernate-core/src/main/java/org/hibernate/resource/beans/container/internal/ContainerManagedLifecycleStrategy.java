@@ -1,35 +1,31 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.container.internal;
 
-import javax.enterprise.context.ContextNotActiveException;
-import javax.enterprise.inject.Instance;
-import javax.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.context.ContextNotActiveException;
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.spi.BeanManager;
 
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.resource.beans.internal.BeansMessageLogger.BEANS_MSG_LOGGER;
 
 /**
  * A {@link BeanLifecycleStrategy} to use when CDI compliance is required
  * (i.e. when the bean lifecycle is to be managed by the CDI runtime, not the JPA runtime).
- *
+ * <p>
  * The main characteristic of this strategy is that every create/destroy operation is delegated
  * to the CDI runtime.
- *
+ * <p>
  * In particular, @Singleton-scoped or @ApplicationScoped beans are retrieved from the CDI context,
  * and are not duplicated, in contrast to {@link JpaCompliantLifecycleStrategy}.
  */
 public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy {
-	private static final Logger log = Logger.getLogger( ContainerManagedLifecycleStrategy.class );
-
 	public static final ContainerManagedLifecycleStrategy INSTANCE = new ContainerManagedLifecycleStrategy();
 
 	private ContainerManagedLifecycleStrategy() {
@@ -75,6 +71,11 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 		}
 
 		@Override
+		public Class<B> getBeanClass() {
+			return beanType;
+		}
+
+		@Override
 		public B getBeanInstance() {
 			if ( beanInstance == null ) {
 				initialize();
@@ -89,16 +90,16 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 			}
 
 			try {
-				this.instance = resolveContainerInstance();
-				this.beanInstance = this.instance.get();
+				instance = resolveContainerInstance();
+				beanInstance = instance.get();
 			}
 			catch (NotYetReadyException e) {
 				throw e;
 			}
 			catch (Exception e) {
-				log.debugf( "Error resolving CDI bean [%s] - using fallback" );
-				this.beanInstance = produceFallbackInstance();
-				this.instance = null;
+				BEANS_MSG_LOGGER.errorResolvingCdiBeanUsingFallback();
+				beanInstance = produceFallbackInstance();
+				instance = null;
 			}
 
 			this.beanManager = null;
@@ -121,12 +122,7 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 				instance.destroy( beanInstance );
 			}
 			catch (ContextNotActiveException e) {
-				log.debugf(
-						"Error destroying managed bean instance [%s] - the context is not active anymore."
-								+ " The instance must have been destroyed already - ignoring.",
-						instance,
-						e
-				);
+				BEANS_MSG_LOGGER.errorDestroyingManagedBeanInstanceContextNotActive( instance, e );
 			}
 			finally {
 				beanInstance = null;
@@ -148,15 +144,14 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		protected Instance<B> resolveContainerInstance() {
-			final Instance root;
+			final Instance<Object> root;
 			try {
 				root = beanManager.createInstance();
 			}
 			catch (Exception e) {
-				// this indicates that the BeanManager is not yet ready to use, which
-				// should be consider an error
+				// this indicates that the BeanManager is not yet ready to use,
+				// which should be considered an error
 				throw new NotYetReadyException( e );
 			}
 
@@ -187,15 +182,14 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		protected Instance<B> resolveContainerInstance() {
-			final Instance root;
+			final Instance<Object> root;
 			try {
 				root = beanManager.createInstance();
 			}
 			catch (Exception e) {
-				// this indicates that the BeanManager is not yet ready to use, which
-				// should be consider an error
+				// this indicates that the BeanManager is not yet ready to use,
+				// which should be considered an error
 				throw new NotYetReadyException( e );
 			}
 
@@ -203,7 +197,7 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 				return root.select( beanType, new NamedBeanQualifier( beanName ) );
 			}
 			catch (Exception e) {
-				throw new NoSuchBeanException( "Bean class not known to CDI : " + beanType.getName(), e );
+				throw new NoSuchBeanException( "Bean class not known to CDI: " + beanType.getName(), e );
 			}
 		}
 

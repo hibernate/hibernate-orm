@@ -1,42 +1,42 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
-import java.io.Closeable;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
-
-import org.hibernate.type.Type;
+import org.hibernate.query.Query;
 
 /**
- * A result iterator that allows moving around within the results
- * by arbitrary increments. The <tt>Query</tt> / <tt>ScrollableResults</tt>
- * pattern is very similar to the JDBC <tt>PreparedStatement</tt>/
- * <tt>ResultSet</tt> pattern and the semantics of methods of this interface
- * are similar to the similarly named methods on <tt>ResultSet</tt>.<br>
- * <br>
- * Contrary to JDBC, columns of results are numbered from zero.
+ * A result iterator that allows moving around within the results by
+ * arbitrary increments.
  *
- * @see Query#scroll()
+ * @apiNote The {@link Query} / {@link ScrollableResults} pattern is
+ * very similar to the JDBC {@link java.sql.PreparedStatement} /
+ * {@link java.sql.ResultSet} pattern and so the semantics of methods
+ * of this interface are similar to the similarly-named methods of
+ * {@code ResultSet}.
+ *
+ * @see org.hibernate.query.SelectionQuery#scroll()
  *
  * @author Gavin King
  */
-public interface ScrollableResults extends AutoCloseable, Closeable {
+public interface ScrollableResults<R> extends AutoCloseable {
+	/**
+	 * Get the current row of results.
+	 *
+	 * @return The array of results
+	 */
+	R get();
 
 	/**
 	 * Release resources immediately.
 	 */
 	void close();
+
+	/**
+	 * @return {@code true} if {@link #close()} was already called
+	 */
+	boolean isClosed();
 
 	/**
 	 * Advance to the next result.
@@ -53,13 +53,44 @@ public interface ScrollableResults extends AutoCloseable, Closeable {
 	boolean previous();
 
 	/**
-	 * Scroll the specified number of positions from the current position.
+	 * Scroll the specified number of positions from the current
+	 * position.
 	 *
-	 * @param positions a positive (forward) or negative (backward) number of rows
+	 * @param positions a positive (forward) or negative (backward)
+	 *                  number of positions
 	 *
 	 * @return {@code true} if there is a result at the new location
 	 */
 	boolean scroll(int positions);
+
+	/**
+	 * Moves the result cursor to the specified position. The index
+	 * may be a positive value, and the position may be reached by
+	 * counting forward from the first result at position {@code 1},
+	 * or it may be a negative value, so that the position may be
+	 * reached by counting backward from the last result at position
+	 * {@code -1}.
+	 *
+	 * @param position an absolute positive (from the start) or
+	 *                 negative (from the end) position within the
+	 *                 query results
+	 *
+	 * @return {@code true} if there is a result at the new location
+	 */
+	boolean position(int position);
+
+	/**
+	 * The current position within the query results. The first
+	 * query result, if any, is at position {@code 1}. An empty
+	 * or newly-created instance has position {@code 0}.
+	 *
+	 * @return the current position, a positive integer index
+	 *         starting at {@code 1}, or {@code 0} if this
+	 *         instance is empty or newly-created
+	 *
+	 * @since 7.0
+	 */
+	int getPosition();
 
 	/**
 	 * Go to the last result.
@@ -76,7 +107,9 @@ public interface ScrollableResults extends AutoCloseable, Closeable {
 	boolean first();
 
 	/**
-	 * Go to a location just before first result,  This is the location of the cursor on a newly returned
+	 * Go to a location just before first result.
+	 * <p>
+	 * This is the location of the cursor on a newly returned
 	 * scrollable result.
 	 */
 	void beforeFirst();
@@ -89,7 +122,8 @@ public interface ScrollableResults extends AutoCloseable, Closeable {
 	/**
 	 * Is this the first result?
 	 *
-	 * @return {@code true} if this is the first row of results, otherwise {@code false}
+	 * @return {@code true} if this is the first row of results,
+	 *         otherwise {@code false}
 	 */
 	boolean isFirst();
 
@@ -101,261 +135,46 @@ public interface ScrollableResults extends AutoCloseable, Closeable {
 	boolean isLast();
 
 	/**
-	 * Get the current position in the results. The first position is number 0 (unlike JDBC).
+	 * Get the current position in the results, with the first
+	 * position labelled as row number {@code 0}. That is, this
+	 * operation returns {@link #getPosition() position-1}.
 	 *
-	 * @return The current position number, numbered from 0; -1 indicates that there is no current row
+	 * @return The current position number, numbered from {@code 0};
+	 *         {@code -1} indicates that there is no current row
+	 *
+	 * @deprecated Use {@link #getPosition()}
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	int getRowNumber();
 
 	/**
-	 * Set the current position in the result set.  Can be numbered from the first position (positive number) or
-	 * the last row (negative number).
+	 * Set the current position in the result set, with the first
+	 * position labelled as row number {@code 1}, and the last
+	 * position labelled as row number {@code -1}. Results may be
+	 * numbered from the first result (using a positive position)
+	 * or backward from the last result (using a negative position).
 	 *
-	 * @param rowNumber the row number.  A positive number indicates a value numbered from the first row; a
-	 * negative number indicates a value numbered from the last row.
+	 * @param rowNumber the row number. A positive number indicates
+	 *                  a value numbered from the first row; a
+	 *                  negative number indicates a value numbered
+	 *                  from the last row.
 	 *
 	 * @return true if there is a row at that row number
+	 *
+	 * @deprecated Use {@link #position(int)}
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	boolean setRowNumber(int rowNumber);
 
 	/**
-	 * Get the current row of results.
+	 * Gives the JDBC driver a hint as to the number of rows that
+	 * should be fetched from the database when more rows are needed.
+	 * If {@code 0}, the JDBC driver's default setting will be used.
 	 *
-	 * @return The array of results
+	 * @see java.sql.ResultSet#setFetchSize(int)
+	 * @see org.hibernate.cfg.AvailableSettings#STATEMENT_FETCH_SIZE
+	 *
+	 * @since 6.1.2
 	 */
-	Object[] get();
-
-	/**
-	 * Get the <tt>i</tt>th object in the current row of results, without
-	 * initializing any other results in the row. This method may be used
-	 * safely, regardless of the type of the column (ie. even for scalar
-	 * results).
-	 *
-	 * @param i the column, numbered from zero
-	 *
-	 * @return The requested result object; may return {@code null}
-	 *
-	 * @throws IndexOutOfBoundsException If i is an invalid index.
-	 */
-	Object get(int i);
-
-	/**
-	 * Get the type of the <tt>i</tt>th column of results.
-	 *
-	 * @param i the column, numbered from zero
-	 *
-	 * @return the Hibernate type
-	 *
-	 * @throws IndexOutOfBoundsException If i is an invalid index.
-	 */
-	Type getType(int i);
-
-	/**
-	 * Convenience method to read an integer.
-	 *
-	 * @param col The column, numbered from zero
-	 *
-	 * @return The column value as an integer
-	 *
-	 * @throws IndexOutOfBoundsException If col is an invalid index.
-	 */
-	Integer getInteger(int col);
-
-	/**
-	 * Convenience method to read a long.
-	 *
-	 * @param col The column, numbered from zero
-	 *
-	 * @return The column value as a long
-	 *
-	 * @throws IndexOutOfBoundsException If col is an invalid index.
-	 */
-	Long getLong(int col);
-
-	/**
-	 * Convenience method to read a float.
-	 *
-	 * @param col The column, numbered from zero
-	 *
-	 * @return The column value as a float
-	 *
-	 * @throws IndexOutOfBoundsException If col is an invalid index.
-	 */
-	Float getFloat(int col);
-
-	/**
-	 * Convenience method to read a boolean.
-	 *
-	 * @param col The column, numbered from zero
-	 *
-	 * @return The column value as a boolean
-	 *
-	 * @throws IndexOutOfBoundsException If col is an invalid index.
-	 */
-	Boolean getBoolean(int col);
-
-	/**
-	 * Convenience method to read a double.
-	 *
-	 * @param col The column, numbered from zero
-	 *
-	 * @return The column value as a double
-	 *
-	 * @throws IndexOutOfBoundsException If col is an invalid index.
-	 */
-	Double getDouble(int col);
-
-	/**
-	 * Convenience method to read a short.
-	 *
-	 * @param col The column, numbered from zero
-	 *
-	 * @return The column value as a short
-	 *
-	 * @throws IndexOutOfBoundsException If col is an invalid index.
-	 */
-	Short getShort(int col);
-
-	/**
-	 * Convenience method to read a byte.
-	 *
-	 * @param col The column, numbered from zero
-	 *
-	 * @return The column value as a byte
-	 *
-	 * @throws IndexOutOfBoundsException If col is an invalid index.
-	 */
-	Byte getByte(int col);
-
-	/**
-	 * Convenience method to read a char.
-	 *
-	 * @param col The column, numbered from zero
-	 *
-	 * @return The column value as a char
-	 *
-	 * @throws IndexOutOfBoundsException If col is an invalid index.
-	 */
-	Character getCharacter(int col);
-
-	/**
-	 * Convenience method to read a binary (byte[]).
-	 *
-	 * @param col The column, numbered from zero
-	 *
-	 * @return The column value as a binary (byte[])
-	 *
-	 * @throws IndexOutOfBoundsException If col is an invalid index.
-	 */
-	byte[] getBinary(int col);
-
-	/**
-	 * Convenience method to read a String using streaming.
-	 *
-	 * @param col The column, numbered from zero
-	 *
-	 * @return The column value as a String
-	 *
-	 * @throws IndexOutOfBoundsException If col is an invalid index.
-	 */
-	String getText(int col);
-
-	/**
-	 * Convenience method to read a blob.
-	 *
-	 * @param col The column, numbered from zero
-	 *
-	 * @return The column value as a Blob
-	 *
-	 * @throws IndexOutOfBoundsException If col is an invalid index.
-	 */
-	Blob getBlob(int col);
-
-	/**
-	 * Convenience method to read a clob.
-	 *
-	 * @param col The column, numbered from zero
-	 *
-	 * @return The column value as a Clob
-	 *
-	 * @throws IndexOutOfBoundsException If col is an invalid index.
-	 */
-	Clob getClob(int col);
-
-	/**
-	 * Convenience method to read a string.
-	 *
-	 * @param col The column, numbered from zero
-	 *
-	 * @return The column value as a String
-	 *
-	 * @throws IndexOutOfBoundsException If col is an invalid index.
-	 */
-	String getString(int col);
-
-	/**
-	 * Convenience method to read a BigDecimal.
-	 *
-	 * @param col The column, numbered from zero
-	 *
-	 * @return The column value as a BigDecimal
-	 *
-	 * @throws IndexOutOfBoundsException If col is an invalid index.
-	 */
-	BigDecimal getBigDecimal(int col);
-
-	/**
-	 * Convenience method to read a BigInteger.
-	 *
-	 * @param col The column, numbered from zero
-	 *
-	 * @return The column value as a BigInteger
-	 *
-	 * @throws IndexOutOfBoundsException If col is an invalid index.
-	 */
-	BigInteger getBigInteger(int col);
-
-	/**
-	 * Convenience method to read a Date.
-	 *
-	 * @param col The column, numbered from zero
-	 *
-	 * @return The column value as a Date
-	 *
-	 * @throws IndexOutOfBoundsException If col is an invalid index.
-	 */
-	Date getDate(int col);
-
-	/**
-	 * Convenience method to read a Locale.
-	 *
-	 * @param col The column, numbered from zero
-	 *
-	 * @return The column value as a Locale
-	 *
-	 * @throws IndexOutOfBoundsException If col is an invalid index.
-	 */
-	Locale getLocale(int col);
-
-	/**
-	 * Convenience method to read a Calendar.
-	 *
-	 * @param col The column, numbered from zero
-	 *
-	 * @return The column value as a Calendar
-	 *
-	 * @throws IndexOutOfBoundsException If col is an invalid index.
-	 */
-	Calendar getCalendar(int col);
-
-	/**
-	 * Convenience method to read a TimeZone.
-	 *
-	 * @param col The column, numbered from zero
-	 *
-	 * @return The column value as a TimeZone
-	 *
-	 * @throws IndexOutOfBoundsException If col is an invalid index.
-	 */
-	TimeZone getTimeZone(int col);
+	void setFetchSize(int fetchSize);
 }

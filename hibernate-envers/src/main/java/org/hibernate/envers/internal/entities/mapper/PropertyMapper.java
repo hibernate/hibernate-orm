@@ -1,19 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper;
+
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
-
-import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.boot.internal.EnversService;
-import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -31,7 +29,7 @@ public interface PropertyMapper extends ModifiedFlagMapperSupport, DynamicCompon
 	 *
 	 * @return True if there are any differences between the states represented by newObj and oldObj.
 	 */
-	boolean mapToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj);
+	boolean mapToMapFromEntity(SharedSessionContractImplementor session, Map<String, Object> data, Object newObj, Object oldObj);
 
 	/**
 	 * Maps properties from the given map to the given object.
@@ -51,6 +49,13 @@ public interface PropertyMapper extends ModifiedFlagMapperSupport, DynamicCompon
 			AuditReaderImplementor versionsReader,
 			Number revision);
 
+	Object mapToEntityFromMap(
+			EnversService enversService,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision);
+
 	/**
 	 * Maps collection changes.
 	 *
@@ -63,12 +68,13 @@ public interface PropertyMapper extends ModifiedFlagMapperSupport, DynamicCompon
 	 * @return List of changes that need to be performed on the persistent store.
 	 */
 	List<PersistentCollectionChangeData> mapCollectionChanges(
-			SessionImplementor session, String referencingPropertyName,
+			SharedSessionContractImplementor session,
+			String referencingPropertyName,
 			PersistentCollection newColl,
-			Serializable oldColl, Serializable id);
+			Serializable oldColl, Object id);
 
 	void mapModifiedFlagsToMapFromEntity(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj);

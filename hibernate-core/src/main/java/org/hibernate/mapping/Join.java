@@ -1,71 +1,94 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.List;
+import java.util.function.Supplier;
 
+import org.hibernate.MappingException;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.Alias;
 
+import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationConstructor;
+
 /**
+ * A mapping model object representing some sort of auxiliary table, for
+ * example, an {@linkplain jakarta.persistence.JoinTable association table},
+ * a {@linkplain jakarta.persistence.SecondaryTable secondary table}, or a
+ * table belonging to a {@linkplain jakarta.persistence.InheritanceType#JOINED
+ * joined subclass}.
+ *
  * @author Gavin King
  */
 public class Join implements AttributeContainer, Serializable {
 
 	private static final Alias PK_ALIAS = new Alias(15, "PK");
 
-	private ArrayList properties = new ArrayList();
-	private ArrayList declaredProperties = new ArrayList();
+	private final ArrayList<Property> properties = new ArrayList<>();
+	private final ArrayList<Property> declaredProperties = new ArrayList<>();
 	private Table table;
 	private KeyValue key;
 	private PersistentClass persistentClass;
-	private boolean sequentialSelect;
 	private boolean inverse;
 	private boolean optional;
+	private boolean disableForeignKeyCreation;
 
 	// Custom SQL
 	private String customSQLInsert;
 	private boolean customInsertCallable;
-	private ExecuteUpdateResultCheckStyle insertCheckStyle;
 	private String customSQLUpdate;
 	private boolean customUpdateCallable;
-	private ExecuteUpdateResultCheckStyle updateCheckStyle;
 	private String customSQLDelete;
 	private boolean customDeleteCallable;
-	private ExecuteUpdateResultCheckStyle deleteCheckStyle;
+
+	private Supplier<? extends Expectation> insertExpectation;
+	private Supplier<? extends Expectation> updateExpectation;
+	private Supplier<? extends Expectation> deleteExpectation;
 
 	@Override
-	public void addProperty(Property prop) {
-		properties.add(prop);
-		declaredProperties.add(prop);
-		prop.setPersistentClass( getPersistentClass() );
+	public void addProperty(Property property) {
+		properties.add( property );
+		declaredProperties.add( property );
+		property.setPersistentClass( persistentClass );
 	}
 
-	public void addMappedsuperclassProperty(Property prop) {
-		properties.add(prop);
-		prop.setPersistentClass( getPersistentClass() );
+	@Override
+	public boolean contains(Property property) {
+		return properties.contains( property );
 	}
 
-	public Iterator getDeclaredPropertyIterator() {
-		return declaredProperties.iterator();
+	@Override
+	public Property getProperty(String propertyName) throws MappingException {
+		throw new UnsupportedOperationException(); //TODO
 	}
 
-	public boolean containsProperty(Property prop) {
-		return properties.contains(prop);
-	}
-	public Iterator getPropertyIterator() {
-		return properties.iterator();
+	public void addMappedSuperclassProperty(Property property ) {
+		properties.add( property );
+		property.setPersistentClass( persistentClass );
 	}
 
+	public List<Property> getDeclaredProperties() {
+		return declaredProperties;
+	}
+
+	public List<Property> getProperties() {
+		return properties;
+	}
+
+	public boolean containsProperty(Property property) {
+		return properties.contains( property );
+	}
+
+	@Override
 	public Table getTable() {
 		return table;
 	}
+
 	public void setTable(Table table) {
 		this.table = table;
 	}
@@ -73,6 +96,7 @@ public class Join implements AttributeContainer, Serializable {
 	public KeyValue getKey() {
 		return key;
 	}
+
 	public void setKey(KeyValue key) {
 		this.key = key;
 	}
@@ -85,17 +109,23 @@ public class Join implements AttributeContainer, Serializable {
 		this.persistentClass = persistentClass;
 	}
 
+	public void disableForeignKeyCreation() {
+		disableForeignKeyCreation = true;
+	}
+
 	public void createForeignKey() {
-		getKey().createForeignKeyOfEntity( persistentClass.getEntityName() );
+		final var foreignKey = getKey().createForeignKeyOfEntity( persistentClass.getEntityName() );
+		if ( disableForeignKeyCreation ) {
+			foreignKey.disableCreation();
+		}
 	}
 
 	public void createPrimaryKey() {
 		//Primary key constraint
-		PrimaryKey pk = new PrimaryKey( table );
-		pk.setName( PK_ALIAS.toAliasString( table.getName() ) );
-		table.setPrimaryKey(pk);
-
-		pk.addColumns( getKey().getColumnIterator() );
+		final var primaryKey = new PrimaryKey( table );
+		primaryKey.setName( PK_ALIAS.toAliasString( table.getName() ) );
+		table.setPrimaryKey(primaryKey);
+		primaryKey.addColumns( getKey() );
 	}
 
 	public int getPropertySpan() {
@@ -105,7 +135,7 @@ public class Join implements AttributeContainer, Serializable {
 	public void setCustomSQLInsert(String customSQLInsert, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLInsert = customSQLInsert;
 		this.customInsertCallable = callable;
-		this.insertCheckStyle = checkStyle;
+		this.insertExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLInsert() {
@@ -116,14 +146,10 @@ public class Join implements AttributeContainer, Serializable {
 		return customInsertCallable;
 	}
 
-	public ExecuteUpdateResultCheckStyle getCustomSQLInsertCheckStyle() {
-		return insertCheckStyle;
-	}
-
 	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLUpdate = customSQLUpdate;
 		this.customUpdateCallable = callable;
-		this.updateCheckStyle = checkStyle;
+		this.updateExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLUpdate() {
@@ -134,14 +160,10 @@ public class Join implements AttributeContainer, Serializable {
 		return customUpdateCallable;
 	}
 
-	public ExecuteUpdateResultCheckStyle getCustomSQLUpdateCheckStyle() {
-		return updateCheckStyle;
-	}
-
 	public void setCustomSQLDelete(String customSQLDelete, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLDelete = customSQLDelete;
 		this.customDeleteCallable = callable;
-		this.deleteCheckStyle = checkStyle;
+		this.deleteExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLDelete() {
@@ -150,17 +172,6 @@ public class Join implements AttributeContainer, Serializable {
 
 	public boolean isCustomDeleteCallable() {
 		return customDeleteCallable;
-	}
-
-	public ExecuteUpdateResultCheckStyle getCustomSQLDeleteCheckStyle() {
-		return deleteCheckStyle;
-	}
-
-	public boolean isSequentialSelect() {
-		return sequentialSelect;
-	}
-	public void setSequentialSelect(boolean deferred) {
-		this.sequentialSelect = deferred;
 	}
 
 	public boolean isInverse() {
@@ -172,14 +183,12 @@ public class Join implements AttributeContainer, Serializable {
 	}
 
 	public String toString() {
-		return getClass().getName() + '(' + table.toString() + ')';
+		return getClass().getSimpleName() + '(' + table.getName() + ')';
 	}
 
 	public boolean isLazy() {
-		Iterator iter = getPropertyIterator();
-		while ( iter.hasNext() ) {
-			Property prop = (Property) iter.next();
-			if ( !prop.isLazy() ) {
+		for ( Property property : properties ) {
+			if ( !property.isLazy() ) {
 				return false;
 			}
 		}
@@ -189,7 +198,32 @@ public class Join implements AttributeContainer, Serializable {
 	public boolean isOptional() {
 		return optional;
 	}
+
 	public void setOptional(boolean nullable) {
 		this.optional = nullable;
+	}
+
+	public Supplier<? extends Expectation> getInsertExpectation() {
+		return insertExpectation;
+	}
+
+	public void setInsertExpectation(Supplier<? extends Expectation> insertExpectation) {
+		this.insertExpectation = insertExpectation;
+	}
+
+	public Supplier<? extends Expectation> getUpdateExpectation() {
+		return updateExpectation;
+	}
+
+	public void setUpdateExpectation(Supplier<? extends Expectation> updateExpectation) {
+		this.updateExpectation = updateExpectation;
+	}
+
+	public Supplier<? extends Expectation> getDeleteExpectation() {
+		return deleteExpectation;
+	}
+
+	public void setDeleteExpectation(Supplier<? extends Expectation> deleteExpectation) {
+		this.deleteExpectation = deleteExpectation;
 	}
 }

@@ -1,19 +1,38 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.internal;
 
-import org.hibernate.cache.spi.AbstractCacheTransactionSynchronization;
-import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cache.spi.CacheTransactionSynchronization;
 
 /**
  * @author Steve Ebersole
  */
-public class NoCachingTransactionSynchronizationImpl extends AbstractCacheTransactionSynchronization {
-	public NoCachingTransactionSynchronizationImpl(RegionFactory regionFactory) {
-		super( regionFactory );
+public class NoCachingTransactionSynchronizationImpl implements CacheTransactionSynchronization {
+	public static final NoCachingTransactionSynchronizationImpl INSTANCE = new NoCachingTransactionSynchronizationImpl();
+
+	private NoCachingTransactionSynchronizationImpl() {
+		//noop
+	}
+
+	@Override
+	public long getCachingTimestamp() {
+		throw new UnsupportedOperationException("Method not supported when 2LC is not enabled");
+	}
+
+	@Override
+	public void transactionJoined() {
+		//noop
+	}
+
+	@Override
+	public void transactionCompleting() {
+		//noop
+	}
+
+	@Override
+	public void transactionCompleted(boolean successful) {
+		//noop
 	}
 }

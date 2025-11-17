@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util;
 
@@ -15,28 +13,28 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.util.Objects;
 
 import org.hibernate.Hibernate;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.SerializationException;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+
 /**
- * <p>Assists with the serialization process and performs additional functionality based
- * on serialization.</p>
+ * Assists with the serialization process and performs additional
+ * functionality based on serialization.
  * <p>
  * <ul>
  * <li>Deep clone using serialization
  * <li>Serialize managing finally and IOException
  * <li>Deserialize managing finally and IOException
  * </ul>
- * <p/>
- * <p>This class throws exceptions for invalid <code>null</code> inputs.
- * Each method documents its behaviour in more detail.</p>
+ * <p>
+ * This class throws exceptions for invalid {@code null} inputs.
  *
- * @author <a href="mailto:nissim@nksystems.com">Nissim Karpenstein</a>
- * @author <a href="mailto:janekdb@yahoo.co.uk">Janek Bogucki</a>
- * @author <a href="mailto:dlr@finemaltcoding.com">Daniel Rall</a>
+ * @author Nissim Karpenstein
+ * @author Janek Bogucki
+ * @author Daniel Rall
  * @author Stephen Colebourne
  * @author Jeff Varszegi
  * @author Gary Gregory
@@ -44,7 +42,6 @@ import org.hibernate.type.SerializationException;
  * @since 1.0
  */
 public final class SerializationHelper {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SerializationHelper.class );
 
 	private SerializationHelper() {
 	}
@@ -53,22 +50,22 @@ public final class SerializationHelper {
 	//-----------------------------------------------------------------------
 
 	/**
-	 * <p>Deep clone an <code>Object</code> using serialization.</p>
-	 * <p/>
-	 * <p>This is many times slower than writing clone methods by hand
+	 * Deep clone an object using serialization.
+	 * <p>
+	 * This is many times slower than writing clone methods by hand
 	 * on all objects in your object graph. However, for complex object
 	 * graphs, or for those that don't support deep cloning this can
 	 * be a simple alternative implementation. Of course all the objects
-	 * must be <code>Serializable</code>.</p>
+	 * must be {@code Serializable}.
 	 *
-	 * @param object the <code>Serializable</code> object to clone
+	 * @param object the {@code Serializable} object to clone
 	 *
 	 * @return the cloned object
 	 *
 	 * @throws SerializationException (runtime) if the serialization fails
 	 */
 	public static Object clone(Serializable object) throws SerializationException {
-		LOG.trace( "Starting clone through serialization" );
+		CORE_LOGGER.trace( "Starting clone through serialization" );
 		if ( object == null ) {
 			return null;
 		}
@@ -79,19 +76,19 @@ public final class SerializationHelper {
 	//-----------------------------------------------------------------------
 
 	/**
-	 * <p>Serializes an <code>Object</code> to the specified stream.</p>
-	 * <p/>
-	 * <p>The stream will be closed once the object is written.
-	 * This avoids the need for a finally clause, and maybe also exception
-	 * handling, in the application code.</p>
-	 * <p/>
-	 * <p>The stream passed in is not buffered internally within this method.
-	 * This is the responsibility of your application if desired.</p>
+	 * <p>Serializes an object to the given stream.
+	 * <p>
+	 * The stream will be closed once the object is written.
+	 * This avoids the need for a finally clause, and maybe also
+	 * for exception handling, in the application code.
+	 * <p>
+	 * The stream passed in is not buffered internally within this
+	 * method. This is the responsibility of the caller, if desired.
 	 *
 	 * @param obj the object to serialize to bytes, may be null
 	 * @param outputStream the stream to write to, must not be null
 	 *
-	 * @throws IllegalArgumentException if <code>outputStream</code> is <code>null</code>
+	 * @throws IllegalArgumentException if {@code outputStream} is null
 	 * @throws SerializationException (runtime) if the serialization fails
 	 */
 	public static void serialize(Serializable obj, OutputStream outputStream) throws SerializationException {
@@ -99,39 +96,26 @@ public final class SerializationHelper {
 			throw new IllegalArgumentException( "The OutputStream must not be null" );
 		}
 
-		if ( LOG.isTraceEnabled() ) {
+		if ( CORE_LOGGER.isTraceEnabled() ) {
 			if ( Hibernate.isInitialized( obj ) ) {
-				LOG.tracev( "Starting serialization of object [{0}]", obj );
+				CORE_LOGGER.tracev( "Starting serialization of object [{0}]", obj );
 			}
 			else {
-				LOG.trace( "Starting serialization of [uninitialized proxy]" );
+				CORE_LOGGER.trace( "Starting serialization of [uninitialized proxy]" );
 			}
 		}
 
-		ObjectOutputStream out = null;
-		try {
-			// stream closed in the finally
-			out = new ObjectOutputStream( outputStream );
+		try ( var out = new ObjectOutputStream( outputStream ) ) {
 			out.writeObject( obj );
-
 		}
 		catch (IOException ex) {
 			throw new SerializationException( "could not serialize", ex );
 		}
-		finally {
-			try {
-				if ( out != null ) {
-					out.close();
-				}
-			}
-			catch (IOException ignored) {
-			}
-		}
 	}
 
 	/**
-	 * <p>Serializes an <code>Object</code> to a byte array for
-	 * storage/serialization.</p>
+	 * Serializes an object to a byte array for storage or
+	 * externalization.
 	 *
 	 * @param obj the object to serialize to bytes
 	 *
@@ -140,7 +124,7 @@ public final class SerializationHelper {
 	 * @throws SerializationException (runtime) if the serialization fails
 	 */
 	public static byte[] serialize(Serializable obj) throws SerializationException {
-		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream( 512 );
+		final var byteArrayOutputStream = new ByteArrayOutputStream( 512 );
 		serialize( obj, byteArrayOutputStream );
 		return byteArrayOutputStream.toByteArray();
 	}
@@ -149,16 +133,16 @@ public final class SerializationHelper {
 	//-----------------------------------------------------------------------
 
 	/**
-	 * Deserializes an object from the specified stream using the Thread Context
-	 * ClassLoader (TCCL).
-	 * <p/>
+	 * Deserializes an object from the given stream using the
+	 * Thread Context ClassLoader (TCCL).
+	 * <p>
 	 * Delegates to {@link #doDeserialize}
 	 *
 	 * @param inputStream the serialized object input stream, must not be null
 	 *
 	 * @return the deserialized object
 	 *
-	 * @throws IllegalArgumentException if <code>inputStream</code> is <code>null</code>
+	 * @throws IllegalArgumentException if {@code inputStream} is null
 	 * @throws SerializationException (runtime) if the serialization fails
 	 */
 	public static <T> T deserialize(InputStream inputStream) throws SerializationException {
@@ -179,16 +163,16 @@ public final class SerializationHelper {
 	}
 
 	/**
-	 * Deserializes an object from the specified stream using the Thread Context
-	 * ClassLoader (TCCL).  If there is no TCCL set, the classloader of the calling
-	 * class is used.
-	 * <p/>
-	 * The stream will be closed once the object is read. This avoids the need
-	 * for a finally clause, and maybe also exception handling, in the application
-	 * code.
-	 * <p/>
-	 * The stream passed in is not buffered internally within this method.  This is
-	 * the responsibility of the caller, if desired.
+	 * Deserializes an object from the given stream using the
+	 * Thread Context ClassLoader (TCCL). If there is no TCCL set,
+	 * the classloader of the calling class is used.
+	 * <p>
+	 * The stream will be closed once the object is read. This
+	 * avoids the need for a finally clause, and maybe also for
+	 * exception handling, in the application code.
+	 * <p>
+	 * The stream passed in is not buffered internally within this
+	 * method. This is the responsibility of the caller, if desired.
 	 *
 	 * @param inputStream the serialized object input stream, must not be null
 	 * @param loader The classloader to use
@@ -202,7 +186,6 @@ public final class SerializationHelper {
 		return doDeserialize( inputStream, loader, defaultClassLoader(), hibernateClassLoader() );
 	}
 
-	@SuppressWarnings("unchecked")
 	public static <T> T doDeserialize(
 			InputStream inputStream,
 			ClassLoader loader,
@@ -212,43 +195,22 @@ public final class SerializationHelper {
 			throw new IllegalArgumentException( "The InputStream must not be null" );
 		}
 
-		LOG.trace( "Starting deserialization of object" );
+		CORE_LOGGER.trace( "Starting deserialization of object" );
 
-		try {
-			CustomObjectInputStream in = new CustomObjectInputStream(
-					inputStream,
-					loader,
-					fallbackLoader1,
-					fallbackLoader2
-			);
-			try {
-				return (T) in.readObject();
-			}
-			catch (ClassNotFoundException e) {
-				throw new SerializationException( "could not deserialize", e );
-			}
-			catch (IOException e) {
-				throw new SerializationException( "could not deserialize", e );
-			}
-			finally {
-				try {
-					in.close();
-				}
-				catch (IOException ignore) {
-					// ignore
-				}
-			}
+		try ( var in = new CustomObjectInputStream( inputStream, loader, fallbackLoader1, fallbackLoader2 ) ) {
+			//noinspection unchecked
+			return (T) in.readObject();
 		}
-		catch (IOException e) {
+		catch (ClassNotFoundException | IOException e) {
 			throw new SerializationException( "could not deserialize", e );
 		}
 	}
 
 	/**
-	 * Deserializes an object from an array of bytes using the Thread Context
-	 * ClassLoader (TCCL).  If there is no TCCL set, the classloader of the calling
-	 * class is used.
-	 * <p/>
+	 * Deserializes an object from an array of bytes using the
+	 * Thread Context ClassLoader (TCCL). If there is no TCCL set,
+	 * the classloader of the calling class is used.
+	 * <p>
 	 * Delegates to {@link #deserialize(byte[], ClassLoader)}
 	 *
 	 * @param objectData the serialized object, must not be null
@@ -271,8 +233,8 @@ public final class SerializationHelper {
 
 	/**
 	 * Deserializes an object from an array of bytes.
-	 * <p/>
-	 * Delegates to {@link #deserialize(java.io.InputStream, ClassLoader)} using a
+	 * <p>
+	 * Delegates to {@link #deserialize(InputStream, ClassLoader)} using a
 	 * {@link ByteArrayInputStream} to wrap the array.
 	 *
 	 * @param objectData the serialized object, must not be null
@@ -290,10 +252,10 @@ public final class SerializationHelper {
 
 	/**
 	 * By default, to resolve the classes being deserialized JDK serialization uses the
-	 * classes loader which loaded the class which initiated the deserialization call.  Here
-	 * that would be hibernate classes.  However, there are cases where that is not the correct
+	 * classes loader which loaded the class which initiated the deserialization call. Here
+	 * that would be Hibernate classes. However, there are cases where that is not the correct
 	 * class loader to use; mainly here we are worried about deserializing user classes in
-	 * environments (app servers, etc) where Hibernate is on a parent classes loader.  To
+	 * environments (app servers, etc) where Hibernate is on a parent classes loader. To
 	 * facilitate for that we allow passing in the class loader we should use.
 	 */
 	private static final class CustomObjectInputStream extends ObjectInputStream {
@@ -312,49 +274,39 @@ public final class SerializationHelper {
 			this.loader3 = loader3;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
 		@Override
-		protected Class resolveClass(ObjectStreamClass v) throws IOException, ClassNotFoundException {
+		protected Class<?> resolveClass(ObjectStreamClass v) throws IOException, ClassNotFoundException {
 			final String className = v.getName();
-			LOG.tracev( "Attempting to locate class [{0}]", className );
+			CORE_LOGGER.tracev( "Attempting to locate class [{0}]", className );
 
 			try {
 				return Class.forName( className, false, loader1 );
 			}
 			catch (ClassNotFoundException e) {
-				LOG.trace( "Unable to locate class using given classloader" );
+				CORE_LOGGER.trace( "Unable to locate class using given classloader" );
 			}
 
-			if ( different( loader1, loader2 ) ) {
+			if ( !Objects.equals( loader1, loader2 ) ) {
 				try {
 					return Class.forName( className, false, loader2 );
 				}
 				catch (ClassNotFoundException e) {
-					LOG.trace( "Unable to locate class using given classloader" );
+					CORE_LOGGER.trace( "Unable to locate class using given classloader" );
 				}
 			}
 
-			if ( different( loader1, loader3 ) && different( loader2, loader3 ) ) {
+			if ( !Objects.equals( loader1, loader3 ) && !Objects.equals( loader2, loader3 ) ) {
 				try {
 					return Class.forName( className, false, loader3 );
 				}
 				catch (ClassNotFoundException e) {
-					LOG.trace( "Unable to locate class using given classloader" );
+					CORE_LOGGER.trace( "Unable to locate class using given classloader" );
 				}
 			}
 
-			// By default delegate to normal JDK deserialization which will use the class loader
-			// of the class which is calling this deserialization.
+			// By default, delegate to normal JDK deserialization which will use the
+			// class loader of the class which is calling this deserialization.
 			return super.resolveClass( v );
-		}
-
-		private boolean different(ClassLoader one, ClassLoader other) {
-			if ( one == null ) {
-				return other != null;
-			}
-			return !one.equals( other );
 		}
 	}
 }

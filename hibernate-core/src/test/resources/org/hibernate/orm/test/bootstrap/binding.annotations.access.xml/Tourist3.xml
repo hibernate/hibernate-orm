@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="2.0">
+    <description>Mapping for Tourist entity</description>
+    <package>org.hibernate.orm.test.bootstrap.binding.annotations.access.xml</package>
+    <access>PROPERTY</access>
+    <entity class="Tourist" cacheable="false" metadata-complete="false">
+        <attributes>
+            <id name="id" access="FIELD"/>
+        </attributes>
+    </entity>
+</entity-mappings>

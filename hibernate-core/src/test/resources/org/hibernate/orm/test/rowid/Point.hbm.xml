@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+  
+-->
+
+<hibernate-mapping package="org.hibernate.orm.test.rowid">
+
+	<typedef name="rowid" class="org.hibernate.orm.test.rowid.RowIdType"/>
+	
+	<class name="Point" rowid="rowid">
+		<composite-id>
+			<key-property name="x" column="`x`"/>
+			<key-property name="y" column="`y`"/>
+		</composite-id>
+		<property name="description"/>
+		<property name="row" type="rowid" column="rowid" insert="false" update="false"/>
+	</class>
+	
+</hibernate-mapping>
+

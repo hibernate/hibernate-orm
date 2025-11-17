@@ -1,221 +1,150 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import org.hibernate.HibernateException;
-import org.hibernate.JDBCException;
-import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.hql.internal.HolderInstantiator;
-import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.loader.Loader;
-import org.hibernate.type.Type;
+import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
+import org.hibernate.sql.results.jdbc.spi.JdbcValues;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
+import org.hibernate.sql.results.spi.LoadContexts;
+import org.hibernate.sql.results.spi.RowReader;
 
 /**
- * Standard ScrollableResults implementation.
+ * Standard {@link org.hibernate.ScrollableResults} implementation.
  *
  * @author Gavin King
  */
-public class ScrollableResultsImpl extends AbstractScrollableResults implements ScrollableResults {
-	private Object[] currentRow;
+public class ScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
+	private R currentRow;
 
-	/**
-	 * Constructs a ScrollableResultsImpl using the specified information.
-	 *
-	 * @param rs The scrollable result set
-	 * @param ps The prepared statement used to obtain the result set
-	 * @param sess The originating session
-	 * @param loader The loader
-	 * @param queryParameters query parameters
-	 * @param types The result types
-	 * @param holderInstantiator Ugh
-	 */
 	public ScrollableResultsImpl(
-			ResultSet rs,
-			PreparedStatement ps,
-			SharedSessionContractImplementor sess,
-			Loader loader,
-			QueryParameters queryParameters,
-			Type[] types, HolderInstantiator holderInstantiator) {
-		super( rs, ps, sess, loader, queryParameters, types, holderInstantiator );
+			JdbcValues jdbcValues,
+			JdbcValuesSourceProcessingOptions processingOptions,
+			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
+			RowProcessingStateStandardImpl rowProcessingState,
+			RowReader<R> rowReader,
+			SharedSessionContractImplementor persistenceContext) {
+		super(
+				jdbcValues,
+				processingOptions,
+				jdbcValuesSourceProcessingState,
+				rowProcessingState,
+				rowReader,
+				persistenceContext
+		);
 	}
 
 	@Override
-	protected Object[] getCurrentRow() {
+	protected R getCurrentRow() {
 		return currentRow;
 	}
 
 	@Override
-	public boolean scroll(int i) {
-		try {
-			final boolean result = getResultSet().relative( i );
-			prepareCurrentRow( result );
-			return result;
-		}
-		catch (SQLException sqle) {
-			throw convert( sqle, "could not advance using scroll()" );
-		}
-	}
-
-	protected JDBCException convert(SQLException sqle, String message) {
-		return getSession().getFactory().getSQLExceptionHelper().convert( sqle, message );
-	}
-
-	@Override
-	public boolean first() {
-		try {
-			final boolean result = getResultSet().first();
-			prepareCurrentRow( result );
-			return result;
-		}
-		catch (SQLException sqle) {
-			throw convert( sqle, "could not advance using first()" );
-		}
-	}
-
-	@Override
-	public boolean last() {
-		try {
-			final boolean result = getResultSet().last();
-			prepareCurrentRow( result );
-			return result;
-		}
-		catch (SQLException sqle) {
-			throw convert( sqle, "could not advance using last()" );
-		}
-	}
-
-	@Override
 	public boolean next() {
-		try {
-			final boolean result = getResultSet().next();
-			prepareCurrentRow( result );
-			return result;
-		}
-		catch (SQLException sqle) {
-			throw convert( sqle, "could not advance using next()" );
-		}
+		final boolean result = getRowProcessingState().next();
+		prepareCurrentRow( result );
+		return result;
 	}
 
 	@Override
 	public boolean previous() {
-		try {
-			final boolean result = getResultSet().previous();
-			prepareCurrentRow( result );
-			return result;
-		}
-		catch (SQLException sqle) {
-			throw convert( sqle, "could not advance using previous()" );
-		}
+		final boolean result = getRowProcessingState().previous();
+		prepareCurrentRow( result );
+		return result;
+	}
+
+	@Override
+	public boolean scroll(int i) {
+		final boolean hasResult = getRowProcessingState().scroll( i );
+		prepareCurrentRow( hasResult );
+		return hasResult;
+	}
+
+	@Override
+	public boolean position(int position) {
+		final boolean hasResult = getRowProcessingState().position( position );
+		prepareCurrentRow( hasResult );
+		return hasResult;
+	}
+
+	@Override
+	public boolean first() {
+		final boolean hasResult = getRowProcessingState().first();
+		prepareCurrentRow( hasResult );
+		return hasResult;
+	}
+
+	@Override
+	public boolean last() {
+		final boolean hasResult = getRowProcessingState().last();
+		prepareCurrentRow( hasResult );
+		return hasResult;
 	}
 
 	@Override
 	public void afterLast() {
-		try {
-			getResultSet().afterLast();
-		}
-		catch (SQLException sqle) {
-			throw convert( sqle, "exception calling afterLast()" );
-		}
+		getRowProcessingState().afterLast();
 	}
 
 	@Override
 	public void beforeFirst() {
-		try {
-			getResultSet().beforeFirst();
-		}
-		catch (SQLException sqle) {
-			throw convert( sqle, "exception calling beforeFirst()" );
-		}
+		getRowProcessingState().beforeFirst();
 	}
 
 	@Override
 	public boolean isFirst() {
-		try {
-			return getResultSet().isFirst();
-		}
-		catch (SQLException sqle) {
-			throw convert( sqle, "exception calling isFirst()" );
-		}
+		return getRowProcessingState().isFirst();
 	}
 
 	@Override
 	public boolean isLast() {
-		try {
-			return getResultSet().isLast();
-		}
-		catch (SQLException sqle) {
-			throw convert( sqle, "exception calling isLast()" );
-		}
+		return getRowProcessingState().isLast();
 	}
 
 	@Override
-	public int getRowNumber() throws HibernateException {
-		try {
-			return getResultSet().getRow() - 1;
-		}
-		catch (SQLException sqle) {
-			throw convert( sqle, "exception calling getRow()" );
-		}
+	public int getRowNumber() {
+		return getPosition() - 1;
 	}
 
 	@Override
-	public boolean setRowNumber(int rowNumber) throws HibernateException {
-		if ( rowNumber >= 0 ) {
-			rowNumber++;
-		}
+	public int getPosition() {
+		return getRowProcessingState().getPosition();
+	}
 
-		try {
-			final boolean result = getResultSet().absolute( rowNumber );
-			prepareCurrentRow( result );
-			return result;
-		}
-		catch (SQLException sqle) {
-			throw convert( sqle, "could not advance using absolute()" );
-		}
+	@Override
+	public boolean setRowNumber(int rowNumber) {
+		return position( rowNumber );
 	}
 
 	private void prepareCurrentRow(boolean underlyingScrollSuccessful) {
-		if ( !underlyingScrollSuccessful ) {
+		if ( underlyingScrollSuccessful ) {
+			final PersistenceContext persistenceContext = getPersistenceContext().getPersistenceContext();
+			final LoadContexts loadContexts = persistenceContext.getLoadContexts();
+			loadContexts.register( getJdbcValuesSourceProcessingState() );
+			persistenceContext.beforeLoad();
+			try {
+				try {
+					currentRow = getRowReader().readRow( getRowProcessingState() );
+					getRowProcessingState().finishRowProcessing( true );
+					getJdbcValuesSourceProcessingState().finishUp( false );
+				}
+				finally {
+					persistenceContext.afterLoad();
+				}
+				persistenceContext.initializeNonLazyCollections();
+			}
+			finally {
+				loadContexts.deregister( getJdbcValuesSourceProcessingState() );
+			}
+			afterScrollOperation();
+		}
+		else {
 			currentRow = null;
-			return;
 		}
-
-		final PersistenceContext persistenceContext = getSession().getPersistenceContextInternal();
-		persistenceContext.beforeLoad();
-		try {
-			final Object result = getLoader().loadSingleRow(
-					getResultSet(),
-					getSession(),
-					getQueryParameters(),
-					true
-			);
-			if ( result != null && result.getClass().isArray() ) {
-				currentRow = ArrayHelper.toObjectArray( result );
-			}
-			else {
-				currentRow = new Object[] { result };
-			}
-
-			if ( getHolderInstantiator() != null ) {
-				currentRow = new Object[] { getHolderInstantiator().instantiate( currentRow ) };
-			}
-		}
-		finally {
-			persistenceContext.afterLoad();
-		}
-
-		afterScrollOperation();
 	}
 
 }

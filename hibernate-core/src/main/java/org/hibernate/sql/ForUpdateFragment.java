@@ -1,126 +1,79 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql;
 
-import java.util.Iterator;
-import java.util.Map;
-
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
+
+import java.util.Map;
 
 /**
+ * A SQL {@code FOR UPDATE} clause.
+ *
  * @author Gavin King
  */
 public class ForUpdateFragment {
-	private final StringBuilder aliases = new StringBuilder();
-	private boolean isNowaitEnabled;
-	private boolean isSkipLockedEnabled;
+	private final StringBuilder lockItemFragment = new StringBuilder();
 	private final Dialect dialect;
-	private LockMode lockMode;
-	private LockOptions lockOptions;
+	private final LockOptions lockOptions;
 
-	public ForUpdateFragment(Dialect dialect) {
+	public ForUpdateFragment(Dialect dialect, LockOptions lockOptions, Map<String, String[]> keyColumnNameMap) {
 		this.dialect = dialect;
-	}
-
-	public ForUpdateFragment(Dialect dialect, LockOptions lockOptions, Map<String, String[]> keyColumnNames) throws QueryException {
-		this( dialect );
-		LockMode upgradeType = null;
-		Iterator iter = lockOptions.getAliasLockIterator();
 		this.lockOptions =  lockOptions;
 
-		if ( !iter.hasNext()) {  // no tables referenced
-			final LockMode lockMode = lockOptions.getLockMode();
-			if ( LockMode.READ.lessThan( lockMode ) ) {
-				upgradeType = lockMode;
-				this.lockMode = lockMode;
+		if ( lockOptions.getLockMode() == LockMode.NONE ) {
+			return;
+		}
+
+		if ( CollectionHelper.isEmpty( keyColumnNameMap ) ) {
+			return;
+		}
+
+		final RowLockStrategy lockStrategy = dialect.getWriteRowLockStrategy();
+		if ( lockStrategy == RowLockStrategy.NONE ) {
+			return;
+		}
+
+		keyColumnNameMap.forEach( (tableAlias, keyColumnNames) -> {
+			if ( lockStrategy == RowLockStrategy.TABLE ) {
+				addLockItem( tableAlias );
 			}
-		}
-
-		while ( iter.hasNext() ) {
-			final Map.Entry me = ( Map.Entry ) iter.next();
-			final LockMode lockMode = ( LockMode ) me.getValue();
-			if ( LockMode.READ.lessThan( lockMode ) ) {
-				final String tableAlias = ( String ) me.getKey();
-				if ( dialect.forUpdateOfColumns() ) {
-					String[] keyColumns = keyColumnNames.get( tableAlias ); //use the id column alias
-					if ( keyColumns == null ) {
-						throw new IllegalArgumentException( "alias not found: " + tableAlias );
-					}
-					keyColumns = StringHelper.qualify( tableAlias, keyColumns );
-					for ( String keyColumn : keyColumns ) {
-						addTableAlias( keyColumn );
-					}
+			else {
+				assert lockStrategy == RowLockStrategy.COLUMN;
+				for ( String keyColumnReference : StringHelper.qualify( tableAlias, keyColumnNames ) ) {
+					addLockItem( keyColumnReference );
 				}
-				else {
-					addTableAlias( tableAlias );
-				}
-				if ( upgradeType != null && lockMode != upgradeType ) {
-					throw new QueryException( "mixed LockModes" );
-				}
-				upgradeType = lockMode;
 			}
-		}
-
-		if ( upgradeType == LockMode.UPGRADE_NOWAIT || lockOptions.getTimeOut() == LockOptions.NO_WAIT ) {
-			setNowaitEnabled( true );
-		}
-
-		if ( upgradeType == LockMode.UPGRADE_SKIPLOCKED || lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ) {
-			setSkipLockedEnabled( true );
-		}
+		} );
 	}
 
 	public ForUpdateFragment addTableAlias(String alias) {
-		if ( aliases.length() > 0 ) {
-			aliases.append( ", " );
+		addLockItem( alias );
+		return this;
+	}
+
+	public ForUpdateFragment addLockItem(String itemText) {
+		if ( !lockItemFragment.isEmpty() ) {
+			lockItemFragment.append( ", " );
 		}
-		aliases.append( alias );
+		lockItemFragment.append( itemText );
 		return this;
 	}
 
 	public String toFragmentString() {
-		if ( lockOptions!= null ) {
-			if ( aliases.length() == 0) {
-				return dialect.getForUpdateString( lockOptions );
-			}
-			else {
-				return dialect.getForUpdateString( aliases.toString(), lockOptions );
-			}
-		}
-		else if ( aliases.length() == 0) {
-			if ( lockMode != null ) {
-				return dialect.getForUpdateString( lockMode );
-			}
-			return "";
-		}
-		// TODO:  pass lock mode
-		if(isNowaitEnabled) {
-			return dialect.getForUpdateNowaitString( aliases.toString() );
-		}
-		else if (isSkipLockedEnabled) {
-			return dialect.getForUpdateSkipLockedString( aliases.toString() );
+		if ( lockItemFragment.isEmpty() ) {
+			return dialect.getForUpdateString( lockOptions );
 		}
 		else {
-			return dialect.getForUpdateString( aliases.toString() );
+			return dialect.getForUpdateString( lockItemFragment.toString(), lockOptions );
 		}
 	}
 
-	public ForUpdateFragment setNowaitEnabled(boolean nowait) {
-		isNowaitEnabled = nowait;
-		return this;
-	}
-
-	public ForUpdateFragment setSkipLockedEnabled(boolean skipLocked) {
-		isSkipLockedEnabled = skipLocked;
-		return this;
-	}
 
 }

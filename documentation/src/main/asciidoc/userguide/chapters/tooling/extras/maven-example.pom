@@ -1,0 +1,18 @@
+<build>
+    <plugins>
+        [...]
+        <plugin>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-maven-plugin</artifactId>
+            <version>$currentHibernateVersion</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>enhance</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+        [...]
+    </plugins>
+</build>

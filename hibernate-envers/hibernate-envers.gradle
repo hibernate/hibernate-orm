@@ -1,26 +1,36 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 
-description = 'Hibernate\'s entity version (audit/history) support'
+plugins {
+    id "local.publishing-java-module"
+    id "local.publishing-group-relocation"
+}
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-apply plugin: 'hibernate-matrix-testing'
+description = "Hibernate's entity version (audit/history) support"
 
 dependencies {
-    compile( project( ':hibernate-core' ) ) {
-        // Exclude access to this to avoid future use.
-        exclude group: "org.javassist", module: "javassist"
-    }
+    api project( ':hibernate-core' )
 
-    provided( libraries.ant )
-    annotationProcessor( project( ':hibernate-jpamodelgen' ) )
+    implementation libs.hibernateModels
+    implementation jakartaLibs.jaxbApi
+    implementation jakartaLibs.jaxb
+    implementation libs.jandex
+    implementation libs.hibernateModels
 
-    testCompile( project( ':hibernate-testing' ) )
-    testCompile( project( path: ':hibernate-core', configuration: 'tests' ) )
+    compileOnly libs.ant
+
+    annotationProcessor project( ':hibernate-processor' )
+    compileOnly jakartaLibs.annotation
+
+    testImplementation project( ':hibernate-testing' )
+
+    testAnnotationProcessor project( ':hibernate-processor' )
+}
+
+test {
+    include '**/**'
 }
 
 sourceSets {
@@ -38,32 +48,47 @@ sourceSets {
     }
 }
 
-jar {
-    manifest {
-        attributes(
-                // BND Plugin instructions (for OSGi):
-                'Import-Package': [
-                        // TODO: Shouldn't have to explicitly list the JPA packages, but
-                        // the plugin generates them with [1.0,2) versions.
-                        "javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
-                        "javax.persistence.criteria;version=\"${project.jpaVersion.osgiName}\"",
-                        "javax.persistence.metamodel;version=\"${project.jpaVersion.osgiName}\"",
-                        "javax.persistence.spi;version=\"${project.jpaVersion.osgiName}\"",
-                        // optionals
-                        'javax.naming;resolution:=optional',
-                        'org.apache.tools.ant;resolution:=optional',
-                        // Temporarily support JTA 1.1 -- Karaf and other frameworks still
-                        // use it.  Without this, the plugin generates [1.2,2).
-                        'javax.transaction;version="[1.1,2)"',
-                        // Also import every package referenced in the code
-                        '*'
-                ].join( ',' )
-        )
+configurations {
+    tests {
+        description = 'Configuration for the produced test jar'
     }
 }
 
-tasks."matrix_mariadb" {
-    beforeTest { descriptor ->
-        println "Starting test: " + descriptor
+tasks.withType( Test.class ).each { test ->
+    // see GradleParallelTestingResolver for how the test worker id is resolved in JDBC configs
+    if ( project.db == "h2" || project.db == "hsqldb" || project.db == "pgsql_ci" || project.db == "edb_ci"
+            || project.db == "oracle_ci" || project.db == "oracle_xe_ci" || project.db == "mysql_ci" || project.db == "mariadb_ci"
+            || project.db == "db2_ci" || project.db == "mssql_ci" || project.db == "cockroachdb" ) {
+        // Most systems have multi-threading and maxing out a core on both threads will hurt performance
+        // Also, as soon as we hit 16+ threads, the returns are diminishing, so divide by 4
+        def threadCount = Runtime.runtime.availableProcessors()
+        def testThreads = project.getProperties().get( "test.threads" )
+        if ( testThreads == null ) {
+            testThreads = threadCount >= 16 ? threadCount.intdiv( 4 ) : (threadCount.intdiv( 2 ) ?: 1)
+        }
+        else {
+            testThreads = Integer.parseInt( testThreads.toString() )
+        }
+        test.maxParallelForks = testThreads
+        test.systemProperty 'maxParallelForks', test.maxParallelForks
     }
+    else if ( project.db == "oracle_test_pilot_database" ) {
+        // Since Oracle TestPilot databases run on separate machines, use all threads for testing
+        test.maxParallelForks = Runtime.runtime.availableProcessors()
+        test.systemProperty 'maxParallelForks', test.maxParallelForks
+    }
+}
+
+sourcesJar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+task testJar(type: Jar, dependsOn: testClasses) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set( 'test' )
+    from sourceSets.test.output
+}
+
+artifacts {
+    tests testJar
 }

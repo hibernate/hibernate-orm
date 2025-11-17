@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -46,7 +44,7 @@ class SingularAttributeSourceOneToOneImpl
 
 	private final FetchCharacteristicsSingularAssociationImpl fetchCharacteristics;
 
-	private ToolingHintContext toolingHintContext;
+	private final ToolingHintContext toolingHintContext;
 
 	SingularAttributeSourceOneToOneImpl(
 			MappingDocument mappingDocument,
@@ -70,7 +68,7 @@ class SingularAttributeSourceOneToOneImpl
 
 		if ( StringHelper.isNotEmpty( oneToOneElement.getFormulaAttribute() ) ) {
 			formulaSources = Collections.singletonList(
-					(DerivedValueSource) new FormulaImpl( mappingDocument, logicalTableName, oneToOneElement.getFormulaAttribute() )
+					new FormulaImpl( mappingDocument, logicalTableName, oneToOneElement.getFormulaAttribute() )
 			);
 		}
 		else if ( !oneToOneElement.getFormula().isEmpty() ) {
@@ -89,7 +87,7 @@ class SingularAttributeSourceOneToOneImpl
 		this.attributePath = container.getAttributePathBase().append( oneToOneElement.getName() );
 
 		this.fetchCharacteristics = FetchCharacteristicsSingularAssociationImpl.interpretOneToOne(
-				mappingDocument.getMappingDefaults(),
+				mappingDocument.getEffectiveDefaults(),
 				oneToOneElement.getFetch(),
 				oneToOneElement.getOuterJoin(),
 				oneToOneElement.getLazy(),

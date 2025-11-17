@@ -1,19 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
 import org.hibernate.ReplicationMode;
 
 /**
- *  Defines an event class for the replication of an entity.
+ * Event class for {@link org.hibernate.Session#replicate}.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.Session#replicate
  */
-public class ReplicateEvent extends AbstractEvent {
+public class ReplicateEvent extends AbstractSessionEvent {
 	private Object object;
 	private ReplicationMode replicationMode;
 	private String entityName;
@@ -21,20 +21,16 @@ public class ReplicateEvent extends AbstractEvent {
 	public ReplicateEvent(Object object, ReplicationMode replicationMode, EventSource source) {
 		this(null, object, replicationMode, source);
 	}
-	
+
 	public ReplicateEvent(String entityName, Object object, ReplicationMode replicationMode, EventSource source) {
 		super(source);
 		this.entityName = entityName;
 
 		if ( object == null ) {
-			throw new IllegalArgumentException(
-					"attempt to create replication strategy with null entity"
-			);
+			throw new IllegalArgumentException( "Entity may not be null" );
 		}
 		if ( replicationMode == null ) {
-			throw new IllegalArgumentException(
-					"attempt to create replication strategy with null replication mode"
-			);
+			throw new IllegalArgumentException( "ReplicationMode may not be null" );
 		}
 
 		this.object = object;

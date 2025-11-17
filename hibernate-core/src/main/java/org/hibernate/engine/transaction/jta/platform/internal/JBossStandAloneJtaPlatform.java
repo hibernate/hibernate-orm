@@ -1,13 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.transaction.jta.platform.internal;
 
-import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
+import jakarta.transaction.TransactionManager;
+import jakarta.transaction.UserTransaction;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
@@ -18,7 +16,9 @@ import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
+ * @deprecated Use {@link WildFlyStandAloneJtaPlatform} or {@link NarayanaJtaPlatform} instead.
  */
+@Deprecated
 public class JBossStandAloneJtaPlatform extends AbstractJtaPlatform {
 
 	public static final String JBOSS_TM_CLASS_NAME = "com.arjuna.ats.jta.TransactionManager";
@@ -37,10 +37,10 @@ public class JBossStandAloneJtaPlatform extends AbstractJtaPlatform {
 		}
 
 		try {
-			final Class jbossTmClass = serviceRegistry()
-					.getService( ClassLoaderService.class )
-					.classForName( JBOSS_TM_CLASS_NAME );
-			return (TransactionManager) jbossTmClass.getMethod( "transactionManager" ).invoke( null );
+			return (TransactionManager) serviceRegistry().requireService( ClassLoaderService.class )
+					.classForName( JBOSS_TM_CLASS_NAME )
+					.getMethod( "transactionManager" )
+					.invoke( null );
 		}
 		catch ( Exception e ) {
 			throw new JtaPlatformException( "Could not obtain JBoss Transactions transaction manager instance", e );
@@ -58,10 +58,11 @@ public class JBossStandAloneJtaPlatform extends AbstractJtaPlatform {
 		}
 
 		try {
-			final Class jbossUtClass = serviceRegistry()
-					.getService( ClassLoaderService.class )
-					.classForName( JBOSS_UT_CLASS_NAME );
-			return (UserTransaction) jbossUtClass.getMethod( "userTransaction" ).invoke( null );
+			return (UserTransaction) serviceRegistry()
+					.requireService( ClassLoaderService.class )
+					.classForName( JBOSS_UT_CLASS_NAME )
+					.getMethod( "userTransaction" )
+					.invoke( null );
 		}
 		catch ( Exception e ) {
 			throw new JtaPlatformException( "Could not obtain JBoss Transactions user transaction instance", e );

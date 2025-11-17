@@ -1,19 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.internal.util;
 
-import javax.persistence.CacheRetrieveMode;
-import javax.persistence.CacheStoreMode;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.CacheMode;
 
 /**
- * Helper to deal with {@link CacheMode} <-> {@link CacheRetrieveMode}/{@link CacheStoreMode}
- * conversions.
+ * Helper to deal with conversions between {@link CacheMode} and {@link CacheRetrieveMode}/{@link CacheStoreMode}
+ * .
  *
  * @author Steve Ebersole
  */
@@ -42,23 +40,14 @@ public final class CacheModeHelper {
 			retrieveMode = DEFAULT_RETRIEVE_MODE;
 		}
 
-		final boolean get = ( CacheRetrieveMode.USE == retrieveMode );
+		final boolean get = CacheRetrieveMode.USE == retrieveMode;
 
-		switch ( storeMode ) {
-			case USE: {
-				return get ? CacheMode.NORMAL : CacheMode.PUT;
-			}
-			case REFRESH: {
-				// really (get == true) here is a bit of an invalid combo...
-				return CacheMode.REFRESH;
-			}
-			case BYPASS: {
-				return get ? CacheMode.GET : CacheMode.IGNORE;
-			}
-			default: {
-				throw new IllegalStateException( "huh? :)" );
-			}
-		}
+		return switch ( storeMode ) {
+			case USE -> get ? CacheMode.NORMAL : CacheMode.PUT;
+			case BYPASS -> get ? CacheMode.GET : CacheMode.IGNORE;
+			// really (get == true) here is a bit of an invalid combo...
+			case REFRESH -> CacheMode.REFRESH;
+		};
 	}
 
 	/**
@@ -68,37 +57,11 @@ public final class CacheModeHelper {
 	 * @param storeMode The JPA shared-cache store mode.
 	 * @param retrieveMode The JPA shared-cache retrieve mode.
 	 *
-	 * @return Corresponding {@link CacheMode}.
+	 * @return Corresponding {@link CacheMode}, or null if both arguments are null.
 	 */
 	public static CacheMode effectiveCacheMode(CacheStoreMode storeMode, CacheRetrieveMode retrieveMode) {
-		if ( storeMode == null && retrieveMode == null ) {
-			return null;
-		}
-
-		if ( storeMode == null ) {
-			storeMode = DEFAULT_STORE_MODE;
-		}
-		if ( retrieveMode == null ) {
-			retrieveMode = DEFAULT_RETRIEVE_MODE;
-		}
-
-		final boolean get = ( CacheRetrieveMode.USE == retrieveMode );
-
-		switch ( storeMode ) {
-			case USE: {
-				return get ? CacheMode.NORMAL : CacheMode.PUT;
-			}
-			case REFRESH: {
-				// really (get == true) here is a bit of an invalid combo...
-				return CacheMode.REFRESH;
-			}
-			case BYPASS: {
-				return get ? CacheMode.GET : CacheMode.IGNORE;
-			}
-			default: {
-				throw new IllegalStateException( "huh? :)" );
-			}
-		}
+		return storeMode == null && retrieveMode == null ? null
+				: interpretCacheMode( storeMode, retrieveMode );
 	}
 
 	public static CacheStoreMode interpretCacheStoreMode(CacheMode cacheMode) {
@@ -106,13 +69,11 @@ public final class CacheModeHelper {
 			cacheMode = DEFAULT_LEGACY_MODE;
 		}
 
-		if ( CacheMode.REFRESH == cacheMode ) {
-			return CacheStoreMode.REFRESH;
-		}
-		if ( CacheMode.NORMAL == cacheMode || CacheMode.PUT == cacheMode ) {
-			return CacheStoreMode.USE;
-		}
-		return CacheStoreMode.BYPASS;
+		return switch ( cacheMode ) {
+			case NORMAL, PUT -> CacheStoreMode.USE;
+			case REFRESH -> CacheStoreMode.REFRESH;
+			default -> CacheStoreMode.BYPASS;
+		};
 	}
 
 	public static CacheRetrieveMode interpretCacheRetrieveMode(CacheMode cacheMode) {
@@ -120,7 +81,7 @@ public final class CacheModeHelper {
 			cacheMode = DEFAULT_LEGACY_MODE;
 		}
 
-		return ( CacheMode.NORMAL == cacheMode || CacheMode.GET == cacheMode )
+		return CacheMode.NORMAL == cacheMode || CacheMode.GET == cacheMode
 				? CacheRetrieveMode.USE
 				: CacheRetrieveMode.BYPASS;
 	}

@@ -1,0 +1,77 @@
+= Hibernate ORM Gradle Plugin
+
+A Gradle plugin for introducing Hibernate tasks and capabilities into a build.
+
+
+== Set up
+
+[source,groovy]
+----
+plugins {
+  id 'org.hibernate.orm'
+}
+
+// HibernateOrmSpec
+hibernate {
+    ...
+}
+----
+
+
+== DSL
+
+The `hibernate` DSL extension is the main entry into configuring the plugin
+
+[source,groovy]
+----
+hibernate {
+}
+----
+
+It defines configuration options:
+
+useSameVersion:: Specifies whether to have the plugin inject an `implementation` dependency on `hibernate-core`, implicitly using
+    the same version as the plugin.  The default is true.  If you'd prefer to use a different version, set this to false and define
+    the dependency on `hibernate-core` as you normally would.
+sourceSet:: The source-set containing the project's domain model.  Only one source-set is supported, although all languages (Java, Kotlin, etc)
+    within that source-set are considered.
+
+It additionally defines 2 nested DSL extensions related to:
+
+* <<enhance>>
+* <<hbm-xml>>
+
+
+[[enhance]]
+== Bytecode Enhancement
+
+The plugin can perform build-time enhancement of the domain classes.  This is controlled
+by the `enhancement` portion of the `hibernate` DSL extension.
+
+To enable enhancement, reference the DSL extension:
+
+[source,groovy]
+----
+hibernate {
+    enhancement
+}
+----
+
+Enhancement has a few options to control what enhancements take place.  All the options default to `false`:
+
+[source,groovy]
+----
+hibernate {
+  enhancement {
+    lazyInitialization = true
+    dirtyTracking = true
+    associationManagement = true
+    extendedEnhancement = false
+  }
+}
+----
+
+[[hbm-xml]]
+== Legacy `hbm.xml` Transformation
+
+Coming soon...

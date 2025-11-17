@@ -1,0 +1,122 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+
+plugins {
+    id "maven-publish"
+}
+
+// Disable Gradle module metadata publishing until we know what we want.
+// https://docs.gradle.org/6.0.1/userguide/publishing_gradle_module_metadata.html#sub:disabling-gmm-publication
+tasks.withType(GenerateModuleMetadata).configureEach {
+    enabled = false
+}
+
+if ( !project.description ) {
+    project.description = "The Hibernate ORM $project.name module"
+}
+
+var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Apply standard POM information for all publications
+
+publishingExtension.publications.configureEach {
+    pom {
+        url = 'https://hibernate.org/orm'
+
+        organization {
+            name = 'Hibernate.org'
+            url = 'https://hibernate.org'
+        }
+
+        licenses {
+            license {
+                name = 'Apache License, Version 2.0'
+                url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                comments = 'See discussion at https://hibernate.org/community/license/ for more details.'
+                distribution = 'repo'
+            }
+        }
+
+        scm {
+            url = 'https://github.com/hibernate/hibernate-orm'
+            connection = 'scm:git:https://github.com/hibernate/hibernate-orm.git'
+            developerConnection = 'scm:git:git@github.com:hibernate/hibernate-orm.git'
+        }
+
+        issueManagement {
+            system = 'jira'
+            url = 'https://hibernate.atlassian.net/browse/HHH'
+        }
+
+        developers {
+            developer {
+                id = 'hibernate-team'
+                name = 'The Hibernate Development Team'
+                organization = 'Hibernate.org'
+                organizationUrl = 'https://hibernate.org'
+            }
+        }
+    }
+}
+
+publishingExtension.repositories {
+    maven {
+        name = "staging"
+        url = rootProject.layout.buildDirectory.dir("staging-deploy${File.separator}maven")
+    }
+    maven {
+        name = 'snapshots'
+        url = "https://central.sonatype.com/repository/maven-snapshots/"
+        // So that Gradle uses the `ORG_GRADLE_PROJECT_snapshotsPassword` / `ORG_GRADLE_PROJECT_snapshotsUsername`
+        //  env variables to read the username/password for the `snapshots` repository publishing:
+        credentials(PasswordCredentials)
+    }
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// register the "main" publication named `publishedArtifacts`
+publishingExtension.publications.register("publishedArtifacts", MavenPublication) {
+    pom {
+        name = "Hibernate ORM - ${project.name}"
+        description = project.provider { project.description }
+    }
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Ancillary tasks
+
+tasks.register('showPublications') {
+    doFirst {
+        project.publishing.publications.each { publication ->
+            println "Publication (${publication.name}): ${publication.groupId}:${publication.artifactId}:${publication.version}"
+            publication.artifacts.each { artifact ->
+                println "    > ${artifact}"
+            }
+        }
+    }
+}
+
+tasks.withType(PublishToMavenLocal).configureEach {
+    doFirst {
+        logger.lifecycle("PublishToMavenLocal ({})", publication.name)
+        logger.lifecycle("    - {} : {} : {} ", publication.groupId, publication.artifactId, publication.pom.packaging)
+        logger.lifecycle("    - artifacts ({})...", publication.artifacts.size())
+        publication.artifacts.forEach {
+            logger.lifecycle("        - artifact ({}) : {} ({})" , it.classifier, it.file, it.file.size())
+        }
+    }
+}
+
+tasks.withType(PublishToMavenRepository).configureEach {
+    doFirst {
+        logger.lifecycle("PublishToMavenRepository ({} : {})", publication.name, repository.name)
+        logger.lifecycle("    - {} : {} : {} ", publication.groupId, publication.artifactId, publication.pom.packaging)
+        logger.lifecycle("    - artifacts ({})...", publication.artifacts.size())
+        publication.artifacts.forEach {
+            logger.lifecycle("        - artifact ({}) : {} ({})" , it.classifier, it.file, it.file.size())
+        }
+    }
+}

@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.orm.test.hqlfetchscroll">
+	
+	<class name="Parent" table="Parents">
+		<!-- A numeric id must be the <id> field.  Some databases (Sybase, etc.)
+        require identifier columns in order to support scrollable results. -->
+		<id name="id">
+		    <generator class="increment"/>
+		</id>
+		
+		<property name="name"/>
+		
+		<set name="children" cascade="all-delete-orphan" lazy="false">
+			<key column="parent_id"/>
+			<one-to-many class="Child"/>
+		</set>
+		
+	</class>
+	
+	<class name="Child" table="children">
+		<!-- A numeric id must be the <id> field.  Some databases (Sybase, etc.)
+        require identifier columns in order to support scrollable results. -->
+        <id name="id">
+            <generator class="increment"/>
+        </id>
+        
+        <property name="name"/>
+	</class>
+	
+
+</hibernate-mapping>

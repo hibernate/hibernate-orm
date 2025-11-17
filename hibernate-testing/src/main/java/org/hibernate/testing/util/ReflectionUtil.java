@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.util;
 
@@ -59,24 +57,6 @@ public class ReflectionUtil {
 					"Class " + target.getClass() + " does not contain a " + name + " field",
 					e
 			);
-		}
-		catch (IllegalAccessException e) {
-			throw new IllegalArgumentException( "Cannot set field " + name, e );
-		}
-	}
-
-	/**
-	 * Get a field value from a given class
-	 *
-	 * @param target Class whose field is being read
-	 * @param name field name
-	 *
-	 * @return field value
-	 */
-	public static <T> T getStaticFieldValue(Class<?> target, String name) {
-		try {
-			Field field = getField( target, name );
-			return (T) field.get( null );
 		}
 		catch (IllegalAccessException e) {
 			throw new IllegalArgumentException( "Cannot set field " + name, e );

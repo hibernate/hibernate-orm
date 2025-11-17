@@ -1,0 +1,70 @@
+plugins {
+    id "java-platform"
+    id "local.module"
+    id "local.publishing"
+}
+
+description = 'Platform (BOM) for Hibernate ORM dependencies'
+
+dependencies {
+    constraints {
+        api project( ":hibernate-core" )
+        api project( ":hibernate-testing" )
+
+        api project( ":hibernate-envers" )
+        api project( ":hibernate-spatial" )
+        api project( ":hibernate-vector" )
+
+        api project( ":hibernate-community-dialects" )
+        api project( ":hibernate-scan-jandex" )
+
+        api project( ":hibernate-agroal" )
+        api project( ":hibernate-c3p0" )
+        api project( ":hibernate-hikaricp" )
+
+        api project( ":hibernate-jcache" )
+
+        api project( ":hibernate-micrometer" )
+        api project( ":hibernate-graalvm")
+
+        api project( ":hibernate-processor" )
+        api project( ":hibernate-gradle-plugin" )
+        api project( ":hibernate-maven-plugin" )
+        api project( ":hibernate-ant" )
+
+        api libs.hibernateModels
+
+        api jakartaLibs.jpa
+        api jakartaLibs.jta
+        api jakartaLibs.data
+
+        runtime libs.antlrRuntime
+        runtime libs.logging
+        runtime libs.byteBuddy
+        runtime libs.byteBuddyAgent
+        runtime libs.jandex
+        runtime libs.classmate
+
+        runtime jakartaLibs.jaxb
+        runtime jakartaLibs.jaxbApi
+        runtime jakartaLibs.inject
+
+
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // todo : imo these are questionable
+        runtime libs.agroal
+        runtime libs.agroalPool
+        runtime libs.c3p0
+        runtime libs.hikaricp
+
+        runtime libs.jcache
+
+        runtime libs.micrometer
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    }
+}
+
+var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
+publishingExtension.publications.named("publishedArtifacts", MavenPublication) {
+    from components.javaPlatform
+}

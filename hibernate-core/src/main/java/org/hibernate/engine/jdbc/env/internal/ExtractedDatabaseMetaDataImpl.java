@@ -1,40 +1,47 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.internal;
 
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
-import org.hibernate.boot.model.source.internal.hbm.CommaSeparatedStringHelper;
+import org.hibernate.HibernateException;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.cursor.internal.StandardRefCursorSupport;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.SQLStateType;
-import org.hibernate.engine.jdbc.spi.TypeInfo;
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
+import static java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE;
+import static java.util.Collections.emptyList;
+import static java.util.stream.StreamSupport.stream;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
+import static org.hibernate.engine.jdbc.env.spi.SQLStateType.interpretReportedSQLStateType;
+
 /**
- * Standard implementation of ExtractedDatabaseMetaData
+ * Standard implementation of {@link ExtractedDatabaseMetaData}
  *
  * @author Steve Ebersole
  */
 public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData {
-	private final JdbcEnvironment jdbcEnvironment;
 
+	private final JdbcEnvironment jdbcEnvironment;
+	private final JdbcConnectionAccess connectionAccess;
+
+	private final boolean supportsSchemas;
+	private final boolean supportsCatalogs;
 	private final String connectionCatalogName;
 	private final String connectionSchemaName;
+
+	private final String databaseProductName;
+	private final String databaseProductVersion;
 
 	private final boolean supportsRefCursors;
 	private final boolean supportsNamedParameters;
@@ -44,50 +51,72 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	private final boolean supportsDataDefinitionInTransaction;
 	private final boolean doesDataDefinitionCauseTransactionCommit;
 	private final SQLStateType sqlStateType;
-	private final boolean lobLocatorUpdateCopy;
+	private final int transactionIsolation;
+	private final int defaultTransactionIsolation;
+	private final String url;
+	private final String driver;
+	private final boolean jdbcMetadataAccessible;
+	private final int defaultFetchSize;
 
-	private final Set<String> extraKeywords;
-	private final LinkedHashSet<TypeInfo> typeInfoSet;
-	private final List<SequenceInformation> sequenceInformationList;
+	//Lazily initialized: loading all sequence information upfront has been
+	//shown to be too slow in some cases. In this way we only load it
+	//when there is an actual need for these details.
+	private List<SequenceInformation> sequenceInformationList;
 
-	private ExtractedDatabaseMetaDataImpl(
-			JdbcEnvironment jdbcEnvironment,
-			String connectionCatalogName,
-			String connectionSchemaName,
-			Set<String> extraKeywords,
-			LinkedHashSet<TypeInfo> typeInfoSet,
-			boolean supportsRefCursors,
-			boolean supportsNamedParameters,
-			boolean supportsScrollableResults,
-			boolean supportsGetGeneratedKeys,
-			boolean supportsBatchUpdates,
-			boolean supportsDataDefinitionInTransaction,
-			boolean doesDataDefinitionCauseTransactionCommit,
-			SQLStateType sqlStateType,
-			boolean lobLocatorUpdateCopy,
-			List<SequenceInformation> sequenceInformationList) {
-		this.jdbcEnvironment = jdbcEnvironment;
+	ExtractedDatabaseMetaDataImpl(JdbcEnvironment environment) {
+		jdbcEnvironment = environment;
+		connectionAccess = null;
+		jdbcMetadataAccessible = false;
+		connectionSchemaName = null;
+		connectionCatalogName = null;
+		supportsSchemas = true;
+		supportsCatalogs = true;
+		databaseProductName = null;
+		databaseProductVersion = null;
+		supportsRefCursors = false;
+		supportsNamedParameters = false;
+		supportsScrollableResults = false;
+		supportsGetGeneratedKeys = false;
+		supportsBatchUpdates = true;
+		supportsDataDefinitionInTransaction = false;
+		doesDataDefinitionCauseTransactionCommit = false;
+		sqlStateType = null;
+		url = null;
+		driver = null;
+		defaultTransactionIsolation = 0;
+		transactionIsolation = 0;
+		defaultFetchSize = -1;
+	}
 
-		this.connectionCatalogName = connectionCatalogName;
-		this.connectionSchemaName = connectionSchemaName;
-
-		this.extraKeywords = extraKeywords != null
-				? extraKeywords
-				: Collections.<String>emptySet();
-		this.typeInfoSet = typeInfoSet != null
-				? typeInfoSet
-				: new LinkedHashSet<TypeInfo>();
-
-		this.supportsRefCursors = supportsRefCursors;
-		this.supportsNamedParameters = supportsNamedParameters;
-		this.supportsScrollableResults = supportsScrollableResults;
-		this.supportsGetGeneratedKeys = supportsGetGeneratedKeys;
-		this.supportsBatchUpdates = supportsBatchUpdates;
-		this.supportsDataDefinitionInTransaction = supportsDataDefinitionInTransaction;
-		this.doesDataDefinitionCauseTransactionCommit = doesDataDefinitionCauseTransactionCommit;
-		this.sqlStateType = sqlStateType;
-		this.lobLocatorUpdateCopy = lobLocatorUpdateCopy;
-		this.sequenceInformationList = sequenceInformationList;
+	ExtractedDatabaseMetaDataImpl(
+			JdbcEnvironment environment,
+			JdbcConnectionAccess connections,
+			DatabaseMetaData metaData)
+			throws SQLException {
+		jdbcEnvironment = environment;
+		connectionAccess = connections;
+		jdbcMetadataAccessible = true;
+		final Dialect dialect = environment.getDialect();
+		final Connection connection = metaData.getConnection();
+		supportsSchemas = metaData.supportsSchemasInDataManipulation();
+		supportsCatalogs = metaData.supportsCatalogsInDataManipulation();
+		connectionSchemaName = dialect.getSchemaNameResolver().resolveSchemaName( connection, dialect );
+		connectionCatalogName = connection.getCatalog();
+		databaseProductName = metaData.getDatabaseProductName();
+		databaseProductVersion = metaData.getDatabaseProductVersion();
+		supportsRefCursors = StandardRefCursorSupport.supportsRefCursors( metaData );
+		supportsNamedParameters = dialect.supportsNamedParameters( metaData );
+		supportsScrollableResults = metaData.supportsResultSetType( TYPE_SCROLL_INSENSITIVE );
+		supportsGetGeneratedKeys = metaData.supportsGetGeneratedKeys();
+		supportsBatchUpdates = metaData.supportsBatchUpdates();
+		supportsDataDefinitionInTransaction = !metaData.dataDefinitionIgnoredInTransactions();
+		doesDataDefinitionCauseTransactionCommit = metaData.dataDefinitionCausesTransactionCommit();
+		sqlStateType = interpretReportedSQLStateType( metaData.getSQLStateType() );
+		url = metaData.getURL();
+		driver = metaData.getDriverName();
+		defaultTransactionIsolation = metaData.getDefaultTransactionIsolation();
+		transactionIsolation = connection.getTransactionIsolation();
+		defaultFetchSize = defaultFetchSize( connection );
 	}
 
 	@Override
@@ -98,6 +127,16 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	@Override
 	public JdbcEnvironment getJdbcEnvironment() {
 		return jdbcEnvironment;
+	}
+
+	@Override
+	public boolean supportsSchemas() {
+		return supportsSchemas;
+	}
+
+	@Override
+	public boolean supportsCatalogs() {
+		return supportsCatalogs;
 	}
 
 	@Override
@@ -131,18 +170,8 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	}
 
 	@Override
-	public Set<String> getExtraKeywords() {
-		return extraKeywords;
-	}
-
-	@Override
 	public SQLStateType getSqlStateType() {
 		return sqlStateType;
-	}
-
-	@Override
-	public boolean doesLobLocatorUpdateCopy() {
-		return lobLocatorUpdateCopy;
 	}
 
 	@Override
@@ -156,175 +185,111 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	}
 
 	@Override
-	public LinkedHashSet<TypeInfo> getTypeInfoSet() {
-		return typeInfoSet;
+	public String getDatabaseProductName() {
+		return databaseProductName;
 	}
 
 	@Override
-	public List<SequenceInformation> getSequenceInformationList() {
-		return sequenceInformationList;
+	public String getDatabaseProductVersion() {
+		return databaseProductVersion;
 	}
 
-	public static class Builder {
-		private final JdbcEnvironment jdbcEnvironment;
+	@Override
+	public String getUrl() {
+		return url;
+	}
 
-		private String connectionSchemaName;
-		private String connectionCatalogName;
+	@Override
+	public String getDriver() {
+		return driver;
+	}
 
-		private Set<String> extraKeywords;
-		private LinkedHashSet<TypeInfo> typeInfoSet;
+	@Override
+	public int getTransactionIsolation() {
+		return transactionIsolation;
+	}
 
-		private boolean supportsRefCursors;
-		private boolean supportsNamedParameters;
-		private boolean supportsScrollableResults;
-		private boolean supportsGetGeneratedKeys;
-		private boolean supportsBatchUpdates;
-		private boolean supportsDataDefinitionInTransaction;
-		private boolean doesDataDefinitionCauseTransactionCommit;
-		private SQLStateType sqlStateType;
-		private boolean lobLocatorUpdateCopy;
-		private List<SequenceInformation> sequenceInformationList = Collections.emptyList();
+	@Override
+	public int getDefaultTransactionIsolation() {
+		return defaultTransactionIsolation;
+	}
 
-		public Builder(JdbcEnvironment jdbcEnvironment) {
-			this.jdbcEnvironment = jdbcEnvironment;
-		}
+	@Override
+	public int getDefaultFetchSize() {
+		return defaultFetchSize;
+	}
 
-		public Builder apply(DatabaseMetaData databaseMetaData) throws SQLException {
-			connectionCatalogName = databaseMetaData.getConnection().getCatalog();
-			// NOTE : databaseMetaData.getConnection().getSchema() would require java 1.7 as baseline
-			supportsRefCursors = StandardRefCursorSupport.supportsRefCursors( databaseMetaData );
-			supportsNamedParameters = databaseMetaData.supportsNamedParameters();
-			supportsScrollableResults = databaseMetaData.supportsResultSetType( ResultSet.TYPE_SCROLL_INSENSITIVE );
-			supportsGetGeneratedKeys = databaseMetaData.supportsGetGeneratedKeys();
-			supportsBatchUpdates = databaseMetaData.supportsBatchUpdates();
-			supportsDataDefinitionInTransaction = !databaseMetaData.dataDefinitionIgnoredInTransactions();
-			doesDataDefinitionCauseTransactionCommit = databaseMetaData.dataDefinitionCausesTransactionCommit();
-			extraKeywords = parseKeywords( databaseMetaData.getSQLKeywords() );
-			sqlStateType = SQLStateType.interpretReportedSQLStateType( databaseMetaData.getSQLStateType() );
-			lobLocatorUpdateCopy = databaseMetaData.locatorsUpdateCopy();
-			typeInfoSet = new LinkedHashSet<TypeInfo>();
-			typeInfoSet.addAll( TypeInfo.extractTypeInfo( databaseMetaData ) );
-			return this;
-		}
-
-		private Set<String> parseKeywords(String extraKeywordsString) {
-			return CommaSeparatedStringHelper.split( extraKeywordsString );
-		}
-
-		public Builder setConnectionSchemaName(String connectionSchemaName) {
-			this.connectionSchemaName = connectionSchemaName;
-			return this;
-		}
-
-		public Builder setConnectionCatalogName(String connectionCatalogName) {
-			this.connectionCatalogName = connectionCatalogName;
-			return this;
-		}
-
-		public Builder setExtraKeywords(Set<String> extraKeywords) {
-			if ( this.extraKeywords == null ) {
-				this.extraKeywords = extraKeywords;
+	@Override
+	public synchronized List<SequenceInformation> getSequenceInformationList() {
+		if ( jdbcMetadataAccessible ) {
+			//Loading the sequence information can take a while on large databases,
+			//even minutes in some cases.
+			//We trigger this lazily as only certain combinations of configurations,
+			//mappings and used features actually trigger any use of such details.
+			if ( sequenceInformationList == null ) {
+				sequenceInformationList = sequenceInformationList();
 			}
-			else {
-				this.extraKeywords.addAll( extraKeywords );
+			return sequenceInformationList;
+		}
+		else {
+			return emptyList();
+		}
+	}
+
+	// For tests
+	public boolean isJdbcMetadataAccessible() {
+		return jdbcMetadataAccessible;
+	}
+
+	private static int defaultFetchSize(Connection connection) {
+		try ( var statement = connection.createStatement() ) {
+			return statement.getFetchSize();
+		}
+		catch (SQLException ignore) {
+			return  -1;
+		}
+	}
+
+	/**
+	 * Get the sequence information List from the database.
+	 *
+	 * @return sequence information List
+	 */
+	private List<SequenceInformation> sequenceInformationList() {
+		Connection connection = null;
+		try {
+			connection = connectionAccess.obtainConnection();
+			return stream( sequenceInformation( connection, jdbcEnvironment ).spliterator(), false )
+					.toList();
+		}
+		catch (SQLException e) {
+			throw new HibernateException( "Could not fetch the SequenceInformation from the database", e );
+		}
+		finally {
+			if ( connection != null ) {
+				try {
+					connectionAccess.releaseConnection( connection );
+				}
+				catch (SQLException exception) {
+					JDBC_LOGGER.unableToReleaseConnection( exception );
+				}
 			}
-			return this;
 		}
+	}
 
-		public Builder addExtraKeyword(String keyword) {
-			if ( this.extraKeywords == null ) {
-				this.extraKeywords = new HashSet<String>();
-			}
-			this.extraKeywords.add( keyword );
-			return this;
-		}
-
-		public Builder setTypeInfoSet(LinkedHashSet<TypeInfo> typeInfoSet) {
-			if ( this.typeInfoSet == null ) {
-				this.typeInfoSet = typeInfoSet;
-			}
-			else {
-				this.typeInfoSet.addAll( typeInfoSet );
-			}
-			return this;
-		}
-
-		public Builder addTypeInfo(TypeInfo typeInfo) {
-			if ( this.typeInfoSet == null ) {
-				this.typeInfoSet = new LinkedHashSet<TypeInfo>();
-			}
-			typeInfoSet.add( typeInfo );
-			return this;
-		}
-
-		public Builder setSupportsRefCursors(boolean supportsRefCursors) {
-			this.supportsRefCursors = supportsRefCursors;
-			return this;
-		}
-
-		public Builder setSupportsNamedParameters(boolean supportsNamedParameters) {
-			this.supportsNamedParameters = supportsNamedParameters;
-			return this;
-		}
-
-		public Builder setSupportsScrollableResults(boolean supportsScrollableResults) {
-			this.supportsScrollableResults = supportsScrollableResults;
-			return this;
-		}
-
-		public Builder setSupportsGetGeneratedKeys(boolean supportsGetGeneratedKeys) {
-			this.supportsGetGeneratedKeys = supportsGetGeneratedKeys;
-			return this;
-		}
-
-		public Builder setSupportsBatchUpdates(boolean supportsBatchUpdates) {
-			this.supportsBatchUpdates = supportsBatchUpdates;
-			return this;
-		}
-
-		public Builder setSupportsDataDefinitionInTransaction(boolean supportsDataDefinitionInTransaction) {
-			this.supportsDataDefinitionInTransaction = supportsDataDefinitionInTransaction;
-			return this;
-		}
-
-		public Builder setDoesDataDefinitionCauseTransactionCommit(boolean doesDataDefinitionCauseTransactionCommit) {
-			this.doesDataDefinitionCauseTransactionCommit = doesDataDefinitionCauseTransactionCommit;
-			return this;
-		}
-
-		public Builder setSqlStateType(SQLStateType sqlStateType) {
-			this.sqlStateType = sqlStateType;
-			return this;
-		}
-
-		public Builder setLobLocatorUpdateCopy(boolean lobLocatorUpdateCopy) {
-			this.lobLocatorUpdateCopy = lobLocatorUpdateCopy;
-			return this;
-		}
-
-		public Builder setSequenceInformationList(List<SequenceInformation> sequenceInformationList) {
-			this.sequenceInformationList = sequenceInformationList;
-			return this;
-		}
-
-		public ExtractedDatabaseMetaDataImpl build() {
-			return new ExtractedDatabaseMetaDataImpl(
-					jdbcEnvironment,
-					connectionCatalogName,
-					connectionSchemaName,
-					extraKeywords,
-					typeInfoSet,
-					supportsRefCursors,
-					supportsNamedParameters,
-					supportsScrollableResults,
-					supportsGetGeneratedKeys,
-					supportsBatchUpdates,
-					supportsDataDefinitionInTransaction,
-					doesDataDefinitionCauseTransactionCommit,
-					sqlStateType,
-					lobLocatorUpdateCopy,
-					sequenceInformationList
-			);
-		}
+	private static Iterable<SequenceInformation> sequenceInformation(Connection connection, JdbcEnvironment jdbcEnvironment)
+			throws SQLException {
+		return jdbcEnvironment.getDialect().getSequenceInformationExtractor().extractMetadata(
+				new ExtractionContext.EmptyExtractionContext() {
+					@Override
+					public Connection getJdbcConnection() {
+						return connection;
+					}
+					@Override
+					public JdbcEnvironment getJdbcEnvironment() {
+						return jdbcEnvironment;
+					}
+				}
+		);
 	}
 }

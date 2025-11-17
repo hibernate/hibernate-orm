@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.enhanced;
 
@@ -10,33 +8,29 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.InitCommand;
-import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.ExportableColumn;
 import org.hibernate.id.IdentifierGenerationException;
-import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Table;
-import org.hibernate.type.LongType;
+import org.hibernate.type.StandardBasicTypes;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.LockMode.PESSIMISTIC_WRITE;
+import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHolder;
+import static org.hibernate.id.enhanced.ResyncHelper.getCurrentTableValue;
+import static org.hibernate.id.enhanced.ResyncHelper.getMaxPrimaryKey;
+import static org.hibernate.id.enhanced.TableGeneratorLogger.TABLE_GENERATOR_LOGGER;
 
 /**
  * Describes a table used to mimic sequence behavior
@@ -44,18 +38,17 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class TableStructure implements DatabaseStructure {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			TableStructure.class.getName()
-	);
 
 	private final QualifiedName logicalQualifiedTableName;
 	private final Identifier logicalValueColumnNameIdentifier;
 	private final int initialValue;
 	private final int incrementSize;
-	private final Class numberType;
+	private final Class<?> numberType;
+	private final String options;
 
-	private String tableNameText;
+	private final String contributor;
+
+	private QualifiedName physicalTableName;
 	private String valueColumnNameText;
 
 	private String selectQuery;
@@ -64,24 +57,53 @@ public class TableStructure implements DatabaseStructure {
 	private boolean applyIncrementSizeToSourceValues;
 	private int accessCounter;
 
+
 	public TableStructure(
-			JdbcEnvironment jdbcEnvironment,
+			String contributor,
 			QualifiedName qualifiedTableName,
 			Identifier valueColumnNameIdentifier,
 			int initialValue,
 			int incrementSize,
-			Class numberType) {
+			Class<?> numberType) {
+		this(
+				contributor,
+				qualifiedTableName,
+				valueColumnNameIdentifier,
+				initialValue,
+				incrementSize,
+				null,
+				numberType
+		);
+	}
+
+	public TableStructure(
+			String contributor,
+			QualifiedName qualifiedTableName,
+			Identifier valueColumnNameIdentifier,
+			int initialValue,
+			int incrementSize,
+			String options,
+			Class<?> numberType) {
+		this.contributor = contributor;
 		this.logicalQualifiedTableName = qualifiedTableName;
 		this.logicalValueColumnNameIdentifier = valueColumnNameIdentifier;
 
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
+		this.options = options;
 		this.numberType = numberType;
 	}
 
 	@Override
-	public String getName() {
-		return tableNameText;
+	public QualifiedName getPhysicalName() {
+		return physicalTableName;
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	public Identifier getLogicalValueColumnNameIdentifier() {
+		return logicalValueColumnNameIdentifier;
 	}
 
 	@Override
@@ -99,71 +121,83 @@ public class TableStructure implements DatabaseStructure {
 		return accessCounter;
 	}
 
-	@Override
+	@Override @Deprecated
+	public String[] getAllSqlForTests() {
+		return new String[] { selectQuery, updateQuery };
+	}
+
+	@Override @Deprecated
 	public void prepare(Optimizer optimizer) {
 		applyIncrementSizeToSourceValues = optimizer.applyIncrementSizeToSourceValues();
 	}
 
 	private IntegralDataTypeHolder makeValue() {
-		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( numberType );
+		return getIntegralDataTypeHolder( numberType );
 	}
 
 	@Override
 	public AccessCallback buildCallback(final SharedSessionContractImplementor session) {
-		final SqlStatementLogger statementLogger = session.getFactory().getServiceRegistry()
-				.getService( JdbcServices.class )
-				.getSqlStatementLogger();
 		if ( selectQuery == null || updateQuery == null ) {
 			throw new AssertionFailure( "SequenceStyleGenerator's TableStructure was not properly initialized" );
 		}
 
-		final SessionEventListenerManager statsCollector = session.getEventListenerManager();
+		final var statsCollector = session.getEventListenerManager();
+		final var statementLogger =
+				session.getFactory().getJdbcServices()
+						.getSqlStatementLogger();
 
 		return new AccessCallback() {
 			@Override
 			public IntegralDataTypeHolder getNextValue() {
 				return session.getTransactionCoordinator().createIsolationDelegate().delegateWork(
-						new AbstractReturningWork<IntegralDataTypeHolder>() {
+						new AbstractReturningWork<>() {
 							@Override
 							public IntegralDataTypeHolder execute(Connection connection) throws SQLException {
-								final IntegralDataTypeHolder value = makeValue();
+								final var value = makeValue();
 								int rows;
 								do {
-									try (PreparedStatement selectStatement = prepareStatement(
+									try ( var selectStatement = prepareStatement(
 											connection,
 											selectQuery,
 											statementLogger,
-											statsCollector
-									)) {
-										final ResultSet selectRS = executeQuery( selectStatement, statsCollector );
-										if ( !selectRS.next() ) {
-											final String err = "could not read a hi value - you need to populate the table: " + tableNameText;
-											LOG.error( err );
-											throw new IdentifierGenerationException( err );
+											statsCollector,
+											session
+									) ) {
+										final var resultSet = executeQuery(
+												selectStatement,
+												statsCollector,
+												selectQuery,
+												session
+										);
+										if ( !resultSet.next() ) {
+											throw new IdentifierGenerationException(
+													"Could not read a hi value, populate the table: "
+															+ physicalTableName );
 										}
-										value.initialize( selectRS, 1 );
-										selectRS.close();
+										value.initialize( resultSet, 1 );
+										resultSet.close();
 									}
 									catch (SQLException sqle) {
-										LOG.error( "could not read a hi value", sqle );
+										TABLE_GENERATOR_LOGGER.unableToReadHiValue( physicalTableName.render(), sqle );
 										throw sqle;
 									}
 
 
-									try (PreparedStatement updatePS = prepareStatement(
+									try ( var updateStatement = prepareStatement(
 											connection,
 											updateQuery,
 											statementLogger,
-											statsCollector
-									)) {
+											statsCollector,
+											session
+									) ) {
 										final int increment = applyIncrementSizeToSourceValues ? incrementSize : 1;
-										final IntegralDataTypeHolder updateValue = value.copy().add( increment );
-										updateValue.bind( updatePS, 1 );
-										value.bind( updatePS, 2 );
-										rows = executeUpdate( updatePS, statsCollector );
+										final var updateValue = value.copy().add( increment );
+										updateValue.bind( updateStatement, 1 );
+										value.bind( updateStatement, 2 );
+										rows = executeUpdate( updateStatement, statsCollector, updateQuery, session );
 									}
 									catch (SQLException e) {
-										LOG.unableToUpdateQueryHiValue( tableNameText, e );
+										TABLE_GENERATOR_LOGGER.unableToUpdateHiValue( physicalTableName.render(), e );
 										throw e;
 									}
 								} while ( rows == 0 );
@@ -187,50 +221,62 @@ public class TableStructure implements DatabaseStructure {
 	private PreparedStatement prepareStatement(
 			Connection connection,
 			String sql,
-			SqlStatementLogger statementLogger,
-			SessionEventListenerManager statsCollector) throws SQLException {
-		statementLogger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
+			SqlStatementLogger logger,
+			SessionEventListenerManager statsCollector,
+			SharedSessionContractImplementor session) throws SQLException {
+		logger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
+		final var eventMonitor = session.getEventMonitor();
+		final var creationEvent = eventMonitor.beginJdbcPreparedStatementCreationEvent();
+		final var stats = session.getFactory().getStatistics();
 		try {
 			statsCollector.jdbcPrepareStatementStart();
+			if ( stats != null && stats.isStatisticsEnabled() ) {
+				stats.prepareStatement();
+			}
 			return connection.prepareStatement( sql );
 		}
 		finally {
+			eventMonitor.completeJdbcPreparedStatementCreationEvent( creationEvent, sql );
 			statsCollector.jdbcPrepareStatementEnd();
+			if ( stats != null && stats.isStatisticsEnabled() ) {
+				stats.closeStatement();
+			}
 		}
 	}
 
-	private int executeUpdate(PreparedStatement ps, SessionEventListenerManager statsCollector) throws SQLException {
+	private int executeUpdate(
+			PreparedStatement ps,
+			SessionEventListenerManager statsCollector,
+			String sql,
+			SharedSessionContractImplementor session) throws SQLException {
+		final var eventMonitor = session.getEventMonitor();
+		final var executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			statsCollector.jdbcExecuteStatementStart();
 			return ps.executeUpdate();
 		}
 		finally {
+			eventMonitor.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 			statsCollector.jdbcExecuteStatementEnd();
 		}
 
 	}
 
-	private ResultSet executeQuery(PreparedStatement ps, SessionEventListenerManager statsCollector) throws SQLException {
+	private ResultSet executeQuery(
+			PreparedStatement ps,
+			SessionEventListenerManager statsCollector,
+			String sql,
+			SharedSessionContractImplementor session) throws SQLException {
+		final var eventMonitor = session.getEventMonitor();
+		final var executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			statsCollector.jdbcExecuteStatementStart();
 			return ps.executeQuery();
 		}
 		finally {
+			eventMonitor.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 			statsCollector.jdbcExecuteStatementEnd();
 		}
-	}
-
-	@Override
-	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		return new String[] {
-				dialect.getCreateTableString() + " " + tableNameText + " ( " + valueColumnNameText + " " + dialect.getTypeName( Types.BIGINT ) + " )",
-				"insert into " + tableNameText + " values ( " + initialValue + " )"
-		};
-	}
-
-	@Override
-	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		return new String[] { dialect.getDropTableString( tableNameText ) };
 	}
 
 	@Override
@@ -240,49 +286,82 @@ public class TableStructure implements DatabaseStructure {
 
 	@Override
 	public void registerExportables(Database database) {
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
-		final Dialect dialect = jdbcEnvironment.getDialect();
-
-		final Namespace namespace = database.locateNamespace(
+		final var namespace = database.locateNamespace(
 				logicalQualifiedTableName.getCatalogName(),
 				logicalQualifiedTableName.getSchemaName()
 		);
 
-		Table table = namespace.locateTable( logicalQualifiedTableName.getObjectName() );
-		boolean tableCreated = false;
+		final var objectName = logicalQualifiedTableName.getObjectName();
+		Table table = namespace.locateTable( objectName );
+		final boolean tableCreated;
 		if ( table == null ) {
-			table = namespace.createTable( logicalQualifiedTableName.getObjectName(), false );
+			table = namespace.createTable( objectName,
+					identifier -> new Table( contributor, namespace, identifier, false ) );
 			tableCreated = true;
 		}
+		else {
+			tableCreated = false;
+		}
+		physicalTableName = table.getQualifiedTableName();
 
-		this.tableNameText = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				table.getQualifiedTableName(),
-				dialect
-		);
+		valueColumnNameText = logicalValueColumnNameIdentifier.render( database.getDialect() );
+		if ( tableCreated ) {
+			final var typeConfiguration = database.getTypeConfiguration();
+			final var type = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.LONG );
+			final String typeName =
+					typeConfiguration.getDdlTypeRegistry()
+							.getTypeName( type.getJdbcType().getDdlTypeCode(), database.getDialect() );
+			final var valueColumn =
+					ExportableColumnHelper.column( database, table, valueColumnNameText, type, typeName );
+			table.addColumn( valueColumn );
+			table.setOptions( options );
+			table.addInitCommand( context -> new InitCommand(
+					"insert into " + context.format( physicalTableName )
+					+ " ( " + valueColumnNameText + " ) values ( " + initialValue + " )"
+			) );
+		}
+	}
 
-		this.valueColumnNameText = logicalValueColumnNameIdentifier.render( dialect );
-
-
-		this.selectQuery = "select " + valueColumnNameText + " as id_val" +
-				" from " + dialect.appendLockHint( LockMode.PESSIMISTIC_WRITE, tableNameText ) +
-				dialect.getForUpdateString();
-
-		this.updateQuery = "update " + tableNameText +
+	@Override
+	public void initialize(SqlStringGenerationContext context) {
+		final var dialect = context.getDialect();
+		final String formattedPhysicalTableName = context.format( physicalTableName );
+		final String lockedTable =
+				dialect.appendLockHint( new LockOptions( PESSIMISTIC_WRITE ), formattedPhysicalTableName )
+						+ dialect.getForUpdateString();
+		selectQuery = "select " + valueColumnNameText + " as id_val" +
+				" from " + lockedTable ;
+		updateQuery = "update " + formattedPhysicalTableName +
 				" set " + valueColumnNameText + "= ?" +
 				" where " + valueColumnNameText + "=?";
-		if ( tableCreated ) {
-			ExportableColumn valueColumn = new ExportableColumn(
-					database,
-					table,
-					valueColumnNameText,
-					LongType.INSTANCE
-			);
+	}
 
-			table.addColumn( valueColumn );
-
-			table.addInitCommand(
-					new InitCommand( "insert into " + tableNameText + " values ( " + initialValue + " )" )
-			);
-		}
+	@Override
+	public void registerExtraExportables(Table table, Optimizer optimizer) {
+		table.addResyncCommand( (sqlContext, isolator) -> {
+			final String sequenceTableName = sqlContext.format( physicalTableName );
+			final String tableName = sqlContext.format( table.getQualifiedTableName() );
+			final String primaryKeyColumnName = table.getPrimaryKey().getColumn( 0 ).getName();
+			final int adjustment = optimizer.getAdjustment();
+			final long max = getMaxPrimaryKey( isolator, primaryKeyColumnName, tableName );
+			final long current = getCurrentTableValue( isolator, sequenceTableName, valueColumnNameText );
+			if ( max + adjustment > current ) {
+				optimizer.reset();
+				final String update =
+						"update " + sequenceTableName
+						+ " set " + valueColumnNameText + " = " + (max + adjustment);
+				return new InitCommand( update );
+			}
+			else {
+				return new InitCommand();
+			}
+		} );
+		table.addResetCommand( sqlContext -> {
+			optimizer.reset();
+			final String update =
+					"update " + sqlContext.format( physicalTableName )
+					+ " set " + valueColumnNameText + " = " + initialValue;
+			return new InitCommand( update );
+		} );
 	}
 }

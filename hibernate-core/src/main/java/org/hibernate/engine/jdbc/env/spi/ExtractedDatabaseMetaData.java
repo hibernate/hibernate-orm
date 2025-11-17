@@ -1,19 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.spi;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
-import org.hibernate.engine.jdbc.spi.TypeInfo;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Information extracted from {@link java.sql.DatabaseMetaData} regarding what the JDBC driver reports as
@@ -22,7 +18,6 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformation;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings( {"UnusedDeclaration"})
 public interface ExtractedDatabaseMetaData {
 	/**
 	 * Obtain the JDBC Environment from which this metadata came.
@@ -32,9 +27,39 @@ public interface ExtractedDatabaseMetaData {
 	JdbcEnvironment getJdbcEnvironment();
 
 	/**
+	 * The name of the database, according to the JDBC driver.
+	 */
+	String getDatabaseProductName();
+
+	/**
+	 * The version of the database, according to the JDBC driver.
+	 */
+	String getDatabaseProductVersion();
+
+	/**
+	 * Does this driver support named schemas in DML?
+	 *
+	 * @return {@code false} indicates the driver reported false;
+	 * {@code true} indicates the driver reported true or that
+	 * the driver could not be asked.
+	 */
+	boolean supportsSchemas();
+
+	/**
+	 * Does this driver support named catalogs in DML?
+	 *
+	 * @return {@code false} indicates the driver reported false;
+	 * {@code true} indicates the driver reported true or that
+	 * the driver could not be asked.
+	 */
+	boolean supportsCatalogs();
+
+	/**
 	 * Retrieve the name of the catalog in effect when we connected to the database.
 	 *
 	 * @return The catalog name
+	 *
+	 * @see AvailableSettings#DEFAULT_SCHEMA
 	 */
 	String getConnectionCatalogName();
 
@@ -46,36 +71,24 @@ public interface ExtractedDatabaseMetaData {
 	String getConnectionSchemaName();
 
 	/**
-	 * Set of type info reported by the driver.
-	 *
-	 * @return The type information obtained from the driver.
-	 *
-	 * @see java.sql.DatabaseMetaData#getTypeInfo()
-	 */
-	LinkedHashSet<TypeInfo> getTypeInfoSet();
-
-	/**
-	 * Get the list of extra keywords (beyond standard SQL92 keywords) reported by the driver.
-	 *
-	 * @return The extra keywords used by this database.
-	 *
-	 * @see java.sql.DatabaseMetaData#getSQLKeywords()
-	 */
-	Set<String> getExtraKeywords();
-
-	/**
 	 * Does the driver report supporting named parameters?
 	 *
 	 * @return {@code true} indicates the driver reported true; {@code false} indicates the driver reported false
 	 * or that the driver could not be asked.
+	 *
+	 * @see AvailableSettings#CALLABLE_NAMED_PARAMS_ENABLED
 	 */
 	boolean supportsNamedParameters();
 
 	/**
-	 * Does the driver report supporting REF_CURSORs?
+	 * Does the driver report supporting {@link java.sql.Types#REF_CURSOR}?
 	 *
-	 * @return {@code true} indicates the driver reported true; {@code false} indicates the driver reported false
-	 * or that the driver could not be asked.
+	 * @return {@code true} indicates the driver reported true;
+	 * {@code false} indicates the driver reported false or that
+	 * the driver could not be asked.
+	 *
+	 * @see java.sql.DatabaseMetaData#supportsRefCursors()
+	 * @see org.hibernate.dialect.Dialect#supportsRefCursors
 	 */
 	boolean supportsRefCursors();
 
@@ -85,15 +98,17 @@ public interface ExtractedDatabaseMetaData {
 	 * @return True if the driver reported to support {@link java.sql.ResultSet#TYPE_SCROLL_INSENSITIVE}.
 	 *
 	 * @see java.sql.DatabaseMetaData#supportsResultSetType
+	 * @see AvailableSettings#USE_SCROLLABLE_RESULTSET
 	 */
 	boolean supportsScrollableResults();
 
 	/**
 	 * Did the driver report to supporting retrieval of generated keys?
 	 *
-	 * @return True if the if the driver reported to support calls to {@link java.sql.Statement#getGeneratedKeys}
+	 * @return True if the driver reported to support calls to {@link java.sql.Statement#getGeneratedKeys}
 	 *
 	 * @see java.sql.DatabaseMetaData#supportsGetGeneratedKeys
+	 * @see AvailableSettings#USE_GET_GENERATED_KEYS
 	 */
 	boolean supportsGetGeneratedKeys();
 
@@ -103,6 +118,7 @@ public interface ExtractedDatabaseMetaData {
 	 * @return True if the driver supports batched updates
 	 *
 	 * @see java.sql.DatabaseMetaData#supportsBatchUpdates
+	 * @see org.hibernate.dialect.Dialect#supportsBatchUpdates
 	 */
 	boolean supportsBatchUpdates();
 
@@ -137,13 +153,37 @@ public interface ExtractedDatabaseMetaData {
 	SQLStateType getSqlStateType();
 
 	/**
-	 * Did the driver report that updates to a LOB locator affect a copy of the LOB?
+	 * Retrieve the JDBC URL.
 	 *
-	 * @return True if updates to the state of a LOB locator update only a copy.
-	 *
-	 * @see java.sql.DatabaseMetaData#locatorsUpdateCopy()
+	 * @see java.sql.DatabaseMetaData#getURL()
 	 */
-	boolean doesLobLocatorUpdateCopy();
+	String getUrl();
+
+	/**
+	 * Retrieve the JDBC driver name.
+	 *
+	 * @see java.sql.DatabaseMetaData#getDriverName()
+	 */
+	String getDriver();
+
+	/**
+	 * Retrieve the transaction isolation level.
+	 *
+	 * @see java.sql.Connection#getTransactionIsolation()
+	 */
+	int getTransactionIsolation();
+
+	/**
+	 * Retrieve the default transaction isolation level.
+	 *
+	 * @see java.sql.DatabaseMetaData#getDefaultTransactionIsolation()
+	 */
+	int getDefaultTransactionIsolation();
+
+	/**
+	 * Retrieve the default JDBC {@linkplain java.sql.Statement#getFetchSize fetch size}.
+	 */
+	int getDefaultFetchSize();
 
 	/**
 	 * Retrieve the list of {@code SequenceInformation} objects which describe the underlying database sequences.
@@ -151,6 +191,6 @@ public interface ExtractedDatabaseMetaData {
 	 * @return {@code SequenceInformation} objects.
 	 */
 	default List<SequenceInformation> getSequenceInformationList() {
-		return Collections.emptyList();
+		return emptyList();
 	}
 }

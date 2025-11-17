@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="https://jakarta.ee/xml/ns/persistence/orm" version="3.1">
+    <package>org.hibernate.orm.test.boot.jaxb.mapping</package>
+    <entity class="SimpleEntity" access="FIELD" metadata-complete="true">
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+        </attributes>
+    </entity>
+</entity-mappings>

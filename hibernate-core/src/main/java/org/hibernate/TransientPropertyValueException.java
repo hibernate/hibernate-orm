@@ -1,16 +1,24 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
-import org.hibernate.internal.util.StringHelper;
+import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
- * Thrown when a property cannot be persisted because it is an association
- * with a transient unsaved entity instance.
+ * Thrown when the state of an entity cannot be made persistent
+ * because the entity holds a reference to a transient entity.
+ * <p>
+ * An entity is considered <em>transient</em> if it is:
+ * <ul>
+ * <li>a newly-instantiated instance of an entity class which has
+ *    never been {@linkplain Session#persist made persistent} in
+ *    the database, or
+ * <li>an entity instance previously associated with a persistence
+ *     context which has been {@linkplain Session#remove removed}
+ *     from the database.
+ * </ul>
  *
  * @author Gail Badner
  */
@@ -20,7 +28,7 @@ public class TransientPropertyValueException extends TransientObjectException {
 	private final String propertyName;
 
 	/**
-	 * Constructs a {@link TransientPropertyValueException} instance.
+	 * Constructs a {@code TransientPropertyValueException} instance.
 	 *
 	 * @param message - the exception message;
 	 * @param transientEntityName - the entity name for the transient entity
@@ -29,9 +37,9 @@ public class TransientPropertyValueException extends TransientObjectException {
 	 * @param propertyName - the property name
 	 */
 	public TransientPropertyValueException(
-			String message, 
-			String transientEntityName, 
-			String propertyOwnerEntityName, 
+			String message,
+			String transientEntityName,
+			String propertyOwnerEntityName,
 			String propertyName) {
 		super( message );
 		this.transientEntityName = transientEntityName;
@@ -50,6 +58,7 @@ public class TransientPropertyValueException extends TransientObjectException {
 	/**
 	 * Returns the entity name for entity that owns the association
 	 * property.
+	 *
 	 * @return the entity name for entity that owns the association
 	 * property
 	 */
@@ -59,6 +68,7 @@ public class TransientPropertyValueException extends TransientObjectException {
 
 	/**
 	 * Returns the property name.
+	 *
 	 * @return the property name.
 	 */
 	public String getPropertyName() {
@@ -67,7 +77,8 @@ public class TransientPropertyValueException extends TransientObjectException {
 
 	@Override
 	public String getMessage() {
-		return super.getMessage() + " : "
-				+ StringHelper.qualify( propertyOwnerEntityName, propertyName ) + " -> " + transientEntityName;
+		return super.getMessage() + " ["
+				+ qualify( propertyOwnerEntityName, propertyName )
+				+ " -> " + transientEntityName + "]";
 	}
 }

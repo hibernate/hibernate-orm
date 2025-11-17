@@ -1,10 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.spi;
+
+import static org.hibernate.internal.util.StringHelper.split;
 
 /**
  * An attribute path is, generally speaking, the path of attribute names back
@@ -40,14 +40,15 @@ public class AttributePath extends AbstractAttributeKey {
 	}
 
 	public static AttributePath parse(String path) {
-		if ( path == null ) {
+		if ( path != null ) {
+			AttributePath attributePath = new AttributePath();
+			for ( String part : split( ".", path ) ) {
+				attributePath = attributePath.append( part );
+			}
+			return attributePath;
+		}
+		else {
 			return null;
 		}
-
-		AttributePath attributePath = new AttributePath();
-		for ( String part : path.split( "\\." ) ) {
-			attributePath = attributePath.append( part );
-		}
-		return attributePath;
 	}
 }

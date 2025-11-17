@@ -1,37 +1,92 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
+import java.sql.CallableStatement;
+import java.sql.SQLException;
 
-import org.hibernate.metamodel.model.domain.spi.BasicTypeDescriptor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
+import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * @author Emmanuel Bernard
  */
-public class BasicTypeImpl<J> implements BasicTypeDescriptor<J>, Serializable {
-	private final Class<J> clazz;
-	private PersistenceType persistenceType;
+public class BasicTypeImpl<J> implements BasicDomainType<J>, SqmDomainType<J>, JdbcMapping, Serializable {
+	private final JavaType<J> javaType;
+	private final JdbcType jdbcType;
 
-	public PersistenceType getPersistenceType() {
-		return persistenceType;
+	public BasicTypeImpl(JavaType<J> javaType, JdbcType jdbcType) {
+		this.javaType = javaType;
+		this.jdbcType = jdbcType;
 	}
 
+	@Override
 	public Class<J> getJavaType() {
-		return clazz;
-	}
-
-	public BasicTypeImpl(Class<J> clazz, PersistenceType persistenceType) {
-		this.clazz = clazz;
-		this.persistenceType = persistenceType;
+		return BasicDomainType.super.getJavaType();
 	}
 
 	@Override
 	public String getTypeName() {
-		return clazz.getName();
+		return javaType.getTypeName();
+	}
+
+	@Override
+	public SqmDomainType<J> getSqmType() {
+		return this;
+	}
+
+	@Override
+	public JavaType<J> getExpressibleJavaType() {
+		return javaType;
+	}
+
+	@Override
+	public boolean canDoExtraction() {
+		return true;
+	}
+
+	@Override
+	public JdbcType getJdbcType() {
+		return jdbcType;
+	}
+
+	@Override
+	public J extract(
+			CallableStatement statement,
+			int paramIndex,
+			SharedSessionContractImplementor session) throws SQLException {
+		return jdbcType.getExtractor( javaType ).extract( statement, paramIndex, session );
+	}
+
+	@Override
+	public J extract(
+			CallableStatement statement,
+			String paramName,
+			SharedSessionContractImplementor session) throws SQLException {
+		return jdbcType.getExtractor( javaType ).extract( statement, paramName, session );
+	}
+
+	@Override
+	public JavaType<?> getJavaTypeDescriptor() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public ValueExtractor<J> getJdbcValueExtractor() {
+		return jdbcType.getExtractor( javaType );
+	}
+
+	@Override
+	public ValueBinder<J> getJdbcValueBinder() {
+		return jdbcType.getBinder( javaType );
 	}
 }

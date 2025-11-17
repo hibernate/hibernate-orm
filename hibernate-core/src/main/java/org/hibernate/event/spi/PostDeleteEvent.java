@@ -1,49 +1,30 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Occurs after deleting an item from the datastore
- * 
+ *
  * @author Gavin King
  */
-public class PostDeleteEvent extends AbstractEvent {
-	private Object entity;
-	private EntityPersister persister;
-	private Serializable id;
-	private Object[] deletedState;
-	
+public class PostDeleteEvent extends AbstractPostDatabaseOperationEvent {
+	private final Object[] deletedState;
+
 	public PostDeleteEvent(
-			Object entity, 
-			Serializable id,
+			Object entity,
+			Object id,
 			Object[] deletedState,
 			EntityPersister persister,
-			EventSource source
-	) {
-		super(source);
-		this.entity = entity;
-		this.id = id;
-		this.persister = persister;
+			SharedSessionContractImplementor source) {
+		super( source, entity, id, persister );
 		this.deletedState = deletedState;
 	}
-	
-	public Serializable getId() {
-		return id;
-	}
-	public EntityPersister getPersister() {
-		return persister;
-	}
-	public Object getEntity() {
-		return entity;
-	}
+
 	public Object[] getDeletedState() {
 		return deletedState;
 	}

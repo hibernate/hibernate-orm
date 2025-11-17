@@ -1,0 +1,992 @@
+[[interacting]]
+== Interacting with the database
+
+To interact with the database, that is, to execute queries, or to insert, update, or delete data, we need an instance of one of the following objects:
+
+- a JPA `EntityManager`,
+- a Hibernate `Session`, or
+- a Hibernate `StatelessSession`.
+
+The `Session` interface extends `EntityManager`, and so the only difference between the two interfaces is that `Session` offers a few more operations.
+
+[TIP]
+// .The `Session` hiding inside an `EntityManager`
+====
+Actually, in Hibernate, every `EntityManager` is a `Session`, and you can narrow it like this:
+
+[source,java]
+----
+Session session = entityManager.unwrap(Session.class);
+----
+====
+
+An instance of `Session` (or of `EntityManager`) is a _stateful session_.
+It mediates the interaction between your program and the database via operations on a _persistence context_.
+
+In this chapter, we're not going to talk much about `StatelessSession`.
+We'll come back to <<stateless-sessions,this very useful API>> when we talk about performance.
+What you need to know for now is that a stateless session doesn't have a persistence context.
+
+[TIP]
+// .Some people prefer `StatelessSession`
+====
+Still, we should let you know that some people prefer to use `StatelessSession` everywhere.
+It's a simpler programming model, and lets the developer interact with the database more _directly_.
+
+Stateful sessions certainly have their advantages, but they're more difficult to reason about, and when something goes wrong, the error messages can be more difficult to understand.
+====
+
+[[persistence-contexts]]
+=== Persistence contexts
+
+A persistence context is a sort of cache; we sometimes call it the "first-level cache", to distinguish it from the <<second-level-cache,second-level cache>>.
+For every entity instance read from the database within the scope of a persistence context, and for every new entity made persistent within the scope of the persistence context, the context holds a unique mapping from the identifier of the entity instance to the instance itself.
+
+Thus, an entity instance may be in one of three states with respect to a given persistence context:
+
+1. _transient_ — never persistent, and not associated with the persistence context,
+2. _persistent_ — currently associated with the persistence context, or
+3. _detached_ — previously persistent in another session, but not currently associated with _this_ persistence context.
+
+image::images/entity-lifecyle.png[Entity lifecycle,width=800,align="center"]
+
+At any given moment, an instance may be associated with at most one persistence context.
+
+The lifetime of a persistence context usually corresponds to the lifetime of a transaction, though it's possible to have a persistence context that spans several database-level transactions that form a single logical unit of work.
+
+[WARNING]
+====
+A persistence context—that is, a `Session` or `EntityManager`—absolutely positively **must not be shared between multiple threads or between concurrent transactions.**
+
+If you accidentally leak a session across threads, you will suffer.
+====
+
+.Container-managed persistence contexts
+****
+In a container environment, the lifecycle of a persistence context scoped to the transaction will usually be managed for you.
+****
+
+There are several reasons we like persistence contexts.
+
+1. They help avoid _data aliasing_: if we modify an entity in one section of code, then other code executing within the same persistence context will see our modification.
+2. They enable _automatic dirty checking_: after modifying an entity, we don't need to perform any explicit operation to ask Hibernate to propagate that change back to the database.
+   Instead, the change will be automatically synchronized with the database when the session is <<flush,flushed>>.
+3. They can improve performance by avoiding a trip to the database when a given entity instance is requested repeatedly in a given unit of work.
+4. They make it possible to _transparently batch_ together multiple database operations.
+
+A persistence context also allows us to detect circularities when performing operations on graphs of entities.
+(Even in a stateless session, we need some sort of temporary cache of the entity instances we've visited while executing a query.)
+
+On the other hand, stateful sessions come with some very important restrictions, since:
+
+- persistence contexts aren't threadsafe, and can't be shared across threads, and
+- a persistence context can't be reused across unrelated transactions, since that would break the isolation and atomicity of the transactions.
+
+Furthermore, a persistence context holds a hard references to all its entities, preventing them from being garbage collected.
+Thus, the session must be discarded once a unit of work is complete.
+
+[IMPORTANT]
+// .This is important
+====
+If you don't completely understand the previous passage, go back and re-read it until you do.
+A great deal of human suffering has resulted from users mismanaging the lifecycle of the Hibernate `Session` or JPA `EntityManager`.
+====
+
+We'll conclude by noting that whether a persistence context helps or harms the performance of a given unit of work depends greatly on the nature of the unit of work.
+For this reason Hibernate provides both stateful and stateless sessions.
+
+[[creating-session]]
+=== Creating a session
+
+Sticking with standard JPA-defined APIs, we saw how to obtain an `EntityManagerFactory` in <<configuration-jpa>>.
+It's quite unsurprising that we may use this object to create an `EntityManager`:
+
+[source,java]
+----
+EntityManager entityManager = entityManagerFactory.createEntityManager();
+----
+
+When we're finished with the `EntityManager`, we should explicitly clean it up:
+
+[source,java]
+----
+entityManager.close();
+----
+
+On the other hand, if we're starting from a `SessionFactory`, as described in <<configuration-api>>, we may use:
+
+[source,java]
+----
+Session session = sessionFactory.openSession();
+----
+
+But we still need to clean up:
+
+[source,java]
+----
+session.close();
+----
+
+.Injecting the `EntityManager`
+****
+If you're writing code for some sort of container environment, you'll probably obtain the `EntityManager` by some sort of dependency injection.
+For example, in Java (or Jakarta) EE you would write:
+
+[source,java]
+----
+@PersistenceContext EntityManager entityManager;
+----
+
+In Quarkus, injection is handled by CDI:
+
+[source,java]
+----
+@Inject EntityManager entityManager;
+----
+****
+
+Outside a container environment, we'll also have to write code to manage database transactions.
+
+[[managing-transactions]]
+=== Managing transactions
+
+Using JPA-standard APIs, the `EntityTransaction` interface allows us to control database transactions.
+The idiom we recommend is the following:
+
+[source,java]
+----
+EntityManager entityManager = entityManagerFactory.createEntityManager();
+EntityTransaction tx = entityManager.getTransaction();
+try {
+    tx.begin();
+    //do some work
+    ...
+    tx.commit();
+}
+catch (Exception e) {
+    if (tx.isActive()) tx.rollback();
+    throw e;
+}
+finally {
+    entityManager.close();
+}
+----
+
+But this code is extremely tedious, so there's a cleaner option:
+
+[source,java]
+----
+entityManagerFactory.runInTransaction(entityManager -> {
+    // do the work
+    ...
+});
+----
+
+When we need to return a value from within the anonymous function, we use `callInTransaction()` instead of `runInTransaction()`.
+
+Using Hibernate's native APIs we can write something very similar:
+// [source,java]
+// ----
+// Session session = sessionFactory.openSession();
+// Transaction tx = null;
+// try {
+//     tx = session.beginTransaction();
+//     //do some work
+//     ...
+//     tx.commit();
+// }
+// catch (Exception e) {
+//     if (tx!=null) tx.rollback();
+//     throw e;
+// }
+// finally {
+//     session.close();
+// }
+// ----
+[source,java]
+----
+sessionFactory.inTransaction(session -> {
+    //do the work
+    ...
+});
+----
+
+.Container-managed transactions
+****
+In a container environment, the container itself is usually responsible for managing transactions.
+In Java EE or Quarkus, you'll probably indicate the boundaries of the transaction using the `@Transactional` annotation.
+****
+
+The `EntityTransaction` interface provides a standard way to set the transaction timeout:
+
+[source,java]
+----
+entityManager.getTransaction().setTimeout(30); // 30 seconds
+----
+
+`EntityTransaction` also provides a way to set the transaction to rollback-only mode:
+
+[source,java]
+----
+entityManager.getTransaction().setRollbackOnly();
+----
+
+A transaction in rollback-only mode will be rolled back when it completes.
+
+[[after-tx-rollback]]
+[IMPORTANT]
+====
+Hibernate is not a software transactional memory.
+When a transaction rolls back, Hibernate makes no attempt to roll back the state of objects held in memory to their state at the beginning of the transaction.
+After a transaction rollback, the persistence context must be discarded, and the state of its entities must be assumed inconsistent with the state held by the database.
+====
+
+The interface link:{doc-javadoc-url}org/hibernate/Transaction.html[`Transaction`] extends `EntityTransaction` with some additional operations, including the ability to register transaction completion callbacks.
+
+[[persistence-operations]]
+=== Operations on the persistence context
+
+Of course, the main reason we need an `EntityManager` is to do stuff to the database.
+The following important operations let us interact with the persistence context and schedule modifications to the data:
+
+.Methods for modifying data and managing the persistence context
+[%breakable,cols="30,~"]
+|===
+| Method name and parameters | Effect
+
+| `persist(Object)`
+| Make a transient object persistent and schedule a SQL `insert` statement for later execution
+| `remove(Object)`
+| Make a persistent object transient and schedule a SQL `delete` statement for later execution
+| `merge(Object)`
+| Copy the state of a given detached object to a corresponding managed persistent instance and return
+the persistent object
+| `detach(Object)`
+| Disassociate a persistent object from a session without
+affecting the database
+| `clear()`
+| Empty the persistence context and detach all its entities
+| `flush()`
+| Detect changes made to persistent objects association with the session and synchronize the database state with the state of the session by executing SQL `insert`, `update`, and `delete` statements
+|===
+
+Notice that `persist()` and `remove()` have no immediate effect on the database, and instead simply schedule a command for later execution.
+Also notice that there's no `update()` operation for a stateful session.
+Modifications are automatically detected when the session is <<flush,flushed>>.
+
+On the other hand, except for `getReference()`, the following operations all result in immediate access to the database:
+
+.Methods for reading and locking data
+[%breakable,cols="30,~"]
+|===
+| Method name and parameters | Effect
+
+| `find(Class,Object)`
+| Obtain a persistent object given its type and its id
+| `find(Class,Object,LockModeType)`
+| Obtain a persistent object given its type and its id, requesting the given <<optimistic-and-pessimistic-locking,optimistic or pessimistic lock mode>>
+| `find(EntityGraph,Object)`
+| Obtain a persistent object given its id and an `EntityGraph` specifying its type and associations which should be eagerly fetched
+| `getReference(Class,id)`
+| Obtain a reference to a persistent object given its type and its id, without actually loading its state from the database
+| `getReference(Object)`
+| Obtain a reference to a persistent object with the same identity as the given detached instance, without actually loading its state from the database
+| `refresh(Object)`
+| Refresh the persistent state of an object using a new SQL `select` to retrieve its current state from the database
+| `refresh(Object,LockModeType)`
+| Refresh the persistent state of an object using a new SQL `select` to retrieve its current state from the database, requesting the given <<optimistic-and-pessimistic-locking,optimistic or pessimistic lock mode>>
+| `lock(Object,LockModeType)`
+| Obtain an <<optimistic-and-pessimistic-locking,optimistic or pessimistic lock>> on a persistent object
+|===
+
+Any of these operations might throw an exception.
+Now, if an exception occurs while interacting with the database, there's no good way to resynchronize the state of the current persistence context with the state held in database tables.
+
+Therefore, a session is considered to be unusable after any of its methods throws an exception.
+
+[[fragile-persistence-context]]
+[IMPORTANT]
+// .The persistence context is fragile
+====
+The persistence context is fragile.
+If you receive an exception from Hibernate, you should immediately close and discard the current session. Open a new session if you need to, but throw the bad one away first.
+====
+
+One very important kind of exception which can happen when data is shared between concurrent units of work is an _optimistic lock failure_.
+Optimistic locks are verified by checking <<version-attributes,versions>>.
+A version check is included in the `where` clause of every SQL `update` or `delete` statement for a versioned entity.
+If a version check fails--that is, if no rows are updated--Hibernate infers that the entity was updated in some other unit of work and throws an `OptimisticLockException` to indicate that the current session is working with stale data.
+As with other exceptions, this loss of synchronization between the persistence context and the database means that we must discard the current session.
+
+[CAUTION]
+====
+Some of these operations listed above require slightly more care than others.
+When you call `detach()`, `clear()`, `flush()`, or `refresh()`, you've already strayed from the narrow path.
+You didn't stray far--and you probably had a good reason for going there--but you're in territory where Hibernate just has to assume you know what you're doing.
+If you start to feel that this terrain is bogging you down, consider using a <<stateless-sessions,stateless session>>.
+====
+
+Four of these operations accept _options_, allowing influence over their behavior.
+
+[%breakable,cols="50,~"]
+|===
+| Method name and parameters | Effect
+
+| `find(Class,Object,FindOption...)`
+| Obtain a persistent object given its type and its id, using the specified options
+| `find(EntityGraph,Object,FindOption...)`
+| Obtain a persistent object given its id and an `EntityGraph` specifying its type and associations which should be eagerly fetched, using the specified options
+| `refresh(Object,LockModeType,RefreshOption...)`
+| Refresh the persistent state of an object using a new SQL `select` to retrieve its current state from the database, requesting the given <<optimistic-and-pessimistic-locking,optimistic or pessimistic lock mode>>, using the specified options
+| `lock(Object,LockModeType,LockOption...)`
+| Obtain an <<optimistic-and-pessimistic-locking,optimistic or pessimistic lock>> on a persistent object, using the specified options
+|===
+
+For example, JPA provides the `Timeout` class which is a `FindOption`, a `RefreshOption`, and a `LockOption`.
+
+[source,java]
+----
+var book = entityManger.find(Book.class, isbn, Timeout.ms(100), CacheStoreMode.BYPASS);
+----
+
+Finally, the Hibernate `Session` offers the following method, which is capable of efficiently loading multiple entity instances in parallel:
+
+[%breakable,cols="50,~"]
+|===
+| Method name and parameters | Effect
+
+| `findMultiple(Class,List<Object>,FindOption...)`
+| Obtain a list of persistent objects given their type and their ids, using the specified options
+| `findMultiple(EntityGraph,List<Object>,FindOption...)`
+| Obtain a list of persistent objects given their ids and an `EntityGraph` specifying their type and associations which should be eagerly fetched, using the specified options
+|===
+
+The following code results in a single SQL `select` statement:
+
+[source,java]
+----
+List<Book> books = session.findMultiple(Book.class, bookIds);
+----
+
+Each of the operations we've seen so far affects a single entity instance passed as an argument.
+But there's a way to set things up so that an operation will propagate to associated entities.
+
+[[cascade]]
+=== Cascading persistence operations
+
+It's quite often the case that the lifecycle of a _child_ entity is completely dependent on the lifecycle of some _parent_.
+This is especially common for many-to-one and one-to-one associations, though it's very rare for many-to-many associations.
+
+For example, it's quite common to make an `Order` and all its ``Item``s persistent in the same transaction, or to delete a `Project` and its ``Files``s at once.
+This sort of relationship is sometimes called a _whole/part_-type relationship.
+
+_Cascading_ is a convenience which allows us to propagate one of the operations listed in <<persistence-operations>> from a parent to its children.
+To set up cascading, we specify the `cascade` member of one of the association mapping annotations, usually `@OneToMany` or `@OneToOne`.
+
+[source,java]
+----
+@Entity
+class Order {
+    ...
+    @OneToMany(mappedby=Item_.ORDER,
+               // cascade persist(), remove(), and refresh() from Order to Item
+               cascade={PERSIST,REMOVE,REFRESH},
+               // also remove() orphaned Items
+               orphanRemoval=true)
+    private Set<Item> items;
+    ...
+}
+----
+
+_Orphan removal_ indicates that an `Item` should be automatically deleted if it is removed from the set of items belonging to its parent `Order`.
+
+[[proxies-and-lazy-fetching]]
+=== Proxies and lazy fetching
+
+Our data model is a set of interconnected entities, and in Java our whole dataset would be represented as an enormous interconnected graph of objects.
+It's possible that this graph is disconnected, but more likely it's connected, or composed of a relatively small number of connected subgraphs.
+
+Therefore, when we retrieve an object belonging to this graph from the database and instantiate it in memory, we simply can't recursively retrieve and instantiate all its associated entities.
+Quite aside from the waste of memory on the VM side, this process would involve a huge number of round trips to the database server, or a massive multidimensional cartesian product of tables, or both.
+Instead, we're forced to cut the graph somewhere.
+
+Hibernate solves this problem using _proxies_ and _lazy fetching_.
+A proxy is an object that masquerades as a real entity or collection, but doesn't actually hold any state, because that state has not yet been fetched from the database.
+When you call a method of the proxy, Hibernate will detect the call and fetch the state from the database before allowing the invocation to proceed to the real entity object or collection.
+
+Now for the gotchas:
+
+1. Hibernate will only do this for an entity which is currently associated with a persistence context.
+   Once the session ends, and the persistence context is cleaned up, the proxy is no longer fetchable, and instead its methods throw the hated `LazyInitializationException`.
+2. For a polymorphic association, Hibernate does not know the concrete type of the referenced entity when the proxy is instantiated, and so operations like `instanceof` and typecasts do not work correctly when applied to a proxy.
+3. A round trip to the database to fetch the state of a single entity instance is just about _the least efficient_ way to access data.
+   It almost inevitably leads to the infamous _N+1 selects_ problem we'll discuss later when we talk about how to <<association-fetching,optimize association fetching>>.
+
+[TIP]
+====
+The link:{doc-javadoc-url}org/hibernate/annotations/ConcreteProxy.html[`@ConcreteProxy`] annotation solves gotcha 2, but at the cost of performance (extra joins), and so its use is not generally recommended, except in very special circumstances.
+====
+
+[TIP]
+// .Strive to avoid triggering lazy fetching
+====
+We're getting a bit ahead of ourselves here, but let's quickly mention the general strategy we recommend to navigate past these gotchas:
+
+- All associations should be set `fetch=LAZY` to avoid fetching extra data when it's not needed.
+  As we mentioned <<lazy-problem,earlier>>, this setting is not the default for `@ManyToOne` associations, and must be specified explicitly.
+- But strive to avoid writing code which triggers lazy fetching.
+  Instead, fetch all the data you'll need upfront at the beginning of a unit of work, using one of the techniques described in <<association-fetching>>, usually, using _join fetch_ in HQL or an `EntityGraph`.
+====
+
+It's important to know that some operations which may be performed with an unfetched proxy _don't_ require fetching its state from the database.
+First, we're always allowed to obtain its identifier:
+
+[source,java]
+----
+var pubId = entityManager.find(Book.class, bookId).getPublisher().getId(); // does not fetch publisher
+----
+
+Second, we may create an association to a proxy:
+
+[source,java]
+----
+book.setPublisher(entityManager.getReference(Publisher.class, pubId)); // does not fetch publisher
+----
+
+Sometimes it's useful to test whether a proxy or collection has been fetched from the database.
+JPA lets us do this using the `PersistenceUnitUtil`:
+
+[source,java]
+----
+boolean authorsFetched = entityManagerFactory.getPersistenceUnitUtil().isLoaded(book.getAuthors());
+----
+
+Hibernate has a slightly easier way to do it:
+
+[source,java]
+----
+boolean authorsFetched = Hibernate.isInitialized(book.getAuthors());
+----
+
+Similarly, `PersistenceUnitUtil.load()` force-fetches a proxy or collection:
+
+[source,java]
+----
+Book book = session.find(Book.class, bookId);  // fetch just the Book, leaving authors unfetched
+entityManagerFactory.getPersistenceUnitUtil().load(book.getAuthors());
+----
+
+Again, `Hibernate.initialize()` is slightly more convenient:
+
+[source,java]
+----
+Book book = session.find(Book.class, bookId);  // fetch just the Book, leaving authors unfetched
+Hibernate.initialize(book.getAuthors());  // fetch the Authors
+----
+
+On the other hand, the above code is very inefficient, requiring two trips to the database to obtain data that could in principle be retrieved with just one query.
+
+The static methods of the link:{doc-javadoc-url}org/hibernate/Hibernate.html[`Hibernate`] class let us do a lot more, and it's worth getting a bit familiar with them.
+Of particular interest are the operations which let us work with unfetched collections without fetching their state from the database.
+For example, consider this code:
+
+[source,java]
+----
+Book book = session.find(Book.class, bookId);  // fetch just the Book, leaving authors unfetched
+Author authorRef = session.getReference(Author.class, authorId);  // obtain an unfetched proxy
+boolean isByAuthor = Hibernate.contains(book.getAuthors(), authorRef); // no fetching
+----
+
+This code fragment leaves both the set `book.authors` and the proxy `authorRef` unfetched.
+
+It's clear from the discussion above that we need a way to request that an association be _eagerly_ fetched using a database `join`, thus protecting ourselves from the infamous N+1 selects.
+One way to do this is by passing an `EntityGraph` to `find()`.
+
+[[entity-graph]]
+=== Entity graphs and eager fetching
+
+When an association is mapped `fetch=LAZY`, it won't, by default, be fetched when we call the `find()` method.
+We may request that an association be fetched eagerly (immediately) by passing an `EntityGraph` to `find()`.
+
+[source,java]
+----
+var graph = entityManager.createEntityGraph(Book.class);
+graph.addSubgraph(Book_.publisher);
+Book book = entityManager.find(graph, bookId);
+----
+
+//
+// [source,java]
+// ----
+// var graph = session.createEntityGraph(Book.class);
+// graph.addSubgraph(Book_.publisher);
+// Book book = session.byId(Book.class).withFetchGraph(graph).load(bookId);
+// ----
+
+This code adds a `left outer join` to our SQL query, fetching the associated `Publisher` along with the `Book`.
+
+We may even attach additional nodes to our `EntityGraph`:
+
+[source,java]
+----
+var graph = session.createEntityGraph(Book.class);
+graph.addSubgraph(Book_.publisher);
+graph.addPluralSubgraph(Book_.authors).addSubgraph(Author_.person);
+Book book = entityManager.find(graph, bookId);
+----
+
+// [source,java]
+// ----
+// var graph = session.createEntityGraph(Book.class);
+// graph.addSubgraph(Book_.publisher);
+// graph.addPluralSubgraph(Book_.authors).addSubgraph(Author_.person);
+// Book book = session.byId(Book.class).withFetchGraph(graph).load(bookId);
+// ----
+
+This results in a SQL query with _four_ ``left outer join``s.
+
+[NOTE]
+====
+In the code examples above, The classes `Book_` and `Author_` are generated by <<metamodel-generator,Hibernate Processor>>, as we saw earlier.
+They let us refer to attributes of our model in a completely type-safe way.
+We'll use them again, below, when we talk about <<criteria-queries>>.
+====
+
+JPA specifies that any given `EntityGraph` may be interpreted in two different ways.
+
+- A _fetch graph_ specifies exactly the associations that should be eagerly loaded.
+  Any association not belonging to the entity graph is proxied and loaded lazily only if required.
+- A _load graph_ specifies that the associations in the entity graph are to be fetched in addition to the associations mapped `fetch=EAGER`.
+
+An `EntityGraph` passed directly to `find()` is always interpreted as a load graph.
+
+[TIP]
+====
+You're right, the names make no sense.
+But don't worry, if you take our advice, and map your associations `fetch=LAZY`, there's no difference between a "fetch" graph and a "load" graph, so the names don't matter.
+====
+
+[NOTE]
+====
+JPA even specifies a way to define named entity graphs using annotations.
+But the annotation-based API is so verbose that it's just not worth using.
+====
+
+[[load-access]]
+=== Controlling lookup by id
+
+As we will soon see in the <<queries,next chapter>>, we can do almost anything via <<hql-queries,HQL>>, <<criteria-queries,criteria>>, or <<native-queries,native SQL>> queries.
+But when we already know the identifier of the entity we need, a query can feel like overkill.
+And queries don't make efficient use of the <<second-level-cache,second level cache>>.
+
+We met the `find()` and `findMultiple()` methods <<persistence-operations,earlier>>.
+These are the most basic ways to perform a _lookup_ by id.
+But they can't quite do everything.
+Therefore, Hibernate has some APIs that streamline certain more complicated lookups:
+
+.Operations for lookup by id
+[%breakable,cols="30,~"]
+|===
+| Method name | Purpose
+
+| `byId()` | Lets us specify association fetching via an `EntityGraph`, as we saw; also lets us specify some additional options, including how the lookup <<second-level-cache-management,interacts with the second level cache>>, and whether the entity should be loaded in read-only mode
+| `byMultipleIds()` | Lets us load a _batch_ of ids at the same time
+|===
+
+[NOTE]
+====
+Since the introduction of `FindOption` in JPA 3.2, `byId()` is now much less useful.
+====
+
+Batch loading is very useful when we need to retrieve multiple instances of the same entity class by id:
+
+[source,java]
+----
+var graph = session.createEntityGraph(Book.class);
+graph.addSubgraph(Book_.publisher);
+
+List<Book> books =
+        session.byMultipleIds(Book.class)
+            .withFetchGraph(graph)  // control association fetching
+            .withBatchSize(20)      // specify an explicit batch size
+            .with(CacheMode.GET)    // control interaction with the cache
+            .multiLoad(bookIds);
+----
+
+The given list of `bookIds` will be broken into batches, and each batch will be fetched from the database in a single `select`.
+If we don't specify the batch size explicitly, a batch size will be chosen automatically.
+
+We also have some operations for working with lookups by <<natural-identifiers, natural id>>:
+
+[%breakable,cols="30,~"]
+|===
+| Method name | Purpose
+
+| `bySimpleNaturalId()` | For an entity with just one attribute is annotated `@NaturalId`
+| `byNaturalId()` | For an entity with multiple attributes are annotated `@NaturalId`
+| `byMultipleNaturalId()` | Lets us load a _batch_ of natural ids at the same time
+|===
+
+Here's how we can retrieve an entity by its composite natural id:
+
+[source,java]
+----
+Book book =
+        session.byNaturalId(Book.class)
+            .using(Book_.isbn, isbn)
+            .using(Book_.printing, printing)
+            .load();
+----
+
+Notice that this code fragment is completely typesafe, again thanks to <<metamodel-generator,Hibernate Processor>>.
+
+[[controlling-merge]]
+=== Controlling state retrieval during merge
+
+The <<persistence-operations,`merge()`>> operation is usually used when some interaction with a user or automated system spans multiple transactions, with each transaction having its own persistence context:
+
+1. an entity `e` is retrieved in one persistence context, and then the current transaction ends, resulting in destruction of the persistence context and in the entity becoming detached, then
+2.  `e` is modified in some way while detached, and then
+3. finally, the modification is made persistent by merging the detached instance in a second transaction, with a new persistence context, by calling `session.merge(e)`.
+
+In step 3, the original entity instance `e` remains detached, but `merge()` returns a distinct instance `f` representing the same row of the database and associated with the new persistence context.
+That is, `merge()` trades a detached instance for a <<persistence-contexts,persistent instance>> representing the same row.
+
+To determine the nature of the modification held in `e` and to guarantee correct semantics with respect to optimistic locking, Hibernate first ``select``s the current persistent state of the entity from the database before applying the modification to `f`.
+
+<<cascade,Cascade merge>> allows multiple modifications held in a graph of entity instances to be made persistent in one call to `merge()`.
+When `merge()` is used with cascading -- that is, when the `merge()` operation is applied to a root entity with associations mapped `cascade=MERGE` -- Hibernate issues a single `select` statement to retrieve the current database state of the root entity and all its associated entities.
+This behavior avoids the use of N+1 select statements for state retrieval during cascade merge but, in certain circumstances, the query might be suboptimal.
+On the other hand, this query does not occur if the root entity was already loaded into the persistence context before `merge()` is called.
+
+Therefore, when using the `EntityManager` API, we may gain control over the way state is loaded before a `merge()` just by calling `find()` before calling `merge()`.
+
+[source,java]
+----
+Book book = ... ;
+var graph = entityManager.createEntityGraph(Book.class);
+graph.addSubgraph(Book_.chapters);  // Book.chapters mapped cascade=MERGE
+entityManager.find(graph, book.getIsbn());  // force loading of the book
+entityManager.merge(book);  // merge the detached objet
+----
+
+The `Session` interface provides a streamlined alternative:
+
+[source,java]
+----
+Book book = ... ;
+var graph = session.createEntityGraph(Book.class);
+graph.addSubgraph(Book_.chapters);
+session.merge(book, graph);  // equivalent to find() then merge()
+----
+
+When merging multiple root entities, `findMultiple()` may be used instead of `find()`.
+
+[source,java]
+----
+List<Book> books = ... ;
+var isbns = books.stream().map(Book::getIsbn).toList();
+var graph = session.createEntityGraph(Book.class);
+graph.addSubgraph(Book_.chapters);  // Book.chapters mapped cascade=MERGE
+session.findMultiple(graph, isbns);  // force loading of the books
+for (var book in books) {
+    session.merge(book);
+}
+----
+
+TIP: In some cases, `merge()` is much less efficient than the `upsert()` operation of <<stateless-sessions,`StatelessSession`>>.
+
+[[flush]]
+=== Flushing the session
+
+From time to time, a _flush_ operation is triggered, and the session synchronizes dirty state held in memory—that is, modifications to the state of entities associated with the persistence context—with persistent state held in the database. Of course, it does this by executing SQL `INSERT`, `UPDATE`, and `DELETE` statements.
+
+By default, a flush is triggered:
+
+- when the current transaction commits, for example, when `Transaction.commit()` is called,
+- before execution of a query whose result would be affected by the synchronization of dirty state held in memory, or
+- when the program directly calls `flush()`.
+
+In the following code, the flush occurs when the transaction commits:
+
+[source,java]
+----
+session.getTransaction().begin();
+session.persist(author);
+var books =
+        // new Author does not affect results of query for Books
+        session.createSelectionQuery("from Book")
+                // no need to flush
+                .getResultList();
+// flush occurs here, just before transaction commits
+session.getTransaction().commit();
+----
+
+But in this code, the flush occurs when the query is executed:
+
+[source,java]
+----
+session.getTransaction().begin();
+session.persist(book);
+var books =
+        // new Book would affect results of query for Books
+        session.createSelectionQuery("from Book")
+                // flush occurs here, just before query is executed
+                .getResultList();
+// changes were already flushed to database, nothing to flush
+session.getTransaction().commit();
+----
+
+It's always possible to call `flush()` explicitly:
+
+[source,java]
+----
+session.getTransaction().begin();
+session.persist(author);
+session.flush(); // explicit flush
+var books =
+        session.createSelectionQuery("from Book")
+                // nothing to flush
+                .getResultList();
+// nothing to flush
+session.getTransaction().commit();
+----
+
+[NOTE]
+// .SQL execution happens asynchronously
+====
+Notice that SQL statements are not usually executed synchronously by methods of the `Session` interface like `persist()` and `remove()`. If synchronous execution of SQL is desired, the `StatelessSession` allows this.
+====
+
+This behavior can be controlled by explicitly setting the flush mode.
+For example, to disable flushes that occur before query execution, call:
+
+[source,java]
+----
+entityManager.setFlushMode(FlushModeType.COMMIT);
+----
+
+Hibernate allows greater control over the link:{doc-javadoc-url}org/hibernate/FlushMode.html[flush mode] than JPA:
+
+[source,java]
+----
+session.setHibernateFlushMode(FlushMode.MANUAL);
+----
+
+Since flushing is a somewhat expensive operation (the session must dirty-check every entity in the persistence context), setting the flush mode to `COMMIT` can occasionally be a useful optimization.
+But take care--in this mode, queries might return stale data:
+
+[source,java]
+----
+session.getTransaction().begin();
+session.setFlushMode(FlushModeType.COMMIT); // disable AUTO-flush
+session.persist(book);
+var books =
+        // flushing on query execution disabled
+        session.createSelectionQuery("from Book")
+                // no flush, query returns stale results
+                .getResultList();
+// flush occurs here, just before transaction commits
+session.getTransaction().commit();
+----
+
+.Flush modes
+[%breakable,cols="15,15,~"]
+|===
+| Hibernate `FlushMode` | JPA `FlushModeType` | Interpretation
+
+| `MANUAL` | | Never flush automatically
+| `COMMIT` | `COMMIT` | Flush before transaction commit
+| `AUTO` | `AUTO` | Flush before transaction commit, and before execution of a query whose results might be affected by modifications held in memory
+| `ALWAYS` | | Flush before transaction commit, and before execution of every query
+|===
+
+A second way to reduce the cost of flushing is to load entities in link:{doc-javadoc-url}org/hibernate/Session.html#setDefaultReadOnly(boolean)[_read-only_ mode]:
+
+- `Session.setDefaultReadOnly(true)` specifies that all entities loaded by a given session should be loaded in read-only mode by default,
+- `SelectionQuery.setReadOnly(true)` specifies that every entity returned by a given query should be loaded in read-only mode, and
+- `Session.setReadOnly(Object, true)` specifies that a given entity already loaded by the session should be switched to read-only mode.
+
+Hibernate's link:{doc-javadoc-url}org/hibernate/ReadOnlyMode.html[`ReadOnlyMode`] is a custom `FindOption`:
+
+[source,java]
+----
+var book = entityManager.find(Book.class, isbn, ReadOnlyMode.READ_ONLY);
+----
+
+It's not necessary to dirty-check an entity instance in read-only mode.
+
+[[callbacks]]
+=== Lifecycle callbacks and entity listeners
+
+The annotations `@PrePersist`, `@PreRemove`, `@PreUpdate`, `@PostPersist`, `@PostRemove`, `@PostUpdate`, and `@PostLoad` allow an entity to respond to persistence lifecycle operations and maintain its transient internal state.
+For example:
+
+[source,java]
+----
+@Entity
+class Order {
+    ...
+    transient double total;
+
+    @PostLoad
+    void computeTotal() {
+        total = items.stream().mapToDouble(i -> i.price * i.quantity).sum();
+    }
+
+    ...
+}
+----
+
+If we need to interact with technical objects, we can place the lifecycle callback on a separate class, called an _entity listener_.
+The `@EntityListeners` annotation specifies the listeners for a given entity class:
+
+[source,java]
+----
+@Entity
+@EntityListeners(OrderEvents.class)
+class Order { ... }
+----
+
+An entity listener may inject CDI beans:
+
+[source,java]
+----
+// entity listener class
+class OrderEvents {
+    @Inject
+    Event<NewOrder> newOrderEvent;
+
+    @PostPersist
+    void newOrder(Order order) {
+        // send a CDI event
+        newOrderEvent.fire(new NewOrder(order));
+    }
+}
+----
+A single entity listener class may even be a generic listener that receives lifecycle callbacks for multiple different entity classes.
+
+[TIP]
+The venerable link:{doc-javadoc-url}org/hibernate/Interceptor.html[`Interceptor`] interface is a more powerful alternative to entity listeners.
+`Interceptor` and its friend link:{doc-javadoc-url}org/hibernate/CustomEntityDirtinessStrategy.html[`CustomEntityDirtinessStrategy`] allow advanced users to augment the built-in handling of managed entities with custom behavior.
+These interfaces are very useful if you're building your own persistence framework with Hibernate as the foundation.
+
+We're about to see one way `Interceptor` can be used.
+
+[[transient-vs-detached]]
+=== Transient vs detached
+
+Sometimes, Hibernate needs to be able to distinguish whether an entity instance is:
+
+- a brand-new transient object the client just instantiated using `new`, or
+- a detached object, which previously belonged to a persistence context.
+
+This is a bit of a problem, since there's no good and efficient way for Hibernate to just tag an entity with a Post-it saying "I've seen you before".
+
+Therefore, Hibernate uses heuristics.
+The two most useful heuristics are:
+
+1. If the entity has a <<generated-identifiers,generated identifier>>, the value of the id field is inspected: if the value currently assigned to the id field is the default value for the type of the field, then the object is transient; otherwise, the object is detached.
+2. If the entity has a <<version-attributes,version>>, the value of the version field is inspected: if the value currently assigned to the version field is the default value, or a negative number, then the object is transient; otherwise, the object is detached.
+
+If the entity has neither a generated id, nor a version, Hibernate usually falls back to just doing something reasonable.
+In extreme cases a `SELECT` query will be issued to determine whether a matching row exists in the database.
+
+[WARNING]
+These heuristics aren't perfect.
+It's quite easy to confuse Hibernate by assigning a value to the id field or version field, making a new transient instance look like it's detached.
+We therefore strongly discourage assigning values to fields annotated `@GeneratedValue` or `@Version` before passing an entity to Hibernate.
+
+If the heuristics ever happen cause a real problem, you may implement your own Post-it tagging via link:{doc-javadoc-url}org/hibernate/Interceptor.html#isTransient(java.lang.Object)[`Interceptor.isTransient()`].
+
+
+[[jdbc]]
+=== Interacting directly with JDBC
+
+From time to time we run into the need to write some code that calls JDBC directly.
+The `EntityManager` now offers a convenient way to do this:
+
+[source,java]
+----
+entityManager.runWithConnection((Connection connection) -> {
+    try (var callable = connection.prepareCall("{call myproc(?)}")) {
+        callable.setLong(1, argument);
+        callable.execute();
+    }
+});
+----
+
+To return a value, use `callWithConnection()` instead of `runWithConnection()`.
+
+The Hibernate `Session` has an older, slightly simpler API:
+
+[source,java]
+----
+session.doWork(connection -> {
+    try (var callable = connection.prepareCall("{call myproc(?)}")) {
+        callable.setLong(1, argument);
+        callable.execute();
+    }
+});
+----
+
+If the work returns a value, use `doReturningWork()` instead of `doWork()`.
+
+The `Connection` passed to the work is the same connection being used by the session, and so any work performed using that connection occurs in the same transaction context.
+
+[TIP]
+====
+In a container environment where transactions and database connections are managed by the container, this might not be the easiest way to obtain the JDBC connection.
+====
+
+[[advice]]
+=== What to do when things go wrong
+
+Object/relational mapping has been called the "Vietnam of computer science".
+The person who made this analogy is American, and so one supposes that he meant to imply some kind of unwinnable war.
+This is quite ironic, since at the very moment he made this comment, Hibernate was already on the brink of winning the war.
+
+Today, Vietnam is a peaceful country with exploding per-capita GDP, and ORM is a solved problem.
+That said, Hibernate is complex, and ORM still presents many pitfalls for the inexperienced, even occasionally for the experienced.
+Sometimes things go wrong.
+
+In this section we'll quickly sketch some general strategies for avoiding "quagmires".
+
+- Understand SQL and the relational model.
+  Know the capabilities of your RDBMS.
+  Work closely with the DBA if you're lucky enough to have one.
+  Hibernate is not about "transparent persistence" for Java objects.
+  It's about making two excellent technologies work smoothly together.
+- <<logging-generated-sql,Log the SQL>> executed by Hibernate.
+  You cannot know that your persistence logic is correct until you've actually inspected the SQL that's being executed.
+  Even when everything seems to be "working", there might be a lurking <<association-fetching,N+1 selects monster>>.
+- Be careful when <<bidirectional-problem,modifying bidirectional associations>>.
+  In principle, you should update _both ends_ of the association.
+  But Hibernate doesn't strictly enforce that, since there are situations where such a rule would be too heavy-handed.
+  Whatever the case, it's up to you to maintain consistency across your model.
+- Never <<persistence-contexts,leak a persistence context>> across threads or concurrent transactions.
+  Have a strategy or framework to guarantee this never happens.
+- When running queries that return large result sets, take care to consider the size of the <<session-cache-management,session cache>>.
+  Consider using a <<stateless-sessions,stateless session>>.
+- Think carefully about the semantics of the <<second-level-cache,second-level cache>>, and how the caching policies impact transaction isolation.
+- Avoid fancy bells and whistles you don't need.
+  Hibernate is incredibly feature-rich, and that's a good thing, because it serves the needs of a huge number of users, many of whom have one or two very specialized needs.
+  But nobody has _all_ those specialized needs.
+  In all probability, you have none of them.
+  Write your domain model in the simplest way that's reasonable, using the simplest mapping strategies that make sense.
+- When something isn't behaving as you expect, _simplify_.
+  Isolate the problem.
+  Find the absolute minimum test case which reproduces the behavior, _before_ asking for help online.
+  Most of the time, the mere act of isolating the problem will suggest an obvious solution.
+- If you're new to Hibernate, avoid frameworks and libraries that "wrap" JPA.
+  You need an excellent understanding of Hibernate and JPA _first_, before introducing unnecessary additional moving parts.
+  If there's any one criticism of Hibernate and ORM that sometimes _does_ ring true, it's that it takes you too far from direct control over JDBC.
+  An additional layer just takes you even further.
+  If you insist you really do need this extra layer, we beg you to consider https://hibernate.org/repositories/[Hibernate Data Repositories] instead of older third-party solutions.
+- Avoid copy/pasting code from random bloggers or stackoverflow reply guys.
+  Many of the suggestions you'll find online just aren't the simplest solution, and many aren't correct for Hibernate 6 and 7.
+  Instead, _understand_ what you're doing; study the Javadoc of the APIs you're using; read the JPA specification; follow the advice we give in this document; go direct to the Hibernate team on Zulip.
+  (Sure, we can be a bit cantankerous at times, but we _do_ always want you to be successful.)
+- Always consider other options.
+  You don't have to use Hibernate for _everything_.
+

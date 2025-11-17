@@ -1,25 +1,23 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.internal;
 
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.Map;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
- * Yeah, right, so....  No idea...
- *
  * @author Michael Bartmann
  * @author Gavin King
  * @author Steve Ebersole
@@ -28,10 +26,10 @@ public class PropertyAccessStrategyNoopImpl implements PropertyAccessStrategy {
 	/**
 	 * Singleton access
 	 */
-	public static final PropertyAccessStrategyNoopImpl INSTANCE = new PropertyAccessStrategyNoopImpl();
+	public static final PropertyAccessStrategy INSTANCE = new PropertyAccessStrategyNoopImpl();
 
 	@Override
-	public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName) {
+	public PropertyAccess buildPropertyAccess(Class<?> containerJavaType, String propertyName, boolean setterRequired) {
 		return PropertyAccessNoopImpl.INSTANCE;
 	}
 
@@ -64,32 +62,37 @@ public class PropertyAccessStrategyNoopImpl implements PropertyAccessStrategy {
 		public static final GetterImpl INSTANCE = new GetterImpl();
 
 		@Override
-		public Object get(Object owner) {
+		public @Nullable Object get(Object owner) {
 			return null;
 		}
 
 		@Override
-		public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
+		public @Nullable Object getForInsert(Object owner, Map<Object, Object> mergeMap, SharedSessionContractImplementor session) {
 			return null;
 		}
 
 		@Override
-		public Class getReturnType() {
+		public Class<?> getReturnTypeClass() {
 			return Object.class;
 		}
 
 		@Override
-		public Member getMember() {
+		public Type getReturnType() {
+			return Object.class;
+		}
+
+		@Override
+		public @Nullable Member getMember() {
 			return null;
 		}
 
 		@Override
-		public String getMethodName() {
+		public @Nullable String getMethodName() {
 			return null;
 		}
 
 		@Override
-		public Method getMethod() {
+		public @Nullable Method getMethod() {
 			return null;
 		}
 	}
@@ -101,16 +104,16 @@ public class PropertyAccessStrategyNoopImpl implements PropertyAccessStrategy {
 		public static final SetterImpl INSTANCE = new SetterImpl();
 
 		@Override
-		public void set(Object target, Object value, SessionFactoryImplementor factory) {
+		public void set(Object target, @Nullable Object value) {
 		}
 
 		@Override
-		public String getMethodName() {
+		public @Nullable String getMethodName() {
 			return null;
 		}
 
 		@Override
-		public Method getMethod() {
+		public @Nullable Method getMethod() {
 			return null;
 		}
 	}

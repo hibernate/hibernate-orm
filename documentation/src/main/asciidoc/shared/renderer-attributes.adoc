@@ -1,0 +1,2 @@
+:icons: font
+:doctype: book

@@ -1,21 +1,24 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 import java.sql.SQLException;
 
 /**
- * Thrown when a database query timeout occurs.
+ * A {@link JDBCException} indicating that a database query timed
+ * out on the database.
  *
  * @author Scott Marlow
+ *
+ * @see jakarta.persistence.Query#setTimeout
+ * @see org.hibernate.query.CommonQueryContract#setTimeout
+ * @see jakarta.persistence.QueryTimeoutException
  */
 public class QueryTimeoutException extends JDBCException {
 	/**
-	 * Constructs a QueryTimeoutException using the supplied information.
+	 * Constructs a {@code QueryTimeoutException} using the supplied information.
 	 *
 	 * @param message The message explaining the exception condition
 	 * @param sqlException The underlying SQLException

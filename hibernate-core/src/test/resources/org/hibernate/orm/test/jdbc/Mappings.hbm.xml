@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+      "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+          "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.orm.test.jdbc">
+
+    <class name="Person" table="T_JDBC_PERSON">
+        <id name="id" column="ID">
+            <generator class="increment" />
+        </id>
+        <property name="firstName" />
+        <property name="lastName" />
+    </class>
+
+    <class name="Boat" table="T_JDBC_BOAT">
+        <id name="id" column="ID">
+            <generator class="increment" />
+        </id>
+        <property name="tag" />
+        <many-to-one name="driver"/>
+        <many-to-one name="boarder"/>
+    </class>
+
+</hibernate-mapping>

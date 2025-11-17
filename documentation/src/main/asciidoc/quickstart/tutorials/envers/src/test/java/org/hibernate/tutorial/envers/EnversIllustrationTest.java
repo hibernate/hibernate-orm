@@ -1,44 +1,29 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Inc.
- *
- * This copyrighted material is made available to anyone wishing to use, modify,
- * copy, or redistribute it subject to the terms and conditions of the GNU
- * Lesser General Public License, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this distribution; if not, write to:
- * Free Software Foundation, Inc.
- * 51 Franklin Street, Fifth Floor
- * Boston, MA  02110-1301  USA
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tutorial.envers;
 
 import java.util.Date;
 import java.util.List;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 
 import junit.framework.TestCase;
 
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 
+import static java.time.LocalDateTime.now;
+
+import static jakarta.persistence.Persistence.createEntityManagerFactory;
+
 /**
- * Illustrates the set up and use of Envers.
+ * Illustrates the setup and use of Envers.
  * <p>
- * This example is different from the others in that we really need to save multiple revisions to the entity in
- * order to get a good look at Envers in action.
+ * This example is different from the others because we need to have
+ * multiple revisions to the entity in order to get a good look at
+ * Envers in action.
  *
  * @author Steve Ebersole
  */
@@ -46,14 +31,12 @@ public class EnversIllustrationTest extends TestCase {
 	private EntityManagerFactory entityManagerFactory;
 
 	@Override
-	protected void setUp() throws Exception {
-		// like discussed with regards to SessionFactory, an EntityManagerFactory is set up once for an application
-		// 		IMPORTANT: notice how the name here matches the name we gave the persistence-unit in persistence.xml!
-		entityManagerFactory = Persistence.createEntityManagerFactory( "org.hibernate.tutorial.envers" );
+	protected void setUp() {
+		entityManagerFactory = createEntityManagerFactory( "org.hibernate.tutorial.envers" );
 	}
 
 	@Override
-	protected void tearDown() throws Exception {
+	protected void tearDown() {
 		entityManagerFactory.close();
 	}
 
@@ -61,8 +44,8 @@ public class EnversIllustrationTest extends TestCase {
 		// create a couple of events
 		EntityManager entityManager = entityManagerFactory.createEntityManager();
 		entityManager.getTransaction().begin();
-		entityManager.persist( new Event( "Our very first event!", new Date() ) );
-		entityManager.persist( new Event( "A follow up event", new Date() ) );
+		entityManager.persist( new Event( "Our very first event!", now() ) );
+		entityManager.persist( new Event( "A follow up event", now() ) );
 		entityManager.getTransaction().commit();
 		entityManager.close();
 
@@ -82,7 +65,7 @@ public class EnversIllustrationTest extends TestCase {
 		entityManager = entityManagerFactory.createEntityManager();
 		entityManager.getTransaction().begin();
 		Event myEvent = entityManager.find( Event.class, 2L ); // we are using the increment generator, so we know 2 is a valid id
-		myEvent.setDate( new Date() );
+		myEvent.setDate( now() );
 		myEvent.setTitle( myEvent.getTitle() + " (rescheduled)" );
         entityManager.getTransaction().commit();
         entityManager.close();

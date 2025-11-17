@@ -1,0 +1,258 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.dialect.function;
+
+import java.util.List;
+import java.util.Locale;
+import java.util.function.Supplier;
+
+import org.hibernate.AssertionFailure;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
+import org.hibernate.type.BindingContext;
+import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.function.FunctionKind;
+import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
+import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
+import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.CastTarget;
+import org.hibernate.sql.ast.tree.expression.Distinct;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.type.BasicPluralType;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
+import org.hibernate.type.spi.TypeConfiguration;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static java.util.Arrays.asList;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
+import static org.hibernate.type.SqlTypes.isNumericType;
+
+/**
+ * @author Christian Beikov
+ */
+public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
+
+	private final SqlAstNodeRenderingMode defaultArgumentRenderingMode;
+	private final CastFunction castFunction;
+	private final BasicType<Double> doubleType;
+
+	public AvgFunction(
+			Dialect dialect,
+			TypeConfiguration typeConfiguration,
+			SqlAstNodeRenderingMode defaultArgumentRenderingMode) {
+		super(
+				"avg",
+				FunctionKind.AGGREGATE,
+				new Validator(),
+				new ReturnTypeResolver( typeConfiguration ),
+				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, NUMERIC )
+		);
+		this.defaultArgumentRenderingMode = defaultArgumentRenderingMode;
+		doubleType = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE );
+		//This is kinda wrong, we're supposed to use findFunctionDescriptor("cast"), not instantiate CastFunction
+		//However, since no Dialects currently override the cast() function, it's OK for now
+		castFunction = new CastFunction( dialect, dialect.getPreferredSqlTypeCodeForBoolean() );
+	}
+
+	@Override
+	public void render(
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
+			SqlAstTranslator<?> walker) {
+		render( sqlAppender, sqlAstArguments, null, returnType, walker );
+	}
+
+	@Override
+	public void render(
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> sqlAstArguments,
+			Predicate filter,
+			ReturnableType<?> returnType,
+			SqlAstTranslator<?> translator) {
+		final boolean caseWrapper =
+				filter != null && !filterClauseSupported( translator );
+		sqlAppender.appendSql( "avg(" );
+		final Expression arg;
+		final var argNode = sqlAstArguments.get( 0 );
+		if ( argNode instanceof Distinct distinct ) {
+			sqlAppender.appendSql( "distinct " );
+			arg = distinct.getExpression();
+		}
+		else if ( argNode instanceof Expression expression ) {
+			arg = expression;
+		}
+		else {
+			throw new AssertionFailure( "Unexpected argument type" );
+		}
+		if ( caseWrapper ) {
+			translator.getCurrentClauseStack().push( Clause.WHERE );
+			sqlAppender.appendSql( "case when " );
+			filter.accept( translator );
+			translator.getCurrentClauseStack().pop();
+			sqlAppender.appendSql( " then " );
+			renderArgument( sqlAppender, translator, arg );
+			sqlAppender.appendSql( " else null end)" );
+		}
+		else {
+			renderArgument( sqlAppender, translator, arg );
+			sqlAppender.appendSql( ')' );
+			if ( filter != null ) {
+				translator.getCurrentClauseStack().push( Clause.WHERE );
+				sqlAppender.appendSql( " filter (where " );
+				filter.accept( translator );
+				sqlAppender.appendSql( ')' );
+				translator.getCurrentClauseStack().pop();
+			}
+		}
+	}
+
+	private void renderArgument(SqlAppender sqlAppender, SqlAstTranslator<?> translator, Expression realArg) {
+		final JdbcMapping sourceMapping = realArg.getExpressionType().getSingleJdbcMapping();
+		// Only cast to float/double if this is an integer
+		if ( sourceMapping.getJdbcType().isInteger() ) {
+			castFunction.render(
+					sqlAppender,
+					asList( realArg, new CastTarget( doubleType ) ),
+					doubleType,
+					translator
+			);
+		}
+		else {
+			translator.render( realArg, defaultArgumentRenderingMode );
+		}
+	}
+
+	@Override
+	public String getArgumentListSignature() {
+		return "(NUMERIC arg)";
+	}
+
+	public static class Validator implements ArgumentsValidator {
+
+		public static final ArgumentsValidator INSTANCE = new Validator();
+
+		@Override
+		public void validate(
+				List<? extends SqmTypedNode<?>> arguments,
+				String functionName,
+				BindingContext bindingContext) {
+			if ( arguments.size() != 1 ) {
+				throw new FunctionArgumentException(
+						String.format(
+								Locale.ROOT,
+								"Function %s() has %d parameters, but %d arguments given",
+								functionName,
+								1,
+								arguments.size()
+						)
+				);
+			}
+			final var expressible = arguments.get( 0 ).getExpressible();
+			if ( expressible != null ) {
+				final var domainType = expressible.getSqmType();
+				if ( domainType != null ) {
+					final var jdbcType = getJdbcType( domainType, bindingContext.getTypeConfiguration() );
+					if ( !isNumeric( jdbcType ) ) {
+						throw new FunctionArgumentException(
+								String.format(
+										"Parameter %d of function '%s()' has type '%s', but argument is of type '%s'",
+										1,
+										functionName,
+										NUMERIC,
+										domainType.getTypeName()
+								)
+						);
+					}
+				}
+			}
+		}
+
+		private static boolean isNumeric(JdbcType jdbcType) {
+			final int sqlTypeCode = jdbcType.getDefaultSqlTypeCode();
+			return isNumericType( sqlTypeCode )
+				|| jdbcType instanceof ArrayJdbcType arrayJdbcType
+						&& isNumeric( arrayJdbcType.getElementJdbcType() );
+		}
+
+		private static JdbcType getJdbcType(DomainType<?> domainType, TypeConfiguration typeConfiguration) {
+			if ( domainType instanceof JdbcMapping jdbcMapping ) {
+				return jdbcMapping.getJdbcType();
+			}
+			else {
+				final var javaType = domainType.getExpressibleJavaType();
+				return javaType.getJavaTypeClass().isEnum()
+						// we can't tell if the enum is mapped STRING or ORDINAL
+						? ObjectJdbcType.INSTANCE
+						: javaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
+			}
+		}
+
+		@Override
+		public String getSignature() {
+			return "(arg)";
+		}
+	}
+
+	public static class ReturnTypeResolver implements FunctionReturnTypeResolver {
+
+		private final BasicType<Double> doubleType;
+
+		public ReturnTypeResolver(TypeConfiguration typeConfiguration) {
+			doubleType = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE );
+		}
+
+		@Override
+		public BasicValuedMapping resolveFunctionReturnType(
+				Supplier<BasicValuedMapping> impliedTypeAccess,
+				List<? extends SqlAstNode> arguments) {
+			final var impliedType = impliedTypeAccess.get();
+			if ( impliedType != null ) {
+				return impliedType;
+			}
+			else {
+				var expression = (Expression) arguments.get( 0 );
+				final var jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
+				return jdbcMapping instanceof BasicPluralType<?, ?>
+						? (BasicValuedMapping) jdbcMapping
+						: doubleType;
+			}
+		}
+
+		@Override
+		public ReturnableType<?> resolveFunctionReturnType(
+				ReturnableType<?> impliedType,
+				@Nullable SqmToSqlAstConverter converter,
+				List<? extends SqmTypedNode<?>> arguments,
+				TypeConfiguration typeConfiguration) {
+			final var expressible = arguments.get( 0 ).getExpressible();
+			if ( expressible != null ) {
+				final var domainType = expressible.getSqmType();
+				if ( domainType instanceof BasicPluralType<?, ?> ) {
+					return (ReturnableType<?>) domainType;
+				}
+			}
+			return typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE );
+		}
+	}
+
+}

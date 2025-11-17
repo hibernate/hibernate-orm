@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://xmlns.jcp.org/xml/ns/persistence/orm"
+                 version="2.1">
+    <package>org.hibernate.test.converter</package>
+    <converter class="org.hibernate.orm.test.mapping.converted.converter.StringClobConverter" auto-apply="true"/>
+</entity-mappings>

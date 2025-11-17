@@ -1,18 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.backend.jta.internal;
 
-import javax.transaction.SystemException;
-import javax.transaction.TransactionManager;
-
-import org.jboss.logging.Logger;
+import jakarta.transaction.SystemException;
+import jakarta.transaction.TransactionManager;
 
 import org.hibernate.TransactionException;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
+
+import static org.hibernate.resource.transaction.backend.jta.internal.JtaLogging.JTA_LOGGER;
 
 /**
  * JtaTransactionAdapter for coordinating with the JTA TransactionManager
@@ -20,7 +18,6 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
  * @author Steve Ebersole
  */
 public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransactionAdapter {
-	private static final Logger log = Logger.getLogger( JtaTransactionAdapterTransactionManagerImpl.class );
 
 	private final TransactionManager transactionManager;
 
@@ -34,17 +31,17 @@ public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransacti
 	public void begin() {
 		try {
 			if ( getStatus() == TransactionStatus.NOT_ACTIVE ) {
-				log.trace( "Calling TransactionManager#begin" );
+				JTA_LOGGER.callingTransactionManagerBegin();
 				transactionManager.begin();
 				initiator = true;
-				log.trace( "Called TransactionManager#begin" );
+				JTA_LOGGER.calledTransactionManagerBegin();
 			}
 			else {
-				log.trace( "Skipping TransactionManager#begin due to already active transaction" );
+				JTA_LOGGER.skippingTransactionManagerBegin();
 			}
 		}
 		catch (Exception e) {
-			throw new TransactionException( "JTA TransactionManager#begin failed", e );
+			throw new TransactionException( "JTA TransactionManager.begin() failed", e );
 		}
 	}
 
@@ -53,16 +50,16 @@ public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransacti
 		try {
 			if ( initiator ) {
 				initiator = false;
-				log.trace( "Calling TransactionManager#commit" );
+				JTA_LOGGER.callingTransactionManagerCommit();
 				transactionManager.commit();
-				log.trace( "Called TransactionManager#commit" );
+				JTA_LOGGER.calledTransactionManagerCommit();
 			}
 			else {
-				log.trace( "Skipping TransactionManager#commit due to not being initiator" );
+				JTA_LOGGER.skippingTransactionManagerCommit();
 			}
 		}
 		catch (Exception e) {
-			throw new TransactionException( "JTA TransactionManager#commit failed", e );
+			throw new TransactionException( "JTA TransactionManager.commit() failed", e );
 		}
 	}
 
@@ -71,23 +68,27 @@ public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransacti
 		try {
 			if ( initiator ) {
 				initiator = false;
-				log.trace( "Calling TransactionManager#rollback" );
+				JTA_LOGGER.callingTransactionManagerRollback();
 				transactionManager.rollback();
-				log.trace( "Called TransactionManager#rollback" );
+				JTA_LOGGER.calledTransactionManagerRollback();
 			}
 			else {
 				markRollbackOnly();
 			}
 		}
 		catch (Exception e) {
-			throw new TransactionException( "JTA TransactionManager#rollback failed", e );
+			throw new TransactionException( "JTA TransactionManager.rollback() failed", e );
 		}
 	}
 
 	@Override
 	public TransactionStatus getStatus() {
 		try {
-			return StatusTranslator.translate( transactionManager.getStatus() );
+			final TransactionStatus status = StatusTranslator.translate( transactionManager.getStatus() );
+			if ( status == null ) {
+				throw new TransactionException( "TransactionManager reported transaction status as unknown" );
+			}
+			return status;
 		}
 		catch (SystemException e) {
 			throw new TransactionException( "JTA TransactionManager#getStatus failed", e );
@@ -106,6 +107,13 @@ public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransacti
 
 	@Override
 	public void setTimeOut(int seconds) {
-
+		if ( seconds > 0 ) {
+			try {
+				transactionManager.setTransactionTimeout( seconds );
+			}
+			catch (SystemException e) {
+				throw new TransactionException( "Unable to apply requested transaction timeout", e );
+			}
+		}
 	}
 }

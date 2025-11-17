@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+  <class name="org.hibernate.orm.test.mapping.converted.enums.Person">
+    <id name="id" type="long">
+      <generator class="native"></generator>
+    </id>
+
+    <property name="gender" not-null="true">
+		<type name="org.hibernate.orm.test.EnumType">
+			<param name="enumClass">org.hibernate.orm.test.mapping.converted.enums.Gender</param>
+			<param name="type">12</param>
+		</type>
+	</property>
+
+    <property name="hairColor" not-null="true">
+		<type name="org.hibernate.orm.test.EnumType">
+			<param name="enumClass">org.hibernate.orm.test.mapping.converted.enums.HairColor</param>
+		</type>
+	</property>
+
+    <property name="originalHairColor">
+        <type name="org.hibernate.orm.test.EnumType">
+            <param name="enumClass">org.hibernate.orm.test.mapping.converted.enums.HairColor</param>
+            <param name="type">12</param>
+        </type>
+    </property>
+
+  </class>
+</hibernate-mapping>

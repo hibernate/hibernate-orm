@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+	
+	<class name="org.hibernate.orm.test.legacy.Immutable" table="immut" mutable="false">
+		<!--cache-->
+		<id name="id" column="id_" length="64">
+			<generator class="uuid"/>
+		</id>
+		<property name="foo"/>
+		<property name="bar"/>
+	</class>
+	
+</hibernate-mapping>

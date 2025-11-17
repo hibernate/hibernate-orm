@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+
+    <class name="org.hibernate.orm.test.legacy.Simple" table="SimpleEntity">
+        <id name="id" type="long" column="id_">
+            <generator class="assigned"/>
+        </id>
+        <property name="name"/>
+        <property name="address"/>
+        <property name="count" column="count_" not-null="true" unique="true"/> 
+        <property name="date" column="date_"/>
+        <property name="pay"/>
+        <many-to-one name="other" access="field"/>
+    </class>
+    
+
+</hibernate-mapping>

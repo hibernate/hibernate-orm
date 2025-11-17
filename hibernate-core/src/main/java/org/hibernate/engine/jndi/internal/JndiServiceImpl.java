@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jndi.internal;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.InvalidNameException;
@@ -23,29 +21,26 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jndi.JndiException;
 import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.jndi.spi.JndiService;
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.NullnessUtil;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+
 
 /**
  * Standard implementation of JNDI services.
  *
  * @author Steve Ebersole
  */
-public class JndiServiceImpl implements JndiService {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			JndiServiceImpl.class.getName()
-	);
+final class JndiServiceImpl implements JndiService {
 
-	private final Hashtable initialContextSettings;
+	private final Hashtable<String,Object> initialContextSettings;
 
 	/**
 	 * Constructs a JndiServiceImpl
 	 *
 	 * @param configurationValues Map of configuration settings, some of which apply to JNDI support.
 	 */
-	public JndiServiceImpl(Map configurationValues) {
+	public JndiServiceImpl(Map<?,?> configurationValues) {
 		this.initialContextSettings = extractJndiProperties( configurationValues );
 	}
 
@@ -56,32 +51,30 @@ public class JndiServiceImpl implements JndiService {
 	 *
 	 * @return The extracted JNDI specific properties.
 	 */
-	@SuppressWarnings({ "unchecked" })
-	public static Properties extractJndiProperties(Map configurationValues) {
-		final Properties jndiProperties = new Properties();
+	private static Hashtable<String,Object> extractJndiProperties(Map<?,?> configurationValues) {
+		final Hashtable<String,Object> jndiProperties = new Hashtable<>();
 
-		for ( Map.Entry entry : (Set<Map.Entry>) configurationValues.entrySet() ) {
-			if ( !String.class.isInstance( entry.getKey() ) ) {
-				continue;
-			}
-			final String propertyName = (String) entry.getKey();
-			final Object propertyValue = entry.getValue();
-			if ( propertyName.startsWith( Environment.JNDI_PREFIX ) ) {
-				// write the IntialContextFactory class and provider url to the result only if they are
-				// non-null; this allows the environmental defaults (if any) to remain in effect
-				if ( Environment.JNDI_CLASS.equals( propertyName ) ) {
-					if ( propertyValue != null ) {
-						jndiProperties.put( Context.INITIAL_CONTEXT_FACTORY, propertyValue );
+		for ( var entry : configurationValues.entrySet() ) {
+			if ( entry.getKey() instanceof String propertyName ) {
+				final Object propertyValue = entry.getValue();
+				if ( propertyName.startsWith( Environment.JNDI_PREFIX ) ) {
+					// write the InitialContextFactory class and provider url to the result only if they are
+					// non-null; this allows the environmental defaults (if any) to remain in effect
+					if ( Environment.JNDI_CLASS.equals( propertyName ) ) {
+						if ( propertyValue != null ) {
+							jndiProperties.put( Context.INITIAL_CONTEXT_FACTORY, propertyValue );
+						}
 					}
-				}
-				else if ( Environment.JNDI_URL.equals( propertyName ) ) {
-					if ( propertyValue != null ) {
-						jndiProperties.put( Context.PROVIDER_URL, propertyValue );
+					else if ( Environment.JNDI_URL.equals( propertyName ) ) {
+						if ( propertyValue != null ) {
+							jndiProperties.put( Context.PROVIDER_URL, propertyValue );
+						}
 					}
-				}
-				else {
-					final String passThruPropertyname = propertyName.substring( Environment.JNDI_PREFIX.length() + 1 );
-					jndiProperties.put( passThruPropertyname, propertyValue );
+					else {
+						final String passThruPropertyName = propertyName.substring(
+								Environment.JNDI_PREFIX.length() + 1 );
+						jndiProperties.put( passThruPropertyName, NullnessUtil.castNonNull( propertyValue ) );
+					}
 				}
 			}
 		}
@@ -91,7 +84,7 @@ public class JndiServiceImpl implements JndiService {
 
 	@Override
 	public Object locate(String jndiName) {
-		final InitialContext initialContext = buildInitialContext();
+		final var initialContext = buildInitialContext();
 		final Name name = parseName( jndiName, initialContext );
 		try {
 			return initialContext.lookup( name );
@@ -115,6 +108,16 @@ public class JndiServiceImpl implements JndiService {
 
 	private Name parseName(String jndiName, Context context) {
 		try {
+			final URI uri = new URI( jndiName );
+			final String scheme = uri.getScheme();
+			if ( scheme != null && (! allowedScheme( scheme ) ) ) {
+				throw new JndiException( "JNDI lookups for scheme '" + scheme + "' are not allowed" );
+			}
+		}
+		catch (URISyntaxException e) {
+			//Ok
+		}
+		try {
 			return context.getNameParser( "" ).parse( jndiName );
 		}
 		catch ( InvalidNameException e ) {
@@ -125,18 +128,25 @@ public class JndiServiceImpl implements JndiService {
 		}
 	}
 
+	private static boolean allowedScheme(final String scheme) {
+		return switch ( scheme ) {
+			case "java", "osgi" -> true;
+			default -> false;
+		};
+	}
+
 	private void cleanUp(InitialContext initialContext) {
 		try {
 			initialContext.close();
 		}
 		catch ( NamingException e ) {
-			LOG.unableToCloseInitialContext(e.toString());
+			CORE_LOGGER.unableToCloseInitialContext(e.toString());
 		}
 	}
 
 	@Override
 	public void bind(String jndiName, Object value) {
-		final InitialContext initialContext = buildInitialContext();
+		final var initialContext = buildInitialContext();
 		final Name name = parseName( jndiName, initialContext );
 		try {
 			bind( name, value, initialContext );
@@ -148,7 +158,7 @@ public class JndiServiceImpl implements JndiService {
 
 	private void bind(Name name, Object value, Context context) {
 		try {
-			LOG.tracef( "Binding : %s", name );
+			CORE_LOGGER.tracef( "Binding: %s", name );
 			context.rebind( name, value );
 		}
 		catch ( Exception initialException ) {
@@ -166,7 +176,7 @@ public class JndiServiceImpl implements JndiService {
 
 				Context intermediateContext = null;
 				try {
-					LOG.tracev( "Intermediate lookup: {0}", intermediateContextName );
+					CORE_LOGGER.tracef( "Intermediate lookup: %s", intermediateContextName );
 					intermediateContext = (Context) intermediateContextBase.lookup( intermediateContextName );
 				}
 				catch ( NameNotFoundException handledBelow ) {
@@ -177,10 +187,10 @@ public class JndiServiceImpl implements JndiService {
 				}
 
 				if ( intermediateContext != null ) {
-					LOG.tracev( "Found intermediate context: {0}", intermediateContextName );
+					CORE_LOGGER.tracef( "Found intermediate context: %s", intermediateContextName );
 				}
 				else {
-					LOG.tracev( "Creating sub-context: {0}", intermediateContextName );
+					CORE_LOGGER.tracef( "Creating subcontext: %s", intermediateContextName );
 					try {
 						intermediateContext = intermediateContextBase.createSubcontext( intermediateContextName );
 					}
@@ -191,7 +201,7 @@ public class JndiServiceImpl implements JndiService {
 				intermediateContextBase = intermediateContext;
 				name = name.getSuffix( 1 );
 			}
-			LOG.tracev( "Binding : {0}", name );
+			CORE_LOGGER.tracef( "Binding: %s", name );
 			try {
 				intermediateContextBase.rebind( name, value );
 			}
@@ -199,12 +209,12 @@ public class JndiServiceImpl implements JndiService {
 				throw new JndiException( "Error performing intermediate bind [" + name + "]", e );
 			}
 		}
-		LOG.debugf( "Bound name: %s", name );
+		CORE_LOGGER.tracef( "Bound name: %s", name );
 	}
 
 	@Override
 	public void unbind(String jndiName) {
-		final InitialContext initialContext = buildInitialContext();
+		final var initialContext = buildInitialContext();
 		final Name name = parseName( jndiName, initialContext );
 		try {
 			initialContext.unbind( name );
@@ -219,7 +229,7 @@ public class JndiServiceImpl implements JndiService {
 
 	@Override
 	public void addListener(String jndiName, NamespaceChangeListener listener) {
-		final InitialContext initialContext = buildInitialContext();
+		final var initialContext = buildInitialContext();
 		final Name name = parseName( jndiName, initialContext );
 		try {
 			( (EventContext) initialContext ).addNamingListener( name, EventContext.OBJECT_SCOPE, listener );

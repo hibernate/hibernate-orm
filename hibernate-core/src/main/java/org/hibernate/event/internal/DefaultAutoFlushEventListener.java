@@ -1,23 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.ActionQueue;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
+
 
 /**
  * Defines the default flush event listeners used by hibernate for
@@ -27,51 +21,60 @@ import org.jboss.logging.Logger;
  */
 public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener implements AutoFlushEventListener {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DefaultAutoFlushEventListener.class.getName() );
-
 	/**
 	 * Handle the given auto-flush event.
-	 * 
-	 * @param event
-	 *            The auto-flush event to be handled.
-	 * @throws HibernateException
+	 *
+	 * @param event The auto-flush event to be handled.
 	 */
+	@Override
 	public void onAutoFlush(AutoFlushEvent event) throws HibernateException {
-		final EventSource source = event.getSession();
-		final SessionEventListenerManager eventListenerManager = source.getEventListenerManager();
+		final var source = event.getSession();
+		final var eventListenerManager = source.getEventListenerManager();
+		final var eventMonitor = source.getEventMonitor();
+		final var partialFlushEvent = eventMonitor.beginPartialFlushEvent();
 		try {
 			eventListenerManager.partialFlushStart();
 
 			if ( flushMightBeNeeded( source ) ) {
 				// Need to get the number of collection removals before flushing to executions
 				// (because flushing to executions can add collection removal actions to the action queue).
-				final ActionQueue actionQueue = source.getActionQueue();
+				final var actionQueue = source.getActionQueue();
+				final var session = event.getSession();
+				final var persistenceContext = session.getPersistenceContextInternal();
+				if ( !event.isSkipPreFlush() ) {
+					preFlush( session, persistenceContext );
+				}
 				final int oldSize = actionQueue.numberOfCollectionRemovals();
-				flushEverythingToExecutions( event );
+				flushEverythingToExecutions( event, persistenceContext, session );
 				if ( flushIsReallyNeeded( event, source ) ) {
-					LOG.trace( "Need to execute flush" );
+					EVENT_LISTENER_LOGGER.needToExecuteFlush();
 					event.setFlushRequired( true );
 
 					// note: performExecutions() clears all collectionXxxxtion
 					// collections (the collection actions) in the session
-					performExecutions( source );
-					postFlush( source );
-
-					postPostFlush( source );
-
-					final StatisticsImplementor statistics = source.getFactory().getStatistics();
+					final var flushEvent = eventMonitor.beginFlushEvent();
+					try {
+						performExecutions( source );
+						postFlush( source );
+						postPostFlush( source );
+					}
+					finally {
+						eventMonitor.completeFlushEvent( flushEvent, event, true );
+					}
+					final var statistics = source.getFactory().getStatistics();
 					if ( statistics.isStatisticsEnabled() ) {
 						statistics.flush();
 					}
 				}
 				else {
-					LOG.trace( "Don't need to execute flush" );
+					EVENT_LISTENER_LOGGER.noNeedToExecuteFlush();
 					event.setFlushRequired( false );
 					actionQueue.clearFromFlushNeededCheck( oldSize );
 				}
 			}
 		}
 		finally {
+			eventMonitor.completePartialFlushEvent( partialFlushEvent, event );
 			eventListenerManager.partialFlushEnd(
 					event.getNumberOfEntitiesProcessed(),
 					event.getNumberOfEntitiesProcessed()
@@ -79,16 +82,32 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 		}
 	}
 
+	@Override
+	public void onAutoPreFlush(EventSource source) throws HibernateException {
+		final var eventListenerManager = source.getEventListenerManager();
+		eventListenerManager.prePartialFlushStart();
+		final var eventMonitor = source.getEventMonitor();
+		final var diagnosticEvent = eventMonitor.beginPrePartialFlush();
+		try {
+			if ( flushMightBeNeeded( source ) ) {
+				preFlush( source, source.getPersistenceContextInternal() );
+			}
+		}
+		finally {
+			eventMonitor.completePrePartialFlush( diagnosticEvent, source );
+			eventListenerManager.prePartialFlushEnd();
+		}
+	}
+
 	private boolean flushIsReallyNeeded(AutoFlushEvent event, final EventSource source) {
 		return source.getHibernateFlushMode() == FlushMode.ALWAYS
-				|| source.getActionQueue().areTablesToBeUpdated( event.getQuerySpaces() );
+			|| source.getActionQueue().areTablesToBeUpdated( event.getQuerySpaces() );
 	}
 
 	private boolean flushMightBeNeeded(final EventSource source) {
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final var persistenceContext = source.getPersistenceContextInternal();
 		return !source.getHibernateFlushMode().lessThan( FlushMode.AUTO )
-				&& source.getDontFlushFromFind() == 0
-				&& ( persistenceContext.getNumberOfManagedEntities() > 0 ||
-						persistenceContext.getCollectionEntriesSize() > 0 );
+			&& ( persistenceContext.getNumberOfManagedEntities() > 0
+				|| persistenceContext.getCollectionEntriesSize() > 0 );
 	}
 }

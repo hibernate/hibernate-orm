@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="https://jakarta.ee/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence/orm https://jakarta.ee/xml/ns/persistence/orm/orm_3_2.xsd"
+                 version="3.2">
+
+    <package>org.hibernate.orm.test.jpa.xml</package>
+
+    <entity class="Consumer" name="Consumer">
+        <table name="consumer"/>
+        <attributes>
+            <id name="id">
+                <column name="id_entity"/>
+                <generated-value strategy="AUTO"/>
+            </id>
+            <version name="version">
+                <column name="version"/>
+            </version>
+            <one-to-many name="consumerItems" mapped-by="consumer" fetch="LAZY">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="ConsumerItem" name="ConsumerInventory">
+        <table name="consumer_item"/>
+        <attributes>
+            <id name="id">
+                <column name="id_entity"/>
+                <generated-value strategy="AUTO"/>
+            </id>
+            <version name="version">
+                <column name="version"/>
+            </version>
+            <many-to-one name="consumer" target-entity="Consumer">
+                <join-column name="consumer_id"/>
+                <cascade>
+                    <cascade-merge/>
+                </cascade>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+</entity-mappings>
+
+

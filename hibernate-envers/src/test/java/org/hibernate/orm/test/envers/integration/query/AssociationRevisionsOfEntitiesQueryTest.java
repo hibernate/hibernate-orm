@@ -1,0 +1,197 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.orm.test.envers.integration.query;
+
+import java.util.List;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.criteria.JoinType;
+
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.query.AuditEntity;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.fail;
+
+/**
+ * @author Chris Cranford
+ */
+@JiraKey(value = "HHH-13817")
+@Jpa(annotatedClasses = {
+		AssociationRevisionsOfEntitiesQueryTest.Template.class,
+		AssociationRevisionsOfEntitiesQueryTest.TemplateType.class
+})
+@EnversTest
+public class AssociationRevisionsOfEntitiesQueryTest {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		// Revision 1
+		scope.inTransaction( entityManager -> {
+			final TemplateType type1 = new TemplateType( 1, "Type1" );
+			final TemplateType type2 = new TemplateType( 2, "Type2" );
+			entityManager.persist( type1 );
+			entityManager.persist( type2 );
+
+			final Template template = new Template( 1, "Template1", type1 );
+			entityManager.persist( template );
+		} );
+
+		// Revision 2
+		scope.inTransaction( entityManager -> {
+			final TemplateType type = entityManager.find( TemplateType.class, 2 );
+			final Template template = entityManager.find( Template.class, 1 );
+			template.setName( "Template1-Updated" );
+			template.setTemplateType( type );
+			entityManager.merge( template );
+		} );
+
+		// Revision 3
+		scope.inTransaction( entityManager -> {
+			final Template template = entityManager.find( Template.class, 1 );
+			entityManager.remove( template );
+		} );
+	}
+
+	@Test
+	public void testRevisionsOfEntityWithAssociationQueries(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
+			List<?> results = AuditReaderFactory.get( entityManager ).createQuery()
+					.forRevisionsOfEntity( Template.class, true, true )
+					.add( AuditEntity.id().eq( 1 ) )
+					.traverseRelation( "templateType", JoinType.INNER )
+					.add( AuditEntity.property( "name" ).eq( "Type1" ) )
+					.up()
+					.getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( "Template1", ( (Template) results.get( 0 ) ).getName() );
+		} );
+
+		scope.inEntityManager( entityManager -> {
+			List<?> results = AuditReaderFactory.get( entityManager ).createQuery()
+					.forRevisionsOfEntity( Template.class, true, true )
+					.add( AuditEntity.id().eq( 1 ) )
+					.traverseRelation( "templateType", JoinType.INNER )
+					.add( AuditEntity.property( "name" ).eq( "Type2" ) )
+					.up()
+					.getResultList();
+
+			assertEquals( isStoreDataAtDelete( scope ) ? 2 : 1, results.size() );
+			for ( Object result : results ) {
+				assertEquals( "Template1-Updated", ( (Template) result ).getName() );
+			}
+		} );
+	}
+
+	@Test
+	public void testAssociationQueriesNotAllowedWhenNotSelectingJustEntities(EntityManagerFactoryScope scope) {
+		try {
+			scope.inEntityManager( entityManager -> {
+				AuditReaderFactory.get( entityManager ).createQuery()
+						.forRevisionsOfEntity( Template.class, false, true )
+						.add( AuditEntity.id().eq( 1 ) )
+						.traverseRelation( "templateType", JoinType.INNER )
+						.add( AuditEntity.property( "name" ).eq( "Type1" ) )
+						.up()
+						.getResultList();
+			} );
+
+			fail( "Test should have thrown IllegalStateException due to selectEntitiesOnly=false" );
+		}
+		catch ( Exception e ) {
+			assertInstanceOf( IllegalStateException.class, e );
+		}
+	}
+
+	protected boolean isStoreDataAtDelete(EntityManagerFactoryScope scope) {
+		return false;
+	}
+
+	@Entity(name = "TemplateType")
+	@Audited
+	public static class TemplateType {
+		@Id
+		private Integer id;
+		private String name;
+
+		TemplateType() {
+			this( null, null );
+		}
+
+		TemplateType(Integer id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+	}
+
+	@Entity(name = "Template")
+	@Audited
+	public static class Template {
+		@Id
+		private Integer id;
+		private String name;
+		@ManyToOne
+		private TemplateType templateType;
+
+		Template() {
+			this( null, null, null );
+		}
+
+		Template(Integer id, String name, TemplateType type) {
+			this.id = id;
+			this.name = name;
+			this.templateType = type;
+		}
+
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public TemplateType getTemplateType() {
+			return templateType;
+		}
+
+		public void setTemplateType(TemplateType templateType) {
+			this.templateType = templateType;
+		}
+	}
+}

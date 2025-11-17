@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal.exec;
 
@@ -12,11 +10,10 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * ScriptTargetOutput implementation for writing to supplied File references
@@ -24,10 +21,10 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput implements ScriptTargetOutput {
-	private static final Logger log = CoreLogging.logger( ScriptTargetOutputToFile.class );
 
 	private final File file;
 	private final String charsetName;
+	private final boolean append;
 
 	private Writer writer;
 
@@ -36,10 +33,24 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 	 *
 	 * @param file The file to read from
 	 * @param charsetName The charset name
+	 * @param append If true, then bytes will be written to the end of the file rather than the beginning
 	 */
-	public ScriptTargetOutputToFile(File file, String charsetName) {
+	public ScriptTargetOutputToFile(File file, String charsetName, boolean append) {
 		this.file = file;
 		this.charsetName = charsetName;
+		this.append = append;
+	}
+
+	/**
+	 * Constructs a ScriptTargetOutputToFile instance,
+	 * the bytes will be written to the end of the file rather than the beginning
+	 *
+	 * @param file The file to read from
+	 * @param charsetName The charset name
+	 *
+	 */
+	public ScriptTargetOutputToFile(File file, String charsetName ) {
+		this(file, charsetName, true);
 	}
 
 	@Override
@@ -53,7 +64,7 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 	@Override
 	public void prepare() {
 		super.prepare();
-		this.writer = toFileWriter( this.file, this.charsetName );
+		this.writer = toFileWriter( this.file, this.charsetName, append );
 	}
 
 	@Override
@@ -63,7 +74,7 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 				writer.close();
 			}
 			catch (IOException e) {
-				throw new SchemaManagementException( "Unable to close file writer : " + e.toString() );
+				throw new SchemaManagementException( "Unable to close file writer : " + e );
 			}
 			finally {
 				writer = null;
@@ -72,30 +83,26 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 	}
 
 	@SuppressWarnings("ResultOfMethodCallIgnored")
-	static Writer toFileWriter( File file, String charsetName ) {
+	static Writer toFileWriter(File file, String charsetName, boolean append) {
 		try {
-			if ( ! file.exists() ) {
+			if ( !file.exists() ) {
 				// best effort, since this is very likely not allowed in EE environments
-				log.debug( "Attempting to create non-existent script target file : " + file.getAbsolutePath() );
-				if ( file.getParentFile() != null ) {
-					file.getParentFile().mkdirs();
+				CORE_LOGGER.attemptingToCreateScriptTarget( file.getAbsolutePath() );
+				final var parentFile = file.getParentFile();
+				if ( parentFile != null ) {
+					parentFile.mkdirs();
 				}
 				file.createNewFile();
 			}
 		}
 		catch (Exception e) {
-			log.debug( "Exception calling File#createNewFile : " + e.toString() );
+			CORE_LOGGER.couldNotCreateScriptTarget( e );
 		}
 		try {
-			return charsetName != null ?
-					new OutputStreamWriter(
-							new FileOutputStream( file, true ),
-							charsetName
-					) :
-					new OutputStreamWriter( new FileOutputStream(
-							file,
-							true
-					) );
+			final var outputStream = new FileOutputStream( file, append );
+			return charsetName != null
+					? new OutputStreamWriter( outputStream, charsetName )
+					: new OutputStreamWriter( outputStream );
 		}
 		catch (IOException e) {
 			throw new SchemaManagementException( "Unable to open specified script target file for writing : " + file, e );

@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.spi;
 
 import java.sql.DatabaseMetaData;
 
 /**
- * Enum interpretation of the valid values from {@link java.sql.DatabaseMetaData#getSQLStateType()}
+ * Enum interpretation of the valid values from {@link DatabaseMetaData#getSQLStateType()}
  *
  * @author Steve Ebersole
  */
@@ -29,16 +27,10 @@ public enum SQLStateType {
 
 
 	public static SQLStateType interpretReportedSQLStateType(int sqlStateType) {
-		switch ( sqlStateType ) {
-			case DatabaseMetaData.sqlStateSQL99 : {
-				return SQL99;
-			}
-			case DatabaseMetaData.sqlStateXOpen : {
-				return XOpen;
-			}
-			default : {
-				return UNKNOWN;
-			}
-		}
+		return switch ( sqlStateType ) {
+			case DatabaseMetaData.sqlStateSQL99 -> SQL99;
+			case DatabaseMetaData.sqlStateXOpen -> XOpen;
+			default -> UNKNOWN;
+		};
 	}
 }

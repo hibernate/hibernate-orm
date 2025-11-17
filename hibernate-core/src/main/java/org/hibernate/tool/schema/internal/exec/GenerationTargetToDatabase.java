@@ -1,41 +1,60 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal.exec;
 
+import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.SQLWarning;
 import java.sql.Statement;
 
-import org.hibernate.engine.jdbc.internal.DDLFormatterImpl;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.engine.jdbc.internal.FormatStyle;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
+import org.hibernate.tool.schema.spi.GenerationTarget;
+import org.hibernate.tool.schema.spi.ScriptSourceInput;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
- * GenerationTarget implementation for handling generation directly to the database
+ * A {@link GenerationTarget} which exports DDL directly to the database.
  *
  * @author Steve Ebersole
  */
 public class GenerationTargetToDatabase implements GenerationTarget {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( GenerationTargetToDatabase.class );
 
 	private final DdlTransactionIsolator ddlTransactionIsolator;
 	private final boolean releaseAfterUse;
 
 	private Statement jdbcStatement;
+	private final boolean autocommit;
 
 	public GenerationTargetToDatabase(DdlTransactionIsolator ddlTransactionIsolator) {
 		this( ddlTransactionIsolator, true );
 	}
 
 	public GenerationTargetToDatabase(DdlTransactionIsolator ddlTransactionIsolator, boolean releaseAfterUse) {
+		this( ddlTransactionIsolator, releaseAfterUse, true );
+	}
+
+	public GenerationTargetToDatabase(DdlTransactionIsolator ddlTransactionIsolator, boolean releaseAfterUse, boolean autocommit) {
 		this.ddlTransactionIsolator = ddlTransactionIsolator;
 		this.releaseAfterUse = releaseAfterUse;
+		this.autocommit = autocommit;
+	}
+
+	private SqlStatementLogger getSqlStatementLogger() {
+		return ddlTransactionIsolator.getJdbcContext().getSqlStatementLogger();
+	}
+
+	private SqlExceptionHelper getSqlExceptionHelper() {
+		return ddlTransactionIsolator.getJdbcContext().getSqlExceptionHelper();
+	}
+
+	private Connection getIsolatedConnection() {
+		return ddlTransactionIsolator.getIsolatedConnection( autocommit );
 	}
 
 	@Override
@@ -43,41 +62,57 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 	}
 
 	@Override
+	public void beforeScript(ScriptSourceInput scriptSource) {
+		if ( scriptSource.exists() ) {
+			CORE_LOGGER.executingScript( scriptSource.getScriptDescription() );
+		}
+	}
+
+	@Override
 	public void accept(String command) {
-		ddlTransactionIsolator.getJdbcContext().getSqlStatementLogger().logStatement(
-				command,
-				DDLFormatterImpl.INSTANCE
-		);
-
+		getSqlStatementLogger().logStatement( command, FormatStyle.NONE.getFormatter() );
 		try {
-			final Statement jdbcStatement = jdbcStatement();
-			jdbcStatement.execute( command );
-
-			try {
-				SQLWarning warnings = jdbcStatement.getWarnings();
-				if ( warnings != null) {
-					ddlTransactionIsolator.getJdbcContext().getSqlExceptionHelper().logAndClearWarnings( jdbcStatement );
-				}
-			}
-			catch( SQLException e ) {
-				log.unableToLogSqlWarnings( e );
-			}
+			final var statement = jdbcStatement();
+			statement.execute( command );
+			logWarnings( statement );
 		}
 		catch (SQLException e) {
 			throw new CommandAcceptanceException(
-					"Error executing DDL \"" + command + "\" via JDBC Statement",
+					"Error executing DDL \"" + command + "\" via JDBC [" + stripSql(e) + "]",
 					e
 			);
 		}
 	}
 
+	private void logWarnings(Statement statement) {
+		try {
+			final var warnings = statement.getWarnings();
+			if ( warnings != null) {
+				getSqlExceptionHelper().logAndClearWarnings( statement );
+			}
+		}
+		catch( SQLException e ) {
+			CORE_LOGGER.unableToLogSqlWarnings( e );
+		}
+	}
+
+	/**
+	 * Strip repetition of the SQL statement from h2 messages.
+	 */
+	private static String stripSql(SQLException e) {
+		final String message = e.getMessage();
+		final int index = message.indexOf( " SQL statement:" );
+		return index > 0 ? message.substring( 0, index ) : message;
+	}
+
 	private Statement jdbcStatement() {
 		if ( jdbcStatement == null ) {
 			try {
-				this.jdbcStatement = ddlTransactionIsolator.getIsolatedConnection().createStatement();
+				jdbcStatement = getIsolatedConnection().createStatement();
 			}
 			catch (SQLException e) {
-				throw ddlTransactionIsolator.getJdbcContext().getSqlExceptionHelper().convert( e, "Unable to create JDBC Statement for DDL execution" );
+				throw getSqlExceptionHelper()
+						.convert( e, "Unable to create JDBC Statement for DDL execution" );
 			}
 		}
 
@@ -92,7 +127,8 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 				jdbcStatement = null;
 			}
 			catch (SQLException e) {
-				throw ddlTransactionIsolator.getJdbcContext().getSqlExceptionHelper().convert( e, "Unable to close JDBC Statement after DDL execution" );
+				throw getSqlExceptionHelper()
+						.convert( e, "Unable to close JDBC Statement after DDL execution" );
 			}
 		}
 		if ( releaseAfterUse ) {

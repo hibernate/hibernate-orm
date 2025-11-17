@@ -1,25 +1,34 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.enhanced;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.id.IntegralDataTypeHolder;
+import org.hibernate.sql.ast.tree.expression.Expression;
+
 import java.io.Serializable;
 
-import org.hibernate.id.IntegralDataTypeHolder;
-
 /**
- * Performs optimization on an optimizable identifier generator.  Typically
+ * Performs optimization on an optimizable identifier generator. Typically.
  * this optimization takes the form of trying to ensure we do not have to
  * hit the database on each and every request to get an identifier value.
- * <p/>
- * Optimizers work on constructor injection.  They should provide
- * a constructor with the following arguments <ol>
- * <li>java.lang.Class - The return type for the generated values</li>
- * <li>int - The increment size</li>
+ * <p>
+ * Optimizers are used with
+ * {@linkplain jakarta.persistence.SequenceGenerator sequence generators}
+ * and {@linkplain jakarta.persistence.TableGenerator table generators}.
+ * An optimizer may be selected by setting the configuration property
+ * {@value org.hibernate.cfg.MappingSettings#PREFERRED_POOLED_OPTIMIZER}.
+ * <p>
+ * Optimizers work on constructor injection. They should provide a
+ * constructor accepting the following arguments:
+ * <ol>
+ * <li>{@code java.lang.Class} - The return type for the generated values</li>
+ * <li>{@code int} - The increment size</li>
  * </ol>
+ *
+ * @see org.hibernate.cfg.MappingSettings#PREFERRED_POOLED_OPTIMIZER
  *
  * @author Steve Ebersole
  */
@@ -27,13 +36,20 @@ public interface Optimizer {
 	/**
 	 * Generate an identifier value accounting for this specific optimization.
 	 *
-	 * All known implementors are synchronized. Consider carefully if a new
-	 * implementation could drop this requirement.
+	 * @implNote All known implementors are synchronized. Consider carefully
+	 *           if a new implementation could drop this requirement.
 	 *
 	 * @param callback Callback to access the underlying value source.
 	 * @return The generated identifier value.
 	 */
-	public Serializable generate(AccessCallback callback);
+	Serializable generate(AccessCallback callback);
+
+	/**
+	 * Reset the optimizer before restarting the underlying database sequence.
+	 *
+	 * @since 7.2
+	 */
+	void reset();
 
 	/**
 	 * A common means to access the last value obtained from the underlying
@@ -43,14 +59,14 @@ public interface Optimizer {
 	 * @return The last value we obtained from the underlying source;
 	 * null indicates we have not yet consulted with the source.
 	 */
-	public IntegralDataTypeHolder getLastSourceValue();
+	IntegralDataTypeHolder getLastSourceValue();
 
 	/**
 	 * Retrieves the defined increment size.
 	 *
 	 * @return The increment size.
 	 */
-	public int getIncrementSize();
+	int getIncrementSize();
 
 	/**
 	 * Are increments to be applied to the values stored in the underlying
@@ -58,7 +74,28 @@ public interface Optimizer {
 	 *
 	 * @return True if the values in the source are to be incremented
 	 * according to the defined increment size; false otherwise, in which
-	 * case the increment is totally an in memory construct.
+	 * case the increment size is a completely in-memory construct.
 	 */
-	public boolean applyIncrementSizeToSourceValues();
+	boolean applyIncrementSizeToSourceValues();
+
+	/**
+	 * Creates an expression representing the low/base value for ID allocation in batch insert operations.
+	 * <p>
+	 * Each optimizer implementation should define its own
+	 * strategy for calculating the starting value of a sequence range.
+	 *
+	 * @param databaseValue The expression representing the next value from database sequence
+	 * @param sessionFactory The session factory
+	 * @return An expression that calculates the low/base value according to the optimizer strategy
+	 *
+	 * @since 7.1
+	 */
+	Expression createLowValueExpression(Expression databaseValue, SessionFactoryImplementor sessionFactory);
+
+	/**
+	 * @since 7.2
+	 */
+	default int getAdjustment() {
+		return 1;
+	}
 }

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<jaxb:bindings xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
-		xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-		xmlns:xs="http://www.w3.org/2001/XMLSchema"
-		xmlns:inheritance="http://jaxb2-commons.dev.java.net/basic/inheritance"
-		jaxb:extensionBindingPrefixes="inheritance"
-		version="2.1">
+<jaxb:bindings xmlns:jaxb="https://jakarta.ee/xml/ns/jaxb"
+			   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+			   xmlns:xs="http://www.w3.org/2001/XMLSchema"
+			   xmlns:inheritance="http://jvnet.org/basicjaxb/xjc/inheritance"
+			   jaxb:extensionBindingPrefixes="inheritance"
+			   version="3.0">
 
 	<jaxb:bindings schemaLocation="../resources/org/hibernate/xsd/mapping/legacy-mapping-4.0.xsd" node="/xsd:schema">
 
@@ -42,9 +42,9 @@
 		</jaxb:bindings>
 
 		<jaxb:bindings node="//xsd:simpleType[@name='EntityModeEnum']">
-			<jaxb:javaType name="org.hibernate.EntityMode"
-					parseMethod="org.hibernate.boot.jaxb.hbm.internal.EntityModeConverter.fromXml"
-					printMethod="org.hibernate.boot.jaxb.hbm.internal.EntityModeConverter.toXml" />
+			<jaxb:javaType name="org.hibernate.metamodel.RepresentationMode"
+					parseMethod="org.hibernate.boot.jaxb.hbm.internal.RepresentationModeConverter.fromXml"
+					printMethod="org.hibernate.boot.jaxb.hbm.internal.RepresentationModeConverter.toXml" />
 		</jaxb:bindings>
 
 		<jaxb:bindings node="//xsd:simpleType[@name='FlushModeEnum']">
@@ -84,10 +84,9 @@
 		</jaxb:bindings>
 
 
-
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<!-- Binding model customizations -->
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <jaxb:bindings node="//xsd:element[@name='hibernate-mapping']/xsd:complexType">
+        	<inheritance:implements>org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor</inheritance:implements>
+		</jaxb:bindings>
 
 		<jaxb:bindings node="//xsd:complexType[@name='ToolingHintContainer']">
 			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.ToolingHintContainer</inheritance:implements>
@@ -119,6 +118,7 @@
 			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.TableInformationContainer</inheritance:implements>
 			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.SecondaryTableContainer</inheritance:implements>
 			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.ToolingHintContainer</inheritance:implements>
+			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.Discriminatable</inheritance:implements>
 		</jaxb:bindings>
 		<jaxb:bindings node="//xsd:complexType[@name='RootEntityType']//xsd:attribute[@name='subselect']">
 			<jaxb:property name="subselectAttribute"/>
@@ -128,12 +128,14 @@
 			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.SubEntityInfo</inheritance:implements>
 			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.SecondaryTableContainer</inheritance:implements>
 			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.ToolingHintContainer</inheritance:implements>
+			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.Discriminatable</inheritance:implements>
 		</jaxb:bindings>
 
 		<jaxb:bindings node="//xsd:complexType[@name='JoinedSubclassEntityType']">
 			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.SubEntityInfo</inheritance:implements>
 			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.TableInformationContainer</inheritance:implements>
 			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.ToolingHintContainer</inheritance:implements>
+			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.Discriminatable</inheritance:implements>
 		</jaxb:bindings>
 
 		<jaxb:bindings node="//xsd:complexType[@name='UnionSubclassEntityType']">
@@ -356,6 +358,10 @@
 			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.NativeQueryNonScalarRootReturn</inheritance:implements>
 		</jaxb:bindings>
 
+		<jaxb:bindings node="//xsd:complexType[@name='NativeQueryScalarReturnType']">
+			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.NativeQueryReturn</inheritance:implements>
+		</jaxb:bindings>
+
 
 		<jaxb:bindings node="//xsd:complexType[@name='FilterParameterType']//xsd:attribute[@name='name']">
 				<jaxb:property name="parameterName"/>
@@ -367,10 +373,6 @@
 
 		<jaxb:bindings node="//xsd:complexType[@name='key-type']//xsd:attribute[@name='column']">
 			<jaxb:property name="columnAttribute"/>
-		</jaxb:bindings>
-
-		<jaxb:bindings node="//xsd:attributeGroup[@name='table-information-group']//xsd:attribute[@name='subselect']">
-			<jaxb:property name="subselectAttribute"/>
 		</jaxb:bindings>
 
 		<jaxb:bindings node="//xsd:complexType[@name='multi-tenancy-type']//xsd:attribute[@name='column']">

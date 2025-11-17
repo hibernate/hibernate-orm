@@ -1,194 +1,149 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Reader;
-import java.io.Serializable;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.Connection;
-import java.sql.NClob;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Supplier;
-import javax.persistence.CacheRetrieveMode;
-import javax.persistence.CacheStoreMode;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.PersistenceException;
-import javax.persistence.StoredProcedureQuery;
-import javax.persistence.TransactionRequiredException;
-import javax.persistence.criteria.CriteriaBuilder;
-
-import org.hibernate.CacheMode;
-import org.hibernate.Criteria;
-import org.hibernate.Filter;
-import org.hibernate.FlushMode;
-import org.hibernate.HibernateException;
-import org.hibernate.IdentifierLoadAccess;
-import org.hibernate.JDBCException;
-import org.hibernate.LobHelper;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.MappingException;
-import org.hibernate.MultiIdentifierLoadAccess;
-import org.hibernate.NaturalIdLoadAccess;
-import org.hibernate.ObjectDeletedException;
-import org.hibernate.ObjectNotFoundException;
-import org.hibernate.QueryException;
-import org.hibernate.ReplicationMode;
-import org.hibernate.ScrollMode;
-import org.hibernate.Session;
-import org.hibernate.SessionEventListener;
-import org.hibernate.SessionException;
-import org.hibernate.SharedSessionBuilder;
-import org.hibernate.SimpleNaturalIdLoadAccess;
-import org.hibernate.Transaction;
-import org.hibernate.TransientObjectException;
-import org.hibernate.TypeHelper;
-import org.hibernate.TypeMismatchException;
-import org.hibernate.UnknownProfileException;
-import org.hibernate.UnresolvableObjectException;
-import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.FindOption;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.LockOption;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.RefreshOption;
+import jakarta.persistence.Timeout;
+import jakarta.persistence.TransactionRequiredException;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaSelect;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.Metamodel;
+import org.hibernate.*;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
-import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
-import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.criterion.NaturalIdentifier;
-import org.hibernate.engine.internal.StatefulPersistenceContext;
-import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.NonContextualLobCreator;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.engine.query.spi.FilterQueryPlan;
-import org.hibernate.engine.query.spi.HQLQueryPlan;
-import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
-import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
+import org.hibernate.engine.creation.internal.SessionCreationOptions;
+import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
+import org.hibernate.engine.internal.PersistenceContexts;
 import org.hibernate.engine.spi.ActionQueue;
-import org.hibernate.engine.spi.CollectionEntry;
-import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.Status;
-import org.hibernate.engine.spi.TypedValue;
-import org.hibernate.engine.transaction.spi.TransactionImplementor;
-import org.hibernate.engine.transaction.spi.TransactionObserver;
-import org.hibernate.event.spi.AutoFlushEvent;
-import org.hibernate.event.spi.AutoFlushEventListener;
-import org.hibernate.event.spi.ClearEvent;
-import org.hibernate.event.spi.ClearEventListener;
-import org.hibernate.event.spi.DeleteEvent;
-import org.hibernate.event.spi.DeleteEventListener;
-import org.hibernate.event.spi.DirtyCheckEvent;
-import org.hibernate.event.spi.DirtyCheckEventListener;
-import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.EvictEvent;
-import org.hibernate.event.spi.EvictEventListener;
-import org.hibernate.event.spi.FlushEvent;
-import org.hibernate.event.spi.FlushEventListener;
-import org.hibernate.event.spi.InitializeCollectionEvent;
-import org.hibernate.event.spi.InitializeCollectionEventListener;
-import org.hibernate.event.spi.LoadEvent;
-import org.hibernate.event.spi.LoadEventListener;
+import org.hibernate.event.service.spi.EventListenerGroups;
+import org.hibernate.event.spi.*;
 import org.hibernate.event.spi.LoadEventListener.LoadType;
-import org.hibernate.event.spi.LockEvent;
-import org.hibernate.event.spi.LockEventListener;
-import org.hibernate.event.spi.MergeEvent;
-import org.hibernate.event.spi.MergeEventListener;
-import org.hibernate.event.spi.PersistEvent;
-import org.hibernate.event.spi.PersistEventListener;
-import org.hibernate.event.spi.RefreshEvent;
-import org.hibernate.event.spi.RefreshEventListener;
-import org.hibernate.event.spi.ReplicateEvent;
-import org.hibernate.event.spi.ReplicateEventListener;
-import org.hibernate.event.spi.ResolveNaturalIdEvent;
-import org.hibernate.event.spi.ResolveNaturalIdEventListener;
-import org.hibernate.event.spi.SaveOrUpdateEvent;
-import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
-import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.hql.spi.QueryTranslator;
-import org.hibernate.internal.CriteriaImpl.CriterionEntry;
-import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.QueryHints;
-import org.hibernate.jpa.internal.util.CacheModeHelper;
+import org.hibernate.internal.util.ExceptionHelper;
+import org.hibernate.jpa.internal.LegacySpecHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
-import org.hibernate.jpa.internal.util.LockOptionsHelper;
-import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
-import org.hibernate.loader.criteria.CriteriaLoader;
-import org.hibernate.loader.custom.CustomLoader;
-import org.hibernate.loader.custom.CustomQuery;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
-import org.hibernate.param.CollectionFilterKeyParameterSpecification;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.loader.internal.CacheLoadHelper;
+import org.hibernate.loader.internal.IdentifierLoadAccessImpl;
+import org.hibernate.loader.internal.LoadAccessContext;
+import org.hibernate.loader.internal.NaturalIdLoadAccessImpl;
+import org.hibernate.loader.internal.SimpleNaturalIdLoadAccessImpl;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.MultiLoadOptions;
-import org.hibernate.persister.entity.OuterJoinLoadable;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.procedure.ProcedureCallMemento;
-import org.hibernate.procedure.UnknownSqlResultSetMappingException;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.Query;
-import org.hibernate.query.internal.CollectionFilterImpl;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
-import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
+import org.hibernate.query.SelectionQuery;
+import org.hibernate.query.UnknownSqlResultSetMappingException;
+import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
+import org.hibernate.resource.transaction.spi.TransactionObserver;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
-import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serial;
+import java.io.Serializable;
+import java.sql.SQLException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static java.lang.Boolean.parseBoolean;
+import static java.lang.Integer.parseInt;
+import static java.lang.System.currentTimeMillis;
+import static java.util.Collections.unmodifiableMap;
+import static org.hibernate.CacheMode.fromJpaModes;
+import static org.hibernate.Timeouts.WAIT_FOREVER_MILLI;
+import static org.hibernate.cfg.AvailableSettings.CRITERIA_COPY_TREE;
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_BATCH_FETCH_SIZE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
+import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
+import static org.hibernate.cfg.AvailableSettings.USE_SUBSELECT_FETCH;
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.event.spi.LoadEventListener.IMMEDIATE_LOAD;
+import static org.hibernate.event.spi.LoadEventListener.INTERNAL_LOAD_EAGER;
+import static org.hibernate.event.spi.LoadEventListener.INTERNAL_LOAD_LAZY;
+import static org.hibernate.event.spi.LoadEventListener.INTERNAL_LOAD_NULLABLE;
+import static org.hibernate.internal.LockOptionsHelper.applyPropertiesToLockOptions;
+import static org.hibernate.internal.SessionLogging.SESSION_LOGGER;
+import static org.hibernate.jpa.HibernateHints.HINT_BATCH_FETCH_SIZE;
+import static org.hibernate.jpa.HibernateHints.HINT_ENABLE_SUBSELECT_FETCH;
+import static org.hibernate.jpa.HibernateHints.HINT_FETCH_PROFILE;
+import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
+import static org.hibernate.jpa.HibernateHints.HINT_JDBC_BATCH_SIZE;
+import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
+import static org.hibernate.jpa.internal.util.CacheModeHelper.interpretCacheMode;
+import static org.hibernate.jpa.internal.util.ConfigurationHelper.getBoolean;
+import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.getFlushModeType;
+import static org.hibernate.pretty.MessageHelper.infoString;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
- * Concrete implementation of a Session.
- * <p/>
- * Exposes two interfaces:<ul>
- * <li>{@link org.hibernate.Session} to the application</li>
- * <li>{@link org.hibernate.engine.spi.SessionImplementor} to other Hibernate components (SPI)</li>
+ * Concrete implementation of the {@link Session} API.
+ * <p>
+ * Exposes two interfaces:
+ * <ul>
+ * <li>{@link Session} to the application, and
+ * <li>{@link SessionImplementor} and {@link EventSource} (both SPI interfaces) to other subsystems.
  * </ul>
- * <p/>
+ * <p>
  * This class is not thread-safe.
+ *
+ * @implNote The {@code SessionImpl} does not directly perform operations against the database or second-level cache.
+ * Instead, it is an {@link org.hibernate.event.spi.EventSource}, raising events which are processed by various
+ * implementations of the listener interfaces defined by {@link org.hibernate.event.spi}. These listeners typically
+ * place {@link org.hibernate.action.internal.EntityAction} instances on the {@link ActionQueue} associated with the
+ * session, and such actions are executed asynchronously when the session is {@linkplain #flush flushed}. The
+ * motivation behind this architecture is two-fold: first, it enables customization by sophisticated extensions to
+ * Hibernate ORM, and, second, it enables the transactional write-behind semantics of a stateful session. The stateful
+ * session holds its state in an instance of {@code StatefulPersistenceContext}, which we may view as the first-level
+ * cache associated with the session.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -197,88 +152,109 @@ import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
  * @author Sanne Grinovero
  */
 public class SessionImpl
-		extends AbstractSessionImpl
-		implements EventSource, SessionImplementor, HibernateEntityManagerImplementor {
-	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( SessionImpl.class );
+		extends AbstractSharedSessionContract
+		implements Serializable, SharedSessionContractImplementor, JdbcSessionOwner, SessionImplementor, EventSource,
+				TransactionCoordinatorBuilder.Options, WrapperOptions, LoadAccessContext {
 
-	// Defaults to null which means the properties are the default - as defined in FastSessionServices#defaultSessionProperties
+	// Defaults to null which means the properties are the default
+	// as defined in FastSessionServices#defaultSessionProperties
 	private Map<String, Object> properties;
 
 	private transient ActionQueue actionQueue;
-	private transient StatefulPersistenceContext persistenceContext;
+	private transient EventListenerGroups eventListenerGroups;
+	private transient PersistenceContext persistenceContext;
 
 	private transient LoadQueryInfluencers loadQueryInfluencers;
 
 	private LockOptions lockOptions;
 
-	private boolean autoClear;
-	private boolean autoClose;
-	private boolean queryParametersValidationEnabled;
+	private FlushMode flushMode;
 
-	private transient int dontFlushFromFind;
+	private final boolean autoClear;
+	private final boolean autoClose;
+
+	private final boolean identifierRollbackEnabled;
 
 	private transient LoadEvent loadEvent; //cached LoadEvent instance
+	private transient PostLoadEvent postLoadEvent; //cached PostLoadEvent instance
 
 	private transient TransactionObserver transactionObserver;
-
-	private transient boolean isEnforcingFetchGraph;
 
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 
-		this.persistenceContext = createPersistenceContext();
-		this.actionQueue = createActionQueue();
+		final var sessionOpenEvent = getEventMonitor().beginSessionOpenEvent();
+		try {
+			persistenceContext = createPersistenceContext( options );
+			actionQueue = createActionQueue();
+			eventListenerGroups = factory.getEventListenerGroups();
 
-		this.autoClear = options.shouldAutoClear();
-		this.autoClose = options.shouldAutoClose();
-		this.queryParametersValidationEnabled = options.isQueryParametersValidationEnabled();
+			flushMode = options.getInitialSessionFlushMode();
 
-		if ( options instanceof SharedSessionCreationOptions ) {
-			final SharedSessionCreationOptions sharedOptions = (SharedSessionCreationOptions) options;
-			final ActionQueue.TransactionCompletionProcesses transactionCompletionProcesses = sharedOptions.getTransactionCompletionProcesses();
-			if ( sharedOptions.isTransactionCoordinatorShared() && transactionCompletionProcesses != null ) {
-				actionQueue.setTransactionCompletionProcesses(
-						transactionCompletionProcesses,
-						true
-				);
+			autoClear = options.shouldAutoClear();
+			autoClose = options.shouldAutoClose();
+
+			identifierRollbackEnabled = options.isIdentifierRollbackEnabled();
+
+			setUpTransactionCompletionProcesses( options, actionQueue, this );
+
+			loadQueryInfluencers = new LoadQueryInfluencers( factory, options );
+
+			// NOTE : pulse() already handles auto-join-ability correctly
+			getTransactionCoordinator().pulse();
+
+			// do not override explicitly set flush mode ( SessionBuilder#flushMode() )
+			if ( getHibernateFlushMode() == null ) {
+				setHibernateFlushMode( getInitialFlushMode() );
+			}
+
+			setUpMultitenancy( factory, loadQueryInfluencers );
+
+			final var statistics = factory.getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.openSession();
+			}
+
+			if ( SESSION_LOGGER.isTraceEnabled() ) {
+				SESSION_LOGGER.openedSession( getSessionIdentifier(), currentTimeMillis() );
 			}
 		}
-
-		loadQueryInfluencers = new LoadQueryInfluencers( factory );
-
-		final StatisticsImplementor statistics = factory.getStatistics();
-		if ( statistics.isStatisticsEnabled() ) {
-			statistics.openSession();
-		}
-
-		if ( this.properties != null ) {
-			//There might be custom properties for this session that affect the LockOptions state
-			LockOptionsHelper.applyPropertiesToLockOptions( this.properties, this::getLockOptionsForWrite );
-		}
-		getSession().setCacheMode( fastSessionServices.initialSessionCacheMode );
-
-		// NOTE : pulse() already handles auto-join-ability correctly
-		getTransactionCoordinator().pulse();
-
-		// do not override explicitly set flush mode ( SessionBuilder#flushMode() )
-		if ( getHibernateFlushMode() == null ) {
-			final FlushMode initialMode;
-			if ( this.properties == null ) {
-				initialMode = fastSessionServices.initialSessionFlushMode;
-			}
-			else {
-				initialMode = ConfigurationHelper.getFlushMode( getSessionProperty( AvailableSettings.FLUSH_MODE ), FlushMode.AUTO );
-			}
-			getSession().setHibernateFlushMode( initialMode );
-		}
-
-		if ( log.isTraceEnabled() ) {
-			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), getTimestamp() );
+		finally {
+			getEventMonitor().completeSessionOpenEvent( sessionOpenEvent, this );
 		}
 	}
 
-	protected StatefulPersistenceContext createPersistenceContext() {
-		return new StatefulPersistenceContext( this );
+	private static void setUpTransactionCompletionProcesses(
+			SessionCreationOptions options,
+			ActionQueue actionQueue,
+			SessionImpl childSession) {
+		if ( options instanceof SharedSessionCreationOptions sharedOptions
+				&& sharedOptions.isTransactionCoordinatorShared() ) {
+			final var callbacks = sharedOptions.getTransactionCompletionCallbacks();
+			if ( callbacks != null ) {
+				actionQueue.setTransactionCompletionCallbacks( callbacks, true );
+//				// register a callback with the child session to propagate auto flushing
+//				callbacks.registerCallback( session -> {
+//					// NOTE: `session` here is the parent
+//					assert session != childSession;
+//					if ( !childSession.isClosed() && childSession.getHibernateFlushMode() != FlushMode.MANUAL ) {
+//						childSession.triggerChildAutoFlush();
+//					}
+//				} );
+			}
+		}
+	}
+
+	private FlushMode getInitialFlushMode() {
+		return properties == null
+				? getSessionFactoryOptions().getInitialSessionFlushMode()
+				: ConfigurationHelper.getFlushMode( getSessionProperty( HINT_FLUSH_MODE ), FlushMode.AUTO );
+	}
+
+	protected PersistenceContext createPersistenceContext(SessionCreationOptions options) {
+		final var persistenceContext = PersistenceContexts.createPersistenceContext( this );
+		persistenceContext.setDefaultReadOnly( options.isReadOnly() );
+		return persistenceContext;
 	}
 
 	protected ActionQueue createActionQueue() {
@@ -286,43 +262,72 @@ public class SessionImpl
 	}
 
 	private LockOptions getLockOptionsForRead() {
-		return this.lockOptions == null ? fastSessionServices.defaultLockOptions : this.lockOptions;
+		return lockOptions == null
+				? getSessionFactoryOptions().getDefaultLockOptions()
+				: lockOptions;
 	}
 
 	private LockOptions getLockOptionsForWrite() {
-		if ( this.lockOptions == null ) {
-			this.lockOptions = new LockOptions();
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions();
 		}
-		return this.lockOptions;
+		return lockOptions;
 	}
 
-	protected void applyQuerySettingsAndHints(Query query) {
-		final LockOptions lockOptionsForRead = getLockOptionsForRead();
+	protected void applyQuerySettingsAndHints(SelectionQuery<?> query) {
+		applyLockOptionsHint( query );
+	}
+
+	protected void applyLockOptionsHint(SelectionQuery<?> query) {
+		final var lockOptionsForRead = getLockOptionsForRead();
 		if ( lockOptionsForRead.getLockMode() != LockMode.NONE ) {
 			query.setLockMode( getLockMode( lockOptionsForRead.getLockMode() ) );
 		}
-		final Object queryTimeout;
-		if ( ( queryTimeout = getSessionProperty( QueryHints.SPEC_HINT_TIMEOUT )  ) != null ) {
-			query.setHint( QueryHints.SPEC_HINT_TIMEOUT, queryTimeout );
-		}
-		final Object lockTimeout;
-		if ( ( lockTimeout = getSessionProperty( JPA_LOCK_TIMEOUT ) ) != null ) {
-			query.setHint( JPA_LOCK_TIMEOUT, lockTimeout );
+
+		final Object specQueryTimeout = getHintedQueryTimeout();
+		if ( specQueryTimeout != null ) {
+			query.setHint( HINT_SPEC_QUERY_TIMEOUT, specQueryTimeout );
 		}
 	}
 
-	private Object getSessionProperty(final String name) {
-		if ( properties == null ) {
-			return fastSessionServices.defaultSessionProperties.get( name );
-		}
-		else {
-			return properties.get( name );
+	private Object getHintedQueryTimeout() {
+		return LegacySpecHelper.getInteger(
+				HINT_SPEC_QUERY_TIMEOUT,
+				HINT_JAVAEE_QUERY_TIMEOUT,
+				this::getSessionProperty
+		);
+	}
+
+	protected void applyQuerySettingsAndHints(Query<?> query) {
+		applyQuerySettingsAndHints( (SelectionQuery<?>) query );
+		applyLockTimeoutHint( query );
+	}
+
+	private void applyLockTimeoutHint(Query<?> query) {
+		final Integer specLockTimeout = getHintedLockTimeout();
+		if ( specLockTimeout != null ) {
+			query.setHint( HINT_SPEC_LOCK_TIMEOUT, specLockTimeout );
 		}
 	}
 
-	@Override
-	public SharedSessionBuilder sessionWithOptions() {
-		return new SharedSessionBuilderImpl( this );
+	private Integer getHintedLockTimeout() {
+		return LegacySpecHelper.getInteger(
+				HINT_SPEC_LOCK_TIMEOUT,
+				HINT_JAVAEE_LOCK_TIMEOUT,
+				this::getSessionProperty,
+				// treat WAIT_FOREVER the same as null
+				value -> !Integer.valueOf( WAIT_FOREVER_MILLI ).equals( value )
+		);
+	}
+
+	private Object getSessionProperty(String propertyName) {
+		return properties == null
+				? getDefaultProperties().get( propertyName )
+				: properties.get( propertyName );
+	}
+
+	private Map<String, Object> getDefaultProperties() {
+		return getSessionFactoryOptions().getDefaultSessionProperties();
 	}
 
 	@Override
@@ -345,7 +350,8 @@ public class SessionImpl
 		persistenceContext.clear();
 		actionQueue.clear();
 
-		fastSessionServices.eventListenerGroup_CLEAR.fireLazyEventOnEachListener( this::createClearEvent, ClearEventListener::onClear );
+		eventListenerGroups.eventListenerGroup_CLEAR
+				.fireLazyEventOnEachListener( this::createClearEvent, ClearEventListener::onClear );
 	}
 
 	private ClearEvent createClearEvent() {
@@ -353,71 +359,85 @@ public class SessionImpl
 	}
 
 	@Override
-	@SuppressWarnings("StatementWithEmptyBody")
-	public void close() throws HibernateException {
+	public void close() {
 		if ( isClosed() ) {
-			if ( getFactory().getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
-				throw new IllegalStateException( "Illegal call to #close() on already closed Session/EntityManager" );
+			if ( getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
+				throw new IllegalStateException( "EntityManager was already closed" );
 			}
-
-			log.trace( "Already closed" );
-			return;
-		}
-
-		closeWithoutOpenChecks();
-	}
-
-	public void closeWithoutOpenChecks() throws HibernateException {
-		if ( log.isTraceEnabled() ) {
-			log.tracef( "Closing session [%s]", getSessionIdentifier() );
-		}
-
-		// todo : we want this check if usage is JPA, but not native Hibernate usage
-		final SessionFactoryImplementor sessionFactory = getSessionFactory();
-		if ( sessionFactory.getSessionFactoryOptions().isJpaBootstrap() ) {
-			// Original hibernate-entitymanager EM#close behavior
-			checkSessionFactoryOpen();
-			checkOpenOrWaitingForAutoClose();
-			if ( fastSessionServices.discardOnClose || !isTransactionInProgress( false ) ) {
-				super.close();
-			}
-			else {
-				//Otherwise, session auto-close will be enabled by shouldAutoCloseSession().
-				prepareForAutoClose();
-			}
+			SESSION_LOGGER.alreadyClosed();
 		}
 		else {
-			super.close();
-		}
-
-		final StatisticsImplementor statistics = sessionFactory.getStatistics();
-		if ( statistics.isStatisticsEnabled() ) {
-			statistics.closeSession();
+			closeWithoutOpenChecks();
 		}
 	}
 
-	private boolean isTransactionInProgress(boolean isMarkedRollbackConsideredActive) {
-		if ( waitingForAutoClose ) {
-			return getSessionFactory().isOpen() &&
-					getTransactionCoordinator().isTransactionActive( isMarkedRollbackConsideredActive );
+	public void closeWithoutOpenChecks() {
+		if ( SESSION_LOGGER.isTraceEnabled() ) {
+			SESSION_LOGGER.closingSession( getSessionIdentifier() );
 		}
-		return !isClosed() &&
-				getTransactionCoordinator().isTransactionActive( isMarkedRollbackConsideredActive );
+
+		final var eventMonitor = getEventMonitor();
+		final var sessionClosedEvent = eventMonitor.beginSessionClosedEvent();
+		try {
+			if ( isJpaBootstrap() ) {
+				// Original HEM close behavior
+				checkSessionFactoryOpen();
+				checkOpenOrWaitingForAutoClose();
+				if ( getSessionFactoryOptions().isReleaseResourcesOnCloseEnabled()
+						|| !isTransactionInProgressAndNotMarkedForRollback() ) {
+					super.close();
+				}
+				else {
+					// In the JPA bootstrap, if the session is closed
+					// before the transaction commits, we just mark the
+					// session as closed, and set waitingForAutoClose.
+					// This method will be called a second time from
+					// afterTransactionCompletion when the transaction
+					// commits, and the session will be closed for real.
+					prepareForAutoClose();
+				}
+			}
+			else {
+				// Regular Hibernate behavior
+				super.close();
+			}
+		}
+		finally {
+			// E.g. when we are in the JTA context the session can get closed while the transaction is still active
+			// and JTA will call the AfterCompletion itself. Hence, we don't want to clear out the action queue callbacks at this point:
+			if ( !getTransactionCoordinator().isTransactionActive() && actionQueue.hasAfterTransactionActions() ) {
+				SESSION_LOGGER.warn( "Closing session with unprocessed clean up bulk operations, forcing their execution" );
+				actionQueue.executePendingBulkOperationCleanUpActions();
+			}
+			final var statistics = getSessionFactory().getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.closeSession();
+			}
+			eventMonitor.completeSessionClosedEvent( sessionClosedEvent, this );
+		}
+	}
+
+	private boolean isJpaBootstrap() {
+		return getSessionFactoryOptions().isJpaBootstrap();
+	}
+
+	private boolean isTransactionInProgressAndNotMarkedForRollback() {
+		return isOpenOrWaitingForAutoClose()
+			&& isTransactionActiveAndNotMarkedForRollback();
+	}
+
+	private boolean isTransactionActiveAndNotMarkedForRollback() {
+		final var transactionCoordinator = getTransactionCoordinator();
+		return transactionCoordinator.isJoined()
+			&& transactionCoordinator.getTransactionDriverControl().isActiveAndNoMarkedForRollback();
 	}
 
 	@Override
-	protected boolean shouldCloseJdbcCoordinatorOnClose(boolean isTransactionCoordinatorShared) {
-		if ( !isTransactionCoordinatorShared ) {
-			return super.shouldCloseJdbcCoordinatorOnClose( isTransactionCoordinatorShared );
-		}
-
-		final ActionQueue actionQueue = getActionQueue();
+	protected void checkBeforeClosingJdbcCoordinator() {
+		final var actionQueue = getActionQueue();
 		if ( actionQueue.hasBeforeTransactionActions() || actionQueue.hasAfterTransactionActions() ) {
-			log.warn(
-					"On close, shared Session had before/after transaction actions that have not yet been processed"
-			);
+			SESSION_LOGGER.closingSharedSessionWithUnprocessedTxCompletions();
 		}
-		return false;
 	}
 
 	@Override
@@ -426,8 +446,8 @@ public class SessionImpl
 	}
 
 	@Override
-	public boolean isQueryParametersValidationEnabled() {
-		return queryParametersValidationEnabled;
+	public boolean isIdentifierRollbackEnabled() {
+		return identifierRollbackEnabled;
 	}
 
 	@Override
@@ -444,21 +464,21 @@ public class SessionImpl
 
 	protected void checkSessionFactoryOpen() {
 		if ( !getFactory().isOpen() ) {
-			log.debug( "Forcing Session/EntityManager closed as SessionFactory/EntityManagerFactory has been closed" );
+			SESSION_LOGGER.forcingCloseBecauseFactoryClosed();
 			setClosed();
 		}
 	}
 
 	private void managedFlush() {
-		if ( isClosed() && !waitingForAutoClose ) {
-			log.trace( "Skipping auto-flush due to session closed" );
-			return;
+		if ( !isOpenOrWaitingForAutoClose() ) {
+			SESSION_LOGGER.skippingAutoFlushSessionClosed();
 		}
-		log.trace( "Automatically flushing session" );
-		doFlush();
+		else {
+			SESSION_LOGGER.automaticallyFlushingSession();
+			fireFlush();
+		}
 	}
 
-	@Override
 	public boolean shouldAutoClose() {
 		if ( waitingForAutoClose ) {
 			return true;
@@ -468,52 +488,18 @@ public class SessionImpl
 		}
 		else {
 			// JPA technically requires that this be a PersistentUnityTransactionType#JTA to work,
-			// but we do not assert that here...
-			//return isAutoCloseSessionEnabled() && getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta();
+			// but we do not assert that here:
 			return isAutoCloseSessionEnabled();
+			//  && getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta();
 		}
 	}
 
 	private void managedClose() {
-		log.trace( "Automatically closing session" );
+		SESSION_LOGGER.automaticallyClosingSession();
 		closeWithoutOpenChecks();
 	}
 
 	@Override
-	public Connection connection() throws HibernateException {
-		checkOpenOrWaitingForAutoClose();
-		return getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
-	}
-
-	@Override
-	public Connection disconnect() throws HibernateException {
-		checkOpen();
-		log.debug( "Disconnecting session" );
-		return getJdbcCoordinator().getLogicalConnection().manualDisconnect();
-	}
-
-	@Override
-	public void reconnect(Connection conn) throws HibernateException {
-		checkOpen();
-		log.debug( "Reconnecting session" );
-		checkTransactionSynchStatus();
-		getJdbcCoordinator().getLogicalConnection().manualReconnect( conn );
-	}
-
-	@Override
-	public void setAutoClear(boolean enabled) {
-		checkOpenOrWaitingForAutoClose();
-		autoClear = enabled;
-	}
-
-	/**
-	 * Check if there is a Hibernate or JTA transaction in progress and,
-	 * if there is not, flush if necessary, make sure the connection has
-	 * been committed (if it is not in autocommit mode) and run the after
-	 * completion processing
-	 *
-	 * @param success Was the operation a success
-	 */
 	public void afterOperation(boolean success) {
 		if ( !isTransactionInProgress() ) {
 			getJdbcCoordinator().afterTransaction();
@@ -537,34 +523,33 @@ public class SessionImpl
 	}
 
 	@Override
-	public LockMode getCurrentLockMode(Object object) throws HibernateException {
+	public LockMode getCurrentLockMode(Object object) {
 		checkOpen();
 		checkTransactionSynchStatus();
 		if ( object == null ) {
 			throw new NullPointerException( "null object passed to getCurrentLockMode()" );
 		}
-		if ( object instanceof HibernateProxy ) {
-			object = ( (HibernateProxy) object ).getHibernateLazyInitializer().getImplementation( this );
+
+		final var lazyInitializer = extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			object = lazyInitializer.getImplementation( this );
 			if ( object == null ) {
 				return LockMode.NONE;
 			}
 		}
-		EntityEntry e = persistenceContext.getEntry( object );
-		if ( e == null ) {
-			throw new TransientObjectException( "Given object not associated with the session" );
+
+		final var entry = getEntityEntry( object );
+		if ( entry.getStatus().isDeletedOrGone() ) {
+			throw new ObjectDeletedException( "Given entity was removed", entry.getId(),
+					entry.getPersister().getEntityName() );
 		}
-		if ( e.getStatus() != Status.MANAGED ) {
-			throw new ObjectDeletedException(
-					"The given object was deleted",
-					e.getId(),
-					e.getPersister().getEntityName()
-			);
+		else {
+			return entry.getLockMode();
 		}
-		return e.getLockMode();
 	}
 
 	@Override
-	public Object getEntityUsingInterceptor(EntityKey key) throws HibernateException {
+	public Object getEntityUsingInterceptor(EntityKey key) {
 		checkOpenOrWaitingForAutoClose();
 		// todo : should this get moved to PersistentContext?
 		// logically, is PersistentContext the "thing" to which an interceptor gets attached?
@@ -595,158 +580,151 @@ public class SessionImpl
 	}
 
 	@Override
-	protected void delayedAfterCompletion() {
-		if ( getTransactionCoordinator() instanceof JtaTransactionCoordinatorImpl ) {
-			( (JtaTransactionCoordinatorImpl) getTransactionCoordinator() ).getSynchronizationCallbackCoordinator()
-					.processAnyDelayedAfterCompletion();
+	public void delayedAfterCompletion() {
+		super.delayedAfterCompletion();
+	}
+
+	@Override
+	public void pulseTransactionCoordinator() {
+		super.pulseTransactionCoordinator();
+	}
+
+	@Override
+	public void checkOpenOrWaitingForAutoClose() {
+		if ( !waitingForAutoClose ) {
+			checkOpen();
 		}
 	}
-
-	// saveOrUpdate() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public void saveOrUpdate(Object object) throws HibernateException {
-		saveOrUpdate( null, object );
-	}
-
-	@Override
-	public void saveOrUpdate(String entityName, Object obj) throws HibernateException {
-		fireSaveOrUpdate( new SaveOrUpdateEvent( entityName, obj, this ) );
-	}
-
-	private void fireSaveOrUpdate(final SaveOrUpdateEvent event) {
-		checkOpen();
-		checkTransactionSynchStatus();
-		checkNoUnresolvedActionsBeforeOperation();
-		fastSessionServices.eventListenerGroup_SAVE_UPDATE.fireEventOnEachListener( event, SaveOrUpdateEventListener::onSaveOrUpdate );
-		checkNoUnresolvedActionsAfterOperation();
-	}
-
-	// save() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public Serializable save(Object obj) throws HibernateException {
-		return save( null, obj );
-	}
-
-	@Override
-	public Serializable save(String entityName, Object object) throws HibernateException {
-		return fireSave( new SaveOrUpdateEvent( entityName, object, this ) );
-	}
-
-	private Serializable fireSave(final SaveOrUpdateEvent event) {
-		checkOpen();
-		checkTransactionSynchStatus();
-		checkNoUnresolvedActionsBeforeOperation();
-		fastSessionServices.eventListenerGroup_SAVE.fireEventOnEachListener( event, SaveOrUpdateEventListener::onSaveOrUpdate );
-		checkNoUnresolvedActionsAfterOperation();
-		return event.getResultId();
-	}
-
-
-	// update() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public void update(Object obj) throws HibernateException {
-		update( null, obj );
-	}
-
-	@Override
-	public void update(String entityName, Object object) throws HibernateException {
-		fireUpdate( new SaveOrUpdateEvent( entityName, object, this ) );
-	}
-
-	private void fireUpdate(SaveOrUpdateEvent event) {
-		checkOpen();
-		checkTransactionSynchStatus();
-		checkNoUnresolvedActionsBeforeOperation();
-		fastSessionServices.eventListenerGroup_UPDATE.fireEventOnEachListener( event, SaveOrUpdateEventListener::onSaveOrUpdate );
-		checkNoUnresolvedActionsAfterOperation();
-	}
-
 
 	// lock() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void lock(String entityName, Object object, LockMode lockMode) throws HibernateException {
-		fireLock( new LockEvent( entityName, object, lockMode, this ) );
+	public void lock(Object object, LockOptions lockOptions) {
+		fireLock( new LockEvent( object, lockOptions, this ) );
 	}
 
 	@Override
-	public LockRequest buildLockRequest(LockOptions lockOptions) {
-		return new LockRequestImpl( lockOptions );
+	public void lock(String entityName, Object object, LockOptions lockOptions) {
+		fireLock( new LockEvent( entityName, object, lockOptions, this ) );
 	}
 
 	@Override
-	public void lock(Object object, LockMode lockMode) throws HibernateException {
-		fireLock( new LockEvent( object, lockMode, this ) );
+	public void lock(Object object, LockMode lockMode) {
+		final var lockOptions = copySessionLockOptions();
+		lockOptions.setLockMode( lockMode );
+		fireLock( new LockEvent( object, lockOptions, this ) );
 	}
 
-	private void fireLock(String entityName, Object object, LockOptions options) {
-		fireLock( new LockEvent( entityName, object, options, this ) );
+	@Override
+	public void lock(Object object, LockMode lockMode, LockOption... lockOptions) {
+		lock( object, buildLockOptions( lockMode, lockOptions ) );
 	}
 
-	private void fireLock(Object object, LockOptions options) {
-		fireLock( new LockEvent( object, options, this ) );
-	}
-
-	private void fireLock(LockEvent event) {
+	private void fireLock(final LockEvent lockEvent) {
 		checkOpen();
-		pulseTransactionCoordinator();
-		fastSessionServices.eventListenerGroup_LOCK.fireEventOnEachListener( event, LockEventListener::onLock );
-		delayedAfterCompletion();
+		checkEntityManaged( lockEvent.getEntityName(), lockEvent.getObject() );
+		try {
+			pulseTransactionCoordinator();
+			checkTransactionNeededForLock( lockEvent.getLockMode() );
+			eventListenerGroups.eventListenerGroup_LOCK
+					.fireEventOnEachListener( lockEvent,
+							LockEventListener::onLock );
+		}
+		catch ( RuntimeException e ) {
+			convertIfJpaBootstrap( e, lockEvent.getLockOptions() );
+		}
+		finally {
+			delayedAfterCompletion();
+		}
+	}
+
+	private void convertIfJpaBootstrap(RuntimeException exception, LockOptions lockOptions) {
+		if ( !isJpaBootstrap() && exception instanceof HibernateException ) {
+			throw exception;
+		}
+		else if ( exception instanceof MappingException ) {
+			// I believe this is now obsolete everywhere we do it,
+			// but we do it everywhere else, so let's do it here
+			throw getExceptionConverter()
+					.convert( new IllegalArgumentException( exception.getMessage(), exception ) );
+		}
+		else {
+			throw getExceptionConverter().convert( exception, lockOptions );
+		}
 	}
 
 	// persist() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void persist(String entityName, Object object) throws HibernateException {
+	public void persist(String entityName, Object object) {
 		checkOpen();
 		firePersist( new PersistEvent( entityName, object, this ) );
 	}
 
 	@Override
-	public void persist(Object object) throws HibernateException {
+	public void persist(Object object) {
 		checkOpen();
 		firePersist( new PersistEvent( null, object, this ) );
 	}
 
 	@Override
-	public void persist(String entityName, Object object, Map copiedAlready) throws HibernateException {
+	public void persist(String entityName, Object object, PersistContext copiedAlready) {
 		checkOpenOrWaitingForAutoClose();
 		firePersist( copiedAlready, new PersistEvent( entityName, object, this ) );
 	}
 
-	private void firePersist(final PersistEvent event) {
+	private void firePersist(final PersistEvent persistEvent) {
+		Throwable originalException = null;
 		try {
+			checkNotReadOnly();
 			checkTransactionSynchStatus();
 			checkNoUnresolvedActionsBeforeOperation();
 
-			fastSessionServices.eventListenerGroup_PERSIST.fireEventOnEachListener( event, PersistEventListener::onPersist );
+			eventListenerGroups.eventListenerGroup_PERSIST
+					.fireEventOnEachListener( persistEvent,
+							PersistEventListener::onPersist );
 		}
 		catch (MappingException e) {
-			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage() ) );
+			originalException = getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch (RuntimeException e) {
-			throw getExceptionConverter().convert( e );
+			originalException = getExceptionConverter().convert( e );
+		}
+		catch (Throwable t1) {
+			originalException = t1;
 		}
 		finally {
+			Throwable suppressed = null;
 			try {
 				checkNoUnresolvedActionsAfterOperation();
 			}
 			catch (RuntimeException e) {
-				throw getExceptionConverter().convert( e );
+				suppressed = getExceptionConverter().convert( e );
 			}
+			catch (Throwable t2) {
+				suppressed = t2;
+			}
+			if ( suppressed != null ) {
+				if ( originalException == null ) {
+					originalException = suppressed;
+				}
+				else {
+					originalException.addSuppressed( suppressed );
+				}
+			}
+		}
+		if ( originalException != null ) {
+			ExceptionHelper.rethrow( originalException );
 		}
 	}
 
-	private void firePersist(final Map copiedAlready, final PersistEvent event) {
-		pulseTransactionCoordinator();
-
+	private void firePersist(final PersistContext copiedAlready, final PersistEvent persistEvent) {
 		try {
+			pulseTransactionCoordinator();
 			//Uses a capturing lambda in this case as we need to carry the additional Map parameter:
-			fastSessionServices.eventListenerGroup_PERSIST
-					.fireEventOnEachListener( event, copiedAlready, PersistEventListener::onPersist );
+			eventListenerGroups.eventListenerGroup_PERSIST
+					.fireEventOnEachListener( persistEvent, copiedAlready,
+							PersistEventListener::onPersist );
 		}
 		catch ( MappingException e ) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage() ) ) ;
@@ -763,39 +741,56 @@ public class SessionImpl
 	// persistOnFlush() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void persistOnFlush(String entityName, Object object, Map copiedAlready) {
+	public void persistOnFlush(String entityName, Object object, PersistContext copiedAlready) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
-		PersistEvent event = new PersistEvent( entityName, object, this );
-		fastSessionServices.eventListenerGroup_PERSIST_ONFLUSH.fireEventOnEachListener( event, copiedAlready, PersistEventListener::onPersist );
+		final var persistEvent = new PersistEvent( entityName, object, this );
+		eventListenerGroups.eventListenerGroup_PERSIST_ONFLUSH
+				.fireEventOnEachListener( persistEvent, copiedAlready,
+						PersistEventListener::onPersist );
 		delayedAfterCompletion();
 	}
 
 	// merge() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	@Override
-	public Object merge(String entityName, Object object) throws HibernateException {
+	@Override @SuppressWarnings("unchecked")
+	public <T> T merge(String entityName, T object) {
 		checkOpen();
-		return fireMerge( new MergeEvent( entityName, object, this ) );
+		return (T) fireMerge( new MergeEvent( entityName, object, this ) );
 	}
 
 	@Override
-	public Object merge(Object object) throws HibernateException {
+	public <T> T merge(T object, EntityGraph<? super T> loadGraph) {
+		final var effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
+		try {
+			effectiveEntityGraph.applyGraph( (RootGraphImplementor<?>) loadGraph, GraphSemantic.LOAD );
+			return merge( object );
+		}
+		finally {
+			effectiveEntityGraph.clear();
+		}
+	}
+
+	@Override @SuppressWarnings("unchecked")
+	public <T> T merge(T object) {
 		checkOpen();
-		return fireMerge( new MergeEvent( null, object, this ));
+		return (T) fireMerge( new MergeEvent( null, object, this ));
 	}
 
 	@Override
-	public void merge(String entityName, Object object, Map copiedAlready) throws HibernateException {
+	public void merge(String entityName, Object object, MergeContext copiedAlready) {
 		checkOpenOrWaitingForAutoClose();
 		fireMerge( copiedAlready, new MergeEvent( entityName, object, this ) );
 	}
 
-	private Object fireMerge(MergeEvent event) {
+	private Object fireMerge(final MergeEvent mergeEvent) {
 		try {
+			checkNotReadOnly();
 			checkTransactionSynchStatus();
 			checkNoUnresolvedActionsBeforeOperation();
-			fastSessionServices.eventListenerGroup_MERGE.fireEventOnEachListener( event, MergeEventListener::onMerge );
+			eventListenerGroups.eventListenerGroup_MERGE
+					.fireEventOnEachListener( mergeEvent,
+							MergeEventListener::onMerge );
 			checkNoUnresolvedActionsAfterOperation();
 		}
 		catch ( ObjectDeletedException sse ) {
@@ -809,13 +804,15 @@ public class SessionImpl
 			throw getExceptionConverter().convert( e );
 		}
 
-		return event.getResult();
+		return mergeEvent.getResult();
 	}
 
-	private void fireMerge(final Map copiedAlready, final MergeEvent event) {
+	private void fireMerge(final MergeContext mergeContext, final MergeEvent mergeEvent) {
 		try {
 			pulseTransactionCoordinator();
-			fastSessionServices.eventListenerGroup_MERGE.fireEventOnEachListener( event, copiedAlready, MergeEventListener::onMerge );
+			eventListenerGroups.eventListenerGroup_MERGE
+					.fireEventOnEachListener( mergeEvent, mergeContext,
+							MergeEventListener::onMerge );
 		}
 		catch ( ObjectDeletedException sse ) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( sse ) );
@@ -836,49 +833,27 @@ public class SessionImpl
 	// delete() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void delete(Object object) throws HibernateException {
-		checkOpen();
-		fireDelete( new DeleteEvent( object, this ) );
-	}
-
-	@Override
-	public void delete(String entityName, Object object) throws HibernateException {
-		checkOpen();
-		fireDelete( new DeleteEvent( entityName, object, this ) );
-	}
-
-	@Override
-	public void delete(String entityName, Object object, boolean isCascadeDeleteEnabled, Set transientEntities)
-			throws HibernateException {
+	public void delete(String entityName, Object object, boolean isCascadeDeleteEnabled, DeleteContext transientEntities) {
 		checkOpenOrWaitingForAutoClose();
-		final boolean removingOrphanBeforeUpates = persistenceContext.isRemovingOrphanBeforeUpates();
-		final boolean traceEnabled = log.isTraceEnabled();
-		if ( traceEnabled && removingOrphanBeforeUpates ) {
+		final boolean removingOrphanBeforeUpdates = persistenceContext.isRemovingOrphanBeforeUpdates();
+		final boolean traceEnabled = SESSION_LOGGER.isTraceEnabled();
+		if ( traceEnabled && removingOrphanBeforeUpdates ) {
 			logRemoveOrphanBeforeUpdates( "before continuing", entityName, object );
 		}
 		fireDelete(
-				new DeleteEvent(
-						entityName,
-						object,
-						isCascadeDeleteEnabled,
-						removingOrphanBeforeUpates,
-						this
-				),
+				new DeleteEvent( entityName, object, isCascadeDeleteEnabled, removingOrphanBeforeUpdates, this ),
 				transientEntities
 		);
-		if ( traceEnabled && removingOrphanBeforeUpates ) {
+		if ( traceEnabled && removingOrphanBeforeUpdates ) {
 			logRemoveOrphanBeforeUpdates( "after continuing", entityName, object );
 		}
 	}
 
 	@Override
 	public void removeOrphanBeforeUpdates(String entityName, Object child) {
-		// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task
-		// ordering is improved.
-		final boolean traceEnabled = log.isTraceEnabled();
-		if ( traceEnabled ) {
-			logRemoveOrphanBeforeUpdates( "begin", entityName, child );
-		}
+		// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.
+		//       This should be removed once action/task ordering is improved.
+		logRemoveOrphanBeforeUpdates( "begin", entityName, child );
 		persistenceContext.beginRemoveOrphanBeforeUpdates();
 		try {
 			checkOpenOrWaitingForAutoClose();
@@ -886,27 +861,25 @@ public class SessionImpl
 		}
 		finally {
 			persistenceContext.endRemoveOrphanBeforeUpdates();
-			if ( traceEnabled ) {
-				logRemoveOrphanBeforeUpdates( "end", entityName, child );
-			}
+			logRemoveOrphanBeforeUpdates( "end", entityName, child );
 		}
 	}
 
 	private void logRemoveOrphanBeforeUpdates(String timing, String entityName, Object entity) {
-		if ( log.isTraceEnabled() ) {
-			final EntityEntry entityEntry = persistenceContext.getEntry( entity );
-			log.tracef(
-					"%s remove orphan before updates: [%s]",
-					timing,
-					entityEntry == null ? entityName : MessageHelper.infoString( entityName, entityEntry.getId() )
-			);
+		if ( SESSION_LOGGER.isTraceEnabled() ) {
+			final var entityEntry = persistenceContext.getEntry( entity );
+			final String entityInfo = entityEntry == null ? entityName : infoString( entityName, entityEntry.getId() );
+			SESSION_LOGGER.removeOrphanBeforeUpdates( timing, entityInfo );
 		}
 	}
 
-	private void fireDelete(final DeleteEvent event) {
-		try{
+	private void fireDelete(final DeleteEvent deleteEvent) {
+		try {
+			checkNotReadOnly();
 			pulseTransactionCoordinator();
-			fastSessionServices.eventListenerGroup_DELETE.fireEventOnEachListener( event, DeleteEventListener::onDelete );
+			eventListenerGroups.eventListenerGroup_DELETE
+					.fireEventOnEachListener( deleteEvent,
+							DeleteEventListener::onDelete );
 		}
 		catch ( ObjectDeletedException sse ) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( sse ) );
@@ -923,10 +896,12 @@ public class SessionImpl
 		}
 	}
 
-	private void fireDelete(final DeleteEvent event, final Set transientEntities) {
-		try{
+	private void fireDelete(final DeleteEvent deleteEvent, final DeleteContext transientEntities) {
+		try {
 			pulseTransactionCoordinator();
-			fastSessionServices.eventListenerGroup_DELETE.fireEventOnEachListener( event, transientEntities, DeleteEventListener::onDelete );
+			eventListenerGroups.eventListenerGroup_DELETE
+					.fireEventOnEachListener( deleteEvent, transientEntities,
+							DeleteEventListener::onDelete );
 		}
 		catch ( ObjectDeletedException sse ) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( sse ) );
@@ -947,50 +922,94 @@ public class SessionImpl
 	// load()/get() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void load(Object object, Serializable id) throws HibernateException {
-		LoadEvent event = loadEvent;
-		loadEvent = null;
-		if ( event == null ) {
-			event = new LoadEvent( id, object, this, getReadOnlyFromLoadQueryInfluencers() );
+	public void load(Object object, Object id) {
+		fireLoad( new LoadEvent( id, object, this, getReadOnlyFromLoadQueryInfluencers() ), LoadEventListener.RELOAD );
+	}
+
+	private <T> void setMultiIdentifierLoadAccessOptions(FindOption[] options, MultiIdentifierLoadAccess<T> loadAccess) {
+		CacheStoreMode storeMode = getCacheStoreMode();
+		CacheRetrieveMode retrieveMode = getCacheRetrieveMode();
+		LockOptions lockOptions = copySessionLockOptions();
+		int batchSize = -1;
+		for ( FindOption option : options ) {
+			if ( option instanceof CacheStoreMode cacheStoreMode ) {
+				storeMode = cacheStoreMode;
+			}
+			else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
+				retrieveMode = cacheRetrieveMode;
+			}
+			else if ( option instanceof CacheMode cacheMode ) {
+				storeMode = cacheMode.getJpaStoreMode();
+				retrieveMode = cacheMode.getJpaRetrieveMode();
+			}
+			else if ( option instanceof LockModeType lockModeType ) {
+				lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
+			}
+			else if ( option instanceof LockMode lockMode ) {
+				lockOptions.setLockMode( lockMode );
+			}
+			else if ( option instanceof LockOptions lockOpts ) {
+				lockOptions = lockOpts;
+			}
+			else if ( option instanceof PessimisticLockScope pessimisticLockScope ) {
+				lockOptions.setLockScope( pessimisticLockScope );
+			}
+			else if ( option instanceof Timeout timeout ) {
+				lockOptions.setTimeOut( timeout.milliseconds() );
+			}
+			else if ( option instanceof EnabledFetchProfile enabledFetchProfile ) {
+				loadAccess.enableFetchProfile( enabledFetchProfile.profileName() );
+			}
+			else if ( option instanceof ReadOnlyMode ) {
+				loadAccess.withReadOnly( option == ReadOnlyMode.READ_ONLY );
+			}
+			else if ( option instanceof BatchSize batchSizeOption ) {
+				batchSize = batchSizeOption.batchSize();
+			}
+			else if ( option instanceof SessionCheckMode ) {
+				loadAccess.enableSessionCheck( option == SessionCheckMode.ENABLED );
+			}
+			else if ( option instanceof OrderingMode ) {
+				loadAccess.enableOrderedReturn( option == OrderingMode.ORDERED );
+			}
+			else if ( option instanceof RemovalsMode ) {
+				loadAccess.enableReturnOfDeletedEntities( option == RemovalsMode.INCLUDE );
+			}
 		}
-		else {
-			event.setEntityClassName( null );
-			event.setEntityId( id );
-			event.setInstanceToLoad( object );
-			event.setLockMode( LoadEvent.DEFAULT_LOCK_MODE );
-			event.setLockScope( LoadEvent.DEFAULT_LOCK_OPTIONS.getScope() );
-			event.setLockTimeout( LoadEvent.DEFAULT_LOCK_OPTIONS.getTimeOut() );
-		}
-
-		fireLoad( event, LoadEventListener.RELOAD );
-
-		if ( loadEvent == null ) {
-			event.setEntityClassName( null );
-			event.setEntityId( null );
-			event.setInstanceToLoad( null );
-			event.setResult( null );
-			loadEvent = event;
-		}
+		loadAccess.with( lockOptions )
+				.with( interpretCacheMode( storeMode, retrieveMode ) )
+				.withBatchSize( batchSize );
 	}
 
 	@Override
-	public <T> T load(Class<T> entityClass, Serializable id) throws HibernateException {
-		return this.byId( entityClass ).getReference( id );
+	public <E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption... options) {
+		final var loadAccess = byMultipleIds( entityType );
+		setMultiIdentifierLoadAccessOptions( options, loadAccess );
+		return loadAccess.multiLoad( ids );
 	}
 
 	@Override
-	public Object load(String entityName, Serializable id) throws HibernateException {
-		return this.byId( entityName ).getReference( id );
+	public <E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> ids, FindOption... options) {
+		final var rootGraph = (RootGraph<E>) entityGraph;
+		final var type = rootGraph.getGraphedType();
+		final MultiIdentifierLoadAccess<E> loadAccess =
+				switch ( type.getRepresentationMode() ) {
+					case MAP -> byMultipleIds( type.getTypeName() );
+					case POJO -> byMultipleIds( type.getJavaType() );
+				};
+		loadAccess.withLoadGraph( rootGraph );
+		setMultiIdentifierLoadAccessOptions( options, loadAccess );
+		return loadAccess.multiLoad( ids );
 	}
 
 	@Override
-	public <T> T get(Class<T> entityClass, Serializable id) throws HibernateException {
-		return this.byId( entityClass ).load( id );
+	public <T> T get(Class<T> entityClass, Object id) {
+		return byId( entityClass ).load( id );
 	}
 
 	@Override
-	public Object get(String entityName, Serializable id) throws HibernateException {
-		return this.byId( entityName ).load( id );
+	public Object get(String entityName, Object id) {
+		return byId( entityName ).load( id );
 	}
 
 	/**
@@ -999,75 +1018,43 @@ public class SessionImpl
 	 * Do NOT return a proxy.
 	 */
 	@Override
-	public Object immediateLoad(String entityName, Serializable id) throws HibernateException {
-		if ( log.isDebugEnabled() ) {
-			EntityPersister persister = getFactory().getMetamodel().entityPersister( entityName );
-			log.debugf( "Initializing proxy: %s", MessageHelper.infoString( persister, id, getFactory() ) );
+	public Object immediateLoad(String entityName, Object id) {
+		if ( SESSION_LOGGER.isDebugEnabled() ) {
+			final var persister = requireEntityPersister( entityName );
+			SESSION_LOGGER.initializingProxy( infoString( persister, id, getFactory() ) );
 		}
-		LoadEvent event = loadEvent;
-		loadEvent = null;
-		event = recycleEventInstance( event, id, entityName );
-		fireLoadNoChecks( event, LoadEventListener.IMMEDIATE_LOAD );
-		Object result = event.getResult();
-		if ( loadEvent == null ) {
-			event.setEntityClassName( null );
-			event.setEntityId( null );
-			event.setInstanceToLoad( null );
-			event.setResult( null );
-			loadEvent = event;
-		}
-		return result;
+		final var event = makeLoadEvent( entityName, id, getReadOnlyFromLoadQueryInfluencers(), true );
+		fireLoadNoChecks( event, IMMEDIATE_LOAD );
+		final Object result = event.getResult();
+		releaseLoadEvent( event );
+		final var lazyInitializer = extractLazyInitializer( result );
+		return lazyInitializer != null ? lazyInitializer.getImplementation() : result;
 	}
 
 	@Override
-	public Object internalLoad(
-			String entityName,
-			Serializable id,
-			boolean eager,
-			boolean nullable) {
-		final EffectiveEntityGraph effectiveEntityGraph = getLoadQueryInfluencers().getEffectiveEntityGraph();
-		final GraphSemantic semantic = effectiveEntityGraph.getSemantic();
-		final RootGraphImplementor<?> graph = effectiveEntityGraph.getGraph();
-		boolean clearedEffectiveGraph = false;
-		if ( semantic != null ) {
-			if ( ! graph.appliesTo( entityName ) ) {
-				log.debug( "Clearing effective entity graph for subsequent-select" );
-				clearedEffectiveGraph = true;
-				effectiveEntityGraph.clear();
-			}
+	public Object internalLoad(String entityName, Object id, boolean eager, boolean nullable) {
+		final var type = internalLoadType( eager, nullable );
+		final var effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
+		final var semantic = effectiveEntityGraph.getSemantic();
+		final var graph = effectiveEntityGraph.getGraph();
+		boolean clearedEffectiveGraph;
+		if ( semantic == null
+				|| graph.appliesTo( getFactory().getJpaMetamodel().entity( entityName ) ) ) {
+			clearedEffectiveGraph = false;
 		}
-
+		else {
+			SESSION_LOGGER.clearingEffectiveEntityGraph();
+			clearedEffectiveGraph = true;
+			effectiveEntityGraph.clear();
+		}
 		try {
-			final LoadEventListener.LoadType type;
-			if ( nullable ) {
-				type = LoadEventListener.INTERNAL_LOAD_NULLABLE;
-			}
-			else {
-				type = eager
-						? LoadEventListener.INTERNAL_LOAD_EAGER
-						: LoadEventListener.INTERNAL_LOAD_LAZY;
-			}
-
-			LoadEvent event = loadEvent;
-			loadEvent = null;
-
-			event = recycleEventInstance( event, id, entityName );
-
+			final var event = makeLoadEvent( entityName, id, getReadOnlyFromLoadQueryInfluencers(), true );
 			fireLoadNoChecks( event, type );
-
-			Object result = event.getResult();
-
+			final Object result = event.getResult();
 			if ( !nullable ) {
 				UnresolvableObjectException.throwIfNull( result, id, entityName );
 			}
-
-			if ( loadEvent == null ) {
-				event.setEntityClassName( null );
-				event.setEntityId( null );
-				event.setInstanceToLoad( null );
-				event.setResult( null );
-				loadEvent = event;
-			}
+			releaseLoadEvent( event );
 			return result;
 		}
 		finally {
@@ -1077,102 +1064,207 @@ public class SessionImpl
 		}
 	}
 
-	/**
-	 * Helper to avoid creating many new instances of LoadEvent: it's an allocation hot spot.
-	 */
-	private LoadEvent recycleEventInstance(final LoadEvent event, final Serializable id, final String entityName) {
-		if ( event == null ) {
-			return new LoadEvent( id, entityName, true, this, getReadOnlyFromLoadQueryInfluencers() );
+	protected static LoadType internalLoadType(boolean eager, boolean nullable) {
+		if ( nullable ) {
+			return INTERNAL_LOAD_NULLABLE;
 		}
 		else {
-			event.setEntityClassName( entityName );
-			event.setEntityId( id );
-			event.setInstanceToLoad( null );
-			event.setLockMode( LoadEvent.DEFAULT_LOCK_MODE );
-			event.setLockScope( LoadEvent.DEFAULT_LOCK_OPTIONS.getScope() );
-			event.setLockTimeout( LoadEvent.DEFAULT_LOCK_OPTIONS.getTimeOut() );
+			return eager ? INTERNAL_LOAD_EAGER : INTERNAL_LOAD_LAZY;
+		}
+	}
+
+	@Override
+	public Object loadFromSecondLevelCache(
+			EntityPersister persister, EntityKey entityKey, Object instanceToLoad, LockMode lockMode) {
+		final Object entity =
+				CacheLoadHelper.loadFromSecondLevelCache( this, instanceToLoad, lockMode, persister, entityKey );
+		if ( entity != null ) {
+			final Object id = entityKey.getIdentifierValue();
+			final var postLoadEvent = makePostLoadEvent( persister, id, entity );
+			eventListenerGroups.eventListenerGroup_POST_LOAD
+					.fireEventOnEachListener( postLoadEvent,
+							PostLoadEventListener::onPostLoad );
+			releasePostLoadEvent( postLoadEvent );
+		}
+		return entity;
+	}
+
+	/**
+	 * Helper to avoid creating many new instances of {@link PostLoadEvent}.
+	 * It's an allocation hot spot.
+	 */
+	// Hibernate Reactive may need to use this
+	protected PostLoadEvent makePostLoadEvent(EntityPersister persister, Object id, Object entity) {
+		final var event = postLoadEvent;
+		if ( event == null ) {
+			return new PostLoadEvent( id, persister, entity, this );
+		}
+		else {
+			postLoadEvent = null;
+			event.setId( id );
+			event.setPersister( persister );
+			event.setEntity( entity );
 			return event;
 		}
 	}
 
-	@Override
-	public <T> T load(Class<T> entityClass, Serializable id, LockMode lockMode) throws HibernateException {
-		return this.byId( entityClass ).with( new LockOptions( lockMode ) ).getReference( id );
+	/**
+	 * Helper to avoid creating many new instances of {@link LoadEvent}.
+	 * It's an allocation hot spot.
+	 */
+	// Hibernate Reactive may need to use this
+	protected LoadEvent makeLoadEvent(String entityName, Object id, Boolean readOnly, LockOptions lockOptions) {
+		final var event = loadEvent;
+		if ( event == null ) {
+			return new LoadEvent( id, entityName, lockOptions, this, readOnly );
+		}
+		else {
+			loadEvent = null;
+			event.setEntityClassName( entityName );
+			event.setEntityId( id );
+			event.setInstanceToLoad( null );
+			event.setReadOnly( readOnly );
+			event.setLockOptions( lockOptions );
+			event.setAssociationFetch( false );
+			return event;
+		}
 	}
 
-	@Override
-	public <T> T load(Class<T> entityClass, Serializable id, LockOptions lockOptions) throws HibernateException {
-		return this.byId( entityClass ).with( lockOptions ).getReference( id );
+	/**
+	 * Helper to avoid creating many new instances of {@link LoadEvent}.
+	 * It's an allocation hot spot.
+	 */
+	// Hibernate Reactive may need to use this
+	protected LoadEvent makeLoadEvent(String entityName, Object id, Boolean readOnly, boolean isAssociationFetch) {
+		final var event = loadEvent;
+		if ( event == null ) {
+			return new LoadEvent( id, entityName, isAssociationFetch, this, readOnly );
+		}
+		else {
+			loadEvent = null;
+			event.setEntityClassName( entityName );
+			event.setEntityId( id );
+			event.setInstanceToLoad( null );
+			event.setReadOnly( readOnly );
+			event.setLockOptions( LockMode.NONE.toLockOptions() );
+			event.setAssociationFetch( isAssociationFetch );
+			return event;
+		}
 	}
 
-	@Override
-	public Object load(String entityName, Serializable id, LockMode lockMode) throws HibernateException {
-		return this.byId( entityName ).with( new LockOptions( lockMode ) ).getReference( id );
+	// Hibernate Reactive may need to use this
+	protected void releasePostLoadEvent(PostLoadEvent event) {
+		if ( postLoadEvent == null ) {
+			event.setEntity( null );
+			event.setId( null );
+			event.setPersister( null );
+			postLoadEvent = event;
+		}
 	}
 
-	@Override
-	public Object load(String entityName, Serializable id, LockOptions lockOptions) throws HibernateException {
-		return this.byId( entityName ).with( lockOptions ).getReference( id );
+	// Hibernate Reactive may need to use this
+	protected void releaseLoadEvent(LoadEvent event) {
+		if ( loadEvent == null ) {
+			event.setEntityClassName( null );
+			event.setEntityId( null );
+			event.setInstanceToLoad( null );
+			event.setResult( null );
+			event.setLockOptions( null );
+			event.setReadOnly( null );
+			loadEvent = event;
+		}
 	}
 
-	@Override
-	public <T> T get(Class<T> entityClass, Serializable id, LockMode lockMode) throws HibernateException {
+	@Override @Deprecated
+	public <T> T get(Class<T> entityClass, Object id, LockMode lockMode) {
 		return this.byId( entityClass ).with( new LockOptions( lockMode ) ).load( id );
 	}
 
-	@Override
-	public <T> T get(Class<T> entityClass, Serializable id, LockOptions lockOptions) throws HibernateException {
-		return this.byId( entityClass ).with( lockOptions ).load( id );
-	}
-
-	@Override
-	public Object get(String entityName, Serializable id, LockMode lockMode) throws HibernateException {
+	@Override @Deprecated
+	public Object get(String entityName, Object id, LockMode lockMode) {
 		return this.byId( entityName ).with( new LockOptions( lockMode ) ).load( id );
 	}
 
-	@Override
-	public Object get(String entityName, Serializable id, LockOptions lockOptions) throws HibernateException {
+	@Override @Deprecated
+	public <T> T get(Class<T> entityClass, Object id, LockOptions lockOptions) {
+		return this.byId( entityClass ).with( lockOptions ).load( id );
+	}
+
+	@Override @Deprecated
+	public Object get(String entityName, Object id, LockOptions lockOptions) {
 		return this.byId( entityName ).with( lockOptions ).load( id );
 	}
 
 	@Override
-	public IdentifierLoadAccessImpl byId(String entityName) {
-		return new IdentifierLoadAccessImpl( entityName );
+	public <T> IdentifierLoadAccessImpl<T> byId(String entityName) {
+		return new IdentifierLoadAccessImpl<>( this, requireEntityPersister( entityName ) );
 	}
 
 	@Override
 	public <T> IdentifierLoadAccessImpl<T> byId(Class<T> entityClass) {
-		return new IdentifierLoadAccessImpl<T>( entityClass );
+		return new IdentifierLoadAccessImpl<>( this, requireEntityPersister( entityClass ) );
 	}
 
 	@Override
 	public <T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass) {
-		return new MultiIdentifierLoadAccessImpl<T>( locateEntityPersister( entityClass ) );
+		return new MultiIdentifierLoadAccessImpl<>( this, requireEntityPersister( entityClass ) );
 	}
 
 	@Override
-	public MultiIdentifierLoadAccess byMultipleIds(String entityName) {
-		return new MultiIdentifierLoadAccessImpl( locateEntityPersister( entityName ) );
+	public <T> MultiIdentifierLoadAccess<T> byMultipleIds(String entityName) {
+		return new MultiIdentifierLoadAccessImpl<>( this, requireEntityPersister( entityName ) );
 	}
 
 	@Override
-	public NaturalIdLoadAccess byNaturalId(String entityName) {
-		return new NaturalIdLoadAccessImpl( entityName );
+	public <T> NaturalIdLoadAccess<T> byNaturalId(String entityName) {
+		return new NaturalIdLoadAccessImpl<>( this, requireEntityPersister( entityName ) );
 	}
 
 	@Override
 	public <T> NaturalIdLoadAccess<T> byNaturalId(Class<T> entityClass) {
-		return new NaturalIdLoadAccessImpl<T>( entityClass );
+		return new NaturalIdLoadAccessImpl<>( this, requireEntityPersister( entityClass ) );
 	}
 
 	@Override
-	public SimpleNaturalIdLoadAccess bySimpleNaturalId(String entityName) {
-		return new SimpleNaturalIdLoadAccessImpl( entityName );
+	public <T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(String entityName) {
+		return new SimpleNaturalIdLoadAccessImpl<>( this, requireEntityPersister( entityName ) );
 	}
 
 	@Override
 	public <T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(Class<T> entityClass) {
-		return new SimpleNaturalIdLoadAccessImpl<T>( entityClass );
+		return new SimpleNaturalIdLoadAccessImpl<>( this, requireEntityPersister( entityClass ) );
+	}
+
+	@Override
+	public <T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(Class<T> entityClass) {
+		return new NaturalIdMultiLoadAccessStandard<>( requireEntityPersister( entityClass ), this );
+	}
+
+	@Override
+	public <T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(String entityName) {
+		return new NaturalIdMultiLoadAccessStandard<>( requireEntityPersister( entityName ), this );
+	}
+
+	@Override
+	public Object load(LoadType loadType, Object id, String entityName, LockOptions lockOptions, Boolean readOnly) {
+		boolean success = false;
+		try {
+			final var event =
+					makeLoadEvent( entityName, id, readOnly,
+							lockOptions == null ? LockOptions.NONE : lockOptions );
+			fireLoad( event, loadType );
+			final Object result = event.getResult();
+			releaseLoadEvent( event );
+			if ( !loadType.isAllowNulls() && result == null ) {
+				getSession().getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
+			}
+			success = true;
+			return result;
+		}
+		finally {
+			// we might be called from outside transaction
+			afterOperation( success );
+		}
 	}
 
 	private void fireLoad(LoadEvent event, LoadType loadType) {
@@ -1181,124 +1273,98 @@ public class SessionImpl
 		delayedAfterCompletion();
 	}
 
-	//Performance note:
-	// This version of #fireLoad is meant to be invoked by internal methods only,
-	// so to skip the session open, transaction synch, etc.. checks,
-	// which have been proven to be not particularly cheap:
-	// it seems they prevent these hot methods from being inlined.
-	private void fireLoadNoChecks(final LoadEvent event, final LoadType loadType) {
+	/**
+	 * This version of {@link #load} is for use by internal methods only.
+	 * It skips the session open check, transaction sync checks, and so on,
+	 * which have been shown to be expensive (apparently they prevent these
+	 * hot methods from being inlined).
+	 */
+	private void fireLoadNoChecks(final LoadEvent loadEvent, final LoadType loadType) {
 		pulseTransactionCoordinator();
-		fastSessionServices.eventListenerGroup_LOAD.fireEventOnEachListener( event, loadType, LoadEventListener::onLoad );
-	}
-
-	private void fireResolveNaturalId(final ResolveNaturalIdEvent event) {
-		checkOpenOrWaitingForAutoClose();
-		pulseTransactionCoordinator();
-		fastSessionServices.eventListenerGroup_RESOLVE_NATURAL_ID.fireEventOnEachListener( event, ResolveNaturalIdEventListener::onResolveNaturalId );
-		delayedAfterCompletion();
+		eventListenerGroups.eventListenerGroup_LOAD
+				.fireEventOnEachListener( loadEvent, loadType,
+						LoadEventListener::onLoad );
 	}
 
 
 	// refresh() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void refresh(Object object) throws HibernateException {
-		checkOpen();
-		fireRefresh( new RefreshEvent( null, object, this ) );
+	public void refresh(Object object) {
+		fireRefresh( new RefreshEvent( object, this ) );
 	}
 
 	@Override
-	public void refresh(String entityName, Object object) throws HibernateException {
-		checkOpen();
-		fireRefresh( new RefreshEvent( entityName, object, this ) );
+	public void refresh(Object object, LockOptions lockOptions) {
+		fireRefresh( new RefreshEvent( object, lockOptions, this ) );
 	}
 
 	@Override
-	public void refresh(Object object, LockMode lockMode) throws HibernateException {
-		checkOpen();
-		fireRefresh( new RefreshEvent( object, lockMode, this ) );
-	}
-
-	@Override
-	public void refresh(Object object, LockOptions lockOptions) throws HibernateException {
-		checkOpen();
-		refresh( null, object, lockOptions );
-	}
-
-	@Override
-	public void refresh(String entityName, Object object, LockOptions lockOptions) throws HibernateException {
-		checkOpen();
-		fireRefresh( new RefreshEvent( entityName, object, lockOptions, this ) );
-	}
-
-	@Override
-	public void refresh(String entityName, Object object, Map refreshedAlready) throws HibernateException {
-		checkOpenOrWaitingForAutoClose();
+	public void refresh(String entityName, Object object, RefreshContext refreshedAlready) {
 		fireRefresh( refreshedAlready, new RefreshEvent( entityName, object, this ) );
 	}
 
-	private void fireRefresh(final RefreshEvent event) {
+	private void fireRefresh(final RefreshEvent refreshEvent) {
+		checkOpen();
+		checkEntityManaged( refreshEvent.getEntityName(), refreshEvent.getObject() );
 		try {
-			if ( !getSessionFactory().getSessionFactoryOptions().isAllowRefreshDetachedEntity() ) {
-				if ( event.getEntityName() != null ) {
-					if ( !contains( event.getEntityName(), event.getObject() ) ) {
-						throw new IllegalArgumentException( "Entity not managed" );
-					}
-				}
-				else {
-					if ( !contains( event.getObject() ) ) {
-						throw new IllegalArgumentException( "Entity not managed" );
-					}
-				}
-			}
 			pulseTransactionCoordinator();
-			fastSessionServices.eventListenerGroup_REFRESH.fireEventOnEachListener( event, RefreshEventListener::onRefresh );
+			checkTransactionNeededForLock( refreshEvent.getLockMode() );
+			eventListenerGroups.eventListenerGroup_REFRESH
+					.fireEventOnEachListener( refreshEvent,
+							RefreshEventListener::onRefresh );
 		}
-		catch (RuntimeException e) {
-			if ( !getSessionFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
-				if ( e instanceof HibernateException ) {
-					throw e;
-				}
-			}
-			//including HibernateException
-			throw getExceptionConverter().convert( e );
+		catch ( RuntimeException e ) {
+			convertIfJpaBootstrap( e, refreshEvent.getLockOptions() );
 		}
 		finally {
 			delayedAfterCompletion();
 		}
 	}
 
-	private void fireRefresh(final Map refreshedAlready, final RefreshEvent event) {
+	private void fireRefresh(final RefreshContext refreshedAlready, final RefreshEvent refreshEvent) {
+		// called from cascades
+		checkOpenOrWaitingForAutoClose();
+		checkEntityManaged( refreshEvent.getEntityName(), refreshEvent.getObject() );
 		try {
 			pulseTransactionCoordinator();
-			fastSessionServices.eventListenerGroup_REFRESH.fireEventOnEachListener( event, refreshedAlready, RefreshEventListener::onRefresh );
-		}
-		catch (RuntimeException e) {
-			throw getExceptionConverter().convert( e );
+			eventListenerGroups.eventListenerGroup_REFRESH
+					.fireEventOnEachListener( refreshEvent, refreshedAlready,
+							RefreshEventListener::onRefresh );
 		}
 		finally {
 			delayedAfterCompletion();
 		}
 	}
 
+	private void checkEntityManaged(String entityName, Object entity) {
+		if ( !managed( entityName, entity ) ) {
+			throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
+		}
+	}
+
+	private boolean managed(String entityName, Object entity) {
+		return entityName == null ? contains( entity ) : contains( entityName, entity );
+	}
 
 	// replicate() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void replicate(Object obj, ReplicationMode replicationMode) throws HibernateException {
+	public void replicate(Object obj, ReplicationMode replicationMode) {
 		fireReplicate( new ReplicateEvent( obj, replicationMode, this ) );
 	}
 
 	@Override
-	public void replicate(String entityName, Object obj, ReplicationMode replicationMode)
-			throws HibernateException {
+	public void replicate(String entityName, Object obj, ReplicationMode replicationMode) {
 		fireReplicate( new ReplicateEvent( entityName, obj, replicationMode, this ) );
 	}
 
-	private void fireReplicate(final ReplicateEvent event) {
+	private void fireReplicate(final ReplicateEvent replicateEvent) {
 		checkOpen();
 		pulseTransactionCoordinator();
-		fastSessionServices.eventListenerGroup_REPLICATE.fireEventOnEachListener( event, ReplicateEventListener::onReplicate );
+		eventListenerGroups.eventListenerGroup_REPLICATE
+				.fireEventOnEachListener( replicateEvent,
+						ReplicateEventListener::onReplicate );
 		delayedAfterCompletion();
 	}
 
@@ -1310,66 +1376,129 @@ public class SessionImpl
 	 * (references held by application or other persistent instances are okay)
 	 */
 	@Override
-	public void evict(Object object) throws HibernateException {
+	public void evict(Object object) {
 		checkOpen();
 		pulseTransactionCoordinator();
-		final EvictEvent event = new EvictEvent( object, this );
-		fastSessionServices.eventListenerGroup_EVICT.fireEventOnEachListener( event, EvictEventListener::onEvict );
+		eventListenerGroups.eventListenerGroup_EVICT
+				.fireEventOnEachListener( new EvictEvent( object, this ),
+						EvictEventListener::onEvict );
 		delayedAfterCompletion();
 	}
 
-	/**
-	 * detect in-memory changes, determine if the changes are to tables
-	 * named in the query and, if so, complete execution the flush
-	 */
-	protected boolean autoFlushIfRequired(Set querySpaces) throws HibernateException {
+	@Override
+	public boolean autoFlushIfRequired(Set<String> querySpaces) {
+		return autoFlushIfRequired( querySpaces, false );
+	}
+
+	@Override
+	public boolean autoFlushIfRequired(Set<String> querySpaces, boolean skipPreFlush) {
 		checkOpen();
 		if ( !isTransactionInProgress() ) {
 			// do not auto-flush while outside a transaction
 			return false;
 		}
-		AutoFlushEvent event = new AutoFlushEvent( querySpaces, this );
-		fastSessionServices.eventListenerGroup_AUTO_FLUSH.fireEventOnEachListener( event, AutoFlushEventListener::onAutoFlush );
-		return event.isFlushRequired();
+		final var autoFlushEvent = new AutoFlushEvent( querySpaces, skipPreFlush, this );
+		eventListenerGroups.eventListenerGroup_AUTO_FLUSH
+				.fireEventOnEachListener( autoFlushEvent,
+						AutoFlushEventListener::onAutoFlush );
+		return autoFlushEvent.isFlushRequired();
 	}
 
 	@Override
-	public boolean isDirty() throws HibernateException {
+	public void autoPreFlush() {
 		checkOpen();
-		pulseTransactionCoordinator();
-		log.debug( "Checking session dirtiness" );
+		// do not auto-flush while outside a transaction
+		if ( isTransactionInProgress() ) {
+			eventListenerGroups.eventListenerGroup_AUTO_FLUSH
+					.fireEventOnEachListener( this,
+							AutoFlushEventListener::onAutoPreFlush );
+		}
+	}
+
+	@Override
+	public boolean isDirty() {
+		checkOpen();
 		if ( actionQueue.areInsertionsOrDeletionsQueued() ) {
-			log.debug( "Session dirty (scheduled updates and insertions)" );
 			return true;
 		}
-		DirtyCheckEvent event = new DirtyCheckEvent( this );
-		fastSessionServices.eventListenerGroup_DIRTY_CHECK.fireEventOnEachListener( event, DirtyCheckEventListener::onDirtyCheck );
-		delayedAfterCompletion();
-		return event.isDirty();
+		else {
+			final var dirtyCheckEvent = new DirtyCheckEvent( this );
+			eventListenerGroups.eventListenerGroup_DIRTY_CHECK
+					.fireEventOnEachListener( dirtyCheckEvent,
+							DirtyCheckEventListener::onDirtyCheck );
+			return dirtyCheckEvent.isDirty();
+		}
 	}
 
 	@Override
-	public void flush() throws HibernateException {
+	public void flush() {
 		checkOpen();
-		doFlush();
+		fireFlush();
 	}
 
-	private void doFlush() {
-		pulseTransactionCoordinator();
-		checkTransactionNeededForUpdateOperation();
-
-		try {
-			if ( persistenceContext.getCascadeLevel() > 0 ) {
-				throw new HibernateException( "Flush during cascade is dangerous" );
+	private void fireFlush() {
+		if ( !isReadOnly() ) {
+			try {
+				pulseTransactionCoordinator();
+				checkTransactionNeededForUpdateOperation();
+				if ( persistenceContext.getCascadeLevel() > 0 ) {
+					throw new HibernateException( "Flush during cascade is dangerous" );
+				}
+				eventListenerGroups.eventListenerGroup_FLUSH
+						.fireEventOnEachListener( new FlushEvent( this ),
+								FlushEventListener::onFlush );
+				delayedAfterCompletion();
 			}
+			catch (RuntimeException e) {
+				throw getExceptionConverter().convert( e );
+			}
+		}
+	}
 
-			FlushEvent event = new FlushEvent( this );
-			fastSessionServices.eventListenerGroup_FLUSH.fireEventOnEachListener( event, FlushEventListener::onFlush );
-			delayedAfterCompletion();
+	/**
+	 * Used for auto flushing shared/child session as part of the parent session's auto flush.
+	 */
+	@Override
+	public void propagateFlush() {
+		if ( isClosed() ) {
+			return;
 		}
-		catch ( RuntimeException e ) {
-			throw getExceptionConverter().convert( e );
+		if ( !isReadOnly() ) {
+			try {
+				SESSION_LOGGER.automaticallyFlushingChildSession();
+				eventListenerGroups.eventListenerGroup_FLUSH
+						.fireEventOnEachListener( new FlushEvent( this ),
+								FlushEventListener::onFlush );
+			}
+			catch (RuntimeException e) {
+				throw getExceptionConverter().convert( e );
+			}
 		}
+	}
+
+	@Override
+	public void propagateClose() {
+		if ( isClosed() ) {
+			return;
+		}
+		SESSION_LOGGER.automaticallyClosingChildSession();
+		closeWithoutOpenChecks();
+	}
+
+	@Override
+	public void setHibernateFlushMode(FlushMode flushMode) {
+		this.flushMode = flushMode;
+	}
+
+	@Override
+	public FlushMode getHibernateFlushMode() {
+		return flushMode;
+	}
+
+	@Override
+	public FlushModeType getFlushMode() {
+		checkOpen();
+		return getFlushModeType( getHibernateFlushMode() );
 	}
 
 	@Override
@@ -1379,226 +1508,42 @@ public class SessionImpl
 	}
 
 	@Override
-	public void forceFlush(EntityEntry entityEntry) throws HibernateException {
-		if ( log.isDebugEnabled() ) {
-			log.debugf(
-					"Flushing to force deletion of re-saved object: %s",
-					MessageHelper.infoString( entityEntry.getPersister(), entityEntry.getId(), getFactory() )
-			);
+	public void forceFlush(EntityEntry entityEntry) {
+		forceFlush( entityEntry.getEntityKey() );
+	}
+
+	@Override
+	public void forceFlush(EntityKey key) {
+		if ( SESSION_LOGGER.isTraceEnabled() ) {
+			SESSION_LOGGER.flushingToForceDeletion( infoString( key.getPersister(), key.getIdentifier(), getFactory() ) );
 		}
 
 		if ( persistenceContext.getCascadeLevel() > 0 ) {
 			throw new ObjectDeletedException(
 					"deleted object would be re-saved by cascade (remove deleted object from associations)",
-					entityEntry.getId(),
-					entityEntry.getPersister().getEntityName()
+					key.getIdentifier(),
+					key.getPersister().getEntityName()
 			);
 		}
 		checkOpenOrWaitingForAutoClose();
-		doFlush();
+		fireFlush();
 	}
 
-	@Override
-	public List list(String query, QueryParameters queryParameters) throws HibernateException {
-		checkOpenOrWaitingForAutoClose();
-		pulseTransactionCoordinator();
-		queryParameters.validateParameters();
-
-		HQLQueryPlan plan = queryParameters.getQueryPlan();
-		if ( plan == null ) {
-			plan = getQueryPlan( query, false );
-		}
-
-		autoFlushIfRequired( plan.getQuerySpaces() );
-
-		final List results;
-		boolean success = false;
-
-		dontFlushFromFind++;   //stops flush being called multiple times if this method is recursively called
-		try {
-			results = plan.performList( queryParameters, this );
-			success = true;
-		}
-		finally {
-			dontFlushFromFind--;
-			afterOperation( success );
-			delayedAfterCompletion();
-		}
-		return results;
-	}
-
-	@Override
-	public int executeUpdate(String query, QueryParameters queryParameters) throws HibernateException {
-		checkOpenOrWaitingForAutoClose();
-		pulseTransactionCoordinator();
-		queryParameters.validateParameters();
-		HQLQueryPlan plan = getQueryPlan( query, false );
-		autoFlushIfRequired( plan.getQuerySpaces() );
-
-		verifyImmutableEntityUpdate( plan );
-
-		boolean success = false;
-		int result = 0;
-		try {
-			result = plan.performExecuteUpdate( queryParameters, this );
-			success = true;
-		}
-		finally {
-			afterOperation( success );
-			delayedAfterCompletion();
-		}
-		return result;
-	}
-
-	protected void verifyImmutableEntityUpdate(HQLQueryPlan plan) {
-		if ( plan.isUpdate() ) {
-			List<String> primaryFromClauseTables = new ArrayList<>();
-			for ( QueryTranslator queryTranslator : plan.getTranslators() ) {
-				primaryFromClauseTables.addAll( queryTranslator.getPrimaryFromClauseTables() );
-			}
-			for ( EntityPersister entityPersister : getSessionFactory().getMetamodel().entityPersisters().values() ) {
-				if ( !entityPersister.isMutable() ) {
-					List<Serializable> entityQuerySpaces = new ArrayList<>(
-							Arrays.asList( entityPersister.getQuerySpaces() )
-					);
-					boolean matching = false;
-					for ( Serializable entityQuerySpace : entityQuerySpaces ) {
-						if ( primaryFromClauseTables.contains( entityQuerySpace ) ) {
-							matching = true;
-							break;
-						}
-					}
-
-					if ( matching ) {
-						ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode = getSessionFactory()
-								.getSessionFactoryOptions()
-								.getImmutableEntityUpdateQueryHandlingMode();
-
-						String querySpaces = Arrays.toString( entityQuerySpaces.toArray() );
-
-						switch ( immutableEntityUpdateQueryHandlingMode ) {
-							case WARNING:
-								log.immutableEntityUpdateQuery( plan.getSourceQuery(), querySpaces );
-								break;
-							case EXCEPTION:
-								throw new HibernateException(
-										"The query: [" + plan.getSourceQuery() + "] attempts to update an immutable entity: " + querySpaces
-								);
-							default:
-								throw new UnsupportedOperationException(
-										"The " + immutableEntityUpdateQueryHandlingMode + " is not supported!"
-								);
-
-						}
-					}
-				}
-			}
-		}
-	}
-
-	@Override
-	public int executeNativeUpdate(
-			NativeSQLQuerySpecification nativeQuerySpecification,
-			QueryParameters queryParameters) throws HibernateException {
-		checkOpenOrWaitingForAutoClose();
-		pulseTransactionCoordinator();
-		queryParameters.validateParameters();
-		NativeSQLQueryPlan plan = getNativeQueryPlan( nativeQuerySpecification );
-
-
-		autoFlushIfRequired( plan.getCustomQuery().getQuerySpaces() );
-
-		boolean success = false;
-		int result = 0;
-		try {
-			result = plan.performExecuteUpdate( queryParameters, this );
-			success = true;
-		}
-		finally {
-			afterOperation( success );
-			delayedAfterCompletion();
-		}
-		return result;
-	}
-
-	@Override
-	public Iterator iterate(String query, QueryParameters queryParameters) throws HibernateException {
-		checkOpenOrWaitingForAutoClose();
-		pulseTransactionCoordinator();
-		queryParameters.validateParameters();
-
-		HQLQueryPlan plan = queryParameters.getQueryPlan();
-		if ( plan == null || !plan.isShallow() ) {
-			plan = getQueryPlan( query, true );
-		}
-
-		autoFlushIfRequired( plan.getQuerySpaces() );
-
-		dontFlushFromFind++; //stops flush being called multiple times if this method is recursively called
-		try {
-			return plan.performIterate( queryParameters, this );
-		}
-		finally {
-			delayedAfterCompletion();
-			dontFlushFromFind--;
-		}
-	}
-
-	@Override
-	public ScrollableResultsImplementor scroll(String query, QueryParameters queryParameters) throws HibernateException {
-		checkOpenOrWaitingForAutoClose();
-		pulseTransactionCoordinator();
-
-		HQLQueryPlan plan = queryParameters.getQueryPlan();
-		if ( plan == null ) {
-			plan = getQueryPlan( query, false );
-		}
-
-		autoFlushIfRequired( plan.getQuerySpaces() );
-
-		dontFlushFromFind++;
-		try {
-			return plan.performScroll( queryParameters, this );
-		}
-		finally {
-			delayedAfterCompletion();
-			dontFlushFromFind--;
-		}
-	}
-
-	@Override
-	public org.hibernate.query.Query createFilter(Object collection, String queryString) {
-		checkOpen();
-		pulseTransactionCoordinator();
-		CollectionFilterImpl filter = new CollectionFilterImpl(
-				queryString,
-				collection,
-				this,
-				getFilterQueryPlan( collection, queryString, null, false ).getParameterMetadata()
-		);
-		filter.setComment( queryString );
-		delayedAfterCompletion();
-		return filter;
-	}
-
-
-	@Override
-	public Object instantiate(String entityName, Serializable id) throws HibernateException {
-		return instantiate( getFactory().getMetamodel().entityPersister( entityName ), id );
+	@Override @Deprecated
+	public Object instantiate(String entityName, Object id) {
+		return instantiate( requireEntityPersister( entityName ), id );
 	}
 
 	/**
 	 * give the interceptor an opportunity to override the default instantiation
 	 */
 	@Override
-	public Object instantiate(EntityPersister persister, Serializable id) throws HibernateException {
+	public Object instantiate(EntityPersister persister, Object id) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
-		Object result = getInterceptor().instantiate(
-				persister.getEntityName(),
-				persister.getEntityMetamodel().getEntityMode(),
-				id
-		);
+		Object result =
+				getInterceptor()
+						.instantiate( persister.getEntityName(), persister.getRepresentationStrategy(), id );
 		if ( result == null ) {
 			result = persister.instantiate( id, this );
 		}
@@ -1607,26 +1552,36 @@ public class SessionImpl
 	}
 
 	@Override
-	public EntityPersister getEntityPersister(final String entityName, final Object object) {
+	public EntityPersister getEntityPersister(final String entityName, final Object entity) {
 		checkOpenOrWaitingForAutoClose();
 		if ( entityName == null ) {
-			return getFactory().getMetamodel().entityPersister( guessEntityName( object ) );
+			return requireEntityPersister( guessEntityName( entity ) );
 		}
 		else {
-			// try block is a hack around fact that currently tuplizers are not
-			// given the opportunity to resolve a subclass entity name.  this
-			// allows the (we assume custom) interceptor the ability to
+			// try block is a hack around fact that currently tuplizers are
+			// not given the opportunity to resolve a subclass entity name.
+			// This allows the (we assume custom) interceptor the ability to
 			// influence this decision if we were not able to based on the
 			// given entityName
 			try {
-				return getFactory().getMetamodel().entityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );
+				return requireEntityPersister( entityName )
+						.getSubclassEntityPersister( entity, getFactory() );
 			}
-			catch (HibernateException e) {
+			catch ( UnknownEntityTypeException uee ) {
 				try {
-					return getEntityPersister( null, object );
+					return getEntityPersister( null, entity );
 				}
-				catch (HibernateException e2) {
-					throw e;
+				catch ( HibernateException e ) {
+					final var entityClass = entity.getClass();
+					final String problem =
+							entityClass.isAnnotationPresent( Entity.class )
+									? "does not belong to this persistence unit"
+									: "is not annotated '@Entity'";
+					throw new UnknownEntityTypeException(
+							uee.getMessage()
+								+ " ('" + entityClass.getSimpleName() + "' " + problem + ")",
+							e
+					);
 				}
 			}
 		}
@@ -1634,334 +1589,43 @@ public class SessionImpl
 
 	// not for internal use:
 	@Override
-	public Serializable getIdentifier(Object object) throws HibernateException {
+	public Object getIdentifier(Object object) {
 		checkOpen();
 		checkTransactionSynchStatus();
-		if ( object instanceof HibernateProxy ) {
-			LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-			if ( li.getSession() != this ) {
-				throw new TransientObjectException( "The proxy was not associated with this session" );
-			}
-			return li.getIdentifier();
+		if ( object == null ) {
+			throw new IllegalArgumentException( "Entity may not be null" );
+		}
+		final var lazyInitializer = extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			checkOwnsProxy( lazyInitializer );
+			return lazyInitializer.getInternalIdentifier();
 		}
 		else {
-			EntityEntry entry = persistenceContext.getEntry( object );
-			if ( entry == null ) {
-				throw new TransientObjectException( "The instance was not associated with this session" );
-			}
-			return entry.getId();
+			return getEntityEntry( object ).getId();
 		}
 	}
 
 	/**
-	 * Get the id value for an object that is actually associated with the session. This
-	 * is a bit stricter than getEntityIdentifierIfNotUnsaved().
+	 * Get the id value for an object that is actually associated with the session.
+	 * This is a bit stricter than
+	 * {@link org.hibernate.engine.internal.ForeignKeys#getEntityIdentifierIfNotUnsaved}.
 	 */
 	@Override
-	public Serializable getContextEntityIdentifier(Object object) {
+	public Object getContextEntityIdentifier(Object object) {
 		checkOpenOrWaitingForAutoClose();
-		if ( object instanceof HibernateProxy ) {
-			return getProxyIdentifier( object );
+		final var lazyInitializer = extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getInternalIdentifier();
 		}
-		else {
-			EntityEntry entry = persistenceContext.getEntry( object );
-			return entry != null ? entry.getId() : null;
-		}
-	}
-
-	private Serializable getProxyIdentifier(Object proxy) {
-		return ( (HibernateProxy) proxy ).getHibernateLazyInitializer().getIdentifier();
-	}
-
-	private FilterQueryPlan getFilterQueryPlan(
-			Object collection,
-			String filter,
-			QueryParameters parameters,
-			boolean shallow) throws HibernateException {
-		if ( collection == null ) {
-			throw new NullPointerException( "null collection passed to filter" );
-		}
-
-		CollectionEntry entry = persistenceContext.getCollectionEntryOrNull( collection );
-		final CollectionPersister roleBeforeFlush = ( entry == null ) ? null : entry.getLoadedPersister();
-
-		FilterQueryPlan plan = null;
-		final Map<String, Filter> enabledFilters = getLoadQueryInfluencers().getEnabledFilters();
-		final SessionFactoryImplementor factory = getFactory();
-		if ( roleBeforeFlush == null ) {
-			// if it was previously unreferenced, we need to flush in order to
-			// get its state into the database in order to execute query
-			flush();
-			entry = persistenceContext.getCollectionEntryOrNull( collection );
-			CollectionPersister roleAfterFlush = ( entry == null ) ? null : entry.getLoadedPersister();
-			if ( roleAfterFlush == null ) {
-				throw new QueryException( "The collection was unreferenced" );
-			}
-			plan = factory.getQueryPlanCache().getFilterQueryPlan(
-					filter,
-					roleAfterFlush.getRole(),
-					shallow,
-					enabledFilters
-			);
-		}
-		else {
-			// otherwise, we only need to flush if there are in-memory changes
-			// to the queried tables
-			plan = factory.getQueryPlanCache().getFilterQueryPlan(
-					filter,
-					roleBeforeFlush.getRole(),
-					shallow,
-					enabledFilters
-			);
-			if ( autoFlushIfRequired( plan.getQuerySpaces() ) ) {
-				// might need to run a different filter entirely after the flush
-				// because the collection role may have changed
-				entry = persistenceContext.getCollectionEntryOrNull( collection );
-				CollectionPersister roleAfterFlush = ( entry == null ) ? null : entry.getLoadedPersister();
-				if ( roleBeforeFlush != roleAfterFlush ) {
-					if ( roleAfterFlush == null ) {
-						throw new QueryException( "The collection was dereferenced" );
-					}
-					plan = factory.getQueryPlanCache().getFilterQueryPlan(
-							filter,
-							roleAfterFlush.getRole(),
-							shallow,
-							enabledFilters
-					);
-				}
+		else if ( isPersistentAttributeInterceptable( object ) ) {
+			if ( asPersistentAttributeInterceptable( object ).$$_hibernate_getInterceptor()
+					instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor ) {
+				return lazinessInterceptor.getIdentifier();
 			}
 		}
 
-		if ( parameters != null ) {
-			parameters.getNamedParameters().put(
-					CollectionFilterKeyParameterSpecification.PARAM_KEY,
-					new TypedValue(
-							entry.getLoadedPersister().getKeyType(),
-							entry.getLoadedKey()
-					)
-			);
-		}
-
-		return plan;
-	}
-
-	@Override
-	public List listFilter(Object collection, String filter, QueryParameters queryParameters) {
-		checkOpenOrWaitingForAutoClose();
-		pulseTransactionCoordinator();
-		FilterQueryPlan plan = getFilterQueryPlan( collection, filter, queryParameters, false );
-		List results = Collections.EMPTY_LIST;
-
-		boolean success = false;
-		dontFlushFromFind++;   //stops flush being called multiple times if this method is recursively called
-		try {
-			results = plan.performList( queryParameters, this );
-			success = true;
-		}
-		finally {
-			dontFlushFromFind--;
-			afterOperation( success );
-			delayedAfterCompletion();
-		}
-		return results;
-	}
-
-	@Override
-	public Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters) {
-		checkOpenOrWaitingForAutoClose();
-		pulseTransactionCoordinator();
-		FilterQueryPlan plan = getFilterQueryPlan( collection, filter, queryParameters, true );
-		Iterator itr = plan.performIterate( queryParameters, this );
-		delayedAfterCompletion();
-		return itr;
-	}
-
-	@Override
-	public Criteria createCriteria(Class persistentClass, String alias) {
-		DeprecationLogger.DEPRECATION_LOGGER.deprecatedLegacyCriteria();
-		checkOpen();
-		checkTransactionSynchStatus();
-		return new CriteriaImpl( persistentClass.getName(), alias, this );
-	}
-
-	@Override
-	public Criteria createCriteria(String entityName, String alias) {
-		DeprecationLogger.DEPRECATION_LOGGER.deprecatedLegacyCriteria();
-		checkOpen();
-		checkTransactionSynchStatus();
-		return new CriteriaImpl( entityName, alias, this );
-	}
-
-	@Override
-	public Criteria createCriteria(Class persistentClass) {
-		DeprecationLogger.DEPRECATION_LOGGER.deprecatedLegacyCriteria();
-		checkOpen();
-		checkTransactionSynchStatus();
-		return new CriteriaImpl( persistentClass.getName(), this );
-	}
-
-	@Override
-	public Criteria createCriteria(String entityName) {
-		DeprecationLogger.DEPRECATION_LOGGER.deprecatedLegacyCriteria();
-		checkOpen();
-		checkTransactionSynchStatus();
-		return new CriteriaImpl( entityName, this );
-	}
-
-	@Override
-	public ScrollableResultsImplementor scroll(Criteria criteria, ScrollMode scrollMode) {
-		// TODO: Is this guaranteed to always be CriteriaImpl?
-		CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
-
-		checkOpenOrWaitingForAutoClose();
-		pulseTransactionCoordinator();
-
-		String entityName = criteriaImpl.getEntityOrClassName();
-		CriteriaLoader loader = new CriteriaLoader(
-				getOuterJoinLoadable( entityName ),
-				getFactory(),
-				criteriaImpl,
-				entityName,
-				getLoadQueryInfluencers()
-		);
-		autoFlushIfRequired( loader.getQuerySpaces() );
-		dontFlushFromFind++;
-		try {
-			return loader.scroll( this, scrollMode );
-		}
-		finally {
-			delayedAfterCompletion();
-			dontFlushFromFind--;
-		}
-	}
-
-	@Override
-	public List list(Criteria criteria) throws HibernateException {
-		// TODO: Is this guaranteed to always be CriteriaImpl?
-		CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
-		if ( criteriaImpl.getMaxResults() != null && criteriaImpl.getMaxResults() == 0 ) {
-			return Collections.EMPTY_LIST;
-		}
-
-		final NaturalIdLoadAccess naturalIdLoadAccess = this.tryNaturalIdLoadAccess( criteriaImpl );
-		if ( naturalIdLoadAccess != null ) {
-			// EARLY EXIT!
-			return Arrays.asList( naturalIdLoadAccess.load() );
-		}
-
-
-		checkOpenOrWaitingForAutoClose();
-//		checkTransactionSynchStatus();
-
-		String[] implementors = getFactory().getMetamodel().getImplementors( criteriaImpl.getEntityOrClassName() );
-		int size = implementors.length;
-
-		CriteriaLoader[] loaders = new CriteriaLoader[size];
-		Set spaces = new HashSet();
-		for ( int i = 0; i < size; i++ ) {
-
-			loaders[i] = new CriteriaLoader(
-					getOuterJoinLoadable( implementors[i] ),
-					getFactory(),
-					criteriaImpl,
-					implementors[i],
-					getLoadQueryInfluencers()
-			);
-
-			spaces.addAll( loaders[i].getQuerySpaces() );
-
-		}
-
-		autoFlushIfRequired( spaces );
-
-		List results = Collections.EMPTY_LIST;
-		dontFlushFromFind++;
-		boolean success = false;
-		try {
-			for ( int i = 0; i < size; i++ ) {
-				final List currentResults = loaders[i].list( this );
-				currentResults.addAll( results );
-				results = currentResults;
-			}
-			success = true;
-		}
-		finally {
-			dontFlushFromFind--;
-			afterOperation( success );
-			delayedAfterCompletion();
-		}
-
-		return results;
-	}
-
-	/**
-	 * Checks to see if the CriteriaImpl is a naturalId lookup that can be done via
-	 * NaturalIdLoadAccess
-	 *
-	 * @param criteria The criteria to check as a complete natural identifier lookup.
-	 *
-	 * @return A fully configured NaturalIdLoadAccess or null, if null is returned the standard CriteriaImpl execution
-	 * should be performed
-	 */
-	private NaturalIdLoadAccess tryNaturalIdLoadAccess(CriteriaImpl criteria) {
-		// See if the criteria lookup is by naturalId
-		if ( !criteria.isLookupByNaturalKey() ) {
-			return null;
-		}
-
-		final String entityName = criteria.getEntityOrClassName();
-		final EntityPersister entityPersister = getFactory().getMetamodel().entityPersister( entityName );
-
-		// Verify the entity actually has a natural id, needed for legacy support as NaturalIdentifier criteria
-		// queries did no natural id validation
-		if ( !entityPersister.hasNaturalIdentifier() ) {
-			return null;
-		}
-
-		// Since isLookupByNaturalKey is true there can be only one CriterionEntry and getCriterion() will
-		// return an instance of NaturalIdentifier
-		final CriterionEntry criterionEntry = criteria.iterateExpressionEntries().next();
-		final NaturalIdentifier naturalIdentifier = (NaturalIdentifier) criterionEntry.getCriterion();
-
-		final Map<String, Object> naturalIdValues = naturalIdentifier.getNaturalIdValues();
-		final int[] naturalIdentifierProperties = entityPersister.getNaturalIdentifierProperties();
-
-		// Verify the NaturalIdentifier criterion includes all naturalId properties, first check that the property counts match
-		if ( naturalIdentifierProperties.length != naturalIdValues.size() ) {
-			return null;
-		}
-
-		final String[] propertyNames = entityPersister.getPropertyNames();
-		final NaturalIdLoadAccess naturalIdLoader = this.byNaturalId( entityName );
-
-		// Build NaturalIdLoadAccess and in the process verify all naturalId properties were specified
-		for ( int naturalIdentifierProperty : naturalIdentifierProperties ) {
-			final String naturalIdProperty = propertyNames[naturalIdentifierProperty];
-			final Object naturalIdValue = naturalIdValues.get( naturalIdProperty );
-
-			if ( naturalIdValue == null ) {
-				// A NaturalId property is missing from the criteria query, can't use NaturalIdLoadAccess
-				return null;
-			}
-
-			naturalIdLoader.using( naturalIdProperty, naturalIdValue );
-		}
-
-		// Criteria query contains a valid naturalId, use the new API
-		log.warn(
-				"Session.byNaturalId(" + entityName
-						+ ") should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria"
-		);
-
-		return naturalIdLoader;
-	}
-
-	private OuterJoinLoadable getOuterJoinLoadable(String entityName) throws MappingException {
-		EntityPersister persister = getFactory().getMetamodel().entityPersister( entityName );
-		if ( !( persister instanceof OuterJoinLoadable ) ) {
-			throw new MappingException( "class persister is not OuterJoinLoadable: " + entityName );
-		}
-		return (OuterJoinLoadable) persister;
+		final var entry = persistenceContext.getEntry( object );
+		return entry != null ? entry.getId() : null;
 	}
 
 	@Override
@@ -1974,56 +1638,60 @@ public class SessionImpl
 		}
 
 		try {
-			if ( object instanceof HibernateProxy ) {
-				//do not use proxiesByKey, since not all
-				//proxies that point to this session's
-				//instances are in that collection!
-				LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-				if ( li.isUninitialized() ) {
-					//if it is an uninitialized proxy, pointing
-					//with this session, then when it is accessed,
-					//the underlying instance will be "contained"
-					return li.getSession() == this;
+			final var lazyInitializer = extractLazyInitializer( object );
+			if ( lazyInitializer != null ) {
+				// don't use proxiesByKey, since not all
+				// proxies that point to this session's
+				// instances are in that collection!
+				if ( lazyInitializer.isUninitialized() ) {
+					// if it's an uninitialized proxy associated
+					// with this session, then when it is accessed,
+					// the underlying instance will be "contained"
+					return lazyInitializer.getSession() == this;
 				}
 				else {
-					//if it is initialized, see if the underlying
-					//instance is contained, since we need to
-					//account for the fact that it might have been
-					//evicted
-					object = li.getImplementation();
+					// if it's initialized, see if the underlying
+					// instance is contained, since we need to
+					// account for the fact that it might have been
+					// evicted
+					object = lazyInitializer.getImplementation();
 				}
 			}
 
 			// A session is considered to contain an entity only if the entity has
 			// an entry in the session's persistence context and the entry reports
 			// that the entity has not been removed
-			EntityEntry entry = persistenceContext.getEntry( object );
+			final var entry = persistenceContext.getEntry( object );
 			delayedAfterCompletion();
 
 			if ( entry == null ) {
-				if ( !HibernateProxy.class.isInstance( object ) && persistenceContext.getEntry( object ) == null ) {
+				if ( lazyInitializer == null && persistenceContext.getEntry( object ) == null ) {
 					// check if it is even an entity -> if not throw an exception (per JPA)
 					try {
 						final String entityName = getEntityNameResolver().resolveEntityName( object );
 						if ( entityName == null ) {
-							throw new IllegalArgumentException( "Could not resolve entity-name [" + object + "]" );
+							throw new IllegalArgumentException( "Could not resolve entity name for class '"
+									+ object.getClass() + "'" );
 						}
-						getSessionFactory().getMetamodel().entityPersister( entityName );
+						else {
+							requireEntityPersister( entityName );
+						}
 					}
-					catch (HibernateException e) {
-						throw new IllegalArgumentException( "Not an entity [" + object.getClass() + "]", e );
+					catch ( HibernateException e ) {
+						throw new IllegalArgumentException( "Class '" + object.getClass()
+								+ "' is not an entity class", e );
 					}
 				}
 				return false;
 			}
 			else {
-				return entry.getStatus() != Status.DELETED && entry.getStatus() != Status.GONE;
+				return !entry.getStatus().isDeletedOrGone();
 			}
 		}
-		catch (MappingException e) {
+		catch ( MappingException e ) {
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
-		catch (RuntimeException e) {
+		catch ( RuntimeException e ) {
 			throw getExceptionConverter().convert( e );
 		}
 	}
@@ -2038,46 +1706,46 @@ public class SessionImpl
 		}
 
 		try {
-			if ( !HibernateProxy.class.isInstance( object ) && persistenceContext.getEntry( object ) == null ) {
+			final var lazyInitializer = extractLazyInitializer( object );
+			if ( lazyInitializer == null && persistenceContext.getEntry( object ) == null ) {
 				// check if it is an entity -> if not throw an exception (per JPA)
 				try {
-					getSessionFactory().getMetamodel().entityPersister( entityName );
+					requireEntityPersister( entityName );
 				}
 				catch (HibernateException e) {
 					throw new IllegalArgumentException( "Not an entity [" + entityName + "] : " + object );
 				}
 			}
 
-			if ( object instanceof HibernateProxy ) {
+			if ( lazyInitializer != null ) {
 				//do not use proxiesByKey, since not all
 				//proxies that point to this session's
 				//instances are in that collection!
-				LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-				if ( li.isUninitialized() ) {
+				if ( lazyInitializer.isUninitialized() ) {
 					//if it is an uninitialized proxy, pointing
 					//with this session, then when it is accessed,
 					//the underlying instance will be "contained"
-					return li.getSession() == this;
+					return lazyInitializer.getSession() == this;
 				}
 				else {
 					//if it is initialized, see if the underlying
 					//instance is contained, since we need to
 					//account for the fact that it might have been
 					//evicted
-					object = li.getImplementation();
+					object = lazyInitializer.getImplementation();
 				}
 			}
 			// A session is considered to contain an entity only if the entity has
 			// an entry in the session's persistence context and the entry reports
 			// that the entity has not been removed
-			EntityEntry entry = persistenceContext.getEntry( object );
+			final var entry = persistenceContext.getEntry( object );
 			delayedAfterCompletion();
-			return entry != null && entry.getStatus() != Status.DELETED && entry.getStatus() != Status.GONE;
+			return entry != null && !entry.getStatus().isDeletedOrGone();
 		}
-		catch (MappingException e) {
+		catch ( MappingException e ) {
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
-		catch (RuntimeException e) {
+		catch ( RuntimeException e ) {
 			throw getExceptionConverter().convert( e );
 		}
 	}
@@ -2097,159 +1765,139 @@ public class SessionImpl
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureCall(String procedureName, Class... resultClasses) {
+	public ProcedureCall createStoredProcedureCall(String procedureName, Class<?>... resultClasses) {
 		checkOpen();
 //		checkTransactionSynchStatus();
 		return super.createStoredProcedureCall( procedureName, resultClasses );
 	}
 
 	@Override
-	public ScrollableResultsImplementor scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) {
-		checkOpenOrWaitingForAutoClose();
-//		checkTransactionSynchStatus();
-
-		if ( log.isTraceEnabled() ) {
-			log.tracev( "Scroll SQL query: {0}", customQuery.getSQL() );
-		}
-
-		CustomLoader loader = getFactory().getQueryPlanCache().getNativeQueryInterpreter().createCustomLoader( customQuery, getFactory() );
-
-		autoFlushIfRequired( loader.getQuerySpaces() );
-
-		dontFlushFromFind++; //stops flush being called multiple times if this method is recursively called
-		try {
-			return loader.scroll( queryParameters, this );
-		}
-		finally {
-			delayedAfterCompletion();
-			dontFlushFromFind--;
-		}
-	}
-
-	// basically just an adapted copy of find(CriteriaImpl)
-	@Override
-	public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) {
-		checkOpenOrWaitingForAutoClose();
-//		checkTransactionSynchStatus();
-
-		if ( log.isTraceEnabled() ) {
-			log.tracev( "SQL query: {0}", customQuery.getSQL() );
-		}
-
-		CustomLoader loader = getFactory().getQueryPlanCache().getNativeQueryInterpreter().createCustomLoader( customQuery, getFactory() );
-
-		autoFlushIfRequired( loader.getQuerySpaces() );
-
-		dontFlushFromFind++;
-		boolean success = false;
-		try {
-			List results = loader.list( this, queryParameters );
-			success = true;
-			return results;
-		}
-		finally {
-			dontFlushFromFind--;
-			delayedAfterCompletion();
-			afterOperation( success );
-		}
+	public <T> QueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery) {
+		return createQuery( (CriteriaQuery<T>) selectQuery );
 	}
 
 	@Override
-	public SessionFactoryImplementor getSessionFactory() {
-//		checkTransactionSynchStatus();
-		return getFactory();
-	}
-
-	@Override
-	public void initializeCollection(PersistentCollection collection, boolean writing) {
+	public void initializeCollection(PersistentCollection<?> collection, boolean writing) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
-		InitializeCollectionEvent event = new InitializeCollectionEvent( collection, this );
-		fastSessionServices.eventListenerGroup_INIT_COLLECTION.fireEventOnEachListener( event, InitializeCollectionEventListener::onInitializeCollection );
+		eventListenerGroups.eventListenerGroup_INIT_COLLECTION
+				.fireEventOnEachListener( new InitializeCollectionEvent( collection, this ),
+						InitializeCollectionEventListener::onInitializeCollection );
 		delayedAfterCompletion();
 	}
 
 	@Override
 	public String bestGuessEntityName(Object object) {
-		if ( object instanceof HibernateProxy ) {
-			LazyInitializer initializer = ( (HibernateProxy) object ).getHibernateLazyInitializer();
+		final var lazyInitializer = extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
 			// it is possible for this method to be called during flush processing,
 			// so make certain that we do not accidentally initialize an uninitialized proxy
-			if ( initializer.isUninitialized() ) {
-				return initializer.getEntityName();
+			if ( lazyInitializer.isUninitialized() ) {
+				return lazyInitializer.getEntityName();
 			}
-			object = initializer.getImplementation();
+			object = lazyInitializer.getImplementation();
 		}
-		EntityEntry entry = persistenceContext.getEntry( object );
-		if ( entry == null ) {
-			return guessEntityName( object );
+		final var entry = persistenceContext.getEntry( object );
+		return entry == null
+				? guessEntityName( object )
+				: entry.getPersister().getEntityName();
+	}
+
+	@Override
+	public String bestGuessEntityName(Object object, EntityEntry entry) {
+		final var lazyInitializer = extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			// it is possible for this method to be called during flush processing,
+			// so make certain that we do not accidentally initialize an uninitialized proxy
+			if ( lazyInitializer.isUninitialized() ) {
+				return lazyInitializer.getEntityName();
+			}
+			object = lazyInitializer.getImplementation();
 		}
-		else {
-			return entry.getPersister().getEntityName();
-		}
+		return entry == null
+				? guessEntityName( object )
+				: entry.getPersister().getEntityName();
 	}
 
 	@Override
 	public String getEntityName(Object object) {
 		checkOpen();
 //		checkTransactionSynchStatus();
-		if ( object instanceof HibernateProxy ) {
-			if ( !persistenceContext.containsProxy( object ) ) {
-				throw new TransientObjectException( "proxy was not associated with the session" );
-			}
-			object = ( (HibernateProxy) object ).getHibernateLazyInitializer().getImplementation();
+
+		if ( object == null ) {
+			throw new IllegalArgumentException( "Entity may not be null" );
 		}
 
-		EntityEntry entry = persistenceContext.getEntry( object );
-		if ( entry == null ) {
-			throwTransientObjectException( object );
+		final var lazyInitializer = extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			checkOwnsProxy( lazyInitializer );
+			object = lazyInitializer.getImplementation();
 		}
-		return entry.getPersister().getEntityName();
+
+		return getEntityEntry( object ).getPersister().getEntityName();
 	}
 
-	private void throwTransientObjectException(Object object) throws HibernateException {
-		throw new TransientObjectException(
-				"object references an unsaved transient instance - save the transient instance before flushing: " +
-						guessEntityName( object )
-		);
+	private void checkOwnsProxy(LazyInitializer lazyInitializer) {
+		if ( lazyInitializer.getSession() != this ) {
+			throw new IllegalArgumentException( "Given proxy is not associated with the persistence context" );
+		}
+	}
+
+	private EntityEntry getEntityEntry(Object object) {
+		final var entry = persistenceContext.getEntry( object );
+		if ( entry == null ) {
+			throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
+		}
+		return entry;
+	}
+
+	@Override @SuppressWarnings("unchecked")
+	public <T> T getReference(T object) {
+		checkOpen();
+		final var lazyInitializer = extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			return (T) getReference( lazyInitializer.getPersistentClass(),
+					lazyInitializer.getInternalIdentifier() );
+		}
+		else {
+			final var persister = getEntityPersister( null, object );
+			return (T) getReference( persister.getMappedClass(),
+					persister.getIdentifier(object, this) );
+		}
 	}
 
 	@Override
-	public String guessEntityName(Object object) throws HibernateException {
+	public String guessEntityName(Object object) {
 		checkOpenOrWaitingForAutoClose();
 		return getEntityNameResolver().resolveEntityName( object );
 	}
 
 	@Override
-	public void cancelQuery() throws HibernateException {
+	public void cancelQuery() {
 		checkOpen();
 		getJdbcCoordinator().cancelLastQuery();
 	}
 
-
-	@Override
-	public int getDontFlushFromFind() {
-		return dontFlushFromFind;
-	}
-
 	@Override
 	public String toString() {
-		StringBuilder buf = new StringBuilder( 500 )
-				.append( "SessionImpl(" ).append( System.identityHashCode( this ) );
+		final var string =
+				new StringBuilder( 500 )
+						.append( "SessionImpl(" )
+						.append( System.identityHashCode( this ) );
 		if ( !isClosed() ) {
-			if ( log.isTraceEnabled() ) {
-				buf.append( persistenceContext )
+			if ( SESSION_LOGGER.isTraceEnabled() ) {
+				string.append( persistenceContext )
 					.append( ";" )
 					.append( actionQueue );
 			}
 			else {
-				buf.append( "<open>" );
+				string.append( "<open>" );
 			}
 		}
 		else {
-			buf.append( "<closed>" );
+			string.append( "<closed>" );
 		}
-		return buf.append( ')' ).toString();
+		return string.append( ')' ).toString();
 	}
 
 	@Override
@@ -2284,12 +1932,20 @@ public class SessionImpl
 	}
 
 	@Override
+	public EventSource asEventSource() {
+		return this;
+	}
+
+	@Override
 	public boolean isDefaultReadOnly() {
 		return persistenceContext.isDefaultReadOnly();
 	}
 
 	@Override
 	public void setDefaultReadOnly(boolean defaultReadOnly) {
+		if ( !defaultReadOnly && isReadOnly() ) {
+			throw new SessionException( "Session was created in read-only mode" );
+		}
 		persistenceContext.setDefaultReadOnly( defaultReadOnly );
 	}
 
@@ -2308,6 +1964,26 @@ public class SessionImpl
 	}
 
 	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return getCacheMode().getJpaStoreMode();
+	}
+
+	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return getCacheMode().getJpaRetrieveMode();
+	}
+
+	@Override
+	public void setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		setCacheMode( fromJpaModes( getCacheMode().getJpaRetrieveMode(), cacheStoreMode ) );
+	}
+
+	@Override
+	public void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		setCacheMode( fromJpaModes( cacheRetrieveMode, getCacheMode().getJpaStoreMode() ) );
+	}
+
+	@Override
 	public void afterScrollOperation() {
 		// nothing to do in a stateful session
 	}
@@ -2316,29 +1992,6 @@ public class SessionImpl
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
 		return loadQueryInfluencers;
 	}
-
-	// filter support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public Filter getEnabledFilter(String filterName) {
-		pulseTransactionCoordinator();
-		return loadQueryInfluencers.getEnabledFilter( filterName );
-	}
-
-	@Override
-	public Filter enableFilter(String filterName) {
-		checkOpen();
-		pulseTransactionCoordinator();
-		return loadQueryInfluencers.enableFilter( filterName );
-	}
-
-	@Override
-	public void disableFilter(String filterName) {
-		checkOpen();
-		pulseTransactionCoordinator();
-		loadQueryInfluencers.disableFilter( filterName );
-	}
-
 
 	// fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2358,273 +2011,66 @@ public class SessionImpl
 	}
 
 	@Override
-	public TypeHelper getTypeHelper() {
-		return getSessionFactory().getTypeHelper();
+	public void setSubselectFetchingEnabled(boolean enabled) {
+		loadQueryInfluencers.setSubselectFetchEnabled( enabled );
 	}
 
 	@Override
-	public LobHelper getLobHelper() {
-		if ( lobHelper == null ) {
-			lobHelper = new LobHelperImpl( this );
-		}
-		return lobHelper;
+	public boolean isSubselectFetchingEnabled() {
+		return loadQueryInfluencers.getSubselectFetchEnabled();
 	}
 
-	private transient LobHelperImpl lobHelper;
+	@Override
+	public void setFetchBatchSize(int batchSize) {
+		loadQueryInfluencers.setBatchSize( batchSize );
+	}
 
-	private Transaction getTransactionIfAccessible() {
-		// We do not want an exception to be thrown if the transaction
-		// is not accessible. If the transaction is not accessible,
-		// then return null.
-		return fastSessionServices.isJtaTransactionAccessible ? accessTransaction() : null;
+	@Override
+	public int getFetchBatchSize() {
+		return loadQueryInfluencers.getBatchSize();
+	}
+
+	@Override @Deprecated(forRemoval = true)
+	public LobHelper getLobHelper() {
+		return Hibernate.getLobHelper();
 	}
 
 	@Override
 	public void beforeTransactionCompletion() {
-		log.trace( "SessionImpl#beforeTransactionCompletion()" );
+		SESSION_LOGGER.beforeTransactionCompletion();
 		flushBeforeTransactionCompletion();
 		actionQueue.beforeTransactionCompletion();
-		try {
-			getInterceptor().beforeTransactionCompletion( getTransactionIfAccessible() );
-		}
-		catch (Throwable t) {
-			log.exceptionInBeforeTransactionCompletionInterceptor( t );
-		}
+		beforeTransactionCompletionEvents();
 		super.beforeTransactionCompletion();
 	}
 
 	@Override
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
-		if ( log.isTraceEnabled() ) {
-			log.tracef( "SessionImpl#afterTransactionCompletion(successful=%s, delayed=%s)", successful, delayed );
+		if ( SESSION_LOGGER.isTraceEnabled() ) {
+			SESSION_LOGGER.afterTransactionCompletion( successful, delayed );
 		}
 
-		if ( !isClosed() || waitingForAutoClose ) {
-			if ( autoClear ||!successful ) {
-				internalClear();
-			}
+		final boolean notClosed = isOpenOrWaitingForAutoClose();
+
+		if ( notClosed && (!successful || autoClear) ) {
+			internalClear();
 		}
 
 		persistenceContext.afterTransactionCompletion();
 		actionQueue.afterTransactionCompletion( successful );
 
-		getEventListenerManager().transactionCompletion( successful );
+		afterTransactionCompletionEvents( successful );
 
-		final StatisticsImplementor statistics = getFactory().getStatistics();
-		if ( statistics.isStatisticsEnabled() ) {
-			statistics.endTransaction( successful );
-		}
-
-		try {
-			getInterceptor().afterTransactionCompletion( getTransactionIfAccessible() );
-		}
-		catch (Throwable t) {
-			log.exceptionInAfterTransactionCompletionInterceptor( t );
-		}
-
-		if ( !delayed ) {
-			if ( shouldAutoClose() && (!isClosed() || waitingForAutoClose) ) {
-				managedClose();
-			}
+		if ( !delayed && notClosed && shouldAutoClose() ) {
+			managedClose();
 		}
 
 		super.afterTransactionCompletion( successful, delayed );
 	}
 
-	private static class LobHelperImpl implements LobHelper {
-		private final SessionImpl session;
-
-		private LobHelperImpl(SessionImpl session) {
-			this.session = session;
-		}
-
-		@Override
-		public Blob createBlob(byte[] bytes) {
-			return lobCreator().createBlob( bytes );
-		}
-
-		private LobCreator lobCreator() {
-			// Always use NonContextualLobCreator.  If ContextualLobCreator is
-			// used both here and in WrapperOptions,
-			return NonContextualLobCreator.INSTANCE;
-		}
-
-		@Override
-		public Blob createBlob(InputStream stream, long length) {
-			return lobCreator().createBlob( stream, length );
-		}
-
-		@Override
-		public Clob createClob(String string) {
-			return lobCreator().createClob( string );
-		}
-
-		@Override
-		public Clob createClob(Reader reader, long length) {
-			return lobCreator().createClob( reader, length );
-		}
-
-		@Override
-		public NClob createNClob(String string) {
-			return lobCreator().createNClob( string );
-		}
-
-		@Override
-		public NClob createNClob(Reader reader, long length) {
-			return lobCreator().createNClob( reader, length );
-		}
-	}
-
-	private static class SharedSessionBuilderImpl<T extends SharedSessionBuilder>
-			extends SessionFactoryImpl.SessionBuilderImpl<T>
-			implements SharedSessionBuilder<T>, SharedSessionCreationOptions {
-		private final SessionImpl session;
-		private boolean shareTransactionContext;
-
-		private SharedSessionBuilderImpl(SessionImpl session) {
-			super( (SessionFactoryImpl) session.getFactory() );
-			this.session = session;
-			super.tenantIdentifier( session.getTenantIdentifier() );
-		}
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// SharedSessionBuilder
-
-
-		@Override
-		public T tenantIdentifier(String tenantIdentifier) {
-			// todo : is this always true?  Or just in the case of sharing JDBC resources?
-			throw new SessionException( "Cannot redefine tenant identifier on child session" );
-		}
-
-		@Override
-		public T interceptor() {
-			return interceptor( session.getInterceptor() );
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public T connection() {
-			this.shareTransactionContext = true;
-			return (T) this;
-		}
-
-		@Override
-		public T connectionReleaseMode() {
-			return connectionReleaseMode( session.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode().getReleaseMode() );
-		}
-
-		@Override
-		public T connectionHandlingMode() {
-			return connectionHandlingMode( session.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode() );
-		}
-
-		@Override
-		public T autoJoinTransactions() {
-			return autoJoinTransactions( session.isAutoCloseSessionEnabled() );
-		}
-
-		@Override
-		public T flushMode() {
-			return flushMode( session.getHibernateFlushMode() );
-		}
-
-		@Override
-		public T autoClose() {
-			return autoClose( session.autoClose );
-		}
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// SharedSessionCreationOptions
-
-		@Override
-		public boolean isTransactionCoordinatorShared() {
-			return shareTransactionContext;
-		}
-
-		@Override
-		public TransactionCoordinator getTransactionCoordinator() {
-			return shareTransactionContext ? session.getTransactionCoordinator() : null;
-		}
-
-		@Override
-		public JdbcCoordinator getJdbcCoordinator() {
-			return shareTransactionContext ? session.getJdbcCoordinator() : null;
-		}
-
-		@Override
-		public TransactionImplementor getTransaction() {
-			return shareTransactionContext ? session.getCurrentTransaction() : null;
-		}
-
-		@Override
-		public ActionQueue.TransactionCompletionProcesses getTransactionCompletionProcesses() {
-			return shareTransactionContext ?
-					session.getActionQueue().getTransactionCompletionProcesses() :
-					null;
-		}
-
-		@Override
-		public boolean isQueryParametersValidationEnabled() {
-			return session.isQueryParametersValidationEnabled();
-		}
-	}
-
-	private class LockRequestImpl implements LockRequest {
-		private final LockOptions lockOptions;
-
-		private LockRequestImpl(LockOptions lo) {
-			lockOptions = new LockOptions();
-			LockOptions.copy( lo, lockOptions );
-		}
-
-		@Override
-		public LockMode getLockMode() {
-			return lockOptions.getLockMode();
-		}
-
-		@Override
-		public LockRequest setLockMode(LockMode lockMode) {
-			lockOptions.setLockMode( lockMode );
-			return this;
-		}
-
-		@Override
-		public int getTimeOut() {
-			return lockOptions.getTimeOut();
-		}
-
-		@Override
-		public LockRequest setTimeOut(int timeout) {
-			lockOptions.setTimeOut( timeout );
-			return this;
-		}
-
-		@Override
-		public boolean getScope() {
-			return lockOptions.getScope();
-		}
-
-		@Override
-		public LockRequest setScope(boolean scope) {
-			lockOptions.setScope( scope );
-			return this;
-		}
-
-		@Override
-		public void lock(String entityName, Object object) throws HibernateException {
-			fireLock( entityName, object, lockOptions );
-		}
-
-		@Override
-		public void lock(Object object) throws HibernateException {
-			fireLock( object, lockOptions );
-		}
-	}
-
 	@Override
 	protected void addSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
-		this.transactionObserver = new TransactionObserver() {
+		transactionObserver = new TransactionObserver() {
 			@Override
 			public void afterBegin() {
 			}
@@ -2635,12 +2081,7 @@ public class SessionImpl
 					managedFlush();
 				}
 				actionQueue.beforeTransactionCompletion();
-				try {
-					getInterceptor().beforeTransactionCompletion( getTransactionIfAccessible() );
-				}
-				catch (Throwable t) {
-					log.exceptionInBeforeTransactionCompletionInterceptor( t );
-				}
+				beforeTransactionCompletionEvents();
 			}
 
 			@Override
@@ -2651,581 +2092,13 @@ public class SessionImpl
 				}
 			}
 		};
-		transactionCoordinator.addObserver(transactionObserver);
+		transactionCoordinator.addObserver( transactionObserver );
 	}
 
 	@Override
 	protected void removeSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
 		super.removeSharedSessionTransactionObserver( transactionCoordinator );
 		transactionCoordinator.removeObserver( transactionObserver );
-	}
-
-	private class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
-		private final EntityPersister entityPersister;
-
-		private LockOptions lockOptions;
-		private CacheMode cacheMode;
-		private RootGraphImplementor<T> rootGraph;
-		private GraphSemantic graphSemantic;
-
-		private IdentifierLoadAccessImpl(EntityPersister entityPersister) {
-			this.entityPersister = entityPersister;
-		}
-
-		private IdentifierLoadAccessImpl(String entityName) {
-			this( locateEntityPersister( entityName ) );
-		}
-
-		private IdentifierLoadAccessImpl(Class<T> entityClass) {
-			this( locateEntityPersister( entityClass ) );
-		}
-
-		@Override
-		public final IdentifierLoadAccessImpl<T> with(LockOptions lockOptions) {
-			this.lockOptions = lockOptions;
-			return this;
-		}
-
-		@Override
-		public IdentifierLoadAccess<T> with(CacheMode cacheMode) {
-			this.cacheMode = cacheMode;
-			return this;
-		}
-
-		@Override
-		public IdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic) {
-			this.rootGraph = (RootGraphImplementor<T>) graph;
-			this.graphSemantic = semantic;
-			return this;
-		}
-
-		@Override
-		public final T getReference(Serializable id) {
-			return perform( () -> doGetReference( id ) );
-		}
-
-		protected T perform(Supplier<T> executor) {
-			CacheMode sessionCacheMode = getCacheMode();
-			boolean cacheModeChanged = false;
-			if ( cacheMode != null ) {
-				// naive check for now...
-				// todo : account for "conceptually equal"
-				if ( cacheMode != sessionCacheMode ) {
-					setCacheMode( cacheMode );
-					cacheModeChanged = true;
-				}
-			}
-
-			try {
-				if ( graphSemantic != null ) {
-					if ( rootGraph == null ) {
-						throw new IllegalArgumentException( "Graph semantic specified, but no RootGraph was supplied" );
-					}
-					loadQueryInfluencers.getEffectiveEntityGraph().applyGraph( rootGraph, graphSemantic );
-				}
-
-				try {
-					return executor.get();
-				}
-				finally {
-					if ( graphSemantic != null ) {
-						loadQueryInfluencers.getEffectiveEntityGraph().clear();
-					}
-				}
-			}
-			finally {
-				if ( cacheModeChanged ) {
-					// change it back
-					setCacheMode( sessionCacheMode );
-				}
-			}
-		}
-
-		@SuppressWarnings("unchecked")
-		protected T doGetReference(Serializable id) {
-			if ( this.lockOptions != null ) {
-				LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, SessionImpl.this, getReadOnlyFromLoadQueryInfluencers() );
-				fireLoad( event, LoadEventListener.LOAD );
-				return (T) event.getResult();
-			}
-
-			LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), false, SessionImpl.this, getReadOnlyFromLoadQueryInfluencers() );
-			boolean success = false;
-			try {
-				fireLoad( event, LoadEventListener.LOAD );
-				if ( event.getResult() == null ) {
-					getFactory().getEntityNotFoundDelegate().handleEntityNotFound(
-							entityPersister.getEntityName(),
-							id
-					);
-				}
-				success = true;
-				return (T) event.getResult();
-			}
-			finally {
-				afterOperation( success );
-			}
-		}
-
-		@Override
-		public final T load(Serializable id) {
-			return perform( () -> doLoad( id ) );
-		}
-
-		@Override
-		public Optional<T> loadOptional(Serializable id) {
-			return Optional.ofNullable( perform( () -> doLoad( id ) ) );
-		}
-
-		@SuppressWarnings("unchecked")
-		protected final T doLoad(Serializable id) {
-			if ( this.lockOptions != null ) {
-				LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, SessionImpl.this, getReadOnlyFromLoadQueryInfluencers() );
-				fireLoad( event, LoadEventListener.GET );
-
-				final Object result = event.getResult();
-				initializeIfNecessary( result );
-
-				return (T) result;
-			}
-
-			LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), false, SessionImpl.this, getReadOnlyFromLoadQueryInfluencers() );
-			boolean success = false;
-			try {
-				fireLoad( event, LoadEventListener.GET );
-				success = true;
-			}
-			catch (ObjectNotFoundException e) {
-				// if session cache contains proxy for non-existing object
-			}
-			finally {
-				afterOperation( success );
-			}
-
-			final Object result = event.getResult();
-			initializeIfNecessary( result );
-
-			return (T) result;
-		}
-
-		private void initializeIfNecessary(Object result) {
-			if ( result == null ) {
-				return;
-			}
-
-			if ( result instanceof HibernateProxy ) {
-				final HibernateProxy hibernateProxy = (HibernateProxy) result;
-				final LazyInitializer initializer = hibernateProxy.getHibernateLazyInitializer();
-				if ( initializer.isUninitialized() ) {
-					initializer.initialize();
-				}
-				return;
-			}
-
-			final BytecodeEnhancementMetadata enhancementMetadata = entityPersister.getEntityMetamodel().getBytecodeEnhancementMetadata();
-			if ( ! enhancementMetadata.isEnhancedForLazyLoading() ) {
-				return;
-			}
-
-			final BytecodeLazyAttributeInterceptor interceptor = enhancementMetadata.extractLazyInterceptor(result);
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( result, null );
-			}
-		}
-	}
-
-	private class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, MultiLoadOptions {
-		private final EntityPersister entityPersister;
-
-		private LockOptions lockOptions;
-		private CacheMode cacheMode;
-
-		private RootGraphImplementor<T> rootGraph;
-		private GraphSemantic graphSemantic;
-
-		private Integer batchSize;
-		private boolean sessionCheckingEnabled;
-		private boolean returnOfDeletedEntitiesEnabled;
-		private boolean orderedReturnEnabled = true;
-
-		public MultiIdentifierLoadAccessImpl(EntityPersister entityPersister) {
-			this.entityPersister = entityPersister;
-		}
-
-		@Override
-		public LockOptions getLockOptions() {
-			return lockOptions;
-		}
-
-		@Override
-		public final MultiIdentifierLoadAccess<T> with(LockOptions lockOptions) {
-			this.lockOptions = lockOptions;
-			return this;
-		}
-
-		@Override
-		public MultiIdentifierLoadAccess<T> with(CacheMode cacheMode) {
-			this.cacheMode = cacheMode;
-			return this;
-		}
-
-		@Override
-		public MultiIdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic) {
-			this.rootGraph = (RootGraphImplementor<T>) graph;
-			this.graphSemantic = semantic;
-			return this;
-		}
-
-		@Override
-		public Integer getBatchSize() {
-			return batchSize;
-		}
-
-		@Override
-		public MultiIdentifierLoadAccess<T> withBatchSize(int batchSize) {
-			if ( batchSize < 1 ) {
-				this.batchSize = null;
-			}
-			else {
-				this.batchSize = batchSize;
-			}
-			return this;
-		}
-
-		@Override
-		public boolean isSessionCheckingEnabled() {
-			return sessionCheckingEnabled;
-		}
-
-		@Override
-		public boolean isSecondLevelCacheCheckingEnabled() {
-			return cacheMode == CacheMode.NORMAL || cacheMode == CacheMode.GET;
-		}
-
-		@Override
-		public MultiIdentifierLoadAccess<T> enableSessionCheck(boolean enabled) {
-			this.sessionCheckingEnabled = enabled;
-			return this;
-		}
-
-		@Override
-		public boolean isReturnOfDeletedEntitiesEnabled() {
-			return returnOfDeletedEntitiesEnabled;
-		}
-
-		@Override
-		public MultiIdentifierLoadAccess<T> enableReturnOfDeletedEntities(boolean enabled) {
-			this.returnOfDeletedEntitiesEnabled = enabled;
-			return this;
-		}
-
-		@Override
-		public boolean isOrderReturnEnabled() {
-			return orderedReturnEnabled;
-		}
-
-		@Override
-		public MultiIdentifierLoadAccess<T> enableOrderedReturn(boolean enabled) {
-			this.orderedReturnEnabled = enabled;
-			return this;
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public <K extends Serializable> List<T> multiLoad(K... ids) {
-			return perform( () -> entityPersister.multiLoad( ids, SessionImpl.this, this ) );
-		}
-
-		public List<T> perform(Supplier<List<T>> executor) {
-			CacheMode sessionCacheMode = getCacheMode();
-			boolean cacheModeChanged = false;
-			if ( cacheMode != null ) {
-				// naive check for now...
-				// todo : account for "conceptually equal"
-				if ( cacheMode != sessionCacheMode ) {
-					setCacheMode( cacheMode );
-					cacheModeChanged = true;
-				}
-			}
-
-			try {
-				if ( graphSemantic != null ) {
-					if ( rootGraph == null ) {
-						throw new IllegalArgumentException( "Graph semantic specified, but no RootGraph was supplied" );
-					}
-					loadQueryInfluencers.getEffectiveEntityGraph().applyGraph( rootGraph, graphSemantic );
-				}
-
-				try {
-					return executor.get();
-				}
-				finally {
-					if ( graphSemantic != null ) {
-						loadQueryInfluencers.getEffectiveEntityGraph().clear();
-					}
-				}
-			}
-			finally {
-				if ( cacheModeChanged ) {
-					// change it back
-					setCacheMode( sessionCacheMode );
-				}
-			}
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public <K extends Serializable> List<T> multiLoad(List<K> ids) {
-			return perform( () -> entityPersister.multiLoad( ids.toArray( new Serializable[ ids.size() ] ), SessionImpl.this, this ) );
-		}
-	}
-
-	private EntityPersister locateEntityPersister(Class entityClass) {
-		return getFactory().getMetamodel().locateEntityPersister( entityClass );
-	}
-
-	private EntityPersister locateEntityPersister(String entityName) {
-		return getFactory().getMetamodel().locateEntityPersister( entityName );
-	}
-
-	private abstract class BaseNaturalIdLoadAccessImpl<T> {
-		private final EntityPersister entityPersister;
-		private LockOptions lockOptions;
-		private boolean synchronizationEnabled = true;
-
-		private BaseNaturalIdLoadAccessImpl(EntityPersister entityPersister) {
-			this.entityPersister = entityPersister;
-
-			if ( !entityPersister.hasNaturalIdentifier() ) {
-				throw new HibernateException(
-						String.format( "Entity [%s] did not define a natural id", entityPersister.getEntityName() )
-				);
-			}
-		}
-
-		public BaseNaturalIdLoadAccessImpl<T> with(LockOptions lockOptions) {
-			this.lockOptions = lockOptions;
-			return this;
-		}
-
-		protected void synchronizationEnabled(boolean synchronizationEnabled) {
-			this.synchronizationEnabled = synchronizationEnabled;
-		}
-
-		protected final Serializable resolveNaturalId(Map<String, Object> naturalIdParameters) {
-			performAnyNeededCrossReferenceSynchronizations();
-
-			final ResolveNaturalIdEvent event =
-					new ResolveNaturalIdEvent( naturalIdParameters, entityPersister, SessionImpl.this );
-			fireResolveNaturalId( event );
-
-			if ( event.getEntityId() == PersistenceContext.NaturalIdHelper.INVALID_NATURAL_ID_REFERENCE ) {
-				return null;
-			}
-			else {
-				return event.getEntityId();
-			}
-		}
-
-		protected void performAnyNeededCrossReferenceSynchronizations() {
-			if ( !synchronizationEnabled ) {
-				// synchronization (this process) was disabled
-				return;
-			}
-			if ( entityPersister.getEntityMetamodel().hasImmutableNaturalId() ) {
-				// only mutable natural-ids need this processing
-				return;
-			}
-			if ( !isTransactionInProgress() ) {
-				// not in a transaction so skip synchronization
-				return;
-			}
-
-			final PersistenceContext persistenceContext = getPersistenceContextInternal();
-			final boolean debugEnabled = log.isDebugEnabled();
-			for ( Serializable pk : persistenceContext.getNaturalIdHelper()
-					.getCachedPkResolutions( entityPersister ) ) {
-				final EntityKey entityKey = generateEntityKey( pk, entityPersister );
-				final Object entity = persistenceContext.getEntity( entityKey );
-				final EntityEntry entry = persistenceContext.getEntry( entity );
-
-				if ( entry == null ) {
-					if ( debugEnabled ) {
-						log.debug(
-								"Cached natural-id/pk resolution linked to null EntityEntry in persistence context : "
-										+ MessageHelper.infoString( entityPersister, pk, getFactory() )
-						);
-					}
-					continue;
-				}
-
-				if ( !entry.requiresDirtyCheck( entity ) ) {
-					continue;
-				}
-
-				// MANAGED is the only status we care about here...
-				if ( entry.getStatus() != Status.MANAGED ) {
-					continue;
-				}
-
-				persistenceContext.getNaturalIdHelper().handleSynchronization(
-						entityPersister,
-						pk,
-						entity
-				);
-			}
-		}
-
-		protected final IdentifierLoadAccess getIdentifierLoadAccess() {
-			final IdentifierLoadAccessImpl identifierLoadAccess = new IdentifierLoadAccessImpl( entityPersister );
-			if ( this.lockOptions != null ) {
-				identifierLoadAccess.with( lockOptions );
-			}
-			return identifierLoadAccess;
-		}
-
-		protected EntityPersister entityPersister() {
-			return entityPersister;
-		}
-	}
-
-	private class NaturalIdLoadAccessImpl<T> extends BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadAccess<T> {
-		private final Map<String, Object> naturalIdParameters = new LinkedHashMap<String, Object>();
-
-		private NaturalIdLoadAccessImpl(EntityPersister entityPersister) {
-			super( entityPersister );
-		}
-
-		private NaturalIdLoadAccessImpl(String entityName) {
-			this( locateEntityPersister( entityName ) );
-		}
-
-		private NaturalIdLoadAccessImpl(Class entityClass) {
-			this( locateEntityPersister( entityClass ) );
-		}
-
-		@Override
-		public NaturalIdLoadAccessImpl<T> with(LockOptions lockOptions) {
-			return (NaturalIdLoadAccessImpl<T>) super.with( lockOptions );
-		}
-
-		@Override
-		public NaturalIdLoadAccess<T> using(String attributeName, Object value) {
-			naturalIdParameters.put( attributeName, value );
-			return this;
-		}
-
-		@Override
-		public NaturalIdLoadAccessImpl<T> setSynchronizationEnabled(boolean synchronizationEnabled) {
-			super.synchronizationEnabled( synchronizationEnabled );
-			return this;
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public final T getReference() {
-			final Serializable entityId = resolveNaturalId( this.naturalIdParameters );
-			if ( entityId == null ) {
-				return null;
-			}
-			return (T) this.getIdentifierLoadAccess().getReference( entityId );
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public final T load() {
-			final Serializable entityId = resolveNaturalId( this.naturalIdParameters );
-			if ( entityId == null ) {
-				return null;
-			}
-			try {
-				return (T) this.getIdentifierLoadAccess().load( entityId );
-			}
-			catch (EntityNotFoundException | ObjectNotFoundException enf) {
-				// OK
-			}
-			return null;
-		}
-
-		@Override
-		public Optional<T> loadOptional() {
-			return Optional.ofNullable( load() );
-		}
-	}
-
-	private class SimpleNaturalIdLoadAccessImpl<T> extends BaseNaturalIdLoadAccessImpl<T>
-			implements SimpleNaturalIdLoadAccess<T> {
-		private final String naturalIdAttributeName;
-
-		private SimpleNaturalIdLoadAccessImpl(EntityPersister entityPersister) {
-			super( entityPersister );
-
-			if ( entityPersister.getNaturalIdentifierProperties().length != 1 ) {
-				throw new HibernateException(
-						String.format(
-								"Entity [%s] did not define a simple natural id",
-								entityPersister.getEntityName()
-						)
-				);
-			}
-
-			final int naturalIdAttributePosition = entityPersister.getNaturalIdentifierProperties()[0];
-			this.naturalIdAttributeName = entityPersister.getPropertyNames()[naturalIdAttributePosition];
-		}
-
-		private SimpleNaturalIdLoadAccessImpl(String entityName) {
-			this( locateEntityPersister( entityName ) );
-		}
-
-		private SimpleNaturalIdLoadAccessImpl(Class entityClass) {
-			this( locateEntityPersister( entityClass ) );
-		}
-
-		@Override
-		public final SimpleNaturalIdLoadAccessImpl<T> with(LockOptions lockOptions) {
-			return (SimpleNaturalIdLoadAccessImpl<T>) super.with( lockOptions );
-		}
-
-		private Map<String, Object> getNaturalIdParameters(Object naturalIdValue) {
-			return Collections.singletonMap( naturalIdAttributeName, naturalIdValue );
-		}
-
-		@Override
-		public SimpleNaturalIdLoadAccessImpl<T> setSynchronizationEnabled(boolean synchronizationEnabled) {
-			super.synchronizationEnabled( synchronizationEnabled );
-			return this;
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public T getReference(Object naturalIdValue) {
-			final Serializable entityId = resolveNaturalId( getNaturalIdParameters( naturalIdValue ) );
-			if ( entityId == null ) {
-				return null;
-			}
-			return (T) this.getIdentifierLoadAccess().getReference( entityId );
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public T load(Object naturalIdValue) {
-			final Serializable entityId = resolveNaturalId( getNaturalIdParameters( naturalIdValue ) );
-			if ( entityId == null ) {
-				return null;
-			}
-			try {
-				return (T) this.getIdentifierLoadAccess().load( entityId );
-			}
-			catch (EntityNotFoundException | ObjectNotFoundException e) {
-				// OK
-			}
-			return null;
-		}
-
-		@Override
-		public Optional<T> loadOptional(Serializable naturalIdValue) {
-			return Optional.ofNullable( load( naturalIdValue ) );
-		}
 	}
 
 	@Override
@@ -3237,40 +2110,32 @@ public class SessionImpl
 	@Override
 	public void afterTransactionBegin() {
 		checkOpenOrWaitingForAutoClose();
-		getInterceptor().afterTransactionBegin( getTransactionIfAccessible() );
+		afterTransactionBeginEvents();
 	}
 
 	@Override
 	public void flushBeforeTransactionCompletion() {
-		final boolean doFlush = isTransactionFlushable()
-				&& getHibernateFlushMode() != FlushMode.MANUAL;
+		if ( mustFlushBeforeCompletion() ) {
+			managedFlush();
+		}
+	}
 
-		try {
-			if ( doFlush ) {
-				managedFlush();
-			}
-		}
-		catch (RuntimeException re) {
-			throw ExceptionMapperStandardImpl.INSTANCE.mapManagedFlushFailure( "error during managed flush", re, this );
-		}
+	private boolean mustFlushBeforeCompletion() {
+		return isTransactionFlushable() && getHibernateFlushMode() != FlushMode.MANUAL;
 	}
 
 	private boolean isTransactionFlushable() {
-		if ( getCurrentTransaction() == null ) {
+		final var currentTransaction = getCurrentTransaction();
+		if ( currentTransaction == null ) {
 			// assume it is flushable - CMT, auto-commit, etc
 			return true;
 		}
-		final TransactionStatus status = getCurrentTransaction().getStatus();
-		return status == TransactionStatus.ACTIVE || status == TransactionStatus.COMMITTING;
+		else {
+			final TransactionStatus status = currentTransaction.getStatus();
+			return status == TransactionStatus.ACTIVE
+				|| status == TransactionStatus.COMMITTING;
+		}
 	}
-
-	@Override
-	public boolean isFlushBeforeCompletionEnabled() {
-		return getHibernateFlushMode() != FlushMode.MANUAL;
-	}
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// HibernateEntityManager impl
 
 	@Override
 	public SessionImplementor getSession() {
@@ -3279,34 +2144,13 @@ public class SessionImpl
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// HibernateEntityManagerImplementor impl
-
-
-	@Override
-	public LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties) {
-		LockOptions lockOptions = new LockOptions();
-		if ( this.lockOptions != null ) { //otherwise the default LockOptions constructor is the same as DEFAULT_LOCK_OPTIONS
-			LockOptions.copy( this.lockOptions, lockOptions );
-		}
-		lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
-		if ( properties != null ) {
-			LockOptionsHelper.applyPropertiesToLockOptions( properties, () -> lockOptions );
-		}
-		return lockOptions;
-	}
-
-
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// EntityManager impl
 
 	@Override
 	public void remove(Object entity) {
 		checkOpen();
-
 		try {
-			delete( entity );
+			fireDelete( new DeleteEvent( entity, this ) );
 		}
 		catch (MappingException e) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
@@ -3319,12 +2163,12 @@ public class SessionImpl
 
 	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey) {
-		return find( entityClass, primaryKey, null, null );
+		return find( entityClass, primaryKey, (LockOptions) null, null );
 	}
 
 	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
-		return find( entityClass, primaryKey, null, properties );
+		return find( entityClass, primaryKey, (LockOptions) null, properties );
 	}
 
 	@Override
@@ -3335,46 +2179,51 @@ public class SessionImpl
 	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockModeType, Map<String, Object> properties) {
 		checkOpen();
-
-		LockOptions lockOptions = null;
-
-		try {
-			getLoadQueryInfluencers().getEffectiveEntityGraph().applyConfiguredGraph( properties );
-			Boolean readOnly = properties == null ? null : (Boolean) properties.get( QueryHints.HINT_READONLY );
-			getLoadQueryInfluencers().setReadOnly( readOnly );
-			final IdentifierLoadAccess<T> loadAccess = byId( entityClass );
-			loadAccess.with( determineAppropriateLocalCacheMode( properties ) );
-
-			if ( lockModeType != null ) {
-				if ( !LockModeType.NONE.equals( lockModeType) ) {
-					checkTransactionNeededForUpdateOperation();
-				}
-				lockOptions = buildLockOptions( lockModeType, properties );
-				loadAccess.with( lockOptions );
-			}
-
-			if ( getLoadQueryInfluencers().getEffectiveEntityGraph().getSemantic() == GraphSemantic.FETCH ) {
-				setEnforcingFetchGraph( true );
-			}
-			
-			return loadAccess.load( (Serializable) primaryKey );
+		if ( lockModeType == null ) {
+			throw new IllegalArgumentException("Given LockModeType was null");
 		}
-		catch ( EntityNotFoundException ignored ) {
-			// DefaultLoadEventListener#returnNarrowedProxy() may throw ENFE (see HHH-7861 for details),
-			// which find() should not throw.  Find() should return null if the entity was not found.
-			if ( log.isDebugEnabled() ) {
-				String entityName = entityClass != null ? entityClass.getName(): null;
-				String identifierValue = primaryKey != null ? primaryKey.toString() : null ;
-				log.ignoringEntityNotFound( entityName, identifierValue );
-			}
+		final var lockMode = LockModeTypeHelper.getLockMode( lockModeType );
+		checkTransactionNeededForLock( lockMode );
+		return find( entityClass, primaryKey, buildLockOptions( lockMode, properties ), properties );
+	}
+
+	private <T> T find(Class<T> entityClass, Object primaryKey, LockOptions lockOptions, Map<String, Object> properties) {
+		try {
+			loadQueryInfluencers.getEffectiveEntityGraph().applyConfiguredGraph( properties );
+			loadQueryInfluencers.setReadOnly( readOnlyHint( properties ) );
+			return byId( entityClass )
+					.with( determineAppropriateLocalCacheMode( properties ) )
+					.with( lockOptions )
+					.load( primaryKey );
+		}
+		catch ( FetchNotFoundException e ) {
+			// This may happen if the entity has an associations mapped with
+			// @NotFound(action = NotFoundAction.EXCEPTION) and this associated
+			// entity is not found
+			throw e;
+		}
+		catch ( EntityFilterException e ) {
+			// This may happen if the entity has an associations which is
+			// filtered by a FilterDef and this associated entity is not found
+			throw e;
+		}
+		catch ( EntityNotFoundException e ) {
+			// We swallow other sorts of EntityNotFoundException and return null
+			// For example, DefaultLoadEventListener.proxyImplementation() throws
+			// EntityNotFoundException if there's an existing proxy in the session,
+			// but the underlying database row has been deleted (see HHH-7861)
+			logIgnoringEntityNotFound( entityClass, primaryKey );
 			return null;
 		}
 		catch ( ObjectDeletedException e ) {
-			//the spec is silent about people doing remove() find() on the same PC
+			// the spec is silent about people doing remove() find() on the same PC
 			return null;
 		}
 		catch ( ObjectNotFoundException e ) {
-			//should not happen on the entity itself with get
+			// should not happen on the entity itself with get
+			// TODO: in fact this will occur instead of EntityNotFoundException
+			//       when using StandardEntityNotFoundDelegate, so probably we
+			//       should return null here, as we do above
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
@@ -3382,13 +2231,9 @@ public class SessionImpl
 		}
 		catch ( JDBCException e ) {
 			if ( accessTransaction().isActive() && accessTransaction().getRollbackOnly() ) {
-				// Assume this is similar to the WildFly / IronJacamar "feature" described under HHH-12472.
-				// Just log the exception and return null.
-				if ( log.isDebugEnabled() ) {
-					log.debug( "JDBCException was thrown for a transaction marked for rollback; " +
-									"this is probably due to an operation failing fast due to the " +
-									"transaction marked for rollback.", e );
-				}
+				// Assume situation HHH-12472 running on WildFly
+				// Just log the exception and return null
+				SESSION_LOGGER.jdbcExceptionThrownWithTransactionRolledBack( e );
 				return null;
 			}
 			else {
@@ -3399,9 +2244,116 @@ public class SessionImpl
 			throw getExceptionConverter().convert( e, lockOptions );
 		}
 		finally {
-			getLoadQueryInfluencers().getEffectiveEntityGraph().clear();
-			getLoadQueryInfluencers().setReadOnly( null );
-			setEnforcingFetchGraph( false );
+			loadQueryInfluencers.getEffectiveEntityGraph().clear();
+			loadQueryInfluencers.setReadOnly( null );
+		}
+	}
+
+	// Hibernate Reactive calls this
+	protected static <T> void logIgnoringEntityNotFound(Class<T> entityClass, Object primaryKey) {
+		if ( SESSION_LOGGER.isDebugEnabled() ) {
+			SESSION_LOGGER.ignoringEntityNotFound(
+					entityClass != null ? entityClass.getName(): null,
+					primaryKey != null ? primaryKey.toString() : null
+			);
+		}
+	}
+
+	private <T> void setLoadAccessOptions(FindOption[] options, IdentifierLoadAccessImpl<T> loadAccess) {
+		CacheStoreMode storeMode = getCacheStoreMode();
+		CacheRetrieveMode retrieveMode = getCacheRetrieveMode();
+		LockOptions lockOptions = copySessionLockOptions();
+		for ( FindOption option : options ) {
+			if ( option instanceof CacheStoreMode cacheStoreMode ) {
+				storeMode = cacheStoreMode;
+			}
+			else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
+				retrieveMode = cacheRetrieveMode;
+			}
+			else if ( option instanceof CacheMode cacheMode ) {
+				storeMode = cacheMode.getJpaStoreMode();
+				retrieveMode = cacheMode.getJpaRetrieveMode();
+			}
+			else if ( option instanceof LockModeType lockModeType ) {
+				lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
+			}
+			else if ( option instanceof LockMode lockMode ) {
+				lockOptions.setLockMode( lockMode );
+			}
+			else if ( option instanceof LockOptions lockOpts ) {
+				lockOptions = lockOpts;
+			}
+			else if ( option instanceof Locking.Scope lockScope ) {
+				lockOptions.setScope( lockScope );
+			}
+			else if ( option instanceof PessimisticLockScope pessimisticLockScope ) {
+				lockOptions.setScope( Locking.Scope.fromJpaScope( pessimisticLockScope ) );
+			}
+			else if ( option instanceof Locking.FollowOn followOn ) {
+				lockOptions.setFollowOnStrategy( followOn );
+			}
+			else if ( option instanceof Timeout timeout ) {
+				lockOptions.setTimeout( timeout );
+			}
+			else if ( option instanceof EnabledFetchProfile enabledFetchProfile ) {
+				loadAccess.enableFetchProfile( enabledFetchProfile.profileName() );
+			}
+			else if ( option instanceof ReadOnlyMode ) {
+				loadAccess.withReadOnly( option == ReadOnlyMode.READ_ONLY );
+			}
+			else if ( option instanceof FindMultipleOption findMultipleOption ) {
+				throw new IllegalArgumentException( "Option '" + findMultipleOption + "' can only be used in 'findMultiple()'" );
+			}
+		}
+		if ( lockOptions.getLockMode().isPessimistic() ) {
+			if ( lockOptions.getTimeOut() == WAIT_FOREVER_MILLI ) {
+				final Object factoryHint = getFactory().getProperties().get( HINT_SPEC_LOCK_TIMEOUT );
+				if ( factoryHint != null ) {
+					lockOptions.setTimeOut( Timeouts.fromHint( factoryHint ) );
+				}
+			}
+		}
+		loadAccess.with( lockOptions ).with( interpretCacheMode( storeMode, retrieveMode ) );
+	}
+
+	@Override
+	public <T> T find(Class<T> entityClass, Object primaryKey, FindOption... options) {
+		final IdentifierLoadAccessImpl<T> loadAccess = byId( entityClass );
+		setLoadAccessOptions( options, loadAccess );
+		return loadAccess.load( primaryKey );
+	}
+
+	@Override
+	public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
+		final var graph = (RootGraph<T>) entityGraph;
+		final var type = graph.getGraphedType();
+		final IdentifierLoadAccessImpl<T> loadAccess =
+				switch ( type.getRepresentationMode() ) {
+					case MAP -> byId( type.getTypeName() );
+					case POJO -> byId( type.getJavaType() );
+				};
+		setLoadAccessOptions( options, loadAccess );
+		return loadAccess.withLoadGraph( graph ).load( primaryKey );
+	}
+
+	// Hibernate Reactive may need to use this
+	protected void checkTransactionNeededForLock(LockMode lockMode) {
+		// OPTIMISTIC and OPTIMISTIC_FORCE_INCREMENT require a transaction
+		// because they involve a version check at the end of the transaction
+		// All flavors of PESSIMISTIC lock also clearly require a transaction
+		if ( lockMode.greaterThan( LockMode.READ ) ) {
+			checkTransactionNeededForUpdateOperation();
+		}
+	}
+
+	// Hibernate Reactive may need to use this
+	protected static Boolean readOnlyHint(Map<String, Object> properties) {
+		if ( properties == null ) {
+			return null;
+		}
+		else {
+			final Object value = properties.get( HINT_READ_ONLY );
+			return value == null ? null : getBoolean( value );
 		}
 	}
 
@@ -3414,33 +2366,69 @@ public class SessionImpl
 		}
 		if ( retrieveMode == null ) {
 			// use the EM setting
-			retrieveMode = fastSessionServices.getCacheRetrieveMode( this.properties );
+			retrieveMode = getSessionFactoryOptions().getCacheRetrieveMode( properties );
 		}
 		if ( storeMode == null ) {
 			// use the EM setting
-			storeMode = fastSessionServices.getCacheStoreMode( this.properties );
+			storeMode = getSessionFactoryOptions().getCacheStoreMode( properties );
 		}
-		return CacheModeHelper.interpretCacheMode( storeMode, retrieveMode );
+		return interpretCacheMode( storeMode, retrieveMode );
 	}
 
 	private static CacheRetrieveMode determineCacheRetrieveMode(Map<String, Object> settings) {
-		return ( CacheRetrieveMode ) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
+		final CacheRetrieveMode cacheRetrieveMode =
+				(CacheRetrieveMode) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
+		return cacheRetrieveMode == null
+				? (CacheRetrieveMode) settings.get( JAKARTA_SHARED_CACHE_RETRIEVE_MODE )
+				: cacheRetrieveMode;
 	}
 
 	private static CacheStoreMode determineCacheStoreMode(Map<String, Object> settings) {
-		return ( CacheStoreMode ) settings.get( JPA_SHARED_CACHE_STORE_MODE );
+		final CacheStoreMode cacheStoreMode =
+				(CacheStoreMode) settings.get( JPA_SHARED_CACHE_STORE_MODE );
+		return cacheStoreMode == null
+				? (CacheStoreMode) settings.get( JAKARTA_SHARED_CACHE_STORE_MODE )
+				: cacheStoreMode;
 	}
 
 	private void checkTransactionNeededForUpdateOperation() {
-		checkTransactionNeededForUpdateOperation( "no transaction is in progress" );
+		checkTransactionNeededForUpdateOperation( "No active transaction" );
 	}
 
 	@Override
-	public <T> T getReference(Class<T> entityClass, Object primaryKey) {
+	public Object find(String entityName, Object primaryKey) {
+		final IdentifierLoadAccessImpl<?> loadAccess = byId( entityName );
+		return loadAccess.load( primaryKey );
+	}
+
+	@Override
+	public Object find(String entityName, Object primaryKey, FindOption... options) {
+		final IdentifierLoadAccessImpl<?> loadAccess = byId( entityName );
+		setLoadAccessOptions( options, loadAccess );
+		return loadAccess.load( primaryKey );
+	}
+
+	@Override
+	public <T> T getReference(Class<T> entityClass, Object id) {
 		checkOpen();
 
 		try {
-			return byId( entityClass ).getReference( (Serializable) primaryKey );
+			return byId( entityClass ).getReference( id );
+		}
+		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
+	}
+
+	@Override
+	public Object getReference(String entityName, Object id) {
+		checkOpen();
+
+		try {
+			return byId( entityName ).getReference( id );
 		}
 		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
@@ -3452,25 +2440,53 @@ public class SessionImpl
 
 	@Override
 	public void lock(Object entity, LockModeType lockModeType) {
-		lock( entity, lockModeType, null );
+		lock( entity, LockModeTypeHelper.getLockMode( lockModeType ) );
 	}
 
 	@Override
 	public void lock(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
-		checkOpen();
-		checkTransactionNeededForUpdateOperation();
+		lock( entity, buildLockOptions( LockModeTypeHelper.getLockMode( lockModeType ), properties ) );
+	}
 
-		if ( !contains( entity ) ) {
-			throw new IllegalArgumentException( "entity not in the persistence context" );
-		}
+	@Override
+	public void lock(Object entity, LockModeType lockModeType, LockOption... options) {
+		lock( entity, buildLockOptions( LockModeTypeHelper.getLockMode( lockModeType ), options ) );
+	}
 
-		final LockOptions lockOptions = buildLockOptions( lockModeType, properties );
-		try {
-			buildLockRequest( lockOptions ).lock( entity );
+	private LockOptions buildLockOptions(LockMode lockMode, LockOption[] options) {
+		final var lockOptions = copySessionLockOptions();
+		lockOptions.setLockMode( lockMode );
+		for ( var option : options ) {
+			if ( option instanceof PessimisticLockScope lockScope ) {
+				lockOptions.setLockScope( lockScope );
+			}
+			else if ( option instanceof Timeout timeout ) {
+				lockOptions.setTimeOut( timeout.milliseconds() );
+			}
 		}
-		catch (RuntimeException e) {
-			throw getExceptionConverter().convert( e, lockOptions );
+		return lockOptions;
+	}
+
+	private LockOptions buildLockOptions(LockMode lockMode, Map<String, Object> properties) {
+		final var lockOptions = copySessionLockOptions();
+		lockOptions.setLockMode( lockMode );
+		if ( properties != null ) {
+			applyPropertiesToLockOptions( properties, () -> lockOptions );
 		}
+		return lockOptions;
+	}
+
+	private LockOptions copySessionLockOptions() {
+		final var copiedLockOptions = new LockOptions();
+		if ( lockOptions != null ) {
+			LockOptions.copy( lockOptions, copiedLockOptions );
+		}
+		return copiedLockOptions;
+	}
+
+	@Override
+	public void refresh(Object entity, LockModeType lockModeType) {
+		refresh( entity, LockModeTypeHelper.getLockMode( lockModeType ) );
 	}
 
 	@Override
@@ -3479,42 +2495,55 @@ public class SessionImpl
 	}
 
 	@Override
-	public void refresh(Object entity, LockModeType lockModeType) {
-		refresh( entity, lockModeType, null );
+	public void refresh(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
+		checkOpen();
+		final CacheMode previousCacheMode = getCacheMode();
+		final CacheMode refreshCacheMode = determineAppropriateLocalCacheMode( properties );
+		try {
+			setCacheMode( refreshCacheMode );
+			if ( lockModeType == null ) {
+				refresh( entity );
+			}
+			else {
+				refresh( entity, buildLockOptions( LockModeTypeHelper.getLockMode( lockModeType ), properties ) );
+			}
+		}
+		finally {
+			setCacheMode( previousCacheMode );
+		}
 	}
 
 	@Override
-	public void refresh(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
-		checkOpen();
+	public void refresh(Object entity, RefreshOption... options) {
+		CacheStoreMode storeMode = getCacheStoreMode();
+		LockOptions lockOptions = copySessionLockOptions();
+		for ( RefreshOption option : options ) {
+			if ( option instanceof CacheStoreMode cacheStoreMode ) {
+				storeMode = cacheStoreMode;
+			}
+			else if ( option instanceof LockModeType lockModeType ) {
+				lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
+			}
+			else if ( option instanceof LockMode lockMode ) {
+				lockOptions.setLockMode( lockMode );
+			}
+			else if ( option instanceof LockOptions lockOpts ) {
+				lockOptions = lockOpts;
+			}
+			else if ( option instanceof PessimisticLockScope pessimisticLockScope ) {
+				lockOptions.setLockScope( pessimisticLockScope );
+			}
+			else if ( option instanceof Timeout timeout ) {
+				lockOptions.setTimeOut( timeout.milliseconds() );
+			}
+		}
 
 		final CacheMode previousCacheMode = getCacheMode();
-		final CacheMode refreshCacheMode = determineAppropriateLocalCacheMode( properties );
-
-		LockOptions lockOptions = null;
+		if ( storeMode != null ) {
+			setCacheStoreMode( storeMode );
+		}
 		try {
-			setCacheMode( refreshCacheMode );
-
-			if ( !contains( entity ) ) {
-				throw getExceptionConverter().convert( new IllegalArgumentException( "Entity not managed" ) );
-			}
-
-			if ( lockModeType != null ) {
-				if ( !LockModeType.NONE.equals( lockModeType) ) {
-					checkTransactionNeededForUpdateOperation();
-				}
-
-				lockOptions = buildLockOptions( lockModeType, properties );
-				refresh( entity, lockOptions );
-			}
-			else {
-				refresh( entity );
-			}
-		}
-		catch (MappingException e) {
-			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
-		}
-		catch (RuntimeException e) {
-			throw getExceptionConverter().convert( e, lockOptions );
+			refresh( entity, lockOptions );
 		}
 		finally {
 			setCacheMode( previousCacheMode );
@@ -3537,11 +2566,16 @@ public class SessionImpl
 		checkOpen();
 
 		if ( !isTransactionInProgress() ) {
-			throw new TransactionRequiredException( "Call to EntityManager#getLockMode should occur within transaction according to spec" );
+			throw new TransactionRequiredException( "No active transaction" );
 		}
 
+		if ( entity == null ) {
+			throw new IllegalArgumentException( "Entity may not be null" );
+		}
 		if ( !contains( entity ) ) {
-			throw getExceptionConverter().convert( new IllegalArgumentException( "entity not in the persistence context" ) );
+			// convert() calls markForRollbackOnly()
+			throw getExceptionConverter()
+					.convert( new IllegalArgumentException( "Given entity is not associated with the persistence context" ) );
 		}
 
 		return LockModeTypeHelper.getLockModeType( getCurrentLockMode( entity ) );
@@ -3553,73 +2587,108 @@ public class SessionImpl
 		checkOpen();
 
 		if ( !( value instanceof Serializable ) ) {
-			log.warnf( "Property '" + propertyName + "' is not serializable, value won't be set." );
+			SESSION_LOGGER.nonSerializableProperty( propertyName );
 			return;
 		}
 
 		if ( propertyName == null ) {
-			log.warnf( "Property having key null is illegal; value won't be set." );
+			SESSION_LOGGER.nullPropertyKey();
 			return;
 		}
 
-		//Store property for future reference:
-
+		// store property for future reference:
 		if ( properties == null ) {
-			properties = computeCurrentSessionProperties();
+			properties = computeCurrentProperties();
 		}
 		properties.put( propertyName, value );
 
-		//now actually update settings, if it's any of these which have a direct impact on this Session state:
+		// now actually update the setting, if it's one which affects this Session
+		interpretProperty( propertyName, value );
+	}
 
-		if ( AvailableSettings.FLUSH_MODE.equals( propertyName ) ) {
-			setHibernateFlushMode( ConfigurationHelper.getFlushMode( value, FlushMode.AUTO ) );
-		}
-		else if ( JPA_LOCK_SCOPE.equals( propertyName ) || JPA_LOCK_TIMEOUT.equals(  propertyName ) ) {
-			LockOptionsHelper.applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
-		}
-		else if ( JPA_SHARED_CACHE_RETRIEVE_MODE.equals( propertyName ) || JPA_SHARED_CACHE_STORE_MODE.equals(  propertyName ) ) {
-			getSession().setCacheMode(
-					CacheModeHelper.interpretCacheMode(
-							determineCacheStoreMode( properties ),
-							determineCacheRetrieveMode( properties )
-					)
-			);
+	private void interpretProperty(String propertyName, Object value) {
+		switch ( propertyName ) {
+			case HINT_FLUSH_MODE:
+				setHibernateFlushMode( ConfigurationHelper.getFlushMode( value, FlushMode.AUTO ) );
+				break;
+			case JPA_LOCK_SCOPE:
+			case JAKARTA_LOCK_SCOPE:
+				properties.put( JPA_LOCK_SCOPE, value);
+				properties.put( JAKARTA_LOCK_SCOPE, value);
+				applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
+				break;
+			case JPA_LOCK_TIMEOUT:
+			case JAKARTA_LOCK_TIMEOUT:
+				properties.put( JPA_LOCK_TIMEOUT, value );
+				properties.put( JAKARTA_LOCK_TIMEOUT, value );
+				applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
+				break;
+			case JPA_SHARED_CACHE_RETRIEVE_MODE:
+			case JAKARTA_SHARED_CACHE_RETRIEVE_MODE:
+				properties.put( JPA_SHARED_CACHE_RETRIEVE_MODE, value );
+				properties.put( JAKARTA_SHARED_CACHE_RETRIEVE_MODE, value );
+				setCacheMode(
+						interpretCacheMode(
+								determineCacheStoreMode( properties ),
+								(CacheRetrieveMode) value
+						)
+				);
+				break;
+			case JPA_SHARED_CACHE_STORE_MODE:
+			case JAKARTA_SHARED_CACHE_STORE_MODE:
+				properties.put( JPA_SHARED_CACHE_STORE_MODE, value );
+				properties.put( JAKARTA_SHARED_CACHE_STORE_MODE, value );
+				setCacheMode(
+						interpretCacheMode(
+								(CacheStoreMode) value,
+								determineCacheRetrieveMode( properties )
+						)
+				);
+				break;
+			case CRITERIA_COPY_TREE:
+				setCriteriaCopyTreeEnabled( parseBoolean( value.toString() ) );
+				break;
+			case HINT_FETCH_PROFILE:
+				enableFetchProfile( (String) value );
+				break;
+			case USE_SUBSELECT_FETCH:
+			case HINT_ENABLE_SUBSELECT_FETCH:
+				setSubselectFetchingEnabled( parseBoolean( value.toString() ) );
+				break;
+			case DEFAULT_BATCH_FETCH_SIZE:
+			case HINT_BATCH_FETCH_SIZE:
+				setFetchBatchSize( parseInt( value.toString() ) );
+				break;
+			case STATEMENT_BATCH_SIZE:
+			case HINT_JDBC_BATCH_SIZE:
+				setJdbcBatchSize( parseInt( value.toString() ) );
+				break;
 		}
 	}
 
-	private Map<String, Object> computeCurrentSessionProperties() {
-		final HashMap<String, Object> map = new HashMap<>( fastSessionServices.defaultSessionProperties );
-		//The FLUSH_MODE is always set at Session creation time, so it needs special treatment to not eagerly initialize this Map:
-		map.put( AvailableSettings.FLUSH_MODE, getHibernateFlushMode().name() );
+	private Map<String, Object> computeCurrentProperties() {
+		final var map = new HashMap<>( getDefaultProperties() );
+		//The FLUSH_MODE is always set at Session creation time,
+		//so it needs special treatment to not eagerly initialize this Map:
+		map.put( HINT_FLUSH_MODE, getHibernateFlushMode() );
 		return map;
 	}
 
 	@Override
 	public Map<String, Object> getProperties() {
 		if ( properties == null ) {
-			properties = computeCurrentSessionProperties();
+			properties = computeCurrentProperties();
 		}
-		return Collections.unmodifiableMap( properties );
+		return unmodifiableMap( properties );
 	}
 
 	@Override
-	protected void initQueryFromNamedDefinition(Query query, NamedQueryDefinition namedQueryDefinition) {
-		super.initQueryFromNamedDefinition( query, namedQueryDefinition );
-
-		if ( namedQueryDefinition.getLockOptions() != null ) {
-			if ( namedQueryDefinition.getLockOptions().getLockMode() != null ) {
-				query.setLockMode(
-						LockModeTypeHelper.getLockModeType( namedQueryDefinition.getLockOptions().getLockMode() )
-				);
-			}
-		}
-	}
-
-	@Override
-	public StoredProcedureQuery createNamedStoredProcedureQuery(String name) {
+	public ProcedureCall createNamedStoredProcedureQuery(String name) {
 		checkOpen();
 		try {
-			final ProcedureCallMemento memento = getFactory().getNamedQueryRepository().getNamedProcedureCallMemento( name );
+			final var memento =
+					getFactory().getQueryEngine().getNamedObjectRepository()
+							.getCallableQueryMemento( name );
 			if ( memento == null ) {
 				throw new IllegalArgumentException( "No @NamedStoredProcedureQuery was found with that name : " + name );
 			}
@@ -3631,7 +2700,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public StoredProcedureQuery createStoredProcedureQuery(String procedureName) {
+	public ProcedureCall createStoredProcedureQuery(String procedureName) {
 		try {
 			return createStoredProcedureCall( procedureName );
 		}
@@ -3641,7 +2710,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, Class... resultClasses) {
+	public ProcedureCall createStoredProcedureQuery(String procedureName, Class... resultClasses) {
 		try {
 			return createStoredProcedureCall( procedureName, resultClasses );
 		}
@@ -3651,14 +2720,14 @@ public class SessionImpl
 	}
 
 	@Override
-	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
+	public ProcedureCall createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
 		checkOpen();
 		try {
 			try {
 				return createStoredProcedureCall( procedureName, resultSetMappings );
 			}
-			catch (UnknownSqlResultSetMappingException unknownResultSetMapping) {
-				throw new IllegalArgumentException( unknownResultSetMapping.getMessage(), unknownResultSetMapping );
+			catch ( UnknownSqlResultSetMappingException e ) {
+				throw new IllegalArgumentException( e.getMessage(), e );
 			}
 		}
 		catch ( RuntimeException e ) {
@@ -3667,55 +2736,19 @@ public class SessionImpl
 	}
 
 	@Override
-	public void joinTransaction() {
-		checkOpen();
-		joinTransaction( true );
-	}
-
-	private void joinTransaction(boolean explicitRequest) {
-		if ( !getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta() ) {
-			if ( explicitRequest ) {
-				log.callingJoinTransactionOnNonJtaEntityManager();
-			}
-			return;
-		}
-
-		try {
-			getTransactionCoordinator().explicitJoin();
-		}
-		catch (TransactionRequiredForJoinException e) {
-			throw new TransactionRequiredException( e.getMessage() );
-		}
-		catch (HibernateException he) {
-			throw getExceptionConverter().convert( he );
-		}
-	}
-
-	@Override
-	public boolean isJoinedToTransaction() {
-		checkOpen();
-		return getTransactionCoordinator().isJoined();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public <T> T unwrap(Class<T> clazz) {
+	public <T> T unwrap(Class<T> type) {
 		checkOpen();
 
-		if ( Session.class.isAssignableFrom( clazz ) ) {
-			return (T) this;
-		}
-		if ( SessionImplementor.class.isAssignableFrom( clazz ) ) {
-			return (T) this;
-		}
-		if ( SharedSessionContractImplementor.class.isAssignableFrom( clazz ) ) {
-			return (T) this;
-		}
-		if ( EntityManager.class.isAssignableFrom( clazz ) ) {
-			return (T) this;
+		if ( type.isInstance( this ) ) {
+			return type.cast( this );
 		}
 
-		throw new PersistenceException( "Hibernate cannot unwrap " + clazz );
+		if ( type.isInstance( persistenceContext ) ) {
+			return type.cast( persistenceContext );
+		}
+
+		throw new PersistenceException(
+				"Hibernate cannot unwrap '" + getClass().getName() + "' as '" + type.getName() + "'" );
 	}
 
 	@Override
@@ -3731,48 +2764,41 @@ public class SessionImpl
 	}
 
 	@Override
-	public CriteriaBuilder getCriteriaBuilder() {
+	public Metamodel getMetamodel() {
 		checkOpen();
-		return getFactory().getCriteriaBuilder();
+		return getFactory().getJpaMetamodel();
 	}
 
 	@Override
-	public MetamodelImplementor getMetamodel() {
-		checkOpen();
-		return getFactory().getMetamodel();
+	public Collection<?> getManagedEntities() {
+		return persistenceContext.getEntityHoldersByKey()
+				.values().stream().map( EntityHolder::getManagedObject )
+				.toList();
 	}
 
 	@Override
-	public <T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType) {
-		checkOpen();
-		return new RootGraphImpl<T>( null, getMetamodel().entity( rootType ), getEntityManagerFactory() );
+	public Collection<?> getManagedEntities(String entityName) {
+		return persistenceContext.getEntityHoldersByKey().entrySet().stream()
+				.filter( entry -> entry.getKey().getEntityName().equals( entityName ) )
+				.map( entry -> entry.getValue().getManagedObject() )
+				.toList();
 	}
 
 	@Override
-	public RootGraphImplementor<?> createEntityGraph(String graphName) {
-		checkOpen();
-		final RootGraphImplementor named = getEntityManagerFactory().findEntityGraphByName( graphName );
-		if ( named != null ) {
-			return named.makeRootGraph( graphName, true );
-		}
-		return named;
+	public <E> Collection<E> getManagedEntities(Class<E> entityType) {
+		return persistenceContext.getEntityHoldersByKey().entrySet().stream()
+				.filter( entry -> entry.getKey().getPersister().getMappedClass().equals( entityType ) )
+				.map( entry -> (E) entry.getValue().getManagedObject() )
+				.toList();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public RootGraphImplementor<?> getEntityGraph(String graphName) {
-		checkOpen();
-		final RootGraphImplementor named = getEntityManagerFactory().findEntityGraphByName( graphName );
-		if ( named == null ) {
-			throw new IllegalArgumentException( "Could not locate EntityGraph with given name : " + graphName );
-		}
-		return named;
-	}
-
-	@Override
-	public List getEntityGraphs(Class entityClass) {
-		checkOpen();
-		return getEntityManagerFactory().findEntityGraphsByType( entityClass );
+	public <E> Collection<E> getManagedEntities(EntityType<E> entityType) {
+		final String entityName = ( (EntityDomainType<E>) entityType ).getHibernateEntityName();
+		return persistenceContext.getEntityHoldersByKey().entrySet().stream()
+				.filter( entry -> entry.getKey().getEntityName().equals( entityName ) )
+				.map( entry -> (E) entry.getValue().getManagedObject() )
+				.toList();
 	}
 
 	/**
@@ -3782,14 +2808,15 @@ public class SessionImpl
 	 *
 	 * @throws IOException Indicates a general IO stream exception
 	 */
+	@Serial
 	private void writeObject(ObjectOutputStream oos) throws IOException {
-		if ( log.isTraceEnabled() ) {
-			log.tracef( "Serializing Session [%s]", getSessionIdentifier() );
+		if ( SESSION_LOGGER.isTraceEnabled() ) {
+			SESSION_LOGGER.serializingSession( getSessionIdentifier() );
 		}
 
 		oos.defaultWriteObject();
 
-		persistenceContext.serialize( oos );
+		PersistenceContexts.serialize( persistenceContext, oos );
 		actionQueue.serialize( oos );
 
 		oos.writeObject( loadQueryInfluencers );
@@ -3803,14 +2830,15 @@ public class SessionImpl
 	 * @throws IOException Indicates a general IO stream exception
 	 * @throws ClassNotFoundException Indicates a class resolution issue
 	 */
+	@Serial
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException, SQLException {
-		if ( log.isTraceEnabled() ) {
-			log.tracef( "Deserializing Session [%s]", getSessionIdentifier() );
+		if ( SESSION_LOGGER.isTraceEnabled() ) {
+			SESSION_LOGGER.deserializingSession( getSessionIdentifier() );
 		}
 
 		ois.defaultReadObject();
 
-		persistenceContext = StatefulPersistenceContext.deserialize( ois, this );
+		persistenceContext = PersistenceContexts.deserialize( ois, this );
 		actionQueue = ActionQueue.deserialize( ois, this );
 
 		loadQueryInfluencers = (LoadQueryInfluencers) ois.readObject();
@@ -3819,26 +2847,15 @@ public class SessionImpl
 		// filter, which will fail when called before FilterImpl#afterDeserialize( factory );
 		// Instead lookup the filter by name and then call FilterImpl#afterDeserialize( factory ).
 		for ( String filterName : loadQueryInfluencers.getEnabledFilterNames() ) {
-			( (FilterImpl) loadQueryInfluencers.getEnabledFilter( filterName ) ).afterDeserialize( getFactory() );
+			( (FilterImpl) loadQueryInfluencers.getEnabledFilter( filterName ) )
+					.afterDeserialize( getFactory() );
 		}
+
+		eventListenerGroups = getFactory().getEventListenerGroups();
 	}
 
-	private Boolean getReadOnlyFromLoadQueryInfluencers() {
-		Boolean readOnly = null;
-		if ( loadQueryInfluencers != null ) {
-			readOnly = loadQueryInfluencers.getReadOnly();
-		}
-		return readOnly;
+	// Used by Hibernate reactive
+	protected Boolean getReadOnlyFromLoadQueryInfluencers() {
+		return loadQueryInfluencers == null ? null : loadQueryInfluencers.getReadOnly();
 	}
-
-	@Override
-	public boolean isEnforcingFetchGraph() {
-		return this.isEnforcingFetchGraph;
-	}
-
-	@Override
-	public void setEnforcingFetchGraph(boolean isEnforcingFetchGraph) {
-		this.isEnforcingFetchGraph = isEnforcingFetchGraph;
-	}
-
 }

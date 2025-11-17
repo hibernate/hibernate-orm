@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.archive.internal;
 
@@ -16,7 +14,6 @@ import java.util.List;
 
 import org.hibernate.boot.archive.spi.ArchiveException;
 
-import org.jboss.logging.Logger;
 
 /**
  * Helper for dealing with archives
@@ -25,11 +22,10 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ArchiveHelper {
-	private static final Logger log = Logger.getLogger( ArchiveHelper.class );
 
 	/**
-	 * Get the JAR URL of the JAR containing the given entry
-	 * Method used in a non managed environment
+	 * Get the JAR URL of the JAR containing the given entry.
+	 * Method used in a non-managed environment.
 	 *
 	 * @param url URL pointing to the known file in the JAR
 	 * @param entry file known to be in the JAR
@@ -93,7 +89,7 @@ public class ArchiveHelper {
 					"Unable to determine JAR Url from " + url + ". Cause: " + e.getMessage()
 			);
 		}
-		log.trace( "JAR URL from URL Entry: " + url + " >> " + jarUrl );
+		org.hibernate.boot.BootLogging.BOOT_LOGGER.jarUrlFromUrlEntry( String.valueOf(url), String.valueOf(jarUrl) );
 		return jarUrl;
 	}
 
@@ -118,7 +114,7 @@ public class ArchiveHelper {
 				jarUrl = new URL( "file:" + jarPath );
 			}
 			catch (MalformedURLException ee) {
-				throw new IllegalArgumentException( "Unable to find jar:" + jarPath, ee );
+				throw new IllegalArgumentException( "Unable to find jar: " + jarPath, ee );
 			}
 		}
 		return jarUrl;
@@ -152,12 +148,12 @@ public class ArchiveHelper {
 	 *
 	 * @throws IOException Indicates a problem accessing the stream
 	 *
-	 * @see #getBytesFromInputStreamSafely(java.io.InputStream)
+	 * @see #getBytesFromInputStreamSafely(InputStream)
 	 */
 	public static byte[] getBytesFromInputStream(InputStream inputStream) throws IOException {
 		// Optimized by HHH-7835
 		int size;
-		final List<byte[]> data = new LinkedList<byte[]>();
+		final List<byte[]> data = new LinkedList<>();
 		final int bufferSize = 4096;
 		byte[] tmpByte = new byte[bufferSize];
 		int offset = 0;

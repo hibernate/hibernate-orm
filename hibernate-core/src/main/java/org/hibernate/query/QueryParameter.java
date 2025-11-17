@@ -1,31 +1,59 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
 
 import org.hibernate.Incubating;
-import org.hibernate.type.Type;
+import org.hibernate.type.BindableType;
 
 /**
- * NOTE: Consider this contract (and its sub-contracts) as incubating as we transition to 6.0 and SQM
+ * Represents a parameter defined in the source (HQL/JPQL or criteria) query.
  *
  * @author Steve Ebersole
  */
 @Incubating
-public interface QueryParameter<T> extends javax.persistence.Parameter<T> {
+public interface QueryParameter<T> extends jakarta.persistence.Parameter<T> {
 	/**
-	 * Get the Hibernate Type associated with this parameter.
+	 * Determine if this a named parameter or ordinal.
 	 *
-	 * @return The Hibernate Type.
+	 * @return {@code true} if it is a named parameter;
+	 *         {@code false} if it is ordinal
+	 *
+	 * @since 7.0
 	 */
-	Type getHibernateType();
+	default boolean isNamed() {
+		return getName() != null;
+	}
 
-	int[] getSourceLocations();
+	/**
+	 * Determine if this a named parameter or ordinal.
+	 *
+	 * @return {@code true} if it is an ordinal parameter;
+	 *         {@code false} if it is named
+	 *
+	 * @since 7.0
+	 */
+	default boolean isOrdinal() {
+		return getPosition() != null;
+	}
 
-	// todo : add a method indicating whether this parameter is valid for use in "parameter list binding"
-	//		actually this already implemented in 6.0 code and I'm not going to mess with
-	//		this in earlier versions
+	/**
+	 * Does this parameter allow multi-valued (collection, array, etc) binding?
+	 * <p>
+	 * This is only valid for HQL/JPQL and (I think) Criteria queries, and is
+	 * determined based on the context of the parameters declaration.
+	 *
+	 * @return {@code true} indicates that multi-valued binding is allowed for this
+	 * parameter
+	 */
+	boolean allowsMultiValuedBinding();
+
+	/**
+	 * Get the Hibernate Type associated with this parameter, if one.  May
+	 * return {@code null}.
+	 *
+	 * @return The associated Hibernate Type, may be {@code null}.
+	 */
+	BindableType<T> getHibernateType();
 }

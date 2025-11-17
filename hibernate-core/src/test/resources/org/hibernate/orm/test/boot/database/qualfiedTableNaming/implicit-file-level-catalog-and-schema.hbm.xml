@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+				   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://www.hibernate.org/xsd/hibernate-mapping/hibernate-mapping-4.0.xsd"
+				   package="org.hibernate.orm.test.boot.database.qualfiedTableNaming"
+				   catalog="someImplicitFileLevelCatalog" schema="someImplicitFileLevelSchema" default-access="field">
+	<class name="DefaultCatalogAndSchemaTest$EntityWithHbmXmlImplicitFileLevelQualifiers" entity-name="EntityWithHbmXmlImplicitFileLevelQualifiers">
+		<comment>Some entity-level comment</comment>
+		<id name="id">
+			<column name="id">
+				<comment>Some column-level comment for "id"</comment>
+			</column>
+		</id>
+		<property name="basic">
+			<column name="basic">
+				<comment>Some column-level comment for "property"</comment>
+			</column>
+		</property>
+	</class>
+</hibernate-mapping>

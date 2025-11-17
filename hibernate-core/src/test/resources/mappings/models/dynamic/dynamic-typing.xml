@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <entity name="TheEntity" metadata-complete="true">
+        <attributes>
+            <id name="id">
+                <!-- match full name -->
+                <target>java.lang.Integer</target>
+            </id>
+            <basic name="theBoolean">
+                <!-- match primitive name (highest precedence) -->
+                <target>boolean</target>
+            </basic>
+            <basic name="theString">
+                <!-- match simple name -->
+                <target>String</target>
+            </basic>
+            <basic name="theInt">
+                <!-- match primitive name (highest precedence) -->
+                <target>int</target>
+            </basic>
+            <basic name="theInteger">
+                <!-- match simple name -->
+                <target>Integer</target>
+            </basic>
+            <basic name="theUrl">
+                <target>java.net.URL</target>
+            </basic>
+            <basic name="theClob">
+                <target>java.sql.Clob</target>
+            </basic>
+            <basic name="theInstant">
+                <target>java.time.Instant</target>
+            </basic>
+            <basic name="theDate">
+                <temporal>DATE</temporal>
+            </basic>
+            <basic name="theTime">
+                <temporal>TIME</temporal>
+            </basic>
+            <basic name="theTimestamp">
+                <temporal>TIMESTAMP</temporal>
+            </basic>
+
+            <element-collection name="listOfIntegers" classification="LIST" target-class="java.lang.Integer">
+                <order-column name="position"/>
+                <column name="numbers"/>
+                <collection-table>
+                    <join-column name="fk"/>
+                </collection-table>
+            </element-collection>
+
+            <element-collection name="listOfUuids" classification="LIST" target-class="java.util.UUID">
+                <order-column name="position"/>
+                <column name="uuids"/>
+                <collection-table>
+                    <join-column name="fk"/>
+                </collection-table>
+            </element-collection>
+        </attributes>
+    </entity>
+</entity-mappings>

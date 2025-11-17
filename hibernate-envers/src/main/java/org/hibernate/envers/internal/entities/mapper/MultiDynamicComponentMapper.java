@@ -1,17 +1,15 @@
-	/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper;
 
-import java.util.Map;
-
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+
+import java.util.Map;
 
 /**
  * Multi mapper for dynamic components (it knows that component is a map, not a class)
@@ -45,7 +43,7 @@ public class MultiDynamicComponentMapper extends MultiPropertyMapper {
 
 	@Override
 	public boolean mapToMapFromEntity(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
@@ -71,7 +69,7 @@ public class MultiDynamicComponentMapper extends MultiPropertyMapper {
 
 	@Override
 	public boolean map(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			String[] propertyNames,
 			Object[] newState,
@@ -94,7 +92,7 @@ public class MultiDynamicComponentMapper extends MultiPropertyMapper {
 
 	@Override
 	public void mapModifiedFlagsToMapFromEntity(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
@@ -121,5 +119,15 @@ public class MultiDynamicComponentMapper extends MultiPropertyMapper {
 		for ( PropertyMapper mapper : properties.values() ) {
 			mapper.mapToEntityFromMap( enversService, obj, data, primaryKey, versionsReader, revision );
 		}
+	}
+
+	@Override
+	public Object mapToEntityFromMap(
+			EnversService enversService,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision) {
+		return null;
 	}
 }

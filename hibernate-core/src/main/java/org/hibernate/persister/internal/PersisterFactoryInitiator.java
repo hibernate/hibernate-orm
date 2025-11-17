@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.internal;
 
@@ -28,20 +26,21 @@ public class PersisterFactoryInitiator implements StandardServiceInitiator<Persi
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
-	public PersisterFactory initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public PersisterFactory initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final Object customImpl = configurationValues.get( IMPL_NAME );
 		if ( customImpl == null ) {
 			return new PersisterFactoryImpl();
 		}
 
-		if ( PersisterFactory.class.isInstance( customImpl ) ) {
-			return (PersisterFactory) customImpl;
+		if ( customImpl instanceof PersisterFactory persisterFactory ) {
+			return persisterFactory;
 		}
 
-		final Class<? extends PersisterFactory> customImplClass = Class.class.isInstance( customImpl )
-				? ( Class<? extends PersisterFactory> ) customImpl
-				: locate( registry, customImpl.toString() );
+		@SuppressWarnings("unchecked")
+		final var customImplClass =
+				customImpl instanceof Class
+						? (Class<? extends PersisterFactory>) customImpl
+						: locate( registry, customImpl.toString() );
 		try {
 			return customImplClass.newInstance();
 		}
@@ -51,6 +50,6 @@ public class PersisterFactoryInitiator implements StandardServiceInitiator<Persi
 	}
 
 	private Class<? extends PersisterFactory> locate(ServiceRegistryImplementor registry, String className) {
-		return registry.getService( ClassLoaderService.class ).classForName( className );
+		return registry.requireService( ClassLoaderService.class ).classForName( className );
 	}
 }

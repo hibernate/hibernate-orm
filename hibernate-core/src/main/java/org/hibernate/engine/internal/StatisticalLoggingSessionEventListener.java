@@ -1,20 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
 
-import org.hibernate.BaseSessionEventListener;
+import org.hibernate.SessionEventListener;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.engine.internal.SessionMetricsLogger.SESSION_METRICS_LOGGER;
 
 /**
+ * Tracks and logs certain session-level metrics.
+ *
  * @author Steve Ebersole
  */
-public class StatisticalLoggingSessionEventListener extends BaseSessionEventListener {
-	private static final Logger log = Logger.getLogger( StatisticalLoggingSessionEventListener.class );
+public class StatisticalLoggingSessionEventListener implements SessionEventListener {
 
 	/**
 	 * Used by SettingsFactory (in conjunction with stats being enabled) to determine whether to apply this listener
@@ -22,7 +21,7 @@ public class StatisticalLoggingSessionEventListener extends BaseSessionEventList
 	 * @return {@code true} if logging is enabled for this listener.
 	 */
 	public static boolean isLoggingEnabled() {
-		return log.isInfoEnabled();
+		return SESSION_METRICS_LOGGER.isDebugEnabled();
 	}
 
 	// cumulative state ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -60,6 +59,9 @@ public class StatisticalLoggingSessionEventListener extends BaseSessionEventList
 	private long partialFlushEntityCount;
 	private long partialFlushCollectionCount;
 	private long partialFlushTime;
+
+	private int prePartialFlushCount;
+	private long prePartialFlushTime;
 
 
 	// JDBC Connection acquisition ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -235,6 +237,22 @@ public class StatisticalLoggingSessionEventListener extends BaseSessionEventList
 	// Partial-flushing  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private long partialFlushStart = -1;
+	private long prePartialFlushStart = -1;
+
+	@Override
+	public void prePartialFlushStart() {
+		assert prePartialFlushStart < 0 : "Nested calls to prePartialFlushStart";
+		prePartialFlushStart = System.nanoTime();
+	}
+
+	@Override
+	public void prePartialFlushEnd() {
+		assert prePartialFlushStart > 0 : "Unexpected call to prePartialFlushEnd; expecting prePartialFlushStart";
+
+		prePartialFlushCount++;
+		prePartialFlushTime += ( System.nanoTime() - prePartialFlushStart );
+		prePartialFlushStart = -1;
+	}
 
 	@Override
 	public void partialFlushStart() {
@@ -255,43 +273,35 @@ public class StatisticalLoggingSessionEventListener extends BaseSessionEventList
 
 	@Override
 	public void end() {
-		log.infof(
-				"Session Metrics {\n" +
-						"    %s nanoseconds spent acquiring %s JDBC connections;\n" +
-						"    %s nanoseconds spent releasing %s JDBC connections;\n" +
-						"    %s nanoseconds spent preparing %s JDBC statements;\n" +
-						"    %s nanoseconds spent executing %s JDBC statements;\n" +
-						"    %s nanoseconds spent executing %s JDBC batches;\n" +
-						"    %s nanoseconds spent performing %s L2C puts;\n" +
-						"    %s nanoseconds spent performing %s L2C hits;\n" +
-						"    %s nanoseconds spent performing %s L2C misses;\n" +
-						"    %s nanoseconds spent executing %s flushes (flushing a total of %s entities and %s collections);\n" +
-						"    %s nanoseconds spent executing %s partial-flushes (flushing a total of %s entities and %s collections)\n" +
-						"}",
-				jdbcConnectionAcquisitionTime,
-				jdbcConnectionAcquisitionCount,
-				jdbcConnectionReleaseTime,
-				jdbcConnectionReleaseCount,
-				jdbcPrepareStatementTime,
-				jdbcPrepareStatementCount,
-				jdbcExecuteStatementTime,
-				jdbcExecuteStatementCount,
-				jdbcExecuteBatchTime,
-				jdbcExecuteBatchCount,
-				cachePutTime,
-				cachePutCount,
-				cacheHitTime,
-				cacheHitCount,
-				cacheMissTime,
-				cacheMissCount,
-				flushTime,
-				flushCount,
-				flushEntityCount,
-				flushCollectionCount,
-				partialFlushTime,
-				partialFlushCount,
-				partialFlushEntityCount,
-				partialFlushCollectionCount
-		);
+		if ( isLoggingEnabled() ) {
+			SESSION_METRICS_LOGGER.sessionMetrics(
+					jdbcConnectionAcquisitionTime,
+					jdbcConnectionAcquisitionCount,
+					jdbcConnectionReleaseTime,
+					jdbcConnectionReleaseCount,
+					jdbcPrepareStatementTime,
+					jdbcPrepareStatementCount,
+					jdbcExecuteStatementTime,
+					jdbcExecuteStatementCount,
+					jdbcExecuteBatchTime,
+					jdbcExecuteBatchCount,
+					cachePutTime,
+					cachePutCount,
+					cacheHitTime,
+					cacheHitCount,
+					cacheMissTime,
+					cacheMissCount,
+					flushTime,
+					flushCount,
+					flushEntityCount,
+					flushCollectionCount,
+					prePartialFlushTime,
+					prePartialFlushCount,
+					partialFlushTime,
+					partialFlushCount,
+					partialFlushEntityCount,
+					partialFlushCollectionCount
+			);
+		}
 	}
 }

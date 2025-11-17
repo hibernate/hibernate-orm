@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.jdbc;
 
@@ -12,12 +10,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
+import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
+
+import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.resolveFromSettings;
 
 /**
  * This {@link ConnectionProvider} extends any other ConnectionProvider
@@ -35,12 +38,19 @@ public class ConnectionProviderDelegate implements
 
 	private ConnectionProvider connectionProvider;
 	private boolean configured;
+	private final boolean forceSupportsAggressiveRelease;
 
-	public ConnectionProviderDelegate() {
+	public ConnectionProviderDelegate(){
+		this(false);
+	}
+
+	public ConnectionProviderDelegate(boolean forceSupportsAggressiveRelease) {
+		this.forceSupportsAggressiveRelease = forceSupportsAggressiveRelease;
 	}
 
 	public ConnectionProviderDelegate(ConnectionProvider connectionProvider) {
 		this.connectionProvider = connectionProvider;
+		this.forceSupportsAggressiveRelease = false;
 	}
 
 	public ConnectionProvider getConnectionProvider() {
@@ -57,16 +67,19 @@ public class ConnectionProviderDelegate implements
 	}
 
 	@Override
-	public void configure(Map configurationValues) {
+	public void configure(Map<String, Object> configurationValues) {
 		if ( !configured ) {
 			if ( connectionProvider == null ) {
-				@SuppressWarnings("unchecked")
+				resolveFromSettings( configurationValues );
 				Map<String, Object> settings = new HashMap<>( configurationValues );
 				settings.remove( AvailableSettings.CONNECTION_PROVIDER );
 				connectionProvider = ConnectionProviderInitiator.INSTANCE.initiateService(
 						settings,
 						serviceRegistry
 				);
+			}
+			if ( connectionProvider instanceof ServiceRegistryAwareService ) {
+				( (ServiceRegistryAwareService) connectionProvider ).injectServices( serviceRegistry );
 			}
 			if ( connectionProvider instanceof Configurable ) {
 				Configurable configurableConnectionProvider = (Configurable) connectionProvider;
@@ -82,17 +95,28 @@ public class ConnectionProviderDelegate implements
 	}
 
 	@Override
-	public void closeConnection(Connection conn) throws SQLException {
-		connectionProvider.closeConnection( conn );
+	public void closeConnection(Connection connection) throws SQLException {
+		connectionProvider.closeConnection( connection );
 	}
 
 	@Override
 	public boolean supportsAggressiveRelease() {
-		return connectionProvider.supportsAggressiveRelease();
+		return forceSupportsAggressiveRelease
+			|| connectionProvider.supportsAggressiveRelease();
 	}
 
 	@Override
-	public boolean isUnwrappableAs(Class unwrapType) {
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		return connectionProvider.getDatabaseConnectionInfo( dialect );
+	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect, ExtractedDatabaseMetaData metaData) {
+		return connectionProvider.getDatabaseConnectionInfo( dialect, metaData );
+	}
+
+	@Override
+	public boolean isUnwrappableAs(Class<?> unwrapType) {
 		return connectionProvider.isUnwrappableAs( unwrapType );
 	}
 
@@ -107,4 +131,6 @@ public class ConnectionProviderDelegate implements
 			( (Stoppable) connectionProvider ).stop();
 		}
 	}
+
+
 }

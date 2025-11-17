@@ -1,63 +1,50 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot;
 
 /**
- * Models the definition of caching settings for a particular region.  Generally as found in either:<ul>
+ * Models the definition of caching settings for a particular region.  Generally found in:<ul>
  *     <li>{@code cfg.xml}</li>
+ *     <li>annotations</li>
+ *     <li>{@code orm.xml}</li>
  *     <li>{@code hbm.xml}</li>
- *     <li>annotation</li>
  * </ul>
- * Though certainly other custom sources are acceptable too.
  *
  * @author Steve Ebersole
  */
-public class CacheRegionDefinition {
-	public static enum CacheRegionType {
+public record CacheRegionDefinition(CacheRegionType regionType,
+									String role, String usage, String region,
+									boolean cacheLazy) {
+
+	public enum CacheRegionType {
 		ENTITY,
 		COLLECTION,
 		QUERY
 	}
 
-	private final CacheRegionType regionType;
-	private final String role;
-	private final String usage;
-	private final String region;
-	private final boolean cacheLazy;
-
-	public CacheRegionDefinition(
-			CacheRegionType cacheType,
-			String role,
-			String usage,
-			String region,
-			boolean cacheLazy) {
-		this.regionType = cacheType;
-		this.role = role;
-		this.usage = usage;
-		this.region = region;
-		this.cacheLazy = cacheLazy;
-	}
-
+	@Deprecated(since = "7")
 	public CacheRegionType getRegionType() {
 		return regionType;
 	}
 
+	@Deprecated(since = "7")
 	public String getRole() {
 		return role;
 	}
 
+	@Deprecated(since = "7")
 	public String getUsage() {
 		return usage;
 	}
 
+	@Deprecated(since = "7")
 	public String getRegion() {
 		return region;
 	}
 
+	@Deprecated(since = "7")
 	public boolean isCacheLazy() {
 		return cacheLazy;
 	}

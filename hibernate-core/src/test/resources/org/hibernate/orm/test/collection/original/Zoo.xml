@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				 version="7.0">
+	<package>org.hibernate.orm.test.collection.original</package>
+
+	<entity class="Zoo">
+		<attributes>
+			<id name="id">
+				<generated-value generator="native" />
+			</id>
+			<one-to-many name="animals">
+				<order-column name="list_index"/>
+				<join-column name="zoo_fk" nullable="false"/>
+				<cascade>
+					<cascade-persist/>
+					<cascade-merge/>
+					<cascade-remove/>
+				</cascade>
+			</one-to-many>
+		</attributes>
+	</entity>
+
+	<entity class="Animal">
+		<inheritance strategy="SINGLE_TABLE"/>
+		<discriminator-value>ANIMAL</discriminator-value>
+		<discriminator-column name="discriminator"/>
+		<attributes>
+			<id name="id">
+				<generated-value generator="increment"/>
+			</id>
+			<basic name="name"/>
+			<many-to-one name="zoo">
+				<cascade>
+					<cascade-persist/>
+					<cascade-merge/>
+					<cascade-remove/>
+				</cascade>
+			</many-to-one>
+		</attributes>
+	</entity>
+
+	<entity class="Mammal">
+		<secondary-table name="animal_mammal">
+			<primary-key-join-column name="animal_fk"/>
+		</secondary-table>
+		<discriminator-value>MAMMAL</discriminator-value>
+		<attributes>
+			<basic name="mammalName">
+				<column table="animal_mammal"/>
+			</basic>
+			<basic name="mammalName2">
+				<column table="animal_mammal"/>
+			</basic>
+			<basic name="mammalName3">
+				<column table="animal_mammal"/>
+			</basic>
+		</attributes>
+	</entity>
+</entity-mappings>

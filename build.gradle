@@ -1,84 +1,56 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 
 buildscript {
-	repositories {
-		jcenter()
-		mavenCentral()
-	}
+//	repositories {
+//		mavenCentral()
+//	}
+
 	dependencies {
-		classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:3.0.0.Final'
-		classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
-		classpath 'gradle.plugin.com.github.lburgazzoli:gradle-karaf-plugin:0.5.1'
-		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.7'
-		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
-		classpath 'de.thetaphi:forbiddenapis:3.0.1'
+//		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.7'
+		classpath buildscriptLibs.forbiddenapis
+		classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.3'
 	}
 }
+
 
 plugins {
-	id 'me.champeau.buildscan-recipes' version '0.2.3'
-	id 'org.hibernate.build.xjc' version '2.0.1' apply false
-	id 'org.hibernate.build.maven-repo-auth' version '3.0.3' apply false
-	id 'biz.aQute.bnd' version '5.1.1' apply false
-}
+	id "local.module"
 
-allprojects {
-	repositories {
-		mavenCentral()
-		//Allow loading additional dependencies from a local path;
-		//useful to load JDBC drivers which can not be distributed in public.
-		if (System.env['ADDITIONAL_REPO'] != null) {
-			flatDir {
-				dirs "${System.env.ADDITIONAL_REPO}"
-			}
-		}
-	}
-	apply plugin: 'idea'
+	id "org.hibernate.build.version-injection" version "2.2.0" apply false
+	id 'org.hibernate.orm.database-service' apply false
+	id 'biz.aQute.bnd' version '7.1.0' apply false
 
-	// minimize changes, at least for now (gradle uses 'build' by default)..
-	buildDir = "target"
+	id "com.diffplug.spotless" version "7.0.4"
+	id 'org.checkerframework' version '0.6.61'
+	id 'org.hibernate.orm.build.jdks'
 
-	apply from: rootProject.file( 'gradle/base-information.gradle' )
+	id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
+
+	id 'idea'
+	id 'org.jetbrains.gradle.plugin.idea-ext' version '1.1.10'
+	id 'eclipse'
+	id "com.dorongold.task-tree" version "4.0.1"
 }
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Release Task
+// Releasing
 
-task release {
-	description = "The task performed when we are performing a release build.  Relies on " +
-			"the fact that subprojects will appropriately define a release task " +
-			"themselves if they have any release-related activities to perform"
-
-	doFirst {
-		def javaVersionsInUse = [gradle.ext.javaVersions.main.compiler, gradle.ext.javaVersions.main.release,
-								 gradle.ext.javaVersions.test.compiler, gradle.ext.javaVersions.test.release,
-								 gradle.ext.javaVersions.test.launcher].toSet()
-		// Force to release with JDK 8. It used to not work on JDK11 because of the hibernate-orm-modules module,
-		// but this limitation might be resolved now that this module has been deleted?
-		if ( javaVersionsInUse != [JavaLanguageVersion.of( 8 )].toSet() ) {
-			throw new IllegalStateException( "Please use JDK 8 to perform the release. Currently using: ${javaVersionsInUse}" )
-		}
-	}
+tasks.register( 'releasePrepare' ) {
+	group "release-prepare"
+	description "Scripted release 'Release Prepare' stage.  " +
+			"Includes various checks as to the publish-ability of the project: testing, generation, etc.  " +
+			"Sub-projects register their own `releasePrepare` to hook into this stage."
+	// See `:release:releasePrepare` which does a lot of heavy lifting here
 }
-
-task publish {
-	description = "The task performed when we want to just publish maven artifacts.  Relies on " +
-			"the fact that subprojects will appropriately define a release task " +
-			"themselves if they have any release-related activities to perform"
-}
-
-
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // CI Build Task
 
-task ciBuild {
+tasks.register('ciBuild') {
 	description = "The task performed when one of the 'main' jobs are triggered on the " +
 			"CI server.  Just as above, relies on the fact that subprojects will " +
 			"appropriately define a release task themselves if they have any tasks " +
@@ -86,33 +58,22 @@ task ciBuild {
 }
 
 
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Misc...
+
 wrapper {
 	// To upgrade the version of gradle used in the wrapper, run:
 	//     ./gradlew wrapper --gradle-version NEW_VERSION
-	distributionType = Wrapper.DistributionType.ALL
+
+	// uncomment locally if you need to debug build scripts.
+	// in such cases, having the sources helps
+	//distributionType = Wrapper.DistributionType.ALL
 }
 
 
-buildScan {
-	termsOfServiceUrl = 'https://gradle.com/terms-of-service'
-	termsOfServiceAgree = 'yes'
+idea {
+	module {
+		name = "hibernate-orm"
+	}
 }
-
-buildScanRecipes {
-	recipe 'git-commit', baseUrl: 'https://github.com/hibernate/hibernate-orm/tree'
-}
-
-//idea {
-//    project {
-//		jdkName = gradle.ext.baselineJavaVersion
-//		languageLevel = gradle.ext.baselineJavaVersion
-//
-//		vcs = 'Git'
-//    }
-//    module {
-//        name = "hibernate-orm"
-//    }
-//}
-
-
-

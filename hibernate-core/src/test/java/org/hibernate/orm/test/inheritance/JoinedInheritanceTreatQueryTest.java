@@ -1,0 +1,332 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.orm.test.inheritance;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * @author Marco Belladelli
+ */
+@SuppressWarnings("JUnitMalformedDeclaration")
+@SessionFactory( useCollectingStatementInspector = true )
+@DomainModel( annotatedClasses = {
+		JoinedInheritanceTreatQueryTest.Product.class,
+		JoinedInheritanceTreatQueryTest.ProductOwner.class,
+		JoinedInheritanceTreatQueryTest.ProductOwner1.class,
+		JoinedInheritanceTreatQueryTest.ProductOwner2.class,
+		JoinedInheritanceTreatQueryTest.Description.class,
+} )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-16574" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-18745" )
+public class JoinedInheritanceTreatQueryTest {
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final Description description = new Description( "description" );
+			session.persist( description );
+			final ProductOwner1 own1 = new ProductOwner1( description );
+			session.persist( own1 );
+			session.persist( new Product( own1 ) );
+			final ProductOwner2 own2 = new ProductOwner2( "basic_prop" );
+			session.persist( own2 );
+			session.persist( new Product( own2 ) );
+		} );
+	}
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.dropData();
+	}
+
+	@Test
+	public void testTreatedJoin(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			//noinspection removal
+			final Product result = session.createQuery(
+					"from Product p " +
+							"join treat(p.owner AS ProductOwner1) as own1 " +
+							"join own1.description",
+					Product.class
+			).getSingleResult();
+			assertThat( result.getOwner() ).isInstanceOf( ProductOwner1.class );
+			assertThat( ( (ProductOwner1) result.getOwner() ).getDescription().getText() ).isEqualTo( "description" );
+			inspector.assertNumberOfJoins( 0, 3 );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	public void testTreatedJoinWithCondition(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			final List<Product> result = session.createSelectionQuery(
+					"from Product p " +
+					"join treat(p.owner AS ProductOwner2) as own1 on own1.basicProp = 'unknown value'",
+					Product.class
+			).getResultList();
+			assertThat( result ).isEmpty();
+			inspector.assertNumberOfJoins( 0, 2 );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	public void testMultipleTreatedJoinWithCondition(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			final List<Product> result = session.createSelectionQuery(
+					"from Product p " +
+					"join treat(p.owner AS ProductOwner1) as own1 on own1.description is null " +
+					"join treat(p.owner AS ProductOwner2) as own2 on own2.basicProp = 'unknown value'",
+					Product.class
+			).getResultList();
+			assertThat( result ).isEmpty();
+			inspector.assertNumberOfJoins( 0, 4 );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	public void testMultipleTreatedJoinSameAttribute(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			final List<Product> result = session.createSelectionQuery(
+					"from Product p " +
+					"join treat(p.owner AS ProductOwner1) as own1 " +
+					"join treat(p.owner AS ProductOwner2) as own2",
+					Product.class
+			).getResultList();
+			// No rows, because treat joining the same association with disjunct types can't emit results
+			assertThat( result ).isEmpty();
+			inspector.assertNumberOfJoins( 0, 4 );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	public void testMultipleTreatedJoinSameAttributeCriteria(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			final var cb = session.getCriteriaBuilder();
+			final var query = cb.createQuery(Product.class);
+			final var p = query.from( Product.class );
+			p.join( "owner" ).treatAs( ProductOwner1.class );
+			p.join( "owner" ).treatAs( ProductOwner2.class );
+			final List<Product> result = session.createSelectionQuery( query ).getResultList();
+			// No rows, because treat joining the same association with disjunct types can't emit results
+			assertThat( result ).isEmpty();
+			inspector.assertNumberOfJoins( 0, 4 );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	public void testMultipleTreatedJoinCriteria(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			final var cb = session.getCriteriaBuilder();
+			final var query = cb.createQuery(Product.class);
+			final var p = query.from( Product.class );
+			final var ownerJoin = p.join( "owner" );
+			ownerJoin.treatAs( ProductOwner1.class );
+			ownerJoin.treatAs( ProductOwner2.class );
+			final List<Product> result = session.createSelectionQuery( query ).getResultList();
+			// The owner attribute is inner joined, but since there are multiple subtype treats,
+			// the type restriction for the treat usage does not filter rows
+			assertThat( result ).hasSize( 2 );
+			inspector.assertNumberOfJoins( 0, 3 );
+		} );
+	}
+
+	@Test
+	public void testImplicitTreatedJoin(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			//noinspection removal
+			final Product result = session.createQuery(
+					"from Product p " +
+							"join treat(p.owner as ProductOwner1).description",
+					Product.class
+			).getSingleResult();
+			assertThat( result.getOwner() ).isInstanceOf( ProductOwner1.class );
+			assertThat( ( (ProductOwner1) result.getOwner() ).getDescription().getText() ).isEqualTo( "description" );
+			inspector.assertNumberOfJoins( 0, 3 );
+		} );
+	}
+
+	@Test
+	public void testTreatedRoot(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			//noinspection removal
+			final ProductOwner result = session.createQuery(
+					"from ProductOwner owner " +
+							"join treat(owner as ProductOwner1).description",
+					ProductOwner.class
+			).getSingleResult();
+			assertThat( result ).isInstanceOf( ProductOwner1.class );
+			assertThat( ( (ProductOwner1) result ).getDescription().getText() ).isEqualTo( "description" );
+			inspector.assertNumberOfJoins( 0, 3 );
+		} );
+	}
+
+	@Test
+	public void testTreatedEntityJoin(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			//noinspection removal
+			final Product result = session.createQuery(
+					"from Product p " +
+							"join ProductOwner owner on p.ownerId = owner.id " +
+							"join treat(owner as ProductOwner1).description",
+					Product.class
+			).getSingleResult();
+			assertThat( result.getOwner() ).isInstanceOf( ProductOwner1.class );
+			assertThat( ( (ProductOwner1) result.getOwner() ).getDescription().getText() ).isEqualTo( "description" );
+			inspector.assertNumberOfJoins( 0, 3 );
+		} );
+	}
+
+	@Test
+	public void testBasicProperty(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			//noinspection removal
+			final Product result = session.createQuery(
+					"from Product p " +
+							"join treat(p.owner AS ProductOwner2) as own2 " +
+							"where own2.basicProp = 'basic_prop'",
+					Product.class
+			).getSingleResult();
+			assertThat( result.getOwner() ).isInstanceOf( ProductOwner2.class );
+			assertThat( ( (ProductOwner2) result.getOwner() ).getBasicProp() ).isEqualTo( "basic_prop" );
+			inspector.assertNumberOfJoins( 0, 2 );
+		} );
+	}
+
+	@SuppressWarnings("unused")
+	@Entity( name = "Product" )
+	public static class Product {
+		@Id
+		@GeneratedValue
+		private Integer id;
+
+		@ManyToOne
+		@JoinColumn( name = "owner_id" )
+		private ProductOwner owner;
+
+		@Column( name = "owner_id", insertable = false, updatable = false )
+		private Integer ownerId;
+
+		public Product() {
+		}
+
+		public Product(ProductOwner owner) {
+			this.owner = owner;
+		}
+
+		public ProductOwner getOwner() {
+			return owner;
+		}
+	}
+
+	@SuppressWarnings("unused")
+	@Entity( name = "ProductOwner" )
+	@Inheritance( strategy = InheritanceType.JOINED )
+	public static class ProductOwner {
+		@Id
+		@GeneratedValue
+		private Integer id;
+	}
+
+	@SuppressWarnings("unused")
+	@Entity( name = "ProductOwner1" )
+	public static class ProductOwner1 extends ProductOwner {
+		@ManyToOne
+		private Description description;
+
+		public ProductOwner1() {
+		}
+
+		public ProductOwner1(Description description) {
+			this.description = description;
+		}
+
+		public Description getDescription() {
+			return description;
+		}
+	}
+
+	@SuppressWarnings("unused")
+	@Entity( name = "ProductOwner2" )
+	public static class ProductOwner2 extends ProductOwner {
+		@ManyToOne
+		private Description description;
+
+		private String basicProp;
+
+		public ProductOwner2() {
+		}
+
+		public ProductOwner2(String basicProp) {
+			this.basicProp = basicProp;
+		}
+
+		public String getBasicProp() {
+			return basicProp;
+		}
+	}
+
+	@SuppressWarnings("unused")
+	@Entity( name = "Description" )
+	public static class Description {
+		@Id
+		@GeneratedValue
+		public Integer id;
+
+		public String text;
+
+		public Description() {
+		}
+
+		public Description(String text) {
+			this.text = text;
+		}
+
+		public String getText() {
+			return text;
+		}
+	}
+}

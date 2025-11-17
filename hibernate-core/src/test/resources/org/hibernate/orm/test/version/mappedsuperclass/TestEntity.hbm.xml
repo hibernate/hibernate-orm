@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+    Demonstrates how to control the optimistic locking behavior
+    of a collection (do changes to the collection result in
+    a version increment on the owning instance)
+ -->
+<hibernate-mapping
+        package="org.hibernate.orm.test.version.mappedsuperclass">
+
+    <class name="TestEntity">
+        <id name="id">
+            <generator class="native"/>
+        </id>
+        <version name="version" column="`version`"/>
+        <property name="name"/>
+    </class>
+</hibernate-mapping>

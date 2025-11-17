@@ -1,14 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.revisioninfo;
 
-import java.io.Serializable;
-
-import org.hibernate.Session;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
 
 /**
@@ -20,14 +16,14 @@ public interface RevisionInfoGenerator {
 	 */
 	void setRevisionInfoNumberReader(RevisionInfoNumberReader revisionInfoNumberReader);
 
-	void saveRevisionData(Session session, Object revisionData);
+	void saveRevisionData(SharedSessionContractImplementor session, Object revisionData);
 
 	Object generate();
 
 	/**
-	 * @see org.hibernate.envers.EntityTrackingRevisionListener#entityChanged(Class, String, Serializable, RevisionType, Object)
+	 * @see org.hibernate.envers.EntityTrackingRevisionListener#entityChanged(Class, String, Object, RevisionType, Object)
 	 */
 	void entityChanged(
-			Class entityClass, String entityName, Serializable entityId, RevisionType revisionType,
+			Class entityClass, String entityName, Object entityId, RevisionType revisionType,
 			Object revisionEntity);
 }

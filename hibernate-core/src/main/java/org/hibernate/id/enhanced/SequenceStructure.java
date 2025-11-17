@@ -1,29 +1,26 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.enhanced;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.Sequence;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.mapping.Table;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
+import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHolder;
+import static org.hibernate.id.enhanced.ResyncHelper.getNextSequenceValue;
+import static org.hibernate.id.enhanced.ResyncHelper.getMaxPrimaryKey;
 
 /**
  * Describes a sequence.
@@ -31,37 +28,53 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class SequenceStructure implements DatabaseStructure {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			SequenceStructure.class.getName()
-	);
 
+	private final String contributor;
 	private final QualifiedName logicalQualifiedSequenceName;
 	private final int initialValue;
 	private final int incrementSize;
-	private final Class numberType;
+	private final Class<?> numberType;
+	private final String options;
 
 	private String sql;
 	private boolean applyIncrementSizeToSourceValues;
 	private int accessCounter;
-	protected String sequenceName;
+	protected QualifiedName physicalSequenceName;
 
 	public SequenceStructure(
-			JdbcEnvironment jdbcEnvironment,
+			String contributor,
 			QualifiedName qualifiedSequenceName,
 			int initialValue,
 			int incrementSize,
-			Class numberType) {
+			Class<?> numberType) {
+		this.contributor = contributor;
 		this.logicalQualifiedSequenceName = qualifiedSequenceName;
 
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
 		this.numberType = numberType;
+		this.options = null;
+	}
+
+	public SequenceStructure(
+			String contributor,
+			QualifiedName qualifiedSequenceName,
+			int initialValue,
+			int incrementSize,
+			String options,
+			Class<?> numberType) {
+		this.contributor = contributor;
+		this.logicalQualifiedSequenceName = qualifiedSequenceName;
+
+		this.initialValue = initialValue;
+		this.incrementSize = incrementSize;
+		this.options = options;
+		this.numberType = numberType;
 	}
 
 	@Override
-	public String getName() {
-		return sequenceName;
+	public QualifiedName getPhysicalName() {
+		return physicalSequenceName;
 	}
 
 	@Override
@@ -79,6 +92,11 @@ public class SequenceStructure implements DatabaseStructure {
 		return initialValue;
 	}
 
+	@Override @Deprecated
+	public String[] getAllSqlForTests() {
+		return new String[] { sql };
+	}
+
 	@Override
 	public AccessCallback buildCallback(final SharedSessionContractImplementor session) {
 		if ( sql == null ) {
@@ -90,21 +108,23 @@ public class SequenceStructure implements DatabaseStructure {
 			public IntegralDataTypeHolder getNextValue() {
 				accessCounter++;
 				try {
-					final PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
+					final var jdbcCoordinator = session.getJdbcCoordinator();
+					final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
+					final var resourceRegistry = jdbcCoordinator.getLogicalConnection().getResourceRegistry();
 					try {
-						final ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
+						final var resultSet = jdbcCoordinator.getResultSetReturn().extract( statement, sql );
 						try {
-							rs.next();
-							final IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( numberType );
-							value.initialize( rs, 1 );
-							if ( LOG.isDebugEnabled() ) {
-								LOG.debugf( "Sequence value obtained: %s", value.makeValue() );
+							resultSet.next();
+							final var value = getIntegralDataTypeHolder( numberType );
+							value.initialize( resultSet, 1 );
+							if ( JDBC_LOGGER.isTraceEnabled() ) {
+								JDBC_LOGGER.sequenceValueRetrievedFromDatabase( value.makeValue() );
 							}
 							return value;
 						}
 						finally {
 							try {
-								session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, st );
+								resourceRegistry.release( resultSet, statement );
 							}
 							catch( Throwable ignore ) {
 								// intentionally empty
@@ -112,8 +132,8 @@ public class SequenceStructure implements DatabaseStructure {
 						}
 					}
 					finally {
-						session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
-						session.getJdbcCoordinator().afterStatementExecution();
+						resourceRegistry.release( statement );
+						jdbcCoordinator.afterStatementExecution();
 					}
 
 				}
@@ -134,24 +154,41 @@ public class SequenceStructure implements DatabaseStructure {
 	}
 
 	@Override
-	public void prepare(Optimizer optimizer) {
+	public void configure(Optimizer optimizer) {
 		applyIncrementSizeToSourceValues = optimizer.applyIncrementSizeToSourceValues();
 	}
 
 	@Override
 	public void registerExportables(Database database) {
 		buildSequence( database );
-		this.sql = database.getJdbcEnvironment().getDialect().getSequenceNextValString( sequenceName );
 	}
 
 	@Override
-	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		return dialect.getCreateSequenceStrings( sequenceName, initialValue, getSourceIncrementSize() );
+	public void initialize(SqlStringGenerationContext context) {
+		sql = context.getDialect().getSequenceSupport()
+				.getSequenceNextValString( context.format( physicalSequenceName ) );
 	}
 
 	@Override
-	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		return dialect.getDropSequenceStrings( sequenceName );
+	public void registerExtraExportables(Table table, Optimizer optimizer) {
+		table.addResyncCommand( (sqlContext, isolator) -> {
+			final String sequenceName = sqlContext.format( physicalSequenceName );
+			final String tableName = sqlContext.format( table.getQualifiedTableName() );
+			final String primaryKeyColumnName = table.getPrimaryKey().getColumn( 0 ).getName();
+			final int adjustment = optimizer.getAdjustment();
+			final long max = getMaxPrimaryKey( isolator, primaryKeyColumnName, tableName );
+			final long current = getNextSequenceValue( isolator, sequenceName);
+			final long startWith = Math.max( max + adjustment, current );
+			optimizer.reset();
+			return new InitCommand( sqlContext.getDialect().getSequenceSupport()
+					.getRestartSequenceString( sequenceName, startWith ) );
+		} );
+		table.addResetCommand( sqlContext -> {
+			optimizer.reset();
+			final String sequenceName = sqlContext.format( physicalSequenceName );
+			return new InitCommand( sqlContext.getDialect().getSequenceSupport()
+					.getRestartSequenceString( sequenceName, initialValue ) );
+		} );
 	}
 
 	@Override
@@ -168,23 +205,35 @@ public class SequenceStructure implements DatabaseStructure {
 	}
 
 	protected void buildSequence(Database database) {
-		final int sourceIncrementSize = getSourceIncrementSize();
+		final var sequence =
+				locateOrCreateSequence( database.locateNamespace(
+						logicalQualifiedSequenceName.getCatalogName(),
+						logicalQualifiedSequenceName.getSchemaName()
+				) );
+		physicalSequenceName = sequence.getName();
+	}
 
-		final Namespace namespace = database.locateNamespace(
-				logicalQualifiedSequenceName.getCatalogName(),
-				logicalQualifiedSequenceName.getSchemaName()
-		);
-		Sequence sequence = namespace.locateSequence( logicalQualifiedSequenceName.getObjectName() );
-		if ( sequence != null ) {
-			sequence.validate( initialValue, sourceIncrementSize );
+	private Sequence locateOrCreateSequence(Namespace namespace) {
+		final int sourceIncrementSize = getSourceIncrementSize();
+		final var objectName = logicalQualifiedSequenceName.getObjectName();
+		final var existingSequence = namespace.locateSequence( objectName );
+		if ( existingSequence != null ) {
+			existingSequence.validate( initialValue, sourceIncrementSize );
+			return existingSequence;
 		}
 		else {
-			sequence = namespace.createSequence( logicalQualifiedSequenceName.getObjectName(), initialValue, sourceIncrementSize );
+			return namespace.createSequence(
+					objectName,
+					physicalName -> new Sequence(
+							contributor,
+							namespace.getPhysicalName().catalog(),
+							namespace.getPhysicalName().schema(),
+							physicalName,
+							initialValue,
+							sourceIncrementSize,
+							options
+					)
+			);
 		}
-
-		this.sequenceName = database.getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
-				sequence.getName(),
-				database.getJdbcEnvironment().getDialect()
-		);
 	}
 }

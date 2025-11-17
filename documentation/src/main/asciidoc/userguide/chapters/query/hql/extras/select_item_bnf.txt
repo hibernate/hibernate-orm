@@ -1,0 +1,7 @@
+(expression | instantiation) alias?
+
+instantiation
+    : "NEW" instantiationTarget "(" instantiationArguments ")"
+
+alias
+    : "AS"? IDENTIFIER

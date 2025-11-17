@@ -1,63 +1,82 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.result.internal;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Supplier;
 
 import org.hibernate.JDBCException;
-import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.loader.EntityAliases;
-import org.hibernate.loader.custom.CustomLoader;
-import org.hibernate.loader.custom.CustomQuery;
-import org.hibernate.loader.custom.Return;
-import org.hibernate.loader.custom.RootReturn;
-import org.hibernate.loader.custom.sql.SQLQueryReturnProcessor;
-import org.hibernate.param.ParameterBinder;
-import org.hibernate.result.NoMoreReturnsException;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.result.Output;
 import org.hibernate.result.Outputs;
 import org.hibernate.result.spi.ResultContext;
-
+import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.results.NoMoreOutputsException;
+import org.hibernate.sql.results.internal.ResultsHelper;
+import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
+import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
+import org.hibernate.sql.results.jdbc.internal.DirectResultSetAccess;
+import org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl;
+import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
+import org.hibernate.sql.results.jdbc.spi.JdbcValues;
+import org.hibernate.sql.results.spi.RowReader;
 import org.jboss.logging.Logger;
+
+import static org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions.NO_OPTIONS;
+
 
 /**
  * @author Steve Ebersole
  */
 public class OutputsImpl implements Outputs {
-	private static final Logger log = CoreLogging.logger( OutputsImpl.class );
+
+	private static final Logger LOG = Logger.getLogger( OutputsImpl.class );
 
 	private final ResultContext context;
 	private final PreparedStatement jdbcStatement;
-	private final CustomLoaderExtension loader;
+	private final SqlStatementLogger sqlStatementLogger;
+	private final String sql;
 
 	private CurrentReturnState currentReturnState;
 
-	public OutputsImpl(ResultContext context, PreparedStatement jdbcStatement) {
+	public OutputsImpl(ResultContext context, PreparedStatement jdbcStatement, String sql) {
 		this.context = context;
 		this.jdbcStatement = jdbcStatement;
+		this.sqlStatementLogger = context.getSession().getJdbcServices().getSqlStatementLogger();
+		this.sql = sql;
+	}
 
-		// For now...  but see the LoadPlan work; eventually this should just be a ResultSetProcessor.
-		this.loader = buildSpecializedCustomLoader( context );
+	protected ResultContext getResultContext(){
+		return context;
+	}
 
+	protected void executeStatement() {
+		long executeStartNanos = 0;
+		if ( sqlStatementLogger.getLogSlowQuery() > 0 ) {
+			executeStartNanos = System.nanoTime();
+		}
+		final var session = context.getSession();
+		final var eventMonitor = session.getEventMonitor();
+		final var jdbcPreparedStatementExecutionEvent =
+				eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			final boolean isResultSet = jdbcStatement.execute();
 			currentReturnState = buildCurrentReturnState( isResultSet );
 		}
 		catch (SQLException e) {
 			throw convert( e, "Error calling CallableStatement.getMoreResults" );
+		}
+		finally {
+			eventMonitor.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
+			sqlStatementLogger.logSlowQuery( sql, executeStartNanos, session.getJdbcSessionContext() );
 		}
 	}
 
@@ -80,19 +99,13 @@ public class OutputsImpl implements Outputs {
 	}
 
 	protected JDBCException convert(SQLException e, String message) {
-		return context.getSession().getJdbcServices().getSqlExceptionHelper().convert(
-				e,
-				message,
-				context.getSql()
-		);
+		return context.getSession().getJdbcServices().getSqlExceptionHelper()
+				.convert( e, message, jdbcStatement.toString() );
 	}
 
 	@Override
 	public Output getCurrent() {
-		if ( currentReturnState == null ) {
-			return null;
-		}
-		return currentReturnState.getOutput();
+		return currentReturnState == null ? null : currentReturnState.getOutput();
 	}
 
 	@Override
@@ -118,15 +131,12 @@ public class OutputsImpl implements Outputs {
 
 	@Override
 	public void release() {
-		try {
-			jdbcStatement.close();
-		}
-		catch (SQLException e) {
-			log.debug( "Unable to close PreparedStatement", e );
-		}
+		final var jdbcCoordinator = context.getSession().getJdbcCoordinator();
+		jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( jdbcStatement );
+		jdbcCoordinator.afterStatementExecution();
 	}
 
-	private List extractCurrentResults() {
+	private List<?> extractCurrentResults() {
 		try {
 			return extractResults( jdbcStatement.getResultSet() );
 		}
@@ -135,12 +145,74 @@ public class OutputsImpl implements Outputs {
 		}
 	}
 
-	protected List extractResults(ResultSet resultSet) {
+	protected List<Object> extractResults(ResultSet resultSet) {
+		final var session = context.getSession();
+		final var factory = session.getFactory();
+		final var influencers = session.getLoadQueryInfluencers();
+
+		final var resultSetAccess = new DirectResultSetAccess( session, jdbcStatement, resultSet );
+
+		final var procedureCall = (ProcedureCallImpl<?>) context;
+		final var resultSetMapping = procedureCall.getResultSetMapping();
+
+		final ExecutionContext executionContext = new OutputsExecutionContext( session );
+
+		final JdbcValues jdbcValues = new JdbcValuesResultSetImpl(
+				resultSetAccess,
+				null,
+				null,
+				context.getQueryOptions(),
+				true,
+				resultSetMapping.resolve( resultSetAccess, influencers, factory ),
+				null,
+				executionContext
+		);
+
 		try {
-			return loader.processResultSet( resultSet );
+
+			final RowReader<?> rowReader = ResultsHelper.createRowReader(
+					factory,
+					RowTransformerStandardImpl.instance(),
+					null,
+					jdbcValues
+			);
+
+
+			final var jdbcValuesSourceProcessingState =
+					new JdbcValuesSourceProcessingStateStandardImpl( executionContext, NO_OPTIONS );
+			final ArrayList<Object> results = new ArrayList<>();
+			final var rowProcessingState = new RowProcessingStateStandardImpl(
+					jdbcValuesSourceProcessingState,
+					executionContext,
+					rowReader,
+					jdbcValues
+			);
+			try {
+
+				rowReader.startLoading( rowProcessingState );
+
+				while ( rowProcessingState.next() ) {
+					results.add( rowReader.readRow( rowProcessingState ) );
+					rowProcessingState.finishRowProcessing( true );
+				}
+				if ( resultSetMapping.getNumberOfResultBuilders() == 0
+						&& procedureCall.isFunctionCall()
+						&& procedureCall.getFunctionReturn().getJdbcTypeCode() == Types.REF_CURSOR
+						&& results.size() == 1
+						&& results.get( 0 ) instanceof ResultSet onlyResult ) {
+					// When calling a function that returns a ref_cursor with as table function,
+					// we have to unnest the ResultSet manually here
+					return extractResults( onlyResult );
+				}
+				return results;
+			}
+			finally {
+				rowReader.finishUp( rowProcessingState );
+				jdbcValuesSourceProcessingState.finishUp( results.size() > 1 );
+			}
 		}
-		catch (SQLException e) {
-			throw convert( e, "Error extracting results from CallableStatement" );
+		finally {
+			jdbcValues.finishUp( session );
 		}
 	}
 
@@ -178,13 +250,9 @@ public class OutputsImpl implements Outputs {
 		}
 
 		protected Output buildOutput() {
-			if ( log.isDebugEnabled() ) {
-				log.debugf(
-						"Building Return [isResultSet=%s, updateCount=%s, extendedReturn=%s",
-						isResultSet(),
-						getUpdateCount(),
-						hasExtendedReturns()
-				);
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracef( "Building Return [isResultSet=%s, updateCount=%s, extendedReturn=%s]",
+						isResultSet(), getUpdateCount(), hasExtendedReturns() );
 			}
 
 			if ( isResultSet() ) {
@@ -196,18 +264,21 @@ public class OutputsImpl implements Outputs {
 			else if ( hasExtendedReturns() ) {
 				return buildExtendedReturn();
 			}
+			else if ( hasFunctionReturns() ) {
+				return buildFunctionReturn();
+			}
 
-			throw new NoMoreReturnsException();
+			throw new NoMoreOutputsException();
 		}
 
 		// hooks for stored procedure (out param) processing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		protected Output buildResultSetOutput(List list) {
-			return new ResultSetOutputImpl( list );
+		protected Output buildResultSetOutput(List<?> list) {
+			return new ResultSetOutputImpl<>( list );
 		}
 
-		protected Output buildResultSetOutput(Supplier<List> listSupplier) {
-			return new ResultSetOutputImpl( listSupplier );
+		protected <T> Output buildResultSetOutput(Supplier<List<T>> listSupplier) {
+			return new ResultSetOutputImpl<>( listSupplier );
 		}
 
 		protected Output buildUpdateCountOutput(int updateCount) {
@@ -221,112 +292,15 @@ public class OutputsImpl implements Outputs {
 		protected Output buildExtendedReturn() {
 			throw new IllegalStateException( "State does not define extended returns" );
 		}
-	}
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Hooks into Hibernate's Loader hierarchy for ResultSet -> Object mapping
-
-	private static CustomLoaderExtension buildSpecializedCustomLoader(final ResultContext context) {
-		// might be better to just manually construct the Return(s).. SQLQueryReturnProcessor does a lot of
-		// work that is really unnecessary here.
-		final SQLQueryReturnProcessor processor = new SQLQueryReturnProcessor(
-				context.getQueryReturns(),
-				context.getSession().getFactory()
-		);
-		processor.process();
-		final List<org.hibernate.loader.custom.Return> customReturns = processor.generateCallableReturns();
-
-		CustomQuery customQuery = new CustomQuery() {
-			@Override
-			public String getSQL() {
-				return context.getSql();
-			}
-
-			@Override
-			public Set<String> getQuerySpaces() {
-				return context.getSynchronizedQuerySpaces();
-			}
-
-			@Override
-			public List<ParameterBinder> getParameterValueBinders() {
-				// no parameters in terms of embedded in the SQL string
-				return Collections.emptyList();
-			}
-
-			@Override
-			public List<org.hibernate.loader.custom.Return> getCustomQueryReturns() {
-				return customReturns;
-			}
-		};
-
-		return new CustomLoaderExtension(
-				customQuery,
-				context.getQueryParameters(),
-				context.getSession()
-		);
-	}
-
-	private static class CustomLoaderExtension extends CustomLoader {
-		private static final EntityAliases[] NO_ALIASES = new EntityAliases[0];
-
-		private final QueryParameters queryParameters;
-		private final SharedSessionContractImplementor session;
-		private final EntityAliases[] entityAliases;
-
-		private boolean needsDiscovery = true;
-
-		public CustomLoaderExtension(
-				CustomQuery customQuery,
-				QueryParameters queryParameters,
-				SharedSessionContractImplementor session) {
-			super( customQuery, session.getFactory() );
-			this.queryParameters = queryParameters;
-			this.session = session;
-
-			entityAliases = interpretEntityAliases( customQuery.getCustomQueryReturns() );
+		protected boolean hasFunctionReturns() {
+			return false;
 		}
 
-		private EntityAliases[] interpretEntityAliases(List<Return> customQueryReturns) {
-			final List<EntityAliases> entityAliases = new ArrayList<>();
-			for ( Return queryReturn : customQueryReturns ) {
-				if ( !RootReturn.class.isInstance( queryReturn ) ) {
-					continue;
-				}
-
-				entityAliases.add( ( (RootReturn) queryReturn ).getEntityAliases() );
-			}
-
-			if ( entityAliases.isEmpty() ) {
-				return NO_ALIASES;
-			}
-
-			return entityAliases.toArray( new EntityAliases[ entityAliases.size() ] );
-		}
-
-		@Override
-		protected EntityAliases[] getEntityAliases() {
-			return entityAliases;
-		}
-
-
-		// todo : this would be a great way to add locking to stored procedure support (at least where returning entities).
-
-		public List processResultSet(ResultSet resultSet) throws SQLException {
-			if ( needsDiscovery ) {
-				super.autoDiscoverTypes( resultSet );
-				// todo : EntityAliases discovery
-				needsDiscovery = false;
-			}
-			return super.processResultSet(
-					resultSet,
-					queryParameters,
-					session,
-					true,
-					null,
-					Integer.MAX_VALUE,
-					Collections.emptyList()
-			);
+		protected Output buildFunctionReturn() {
+			throw new IllegalStateException( "State does not define function returns" );
 		}
 	}
+
+
 }

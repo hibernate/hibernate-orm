@@ -1,16 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.internal;
+
+import java.util.Collection;
 
 import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-
-import org.jboss.logging.Logger;
 
 /**
  * TimestampsRegionAccess implementation for cases where query results caching
@@ -19,8 +17,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class TimestampsCacheDisabledImpl implements TimestampsCache {
-	private static final Logger log = Logger.getLogger( TimestampsCacheDisabledImpl.class );
-
 	@Override
 	public TimestampsRegion getRegion() {
 		return null;
@@ -28,12 +24,12 @@ public class TimestampsCacheDisabledImpl implements TimestampsCache {
 
 	@Override
 	public void preInvalidate(String[] spaces, SharedSessionContractImplementor session) {
-		log.trace( "TimestampsRegionAccess#preInvalidate - disabled" );
+		//noop
 	}
 
 	@Override
 	public void invalidate(String[] spaces, SharedSessionContractImplementor session) {
-		log.trace( "TimestampsRegionAccess#invalidate - disabled" );
+		//noop
 	}
 
 	@Override
@@ -41,7 +37,16 @@ public class TimestampsCacheDisabledImpl implements TimestampsCache {
 			String[] spaces,
 			Long timestamp,
 			SharedSessionContractImplementor session) {
-		log.trace( "TimestampsRegionAccess#isUpToDate - disabled" );
+		//noop
+		return false;
+	}
+
+	@Override
+	public boolean isUpToDate(
+			Collection<String> spaces,
+			Long timestamp,
+			SharedSessionContractImplementor session) {
+		//noop
 		return false;
 	}
 }

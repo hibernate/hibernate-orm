@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat.internal;
 
@@ -22,18 +20,18 @@ public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implem
 	private final String rootEntityName;
 	private final LongAdder loadCount = new LongAdder();
 	private final LongAdder updateCount = new LongAdder();
+	private final LongAdder upsertCount = new LongAdder();
 	private final LongAdder insertCount = new LongAdder();
 	private final LongAdder deleteCount = new LongAdder();
 	private final LongAdder fetchCount = new LongAdder();
 	private final LongAdder optimisticFailureCount = new LongAdder();
 
 	EntityStatisticsImpl(EntityPersister rootEntityDescriptor) {
-		super(
-				() -> rootEntityDescriptor.getCacheAccessStrategy() != null
-						? rootEntityDescriptor.getCacheAccessStrategy().getRegion()
-						: null
-		);
-		this.rootEntityName = rootEntityDescriptor.getRootEntityName();
+		super( () -> {
+			final var cache = rootEntityDescriptor.getCacheAccessStrategy();
+			return cache != null ? cache.getRegion() : null;
+		} );
+		rootEntityName = rootEntityDescriptor.getRootEntityName();
 	}
 
 	public long getDeleteCount() {
@@ -50,6 +48,10 @@ public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implem
 
 	public long getUpdateCount() {
 		return updateCount.sum();
+	}
+
+	public long getUpsertCount() {
+		return upsertCount.sum();
 	}
 
 	public long getFetchCount() {
@@ -72,6 +74,10 @@ public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implem
 		updateCount.increment();
 	}
 
+	void incrementUpsertCount() {
+		upsertCount.increment();
+	}
+
 	void incrementInsertCount() {
 		insertCount.increment();
 	}
@@ -85,16 +91,17 @@ public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implem
 	}
 
 	public String toString() {
-		final StringBuilder buffer = new StringBuilder()
+		final var text = new StringBuilder()
 				.append( "EntityStatistics" )
 				.append( "[rootEntityName=" ).append( rootEntityName )
 				.append( ",loadCount=" ).append( this.loadCount )
 				.append( ",updateCount=" ).append( this.updateCount )
+				.append( ",upsertCount=" ).append( this.upsertCount )
 				.append( ",insertCount=" ).append( this.insertCount )
 				.append( ",deleteCount=" ).append( this.deleteCount )
 				.append( ",fetchCount=" ).append( this.fetchCount )
 				.append( ",optimisticLockFailureCount=" ).append( this.optimisticFailureCount );
-		appendCacheStats( buffer );
-		return buffer.append( ']' ).toString();
+		appendCacheStats( text );
+		return text.append( ']' ).toString();
 	}
 }

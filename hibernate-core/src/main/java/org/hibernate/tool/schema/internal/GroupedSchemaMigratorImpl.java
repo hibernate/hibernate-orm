@@ -1,31 +1,33 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
 
+import java.sql.SQLException;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.Formatter;
-import org.hibernate.mapping.Table;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
+import org.hibernate.tool.schema.extract.internal.CachingDatabaseInformationImpl;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
-import org.hibernate.tool.schema.extract.spi.TableInformation;
-import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.spi.GenerationTarget;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaFilter;
 
 /**
- * @author Andrea Boriero
- *
  * This implementation executes a single {@link java.sql.DatabaseMetaData#getTables(String, String, String, String[])} call
- * to retrieve all the database table in order to determine if all the {@link javax.persistence.Entity} have a mapped database tables.
+ * to retrieve all the database table in order to determine if all the {@link jakarta.persistence.Entity} have a mapped database tables.
+ *
+ * @author Andrea Boriero
  */
 public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 
@@ -40,14 +42,17 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 			Metadata metadata,
 			DatabaseInformation existingDatabase,
 			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
 			Dialect dialect,
 			Formatter formatter,
 			Set<String> exportIdentifiers,
 			boolean tryToCreateCatalogs,
 			boolean tryToCreateSchemas,
 			Set<Identifier> exportedCatalogs,
-			Namespace namespace, GenerationTarget[] targets) {
-		final NameSpaceTablesInformation tablesInformation =
+			Namespace namespace,
+			SqlStringGenerationContext context,
+			GenerationTarget[] targets) {
+		final var tablesInformation =
 				new NameSpaceTablesInformation( metadata.getDatabase().getJdbcEnvironment().getIdentifierHelper() );
 
 		if ( schemaFilter.includeNamespace( namespace ) ) {
@@ -60,33 +65,61 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 					tryToCreateSchemas,
 					exportedCatalogs,
 					namespace,
+					context,
 					targets
 			);
-			final NameSpaceTablesInformation tables = existingDatabase.getTablesInformation( namespace );
-			for ( Table table : namespace.getTables() ) {
-				if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
+
+			final var tables = existingDatabase.getTablesInformation( namespace );
+			for ( var table : namespace.getTables() ) {
+				if ( schemaFilter.includeTable( table )
+						&& table.isPhysicalTable()
+						&& contributableInclusionFilter.matches( table ) ) {
 					checkExportIdentifier( table, exportIdentifiers );
-					final TableInformation tableInformation = tables.getTableInformation( table );
+					final var tableInformation = tables.getTableInformation( table );
 					if ( tableInformation == null ) {
-						createTable( table, dialect, metadata, formatter, options, targets );
+						createTable( table, dialect, metadata, formatter, options, context, targets );
 					}
 					else if ( tableInformation.isPhysicalTable() ) {
 						tablesInformation.addTableInformation( tableInformation );
-						migrateTable( table, tableInformation, dialect, metadata, formatter, options, targets );
+						migrateTable( table, tableInformation, dialect, metadata, formatter, options,
+								context, targets );
 					}
 				}
 			}
 
-			for ( Table table : namespace.getTables() ) {
-				if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
-					final TableInformation tableInformation = tablesInformation.getTableInformation( table );
+			for ( var table : namespace.getTables() ) {
+				if ( schemaFilter.includeTable( table )
+						&& table.isPhysicalTable()
+						&& contributableInclusionFilter.matches( table ) ) {
+					final var tableInformation = tablesInformation.getTableInformation( table );
 					if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
-						applyIndexes( table, tableInformation, dialect, metadata, formatter, options, targets );
-						applyUniqueKeys( table, tableInformation, dialect, metadata, formatter, options, targets );
+						applyIndexes( table, tableInformation, dialect, metadata, formatter, options,
+								context, targets );
+						applyUniqueKeys( table, tableInformation, dialect, metadata, formatter, options,
+								context, targets );
 					}
 				}
 			}
 		}
 		return tablesInformation;
+	}
+
+	@Override
+	protected DatabaseInformation buildDatabaseInformation(DdlTransactionIsolator ddlTransactionIsolator, SqlStringGenerationContext sqlStringGenerationContext) {
+		final var serviceRegistry = ddlTransactionIsolator.getJdbcContext().getServiceRegistry();
+		final var jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
+		try {
+			return new CachingDatabaseInformationImpl(
+					serviceRegistry,
+					jdbcEnvironment,
+					sqlStringGenerationContext,
+					ddlTransactionIsolator,
+					tool
+			);
+		}
+		catch (SQLException e) {
+			throw jdbcEnvironment.getSqlExceptionHelper()
+					.convert( e, "Unable to build DatabaseInformation" );
+		}
 	}
 }

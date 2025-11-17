@@ -1,0 +1,70 @@
+= SQL AST
+
+Ultimately our goal here is to have a `JdbcOperation` object to be executed.  Generally, that would look like this:
+
+[source]
+----
+		final SelectStatement sqlAst = ...;
+
+		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
+		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
+
+		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlAst );
+
+		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
+		// <fill in parameter bindings>
+
+		session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
+				jdbcSelect,
+				jdbcParameterBindings,
+				...
+		);
+----
+
+
+== The Tree
+
+The actual tree nodes are defined in the `org.hibernate.sql.ast.tree` package.
+
+
+== Building SQL AST
+
+There are 3 main producers of SQL AST:
+
+SQM:: Translation of HQL and criteria queries. See `org.hibernate.query.sqm.sql`
+Loading:: SQL generated for persistence-context events to load entities and collections.  This includes `Session#find`, `Session#get`, `Session#lock`, ...  See `org.hibernate.loader.internal.MetamodelSelectBuilderProcess`
+Mutations:: SQL generated for persistence-context flush events to write entity and collection state to the database.  See `org.hibernate.persister.entity.mutation` and `org.hibernate.persister.collection.mutation`
+
+
+== Translating SQL AST
+
+Translating a SQL AST produces 2 pieces of information needed for executing SQL:
+
+* `org.hibernate.sql.exec.spi.JdbcOperation`
+* `org.hibernate.sql.exec.spi.JdbcParameterBindings`
+
+
+=== JdbcOperation
+
+* `org.hibernate.sql.exec.spi.JdbcDelete`
+* `org.hibernate.sql.exec.spi.JdbcInsert`
+* `org.hibernate.sql.exec.spi.JdbcSelect`
+* `org.hibernate.sql.exec.spi.JdbcUpdate`
+
+
+=== JdbcParameterBindings
+
+
+== Execution
+
+=== SELECT execution
+
+`org.hibernate.sql.exec.spi.JdbcSelectExecutor`
+
+=== INSERT, UPDATE, DELETE execution
+
+`org.hibernate.sql.exec.spi.JdbcMutationExecutor`
+
+
+

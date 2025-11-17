@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.orm.test.hbm.index">
+
+    <class name="PersonGroup">
+        <id name="id" type="long">
+            <generator class="native" />
+        </id>
+        <map name="comments" table="PersonGroupComment">
+            <key column="group" foreign-key="comment_persongroup_fk"/>
+            <map-key column="locale" type="string"/>
+            <element column="name" type="string" />
+        </map>
+    </class>
+
+</hibernate-mapping>

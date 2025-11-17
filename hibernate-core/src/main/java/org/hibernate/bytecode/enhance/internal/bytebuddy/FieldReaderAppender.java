@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
@@ -10,7 +8,6 @@ import java.util.Objects;
 
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 
 import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.description.field.FieldDescription;
@@ -31,18 +28,21 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 
 	protected final FieldDescription.InDefinedShape persistentFieldAsDefined;
 
-	private FieldReaderAppender(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField) {
+	protected final EnhancerImplConstants constants;
+
+	private FieldReaderAppender(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField, EnhancerImplConstants constants) {
 		this.managedCtClass = managedCtClass;
 		this.persistentField = persistentField;
 		this.persistentFieldAsDefined = persistentField.asDefined();
+		this.constants = constants;
 	}
 
-	static ByteCodeAppender of(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField) {
+	static ByteCodeAppender of(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField, EnhancerImplConstants constants) {
 		if ( !persistentField.isVisibleTo( managedCtClass ) ) {
-			return new MethodDispatching( managedCtClass, persistentField );
+			return new MethodDispatching( managedCtClass, persistentField, constants );
 		}
 		else {
-			return new FieldWriting( managedCtClass, persistentField );
+			return new FieldWriting( managedCtClass, persistentField, constants );
 		}
 	}
 
@@ -54,55 +54,64 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 		TypeDescription dispatcherType = persistentFieldAsDefined.getType().isPrimitive()
 				? persistentFieldAsDefined.getType().asErasure()
 				: TypeDescription.OBJECT;
-		// if ( this.$$_hibernate_getInterceptor() != null )
-		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-		methodVisitor.visitMethodInsn(
-				Opcodes.INVOKEVIRTUAL,
-				managedCtClass.getInternalName(),
-				EnhancerConstants.INTERCEPTOR_GETTER_NAME,
-				Type.getMethodDescriptor( Type.getType( PersistentAttributeInterceptor.class ) ),
-				false
-		);
-		Label skip = new Label();
-		methodVisitor.visitJumpInsn( Opcodes.IFNULL, skip );
-		// this (for field write)
-		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-		// this.$$_hibernate_getInterceptor();
-		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-		methodVisitor.visitMethodInsn(
-				Opcodes.INVOKEVIRTUAL,
-				managedCtClass.getInternalName(),
-				EnhancerConstants.INTERCEPTOR_GETTER_NAME,
-				Type.getMethodDescriptor( Type.getType( PersistentAttributeInterceptor.class ) ),
-				false
-		);
-		// .readXXX( self, fieldName, field );
-		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-		methodVisitor.visitLdcInsn( persistentFieldAsDefined.getName() );
-		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-		fieldRead( methodVisitor );
-		methodVisitor.visitMethodInsn(
-				Opcodes.INVOKEINTERFACE,
-				Type.getInternalName( PersistentAttributeInterceptor.class ),
-				"read" + EnhancerImpl.capitalize( dispatcherType.getSimpleName() ),
-				Type.getMethodDescriptor(
-						Type.getType( dispatcherType.getDescriptor() ),
-						Type.getType( Object.class ),
-						Type.getType( String.class ),
-						Type.getType( dispatcherType.getDescriptor() )
-				),
-				true
-		);
-		// field = (cast) XXX
-		if ( !dispatcherType.isPrimitive() ) {
-			methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, persistentFieldAsDefined.getType().asErasure().getInternalName() );
+		// From `PersistentAttributeTransformer`:
+		//     Final fields will only be written to from the constructor,
+		//     so there's no point trying to replace final field writes with a method call.
+		// as a result if a field is final then there will be no write method, and we don't want to have this block:
+		if ( !persistentField.asDefined().isFinal() ) {
+			// if ( this.$$_hibernate_getInterceptor() != null )
+			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+			methodVisitor.visitMethodInsn(
+					Opcodes.INVOKEVIRTUAL,
+					managedCtClass.getInternalName(),
+					EnhancerConstants.INTERCEPTOR_GETTER_NAME,
+					constants.methodDescriptor_getInterceptor,
+					false
+			);
+			Label skip = new Label();
+			methodVisitor.visitJumpInsn( Opcodes.IFNULL, skip );
+			// this (for field write)
+			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+			// this.$$_hibernate_getInterceptor();
+			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+			methodVisitor.visitMethodInsn(
+					Opcodes.INVOKEVIRTUAL,
+					managedCtClass.getInternalName(),
+					EnhancerConstants.INTERCEPTOR_GETTER_NAME,
+					constants.methodDescriptor_getInterceptor,
+					false
+			);
+			// .readXXX( self, fieldName, field );
+			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+			methodVisitor.visitLdcInsn( persistentFieldAsDefined.getName() );
+			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+
+			fieldRead( methodVisitor );
+			methodVisitor.visitMethodInsn(
+					Opcodes.INVOKEINTERFACE,
+					constants.internalName_PersistentAttributeInterceptor,
+					"read" + EnhancerImpl.capitalize( dispatcherType.getSimpleName() ),
+					Type.getMethodDescriptor(
+							Type.getType( dispatcherType.getDescriptor() ),
+							Type.getType( Object.class ),
+							Type.getType( String.class ),
+							Type.getType( dispatcherType.getDescriptor() )
+					),
+					true
+			);
+			// field = (cast) XXX
+			if ( !dispatcherType.isPrimitive() ) {
+				methodVisitor.visitTypeInsn(
+						Opcodes.CHECKCAST, persistentFieldAsDefined.getType().asErasure().getInternalName() );
+			}
+			fieldWrite( methodVisitor );
+			// end if
+			methodVisitor.visitLabel( skip );
+			if ( implementationContext.getClassFileVersion().isAtLeast( ClassFileVersion.JAVA_V6 ) ) {
+				methodVisitor.visitFrame( Opcodes.F_SAME, 0, null, 0, null );
+			}
 		}
-		fieldWrite( methodVisitor );
-		// end if
-		methodVisitor.visitLabel( skip );
-		if ( implementationContext.getClassFileVersion().isAtLeast( ClassFileVersion.JAVA_V6 ) ) {
-			methodVisitor.visitFrame( Opcodes.F_SAME, 0, null, 0, null );
-		}
+
 		// return field
 		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
 		fieldRead( methodVisitor );
@@ -120,8 +129,8 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 
 	private static class FieldWriting extends FieldReaderAppender {
 
-		private FieldWriting(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField) {
-			super( managedCtClass, persistentField );
+		private FieldWriting(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField, EnhancerImplConstants constants) {
+			super( managedCtClass, persistentField, constants );
 		}
 
 		@Override
@@ -147,8 +156,8 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 
 	private static class MethodDispatching extends FieldReaderAppender {
 
-		private MethodDispatching(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField) {
-			super( managedCtClass, persistentField );
+		private MethodDispatching(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField, EnhancerImplConstants constants) {
+			super( managedCtClass, persistentField, constants );
 		}
 
 		@Override

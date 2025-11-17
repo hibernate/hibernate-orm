@@ -1,17 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.cache;
-
-import java.util.Collections;
 
 import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.cache.spi.RegionFactory;
+
+import static java.util.Collections.singletonList;
 
 /**
  * Makes the JCache RegionFactory available to the Hibernate
@@ -22,10 +20,9 @@ import org.hibernate.cache.spi.RegionFactory;
  */
 public class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
 	@Override
-	@SuppressWarnings("unchecked")
-	public Iterable<StrategyRegistration> getStrategyRegistrations() {
-		return Collections.singletonList(
-				new SimpleStrategyRegistrationImpl(
+	public Iterable<StrategyRegistration<?>> getStrategyRegistrations() {
+		return singletonList(
+				new SimpleStrategyRegistrationImpl<>(
 						RegionFactory.class,
 						CachingRegionFactory.class,
 						"testing",

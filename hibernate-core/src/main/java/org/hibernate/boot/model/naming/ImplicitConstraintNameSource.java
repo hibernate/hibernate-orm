@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.naming;
 
@@ -13,8 +11,17 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
-public interface ImplicitConstraintNameSource extends ImplicitNameSource {
-	public Identifier getTableName();
-	public List<Identifier> getColumnNames();
-	public Identifier getUserProvidedIdentifier();
+public sealed interface ImplicitConstraintNameSource
+		extends ImplicitNameSource
+		permits ImplicitIndexNameSource, ImplicitUniqueKeyNameSource, ImplicitForeignKeyNameSource {
+	Identifier getTableName();
+	List<Identifier> getColumnNames();
+	Identifier getUserProvidedIdentifier();
+	Kind kind();
+
+	enum Kind {
+		FOREIGN_KEY,
+		UNIQUE_KEY,
+		INDEX
+	}
 }

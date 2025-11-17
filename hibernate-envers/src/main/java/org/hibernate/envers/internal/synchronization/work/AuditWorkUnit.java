@@ -1,24 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.synchronization.work;
 
-import java.io.Serializable;
 import java.util.Map;
 
-import org.hibernate.Session;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
 
 /**
- * TODO: refactor constructors into factory methods
+ * Captures specific auditable mutation events.
  *
  * @author Adam Warski (adam at warski dot org)
  */
 public interface AuditWorkUnit extends WorkUnitMergeVisitor, WorkUnitMergeDispatcher {
-	Serializable getEntityId();
+	Object getEntityId();
 
 	String getEntityName();
 
@@ -33,9 +30,9 @@ public interface AuditWorkUnit extends WorkUnitMergeVisitor, WorkUnitMergeDispat
 	 * @param revisionData The current revision data, which will be used to populate the work unit with the correct
 	 * revision relation.
 	 */
-	void perform(Session session, Object revisionData);
+	void perform(SharedSessionContractImplementor session, Object revisionData);
 
-	void undo(Session session);
+	void undo(SharedSessionContractImplementor session);
 
 	/**
 	 * @param revisionData The current revision data, which will be used to populate the work unit with the correct

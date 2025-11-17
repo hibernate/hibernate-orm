@@ -1,0 +1,31 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+import org.hibernate.orm.tooling.gradle.misc.TransformHbmXmlTask
+
+plugins {
+    id 'java'
+    id 'org.hibernate.orm'
+}
+
+repositories {
+    mavenCentral()
+
+    maven {
+        name = 'ossrh-snapshots-repository'
+        url = 'https://oss.sonatype.org/content/repositories/snapshots'
+    }
+}
+
+dependencies {
+    // NOTE : The version used here is irrelevant in terms of testing the plugin.
+    // We just need a resolvable version
+    implementation 'org.hibernate.orm:hibernate-core:6.1.0.Final'
+}
+
+tasks.register( "hbmTransform", TransformHbmXmlTask ) {
+    source "src/main/resources"
+    getRenaming().getExtension().set( "xml" )
+    getOutputDirectory().set( project.layout.buildDirectory.dir( "resources/hbm-transformed" ) )
+}

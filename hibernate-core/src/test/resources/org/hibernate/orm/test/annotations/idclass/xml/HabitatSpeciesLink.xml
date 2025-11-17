@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm_2_0.xsd"
+                 version="2.0">
+    <entity class="org.hibernate.orm.test.annotations.idclass.xml.HabitatSpeciesLink" access="FIELD">
+        <table name="HABITAT_SPECIES_LINK"/>
+        <id-class
+                class="org.hibernate.orm.test.annotations.idclass.xml.HabitatSpeciesLink$HabitatSpeciesLinkId"/>
+        <named-native-query name="testQuery"
+                            result-class="org.hibernate.orm.test.annotations.idclass.xml.HabitatSpeciesLink">
+            <query>select * from HABITAT_SPECIES_LINK link where link.habitat_link = 1</query>
+        </named-native-query>
+        <attributes>
+            <id name="habitatId">
+                <column name="habitat_link"/>
+            </id>
+            <id name="speciesId">
+                <column name="species_link"/>
+            </id>
+        </attributes>
+    </entity>
+</entity-mappings>
+

@@ -12,20 +12,44 @@ However, none of these rules are hard requirements.
 Indeed, Hibernate assumes very little about the nature of your persistent objects. You can express a domain model in other ways (using trees of `java.util.Map` instances, for example).
 
 Historically applications using Hibernate would have used its proprietary XML mapping file format for this purpose.
-With the coming of JPA, most of this information is now defined in a way that is portable across ORM/JPA providers using annotations (and/or standardized XML format).
-This chapter will focus on JPA mapping where possible.
-For Hibernate mapping features not supported by JPA we will prefer Hibernate extension annotations.
+With the coming of Jakarta Persistence, most of this information is now defined in a way that is portable across ORM/Jakarta Persistence providers using annotations (and/or standardized XML format).
+This chapter will focus on Jakarta Persistence mapping where possible.
+For Hibernate mapping features not supported by Jakarta Persistence we will prefer Hibernate extension annotations.
+
+[NOTE]
+====
+This chapter mostly uses "implicit naming" for table names, column names, etc.  For details on
+adjusting these names see <<naming>>.
+====
 
 include::types.adoc[]
-include::naming.adoc[]
+
 include::basic_types.adoc[]
+
 include::embeddables.adoc[]
+
 include::entity.adoc[]
+
+include::naming.adoc[]
+
 include::access.adoc[]
+
 include::identifiers.adoc[]
+
 include::associations.adoc[]
+
 include::collections.adoc[]
+
 include::natural_id.adoc[]
+
+include::partitioning.adoc[]
+
+include::soft_delete.adoc[]
+
 include::dynamic_model.adoc[]
+
 include::inheritance.adoc[]
+
 include::immutability.adoc[]
+
+include::customizing.adoc[]

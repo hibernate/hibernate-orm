@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb;
 
@@ -12,7 +10,7 @@ import java.util.Objects;
 
 
 /**
- * Describes the origin of an xml document
+ * Describes the origin of an XML document.
  *
  * @author Steve Ebersole
  */
@@ -51,21 +49,17 @@ public class Origin implements Serializable {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !( o instanceof Origin ) ) {
+		if ( !(o instanceof Origin other) ) {
 			return false;
 		}
-
-		final Origin other = (Origin) o;
 		return type == other.type
-				&& Objects.equals( name, other.name );
+			&& Objects.equals( name, other.name );
 
 	}
 
 	@Override
 	public int hashCode() {
-		int result = type != null ? type.hashCode() : 0;
-		result = 31 * result + ( name != null ? name.hashCode() : 0 );
-		return result;
+		return Objects.hash( type, name );
 	}
 
 	@Override

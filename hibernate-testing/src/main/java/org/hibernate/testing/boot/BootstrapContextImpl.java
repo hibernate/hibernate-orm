@@ -1,46 +1,51 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.boot;
 
-import java.util.Collection;
-import java.util.Map;
-
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
-import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
+import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
+import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
+import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.jboss.jandex.IndexView;
+import java.util.Collection;
+import java.util.Map;
+
 
 /**
  * @author Andrea Boriero
  */
-public class BootstrapContextImpl implements BootstrapContext {
-	public static final BootstrapContextImpl INSTANCE = new BootstrapContextImpl();
+public class BootstrapContextImpl implements BootstrapContext, AutoCloseable {
+	private final BootstrapContext delegate;
 
-	private BootstrapContext delegate;
+	public BootstrapContextImpl() {
+		this( new StandardServiceRegistryBuilder().build() );
+	}
 
-	private BootstrapContextImpl() {
-		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build();
-		MetadataBuildingOptions buildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
-
+	public BootstrapContextImpl(StandardServiceRegistry serviceRegistry) {
+		final MetadataBuildingOptions buildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
 		delegate = new org.hibernate.boot.internal.BootstrapContextImpl( serviceRegistry, buildingOptions );
 	}
 
@@ -60,8 +65,38 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
+	public ModelsContext getModelsContext() {
+		return delegate.getModelsContext();
+	}
+
+	@Override
+	public SqmFunctionRegistry getFunctionRegistry() {
+		return delegate.getFunctionRegistry();
+	}
+
+	@Override
+	public BeanInstanceProducer getCustomTypeProducer() {
+		return delegate.getCustomTypeProducer();
+	}
+
+	@Override
 	public MetadataBuildingOptions getMetadataBuildingOptions() {
 		return delegate.getMetadataBuildingOptions();
+	}
+
+	@Override
+	public ClassLoaderService getClassLoaderService() {
+		return delegate.getClassLoaderService();
+	}
+
+	@Override
+	public ManagedBeanRegistry getManagedBeanRegistry() {
+		return delegate.getManagedBeanRegistry();
+	}
+
+	@Override
+	public ConfigurationService getConfigurationService() {
+		return delegate.getConfigurationService();
 	}
 
 	@Override
@@ -110,17 +145,12 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public ReflectionManager getReflectionManager() {
-		return delegate.getReflectionManager();
-	}
-
-	@Override
-	public IndexView getJandexView() {
+	public Object getJandexView() {
 		return delegate.getJandexView();
 	}
 
 	@Override
-	public Map<String, SQLFunction> getSqlFunctions() {
+	public Map<String, SqmFunctionDescriptor> getSqlFunctions() {
 		return delegate.getSqlFunctions();
 	}
 
@@ -130,7 +160,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public Collection<AttributeConverterInfo> getAttributeConverters() {
+	public Collection<ConverterDescriptor<?, ?>> getAttributeConverters() {
 		return delegate.getAttributeConverters();
 	}
 
@@ -140,7 +170,27 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
+	public ManagedTypeRepresentationResolver getRepresentationStrategySelector() {
+		return ManagedTypeRepresentationResolverStandard.INSTANCE;
+	}
+
+	@Override
+	public void registerAdHocBasicType(BasicType<?> basicType) {
+	}
+
+	@Override
+	public <T> BasicType<T> resolveAdHocBasicType(String key) {
+		return null;
+	}
+
+	@Override
 	public void release() {
 		delegate.release();
+	}
+
+	@Override
+	public void close() {
+		delegate.release();
+		delegate.getServiceRegistry().close();
 	}
 }

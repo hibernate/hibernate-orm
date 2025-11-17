@@ -1,13 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.bytecode.enhance.spi.interceptor;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -16,10 +12,14 @@ import java.util.Set;
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTracker;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTracker;
 
 /**
  * Interceptor that loads attributes lazily
@@ -27,19 +27,24 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Luis Barreiro
  * @author Steve Ebersole
  */
-public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor {
+public class LazyAttributeLoadingInterceptor extends AbstractInterceptor implements BytecodeLazyAttributeInterceptor {
+
 	private final Object identifier;
-	private final Set<String> lazyFields;
+	private EntityRelatedState entityMeta;
 	private Set<String> initializedLazyFields;
 
 	public LazyAttributeLoadingInterceptor(
-			String entityName,
+			EntityRelatedState entityMeta,
 			Object identifier,
-			Set<String> lazyFields,
 			SharedSessionContractImplementor session) {
-		super( entityName, session );
 		this.identifier = identifier;
-		this.lazyFields = lazyFields;
+		this.entityMeta = entityMeta;
+		setSession( session );
+	}
+
+	@Override
+	public String getEntityName() {
+		return entityMeta.entityName;
 	}
 
 	@Override
@@ -59,9 +64,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 
 	@Override
 	protected Object handleWrite(Object target, String attributeName, Object oldValue, Object newValue) {
-		if ( !isAttributeLoaded( attributeName ) ) {
-			attributeInitialized( attributeName );
-		}
+		attributeInitialized( attributeName );
 		return newValue;
 	}
 
@@ -76,10 +79,12 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 		return EnhancementHelper.performWork(
 				this,
 				(session, isTemporarySession) -> {
-					final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( getEntityName() );
+					final EntityPersister persister = session.getFactory()
+							.getMappingMetamodel()
+							.getEntityDescriptor( getEntityName() );
 
 					if ( isTemporarySession ) {
-						final Serializable id = persister.getIdentifier( target, null );
+						final Object id = persister.getIdentifier( target, session );
 
 						// Add an entry for this entity in the PC of the temp Session
 						// NOTE : a few arguments that would be nice to pass along here...
@@ -120,7 +125,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 	}
 
 	private boolean isLazyAttribute(String fieldName) {
-		return lazyFields == null || lazyFields.contains( fieldName );
+		return entityMeta.lazyFields.contains( fieldName );
 	}
 
 	private boolean isInitializedLazyField(String fieldName) {
@@ -128,7 +133,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 	}
 
 	public boolean hasAnyUninitializedAttributes() {
-		if ( lazyFields == null || lazyFields.isEmpty() ) {
+		if ( entityMeta.lazyFields.isEmpty() ) {
 			return false;
 		}
 
@@ -136,7 +141,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 			return true;
 		}
 
-		for ( String fieldName : lazyFields ) {
+		for ( String fieldName : entityMeta.lazyFields ) {
 			if ( !initializedLazyFields.contains( fieldName ) ) {
 				return true;
 			}
@@ -147,17 +152,26 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + "(entityName=" + getEntityName() + " ,lazyFields=" + lazyFields + ')';
+		return getClass().getSimpleName() + "(entityName=" + getEntityName() + " ,lazyFields=" + entityMeta.lazyFields + ')';
 	}
 
 	private void takeCollectionSizeSnapshot(Object target, String fieldName, Object value) {
-		if ( value instanceof Collection && target instanceof SelfDirtinessTracker ) {
-			CollectionTracker tracker = ( (SelfDirtinessTracker) target ).$$_hibernate_getCollectionTracker();
+		if ( value instanceof Collection<?> collection && isSelfDirtinessTracker( target ) ) {
+			// This must be called first, so that we remember that there is a collection out there,
+			// even if we don't know its size (see below).
+			final SelfDirtinessTracker targetSDT = asSelfDirtinessTracker( target );
+			CollectionTracker tracker = targetSDT.$$_hibernate_getCollectionTracker();
 			if ( tracker == null ) {
-				( (SelfDirtinessTracker) target ).$$_hibernate_clearDirtyAttributes();
-				tracker = ( (SelfDirtinessTracker) target ).$$_hibernate_getCollectionTracker();
+				targetSDT.$$_hibernate_clearDirtyAttributes();
+				tracker = targetSDT.$$_hibernate_getCollectionTracker();
 			}
-			tracker.add( fieldName, ( (Collection) value ).size() );
+
+			if ( value instanceof PersistentCollection<?> persistentCollection
+					&& !persistentCollection.wasInitialized() ) {
+				// Cannot take a snapshot of an uninitialized collection.
+				return;
+			}
+			tracker.add( fieldName, collection.size() );
 		}
 	}
 
@@ -177,4 +191,44 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 		return initializedLazyFields == null ? Collections.emptySet() : initializedLazyFields;
 	}
 
+	public void addLazyFieldByGraph(String fieldName) {
+		if ( entityMeta.shared ) {
+			//We need to make a defensive copy first to not affect other entities of the same type;
+			//as we create a copy we lose some of the efficacy of using a separate class to track this state,
+			//but this is a corner case so we prefer to optimise for the common case.
+			entityMeta = entityMeta.toNonSharedMutableState();
+		}
+		entityMeta.lazyFields.add( fieldName );
+	}
+
+	public void clearInitializedLazyFields() {
+		initializedLazyFields = null;
+	}
+
+	/**
+	 * This is an helper object to group all state which relates to a particular entity type,
+	 * and which is needed for this interceptor.
+	 * Grouping such state allows for upfront construction as a per-entity singleton:
+	 * this reduces processing work on creation of an interceptor instance and is more
+	 * efficient from a point of view of memory usage and memory layout.
+	 */
+	public static class EntityRelatedState {
+		private final String entityName;
+		private final Set<String> lazyFields;
+		private final boolean shared;
+
+		public EntityRelatedState(String entityName, Set<String> lazyFields) {
+			this.entityName = entityName;
+			this.lazyFields = lazyFields; //N.B. this is an immutable, compact set
+			this.shared = true;
+		}
+		private EntityRelatedState(String entityName, Set<String> lazyFields, boolean shared) {
+			this.entityName = entityName;
+			this.lazyFields = lazyFields;
+			this.shared = shared;
+		}
+		private EntityRelatedState toNonSharedMutableState() {
+			return new EntityRelatedState( entityName, new HashSet<>( lazyFields ), false );
+		}
+	}
 }

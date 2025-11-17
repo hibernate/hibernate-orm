@@ -1,20 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tuple;
 
 import org.hibernate.FetchMode;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.walking.spi.AttributeSource;
 import org.hibernate.type.Type;
 
 /**
- * @author Steve Ebersole
+ * @deprecated No direct replacement.
  */
+@Deprecated(forRemoval = true)
 public abstract class AbstractNonIdentifierAttribute extends AbstractAttribute implements NonIdentifierAttribute {
 	private final AttributeSource source;
 	private final SessionFactoryImplementor sessionFactory;
@@ -37,7 +37,6 @@ public abstract class AbstractNonIdentifierAttribute extends AbstractAttribute i
 		this.attributeInformation = attributeInformation;
 	}
 
-	@Override
 	public AttributeSource getSource() {
 		return source();
 	}
@@ -70,11 +69,6 @@ public abstract class AbstractNonIdentifierAttribute extends AbstractAttribute i
 	}
 
 	@Override
-	public ValueGeneration getValueGenerationStrategy() {
-		return attributeInformation.getValueGenerationStrategy();
-	}
-
-	@Override
 	public boolean isNullable() {
 		return attributeInformation.isNullable();
 	}
@@ -97,6 +91,11 @@ public abstract class AbstractNonIdentifierAttribute extends AbstractAttribute i
 	@Override
 	public CascadeStyle getCascadeStyle() {
 		return attributeInformation.getCascadeStyle();
+	}
+
+	@Override
+	public OnDeleteAction getOnDeleteAction() {
+		return attributeInformation.getOnDeleteAction();
 	}
 
 	@Override

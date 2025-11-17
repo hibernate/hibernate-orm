@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -10,7 +8,6 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmAuxiliaryDatabaseObjectType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmDialectScopeType;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.SimpleAuxiliaryDatabaseObject;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 
 /**
@@ -31,11 +28,10 @@ public class AuxiliaryDatabaseObjectBinder {
 		if ( auxDbObjectMapping.getDefinition() != null ) {
 			final String auxDbObjectImplClass = auxDbObjectMapping.getDefinition().getClazz();
 			try {
-				auxDbObject = (AuxiliaryDatabaseObject) context.getBuildingOptions()
-						.getServiceRegistry()
-						.getService( ClassLoaderService.class )
-						.classForName( auxDbObjectImplClass )
-						.newInstance();
+				auxDbObject = (AuxiliaryDatabaseObject)
+						context.getBootstrapContext().getClassLoaderService()
+								.classForName( auxDbObjectImplClass )
+								.newInstance();
 			}
 			catch (ClassLoadingException cle) {
 				throw cle;
@@ -60,9 +56,7 @@ public class AuxiliaryDatabaseObjectBinder {
 		}
 
 		if ( !auxDbObjectMapping.getDialectScope().isEmpty() ) {
-			if ( AuxiliaryDatabaseObject.Expandable.class.isInstance( auxDbObject ) ) {
-				final AuxiliaryDatabaseObject.Expandable expandable
-						= (AuxiliaryDatabaseObject.Expandable) auxDbObject;
+			if ( auxDbObject instanceof AuxiliaryDatabaseObject.Expandable expandable ) {
 				for ( JaxbHbmDialectScopeType dialectScopeBinding : auxDbObjectMapping.getDialectScope() ) {
 					expandable.addDialectScope( dialectScopeBinding.getName() );
 				}

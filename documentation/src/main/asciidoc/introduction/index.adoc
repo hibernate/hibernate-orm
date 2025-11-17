@@ -1,0 +1,28 @@
+:shared-attributes-dir: {doc-main-dir}/asciidoc/shared
+:html-meta-canonical-link: https://docs.hibernate.org/stable/orm/introduction/html_single/
+
+include::{shared-attributes-dir}/common-attributes.adoc[]
+include::{shared-attributes-dir}/url-attributes.adoc[]
+include::{shared-attributes-dir}/filesystem-attributes.adoc[]
+include::{shared-attributes-dir}/renderer-attributes.adoc[]
+
+
+= A Short Guide to Hibernate 7
+:toc2:
+:toclevels: 3
+:sectanchors:
+
+include::Preface.adoc[]
+
+:numbered:
+
+include::Introduction.adoc[]
+include::Configuration.adoc[]
+include::Entities.adoc[]
+include::Mapping.adoc[]
+include::Interacting.adoc[]
+include::Querying.adoc[]
+include::Processor.adoc[]
+include::Tuning.adoc[]
+include::Advanced.adoc[]
+include::Credits.adoc[]

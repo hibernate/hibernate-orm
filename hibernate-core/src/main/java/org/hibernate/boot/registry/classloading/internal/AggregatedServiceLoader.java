@@ -1,13 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry.classloading.internal;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,12 +14,8 @@ import java.util.List;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.Set;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
 
-import org.hibernate.AssertionFailure;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+import static org.hibernate.service.internal.ServiceLogger.SERVICE_LOGGER;
 
 /**
  * A service loader bound to an {@link AggregatedClassLoader}.
@@ -31,48 +23,9 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 abstract class AggregatedServiceLoader<S> {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( AggregatedServiceLoader.class );
-
-	private static final Method SERVICE_LOADER_STREAM_METHOD;
-	private static final Method PROVIDER_TYPE_METHOD;
-
-	static {
-		Class<?> serviceLoaderClass = ServiceLoader.class;
-		Method serviceLoaderStreamMethod = null;
-		Method providerTypeMethod = null;
-		try {
-			/*
-			 * JDK 9 introduced the stream() method on ServiceLoader,
-			 * which we need in order to avoid duplicate service instantiation.
-			 * See ClassPathAndModulePathAggregatedServiceLoader.
-			 */
-			serviceLoaderStreamMethod = serviceLoaderClass.getMethod( "stream" );
-			Class<?> providerClass = Class.forName( serviceLoaderClass.getName() + "$Provider" );
-			providerTypeMethod = providerClass.getMethod( "type" );
-		}
-		catch (NoSuchMethodException | ClassNotFoundException e) {
-			/*
-			 * Probably Java 8.
-			 * Leave the method constants null,
-			 * we will automatically use a service loader implementation that doesn't rely on them.
-			 * See create(...).
-			 */
-		}
-
-		SERVICE_LOADER_STREAM_METHOD = serviceLoaderStreamMethod;
-		PROVIDER_TYPE_METHOD = providerTypeMethod;
-	}
-
 	static <S> AggregatedServiceLoader<S> create(AggregatedClassLoader aggregatedClassLoader,
 			Class<S> serviceContract) {
-		if ( SERVICE_LOADER_STREAM_METHOD != null ) {
-			// Java 9+
 			return new ClassPathAndModulePathAggregatedServiceLoader<>( aggregatedClassLoader, serviceContract );
-		}
-		else {
-			// Java 8
-			return new ClassPathOnlyAggregatedServiceLoader<>( aggregatedClassLoader, serviceContract );
-		}
 	}
 
 	/**
@@ -86,43 +39,9 @@ abstract class AggregatedServiceLoader<S> {
 	public abstract void close();
 
 	/**
-	 * An {@link AggregatedServiceLoader} that will only detect services defined in the class path,
-	 * not in the module path,
-	 * because it passes the aggregated classloader directly to the service loader.
-	 * <p>
-	 * This implementation is best when running Hibernate ORM on Java 8.
-	 * On Java 9 and above, {@link ClassPathAndModulePathAggregatedServiceLoader} should be used.
-	 *
-	 * @param <S> The type of loaded services.
-	 */
-	private static class ClassPathOnlyAggregatedServiceLoader<S> extends AggregatedServiceLoader<S> {
-		private final ServiceLoader<S> delegate;
-
-		private ClassPathOnlyAggregatedServiceLoader(AggregatedClassLoader aggregatedClassLoader, Class<S> serviceContract) {
-			this.delegate = ServiceLoader.load( serviceContract, aggregatedClassLoader );
-		}
-
-		@Override
-		public Collection<S> getAll() {
-			final Set<S> services = new LinkedHashSet<>();
-			for ( S service : delegate ) {
-				services.add( service );
-			}
-			return services;
-		}
-
-		@Override
-		public void close() {
-			// Clear service providers
-			delegate.reload();
-		}
-	}
-
-	/**
 	 * An {@link AggregatedServiceLoader} that will detect services defined in the class path or in the module path.
 	 * <p>
 	 * This implementation only works when running Hibernate ORM on Java 9 and above.
-	 * On Java 8, {@link ClassPathOnlyAggregatedServiceLoader} must be used.
 	 * <p>
 	 * When retrieving services from providers in the module path,
 	 * the service loader internally uses a map from classloader to service catalog.
@@ -182,7 +101,7 @@ abstract class AggregatedServiceLoader<S> {
 				 * as well as the close() method,
 				 * and also the service loader map in ClassLoaderServiceImpl,
 				 * and we can simply call .reload() on the service loader after we load services
-				 * in ClassPathOnlyAggregatedServiceLoader.getAll().
+				 * in ClassPathAndModulePathAggregatedServiceLoader.getAll().
 				 */
 				cache = Collections.unmodifiableCollection( loadAll() );
 			}
@@ -194,10 +113,9 @@ abstract class AggregatedServiceLoader<S> {
 			Set<S> result = new LinkedHashSet<>();
 
 			// Always try the aggregated class loader first
-			Iterator<? extends Supplier<S>> providerIterator = providerStream( aggregatedClassLoaderServiceLoader )
-					.iterator();
+			var providerIterator = aggregatedClassLoaderServiceLoader.stream().iterator();
 			while ( providerIterator.hasNext() ) {
-				Supplier<S> provider = providerIterator.next();
+				ServiceLoader.Provider<S> provider = providerIterator.next();
 				collectServiceIfNotDuplicate( result, alreadyEncountered, provider );
 			}
 
@@ -206,33 +124,22 @@ abstract class AggregatedServiceLoader<S> {
 			 * because only them can instantiate services provided by jars in the module path.
 			 */
 			for ( ServiceLoader<S> delegate : delegates ) {
-				providerIterator = providerStream( delegate ).iterator();
+				providerIterator = delegate.stream().iterator();
 				/*
 				 * Note that advancing the stream itself can lead to (arguably) "legitimate" errors,
-				 * where we fail to load the service,
-				 * but only because individual classloader has its own definition of the service contract class,
-				 * which is different from ours.
+				 * where we fail to load the service, but only because each individual classloader
+				 * has its own definition of the service contract class, which is different from ours.
 				 * In that case (still arguably), the error should be ignored.
-				 * That's why we wrap the call to hasNext in a method that catches an logs errors.
+				 * That's why we wrap the call to hasNext in a method that catches and logs errors.
 				 * See https://hibernate.atlassian.net/browse/HHH-13551.
 				 */
 				while ( hasNextIgnoringServiceConfigurationError( providerIterator ) ) {
-					Supplier<S> provider = providerIterator.next();
+					final ServiceLoader.Provider<S> provider = providerIterator.next();
 					collectServiceIfNotDuplicate( result, alreadyEncountered, provider );
 				}
 			}
 
 			return result;
-		}
-
-		@SuppressWarnings("unchecked")
-		private Stream<? extends Supplier<S>> providerStream(ServiceLoader<S> serviceLoader) {
-			try {
-				return ( (Stream<? extends Supplier<S>>) SERVICE_LOADER_STREAM_METHOD.invoke( serviceLoader ) );
-			}
-			catch (RuntimeException | IllegalAccessException | InvocationTargetException e) {
-				throw new AssertionFailure( "Error calling ServiceLoader.stream()", e );
-			}
 		}
 
 		private boolean hasNextIgnoringServiceConfigurationError(Iterator<?> iterator) {
@@ -241,7 +148,7 @@ abstract class AggregatedServiceLoader<S> {
 					return iterator.hasNext();
 				}
 				catch (ServiceConfigurationError e) {
-					log.ignoringServiceConfigurationError( serviceContract, e );
+					SERVICE_LOGGER.ignoringServiceConfigurationError( serviceContract.getName(), e );
 				}
 			}
 		}
@@ -263,14 +170,8 @@ abstract class AggregatedServiceLoader<S> {
 		 * and one provider may return different types of services
 		 * depending on conditions known only to itself.
 		 */
-		private void collectServiceIfNotDuplicate(Set<S> result, Set<String> alreadyEncountered, Supplier<S> provider) {
-			Class<?> type;
-			try {
-				type = (Class<?>) PROVIDER_TYPE_METHOD.invoke( provider );
-			}
-			catch (RuntimeException | IllegalAccessException | InvocationTargetException e) {
-				throw new AssertionFailure( "Error calling ServiceLoader.Provider.type()", e );
-			}
+		private void collectServiceIfNotDuplicate(Set<S> result, Set<String> alreadyEncountered, ServiceLoader.Provider<S> provider) {
+			final Class<? extends S> type = provider.type();
 			String typeName = type.getName();
 			if ( alreadyEncountered.add( typeName ) ) {
 				result.add( provider.get() );

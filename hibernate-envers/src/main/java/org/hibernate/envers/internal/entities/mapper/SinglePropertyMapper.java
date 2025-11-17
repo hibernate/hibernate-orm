@@ -1,22 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper;
 
-import java.io.Serializable;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
@@ -25,6 +17,11 @@ import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.property.access.spi.SetterFieldImpl;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * TODO: diff
@@ -54,14 +51,14 @@ public class SinglePropertyMapper extends AbstractPropertyMapper implements Simp
 
 	@Override
 	public boolean mapToMapFromEntity(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
 		data.put( propertyData.getName(), newObj );
 		boolean dbLogicallyDifferent = true;
-		if ( (session.getFactory().getJdbcServices()
-				.getDialect() instanceof Oracle8iDialect) && (newObj instanceof String || oldObj instanceof String) ) {
+		final Dialect dialect = session.getFactory().getJdbcServices().getDialect();
+		if ( ( dialect instanceof OracleDialect ) && (newObj instanceof String || oldObj instanceof String) ) {
 			// Don't generate new revision when database replaces empty string with NULL during INSERT or UPDATE statements.
 			dbLogicallyDifferent = !(StringTools.isEmpty( newObj ) && StringTools.isEmpty( oldObj ));
 		}
@@ -70,7 +67,7 @@ public class SinglePropertyMapper extends AbstractPropertyMapper implements Simp
 
 	@Override
 	public void mapModifiedFlagsToMapFromEntity(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
@@ -105,26 +102,32 @@ public class SinglePropertyMapper extends AbstractPropertyMapper implements Simp
 			map.put( propertyData.getBeanName(), value );
 		}
 		else {
-			AccessController.doPrivileged(
-					new PrivilegedAction<Object>() {
-						@Override
-						public Object run() {
-							final Setter setter = ReflectionTools.getSetter(
-									obj.getClass(),
-									propertyData,
-									enversService.getServiceRegistry()
-							);
-
-							// We only set a null value if the field is not primitive. Otherwise, we leave it intact.
-							if ( value != null || !isPrimitive( setter, propertyData, obj.getClass() ) ) {
-								setter.set( obj, value, null );
-							}
-
-							return null;
-						}
-					}
+			final Setter setter = ReflectionTools.getSetter(
+					obj.getClass(),
+					propertyData,
+					enversService.getServiceRegistry()
 			);
+
+			// We only set a null value if the field is not primitive. Otherwise, we leave it intact.
+			if ( value != null || !isPrimitive( setter, propertyData, obj.getClass() ) ) {
+				setter.set( obj, value );
+			}
 		}
+	}
+
+	@Override
+	public Object mapToEntityFromMap(
+			final EnversService enversService,
+			final Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision) {
+		// synthetic properties are not part of the entity model; therefore they should be ignored.
+		if ( data == null || propertyData.isSynthetic() ) {
+			return null;
+		}
+
+		return data.get( propertyData.getName() );
 	}
 
 	private boolean isPrimitive(Setter setter, PropertyData propertyData, Class<?> cls) {
@@ -149,11 +152,11 @@ public class SinglePropertyMapper extends AbstractPropertyMapper implements Simp
 
 	@Override
 	public List<PersistentCollectionChangeData> mapCollectionChanges(
-			SessionImplementor sessionImplementor,
+			SharedSessionContractImplementor sessionImplementor,
 			String referencingPropertyName,
 			PersistentCollection newColl,
 			Serializable oldColl,
-			Serializable id) {
+			Object id) {
 		return null;
 	}
 

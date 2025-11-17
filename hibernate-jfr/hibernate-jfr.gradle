@@ -1,0 +1,18 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+
+plugins {
+    id "local.publishing-java-module"
+    id "local.publishing-group-relocation"
+}
+
+description = 'Integration for JDK JFR into Hibernate O/RM'
+
+dependencies {
+    implementation project( ':hibernate-core' )
+
+    testImplementation project( ':hibernate-testing' )
+    testImplementation testLibs.jfrUnit
+}

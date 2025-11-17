@@ -1,0 +1,19 @@
+
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+
+    <class name="org.hibernate.orm.test.mapping.readwrite.ReadWriteEntity" table="SimpleEntity">
+        <id name="id" />
+        <property name="name" />
+        <property name="value">
+            <column name="conv" read="conv * 1" />
+        </property>
+    </class>
+
+</hibernate-mapping>

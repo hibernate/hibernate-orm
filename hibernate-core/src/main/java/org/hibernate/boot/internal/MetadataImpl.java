@@ -1,30 +1,32 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.regex.Pattern;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.SessionFactory;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategyLegacy;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.query.NamedHqlQueryDefinition;
+import org.hibernate.boot.query.NamedNativeQueryDefinition;
+import org.hibernate.boot.query.NamedProcedureCallDefinition;
+import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
@@ -32,32 +34,33 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderService;
-import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
-import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.NamedQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
-import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.procedure.ProcedureCallMemento;
-import org.hibernate.query.spi.NamedQueryRepository;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.type.Type;
-import org.hibernate.type.TypeResolver;
+import org.hibernate.mapping.UserDefinedObjectType;
+import org.hibernate.mapping.UserDefinedType;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
+import org.hibernate.query.internal.NamedObjectRepositoryImpl;
+import org.hibernate.query.named.NamedObjectRepository;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.tool.schema.Action;
+import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static java.lang.String.join;
+import static java.util.Collections.emptySet;
+import static org.hibernate.cfg.AvailableSettings.EVENT_LISTENER_PREFIX;
+import static org.hibernate.internal.util.StringHelper.splitAtCommas;
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
  * Container for configuration data collected during binding the metamodel.
@@ -67,54 +70,58 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Gail Badner
  */
 public class MetadataImpl implements MetadataImplementor, Serializable {
-	private static final Pattern LISTENER_SEPARATION_PATTERN = Pattern.compile( " ," );
 
 	private final UUID uuid;
 	private final MetadataBuildingOptions metadataBuildingOptions;
 	private final BootstrapContext bootstrapContext;
 
-	private final MutableIdentifierGeneratorFactory identifierGeneratorFactory;
-
 	private final Map<String,PersistentClass> entityBindingMap;
-	private final Map<Class, MappedSuperclass> mappedSuperclassMap;
+	private final List<Component> composites;
+	private final Map<Class<?>, Component> genericComponentsMap;
+	private final Map<Class<?>, DiscriminatorType<?>> embeddableDiscriminatorTypesMap;
+	private final Map<Class<?>, MappedSuperclass> mappedSuperclassMap;
 	private final Map<String,Collection> collectionBindingMap;
 	private final Map<String, TypeDefinition> typeDefinitionMap;
 	private final Map<String, FilterDefinition> filterDefinitionMap;
 	private final Map<String, FetchProfile> fetchProfileMap;
 	private final Map<String, String> imports;
 	private final Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap;
-	private final Map<String, NamedQueryDefinition> namedQueryMap;
-	private final Map<String, NamedSQLQueryDefinition> namedNativeQueryMap;
+	private final Map<String, NamedHqlQueryDefinition<?>> namedQueryMap;
+	private final Map<String, NamedNativeQueryDefinition<?>> namedNativeQueryMap;
 	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
-	private final Map<String, ResultSetMappingDefinition> sqlResultSetMappingMap;
+	private final Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap;
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
-	private final Map<String, SQLFunction> sqlFunctionMap;
+	private final Map<String, SqmFunctionDescriptor> sqlFunctionMap;
 	private final Database database;
 
 	public MetadataImpl(
 			UUID uuid,
 			MetadataBuildingOptions metadataBuildingOptions,
-			MutableIdentifierGeneratorFactory identifierGeneratorFactory,
 			Map<String, PersistentClass> entityBindingMap,
-			Map<Class, MappedSuperclass> mappedSuperclassMap,
+			List<Component> composites,
+			Map<Class<?>, Component> genericComponentsMap,
+			Map<Class<?>, DiscriminatorType<?>> embeddableDiscriminatorTypesMap,
+			Map<Class<?>, MappedSuperclass> mappedSuperclassMap,
 			Map<String, Collection> collectionBindingMap,
 			Map<String, TypeDefinition> typeDefinitionMap,
 			Map<String, FilterDefinition> filterDefinitionMap,
 			Map<String, FetchProfile> fetchProfileMap,
 			Map<String, String> imports,
 			Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap,
-			Map<String, NamedQueryDefinition> namedQueryMap,
-			Map<String, NamedSQLQueryDefinition> namedNativeQueryMap,
+			Map<String, NamedHqlQueryDefinition<?>> namedQueryMap,
+			Map<String, NamedNativeQueryDefinition<?>> namedNativeQueryMap,
 			Map<String, NamedProcedureCallDefinition> namedProcedureCallMap,
-			Map<String, ResultSetMappingDefinition> sqlResultSetMappingMap,
+			Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap,
 			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
-			Map<String, SQLFunction> sqlFunctionMap,
+			Map<String, SqmFunctionDescriptor> sqlFunctionMap,
 			Database database,
 			BootstrapContext bootstrapContext) {
 		this.uuid = uuid;
 		this.metadataBuildingOptions = metadataBuildingOptions;
-		this.identifierGeneratorFactory = identifierGeneratorFactory;
 		this.entityBindingMap = entityBindingMap;
+		this.composites = composites;
+		this.genericComponentsMap = genericComponentsMap;
+		this.embeddableDiscriminatorTypesMap = embeddableDiscriminatorTypesMap;
 		this.mappedSuperclassMap = mappedSuperclassMap;
 		this.collectionBindingMap = collectionBindingMap;
 		this.typeDefinitionMap = typeDefinitionMap;
@@ -142,31 +149,19 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return bootstrapContext.getTypeConfiguration();
 	}
 
-	/**
-	 * Retrieve the {@link Type} resolver associated with this factory.
-	 *
-	 * @return The type resolver
-	 *
-	 * @deprecated (since 5.3) No replacement, access to and handling of Types will be much different in 6.0
-	 */
-	@Deprecated
-	public TypeResolver getTypeResolver() {
-		return bootstrapContext.getTypeConfiguration().getTypeResolver();
+	@Override
+	public SqmFunctionRegistry getFunctionRegistry() {
+		return bootstrapContext.getFunctionRegistry();
 	}
 
 	@Override
 	public SessionFactoryBuilder getSessionFactoryBuilder() {
-		final SessionFactoryBuilderService factoryBuilderService = metadataBuildingOptions.getServiceRegistry().getService( SessionFactoryBuilderService.class );
-		final SessionFactoryBuilderImplementor defaultBuilder = factoryBuilderService.createSessionFactoryBuilder( this, bootstrapContext );
-
-		final ClassLoaderService cls = metadataBuildingOptions.getServiceRegistry().getService( ClassLoaderService.class );
-		final java.util.Collection<SessionFactoryBuilderFactory> discoveredBuilderFactories = cls.loadJavaServices( SessionFactoryBuilderFactory.class );
-
+		final var defaultBuilder = getFactoryBuilder();
 		SessionFactoryBuilder builder = null;
 		List<String> activeFactoryNames = null;
-
-		for ( SessionFactoryBuilderFactory discoveredBuilderFactory : discoveredBuilderFactories ) {
-			final SessionFactoryBuilder returnedBuilder = discoveredBuilderFactory.getSessionFactoryBuilder( this, defaultBuilder );
+		for ( var discoveredBuilderFactory : getSessionFactoryBuilderFactories() ) {
+			final SessionFactoryBuilder returnedBuilder =
+					discoveredBuilderFactory.getSessionFactoryBuilder( this, defaultBuilder );
 			if ( returnedBuilder != null ) {
 				if ( activeFactoryNames == null ) {
 					activeFactoryNames = new ArrayList<>();
@@ -178,21 +173,31 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 		if ( activeFactoryNames != null && activeFactoryNames.size() > 1 ) {
 			throw new HibernateException(
-					"Multiple active SessionFactoryBuilderFactory definitions were discovered : " +
-							String.join(", ", activeFactoryNames)
+					"Multiple active SessionFactoryBuilderFactory definitions were discovered: " +
+							join( ", ", activeFactoryNames )
 			);
 		}
 
-		if ( builder != null ) {
-			return builder;
-		}
+		return builder == null ? defaultBuilder : builder;
+	}
 
-		return defaultBuilder;
+	private Iterable<SessionFactoryBuilderFactory> getSessionFactoryBuilderFactories() {
+		return getClassLoaderService().loadJavaServices( SessionFactoryBuilderFactory.class );
+	}
+
+	private SessionFactoryBuilderImplementor getFactoryBuilder() {
+		return metadataBuildingOptions.getServiceRegistry()
+				.requireService( SessionFactoryBuilderService.class )
+				.createSessionFactoryBuilder( this, bootstrapContext );
+	}
+
+	private ClassLoaderService getClassLoaderService() {
+		return metadataBuildingOptions.getServiceRegistry().requireService( ClassLoaderService.class );
 	}
 
 	@Override
-	public SessionFactory buildSessionFactory() {
-		return getSessionFactoryBuilder().build();
+	public SessionFactoryImplementor buildSessionFactory() {
+		return (SessionFactoryImplementor) getSessionFactoryBuilder().build();
 	}
 
 	@Override
@@ -203,11 +208,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public Database getDatabase() {
 		return database;
-	}
-
-	@Override
-	public MutableIdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-		return identifierGeneratorFactory;
 	}
 
 	@Override
@@ -236,38 +236,43 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public NamedQueryDefinition getNamedQueryDefinition(String name) {
+	public NamedHqlQueryDefinition<?> getNamedHqlQueryMapping(String name) {
 		return namedQueryMap.get( name );
 	}
 
 	@Override
-	public java.util.Collection<NamedQueryDefinition> getNamedQueryDefinitions() {
-		return namedQueryMap.values();
+	public void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition<?>> definitionConsumer) {
+		namedQueryMap.values().forEach( definitionConsumer );
 	}
 
 	@Override
-	public NamedSQLQueryDefinition getNamedNativeQueryDefinition(String name) {
+	public NamedNativeQueryDefinition<?> getNamedNativeQueryMapping(String name) {
 		return namedNativeQueryMap.get( name );
 	}
 
 	@Override
-	public java.util.Collection<NamedSQLQueryDefinition> getNamedNativeQueryDefinitions() {
-		return namedNativeQueryMap.values();
+	public void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition<?>> definitionConsumer) {
+		namedNativeQueryMap.values().forEach( definitionConsumer );
 	}
 
 	@Override
-	public java.util.Collection<NamedProcedureCallDefinition> getNamedProcedureCallDefinitions() {
-		return namedProcedureCallMap.values();
+	public NamedProcedureCallDefinition getNamedProcedureCallMapping(String name) {
+		return namedProcedureCallMap.get( name );
 	}
 
 	@Override
-	public ResultSetMappingDefinition getResultSetMapping(String name) {
+	public void visitNamedProcedureCallDefinition(Consumer<NamedProcedureCallDefinition> definitionConsumer) {
+		namedProcedureCallMap.values().forEach( definitionConsumer );
+	}
+
+	@Override
+	public NamedResultSetMappingDescriptor getResultSetMapping(String name) {
 		return sqlResultSetMappingMap.get( name );
 	}
 
 	@Override
-	public Map<String, ResultSetMappingDefinition> getResultSetMappingDefinitions() {
-		return sqlResultSetMappingMap;
+	public void visitNamedResultSetMappingDefinition(Consumer<NamedResultSetMappingDescriptor> definitionConsumer) {
+		sqlResultSetMappingMap.values().forEach( definitionConsumer );
 	}
 
 	@Override
@@ -311,50 +316,155 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public Map<String, SQLFunction> getSqlFunctionMap() {
+	public Map<String, SqmFunctionDescriptor> getSqlFunctionMap() {
 		return sqlFunctionMap;
 	}
 
 	@Override
+	public Set<String> getContributors() {
+		final HashSet<String> contributors = new HashSet<>();
+		entityBindingMap.forEach( (s, persistentClass)
+				-> contributors.add( persistentClass.getContributor() ) );
+		for ( var namespace : database.getNamespaces() ) {
+			for ( var table : namespace.getTables() ) {
+				contributors.add( table.getContributor() );
+			}
+			for ( var sequence : namespace.getSequences() ) {
+				contributors.add( sequence.getContributor() );
+			}
+		}
+		return contributors;
+	}
+
+	@Override
 	public java.util.Collection<Table> collectTableMappings() {
-		ArrayList<Table> tables = new ArrayList<>();
-		for ( Namespace namespace : database.getNamespaces() ) {
+		final ArrayList<Table> tables = new ArrayList<>();
+		for ( var namespace : database.getNamespaces() ) {
 			tables.addAll( namespace.getTables() );
 		}
 		return tables;
 	}
 
 	@Override
-	public NamedQueryRepository buildNamedQueryRepository(SessionFactoryImpl sessionFactory) {
-		return new NamedQueryRepository(
-				namedQueryMap,
-				namedNativeQueryMap,
-				sqlResultSetMappingMap,
-				buildProcedureCallMementos( sessionFactory )
+	public NamedObjectRepository buildNamedQueryRepository() {
+		return new NamedObjectRepositoryImpl(
+				mapOfSize( namedQueryMap.size() ),
+				mapOfSize( namedNativeQueryMap.size() ),
+				mapOfSize( namedProcedureCallMap.size() ),
+				mapOfSize( sqlResultSetMappingMap.size() )
 		);
-
 	}
 
-	private Map<String, ProcedureCallMemento> buildProcedureCallMementos(SessionFactoryImpl sessionFactory) {
-		final Map<String, ProcedureCallMemento> rtn = new HashMap<>();
-		if ( namedProcedureCallMap != null ) {
-			for ( NamedProcedureCallDefinition procedureCallDefinition : namedProcedureCallMap.values() ) {
-				rtn.put(
-						procedureCallDefinition.getRegisteredName(),
-						procedureCallDefinition.toMemento( sessionFactory,sqlResultSetMappingMap )
-				);
+	@Override
+	public void orderColumns(boolean forceOrdering) {
+		final var columnOrderingStrategy = metadataBuildingOptions.getColumnOrderingStrategy();
+		// No need to order columns when using the no-op strategy
+		if ( columnOrderingStrategy != ColumnOrderingStrategyLegacy.INSTANCE ) {
+			final boolean shouldOrderTableColumns = forceOrdering || shouldOrderTableColumns();
+			for ( var namespace : database.getNamespaces() ) {
+				if ( shouldOrderTableColumns ) {
+					for ( var table : namespace.getTables() ) {
+						handleTable( table, columnOrderingStrategy );
+						handlePrimaryKey( table, columnOrderingStrategy );
+						handleForeignKeys( table, columnOrderingStrategy );
+					}
+				}
+				for ( var userDefinedType : namespace.getUserDefinedTypes() ) {
+					handleUDT( userDefinedType, columnOrderingStrategy );
+				}
 			}
 		}
-		return rtn;
+	}
+
+	private void handleTable(Table table, ColumnOrderingStrategy columnOrderingStrategy) {
+		final var tableColumns = columnOrderingStrategy.orderTableColumns( table, this );
+		if ( tableColumns != null ) {
+			table.reorderColumns( tableColumns );
+		}
+	}
+
+	private void handleUDT(UserDefinedType userDefinedType, ColumnOrderingStrategy columnOrderingStrategy) {
+		if ( userDefinedType instanceof UserDefinedObjectType objectType
+				&& objectType.getColumns().size() > 1 ) {
+			final var objectTypeColumns =
+					columnOrderingStrategy.orderUserDefinedTypeColumns( objectType, this );
+			if ( objectTypeColumns != null ) {
+				objectType.reorderColumns( objectTypeColumns );
+			}
+		}
+	}
+
+	private void handleForeignKeys(Table table, ColumnOrderingStrategy columnOrderingStrategy) {
+		for ( var foreignKey : table.getForeignKeyCollection() ) {
+			final var columns = foreignKey.getColumns();
+			if ( columns.size() > 1 ) {
+				if ( foreignKey.getReferencedColumns().isEmpty() ) {
+					final var targetPrimaryKey =
+							foreignKey.getReferencedTable().getPrimaryKey();
+					// Make sure we order the columns of the primary key first,
+					// so that foreign key ordering can rely on this
+					if ( targetPrimaryKey.getOriginalOrder() == null ) {
+						final var primaryKeyColumns =
+								columnOrderingStrategy.orderConstraintColumns( targetPrimaryKey, this );
+						if ( primaryKeyColumns != null ) {
+							targetPrimaryKey.reorderColumns( primaryKeyColumns );
+						}
+					}
+
+					// Patch up the order of foreign keys based on new order of the target primary key
+					final int[] originalPrimaryKeyOrder = targetPrimaryKey.getOriginalOrder();
+					if ( originalPrimaryKeyOrder != null ) {
+						final var foreignKeyColumnsCopy = new ArrayList<>( columns );
+						for ( int i = 0; i < foreignKeyColumnsCopy.size(); i++ ) {
+							columns.set( i, foreignKeyColumnsCopy.get( originalPrimaryKeyOrder[i] ) );
+						}
+					}
+				}
+			}
+		}
+	}
+
+	private void handlePrimaryKey(Table table, ColumnOrderingStrategy columnOrderingStrategy) {
+		final var primaryKey = table.getPrimaryKey();
+		if ( primaryKey != null
+				&& primaryKey.getColumns().size() > 1
+				&& primaryKey.getOriginalOrder() == null ) {
+			final var primaryKeyColumns =
+					columnOrderingStrategy.orderConstraintColumns( primaryKey, this );
+			if ( primaryKeyColumns != null ) {
+				primaryKey.reorderColumns( primaryKeyColumns );
+			}
+		}
+	}
+
+	private boolean shouldOrderTableColumns() {
+		final var settings =
+				metadataBuildingOptions.getServiceRegistry()
+						.requireService( ConfigurationService.class )
+						.getSettings();
+		for ( var grouping : ActionGrouping.interpret( this, settings ) ) {
+			if ( isColumnOrderingRelevant( grouping.scriptAction() )
+				|| isColumnOrderingRelevant( grouping.databaseAction() ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean isColumnOrderingRelevant(Action grouping) {
+		return switch ( grouping ) {
+			case CREATE, CREATE_DROP, CREATE_ONLY -> true;
+			default -> false;
+		};
 	}
 
 	@Override
 	public void validate() throws MappingException {
-		for ( PersistentClass entityBinding : this.getEntityBindings() ) {
+		for ( var entityBinding : this.getEntityBindings() ) {
 			entityBinding.validate( this );
 		}
 
-		for ( Collection collectionBinding : this.getCollectionBindings() ) {
+		for ( var collectionBinding : this.getCollectionBindings() ) {
 			collectionBinding.validate( this );
 		}
 	}
@@ -362,83 +472,103 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public Set<MappedSuperclass> getMappedSuperclassMappingsCopy() {
 		return mappedSuperclassMap == null
-				? Collections.emptySet()
+				? emptySet()
 				: new HashSet<>( mappedSuperclassMap.values() );
 	}
 
 	@Override
 	public void initSessionFactory(SessionFactoryImplementor sessionFactory) {
-		final ServiceRegistryImplementor sessionFactoryServiceRegistry = sessionFactory.getServiceRegistry();
-
-		assert sessionFactoryServiceRegistry != null;
-
-		final EventListenerRegistry eventListenerRegistry = sessionFactoryServiceRegistry.getService( EventListenerRegistry.class );
-		final ConfigurationService cfgService = sessionFactoryServiceRegistry.getService( ConfigurationService.class );
-		final ClassLoaderService classLoaderService = sessionFactoryServiceRegistry.getService( ClassLoaderService.class );
-
-		for ( Map.Entry entry : ( (Map<?, ?>) cfgService.getSettings() ).entrySet() ) {
-			if ( !String.class.isInstance( entry.getKey() ) ) {
-				continue;
+		// must not use BootstrapContext services here
+		final var registry = sessionFactory.getServiceRegistry();
+		assert registry != null;
+		final var configurationService = registry.requireService( ConfigurationService.class );
+		final var classLoaderService = registry.requireService( ClassLoaderService.class );
+		final var eventListenerRegistry = sessionFactory.getEventListenerRegistry();
+		configurationService.getSettings().forEach( (propertyName, value) -> {
+			if ( propertyName.startsWith( EVENT_LISTENER_PREFIX ) ) {
+				final String eventTypeName = propertyName.substring( EVENT_LISTENER_PREFIX.length() + 1 );
+				final var eventType = EventType.resolveEventTypeByName( eventTypeName );
+				final String listeners = (String) value;
+				appendListeners( eventListenerRegistry, classLoaderService, listeners, eventType );
 			}
-			final String propertyName = (String) entry.getKey();
-			if ( !propertyName.startsWith( org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX ) ) {
-				continue;
+		} );
+	}
+
+	private <T> void appendListeners(
+			EventListenerRegistry eventListenerRegistry,
+			ClassLoaderService classLoaderService,
+			String listeners,
+			EventType<T> eventType) {
+		final var eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
+		for ( String listenerImpl : splitAtCommas( listeners ) ) {
+			@SuppressWarnings("unchecked")
+			T listener = (T) instantiate( listenerImpl, classLoaderService );
+			if ( !eventType.baseListenerInterface().isInstance( listener ) ) {
+				throw new HibernateException( "Event listener '" + listenerImpl
+						+ "' must implement '" + eventType.baseListenerInterface().getName() + "'");
 			}
-			final String eventTypeName = propertyName.substring(
-					org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX.length() + 1
-			);
-			final EventType eventType = EventType.resolveEventTypeByName( eventTypeName );
-			final EventListenerGroup eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
-			for ( String listenerImpl : LISTENER_SEPARATION_PATTERN.split( ( (String) entry.getValue() ) ) ) {
-				eventListenerGroup.appendListener( instantiate( listenerImpl, classLoaderService ) );
-			}
+			eventListenerGroup.appendListener( listener );
 		}
 	}
 
-	private Object instantiate(String listenerImpl, ClassLoaderService classLoaderService) {
+	private static Object instantiate(String listenerImpl, ClassLoaderService classLoaderService) {
 		try {
 			return classLoaderService.classForName( listenerImpl ).newInstance();
 		}
 		catch (Exception e) {
-			throw new HibernateException( "Could not instantiate requested listener [" + listenerImpl + "]", e );
+			throw new HibernateException( "Could not instantiate event listener '" + listenerImpl + "'", e );
 		}
+	}
+
+	@Override
+	public void visitRegisteredComponents(Consumer<Component> consumer) {
+		composites.forEach( consumer );
+	}
+
+	@Override
+	public Component getGenericComponent(Class<?> componentClass) {
+		return genericComponentsMap.get( componentClass );
+	}
+
+	@Override
+	public DiscriminatorType<?> resolveEmbeddableDiscriminatorType(
+			Class<?> embeddableClass,
+			Supplier<DiscriminatorType<?>> supplier) {
+		return embeddableDiscriminatorTypesMap.computeIfAbsent( embeddableClass, k -> supplier.get() );
 	}
 
 	@Override
 	public org.hibernate.type.Type getIdentifierType(String entityName) throws MappingException {
-		final PersistentClass pc = entityBindingMap.get( entityName );
-		if ( pc == null ) {
-			throw new MappingException( "persistent class not known: " + entityName );
+		final var persistentClass = entityBindingMap.get( entityName );
+		if ( persistentClass == null ) {
+			throw new MappingException( "Persistent class not known: " + entityName );
 		}
-		return pc.getIdentifier().getType();
+		return persistentClass.getIdentifier().getType();
 	}
 
 	@Override
 	public String getIdentifierPropertyName(String entityName) throws MappingException {
-		final PersistentClass pc = entityBindingMap.get( entityName );
-		if ( pc == null ) {
-			throw new MappingException( "persistent class not known: " + entityName );
+		final var persistentClass = entityBindingMap.get( entityName );
+		if ( persistentClass == null ) {
+			throw new MappingException( "Persistent class not known: " + entityName );
 		}
-		if ( !pc.hasIdentifierProperty() ) {
+		if ( !persistentClass.hasIdentifierProperty() ) {
 			return null;
 		}
-		return pc.getIdentifierProperty().getName();
+		return persistentClass.getIdentifierProperty().getName();
 	}
 
 	@Override
 	public org.hibernate.type.Type getReferencedPropertyType(String entityName, String propertyName) throws MappingException {
-		final PersistentClass pc = entityBindingMap.get( entityName );
-		if ( pc == null ) {
-			throw new MappingException( "persistent class not known: " + entityName );
+		final var persistentClass = entityBindingMap.get( entityName );
+		if ( persistentClass == null ) {
+			throw new MappingException( "Persistent class not known: " + entityName );
 		}
-		Property prop = pc.getReferencedProperty( propertyName );
-		if ( prop == null ) {
-			throw new MappingException(
-					"property not known: " +
-							entityName + '.' + propertyName
-			);
+		final var referencedProperty = persistentClass.getReferencedProperty( propertyName );
+		if ( referencedProperty == null ) {
+			throw new MappingException( "Property not known: " + entityName + '.' + propertyName );
 		}
-		return prop.getType();
+		return referencedProperty.getType();
 	}
 
 	//Specific for copies only:
@@ -459,28 +589,12 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return fetchProfileMap;
 	}
 
-	public Map<Class, MappedSuperclass> getMappedSuperclassMap() {
+	public Map<Class<?>, MappedSuperclass> getMappedSuperclassMap() {
 		return mappedSuperclassMap;
 	}
 
 	public Map<String, IdentifierGeneratorDefinition> getIdGeneratorDefinitionMap() {
 		return idGeneratorDefinitionMap;
-	}
-
-	public Map<String, NamedQueryDefinition> getNamedQueryMap() {
-		return namedQueryMap;
-	}
-
-	public Map<String, NamedSQLQueryDefinition> getNamedNativeQueryMap() {
-		return namedNativeQueryMap;
-	}
-
-	public Map<String, NamedProcedureCallDefinition> getNamedProcedureCallMap() {
-		return namedProcedureCallMap;
-	}
-
-	public Map<String, ResultSetMappingDefinition> getSqlResultSetMappingMap() {
-		return sqlResultSetMappingMap;
 	}
 
 	public Map<String, NamedEntityGraphDefinition> getNamedEntityGraphMap() {
@@ -491,4 +605,31 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return bootstrapContext;
 	}
 
+	public Map<String, NamedHqlQueryDefinition<?>> getNamedQueryMap() {
+		return namedQueryMap;
+	}
+
+	public Map<String, NamedNativeQueryDefinition<?>> getNamedNativeQueryMap() {
+		return namedNativeQueryMap;
+	}
+
+	public Map<String, NamedProcedureCallDefinition> getNamedProcedureCallMap() {
+		return namedProcedureCallMap;
+	}
+
+	public Map<String, NamedResultSetMappingDescriptor> getSqlResultSetMappingMap() {
+		return sqlResultSetMappingMap;
+	}
+
+	public java.util.List<org.hibernate.mapping.Component> getComposites() {
+		return composites;
+	}
+
+	public Map<Class<?>, Component> getGenericComponentsMap() {
+		return genericComponentsMap;
+	}
+
+	public Map<Class<?>, DiscriminatorType<?>> getEmbeddableDiscriminatorTypesMap() {
+		return embeddableDiscriminatorTypesMap;
+	}
 }

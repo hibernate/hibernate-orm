@@ -1,49 +1,45 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.integrator.internal;
 
 import java.util.LinkedHashSet;
 
+import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cache.internal.CollectionCacheInvalidator;
-import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.secure.spi.JaccIntegrator;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.service.internal.ServiceLogger.SERVICE_LOGGER;
 
 /**
  * @author Steve Ebersole
  */
 public class IntegratorServiceImpl implements IntegratorService {
-	private static final Logger LOG = Logger.getLogger( IntegratorServiceImpl.class.getName() );
 
-	private final LinkedHashSet<Integrator> integrators = new LinkedHashSet<Integrator>();
+	private final LinkedHashSet<Integrator> integrators = new LinkedHashSet<>();
 
-	public IntegratorServiceImpl(LinkedHashSet<Integrator> providedIntegrators, ClassLoaderService classLoaderService) {
-		// register standard integrators.  Envers and JPA, for example, need to be handled by discovery because in
-		// separate project/jars.
-		addIntegrator( new BeanValidationIntegrator() );
-		addIntegrator( new JaccIntegrator() );
-		addIntegrator( new CollectionCacheInvalidator() );
+	public IntegratorServiceImpl(Iterable<Integrator> providedIntegrators, ClassLoaderService classLoaderService) {
+		// Register standard integrators.
+		// Envers, for example, needs to be handled by discovery because in separate project/jar.
+		addIntegrator( integrators, new BeanValidationIntegrator() );
+		addIntegrator( integrators, new CollectionCacheInvalidator() );
 
 		// register provided integrators
-		for ( Integrator integrator : providedIntegrators ) {
-			addIntegrator( integrator );
+		for ( var integrator : providedIntegrators ) {
+			addIntegrator( integrators, integrator );
 		}
-
-		for ( Integrator integrator : classLoaderService.loadJavaServices( Integrator.class ) ) {
-			addIntegrator( integrator );
+		for ( var integrator : classLoaderService.loadJavaServices( Integrator.class ) ) {
+			addIntegrator( integrators, integrator );
 		}
 	}
 
-	private void addIntegrator(Integrator integrator) {
-		LOG.debugf( "Adding Integrator [%s].", integrator.getClass().getName() );
+	private static void addIntegrator(LinkedHashSet<Integrator> integrators, Integrator integrator) {
+		if ( SERVICE_LOGGER.isDebugEnabled() ) {
+			SERVICE_LOGGER.addingIntegrator( integrator.getClass().getName() );
+		}
 		integrators.add( integrator );
 	}
 

@@ -1,22 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.internal;
 
-import java.io.Serializable;
+import java.util.Collection;
 
-import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.TimestampsCache;
-import org.hibernate.engine.spi.SessionEventListenerManager;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
+import static org.hibernate.event.monitor.spi.EventMonitor.CacheActionDescription.TIMESTAMP_INVALIDATE;
+import static org.hibernate.event.monitor.spi.EventMonitor.CacheActionDescription.TIMESTAMP_PRE_INVALIDATE;
 
 /**
  * Standard implementation of TimestampsCache
@@ -24,7 +21,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class TimestampsCacheEnabledImpl implements TimestampsCache {
-	private static final Logger log = Logger.getLogger( TimestampsCacheEnabledImpl.class );
 
 	private final TimestampsRegion timestampsRegion;
 
@@ -41,30 +37,36 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 	public void preInvalidate(
 			String[] spaces,
 			SharedSessionContractImplementor session) {
-		final SessionFactoryImplementor factory = session.getFactory();
-		final RegionFactory regionFactory = factory.getCache().getRegionFactory();
-
-		final StatisticsImplementor statistics = factory.getStatistics();
+		final var factory = session.getFactory();
+		final var regionFactory = factory.getCache().getRegionFactory();
+		final var statistics = factory.getStatistics();
 		final boolean stats = statistics.isStatisticsEnabled();
 
-		final Long ts = regionFactory.nextTimestamp() + regionFactory.getTimeout();
+		final Long timestamp = regionFactory.nextTimestamp() + regionFactory.getTimeout();
 
-		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
-		final boolean debugEnabled = log.isDebugEnabled();
-
-		for ( Serializable space : spaces ) {
-			if ( debugEnabled ) {
-				log.debugf( "Pre-invalidating space [%s], timestamp: %s", space, ts );
+		final var eventListenerManager = session.getEventListenerManager();
+		final var eventMonitor = session.getEventMonitor();
+		final boolean traceEnabled = L2CACHE_LOGGER.isTraceEnabled();
+		for ( String space : spaces ) {
+			if ( traceEnabled ) {
+				L2CACHE_LOGGER.preInvalidatingSpace( space, timestamp );
 			}
-
+			final var cachePutEvent = eventMonitor.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
 
 				//put() has nowait semantics, is this really appropriate?
 				//note that it needs to be async replication, never local or sync
-				timestampsRegion.putIntoCache( space, ts, session );
+				timestampsRegion.putIntoCache( space, timestamp, session );
 			}
 			finally {
+				eventMonitor.completeCachePutEvent(
+						cachePutEvent,
+						session,
+						timestampsRegion,
+						true,
+						TIMESTAMP_PRE_INVALIDATE
+				);
 				eventListenerManager.cachePutEnd();
 			}
 
@@ -78,23 +80,33 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 	public void invalidate(
 			String[] spaces,
 			SharedSessionContractImplementor session) {
-		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		final var factory = session.getFactory();
+		final var statistics = factory.getStatistics();
 		final boolean stats = statistics.isStatisticsEnabled();
 
-		final Long ts = session.getFactory().getCache().getRegionFactory().nextTimestamp();
-		final boolean debugEnabled = log.isDebugEnabled();
+		final Long timestamp = factory.getCache().getRegionFactory().nextTimestamp();
 
-		for ( Serializable space : spaces ) {
-			if ( debugEnabled ) {
-				log.debugf( "Invalidating space [%s], timestamp: %s", space, ts );
+		final var eventListenerManager = session.getEventListenerManager();
+		final var eventMonitor = session.getEventMonitor();
+		final boolean traceEnabled = L2CACHE_LOGGER.isTraceEnabled();
+		for ( String space : spaces ) {
+			if ( traceEnabled ) {
+				L2CACHE_LOGGER.invalidatingSpace( space, timestamp );
 			}
 
-			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
+			final var cachePutEvent = eventMonitor.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
-				timestampsRegion.putIntoCache( space, ts, session );
+				timestampsRegion.putIntoCache( space, timestamp, session );
 			}
 			finally {
+				eventMonitor.completeCachePutEvent(
+						cachePutEvent,
+						session,
+						timestampsRegion,
+						true,
+						TIMESTAMP_INVALIDATE
+				);
 				eventListenerManager.cachePutEnd();
 
 				if ( stats ) {
@@ -109,49 +121,67 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 			String[] spaces,
 			Long timestamp,
 			SharedSessionContractImplementor session) {
-
-		final StatisticsImplementor statistics = session.getFactory().getStatistics();
-		final boolean stats = statistics.isStatisticsEnabled();
-		final boolean debugEnabled = log.isDebugEnabled();
-
-		for ( Serializable space : spaces ) {
-			final Long lastUpdate = getLastUpdateTimestampForSpace( space, session );
-			if ( lastUpdate == null ) {
-				// the last update timestamp for the given space was evicted from the
-				// cache or there have been no writes to it since startup
-				if ( stats ) {
-					statistics.updateTimestampsCacheMiss();
-				}
-			}
-			else {
-				if ( debugEnabled ) {
-					log.debugf(
-							"[%s] last update timestamp: %s",
-							space,
-							lastUpdate + ", result set timestamp: " + timestamp
-					);
-				}
-				if ( stats ) {
-					statistics.updateTimestampsCacheHit();
-				}
-				if ( lastUpdate >= timestamp ) {
-					return false;
-				}
+		final var statistics = session.getFactory().getStatistics();
+		for ( String space : spaces ) {
+			if ( isSpaceOutOfDate( space, timestamp, session, statistics ) ) {
+				return false;
 			}
 		}
 		return true;
 	}
 
-	private Long getLastUpdateTimestampForSpace(Serializable space, SharedSessionContractImplementor session) {
-		Long ts = null;
+	private boolean isSpaceOutOfDate(
+			String space,
+			Long timestamp,
+			SharedSessionContractImplementor session,
+			StatisticsImplementor statistics) {
+		final Long lastUpdate = getLastUpdateTimestampForSpace( space, session );
+		if ( lastUpdate == null ) {
+			// the last update timestamp for the given space was evicted from the
+			// cache or there have been no writes to it since startup
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.updateTimestampsCacheMiss();
+			}
+			return false;
+		}
+		else {
+			L2CACHE_LOGGER.lastUpdateTimestampForSpace( space, lastUpdate, timestamp );
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.updateTimestampsCacheHit();
+			}
+			return lastUpdate >= timestamp;
+		}
+	}
+
+	@Override
+	public boolean isUpToDate(
+			Collection<String> spaces,
+			Long timestamp,
+			SharedSessionContractImplementor session) {
+		final var statistics = session.getFactory().getStatistics();
+		for ( String space : spaces ) {
+			if ( isSpaceOutOfDate( space, timestamp, session, statistics ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private Long getLastUpdateTimestampForSpace(String space, SharedSessionContractImplementor session) {
+		boolean found = false;
+		final var eventMonitor = session.getEventMonitor();
+		final var eventListenerManager = session.getEventListenerManager();
+		final var cacheGetEvent = eventMonitor.beginCacheGetEvent();
 		try {
-			session.getEventListenerManager().cacheGetStart();
-			ts = (Long) timestampsRegion.getFromCache( space, session );
+			eventListenerManager.cacheGetStart();
+			final Long timestamp = (Long) timestampsRegion.getFromCache( space, session );
+			found = timestamp != null;
+			return timestamp;
 		}
 		finally {
-			session.getEventListenerManager().cacheGetEnd( ts != null );
+			eventMonitor.completeCacheGetEvent( cacheGetEvent, session, timestampsRegion, found );
+			eventListenerManager.cacheGetEnd( found );
 		}
-		return ts;
 	}
 
 }

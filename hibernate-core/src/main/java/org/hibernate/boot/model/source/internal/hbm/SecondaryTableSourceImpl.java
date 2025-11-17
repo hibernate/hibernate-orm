@@ -1,14 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
 import java.util.List;
 import java.util.Locale;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFetchStyleEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOnDeleteEnum;
@@ -21,7 +20,8 @@ import org.hibernate.boot.model.source.spi.SecondaryTableSource;
 import org.hibernate.boot.model.source.spi.TableSource;
 import org.hibernate.boot.model.source.spi.TableSpecificationSource;
 import org.hibernate.engine.FetchStyle;
-import org.hibernate.internal.util.StringHelper;
+
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
  * @author Steve Ebersole
@@ -32,7 +32,6 @@ class SecondaryTableSourceImpl extends AbstractHbmSourceNode implements Secondar
 	private final String logicalTableName;
 	private final List<ColumnSource> keyColumnSources;
 
-	@SuppressWarnings("unchecked")
 	public SecondaryTableSourceImpl(
 			MappingDocument sourceMappingDocument,
 			final JaxbHbmSecondaryTableType jaxbSecondaryTableMapping,
@@ -46,8 +45,8 @@ class SecondaryTableSourceImpl extends AbstractHbmSourceNode implements Secondar
 				inLineViewNameInferrer
 		);
 
-		if ( joinTable instanceof TableSource ) {
-			if ( StringHelper.isEmpty( ( (TableSource) joinTable ).getExplicitTableName() ) ) {
+		if ( joinTable instanceof TableSource tableSource ) {
+			if ( isEmpty( tableSource.getExplicitTableName() ) ) {
 				throw new MappingException(
 						String.format(
 								Locale.ENGLISH,
@@ -60,9 +59,15 @@ class SecondaryTableSourceImpl extends AbstractHbmSourceNode implements Secondar
 			}
 		}
 
-		this.logicalTableName = joinTable instanceof TableSource
-					? ( (TableSource) joinTable ).getExplicitTableName()
-					: ( (InLineViewSource) joinTable ).getLogicalName();
+		if ( joinTable instanceof TableSource tableSource ) {
+			logicalTableName = tableSource.getExplicitTableName();
+		}
+		else if ( joinTable instanceof InLineViewSource inLineViewSource ) {
+			logicalTableName = inLineViewSource.getLogicalName();
+		}
+		else {
+			throw new AssertionFailure( "Unrecognized TableSpecificationSource" );
+		}
 
 		this.keyColumnSources = RelationalValueSourceHelper.buildColumnSources(
 				sourceMappingDocument,
@@ -142,7 +147,7 @@ class SecondaryTableSourceImpl extends AbstractHbmSourceNode implements Secondar
 	public String getExplicitForeignKeyName() {
 		return jaxbSecondaryTableMapping.getKey().getForeignKey();
 	}
-	
+
 	@Override
 	public boolean createForeignKeyConstraint() {
 		// TODO: Can HBM do something like JPA's @ForeignKey(NO_CONSTRAINT)?

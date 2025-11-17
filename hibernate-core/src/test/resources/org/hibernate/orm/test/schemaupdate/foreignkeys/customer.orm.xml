@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings
+        xmlns="http://java.sun.com/xml/ns/persistence/orm"
+        version="2.0">
+    <package>org.hibernate.orm.test.schemaupdate.foreignkeys</package>
+
+    <entity class="Customer">
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+            <one-to-many name="inventory" mapped-by="customer" fetch="EAGER"/>
+        </attributes>
+    </entity>
+    <entity class="CustomerInventory">
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+            <many-to-one name="customer" fetch="EAGER">
+                <join-column name="CI_CUSTOMERID" insertable="false" nullable="false"/>
+            </many-to-one>
+
+        </attributes>
+    </entity>
+</entity-mappings>

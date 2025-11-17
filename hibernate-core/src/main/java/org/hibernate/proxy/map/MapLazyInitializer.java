@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.proxy.map;
 
@@ -19,7 +17,7 @@ import org.hibernate.proxy.AbstractLazyInitializer;
  */
 public class MapLazyInitializer extends AbstractLazyInitializer implements Serializable {
 
-	MapLazyInitializer(String entityName, Serializable id, SharedSessionContractImplementor session) {
+	MapLazyInitializer(String entityName, Object id, SharedSessionContractImplementor session) {
 		super( entityName, id, session );
 	}
 
@@ -27,7 +25,12 @@ public class MapLazyInitializer extends AbstractLazyInitializer implements Seria
 		return (Map) getImplementation();
 	}
 
-	public Class getPersistentClass() {
+	public Class<?> getPersistentClass() {
+		throw new UnsupportedOperationException("dynamic-map entity representation");
+	}
+
+	@Override
+	public Class<?> getImplementationClass() {
 		throw new UnsupportedOperationException("dynamic-map entity representation");
 	}
 
@@ -46,5 +49,10 @@ public class MapLazyInitializer extends AbstractLazyInitializer implements Seria
 	@Override
 	protected String getSessionFactoryUuid() {
 		return super.getSessionFactoryUuid();
+	}
+
+	@Override
+	protected String getSessionFactoryName() {
+		return super.getSessionFactoryName();
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -19,7 +17,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToOneType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
 import org.hibernate.boot.jaxb.hbm.spi.PluralAttributeInfo;
-import org.hibernate.boot.model.Caching;
+import org.hibernate.boot.model.source.spi.Caching;
 import org.hibernate.boot.model.CustomSql;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.model.source.spi.AttributeRole;
@@ -33,7 +31,7 @@ import org.hibernate.boot.model.source.spi.PluralAttributeKeySource;
 import org.hibernate.boot.model.source.spi.PluralAttributeSource;
 import org.hibernate.boot.model.source.spi.TableSpecificationSource;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
-import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * @author Steve Ebersole
@@ -98,23 +96,21 @@ public abstract class AbstractPluralAttributeSourceImpl
 						.filter( (JaxbHbmRootEntityType entityType) -> childClass.equals( entityType.getName() ) )
 						.flatMap( jaxbHbmRootEntityType -> jaxbHbmRootEntityType.getAttributes().stream() )
 						.filter( attribute -> {
-							if ( attribute instanceof JaxbHbmManyToOneType ) {
-								JaxbHbmManyToOneType manyToOneType = (JaxbHbmManyToOneType) attribute;
-								String manyToOneTypeClass = manyToOneType.getClazz();
-								String containerClass = container.getAttributeRoleBase().getFullPath();
+							if ( attribute instanceof JaxbHbmManyToOneType manyToOneType ) {
+								final String manyToOneTypeClass = manyToOneType.getClazz();
+								final String containerClass = container.getAttributeRoleBase().getFullPath();
 								// Consider many to ones that have no class defined or equal the owner class of the one to many
 								if ( manyToOneTypeClass == null || manyToOneTypeClass.equals( containerClass ) ) {
 									if ( manyToOneType.getColumnAttribute() == null ) {
-										List<Serializable> columns = manyToOneType.getColumnOrFormula();
+										final List<Serializable> columns = manyToOneType.getColumnOrFormula();
 										if ( columns.size() != keyColumnNames.size() ) {
 											return false;
 										}
 										for ( int i = 0; i < columns.size(); i++ ) {
-											Serializable column = columns.get( i );
-											String keyColumn = keyColumnNames.get( i );
-											if ( !( column instanceof JaxbHbmColumnType ) || !( (JaxbHbmColumnType) column )
-													.getName()
-													.equals( keyColumn ) ) {
+											final Serializable column = columns.get( i );
+											final String keyColumn = keyColumnNames.get( i );
+											if ( !( column instanceof JaxbHbmColumnType columnType )
+													|| !columnType.getName().equals( keyColumn ) ) {
 												return false;
 											}
 										}
@@ -159,7 +155,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 		this.elementSource = interpretElementType();
 
 		this.fetchCharacteristics = FetchCharacteristicsPluralAttributeImpl.interpret(
-				mappingDocument.getMappingDefaults(),
+				mappingDocument.getEffectiveDefaults(),
 				pluralAttributeJaxbMapping.getFetch(),
 				pluralAttributeJaxbMapping.getOuterJoin(),
 				pluralAttributeJaxbMapping.getLazy(),
@@ -169,7 +165,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 
 	private static String[] extractSynchronizedTableNames(PluralAttributeInfo pluralAttributeElement) {
 		if ( pluralAttributeElement.getSynchronize().isEmpty() ) {
-			return new String[0];
+			return ArrayHelper.EMPTY_STRING_ARRAY;
 		}
 
 		final String[] names = new String[pluralAttributeElement.getSynchronize().size()];
@@ -264,7 +260,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 			case MANY_TO_MANY:
 				return true;
 			case MANY_TO_ANY:
-				throw new NotYetImplementedException(
+				throw new AssertionFailure(
 						String.format( "%s is not implemented yet.", elementSource.getNature() )
 				);
 			default:

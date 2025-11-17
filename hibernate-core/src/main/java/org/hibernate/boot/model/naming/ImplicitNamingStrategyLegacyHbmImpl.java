@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.naming;
 
-import org.hibernate.internal.util.StringHelper;
+import static org.hibernate.internal.util.StringHelper.unqualify;
 
 /**
  * Implements the original legacy naming behavior.
@@ -21,7 +19,7 @@ public class ImplicitNamingStrategyLegacyHbmImpl extends ImplicitNamingStrategyJ
 
 	@Override
 	protected String transformEntityName(EntityNaming entityNaming) {
-		return StringHelper.unqualify( entityNaming.getEntityName() );
+		return unqualify( entityNaming.getEntityName() );
 	}
 
 	@Override
@@ -39,10 +37,10 @@ public class ImplicitNamingStrategyLegacyHbmImpl extends ImplicitNamingStrategyJ
 					source.getBuildingContext()
 			);
 		}
-
-		return super.determineJoinColumnName( source );
+		else {
+			return super.determineJoinColumnName( source );
+		}
 	}
-
 
 	@Override
 	public Identifier determineJoinTableName(ImplicitJoinTableNameSource source) {
@@ -50,10 +48,10 @@ public class ImplicitNamingStrategyLegacyHbmImpl extends ImplicitNamingStrategyJ
 			final String name = source.getOwningPhysicalTableName()
 					+ '_'
 					+ transformAttributePath( source.getAssociationOwningAttributePath() );
-
 			return toIdentifier( name, source.getBuildingContext() );
 		}
-
-		return super.determineJoinTableName( source );
+		else {
+			return super.determineJoinTableName( source );
+		}
 	}
 }

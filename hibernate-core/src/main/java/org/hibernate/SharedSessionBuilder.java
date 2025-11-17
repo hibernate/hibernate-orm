@@ -1,128 +1,167 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
+import org.hibernate.engine.creation.CommonSharedBuilder;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
+
 import java.sql.Connection;
+import java.util.TimeZone;
+import java.util.function.UnaryOperator;
 
 /**
- * Specialized {@link SessionBuilder} with access to stuff from another session.
+ * Allows creation of a child {@link Session} which shares some options with
+ * another pre-existing parent session. Each session has its own isolated
+ * persistence context, and entity instances must not be shared between
+ * parent and child sessions.
+ * <p>
+ * When {@linkplain Transaction resource-local} transaction management is used:
+ * <ul>
+ * <li>by default, each session executes with its own dedicated JDBC connection
+ *     and therefore has its own isolated transaction, but
+ * <li>calling the {@link #connection()} method specifies that the connection,
+ *     and therefore also the JDBC transaction, should be shared from parent
+ *     to child.
+ * </ul>
+ * <p>
+ * <pre>
+ * try (var childSession
+ *          = session.sessionWithOptions()
+ *                  .connection() // share the JDBC connection
+ *                  .cacheMode(CacheMode.IGNORE)
+ *                  .openSession()) {
+ *     ...
+ * }
+ * </pre>
+ * <p>
+ * On the other hand, when JTA transaction management is used, all sessions
+ * execute within the same transaction. Typically, connection sharing is
+ * handled automatically by the JTA-enabled {@link javax.sql.DataSource}.
  *
  * @author Steve Ebersole
+ *
+ * @see Session#sessionWithOptions()
+ * @see StatelessSession#sessionWithOptions()
+ * @see SessionBuilder
  */
-public interface SharedSessionBuilder<T extends SharedSessionBuilder> extends SessionBuilder<T> {
+public interface SharedSessionBuilder extends SessionBuilder, CommonSharedBuilder {
 
-	/**
-	 * Signifies that the transaction context from the original session should be used to create the new session.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated Use {@link #connection()} instead
-	 */
-	@Deprecated
-	default T transactionContext() {
-		return connection();
-	}
+	@Override
+	SharedSessionBuilder connection();
 
-	/**
-	 * Signifies that the connection from the original session should be used to create the new session.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	T connection();
-
-	/**
-	 * Signifies the interceptor from the original session should be used to create the new session.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	T interceptor();
+	@Override
+	SharedSessionBuilder interceptor();
 
 	/**
 	 * Signifies that the connection release mode from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (snce 6.0) use {@link #connectionHandlingMode} instead.
+	 * @deprecated use {@link #connectionHandling} instead.
 	 */
-	@Deprecated
-	T connectionReleaseMode();
+	@Deprecated(since = "6.0")
+	SharedSessionBuilder connectionReleaseMode();
 
 	/**
 	 * Signifies that the connection release mode from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T connectionHandlingMode();
+	SharedSessionBuilder connectionHandlingMode();
 
 	/**
 	 * Signifies that the autoJoinTransaction flag from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T autoJoinTransactions();
+	SharedSessionBuilder autoJoinTransactions();
 
 	/**
 	 * Signifies that the FlushMode from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T flushMode();
+	SharedSessionBuilder flushMode();
 
 	/**
 	 * Signifies that the autoClose flag from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T autoClose();
+	SharedSessionBuilder autoClose();
 
-	/**
-	 * Signifies that the flushBeforeCompletion flag from the original session should be used to create the new session.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #flushMode()} instead.
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default T flushBeforeCompletion() {
-		flushMode();
-		return (T) this;
-	}
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// overrides to maintain binary compatibility
+	@Override @Deprecated
+	SharedSessionBuilder statementInspector(StatementInspector statementInspector);
 
 	@Override
-	T interceptor(Interceptor interceptor);
+	SharedSessionBuilder statementInspector(UnaryOperator<String> operator);
 
 	@Override
-	T noInterceptor();
+	SharedSessionBuilder statementInspector();
 
 	@Override
-	T connection(Connection connection);
+	SharedSessionBuilder noStatementInspector();
+
+	@Override @Deprecated
+	SharedSessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode);
 
 	@Override
-	T connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode);
+	SharedSessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode);
 
 	@Override
-	T autoJoinTransactions(boolean autoJoinTransactions);
+	SharedSessionBuilder autoClear(boolean autoClear);
 
 	@Override
-	T autoClose(boolean autoClose);
+	SharedSessionBuilder flushMode(FlushMode flushMode);
+
+	@Override @Deprecated(forRemoval = true)
+	SharedSessionBuilder tenantIdentifier(String tenantIdentifier);
 
 	@Override
-	default T flushBeforeCompletion(boolean flushBeforeCompletion) {
-		if ( flushBeforeCompletion ) {
-			flushMode( FlushMode.ALWAYS );
-		}
-		else {
-			flushMode( FlushMode.MANUAL );
-		}
-		return (T) this;
-	}
+	SharedSessionBuilder tenantIdentifier(Object tenantIdentifier);
+
+	@Override
+	SharedSessionBuilder readOnly(boolean readOnly);
+
+	@Override
+	SharedSessionBuilder initialCacheMode(CacheMode cacheMode);
+
+	@Override
+	SharedSessionBuilder eventListeners(SessionEventListener... listeners);
+
+	@Override
+	SharedSessionBuilder clearEventListeners();
+
+	@Override
+	SharedSessionBuilder jdbcTimeZone(TimeZone timeZone);
+
+	@Override
+	SharedSessionBuilder interceptor(Interceptor interceptor);
+
+	@Override
+	SharedSessionBuilder noInterceptor();
+
+	@Override
+	SharedSessionBuilder noSessionInterceptorCreation();
+
+	@Override
+	SharedSessionBuilder connection(Connection connection);
+
+	@Override
+	SharedSessionBuilder autoJoinTransactions(boolean autoJoinTransactions);
+
+	@Override
+	SharedSessionBuilder autoClose(boolean autoClose);
+
+	@Override
+	SharedSessionBuilder identifierRollback(boolean identifierRollback);
+
+	@Override
+	SharedSessionBuilder defaultBatchFetchSize(int defaultBatchFetchSize);
+
+	@Override
+	SharedSessionBuilder subselectFetchEnabled(boolean subselectFetchEnabled);
 }

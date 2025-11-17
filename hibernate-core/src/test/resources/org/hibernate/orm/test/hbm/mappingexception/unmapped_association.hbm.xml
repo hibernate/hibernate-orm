@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping SYSTEM "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.orm.test.hbm.mappingexception">
+
+    <class name="Person">
+        <id column="PERSON_ID" name="id">
+            <generator class="increment"/>
+        </id>
+        <property column="PERSON_NAME" name="name"/>
+        <many-to-one class="UnmappedClass" column="UNMAPPED_ID" name="unmapped"/>
+    </class>
+
+</hibernate-mapping>

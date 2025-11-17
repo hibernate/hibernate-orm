@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
 
@@ -14,35 +12,48 @@ import org.hibernate.HibernateException;
 import org.hibernate.SessionEventListener;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * @author Steve Ebersole
  */
 public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {
-	private final String tenantIdentifier;
+	private final Object tenantIdentifier;
+	private final boolean readOnly;
 	private final SessionEventListener listener;
-	private final MultiTenantConnectionProvider connectionProvider;
+	private final MultiTenantConnectionProvider<Object> connectionProvider;
+	private final SharedSessionContractImplementor session;
+
 
 	public ContextualJdbcConnectionAccess(
-			String tenantIdentifier,
+			Object tenantIdentifier,
+			boolean readOnly,
 			SessionEventListener listener,
-			MultiTenantConnectionProvider connectionProvider) {
+			MultiTenantConnectionProvider<Object> connectionProvider,
+			SharedSessionContractImplementor session) {
 		this.tenantIdentifier = tenantIdentifier;
+		this.readOnly = readOnly;
 		this.listener = listener;
 		this.connectionProvider = connectionProvider;
+		this.session = session;
 	}
 
 	@Override
 	public Connection obtainConnection() throws SQLException {
 		if ( tenantIdentifier == null ) {
-			throw new HibernateException( "Tenant identifier required!" );
+			throw new HibernateException( "Tenant identifier required" );
 		}
 
+		final var eventMonitor = session.getEventMonitor();
+		final var connectionAcquisitionEvent = eventMonitor.beginJdbcConnectionAcquisitionEvent();
 		try {
 			listener.jdbcConnectionAcquisitionStart();
-			return connectionProvider.getConnection( tenantIdentifier );
+			return readOnly
+					? connectionProvider.getReadOnlyConnection( tenantIdentifier )
+					: connectionProvider.getConnection( tenantIdentifier );
 		}
 		finally {
+			eventMonitor.completeJdbcConnectionAcquisitionEvent( connectionAcquisitionEvent, session, tenantIdentifier );
 			listener.jdbcConnectionAcquisitionEnd();
 		}
 	}
@@ -50,14 +61,22 @@ public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Ser
 	@Override
 	public void releaseConnection(Connection connection) throws SQLException {
 		if ( tenantIdentifier == null ) {
-			throw new HibernateException( "Tenant identifier required!" );
+			throw new HibernateException( "Tenant identifier required" );
 		}
 
+		final var eventMonitor = session.getEventMonitor();
+		final var connectionReleaseEvent = eventMonitor.beginJdbcConnectionReleaseEvent();
 		try {
 			listener.jdbcConnectionReleaseStart();
-			connectionProvider.releaseConnection( tenantIdentifier, connection );
+			if ( readOnly ) {
+				connectionProvider.releaseReadOnlyConnection( tenantIdentifier, connection );
+			}
+			else {
+				connectionProvider.releaseConnection( tenantIdentifier, connection );
+			}
 		}
 		finally {
+			eventMonitor.completeJdbcConnectionReleaseEvent( connectionReleaseEvent, session, tenantIdentifier );
 			listener.jdbcConnectionReleaseEnd();
 		}
 	}

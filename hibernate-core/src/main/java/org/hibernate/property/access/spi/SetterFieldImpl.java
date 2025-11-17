@@ -1,40 +1,44 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.spi;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Locale;
 
+import org.hibernate.Internal;
 import org.hibernate.PropertyAccessException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.internal.AbstractFieldSerialForm;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.util.ReflectHelper.setterMethodOrNull;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Field-based implementation of Setter
  *
  * @author Steve Ebersole
  */
+@Internal
 public class SetterFieldImpl implements Setter {
-	private final Class containerClass;
+	private final Class<?> containerClass;
 	private final String propertyName;
 	private final Field field;
-	private final Method setterMethod;
+	private final @Nullable Method setterMethod;
 
-	public SetterFieldImpl(Class containerClass, String propertyName, Field field) {
+	public SetterFieldImpl(Class<?> containerClass, String propertyName, Field field) {
 		this.containerClass = containerClass;
 		this.propertyName = propertyName;
 		this.field = field;
-		this.setterMethod = ReflectHelper.setterMethodOrNull( containerClass, propertyName, field.getType() );
+		this.setterMethod = setterMethodOrNull( containerClass, propertyName, field.getType() );
 	}
 
-	public Class getContainerClass() {
+	public Class<?> getContainerClass() {
 		return containerClass;
 	}
 
@@ -42,17 +46,17 @@ public class SetterFieldImpl implements Setter {
 		return propertyName;
 	}
 
-	protected Field getField() {
+	public Field getField() {
 		return field;
 	}
 
 	@Override
-	public void set(Object target, Object value, SessionFactoryImplementor factory) {
+	public void set(Object target, @Nullable Object value) {
 		try {
 			field.set( target, value );
 		}
 		catch (Exception e) {
-			if (value == null && field.getType().isPrimitive()) {
+			if ( value == null && field.getType().isPrimitive() ) {
 				throw new PropertyAccessException(
 						e,
 						String.format(
@@ -71,10 +75,8 @@ public class SetterFieldImpl implements Setter {
 						e,
 						String.format(
 								Locale.ROOT,
-								"Could not set field value [%s] value by reflection : [%s.%s]",
-								value,
-								containerClass,
-								propertyName
+								"Could not set value of type [%s]",
+								typeName( value )
 						),
 						true,
 						containerClass,
@@ -84,31 +86,46 @@ public class SetterFieldImpl implements Setter {
 		}
 	}
 
+	private static String typeName(@Nullable Object value) {
+		final var lazyInitializer = extractLazyInitializer( value );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getEntityName();
+		}
+		else if ( value != null ) {
+			return value.getClass().getTypeName();
+		}
+		else {
+			return "<unknown>";
+		}
+	}
+
 	@Override
-	public String getMethodName() {
+	public @Nullable String getMethodName() {
 		return setterMethod != null ? setterMethod.getName() : null;
 	}
 
 	@Override
-	public Method getMethod() {
+	public @Nullable Method getMethod() {
 		return setterMethod;
 	}
 
+	@Serial
 	private Object writeReplace() {
 		return new SerialForm( containerClass, propertyName, field );
 	}
 
 	private static class SerialForm extends AbstractFieldSerialForm implements Serializable {
-		private final Class containerClass;
+		private final Class<?> containerClass;
 		private final String propertyName;
 
 
-		private SerialForm(Class containerClass, String propertyName, Field field) {
+		private SerialForm(Class<?> containerClass, String propertyName, Field field) {
 			super( field );
 			this.containerClass = containerClass;
 			this.propertyName = propertyName;
 		}
 
+		@Serial
 		private Object readResolve() {
 			return new SetterFieldImpl( containerClass, propertyName, resolveField() );
 		}

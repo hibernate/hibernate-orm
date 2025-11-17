@@ -1,36 +1,31 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
 /**
- * Defines an event class for the deletion of an entity.
+ * Event class for {@link org.hibernate.Session#remove}.
+ *
+ * @apiNote This class predates JPA, and today should
+ *          really be named {@code RemoveEvent}.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.Session#remove
  */
-public class DeleteEvent extends AbstractEvent {
-	private Object object;
+public class DeleteEvent extends AbstractSessionEvent {
+	private final Object object;
 	private String entityName;
 	private boolean cascadeDeleteEnabled;
-	// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task
-	// ordering is improved.
+	// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.
+	//       This should be removed once action/task ordering is improved.
 	private boolean orphanRemovalBeforeUpdates;
 
-	/**
-	 * Constructs a new DeleteEvent instance.
-	 *
-	 * @param object The entity to be deleted.
-	 * @param source The session from which the delete event was generated.
-	 */
 	public DeleteEvent(Object object, EventSource source) {
 		super(source);
 		if (object == null) {
-			throw new IllegalArgumentException(
-					"attempt to create delete event with null entity"
-				);
+			throw new IllegalArgumentException( "Entity may not be null" );
 		}
 		this.object = object;
 	}
@@ -55,10 +50,10 @@ public class DeleteEvent extends AbstractEvent {
 	}
 
 	/**
-     * Returns the encapsulated entity to be deleted.
-     *
-     * @return The entity to be deleted.
-     */
+	 * Returns the encapsulated entity to be deleted.
+	 *
+	 * @return The entity to be deleted.
+	 */
 	public Object getObject() {
 		return object;
 	}

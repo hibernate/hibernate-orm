@@ -1,0 +1,38 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+
+plugins {
+    id 'java'
+    id 'org.hibernate.orm'
+}
+
+repositories {
+    mavenCentral()
+
+    maven {
+        name = 'ossrh-snapshots-repository'
+        url = 'https://oss.sonatype.org/content/repositories/snapshots'
+    }
+}
+
+dependencies {
+    // NOTE : The version used here is irrelevant in terms of testing the plugin.
+    // We just need a resolvable version
+    implementation 'org.hibernate.orm:hibernate-core:6.1.0.Final'
+    implementation 'jakarta.annotation:jakarta.annotation-api:2.1.1'
+}
+
+hibernate {
+    useSameVersion = false
+    enhancement {
+        enableLazyInitialization.set(true)
+        enableLazyInitialization = true
+
+        enableDirtyTracking.set(true)
+        enableDirtyTracking = true
+
+        enableExtendedEnhancement.set(true)
+    }
+}

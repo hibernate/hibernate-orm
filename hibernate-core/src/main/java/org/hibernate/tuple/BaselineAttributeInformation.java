@@ -1,47 +1,47 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tuple;
 
 import org.hibernate.FetchMode;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.engine.spi.CascadeStyle;
 
 /**
-* @author Steve Ebersole
+ * @deprecated No direct replacement, though see {@link org.hibernate.metamodel.mapping.AttributeMapping}
+ * and {@link org.hibernate.metamodel.mapping.AttributeMetadata}
 */
+@Deprecated(forRemoval = true)
 public class BaselineAttributeInformation {
 	private final boolean lazy;
 	private final boolean insertable;
 	private final boolean updateable;
-	private final ValueGeneration valueGenerationStrategy;
 	private final boolean nullable;
 	private final boolean dirtyCheckable;
 	private final boolean versionable;
+	private final OnDeleteAction onDeleteAction;
 	private final CascadeStyle cascadeStyle;
 	private final FetchMode fetchMode;
-	private boolean checkable;
 
 	public BaselineAttributeInformation(
 			boolean lazy,
 			boolean insertable,
 			boolean updateable,
-			ValueGeneration valueGenerationStrategy,
 			boolean nullable,
 			boolean dirtyCheckable,
 			boolean versionable,
 			CascadeStyle cascadeStyle,
+			OnDeleteAction onDeleteAction,
 			FetchMode fetchMode) {
 		this.lazy = lazy;
 		this.insertable = insertable;
 		this.updateable = updateable;
-		this.valueGenerationStrategy = valueGenerationStrategy;
 		this.nullable = nullable;
 		this.dirtyCheckable = dirtyCheckable;
 		this.versionable = versionable;
 		this.cascadeStyle = cascadeStyle;
+		this.onDeleteAction = onDeleteAction;
 		this.fetchMode = fetchMode;
 	}
 
@@ -55,10 +55,6 @@ public class BaselineAttributeInformation {
 
 	public boolean isUpdateable() {
 		return updateable;
-	}
-
-	public ValueGeneration getValueGenerationStrategy() {
-		return valueGenerationStrategy;
 	}
 
 	public boolean isNullable() {
@@ -81,19 +77,19 @@ public class BaselineAttributeInformation {
 		return fetchMode;
 	}
 
-	public boolean isCheckable() {
-		return checkable;
+	public OnDeleteAction getOnDeleteAction() {
+		return onDeleteAction;
 	}
 
 	public static class Builder {
 		private boolean lazy;
 		private boolean insertable;
 		private boolean updateable;
-		private ValueGeneration valueGenerationStrategy;
 		private boolean nullable;
 		private boolean dirtyCheckable;
 		private boolean versionable;
 		private CascadeStyle cascadeStyle;
+		private OnDeleteAction onDeleteAction;
 		private FetchMode fetchMode;
 
 		public Builder setLazy(boolean lazy) {
@@ -108,11 +104,6 @@ public class BaselineAttributeInformation {
 
 		public Builder setUpdateable(boolean updateable) {
 			this.updateable = updateable;
-			return this;
-		}
-
-		public Builder setValueGenerationStrategy(ValueGeneration valueGenerationStrategy) {
-			this.valueGenerationStrategy = valueGenerationStrategy;
 			return this;
 		}
 
@@ -136,6 +127,11 @@ public class BaselineAttributeInformation {
 			return this;
 		}
 
+		public Builder setOnDeleteAction(OnDeleteAction onDeleteAction) {
+			this.onDeleteAction = onDeleteAction;
+			return this;
+		}
+
 		public Builder setFetchMode(FetchMode fetchMode) {
 			this.fetchMode = fetchMode;
 			return this;
@@ -146,11 +142,11 @@ public class BaselineAttributeInformation {
 					lazy,
 					insertable,
 					updateable,
-					valueGenerationStrategy,
 					nullable,
 					dirtyCheckable,
 					versionable,
 					cascadeStyle,
+					onDeleteAction,
 					fetchMode
 			);
 		}

@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping
+        SYSTEM
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.orm.test.quote">
+	<typedef name="enumType" class="org.hibernate.orm.test.EnumType">
+		<param name="enumClass">org.hibernate.orm.test.quote.DataPoint$DataPointEnum</param>
+	</typedef>
+
+	<class name="DataPoint">
+		<id column="ID" name="id" type="long">
+			<generator class="native" />
+		</id>
+
+		<property name="fooProp" type="string" />
+
+		<property name="fooEnum">
+			<type name="enumType"/>
+		</property>
+		
+		<set name="fooEnumList">
+            <key/>
+            <element type="enumType"/>
+        </set>
+        
+        <set name="oneToMany" inverse="true">
+            <key column="o2mid"/>
+            <one-to-many class="AssociatedDataPoint" />
+        </set>
+        
+        <set name="manyToMany" table="m2mjointable" inverse="false">
+            <key/>
+            <many-to-many class="AssociatedDataPoint"/>
+        </set>
+	</class>
+	
+	<class name="AssociatedDataPoint">
+		<id column="ID" name="id" type="long">
+			<generator class="native" />
+		</id>
+		
+		<many-to-one name="manyToOne" column="o2mid" class="DataPoint"/>
+        
+        <set name="manyToMany" table="m2mjointable" inverse="true">
+            <key/>
+            <many-to-many class="DataPoint"/>
+        </set>
+	</class>
+</hibernate-mapping>

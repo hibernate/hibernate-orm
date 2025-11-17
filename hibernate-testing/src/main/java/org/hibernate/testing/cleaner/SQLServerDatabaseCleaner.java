@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.cleaner;
 
@@ -54,22 +52,22 @@ public class SQLServerDatabaseCleaner implements DatabaseCleaner {
 			LOG.log( Level.FINEST, "Collect schema objects: START" );
 			rs = s.executeQuery(
 					"SELECT 'ALTER TABLE [' + TABLE_SCHEMA + '].[' + TABLE_NAME + '] DROP CONSTRAINT [' + CONSTRAINT_NAME + ']' FROM INFORMATION_SCHEMA.CONSTRAINT_TABLE_USAGE " +
-							"WHERE EXISTS (SELECT 1 FROM sys.Tables t JOIN sys.Schemas s ON t.schema_id = s.schema_id WHERE t.is_ms_shipped = 0 AND s.name = TABLE_SCHEMA AND t.name = TABLE_NAME) " +
-							"AND EXISTS (SELECT 1 FROM sys.Foreign_keys WHERE name = CONSTRAINT_NAME)" );
+							"WHERE EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE t.is_ms_shipped = 0 AND s.name = TABLE_SCHEMA AND t.name = TABLE_NAME) " +
+							"AND EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = CONSTRAINT_NAME)" );
 			while ( rs.next() ) {
 				sqls.add( rs.getString( 1 ) );
 			}
 
 			rs = s.executeQuery(
 					"SELECT 'DROP VIEW [' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']' FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'VIEW' " +
-							"AND EXISTS (SELECT 1 FROM sys.Views t JOIN sys.Schemas s ON t.schema_id = s.schema_id WHERE t.is_ms_shipped = 0 AND s.name = TABLE_SCHEMA AND t.name = TABLE_NAME)" );
+							"AND EXISTS (SELECT 1 FROM sys.views t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE t.is_ms_shipped = 0 AND s.name = TABLE_SCHEMA AND t.name = TABLE_NAME)" );
 			while ( rs.next() ) {
 				sqls.add( rs.getString( 1 ) );
 			}
 
 			rs = s.executeQuery(
 					"SELECT 'DROP TABLE [' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']' FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' " +
-							"AND EXISTS (SELECT 1 FROM sys.Tables t JOIN sys.Schemas s ON t.schema_id = s.schema_id WHERE t.is_ms_shipped = 0 AND s.name = TABLE_SCHEMA AND t.name = TABLE_NAME)" );
+							"AND EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE t.is_ms_shipped = 0 AND s.name = TABLE_SCHEMA AND t.name = TABLE_NAME)" );
 			while ( rs.next() ) {
 				sqls.add( rs.getString( 1 ) );
 			}

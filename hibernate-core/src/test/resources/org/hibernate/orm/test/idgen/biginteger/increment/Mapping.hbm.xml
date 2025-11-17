@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+    Demonstrates use of simple increment generator on a BigInteger property.
+-->
+
+<hibernate-mapping package="org.hibernate.orm.test.idgen.biginteger.increment">
+
+    <class name="Entity">
+        <id name="id" column="ID" type="big_integer">
+            <generator class="increment" />
+        </id>
+        <property name="name" type="string"/>
+	</class>
+
+</hibernate-mapping>

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry.selector.spi;
 
@@ -11,51 +9,32 @@ import java.util.concurrent.Callable;
 
 import org.hibernate.service.Service;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.service.spi.Stoppable;
+
 /**
  * Service which acts as a registry for named strategy implementations.
- * <p/>
- * Strategies are more open ended than services, though a strategy managed here might very well also be a service.  The
- * strategy is any interface that has multiple, (possibly short) named implementations.
- * <p/>
- * StrategySelector manages resolution of particular implementation by (possibly short) name via the
- * {@link #selectStrategyImplementor} method, which is the main contract here.  As indicated in the docs of that
- * method the given name might be either a short registered name or the implementation FQN.  As an example, consider
- * resolving the {@link org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder} implementation to use.  To use the
- * JDBC-based TransactionCoordinatorBuilder the passed name might be either {@code "jdbc"} or
- * {@code "org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl"} (which is the FQN).
- * <p/>
- * Strategy implementations can be managed by {@link #registerStrategyImplementor} and
- * {@link #unRegisterStrategyImplementor}.  Originally designed to help the OSGi use case, though no longer used there.
- * <p/>
+ * <p>
+ * Strategies are more open-ended than services, though a strategy managed here might very well also be a service.
+ * The strategy is any interface that has multiple, (possibly short) named implementations.
+ * <p>
+ * {@code StrategySelector} manages resolution of particular implementation by (possibly short) name via the
+ * {@link #selectStrategyImplementor} method, which is the main contract here. As indicated in the Javadoc of that
+ * method, the given name might be either a short registered name or the implementation FQN. As an example, consider
+ * resolving the {@link org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder} implementation to use.
+ * To use the JDBC-based {@code TransactionCoordinatorBuilder} the passed name might be either {@code "jdbc"} or
+ * {@code "org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl"}.
+ * <p>
+ * Strategy implementations can be managed by {@link #registerStrategyImplementor} and {@link #unRegisterStrategyImplementor}.
+ * Originally designed to help the OSGi use case, though no longer used there.
+ * <p>
  * The service also exposes a general typing API via {@link #resolveStrategy} and {@link #resolveDefaultableStrategy}
  * which accept implementation references rather than implementation names, allowing for a multitude of interpretations
- * of said "implementation reference".  See the docs for {@link #resolveDefaultableStrategy} for details.
+ * of said "implementation reference". See the docs for {@link #resolveDefaultableStrategy} for details.
  *
  * @author Steve Ebersole
  */
-public interface StrategySelector extends Service {
-	/**
-	 * Registers a named implementor of a particular strategy contract.
-	 *
-	 * @param strategy The strategy contract.
-	 * @param name The registration name
-	 * @param implementation The implementation Class
-	 * @param <T> The type of the strategy.  Used to make sure that the strategy and implementation are type
-	 * compatible.
-	 */
-	<T> void registerStrategyImplementor(Class<T> strategy, String name, Class<? extends T> implementation);
-
-	/**
-	 * Un-registers a named implementor of a particular strategy contract.  Un-registers all named registrations
-	 * for the given strategy contract naming the given class.
-	 *
-	 * @param strategy The strategy contract.
-	 * @param implementation The implementation Class
-	 * @param <T> The type of the strategy.  Used to make sure that the strategy and implementation are type
-	 * compatible.
-	 */
-	<T> void unRegisterStrategyImplementor(Class<T> strategy, Class<? extends T> implementation);
-
+public interface StrategySelector extends Service, Stoppable {
 	/**
 	 * Locate the named strategy implementation.
 	 *
@@ -79,7 +58,7 @@ public interface StrategySelector extends Service {
 	 *
 	 * @return The strategy instance
 	 */
-	<T> T resolveStrategy(Class<T> strategy, Object strategyReference);
+	<T> T resolveStrategy(Class<T> strategy, @Nullable Object strategyReference);
 
 	/**
 	 * Resolve strategy instances. The incoming reference might be:<ul>
@@ -142,11 +121,40 @@ public interface StrategySelector extends Service {
 	<T> T resolveStrategy(Class<T> strategy, Object strategyReference, T defaultValue, StrategyCreator<T> creator);
 
 	/**
-	 * Retrieve all of the registered implementors of the given strategy.  Useful
-	 * to allow defaulting the choice to the single registered implementor when
-	 * only one is registered
+	 * Retrieve all the registered implementors of the given strategy.
+	 * Useful to allow defaulting the choice to the single registered
+	 * implementor when only one is registered
 	 *
 	 * @return The implementors.  Should never return {@code null}
 	 */
 	<T> Collection<Class<? extends T>> getRegisteredStrategyImplementors(Class<T> strategy);
+
+	/**
+	 * Registers a named implementor of a particular strategy contract.
+	 *
+	 * @param strategy The strategy contract.
+	 * @param name The registration name
+	 * @param implementation The implementation class
+	 *
+	 * @param <T> The strategy type.
+	 *
+	 * @deprecated Use {@linkplain NamedStrategyContributor} instead
+	 */
+	@Deprecated( since = "7.0", forRemoval = true )
+	<T> void registerStrategyImplementor(Class<T> strategy, String name, Class<? extends T> implementation);
+
+	/**
+	 * Unregisters a named implementor of a particular strategy contract.
+	 * Unregisters all named registrations for the given strategy contract
+	 * naming the given class.
+	 *
+	 * @param strategy The strategy contract.
+	 * @param implementation The implementation class
+	 *
+	 * @param <T> The strategy type.
+	 *
+	 * @deprecated Use {@linkplain NamedStrategyContributor} instead
+	 */
+	@Deprecated( since = "7.0", forRemoval = true )
+	<T> void unRegisterStrategyImplementor(Class<T> strategy, Class<? extends T> implementation);
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat.spi;
 
@@ -10,10 +8,15 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.service.Service;
 import org.hibernate.stat.Statistics;
 
+import java.util.Map;
+
+import static java.util.Collections.emptyMap;
+
 /**
- * Statistics SPI for the Hibernate core.  This is essentially the
- * "statistic collector" API, its the contract called to collect various stats.
- * 
+ * A service SPI for collecting statistics about various events occurring at runtime.
+ * <p>
+ * A custom implementation may be provided via a {@link StatisticsFactory}.
+ *
  * @author Emmanuel Bernard
  */
 public interface StatisticsImplementor extends Statistics, Service {
@@ -78,6 +81,13 @@ public interface StatisticsImplementor extends Statistics, Service {
 	void updateEntity(String entityName);
 
 	/**
+	 * Callback about an entity being upserted.
+	 *
+	 * @param entityName The name of the entity upserted.
+	 */
+	void upsertEntity(String entityName);
+
+	/**
 	 * Callback about an entity being inserted
 	 *
 	 * @param entityName The name of the entity inserted
@@ -138,23 +148,30 @@ public interface StatisticsImplementor extends Statistics, Service {
 	/**
 	 * Callback indicating a put into second level cache.
 	 *
-	 * @apiNote `entityName` should be the root entity name
+	 * @apiNote {@code entityName} should be the root entity name
 	 */
 	void entityCachePut(NavigableRole entityName, String regionName);
 
 	/**
 	 * Callback indicating a get from second level cache resulted in a hit.
 	 *
-	 * @apiNote `entityName` should be the root entity name
+	 * @apiNote {@code entityName} should be the root entity name
 	 */
 	void entityCacheHit(NavigableRole entityName, String regionName);
 
 	/**
 	 * Callback indicating a get from second level cache resulted in a miss.
 	 *
-	 * @apiNote `entityName` should be the root entity name
+	 * @apiNote {@code entityName} should be the root entity name
 	 */
 	void entityCacheMiss(NavigableRole entityName, String regionName);
+
+	/**
+	 * Callback indicating a removal from second level cache.
+	 *
+	 * @apiNote {@code entityName} should be the root entity name
+	 */
+	void entityCacheRemove(NavigableRole rootEntityRole, String name);
 
 	/**
 	 * Callback indicating a put into second level cache.
@@ -189,7 +206,7 @@ public interface StatisticsImplementor extends Statistics, Service {
 	 * Callback indicating a get from natural id cache resulted in a hit.
 	 */
 	void naturalIdCacheHit(NavigableRole rootEntityName, String regionName);
-	
+
 	/**
 	 * Callback indicating a get from natural id cache resulted in a miss.
 	 */
@@ -225,13 +242,13 @@ public interface StatisticsImplementor extends Statistics, Service {
 	void queryCacheMiss(String hql, String regionName);
 
 	/**
-	 * Callback indicating execution of a sql/hql query
+	 * Callback indicating execution of a SQL or HQL query
 	 *
-	 * @param hql The query
+	 * @param query The query
 	 * @param rows Number of rows returned
 	 * @param time execution time
 	 */
-	void queryExecuted(String hql, int rows, long time);
+	void queryExecuted(String query, int rows, long time);
 
 	/**
 	 * Callback indicating a hit to the timestamp cache
@@ -251,9 +268,18 @@ public interface StatisticsImplementor extends Statistics, Service {
 	/**
 	 * Callback indicating a get from the query plan cache resulted in a hit.
 	 *
-	 * @param hql The query
+	 * @param query The query
 	 */
-	default void queryPlanCacheHit(String hql) {
+	default void queryPlanCacheHit(String query) {
+		//For backward compatibility
+	}
+
+	/**
+	 * Callback indicating a get from the query plan cache resulted in a miss.
+	 *
+	 * @param query The query
+	 */
+	default void queryPlanCacheMiss(String query) {
 		//For backward compatibility
 	}
 
@@ -265,5 +291,18 @@ public interface StatisticsImplementor extends Statistics, Service {
 	 */
 	default void queryCompiled(String hql, long microseconds) {
 		//For backward compatibility
+	}
+
+	/**
+	 * Register the execution of a slow SQL query.
+	 */
+	default void slowQuery(String sql, long executionTime) {
+		//For backward compatibility
+	}
+
+	@Override
+	default Map<String, Long> getSlowQueries() {
+		//For backward compatibility
+		return emptyMap();
 	}
 }

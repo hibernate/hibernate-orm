@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+
+<hibernate-mapping package="org.hibernate.orm.test.manytomany.batchload">
+	
+	<class name="User" table="M2N_BATCHED_USER">
+        <id name="id" type="long">
+            <generator class="increment"/>
+        </id>
+        <property name="name" type="string"/>
+		<set name="groups" table="M2N_BATCHED_GROUPUSER" inverse="false" cascade="all" lazy="false" batch-size="50" >
+            <key column="USER_ID"/>
+			<many-to-many class="Group" column="GROUP_ID"/>
+		</set>
+	</class>
+	
+	<class name="Group" table="M2N_BATCHED_GROUP">
+        <id name="id" type="long">
+            <generator class="increment"/>
+        </id>
+		<property name="name" type="string"/>
+		<set name="users" table="M2N_BATCHED_GROUPUSER" inverse="true" cascade="all" lazy="false" batch-size="50">
+            <key column="GROUP_ID"/>
+			<many-to-many class="User" column="USER_ID"/>
+		</set>
+	</class>
+	
+</hibernate-mapping>

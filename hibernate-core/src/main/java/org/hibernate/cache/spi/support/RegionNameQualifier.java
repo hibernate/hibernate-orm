@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.support;
 
@@ -19,21 +17,12 @@ public class RegionNameQualifier {
 
 	public String qualify(String regionName, SessionFactoryOptions options) {
 		final String prefix = options.getCacheRegionPrefix();
-		if ( prefix == null ) {
-			return regionName;
-		}
-
-		return qualify( prefix, regionName );
+		return prefix == null ? regionName : qualify( prefix, regionName );
 	}
 
 	public String qualify(String prefix, String regionName) {
-		if ( regionName.startsWith( prefix + '.' ) ) {
-			return regionName;
-		}
-
-		return prefix + '.' + regionName;
+		return regionName.startsWith( prefix + '.' ) ? regionName : prefix + '.' + regionName;
 	}
-
 
 	public boolean isQualified(String regionName, SessionFactoryOptions options) {
 		return isQualified( options.getCacheRegionPrefix(), regionName );

@@ -1,17 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.convert.internal;
 
-import javax.persistence.AttributeConverter;
-
-import org.hibernate.boot.internal.ClassmateContext;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
+
+import jakarta.persistence.AttributeConverter;
 
 /**
  * ConverterDescriptor implementation for cases where we are handed
@@ -19,26 +18,21 @@ import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
  *
  * @author Steve Ebersole
  */
-public class InstanceBasedConverterDescriptor extends AbstractConverterDescriptor {
-	private final AttributeConverter converterInstance;
+class InstanceBasedConverterDescriptor<X,Y> extends AbstractConverterDescriptor<X,Y> {
+	private final AttributeConverter<X,Y> converterInstance;
 
-	public InstanceBasedConverterDescriptor(
-			AttributeConverter converterInstance,
-			ClassmateContext classmateContext) {
-		this( converterInstance, null, classmateContext );
-	}
-
-	public InstanceBasedConverterDescriptor(
-			AttributeConverter converterInstance,
+	InstanceBasedConverterDescriptor(
+			AttributeConverter<X,Y> converterInstance,
 			Boolean forceAutoApply,
 			ClassmateContext classmateContext) {
-		super( converterInstance.getClass(), forceAutoApply, classmateContext );
+		super( ReflectHelper.getClass( converterInstance ), forceAutoApply, classmateContext );
 		this.converterInstance = converterInstance;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	protected ManagedBean<? extends AttributeConverter> createManagedBean(JpaAttributeConverterCreationContext context) {
-		return new ProvidedInstanceManagedBeanImpl( converterInstance );
+	protected ManagedBean<? extends AttributeConverter<X,Y>>
+	createManagedBean(JpaAttributeConverterCreationContext context) {
+		return new ProvidedInstanceManagedBeanImpl<>( converterInstance );
 	}
+
 }

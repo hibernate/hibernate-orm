@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="7.0">
+    <package>org.hibernate.orm.test.boot.models.hbm.collections.list</package>
+    <access>FIELD</access>
+
+    <entity class="Root" metadata-complete="true">
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+
+            <one-to-many name="admins2" classification="LIST" target-entity="User">
+                <order-column/>
+                <join-table name="root_admins2">
+                    <join-column name="root_fk"/>
+                </join-table>
+            </one-to-many>
+
+            <many-to-many name="admins" classification="LIST" target-entity="User">
+                <join-table name="root_admins">
+                    <join-column name="root_fk"/>
+                    <inverse-join-column name="user_fk"/>
+                </join-table>
+            </many-to-many>
+
+            <element-collection name="tags" classification="LIST" target-class="java.lang.String">
+                <column name="txt"/>
+                <collection-table>
+                    <join-column name="root_fk"/>
+                </collection-table>
+            </element-collection>
+
+            <element-collection name="categories" classification="LIST" target-class="Category">
+                <order-column name="position"/>
+                <collection-table name="root_categories">
+                    <join-column name="root_fk"/>
+                </collection-table>
+            </element-collection>
+        </attributes>
+    </entity>
+
+    <entity class="User">
+        <table name="users"/>
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+        </attributes>
+    </entity>
+
+    <embeddable class="Category">
+        <attributes>
+            <basic name="name"/>
+            <many-to-one name="owner">
+                <join-column name="owner_fk"/>
+            </many-to-one>
+        </attributes>
+    </embeddable>
+</entity-mappings>
+

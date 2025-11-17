@@ -1,35 +1,57 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure.spi;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import javax.persistence.FlushModeType;
-import javax.persistence.Parameter;
-import javax.persistence.ParameterMode;
-import javax.persistence.TemporalType;
 
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.query.named.NameableQuery;
+import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;
+
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.Type;
 
 /**
  * @author Steve Ebersole
  */
-public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImplementor<R> {
+public interface ProcedureCallImplementor<R> extends ProcedureCall, NameableQuery, QueryImplementor<R> {
 	@Override
 	default List<R> getResultList() {
 		return list();
 	}
 
+	ParameterStrategy getParameterStrategy();
+
 	@Override
-	default R getSingleResult() {
-		return uniqueResult();
-	}
+	FunctionReturnImplementor<R> getFunctionReturn();
+
+	@Override
+	ProcedureParameterMetadataImplementor getParameterMetadata();
+
+	@Override
+	R getSingleResult();
+
+	@Override
+	ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Class<?> type, ParameterMode mode);
+
+	@Override
+	ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, Class<?> type, ParameterMode mode);
+
+	@Override
+	ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Type<?> type, ParameterMode mode);
+
+	@Override
+	ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, Type<?> type, ParameterMode mode);
 
 	@Override
 	ProcedureCallImplementor<R> setHint(String hintName, Object value);
@@ -37,36 +59,42 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 	@Override
 	<T> ProcedureCallImplementor<R> setParameter(Parameter<T> param, T value);
 
-	@Override
+	@Override @Deprecated
 	ProcedureCallImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	ProcedureCallImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override
 	ProcedureCallImplementor<R> setParameter(String name, Object value);
 
-	@Override
+	@Override @Deprecated
 	ProcedureCallImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	ProcedureCallImplementor<R> setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
 	ProcedureCallImplementor<R> setParameter(int position, Object value);
 
-	@Override
+	@Override @Deprecated
 	ProcedureCallImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	ProcedureCallImplementor<R> setParameter(int position, Date value, TemporalType temporalType);
 
 	@Override
 	ProcedureCallImplementor<R> setFlushMode(FlushModeType flushMode);
 
 	@Override
-	ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Class type, ParameterMode mode);
+	ProcedureCallImplementor<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
 
 	@Override
-	ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, Class type, ParameterMode mode);
+	ProcedureCallImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode);
+
+	@Override
+	ProcedureCallImplementor<R> setTimeout(Integer timeout);
+
+	@Override
+	NamedCallableQueryMemento toMemento(String name);
 }

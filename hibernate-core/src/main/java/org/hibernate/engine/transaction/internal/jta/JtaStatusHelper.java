@@ -1,17 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.transaction.internal.jta;
 
-import javax.transaction.Status;
-import javax.transaction.SystemException;
-import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
+import jakarta.transaction.SystemException;
+import jakarta.transaction.TransactionManager;
+import jakarta.transaction.UserTransaction;
 
 import org.hibernate.TransactionException;
+
+import static jakarta.transaction.Status.STATUS_ACTIVE;
+import static jakarta.transaction.Status.STATUS_COMMITTED;
+import static jakarta.transaction.Status.STATUS_MARKED_ROLLBACK;
+import static jakarta.transaction.Status.STATUS_ROLLEDBACK;
+import static jakarta.transaction.Status.STATUS_ROLLING_BACK;
+import static jakarta.transaction.Status.STATUS_UNKNOWN;
 
 /**
  * Utility for dealing with JTA statuses.
@@ -34,7 +38,7 @@ public final class JtaStatusHelper {
 	public static int getStatus(UserTransaction userTransaction) {
 		try {
 			final int status = userTransaction.getStatus();
-			if ( status == Status.STATUS_UNKNOWN ) {
+			if ( status == STATUS_UNKNOWN ) {
 				throw new TransactionException( "UserTransaction reported transaction status as unknown" );
 			}
 			return status;
@@ -45,7 +49,7 @@ public final class JtaStatusHelper {
 	}
 
 	/**
-	 * Extract the status code from the current {@link javax.transaction.Transaction} associated with the
+	 * Extract the status code from the current {@link jakarta.transaction.Transaction} associated with the
 	 * given {@link TransactionManager}
 	 *
 	 * @param transactionManager The {@link TransactionManager} from which to extract the status.
@@ -57,7 +61,7 @@ public final class JtaStatusHelper {
 	public static int getStatus(TransactionManager transactionManager) {
 		try {
 			final int status = transactionManager.getStatus();
-			if ( status == Status.STATUS_UNKNOWN ) {
+			if ( status == STATUS_UNKNOWN ) {
 				throw new TransactionException( "TransactionManager reported transaction status as unknwon" );
 			}
 			return status;
@@ -75,7 +79,7 @@ public final class JtaStatusHelper {
 	 * @return True if the code indicates active; false otherwise.
 	 */
 	public static boolean isActive(int status) {
-		return status == Status.STATUS_ACTIVE;
+		return status == STATUS_ACTIVE;
 	}
 
 	/**
@@ -109,9 +113,9 @@ public final class JtaStatusHelper {
 	 * @return True if the code indicates a roll back; false otherwise.
 	 */
 	public static boolean isRollback(int status) {
-		return status == Status.STATUS_MARKED_ROLLBACK ||
-				status == Status.STATUS_ROLLING_BACK ||
-				status == Status.STATUS_ROLLEDBACK;
+		return status == STATUS_MARKED_ROLLBACK
+			|| status == STATUS_ROLLING_BACK
+			|| status == STATUS_ROLLEDBACK;
 	}
 
 	/**
@@ -144,7 +148,7 @@ public final class JtaStatusHelper {
 	 * @return True if the code indicates a roll back; false otherwise.
 	 */
 	public static boolean isCommitted(int status) {
-		return status == Status.STATUS_COMMITTED;
+		return status == STATUS_COMMITTED;
 	}
 
 	/**
@@ -176,8 +180,8 @@ public final class JtaStatusHelper {
 	 *
 	 * @return True if the code indicates a roll back; false otherwise.
 	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings("unused")
 	public static boolean isMarkedForRollback(int status) {
-		return status == Status.STATUS_MARKED_ROLLBACK;
+		return status == STATUS_MARKED_ROLLBACK;
 	}
 }

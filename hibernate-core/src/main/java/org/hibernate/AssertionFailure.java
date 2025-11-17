@@ -1,15 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-
-import org.jboss.logging.Logger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * Indicates failure of an assertion: a possible bug in Hibernate.
@@ -17,9 +12,6 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  */
 public class AssertionFailure extends RuntimeException {
-	private static final long serialVersionUID = 1L;
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AssertionFailure.class );
 
 	/**
 	 * Creates an instance of AssertionFailure using the given message.
@@ -28,7 +20,7 @@ public class AssertionFailure extends RuntimeException {
 	 */
 	public AssertionFailure(String message) {
 		super( message );
-		LOG.failed( this );
+		CORE_LOGGER.failed( this );
 	}
 
 	/**
@@ -39,6 +31,6 @@ public class AssertionFailure extends RuntimeException {
 	 */
 	public AssertionFailure(String message, Throwable cause) {
 		super( message, cause );
-		LOG.failed( cause );
+		CORE_LOGGER.failed( cause );
 	}
 }

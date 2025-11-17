@@ -1,23 +1,22 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.support;
 
+import org.hibernate.Internal;
 import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.access.CachedDomainDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
-import org.jboss.logging.Logger;
+
+import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractCachedDomainDataAccess implements CachedDomainDataAccess, AbstractDomainDataRegion.Destructible {
-	private static final Logger log = Logger.getLogger( AbstractCachedDomainDataAccess.class );
 
 	private final DomainDataRegion region;
 	private final DomainDataStorageAccess storageAccess;
@@ -34,12 +33,13 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 		return region;
 	}
 
-	protected DomainDataStorageAccess getStorageAccess() {
+	@Internal
+	public DomainDataStorageAccess getStorageAccess() {
 		return storageAccess;
 	}
 
 	protected void clearCache() {
-		log.debugf( "Clearing cache data map [region=`%s`]", region.getName() );
+		L2CACHE_LOGGER.tracef( "Clearing cache data map [region='%s']", region.getName() );
 		getStorageAccess().evictData();
 	}
 

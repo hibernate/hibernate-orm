@@ -1,0 +1,15 @@
+"json_object(" (jsonObjectFunctionEntries jsonNullClause?)? ")"
+
+jsonObjectFunctionEntries
+	: expressionOrPredicate "," expressionOrPredicate ("," expressionOrPredicate "," expressionOrPredicate)*
+	| jsonObjectFunctionEntry ("," jsonObjectFunctionEntry)*
+	;
+
+jsonObjectFunctionEntry
+	: "key"? expressionOrPredicate "value" expressionOrPredicate
+	| expressionOrPredicate ":" expressionOrPredicate
+	;
+
+jsonNullClause
+	: ("absent"|"null") "on null"
+	;

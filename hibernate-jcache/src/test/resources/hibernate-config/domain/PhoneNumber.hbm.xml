@@ -1,9 +1,7 @@
 <?xml version="1.0"?>
 <!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
-  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
   -->
 <!DOCTYPE hibernate-mapping PUBLIC
         "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
@@ -11,7 +9,7 @@
 
 <hibernate-mapping>
 
-    <class name="org.hibernate.jcache.test.domain.PhoneNumber" table="PHONE_NUMBERS">
+    <class name="org.hibernate.orm.test.jcache.domain.PhoneNumber" table="PHONE_NUMBERS">
         <composite-id>
             <key-property column="PERSON_ID" name="personId" type="java.lang.Long"/>
             <key-property column="NUMBER_TYPE" name="numberType" type="java.lang.String"/>

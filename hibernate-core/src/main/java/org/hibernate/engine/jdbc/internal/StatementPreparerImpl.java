@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.internal;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,20 +13,24 @@ import java.sql.Statement;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.ScrollMode;
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
-import org.hibernate.resource.jdbc.spi.JdbcObserver;
+import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
+
 /**
- * Standard implementation of StatementPreparer
+ * Standard implementation of {@link StatementPreparer}.
  *
  * @author Steve Ebersole
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  * @author Brett Meyer
 */
+@SuppressWarnings("resource")
 class StatementPreparerImpl implements StatementPreparer {
 	private final JdbcCoordinatorImpl jdbcCoordinator;
 	private final JdbcServices jdbcServices;
@@ -42,8 +45,8 @@ class StatementPreparerImpl implements StatementPreparer {
 		this.jdbcServices = jdbcServices;
 	}
 
-	protected final SessionFactoryOptions settings() {
-		return jdbcCoordinator.sessionFactory().getSessionFactoryOptions();
+	protected final JdbcSessionContext settings() {
+		return jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext();
 	}
 
 	protected final Connection connection() {
@@ -57,28 +60,34 @@ class StatementPreparerImpl implements StatementPreparer {
 	protected final SqlExceptionHelper sqlExceptionHelper() {
 		return jdbcServices.getSqlExceptionHelper();
 	}
-	
+
 	@Override
 	public Statement createStatement() {
 		try {
-			final Statement statement = connection().createStatement();
-			jdbcCoordinator.getResourceRegistry().register( statement, true );
+			final var statement = connection().createStatement();
+			jdbcCoordinator.getLogicalConnection().getResourceRegistry().register( statement, true );
 			return statement;
 		}
 		catch ( SQLException e ) {
-			throw sqlExceptionHelper().convert( e, "could not create statement" );
+			throw sqlExceptionHelper().convert( e, "Could not create statement" );
 		}
 	}
 
 	@Override
 	public PreparedStatement prepareStatement(String sql) {
-		return buildPreparedStatementPreparationTemplate( sql, false ).prepareStatement();
+		return prepareStatement( sql, false );
 	}
 
 	@Override
 	public PreparedStatement prepareStatement(String sql, final boolean isCallable) {
 		jdbcCoordinator.executeBatch();
 		return buildPreparedStatementPreparationTemplate( sql, isCallable ).prepareStatement();
+	}
+
+	@Override
+	public CallableStatement prepareCallableStatement(String sql) {
+		jdbcCoordinator.executeBatch();
+		return (CallableStatement) prepareStatement( sql, true );
 	}
 
 	private StatementPreparationTemplate buildPreparedStatementPreparationTemplate(String sql, final boolean isCallable) {
@@ -125,72 +134,71 @@ class StatementPreparerImpl implements StatementPreparer {
 	@Override
 	public PreparedStatement prepareQueryStatement(
 			String sql,
-			final boolean isCallable,
-			final ScrollMode scrollMode) {
-		if ( scrollMode != null && !scrollMode.equals( ScrollMode.FORWARD_ONLY ) ) {
-			if ( ! settings().isScrollableResultSetsEnabled() ) {
-				throw new AssertionFailure("scrollable result sets are not enabled");
+			boolean isCallable,
+			@Nullable ScrollMode scrollMode) {
+		final int resultSetType;
+		if ( scrollMode != null && scrollMode != ScrollMode.FORWARD_ONLY ) {
+			if ( !settings().isScrollableResultSetsEnabled() ) {
+				throw new AssertionFailure( "Scrollable result sets are not enabled" );
 			}
-			final PreparedStatement ps = new QueryStatementPreparationTemplate( sql ) {
-				public PreparedStatement doPrepare() throws SQLException {
-						return isCallable
-								? connection().prepareCall( sql, scrollMode.toResultSetType(), ResultSet.CONCUR_READ_ONLY )
-								: connection().prepareStatement( sql, scrollMode.toResultSetType(), ResultSet.CONCUR_READ_ONLY );
-				}
-			}.prepareStatement();
-			jdbcCoordinator.registerLastQuery( ps );
-			return ps;
+			resultSetType = scrollMode.toResultSetType();
 		}
 		else {
-			final PreparedStatement ps = new QueryStatementPreparationTemplate( sql ) {
-				public PreparedStatement doPrepare() throws SQLException {
-						return isCallable
-								? connection().prepareCall( sql )
-								: connection().prepareStatement( sql );
-				}
-			}.prepareStatement();
-			jdbcCoordinator.registerLastQuery( ps );
-			return ps;
+			resultSetType = ResultSet.TYPE_FORWARD_ONLY;
 		}
+
+		final var preparedStatement =
+				new QueryStatementPreparationTemplate( sql ) {
+					public PreparedStatement doPrepare() throws SQLException {
+						return isCallable
+								? connection().prepareCall( sql, resultSetType, ResultSet.CONCUR_READ_ONLY )
+								: connection().prepareStatement( sql, resultSetType, ResultSet.CONCUR_READ_ONLY );
+					}
+				}.prepareStatement();
+		jdbcCoordinator.registerLastQuery( preparedStatement );
+		return preparedStatement;
 	}
 
 	private abstract class StatementPreparationTemplate {
 		protected final String sql;
 
 		protected StatementPreparationTemplate(String incomingSql) {
-			final String inspectedSql = jdbcCoordinator.getJdbcSessionOwner()
-					.getJdbcSessionContext()
-					.getStatementInspector()
-					.inspect( incomingSql );
-			this.sql = inspectedSql == null ? incomingSql : inspectedSql;
+			final String inspectedSql =
+					jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext()
+							.getStatementInspector().inspect( incomingSql );
+			sql = inspectedSql == null ? incomingSql : inspectedSql;
 		}
 
 		public PreparedStatement prepareStatement() {
 			try {
 				jdbcServices.getSqlStatementLogger().logStatement( sql );
 
+				final var jdbcSessionOwner = jdbcCoordinator.getJdbcSessionOwner();
+				final var observer = jdbcSessionOwner.getJdbcSessionContext().getEventHandler();
+				final var eventMonitor = jdbcSessionOwner.getEventMonitor();
+				final var jdbcPreparedStatementCreation = eventMonitor.beginJdbcPreparedStatementCreationEvent();
 				final PreparedStatement preparedStatement;
-				final JdbcObserver observer = jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getObserver();
 				try {
 					observer.jdbcPrepareStatementStart();
 					preparedStatement = doPrepare();
 					setStatementTimeout( preparedStatement );
 				}
 				finally {
+					eventMonitor.completeJdbcPreparedStatementCreationEvent( jdbcPreparedStatementCreation, sql );
 					observer.jdbcPrepareStatementEnd();
 				}
 				postProcess( preparedStatement );
 				return preparedStatement;
 			}
 			catch ( SQLException e ) {
-				throw sqlExceptionHelper().convert( e, "could not prepare statement", sql );
+				throw sqlExceptionHelper().convert( e, "Could not prepare statement", sql );
 			}
 		}
 
 		protected abstract PreparedStatement doPrepare() throws SQLException;
 
 		public void postProcess(PreparedStatement preparedStatement) throws SQLException {
-			jdbcCoordinator.getResourceRegistry().register( preparedStatement, true );
+			jdbcCoordinator.getLogicalConnection().getResourceRegistry().register( preparedStatement, true );
 //			logicalConnection().notifyObserversStatementPrepared();
 		}
 
@@ -214,8 +222,21 @@ class StatementPreparerImpl implements StatementPreparer {
 	}
 
 	private void setStatementFetchSize(PreparedStatement statement) throws SQLException {
-		if ( settings().getJdbcFetchSize() != null ) {
-			statement.setFetchSize( settings().getJdbcFetchSize() );
+		final Integer fetchSize = settings().getFetchSizeOrNull();
+		if ( fetchSize != null ) {
+			JDBC_LOGGER.settingFetchSize( fetchSize );
+			statement.setFetchSize( fetchSize );
+		}
+		else {
+			if ( JDBC_LOGGER.isDebugEnabled() ) {
+				final int defaultFetchSize = statement.getFetchSize();
+				if ( defaultFetchSize > 0 && defaultFetchSize < 100 ) {
+					JDBC_LOGGER.lowFetchSize( defaultFetchSize );
+				}
+			}
+			else if ( JDBC_LOGGER.isTraceEnabled() ) {
+				JDBC_LOGGER.fetchSize( statement.getFetchSize() );
+			}
 		}
 	}
 

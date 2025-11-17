@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence persistence.xsd" version="2.0">
+    <persistence-unit name="annotation-processor" transaction-type="JTA">
+        <mapping-file>/org/hibernate/processor/test/xmlmetacomplete/singlepu/foo.xml</mapping-file>
+    </persistence-unit>
+</persistence>

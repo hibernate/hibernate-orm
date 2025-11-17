@@ -1,13 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.spi;
 
+import java.util.Objects;
+
 /**
- * Models a JDBC {@link java.sql.Types DATATYPE}.  Mainly breaks down into 3 pieces of information:<ul>
+ * Models a JDBC {@linkplain java.sql.Types data type}.  Mainly breaks down into 3 pieces of information:<ul>
  *     <li>
  *         {@link #getTypeCode() type code} - The JDBC type code; generally matches a code from {@link java.sql.Types}
  *         though not necessarily.
@@ -20,29 +20,19 @@ package org.hibernate.boot.model.source.spi;
  *     </li>
  * </ul>
  *
- * @todo Would love to link this in with {@link org.hibernate.engine.jdbc.internal.TypeInfo}
- *
  * @author Steve Ebersole
  */
 public class JdbcDataType {
 	private final int typeCode;
 	private final String typeName;
-	private final Class javaType;
-	private final int hashCode;
+	private final Class<?> javaType;
+	private final int hashCode; // not a record type because we want to cache this
 
-	public JdbcDataType(int typeCode, String typeName, Class javaType) {
+	public JdbcDataType(int typeCode, String typeName, Class<?> javaType) {
 		this.typeCode = typeCode;
 		this.typeName = typeName;
 		this.javaType = javaType;
-
-		int result = typeCode;
-		if ( typeName != null ) {
-			result = 31 * result + typeName.hashCode();
-		}
-		if ( javaType != null ) {
-			result = 31 * result + javaType.hashCode();
-		}
-		this.hashCode = result;
+		this.hashCode = Objects.hash( typeCode, typeName, javaType );
 	}
 
 	public int getTypeCode() {
@@ -53,7 +43,7 @@ public class JdbcDataType {
 		return typeName;
 	}
 
-	public Class getJavaType() {
+	public Class<?> getJavaType() {
 		return javaType;
 	}
 
@@ -67,16 +57,12 @@ public class JdbcDataType {
 		if ( this == o ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		if ( !(o instanceof JdbcDataType jdbcDataType) ) {
 			return false;
 		}
-
-		JdbcDataType jdbcDataType = (JdbcDataType) o;
-
 		return typeCode == jdbcDataType.typeCode
-				&& javaType.equals( jdbcDataType.javaType )
-				&& typeName.equals( jdbcDataType.typeName );
-
+			&& javaType.equals( jdbcDataType.javaType )
+			&& typeName.equals( jdbcDataType.typeName );
 	}
 
 	@Override

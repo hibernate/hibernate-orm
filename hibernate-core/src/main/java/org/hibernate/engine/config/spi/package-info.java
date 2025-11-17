@@ -1,11 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 
 /**
- * SPI Package for the configuration service.
+ * Defines the SPI of the configuration service.
+ * <p>
+ * Provides access to settings via a {@link org.hibernate.service.ServiceRegistry}.
  */
 package org.hibernate.engine.config.spi;

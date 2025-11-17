@@ -1,19 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
 import java.sql.Connection;
 import java.util.TimeZone;
+import java.util.function.UnaryOperator;
 
+import org.hibernate.CacheMode;
+import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
-import org.hibernate.SessionBuilder;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -26,18 +26,15 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  * @author Gunnar Morling
  * @author Guillaume Smet
  */
-@SuppressWarnings("unused")
-public abstract class AbstractDelegatingSharedSessionBuilder<T extends SharedSessionBuilder> implements SharedSessionBuilder<T> {
-
+public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSessionBuilder {
 	private final SharedSessionBuilder delegate;
 
 	public AbstractDelegatingSharedSessionBuilder(SharedSessionBuilder delegate) {
 		this.delegate = delegate;
 	}
 
-	@SuppressWarnings("unchecked")
-	protected T getThis() {
-		return (T) this;
+	protected SharedSessionBuilder getThis() {
+		return this;
 	}
 
 	public SharedSessionBuilder delegate() {
@@ -50,144 +47,188 @@ public abstract class AbstractDelegatingSharedSessionBuilder<T extends SharedSes
 	}
 
 	@Override
-	public T interceptor() {
+	public SharedSessionBuilder interceptor() {
 		delegate.interceptor();
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T connection() {
+	public SharedSessionBuilder connection() {
 		delegate.connection();
-		return getThis();
+		return this;
 	}
 
-	@SuppressWarnings("deprecation")
-	@Override
-	public T connectionReleaseMode() {
+	@Override @Deprecated(since = "6.0")
+	public SharedSessionBuilder connectionReleaseMode() {
 		delegate.connectionReleaseMode();
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T connectionHandlingMode() {
+	public SharedSessionBuilder connectionHandlingMode() {
 		delegate.connectionHandlingMode();
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T autoJoinTransactions() {
+	public SharedSessionBuilder autoJoinTransactions() {
 		delegate.autoJoinTransactions();
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T autoClose() {
+	public SharedSessionBuilder autoClose() {
 		delegate.autoClose();
-		return getThis();
-	}
-
-	@SuppressWarnings("deprecation")
-	@Override
-	public T flushBeforeCompletion() {
-		delegate.flushBeforeCompletion();
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T interceptor(Interceptor interceptor) {
+	public SharedSessionBuilder interceptor(Interceptor interceptor) {
 		delegate.interceptor( interceptor );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T noInterceptor() {
+	public SharedSessionBuilder noInterceptor() {
 		delegate.noInterceptor();
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T statementInspector(StatementInspector statementInspector) {
+	public SharedSessionBuilder noSessionInterceptorCreation() {
+		delegate.noSessionInterceptorCreation();
+		return this;
+	}
+
+	@Override @Deprecated
+	public SharedSessionBuilder statementInspector(StatementInspector statementInspector) {
 		delegate.statementInspector( statementInspector );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T connection(Connection connection) {
+	public SharedSessionBuilder statementInspector(UnaryOperator<String> operator) {
+		delegate.statementInspector( operator );
+		return this;
+	}
+
+	@Override
+	public SharedSessionBuilder statementInspector() {
+		delegate.statementInspector();
+		return this;
+	}
+
+	@Override
+	public SharedSessionBuilder noStatementInspector() {
+		delegate.noStatementInspector();
+		return this;
+	}
+
+	@Override
+	public SharedSessionBuilder connection(Connection connection) {
 		delegate.connection( connection );
-		return getThis();
-	}
-
-	@SuppressWarnings("deprecation")
-	@Override
-	public T connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
-		delegate.connectionReleaseMode( connectionReleaseMode );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T autoJoinTransactions(boolean autoJoinTransactions) {
+	public SharedSessionBuilder autoJoinTransactions(boolean autoJoinTransactions) {
 		delegate.autoJoinTransactions( autoJoinTransactions );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T autoClose(boolean autoClose) {
+	public SharedSessionBuilder autoClose(boolean autoClose) {
 		delegate.autoClose( autoClose );
-		return getThis();
+		return this;
 	}
 
-	@SuppressWarnings("deprecation")
-	@Override
-	public T flushBeforeCompletion(boolean flushBeforeCompletion) {
-		delegate.flushBeforeCompletion( flushBeforeCompletion );
-		return getThis();
-	}
-
-	@Override
-	public T tenantIdentifier(String tenantIdentifier) {
+	@Override @Deprecated(forRemoval = true)
+	public SharedSessionBuilder tenantIdentifier(String tenantIdentifier) {
 		delegate.tenantIdentifier( tenantIdentifier );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T eventListeners(SessionEventListener... listeners) {
+	public SharedSessionBuilder tenantIdentifier(Object tenantIdentifier) {
+		delegate.tenantIdentifier( tenantIdentifier );
+		return this;
+	}
+
+	@Override
+	public SharedSessionBuilder readOnly(boolean readOnly) {
+		delegate.readOnly( readOnly );
+		return this;
+	}
+
+	@Override
+	public SharedSessionBuilder initialCacheMode(CacheMode cacheMode) {
+		delegate.initialCacheMode( cacheMode );
+		return this;
+	}
+
+	@Override
+	public SharedSessionBuilder eventListeners(SessionEventListener... listeners) {
 		delegate.eventListeners( listeners );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T clearEventListeners() {
+	public SharedSessionBuilder clearEventListeners() {
 		delegate.clearEventListeners();
-		return getThis();
+		return this;
 	}
 
-	@Override
-	public T connectionHandlingMode(PhysicalConnectionHandlingMode mode) {
+	@Override @Deprecated
+	public SharedSessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode) {
 		delegate.connectionHandlingMode( mode );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T autoClear(boolean autoClear) {
+	public SharedSessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode) {
+		delegate.connectionHandling( acquisitionMode, releaseMode );
+		return this;
+	}
+
+	@Override
+	public SharedSessionBuilder autoClear(boolean autoClear) {
 		delegate.autoClear( autoClear );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T flushMode(FlushMode flushMode) {
+	public SharedSessionBuilder flushMode(FlushMode flushMode) {
 		delegate.flushMode( flushMode );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T flushMode() {
+	public SharedSessionBuilder flushMode() {
 		delegate.flushMode();
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T jdbcTimeZone(TimeZone timeZone) {
+	public SharedSessionBuilder jdbcTimeZone(TimeZone timeZone) {
 		delegate.jdbcTimeZone( timeZone );
-		return getThis();
+		return this;
+	}
+
+	@Override
+	public SharedSessionBuilder identifierRollback(boolean identifierRollback) {
+		delegate.identifierRollback( identifierRollback );
+		return this;
+	}
+
+	@Override
+	public SharedSessionBuilder defaultBatchFetchSize(int defaultBatchFetchSize) {
+		delegate.defaultBatchFetchSize( defaultBatchFetchSize );
+		return this;
+	}
+
+	@Override
+	public SharedSessionBuilder subselectFetchEnabled(boolean subselectFetchEnabled) {
+		delegate.subselectFetchEnabled( subselectFetchEnabled );
+		return this;
 	}
 }

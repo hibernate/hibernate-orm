@@ -1,17 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.internal.Collections;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.type.CollectionType;
+
+import static org.hibernate.engine.internal.Collections.processReachableCollection;
 
 /**
  * Process collections reachable from an entity. This
@@ -21,7 +20,7 @@ import org.hibernate.type.CollectionType;
  * @author Gavin King
  */
 public class FlushVisitor extends AbstractVisitor {
-	private Object owner;
+	private final Object owner;
 
 	public FlushVisitor(EventSource session, Object owner) {
 		super(session);
@@ -29,29 +28,30 @@ public class FlushVisitor extends AbstractVisitor {
 	}
 
 	Object processCollection(Object collection, CollectionType type) throws HibernateException {
-		
-		if ( collection == CollectionType.UNFETCHED_COLLECTION ) {
+		if ( collection != null && collection != CollectionType.UNFETCHED_COLLECTION ) {
+			final var session = getSession();
+			final var persistentCollection = persistentCollection( collection, type, session );
+			if ( persistentCollection != null ) {
+				processReachableCollection( persistentCollection, type, owner, session );
+			}
+		}
+		return null;
+	}
+
+	private PersistentCollection<?> persistentCollection(Object collection, CollectionType type, EventSource session) {
+		if ( type.hasHolder() ) {
+			return session.getPersistenceContextInternal().getCollectionHolder( collection );
+		}
+		else if ( collection == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+			final Object keyOfOwner = type.getKeyOfOwner( owner, session );
+			return (PersistentCollection<?>) type.getCollection( keyOfOwner, session, owner, Boolean.FALSE );
+		}
+		else if ( collection instanceof PersistentCollection<?> wrapper ) {
+			return wrapper;
+		}
+		else {
 			return null;
 		}
-
-		if ( collection != null ) {
-			final PersistentCollection coll;
-			final EventSource session = getSession();
-			if ( type.hasHolder() ) {
-				coll = session.getPersistenceContextInternal().getCollectionHolder(collection);
-			}
-			else if ( collection == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-				coll = (PersistentCollection) type.resolve( collection, session, owner );
-			}
-			else {
-				coll = (PersistentCollection) collection;
-			}
-
-			Collections.processReachableCollection( coll, type, owner, session);
-		}
-
-		return null;
-
 	}
 
 	@Override

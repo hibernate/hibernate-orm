@@ -1,83 +1,64 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.lazytoone.mappedby;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
-
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.Hibernate;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.jdbc.SQLStatementInterceptor;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static javax.persistence.FetchType.LAZY;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+
+import static jakarta.persistence.FetchType.LAZY;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.annotations.LazyToOneOption.NO_PROXY;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Baseline test for inverse (mappedBy) to-one, using an explicit @LazyToOne(NO_PROXY)
  */
-@RunWith( BytecodeEnhancerRunner.class)
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(
+		annotatedClasses = {
+				InverseToOneExplicitOptionTests.Customer.class, InverseToOneExplicitOptionTests.SupplementalInfo.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions( lazyLoading = true )
-public class InverseToOneExplicitOptionTests extends BaseNonConfigCoreFunctionalTestCase {
-	private SQLStatementInterceptor sqlStatementInterceptor;
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( Customer.class );
-		sources.addAnnotatedClass( SupplementalInfo.class );
-	}
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, true );
-		sqlStatementInterceptor = new SQLStatementInterceptor( ssrb );
-	}
+public class InverseToOneExplicitOptionTests {
 
 	@Test
-	public void testOwnerIsProxy() {
-		inTransaction(
-				(session) -> {
-					final Customer customer = new Customer( 1, "Acme Brick" );
-					session.persist( customer );
-					final SupplementalInfo supplementalInfo = new SupplementalInfo( 1, customer, "extra details" );
-					session.persist( supplementalInfo );
-				}
-		);
-
-		sqlStatementInterceptor.clear();
-
-		final EntityPersister supplementalInfoDescriptor = sessionFactory().getMetamodel().entityPersister( SupplementalInfo.class );
+	public void testOwnerIsProxy(SessionFactoryScope scope) {
+		final EntityPersister supplementalInfoDescriptor = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( SupplementalInfo.class );
 		final BytecodeEnhancementMetadata supplementalInfoEnhancementMetadata = supplementalInfoDescriptor.getBytecodeEnhancementMetadata();
 		assertThat( supplementalInfoEnhancementMetadata.isEnhancedForLazyLoading(), is( true ) );
 
-		final EntityPersister customerDescriptor = sessionFactory().getMetamodel().entityPersister( Customer.class );
+		final EntityPersister customerDescriptor = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( Customer.class );
 		final BytecodeEnhancementMetadata customerEnhancementMetadata = customerDescriptor.getBytecodeEnhancementMetadata();
 		assertThat( customerEnhancementMetadata.isEnhancedForLazyLoading(), is( true ) );
 
-		inTransaction(
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+
+		scope.inTransaction(
 				(session) -> {
 
 					// 1) Get a reference to the SupplementalInfo we created
@@ -95,7 +76,7 @@ public class InverseToOneExplicitOptionTests extends BaseNonConfigCoreFunctional
 
 					// we should have just the uninitialized SupplementalInfo proxy
 					//		- therefore no SQL statements should have been executed
-					assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 0 ) );
+					assertThat( statementInspector.getSqlQueries().size(), is( 0 ) );
 
 					assertThat(
 							supplementalInfoEnhancementMetadata.extractLazyInterceptor( supplementalInfo ),
@@ -104,7 +85,7 @@ public class InverseToOneExplicitOptionTests extends BaseNonConfigCoreFunctional
 
 					// access the id - should do nothing with db
 					supplementalInfo.getId();
-					assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 0 ) );
+					assertThat( statementInspector.getSqlQueries().size(), is( 0 ) );
 					assertThat(
 							supplementalInfoEnhancementMetadata.extractLazyInterceptor( supplementalInfo ),
 							instanceOf( EnhancementAsProxyLazinessInterceptor.class )
@@ -112,7 +93,7 @@ public class InverseToOneExplicitOptionTests extends BaseNonConfigCoreFunctional
 
 					// this should trigger loading the entity's base state
 					supplementalInfo.getSomething();
-					assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 1 ) );
+					assertThat( statementInspector.getSqlQueries().size(), is( 1 ) );
 					assertThat(
 							supplementalInfoEnhancementMetadata.extractLazyInterceptor( supplementalInfo ),
 							instanceOf( LazyAttributeLoadingInterceptor.class )
@@ -123,7 +104,7 @@ public class InverseToOneExplicitOptionTests extends BaseNonConfigCoreFunctional
 					//
 					// here we access customer which triggers a load from customer table
 					final Customer customer = supplementalInfo.getCustomer();
-					assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 2 ) );
+					assertThat( statementInspector.getSqlQueries().size(), is( 2 ) );
 
 					assertThat(
 							customerEnhancementMetadata.extractLazyInterceptor( customer ),
@@ -132,22 +113,51 @@ public class InverseToOneExplicitOptionTests extends BaseNonConfigCoreFunctional
 
 					// just as above, accessing id should trigger no loads
 					customer.getId();
-					assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 2 ) );
+					assertThat( statementInspector.getSqlQueries().size(), is( 2 ) );
 
 					customer.getName();
-					assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 2 ) );
+					assertThat( statementInspector.getSqlQueries().size(), is( 2 ) );
 				}
 		);
 	}
 
-	@After
-	public void dropTestData() {
-		inTransaction(
+	@Test
+	@JiraKey("HHH-14659")
+	public void testQueryJoinFetch(SessionFactoryScope scope) {
+		SupplementalInfo info = scope.fromTransaction( (session) -> {
+			final SupplementalInfo result = session.createQuery(
+							"select s from SupplementalInfo s join fetch s.customer",
+							SupplementalInfo.class )
+					.uniqueResult();
+			assertThat( scope.getCollectingStatementInspector().getSqlQueries().size(), is( 1 ) );
+			return result;
+		} );
+
+		// The "join fetch" should have already initialized the property,
+		// so that the getter can safely be called outside of a session.
+		assertTrue( Hibernate.isPropertyInitialized( info, "customer" ) );
+		// The "join fetch" should have already initialized the associated entity.
+		Customer customer = info.getCustomer();
+		assertTrue( Hibernate.isInitialized( customer ) );
+		assertThat( scope.getCollectingStatementInspector().getSqlQueries().size(), is( 1 ) );
+	}
+
+	@BeforeEach
+	public void createTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				(session) -> {
-					session.createQuery( "delete Customer" ).executeUpdate();
-					session.createQuery( "delete SupplementalInfo" ).executeUpdate();
+					final Customer customer = new Customer( 1, "Acme Brick" );
+					session.persist( customer );
+					final SupplementalInfo supplementalInfo = new SupplementalInfo( 1, customer, "extra details" );
+					session.persist( supplementalInfo );
 				}
 		);
+		scope.getCollectingStatementInspector().clear();
+	}
+
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "Customer" )
@@ -199,7 +209,6 @@ public class InverseToOneExplicitOptionTests extends BaseNonConfigCoreFunctional
 		private Integer id;
 
 		@OneToOne( fetch = LAZY, mappedBy = "supplementalInfo", optional = false )
-		@LazyToOne( value = NO_PROXY )
 		private Customer customer;
 
 		private String something;

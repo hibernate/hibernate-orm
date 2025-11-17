@@ -1,25 +1,28 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.LockMode;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.engine.internal.Nullability;
-import org.hibernate.engine.internal.Versioning;
+import org.hibernate.engine.internal.Nullability.NullabilityCheckType;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
-import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.NaturalIdResolutions;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
+
+import static org.hibernate.engine.internal.Versioning.getVersion;
 
 /**
  * A base class for entity insert actions.
@@ -34,22 +37,21 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 
 	/**
 	 * Constructs an AbstractEntityInsertAction object.
-	 *
-	 * @param id - the entity ID
+	 *  @param id - the entity ID
 	 * @param state - the entity state
 	 * @param instance - the entity
 	 * @param isVersionIncrementDisabled - true, if version increment should
-	 *                                     be disabled; false, otherwise
+*                                     be disabled; false, otherwise
 	 * @param persister - the entity persister
 	 * @param session - the session
 	 */
 	protected AbstractEntityInsertAction(
-			Serializable id,
+			Object id,
 			Object[] state,
 			Object instance,
 			boolean isVersionIncrementDisabled,
 			EntityPersister persister,
-			SharedSessionContractImplementor session) {
+			EventSource session) {
 		super( session, id, instance, persister );
 		this.state = state;
 		this.isVersionIncrementDisabled = isVersionIncrementDisabled;
@@ -63,9 +65,10 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 
 	/**
 	 * Returns the entity state.
+	 * <P>
+	 * Note that the call to {@link #nullifyTransientReferencesIfNotAlready}
+	 * can modify the entity state.
 	 *
-	 * NOTE: calling {@link #nullifyTransientReferencesIfNotAlready} can modify the
-	 *       entity state.
 	 * @return the entity state.
 	 *
 	 * @see #nullifyTransientReferencesIfNotAlready
@@ -102,7 +105,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 * maintained by this action. References to transient entities
 	 * should be nullified when an entity is made "managed" or when this
 	 * action is executed, whichever is first.
-	 * <p/>
+	 * <p>
 	 * References will only be nullified the first time this method is
 	 * called for a this object, so it can safely be called both when
 	 * the entity is made "managed" and when this action is executed.
@@ -110,10 +113,11 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 * @see #makeEntityManaged()
 	 */
 	protected final void nullifyTransientReferencesIfNotAlready() {
-		if ( ! areTransientReferencesNullified ) {
+		if ( !areTransientReferencesNullified ) {
 			new ForeignKeys.Nullifier( getInstance(), false, isEarlyInsert(), getSession(), getPersister() )
 					.nullifyTransientReferences( getState() );
-			new Nullability( getSession() ).checkNullability( getState(), getPersister(), false );
+			new Nullability( getSession(), NullabilityCheckType.CREATE )
+					.checkNullability( getState(), getPersister() );
 			areTransientReferencesNullified = true;
 		}
 	}
@@ -123,18 +127,98 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 */
 	public final void makeEntityManaged() {
 		nullifyTransientReferencesIfNotAlready();
-		final Object version = Versioning.getVersion( getState(), getPersister() );
-		getSession().getPersistenceContextInternal().addEntity(
+		final var persister = getPersister();
+		final var key = getEntityKey();
+		final Object[] state = getState();
+		final Object version = getVersion( state, persister );
+		final var persistenceContext = getSession().getPersistenceContextInternal();
+		final var entityHolder = persistenceContext.addEntityHolder( key, getInstance() );
+		final var entityEntry = persistenceContext.addEntry(
 				getInstance(),
-				( getPersister().isMutable() ? Status.MANAGED : Status.READ_ONLY ),
-				getState(),
-				getEntityKey(),
+				persister.isMutable() ? Status.MANAGED : Status.READ_ONLY,
+				state,
+				getRowId(),
+				key.getIdentifier(),
 				version,
 				LockMode.WRITE,
 				isExecuted,
-				getPersister(),
+				persister,
 				isVersionIncrementDisabled
 		);
+		entityHolder.setEntityEntry( entityEntry );
+		if ( isEarlyInsert() ) {
+			addCollectionsByKeyToPersistenceContext( persistenceContext, state );
+		}
+	}
+
+	protected void addCollectionsByKeyToPersistenceContext(PersistenceContext persistenceContext, Object[] objects) {
+		for ( int i = 0; i < objects.length; i++ ) {
+			final var attributeMapping = getPersister().getAttributeMapping( i );
+			if ( attributeMapping.isEmbeddedAttributeMapping() ) {
+				visitEmbeddedAttributeMapping(
+						attributeMapping.asEmbeddedAttributeMapping(),
+						objects[i],
+						persistenceContext
+				);
+			}
+			else if ( attributeMapping.isPluralAttributeMapping() ) {
+				addCollectionKey(
+						attributeMapping.asPluralAttributeMapping(),
+						objects[i],
+						persistenceContext
+				);
+			}
+		}
+	}
+
+	private void visitEmbeddedAttributeMapping(
+			EmbeddedAttributeMapping attributeMapping,
+			Object object,
+			PersistenceContext persistenceContext) {
+		if ( object != null ) {
+			final var descriptor = attributeMapping.getEmbeddableTypeDescriptor();
+			final var concreteEmbeddableType =
+					descriptor.findSubtypeBySubclass( object.getClass().getName() );
+			final var attributeMappings = descriptor.getAttributeMappings();
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final var attribute = attributeMappings.get( i );
+				if ( concreteEmbeddableType.declaresAttribute( attribute ) ) {
+					if ( attribute.isPluralAttributeMapping() ) {
+						addCollectionKey(
+								attribute.asPluralAttributeMapping(),
+								descriptor.getValue( object, i ),
+								persistenceContext
+						);
+					}
+					else if ( attribute.isEmbeddedAttributeMapping() ) {
+						visitEmbeddedAttributeMapping(
+								attribute.asEmbeddedAttributeMapping(),
+								descriptor.getValue( object, i ),
+								persistenceContext
+						);
+					}
+				}
+			}
+		}
+	}
+
+	private void addCollectionKey(
+			PluralAttributeMapping pluralAttributeMapping,
+			Object object,
+			PersistenceContext persistenceContext) {
+		if ( object instanceof PersistentCollection ) {
+			final var collectionPersister = pluralAttributeMapping.getCollectionDescriptor();
+			final Object key = AbstractEntityPersister.getCollectionKey(
+					collectionPersister,
+					getInstance(),
+					persistenceContext.getEntry( getInstance() ),
+					getSession()
+			);
+			if ( key != null ) {
+				final var collectionKey = new CollectionKey( collectionPersister, key );
+				persistenceContext.addCollectionByKey( collectionKey, (PersistentCollection<?>) object );
+			}
+		}
 	}
 
 	/**
@@ -150,13 +234,19 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 */
 	protected abstract EntityKey getEntityKey();
 
+	protected abstract Object getRowId();
+
+	private NaturalIdResolutions getNaturalIdResolutions() {
+		return getSession().getPersistenceContextInternal().getNaturalIdResolutions();
+	}
+
 	@Override
-	public void afterDeserialize(SharedSessionContractImplementor session) {
+	public void afterDeserialize(EventSource session) {
 		super.afterDeserialize( session );
 		// IMPL NOTE: non-flushed changes code calls this method with session == null...
 		// guard against NullPointerException
 		if ( session != null ) {
-			final EntityEntry entityEntry = session.getPersistenceContextInternal().getEntry( getInstance() );
+			final var entityEntry = session.getPersistenceContextInternal().getEntry( getInstance() );
 			this.state = entityEntry.getLoadedState();
 		}
 	}
@@ -165,14 +255,16 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 * Handle sending notifications needed for natural-id before saving
 	 */
 	protected void handleNaturalIdPreSaveNotifications() {
-		// before save, we need to add a local (transactional) natural id cross-reference
-		getSession().getPersistenceContextInternal().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
-				getPersister(),
-				getId(),
-				state,
-				null,
-				CachedNaturalIdValueSource.INSERT
-		);
+		// before save, we need to add a natural id cross-reference to the persistence-context
+		final var naturalIdMapping = getPersister().getNaturalIdMapping();
+		if ( naturalIdMapping != null ) {
+			getNaturalIdResolutions().manageLocalResolution(
+					getId(),
+					naturalIdMapping.extractNaturalIdFromEntityState( state ),
+					getPersister(),
+					CachedNaturalIdValueSource.INSERT
+			);
+		}
 	}
 
 	/**
@@ -180,25 +272,29 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 *
 	 * @param generatedId The generated entity identifier
 	 */
-	public void handleNaturalIdPostSaveNotifications(Serializable generatedId) {
-		final PersistenceContext.NaturalIdHelper naturalIdHelper = getSession().getPersistenceContextInternal().getNaturalIdHelper();
-		if ( isEarlyInsert() ) {
-			// with early insert, we still need to add a local (transactional) natural id cross-reference
-			naturalIdHelper.manageLocalNaturalIdCrossReference(
-					getPersister(),
+	public void handleNaturalIdPostSaveNotifications(Object generatedId) {
+		final var persister = getPersister();
+		final var naturalIdMapping = persister.getNaturalIdMapping();
+		if ( naturalIdMapping != null ) {
+			final Object naturalIdValues = naturalIdMapping.extractNaturalIdFromEntityState( state );
+			final var resolutions = getNaturalIdResolutions();
+			if ( isEarlyInsert() ) {
+				// with early insert, we still need to add a local (transactional) natural id cross-reference
+				resolutions.manageLocalResolution(
+						generatedId,
+						naturalIdValues,
+						persister,
+						CachedNaturalIdValueSource.INSERT
+				);
+			}
+			// after save, we need to manage the shared cache entries
+			resolutions.manageSharedResolution(
 					generatedId,
-					state,
+					naturalIdValues,
 					null,
+					persister,
 					CachedNaturalIdValueSource.INSERT
 			);
 		}
-		// after save, we need to manage the shared cache entries
-		naturalIdHelper.manageSharedNaturalIdCrossReference(
-				getPersister(),
-				generatedId,
-				state,
-				null,
-				CachedNaturalIdValueSource.INSERT
-		);
 	}
 }

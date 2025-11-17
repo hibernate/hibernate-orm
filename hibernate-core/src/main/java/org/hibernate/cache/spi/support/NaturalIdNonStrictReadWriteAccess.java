@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.support;
 
@@ -15,7 +13,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Standard support for {@link org.hibernate.cache.spi.access.NaturalIdDataAccess}
- * using the {@link org.hibernate.cache.spi.access.AccessType#NONSTRICT_READ_WRITE} access type.
+ * using the {@link AccessType#NONSTRICT_READ_WRITE} access type.
  *
  * @author Steve Ebersole
  */
@@ -39,17 +37,7 @@ public class NaturalIdNonStrictReadWriteAccess extends AbstractNaturalIdDataAcce
 	}
 
 	@Override
-	public void remove(SharedSessionContractImplementor session, Object key) {
-		getStorageAccess().removeFromCache( key, session );
-	}
-
-	@Override
 	public boolean insert(SharedSessionContractImplementor session, Object key, Object value) {
-		return false;
-	}
-
-	@Override
-	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value) {
 		return false;
 	}
 

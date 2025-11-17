@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.any.xml</package>
+
+    <entity class="Person">
+        <table name="persons"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+            </id>
+            <basic name="name"/>
+            <any name="data">
+                <discriminator>
+                    <type>STRING</type>
+                    <column name="data_type"/>
+                    <mapping value="A">Address</mapping>
+                </discriminator>
+                <key>
+                    <java-class>Long</java-class>
+                    <column name="data_fk"/>
+                </key>
+            </any>
+        </attributes>
+    </entity>
+
+    <entity class="Address">
+        <table name="addresses"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+            </id>
+            <element-collection name="lines" target-class="String">
+                <column name="line"/>
+                <collection-table name="address_lines">
+                    <join-column name="address_fk"/>
+                </collection-table>
+            </element-collection>
+        </attributes>
+    </entity>
+</entity-mappings>

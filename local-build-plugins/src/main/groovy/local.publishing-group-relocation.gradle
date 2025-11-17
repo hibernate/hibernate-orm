@@ -1,0 +1,29 @@
+
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+plugins {
+    id "local.publishing"
+}
+
+def oldGroupId = "org.hibernate"
+
+var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
+publishingExtension.publications.create("groupRelocation", MavenPublication) {
+    groupId = oldGroupId
+    artifactId = project.name
+
+    pom {
+        name = "Relocation : ${oldGroupId}:${project.name} -> ${project.group}:${project.name}"
+        description = "The `${project.name}` module has been relocated to the `${project.group}` group"
+
+        distributionManagement {
+            relocation {
+                groupId = project.group
+                artifactId = project.name
+                version = project.version
+            }
+        }
+    }
+}

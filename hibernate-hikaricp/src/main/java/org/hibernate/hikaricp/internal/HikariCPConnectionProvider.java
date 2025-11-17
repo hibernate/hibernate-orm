@@ -1,69 +1,81 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.hikaricp.internal;
 
+import java.io.Serial;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
-import javax.sql.DataSource;
 
 import org.hibernate.HibernateException;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
+import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
 
-import org.jboss.logging.Logger;
-
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getCatalog;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getDriverName;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getFetchSize;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getIsolation;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getSchema;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasCatalog;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasSchema;
+import static org.hibernate.hikaricp.internal.HikariConfigurationUtil.loadConfiguration;
+import static org.hibernate.internal.log.ConnectionInfoLogger.CONNECTION_INFO_LOGGER;
+import static org.hibernate.internal.util.StringHelper.isBlank;
+
 /**
- * HikariCP Connection provider for Hibernate.
+ * {@link ConnectionProvider} based on HikariCP connection pool.
+ * <p>
+ * To force the use of this {@code ConnectionProvider} set
+ * {@value org.hibernate.cfg.JdbcSettings#CONNECTION_PROVIDER}
+ * to {@code hikari} or {@code hikaricp}.
  *
  * @author Brett Wooldridge
  * @author Luca Burgazzoli
  */
 public class HikariCPConnectionProvider implements ConnectionProvider, Configurable, Stoppable {
 
+	@Serial
 	private static final long serialVersionUID = -9131625057941275711L;
-
-	private static final Logger LOGGER = Logger.getLogger( HikariCPConnectionProvider.class );
 
 	/**
 	 * HikariCP configuration.
 	 */
-	private HikariConfig hcfg = null;
+	private HikariConfig hikariConfig = null;
 
 	/**
 	 * HikariCP data source.
 	 */
-	private HikariDataSource hds = null;
+	private HikariDataSource hikariDataSource = null;
 
 	// *************************************************************************
 	// Configurable
 	// *************************************************************************
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public void configure(Map props) throws HibernateException {
+	public void configure(Map<String, Object> configuration) throws HibernateException {
 		try {
-			LOGGER.debug( "Configuring HikariCP" );
-
-			hcfg = HikariConfigurationUtil.loadConfiguration( props );
-			hds = new HikariDataSource( hcfg );
-
+			CONNECTION_INFO_LOGGER.configureConnectionPool( "HikariCP" );
+			hikariConfig = loadConfiguration( configuration );
+			hikariDataSource = new HikariDataSource( hikariConfig );
 		}
 		catch (Exception e) {
-			throw new HibernateException( e );
+			CONNECTION_INFO_LOGGER.unableToInstantiateConnectionPool( e );
+			throw new ConnectionProviderConfigurationException(
+					"Could not configure HikariCP: " + e.getMessage(),  e );
 		}
-
-		LOGGER.debug( "HikariCP Configured" );
 	}
 
 	// *************************************************************************
@@ -72,17 +84,12 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 
 	@Override
 	public Connection getConnection() throws SQLException {
-		Connection conn = null;
-		if ( hds != null ) {
-			conn = hds.getConnection();
-		}
-
-		return conn;
+		return hikariDataSource != null ? hikariDataSource.getConnection() : null;
 	}
 
 	@Override
-	public void closeConnection(Connection conn) throws SQLException {
-		conn.close();
+	public void closeConnection(Connection connection) throws SQLException {
+		connection.close();
 	}
 
 	@Override
@@ -91,22 +98,63 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	}
 
 	@Override
-	@SuppressWarnings("rawtypes")
-	public boolean isUnwrappableAs(Class unwrapType) {
-		return ConnectionProvider.class.equals( unwrapType )
-				|| HikariCPConnectionProvider.class.isAssignableFrom( unwrapType )
-				|| DataSource.class.isAssignableFrom( unwrapType );
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		try ( var connection = hikariDataSource.getConnection() ) {
+			final var info = new DatabaseConnectionInfoImpl(
+					HikariCPConnectionProvider.class,
+					hikariConfig.getJdbcUrl(),
+					// Attempt to resolve the driver name from the dialect,
+					// in case it wasn't explicitly set and access to the
+					// database metadata is allowed
+					isBlank( hikariConfig.getDriverClassName() )
+							? getDriverName( connection )
+							: hikariConfig.getDriverClassName(),
+					dialect.getClass(),
+					dialect.getVersion(),
+					hasSchema( connection ),
+					hasCatalog( connection ),
+					hikariConfig.getSchema() != null
+							? hikariConfig.getSchema()
+							: getSchema( connection ),
+					hikariConfig.getCatalog() != null
+							? hikariConfig.getCatalog()
+							: getCatalog( connection ),
+					Boolean.toString( hikariConfig.isAutoCommit() ),
+					hikariConfig.getTransactionIsolation() != null
+							? hikariConfig.getTransactionIsolation()
+							: toIsolationNiceName( getIsolation( connection ) ),
+					hikariConfig.getMinimumIdle(),
+					hikariConfig.getMaximumPoolSize(),
+					getFetchSize( connection )
+			);
+			if ( !connection.getAutoCommit() ) {
+				connection.rollback();
+			}
+			return info;
+		}
+		catch (SQLException e) {
+			throw new JDBCConnectionException( "Could not create connection", e );
+		}
+	}
+
+	@Override
+	public boolean isUnwrappableAs(Class<?> unwrapType) {
+		return unwrapType.isAssignableFrom( HikariCPConnectionProvider.class )
+			|| unwrapType.isAssignableFrom( HikariDataSource.class )
+			|| unwrapType.isAssignableFrom( HikariConfig.class );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( ConnectionProvider.class.equals( unwrapType ) ||
-				HikariCPConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+		if ( unwrapType.isAssignableFrom( HikariCPConnectionProvider.class ) ) {
 			return (T) this;
 		}
-		else if ( DataSource.class.isAssignableFrom( unwrapType ) ) {
-			return (T) hds;
+		else if ( unwrapType.isAssignableFrom( HikariDataSource.class ) ) {
+			return (T) hikariDataSource;
+		}
+		else if ( unwrapType.isAssignableFrom( HikariConfig.class ) ) {
+			return (T) hikariConfig;
 		}
 		else {
 			throw new UnknownUnwrapTypeException( unwrapType );
@@ -119,6 +167,9 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 
 	@Override
 	public void stop() {
-		hds.close();
+		if ( hikariDataSource != null ) {
+			CONNECTION_INFO_LOGGER.cleaningUpConnectionPool( "HikariCP" );
+			hikariDataSource.close();
+		}
 	}
 }

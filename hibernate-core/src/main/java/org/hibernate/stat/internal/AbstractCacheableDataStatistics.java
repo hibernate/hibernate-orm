@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat.internal;
 
@@ -10,60 +8,74 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Supplier;
 
 import org.hibernate.cache.spi.Region;
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.stat.CacheableDataStatistics;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractCacheableDataStatistics implements CacheableDataStatistics {
-	private final String cacheRegionName;
-	private final LongAdder cacheHitCount;
-	private final LongAdder cacheMissCount;
-	private final LongAdder cachePutCount;
+	private final @Nullable String cacheRegionName;
+	private final @Nullable LongAdder cacheHitCount;
+	private final @Nullable LongAdder cacheMissCount;
+	private final @Nullable LongAdder cachePutCount;
+	private final @Nullable LongAdder cacheRemoveCount;
 
-	public AbstractCacheableDataStatistics(Supplier<Region> regionSupplier) {
-		final Region region = regionSupplier.get();
+	public AbstractCacheableDataStatistics(Supplier<@Nullable Region> regionSupplier) {
+		final var region = regionSupplier.get();
 		if ( region == null ) {
-			this.cacheRegionName = null;
-			this.cacheHitCount = null;
-			this.cacheMissCount = null;
-			this.cachePutCount = null;
+			cacheRegionName = null;
+			cacheHitCount = null;
+			cacheMissCount = null;
+			cachePutCount = null;
+			cacheRemoveCount = null;
 		}
 		else {
-			this.cacheRegionName = region.getName();
-			this.cacheHitCount = new LongAdder();
-			this.cacheMissCount = new LongAdder();
-			this.cachePutCount = new LongAdder();
+			cacheRegionName = region.getName();
+			cacheHitCount = new LongAdder();
+			cacheMissCount = new LongAdder();
+			cachePutCount = new LongAdder();
+			cacheRemoveCount = new LongAdder();
 		}
 	}
 
 	@Override
-	public String getCacheRegionName() {
+	public @Nullable String getCacheRegionName() {
 		return cacheRegionName;
 	}
 
+	@Override
 	public long getCacheHitCount() {
-		if ( cacheRegionName == null ) {
-			return NOT_CACHED_COUNT;
-		}
+		return cacheRegionName == null
+				? NOT_CACHED_COUNT
+				: NullnessUtil.castNonNull( cacheHitCount ).sum();
 
-		return cacheHitCount.sum();
 	}
 
+	@Override
 	public long getCachePutCount() {
-		if ( cacheRegionName == null ) {
-			return NOT_CACHED_COUNT;
-		}
+		return cacheRegionName == null
+				? NOT_CACHED_COUNT
+				: NullnessUtil.castNonNull( cachePutCount ).sum();
 
-		return cachePutCount.sum();
 	}
 
+	@Override
 	public long getCacheMissCount() {
-		if ( cacheRegionName == null ) {
-			return NOT_CACHED_COUNT;
-		}
+		return cacheRegionName == null
+				? NOT_CACHED_COUNT
+				: NullnessUtil.castNonNull( cacheMissCount ).sum();
 
-		return cacheMissCount.sum();
+	}
+
+	@Override
+	public long getCacheRemoveCount() {
+		return cacheRegionName == null
+				? NOT_CACHED_COUNT
+				: NullnessUtil.castNonNull( cacheRemoveCount ).sum();
+
 	}
 
 	public void incrementCacheHitCount() {
@@ -71,7 +83,7 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 			throw new IllegalStateException( "Illegal attempt to increment cache hit count for non-cached data" );
 		}
 
-		cacheHitCount.increment();
+		NullnessUtil.castNonNull( cacheHitCount ).increment();
 	}
 
 	public void incrementCacheMissCount() {
@@ -79,7 +91,7 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 			throw new IllegalStateException( "Illegal attempt to increment cache miss count for non-cached data" );
 		}
 
-		cacheMissCount.increment();
+		NullnessUtil.castNonNull( cacheMissCount ).increment();
 	}
 
 	public void incrementCachePutCount() {
@@ -87,19 +99,24 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 			throw new IllegalStateException( "Illegal attempt to increment cache put count for non-cached data" );
 		}
 
-		cachePutCount.increment();
+		NullnessUtil.castNonNull( cachePutCount ).increment();
 	}
 
-	protected void appendCacheStats(StringBuilder buf) {
-		buf.append( ",cacheRegion=" ).append( cacheRegionName );
-
+	public void incrementCacheRemoveCount() {
 		if ( cacheRegionName == null ) {
-			return;
+			throw new IllegalStateException( "Illegal attempt to increment cache put count for non-cached data" );
 		}
 
-		buf.append( ",cacheHitCount=" ).append( getCacheHitCount() )
-				.append( ",cacheMissCount=" ).append( getCacheMissCount() )
-				.append( ",cachePutCount=" ).append( getCachePutCount() );
+		NullnessUtil.castNonNull( cacheRemoveCount ).increment();
+	}
 
+	protected void appendCacheStats(StringBuilder text) {
+		text.append( ",cacheRegion=" ).append( cacheRegionName );
+		if ( cacheRegionName != null ) {
+			text.append( ",cacheHitCount=" ).append( getCacheHitCount() )
+					.append( ",cacheMissCount=" ).append( getCacheMissCount() )
+					.append( ",cachePutCount=" ).append( getCachePutCount() )
+					.append( ",cacheRemoveCount=" ).append( getCacheRemoveCount() );
+		}
 	}
 }

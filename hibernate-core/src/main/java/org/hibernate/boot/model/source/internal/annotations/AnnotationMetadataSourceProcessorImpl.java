@@ -1,190 +1,141 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.annotations;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.MappedSuperclass;
 
-import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.boot.AttributeConverterInfo;
+import org.hibernate.MappingException;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
-import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
+import org.hibernate.boot.model.convert.spi.RegisteredConversion;
+import org.hibernate.boot.model.internal.AnnotationBinder;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
-import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware.JpaOrmXmlPersistenceUnitDefaults;
-import org.hibernate.cfg.AnnotationBinder;
-import org.hibernate.cfg.InheritanceState;
-import org.hibernate.cfg.annotations.reflection.AttributeConverterDefinitionCollector;
-import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.models.spi.ClassDetails;
 
-import org.jboss.jandex.IndexView;
-import org.jboss.logging.Logger;
+import jakarta.persistence.Entity;
+import jakarta.persistence.MappedSuperclass;
 
-import org.dom4j.Document;
+import static org.hibernate.boot.model.internal.AnnotationBinder.bindClass;
+import static org.hibernate.boot.model.internal.AnnotationBinder.bindDefaults;
+import static org.hibernate.boot.model.internal.AnnotationBinder.bindFetchProfilesForClass;
+import static org.hibernate.boot.model.internal.AnnotationBinder.bindFetchProfilesForPackage;
+import static org.hibernate.boot.model.internal.AnnotationBinder.buildInheritanceStates;
+import static org.hibernate.boot.model.process.spi.MetadataBuildingProcess.processManagedResources;
 
 /**
  * @author Steve Ebersole
  */
 public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProcessor {
-	private static final Logger log = Logger.getLogger( AnnotationMetadataSourceProcessorImpl.class );
+
+	// NOTE: we decategorize the classes into a single collection (xClasses)
+	// 		  here to work with the existing "binder" infrastructure.
+	// todo : once we move to the phased binding approach, come back and handle that
+
+	private final DomainModelSource domainModelSource;
 
 	private final MetadataBuildingContextRootImpl rootMetadataBuildingContext;
-
-	@SuppressWarnings("FieldCanBeLocal")
-	private final IndexView jandexView;
-
-	private final ReflectionManager reflectionManager;
-
-	private final LinkedHashSet<String> annotatedPackages = new LinkedHashSet<String>();
-
-	private final List<XClass> xClasses = new ArrayList<XClass>();
 	private final ClassLoaderService classLoaderService;
 
+	private final LinkedHashSet<String> annotatedPackages = new LinkedHashSet<>();
+	private final LinkedHashSet<ClassDetails> knownClasses = new LinkedHashSet<>();
+
+	/**
+	 * Normal constructor used while processing {@linkplain org.hibernate.boot.MetadataSources mapping sources}
+	 */
 	public AnnotationMetadataSourceProcessorImpl(
 			ManagedResources managedResources,
-			final MetadataBuildingContextRootImpl rootMetadataBuildingContext,
-			IndexView jandexView) {
+			DomainModelSource domainModelSource,
+			MetadataBuildingContextRootImpl rootMetadataBuildingContext) {
+		this.domainModelSource = domainModelSource;
 		this.rootMetadataBuildingContext = rootMetadataBuildingContext;
-		this.jandexView = jandexView;
 
-		this.reflectionManager = rootMetadataBuildingContext.getBootstrapContext().getReflectionManager();
+		final var bootstrapContext = rootMetadataBuildingContext.getBootstrapContext();
 
-		if ( CollectionHelper.isNotEmpty( managedResources.getAnnotatedPackageNames() ) ) {
-			annotatedPackages.addAll( managedResources.getAnnotatedPackageNames() );
-		}
+		classLoaderService = bootstrapContext.getClassLoaderService();
+		assert classLoaderService != null;
 
-		final AttributeConverterManager attributeConverterManager = new AttributeConverterManager( rootMetadataBuildingContext );
-		this.classLoaderService = rootMetadataBuildingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
+		final var converterRegistry =
+				rootMetadataBuildingContext.getMetadataCollector().getConverterRegistry();
+		domainModelSource.getConversionRegistrations().forEach( (registration) -> {
+			final var explicitDomainType = registration.getExplicitDomainType();
+			converterRegistry.addRegisteredConversion( new RegisteredConversion(
+					explicitDomainType == void.class || explicitDomainType == Void.class
+							? void.class
+							: explicitDomainType,
+					registration.getConverterType(),
+					registration.isAutoApply(),
+					rootMetadataBuildingContext
+			) );
+		} );
+		domainModelSource.getConverterRegistrations().forEach( (registration) -> {
+			converterRegistry.addAttributeConverter( ConverterDescriptors.of(
+					classLoaderService.classForName( registration.converterClass().getClassName() ),
+					registration.autoApply(), false,
+					bootstrapContext.getClassmateContext()
+			) );
+		} );
 
-		if ( rootMetadataBuildingContext.getBuildingOptions().isXmlMappingEnabled() ) {
+		applyManagedClasses( domainModelSource, knownClasses );
 
-			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			// Ewww.  This is temporary until we migrate to Jandex + StAX for annotation binding
-
-				final JPAMetadataProvider jpaMetadataProvider = (JPAMetadataProvider) ( (MetadataProviderInjector) reflectionManager )
-						.getMetadataProvider();
-				for ( Binding xmlBinding : managedResources.getXmlMappingBindings() ) {
-	//			if ( !MappingBinder.DelayedOrmXmlData.class.isInstance( xmlBinding.getRoot() ) ) {
-	//				continue;
-	//			}
-	//
-	//			// convert the StAX representation in delayedOrmXmlData to DOM because that's what commons-annotations needs
-	//			final MappingBinder.DelayedOrmXmlData delayedOrmXmlData = (MappingBinder.DelayedOrmXmlData) xmlBinding.getRoot();
-	//			org.dom4j.Document dom4jDocument = toDom4jDocument( delayedOrmXmlData );
-					if ( !org.dom4j.Document.class.isInstance( xmlBinding.getRoot() ) ) {
-						continue;
-					}
-					org.dom4j.Document dom4jDocument = (Document) xmlBinding.getRoot();
-
-					final List<String> classNames = jpaMetadataProvider.getXMLContext().addDocument( dom4jDocument );
-					for ( String className : classNames ) {
-						xClasses.add( toXClass( className, reflectionManager, classLoaderService ) );
-					}
-				}
-				jpaMetadataProvider.getXMLContext().applyDiscoveredAttributeConverters( attributeConverterManager );
-			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		}
-
+		final var classDetailsRegistry = domainModelSource.getClassDetailsRegistry();
 		for ( String className : managedResources.getAnnotatedClassNames() ) {
-			final Class annotatedClass = classLoaderService.classForName( className );
-			categorizeAnnotatedClass( annotatedClass, attributeConverterManager, classLoaderService );
+			knownClasses.add( classDetailsRegistry.resolveClassDetails( className ) );
+		}
+		for ( var annotatedClass : managedResources.getAnnotatedClassReferences() ) {
+			knownClasses.add( classDetailsRegistry.resolveClassDetails( annotatedClass.getName() ) );
 		}
 
-		for ( Class annotatedClass : managedResources.getAnnotatedClassReferences() ) {
-			categorizeAnnotatedClass( annotatedClass, attributeConverterManager, classLoaderService );
-		}
+		annotatedPackages.addAll( managedResources.getAnnotatedPackageNames() );
 	}
 
-	private void categorizeAnnotatedClass(Class annotatedClass, AttributeConverterManager attributeConverterManager, ClassLoaderService cls) {
-		final XClass xClass = reflectionManager.toXClass( annotatedClass );
-		// categorize it, based on assumption it does not fall into multiple categories
-		if ( xClass.isAnnotationPresent( Converter.class ) ) {
-			//noinspection unchecked
-			attributeConverterManager.addAttributeConverter( annotatedClass );
-		}
-		else if ( xClass.isAnnotationPresent( Entity.class )
-				|| xClass.isAnnotationPresent( MappedSuperclass.class ) ) {
-			xClasses.add( xClass );
-		}
-		else if ( xClass.isAnnotationPresent( Embeddable.class ) ) {
-			xClasses.add( xClass );
-		}
-		else {
-			log.debugf( "Encountered a non-categorized annotated class [%s]; ignoring", annotatedClass.getName() );
-		}
-	}
+	/**
+	 * Used as part of processing
+	 * {@linkplain org.hibernate.boot.spi.AdditionalMappingContributions#contributeEntity(Class) "additional" mappings}
+	 */
+	public static void processAdditionalMappings(
+			List<Class<?>> additionalClasses,
+			List<ClassDetails> additionalClassDetails,
+			List<JaxbEntityMappingsImpl> additionalJaxbMappings,
+			MetadataBuildingContextRootImpl rootMetadataBuildingContext,
+			MetadataBuildingOptions options) {
+		final var builder =
+				new AdditionalManagedResourcesImpl.Builder(
+						rootMetadataBuildingContext.getBootstrapContext().getServiceRegistry() );
+		builder.addLoadedClasses( additionalClasses );
+		builder.addClassDetails( additionalClassDetails );
+		builder.addJaxbEntityMappings( additionalJaxbMappings );
 
-	@SuppressWarnings("deprecation")
-	private XClass toXClass(String className, ReflectionManager reflectionManager, ClassLoaderService cls) {
-		return reflectionManager.toXClass( cls.classForName( className ) );
+		final var managedResources = builder.build();
+		final var additionalDomainModelSource =
+				processManagedResources( managedResources,
+						rootMetadataBuildingContext.getMetadataCollector(),
+						rootMetadataBuildingContext.getBootstrapContext(),
+						options.getMappingDefaults() );
+		new AnnotationMetadataSourceProcessorImpl( managedResources, additionalDomainModelSource, rootMetadataBuildingContext )
+				.processEntityHierarchies( new LinkedHashSet<>() );
 	}
-
-//	private Document toDom4jDocument(MappingBinder.DelayedOrmXmlData delayedOrmXmlData) {
-//		// todo : do we need to build a DocumentFactory instance for use here?
-//		//		historically we did that to set TCCL since, iirc, dom4j uses TCCL
-//		org.dom4j.io.STAXEventReader staxToDom4jReader = new STAXEventReader();
-//		try {
-//			return staxToDom4jReader.readDocument( delayedOrmXmlData.getStaxEventReader() );
-//		}
-//		catch (XMLStreamException e) {
-//			throw new MappingException(
-//					"An error occurred transforming orm.xml document from StAX to dom4j representation ",
-//					e,
-//					delayedOrmXmlData.getOrigin()
-//			);
-//		}
-//	}
 
 	@Override
 	public void prepare() {
 		// use any persistence-unit-defaults defined in orm.xml
-		( (JpaOrmXmlPersistenceUnitDefaultAware) rootMetadataBuildingContext.getBuildingOptions() ).apply(
-				new JpaOrmXmlPersistenceUnitDefaults() {
-					final Map persistenceUnitDefaults = reflectionManager.getDefaults();
+		( (JpaOrmXmlPersistenceUnitDefaultAware) rootMetadataBuildingContext.getBuildingOptions() )
+				.apply( domainModelSource.getPersistenceUnitMetadata() );
 
-					@Override
-					public String getDefaultSchemaName() {
-						return StringHelper.nullIfEmpty( (String) persistenceUnitDefaults.get( "schema" ) );
-					}
+		final var defaults = rootMetadataBuildingContext.getBuildingOptions().getMappingDefaults();
+		rootMetadataBuildingContext.getMetadataCollector().getDatabase()
+				.adjustDefaultNamespace( defaults.getImplicitCatalogName(), defaults.getImplicitSchemaName() );
 
-					@Override
-					public String getDefaultCatalogName() {
-						return StringHelper.nullIfEmpty( (String) persistenceUnitDefaults.get( "catalog" ) );
-					}
-
-					@Override
-					public boolean shouldImplicitlyQuoteIdentifiers() {
-						final Object isDelimited = persistenceUnitDefaults.get( "delimited-identifier" );
-						return isDelimited != null && isDelimited == Boolean.TRUE;
-					}
-				}
-		);
-
-		rootMetadataBuildingContext.getMetadataCollector().getDatabase().adjustDefaultNamespace(
-				rootMetadataBuildingContext.getBuildingOptions().getMappingDefaults().getImplicitCatalogName(),
-				rootMetadataBuildingContext.getBuildingOptions().getMappingDefaults().getImplicitSchemaName()
-		);
-
-		AnnotationBinder.bindDefaults( rootMetadataBuildingContext );
+		bindDefaults( rootMetadataBuildingContext );
 		for ( String annotatedPackage : annotatedPackages ) {
 			AnnotationBinder.bindPackage( classLoaderService, annotatedPackage, rootMetadataBuildingContext );
 		}
@@ -192,158 +143,127 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 	@Override
 	public void processTypeDefinitions() {
-
 	}
 
 	@Override
 	public void processQueryRenames() {
-
 	}
 
 	@Override
 	public void processNamedQueries() {
-
 	}
 
 	@Override
 	public void processAuxiliaryDatabaseObjectDefinitions() {
-
 	}
 
 	@Override
 	public void processIdentifierGenerators() {
-
 	}
 
 	@Override
 	public void processFilterDefinitions() {
-
+		final var collector = rootMetadataBuildingContext.getMetadataCollector();
+		for ( var registration : domainModelSource.getGlobalRegistrations().getFilterDefRegistrations().values() ) {
+			collector.addFilterDefinition( registration.toFilterDefinition( rootMetadataBuildingContext ) );
+		}
 	}
 
 	@Override
 	public void processFetchProfiles() {
-
 	}
 
 	@Override
 	public void prepareForEntityHierarchyProcessing() {
-
 	}
 
 	@Override
 	public void processEntityHierarchies(Set<String> processedEntityNames) {
-		final List<XClass> orderedClasses = orderAndFillHierarchy( xClasses );
-		Map<XClass, InheritanceState> inheritanceStatePerClass = AnnotationBinder.buildInheritanceStates(
-				orderedClasses,
-				rootMetadataBuildingContext
-		);
+		final var orderedClasses = orderAndFillHierarchy( knownClasses );
+		final var inheritanceStatePerClass =
+				buildInheritanceStates( orderedClasses, rootMetadataBuildingContext );
 
-
-		for ( XClass clazz : orderedClasses ) {
-			if ( processedEntityNames.contains( clazz.getName() ) ) {
-				log.debugf( "Skipping annotated class processing of entity [%s], as it has already been processed", clazz );
-				continue;
+		for ( var clazz : orderedClasses ) {
+			if ( !processedEntityNames.contains( clazz.getName() )
+					&& !clazz.getName().endsWith( ".package-info" ) ) {
+				bindClass( clazz, inheritanceStatePerClass, rootMetadataBuildingContext );
+				bindFetchProfilesForClass( clazz, rootMetadataBuildingContext );
+				processedEntityNames.add( clazz.getName() );
 			}
-
-			AnnotationBinder.bindClass( clazz, inheritanceStatePerClass, rootMetadataBuildingContext );
-			AnnotationBinder.bindFetchProfilesForClass( clazz, rootMetadataBuildingContext );
-			processedEntityNames.add( clazz.getName() );
 		}
 	}
 
-	private List<XClass> orderAndFillHierarchy(List<XClass> original) {
-		List<XClass> copy = new ArrayList<>( original.size() );
+	private List<ClassDetails> orderAndFillHierarchy(LinkedHashSet<ClassDetails> original) {
+		final LinkedHashSet<ClassDetails> copy = new LinkedHashSet<>( original.size() );
 		insertMappedSuperclasses( original, copy );
-
 		// order the hierarchy
-		List<XClass> workingCopy = new ArrayList<XClass>( copy );
-		List<XClass> newList = new ArrayList<XClass>( copy.size() );
-		while ( workingCopy.size() > 0 ) {
-			XClass clazz = workingCopy.get( 0 );
+		final List<ClassDetails> workingCopy = new ArrayList<>( copy );
+		final List<ClassDetails> newList = new ArrayList<>( copy.size() );
+		while ( !workingCopy.isEmpty() ) {
+			final var clazz = workingCopy.get( 0 );
 			orderHierarchy( workingCopy, newList, copy, clazz );
 		}
 		return newList;
 	}
 
-	private void insertMappedSuperclasses(List<XClass> original, List<XClass> copy) {
-		final boolean debug = log.isDebugEnabled();
-		for ( XClass clazz : original ) {
-			if ( clazz.isAnnotationPresent( javax.persistence.MappedSuperclass.class ) ) {
-				if ( debug ) {
-					log.debugf(
-							"Skipping explicit MappedSuperclass %s, the class will be discovered analyzing the implementing class",
-							clazz
-					);
-				}
+	private void insertMappedSuperclasses(LinkedHashSet<ClassDetails> original, LinkedHashSet<ClassDetails> copy) {
+		for ( var clazz : original ) {
+			if ( clazz.isInterface() && clazz.hasDirectAnnotationUsage( Entity.class ) ) {
+				throw new MappingException( "Interface '" + clazz.getName() + "' may not be annotated '@Entity'" );
+			}
+			else if ( clazz.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
+				// Skip class with explicit @MappedSuperclass annotation
+				// the class will be discovered analyzing the implementing class
 			}
 			else {
 				copy.add( clazz );
-				XClass superClass = clazz.getSuperclass();
+				ClassDetails superClass = clazz.getSuperClass();
 				while ( superClass != null
-						&& !reflectionManager.equals( superClass, Object.class )
+						&& !Object.class.getName().equals( superClass.getName() )
 						&& !copy.contains( superClass ) ) {
-					if ( superClass.isAnnotationPresent( Entity.class )
-							|| superClass.isAnnotationPresent( javax.persistence.MappedSuperclass.class ) ) {
+					if ( superClass.hasDirectAnnotationUsage( Entity.class )
+							|| superClass.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
 						copy.add( superClass );
 					}
-					superClass = superClass.getSuperclass();
+					superClass = superClass.getSuperClass();
 				}
 			}
 		}
 	}
 
-	private void orderHierarchy(List<XClass> copy, List<XClass> newList, List<XClass> original, XClass clazz) {
-		if ( clazz == null || reflectionManager.equals( clazz, Object.class ) ) {
-			return;
-		}
-		//process superclass first
-		orderHierarchy( copy, newList, original, clazz.getSuperclass() );
-		if ( original.contains( clazz ) ) {
-			if ( !newList.contains( clazz ) ) {
-				newList.add( clazz );
+	private void orderHierarchy(List<ClassDetails> copy, List<ClassDetails> newList, LinkedHashSet<ClassDetails> original, ClassDetails clazz) {
+		if ( clazz != null && !Object.class.getName().equals( clazz.getName() ) ) {
+			//process superclass first
+			orderHierarchy( copy, newList, original, clazz.getSuperClass() );
+			if ( original.contains( clazz ) ) {
+				if ( !newList.contains( clazz ) ) {
+					newList.add( clazz );
+				}
+				copy.remove( clazz );
 			}
-			copy.remove( clazz );
 		}
 	}
 
 	@Override
 	public void postProcessEntityHierarchies() {
 		for ( String annotatedPackage : annotatedPackages ) {
-			AnnotationBinder.bindFetchProfilesForPackage( classLoaderService, annotatedPackage, rootMetadataBuildingContext );
+			bindFetchProfilesForPackage( annotatedPackage, rootMetadataBuildingContext );
 		}
 	}
 
 	@Override
 	public void processResultSetMappings() {
-
 	}
 
 	@Override
 	public void finishUp() {
-
 	}
 
-	private static class AttributeConverterManager implements AttributeConverterDefinitionCollector {
-		private final MetadataBuildingContextRootImpl rootMetadataBuildingContext;
-
-		public AttributeConverterManager(MetadataBuildingContextRootImpl rootMetadataBuildingContext) {
-			this.rootMetadataBuildingContext = rootMetadataBuildingContext;
-		}
-
-		@Override
-		public void addAttributeConverter(AttributeConverterInfo info) {
-			rootMetadataBuildingContext.getMetadataCollector().addAttributeConverter(
-					info.toConverterDescriptor( rootMetadataBuildingContext )
-			);
-		}
-
-		@Override
-		public void addAttributeConverter(ConverterDescriptor descriptor) {
-			rootMetadataBuildingContext.getMetadataCollector().addAttributeConverter( descriptor );
-		}
-
-		public void addAttributeConverter(Class<? extends AttributeConverter> converterClass) {
-			rootMetadataBuildingContext.getMetadataCollector().addAttributeConverter( converterClass );
-		}
+	private static void applyManagedClasses(
+			DomainModelSource domainModelSource,
+			LinkedHashSet<ClassDetails> knownClasses) {
+		final var classDetailsRegistry = domainModelSource.getClassDetailsRegistry();
+		domainModelSource.getManagedClassNames()
+				.forEach( className -> knownClasses.add( classDetailsRegistry.resolveClassDetails( className ) ) );
 	}
 }

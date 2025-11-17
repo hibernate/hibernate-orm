@@ -1,98 +1,92 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.test.hikaricp;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.orm.test.util.PreparedStatementSpyConnectionProvider;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingProvider;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
+
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.Id;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.util.PreparedStatementSpyConnectionProvider;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER;
+import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT;
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
-public class HikariCPSkipAutoCommitTest extends BaseCoreFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "The jTDS driver doesn't implement Connection#isValid so this fails")
+@ServiceRegistry(
+		settings = {
+				@Setting( name = CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, value = "true" ),
+				@Setting( name = "hibernate.hikari.autoCommit", value = "false" )
+		},
+		settingProviders = @SettingProvider( settingName = CONNECTION_PROVIDER, provider = HikariCPSkipAutoCommitTest.ConnectionProviderProvider.class)
+)
+@DomainModel( annotatedClasses = HikariCPSkipAutoCommitTest.City.class )
+@SessionFactory
+public class HikariCPSkipAutoCommitTest {
+	private static final PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
 
-	private PreparedStatementSpyConnectionProvider connectionProvider =
-			new PreparedStatementSpyConnectionProvider();
-
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.getProperties().put(
-				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
-				connectionProvider
-		);
-		configuration.getProperties().put( AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, Boolean.TRUE );
-		configuration.getProperties().put( "hibernate.hikari.autoCommit", Boolean.FALSE.toString() );
-	}
-
-	@Override
-	public void releaseSessionFactory() {
-		super.releaseSessionFactory();
+	@AfterAll
+	static void afterAll() {
 		connectionProvider.stop();
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				City.class,
-		};
-	}
-
 	@Test
-	public void test() {
+	public void testIt(SessionFactoryScope factoryScope) throws Exception {
+		// force creation of the SF
+		factoryScope.getSessionFactory();
+
 		connectionProvider.clear();
-		doInHibernate( this::sessionFactory, session -> {
+
+		factoryScope.inTransaction( session -> {
 			City city = new City();
 			city.setId( 1L );
 			city.setName( "Cluj-Napoca" );
 			session.persist( city );
 
-			assertTrue( connectionProvider.getAcquiredConnections().isEmpty() );
-			assertTrue( connectionProvider.getReleasedConnections().isEmpty() );
+			assertThat( connectionProvider.getAcquiredConnections() ).isEmpty();
+			assertThat( connectionProvider.getReleasedConnections() ).isEmpty();
 		} );
 		verifyConnections();
 
 		connectionProvider.clear();
-		doInHibernate( this::sessionFactory, session -> {
+		factoryScope.inTransaction( session -> {
 			City city = session.find( City.class, 1L );
-			assertEquals( "Cluj-Napoca", city.getName() );
+			assertThat(  city.getName() ).isEqualTo( "Cluj-Napoca" );
 		} );
 		verifyConnections();
 	}
 
 	private void verifyConnections() {
-		assertTrue( connectionProvider.getAcquiredConnections().isEmpty() );
+		assertThat( connectionProvider.getAcquiredConnections() ).isEmpty();
 
 		List<Connection> connections = connectionProvider.getReleasedConnections();
-		assertEquals( 1, connections.size() );
-		Connection connection = connections.get( 0 );
+		assertThat( connections ).hasSize( 1 );
 		try {
-			verify(connection, never()).setAutoCommit( false );
+			List<Object[]> setAutoCommitCalls = connectionProvider.spyContext.getCalls(
+					Connection.class.getMethod( "setAutoCommit", boolean.class ),
+					connections.get( 0 )
+			);
+			assertThat( setAutoCommitCalls ).as( "setAutoCommit should never be called" ).isEmpty();
 		}
-		catch (SQLException e) {
-			fail(e.getMessage());
+		catch (NoSuchMethodException e) {
+			throw new RuntimeException( e );
 		}
 	}
 
@@ -118,6 +112,13 @@ public class HikariCPSkipAutoCommitTest extends BaseCoreFunctionalTestCase {
 
 		public void setName(String name) {
 			this.name = name;
+		}
+	}
+
+	public static class ConnectionProviderProvider implements SettingProvider.Provider<PreparedStatementSpyConnectionProvider> {
+		@Override
+		public PreparedStatementSpyConnectionProvider getSetting() {
+			return connectionProvider;
 		}
 	}
 }

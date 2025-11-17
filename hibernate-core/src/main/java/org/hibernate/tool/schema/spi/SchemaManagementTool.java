@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.spi;
 
@@ -10,7 +8,7 @@ import java.util.Map;
 
 import org.hibernate.Incubating;
 import org.hibernate.service.Service;
-import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
 /**
  * Contract for schema management tool integration.
@@ -19,10 +17,19 @@ import org.hibernate.tool.schema.internal.exec.GenerationTarget;
  */
 @Incubating
 public interface SchemaManagementTool extends Service {
-	SchemaCreator getSchemaCreator(Map options);
-	SchemaDropper getSchemaDropper(Map options);
-	SchemaMigrator getSchemaMigrator(Map options);
-	SchemaValidator getSchemaValidator(Map options);
+	SchemaCreator getSchemaCreator(Map<String,Object> options);
+	SchemaDropper getSchemaDropper(Map<String,Object> options);
+	SchemaMigrator getSchemaMigrator(Map<String,Object> options);
+	SchemaValidator getSchemaValidator(Map<String,Object> options);
+	default SchemaPopulator getSchemaPopulator(Map<String,Object> options) {
+		throw new UnsupportedOperationException("Schema populator is not supported by this schema management tool.");
+	}
+	default SchemaTruncator getSchemaTruncator(Map<String,Object> options) {
+		throw new UnsupportedOperationException("Schema truncator is not supported by this schema management tool.");
+	}
+	default GeneratorSynchronizer getSequenceSynchronizer(Map<String,Object> options) {
+		throw new UnsupportedOperationException("Schema populator is not supported by this schema management tool.");
+	}
 
 	/**
 	 * This allows to set an alternative implementation for the Database
@@ -32,4 +39,18 @@ public interface SchemaManagementTool extends Service {
 	 * @param generationTarget the custom instance to use.
 	 */
 	void setCustomDatabaseGenerationTarget(GenerationTarget generationTarget);
+
+	ExtractionTool getExtractionTool();
+
+	/**
+	 * Resolves the {@linkplain GenerationTarget targets} to which to
+	 * send the DDL commands based on configuration
+	 */
+	default GenerationTarget[] buildGenerationTargets(
+			TargetDescriptor targetDescriptor,
+			JdbcContext jdbcContext,
+			Map<String, Object> options,
+			boolean needsAutoCommit) {
+		throw new UnsupportedOperationException("Building generation targets is not supported by this schema management tool.");
+	}
 }

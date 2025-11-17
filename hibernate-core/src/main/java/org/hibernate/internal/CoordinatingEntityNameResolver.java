@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
 
@@ -13,31 +11,34 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 /**
  * @author Steve Ebersole
  */
-public class CoordinatingEntityNameResolver implements EntityNameResolver {
+class CoordinatingEntityNameResolver implements EntityNameResolver {
 	private final SessionFactoryImplementor sessionFactory;
 	private final Interceptor interceptor;
 
-	public CoordinatingEntityNameResolver(SessionFactoryImplementor sessionFactory, Interceptor interceptor) {
+	CoordinatingEntityNameResolver(SessionFactoryImplementor sessionFactory, Interceptor interceptor) {
 		this.sessionFactory = sessionFactory;
 		this.interceptor = interceptor;
 	}
 
 	@Override
 	public String resolveEntityName(Object entity) {
-		String entityName = interceptor.getEntityName( entity );
-		if ( entityName != null ) {
-			return entityName;
+		final String interceptorEntityName = interceptor.getEntityName( entity );
+		if ( interceptorEntityName != null ) {
+			return interceptorEntityName;
 		}
 
-		for ( EntityNameResolver resolver : sessionFactory.getMetamodel().getEntityNameResolvers() ) {
-			entityName = resolver.resolveEntityName( entity );
-			if ( entityName != null ) {
-				break;
+		for ( var resolver : sessionFactory.getSessionFactoryOptions().getEntityNameResolvers() ) {
+			final String resolverEntityName = resolver.resolveEntityName( entity );
+			if ( resolverEntityName != null ) {
+				return resolverEntityName;
 			}
 		}
 
-		if ( entityName != null ) {
-			return entityName;
+		for ( var resolver : sessionFactory.getMappingMetamodel().getEntityNameResolvers() ) {
+			final String resolverEntityName = resolver.resolveEntityName( entity );
+			if ( resolverEntityName != null ) {
+				return resolverEntityName;
+			}
 		}
 
 		// the old-time stand-by...

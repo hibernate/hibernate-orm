@@ -1,29 +1,23 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
+
 import org.hibernate.AssertionFailure;
-import org.hibernate.LockMode;
+import org.hibernate.HibernateException;
 import org.hibernate.action.internal.EntityIncrementVersionProcess;
 import org.hibernate.action.internal.EntityVerifyVersionProcess;
-import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
+import org.hibernate.internal.OptimisticLockHelper;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
-import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * We do 2 things here:<ul>
- * <li>Call {@link Lifecycle} interface if necessary</li>
- * <li>Perform needed {@link EntityEntry#getLockMode()} related processing</li>
- * </ul>
+ * Performs needed {@link EntityEntry#getLockMode()}-related processing.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -42,39 +36,32 @@ public class DefaultPostLoadEventListener implements PostLoadEventListener, Call
 
 		callbackRegistry.postLoad( entity );
 
-		final EventSource session = event.getSession();
-		final EntityEntry entry = session.getPersistenceContextInternal().getEntry( entity );
+		final var session = event.getSession();
+		final var entry = session.getPersistenceContextInternal().getEntry( entity );
 		if ( entry == null ) {
 			throw new AssertionFailure( "possible non-threadsafe access to the session" );
 		}
 
-		final LockMode lockMode = entry.getLockMode();
-		if ( LockMode.PESSIMISTIC_FORCE_INCREMENT.equals( lockMode ) ) {
-			final EntityPersister persister = entry.getPersister();
-			final Object nextVersion = persister.forceVersionIncrement(
-					entry.getId(),
-					entry.getVersion(),
-					session
-			);
-			entry.forceLocked( entity, nextVersion );
-		}
-		else if ( LockMode.OPTIMISTIC_FORCE_INCREMENT.equals( lockMode ) ) {
-			final EntityIncrementVersionProcess incrementVersion = new EntityIncrementVersionProcess( entity );
-			session.getActionQueue().registerProcess( incrementVersion );
-		}
-		else if ( LockMode.OPTIMISTIC.equals( lockMode ) ) {
-			final EntityVerifyVersionProcess verifyVersion = new EntityVerifyVersionProcess( entity );
-			session.getActionQueue().registerProcess( verifyVersion );
-		}
-
-		invokeLoadLifecycle(event, session);
-
-	}
-
-	protected void invokeLoadLifecycle(PostLoadEvent event, EventSource session) {
-		if ( event.getPersister().implementsLifecycle() ) {
-			//log.debug( "calling onLoad()" );
-			( (Lifecycle) event.getEntity() ).onLoad( session, event.getId() );
+		final var lockMode = entry.getLockMode();
+		if ( lockMode.requiresVersion() ) {
+			final var persister = entry.getPersister();
+			if ( persister.isVersioned() ) {
+				switch ( lockMode ) {
+					case PESSIMISTIC_FORCE_INCREMENT:
+						OptimisticLockHelper.forceVersionIncrement( entity, entry, session );
+						break;
+					case OPTIMISTIC_FORCE_INCREMENT:
+						session.getActionQueue().registerCallback( new EntityIncrementVersionProcess( entity ) );
+						break;
+					case OPTIMISTIC:
+						session.getActionQueue().registerCallback( new EntityVerifyVersionProcess( entity ) );
+						break;
+				}
+			}
+			else {
+				throw new HibernateException("[" + lockMode
+						+ "] not supported for non-versioned entities [" + persister.getEntityName() + "]");
+			}
 		}
 	}
 }

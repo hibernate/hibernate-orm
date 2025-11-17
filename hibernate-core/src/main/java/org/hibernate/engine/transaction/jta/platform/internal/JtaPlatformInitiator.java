@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.transaction.jta.platform.internal;
 
@@ -13,20 +11,20 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformResolver;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
-import org.jboss.logging.Logger;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
- * Standard initiator for the standard {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform}
+ * Standard initiator for the standard {@link JtaPlatform}
  *
  * @author Steve Ebersole
  */
 public class JtaPlatformInitiator implements StandardServiceInitiator<JtaPlatform> {
 	public static final JtaPlatformInitiator INSTANCE = new JtaPlatformInitiator();
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JtaPlatformInitiator.class.getName());
 
 	@Override
 	public Class<JtaPlatform> getServiceInitiated() {
@@ -34,27 +32,33 @@ public class JtaPlatformInitiator implements StandardServiceInitiator<JtaPlatfor
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
-	public JtaPlatform initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public @Nullable JtaPlatform initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final Object setting = configurationValues.get( AvailableSettings.JTA_PLATFORM );
-		JtaPlatform platform = registry.getService( StrategySelector.class ).resolveStrategy( JtaPlatform.class, setting );
+		JtaPlatform platform =
+				registry.requireService( StrategySelector.class )
+						.resolveStrategy( JtaPlatform.class, setting );
 
 		if ( platform == null ) {
-			LOG.debug( "No JtaPlatform was specified, checking resolver" );
-			platform = registry.getService( JtaPlatformResolver.class ).resolveJtaPlatform( configurationValues, registry );
+			CORE_LOGGER.trace( "No JtaPlatform was specified, checking resolver" );
+			platform = registry.requireService( JtaPlatformResolver.class )
+					.resolveJtaPlatform( configurationValues, registry );
 		}
 
 		if ( platform == null ) {
-			LOG.debug( "No JtaPlatform was specified, checking resolver" );
+			CORE_LOGGER.trace( "No JtaPlatform was specified, checking fallback provider" );
 			platform = getFallbackProvider( configurationValues, registry );
 		}
 
-		LOG.usingJtaPlatform( platform != null ? platform.getClass().getName() : "null" );
+		if ( platform == null || platform instanceof NoJtaPlatform ) {
+			CORE_LOGGER.noJtaPlatform();
+		}
+		else {
+			CORE_LOGGER.usingJtaPlatform( platform.getClass().getName() );
+		}
 		return platform;
 	}
 
-	@SuppressWarnings({"WeakerAccess", "unused"})
-	protected JtaPlatform getFallbackProvider(Map configurationValues, ServiceRegistryImplementor registry) {
+	protected @Nullable JtaPlatform getFallbackProvider(Map<?,?> configurationValues, ServiceRegistryImplementor registry) {
 		return null;
 	}
 }

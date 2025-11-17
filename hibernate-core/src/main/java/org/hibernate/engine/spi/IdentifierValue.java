@@ -1,43 +1,40 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.internal.CoreLogging;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * A strategy for determining if an identifier value is an identifier of
  * a new transient instance or a previously persistent transient instance.
- * The strategy is determined by the <tt>unsaved-value</tt> attribute in
+ * The strategy is determined by the {@code unsaved-value} attribute in
  * the mapping file.
  *
  * @author Gavin King
  */
 public class IdentifierValue implements UnsavedValueStrategy {
-	private static final Logger LOG = CoreLogging.logger( IdentifierValue.class );
 
-	private final Serializable value;
+	private final @Nullable Object value;
 
 	/**
 	 * Always assume the transient instance is newly instantiated
 	 */
 	public static final IdentifierValue ANY = new IdentifierValue() {
 		@Override
-		public final Boolean isUnsaved(Object id) {
-			LOG.trace( "ID unsaved-value strategy ANY" );
+		public Boolean isUnsaved(Object id) {
+			CORE_LOGGER.idUnsavedValueStrategy( "ANY" );
 			return Boolean.TRUE;
 		}
 
 		@Override
-		public Serializable getDefaultValue(Object currentValue) {
-			return (Serializable) currentValue;
+		public Object getDefaultValue(Object currentValue) {
+			return currentValue;
 		}
 
 		@Override
@@ -51,14 +48,14 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 */
 	public static final IdentifierValue NONE = new IdentifierValue() {
 		@Override
-		public final Boolean isUnsaved(Object id) {
-			LOG.trace( "ID unsaved-value strategy NONE" );
+		public Boolean isUnsaved(Object id) {
+			CORE_LOGGER.idUnsavedValueStrategy( "NONE" );
 			return Boolean.FALSE;
 		}
 
 		@Override
-		public Serializable getDefaultValue(Object currentValue) {
-			return (Serializable) currentValue;
+		public Object getDefaultValue(Object currentValue) {
+			return currentValue;
 		}
 
 		@Override
@@ -73,13 +70,13 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 */
 	public static final IdentifierValue NULL = new IdentifierValue() {
 		@Override
-		public final Boolean isUnsaved(Object id) {
-			LOG.trace( "ID unsaved-value strategy NULL" );
+		public Boolean isUnsaved(@Nullable Object id) {
+			CORE_LOGGER.idUnsavedValueStrategy( "NULL" );
 			return id == null;
 		}
 
 		@Override
-		public Serializable getDefaultValue(Object currentValue) {
+		public @Nullable Serializable getDefaultValue(Object currentValue) {
 			return null;
 		}
 
@@ -94,13 +91,13 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 */
 	public static final IdentifierValue UNDEFINED = new IdentifierValue() {
 		@Override
-		public final Boolean isUnsaved(Object id) {
-			LOG.trace( "ID unsaved-value strategy UNDEFINED" );
+		public @Nullable Boolean isUnsaved(Object id) {
+			CORE_LOGGER.idUnsavedValueStrategy( "UNDEFINED" );
 			return null;
 		}
 
 		@Override
-		public Serializable getDefaultValue(Object currentValue) {
+		public @Nullable Serializable getDefaultValue(Object currentValue) {
 			return null;
 		}
 
@@ -116,9 +113,9 @@ public class IdentifierValue implements UnsavedValueStrategy {
 
 	/**
 	 * Assume the transient instance is newly instantiated if
-	 * its identifier is null or equal to <tt>value</tt>
+	 * its identifier is null or equal to {@code value}
 	 */
-	public IdentifierValue(Serializable value) {
+	public IdentifierValue(Object value) {
 		this.value = value;
 	}
 
@@ -126,13 +123,13 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 * Does the given identifier belong to a new instance?
 	 */
 	@Override
-	public Boolean isUnsaved(Object id) {
-		LOG.tracev( "ID unsaved-value: {0}", value );
+	public @Nullable Boolean isUnsaved(@Nullable Object id) {
+		CORE_LOGGER.idUnsavedValue( value );
 		return id == null || id.equals( value );
 	}
 
 	@Override
-	public Serializable getDefaultValue(Object currentValue) {
+	public @Nullable Object getDefaultValue(@Nullable Object currentValue) {
 		return value;
 	}
 

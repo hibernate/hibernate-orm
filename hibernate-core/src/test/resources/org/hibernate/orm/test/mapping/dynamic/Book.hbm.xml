@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!-- tag::mapping-model-dynamic-example[] -->
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class entity-name="Book">
+        <id name="isbn" column="isbn" length="32" type="string"/>
+
+        <property name="title" not-null="true" length="50" type="string"/>
+
+        <property name="author" not-null="true" length="50" type="string"/>
+
+    </class>
+</hibernate-mapping>
+<!-- end::mapping-model-dynamic-example[] -->

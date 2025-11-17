@@ -1,20 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
 import java.util.Map;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleComponentMapper;
 import org.hibernate.envers.internal.tools.query.Parameters;
 
 /**
- * A {@link MiddleComponentMapper} specifically for {@link javax.persistence.MapKeyEnumerated}.
+ * A {@link MiddleComponentMapper} specifically for {@link jakarta.persistence.MapKeyEnumerated}.
  *
  * @author Chris Cranford
  */
@@ -36,7 +34,7 @@ public class MiddleMapKeyEnumeratedComponentMapper implements MiddleComponentMap
 
 	@Override
 	public void mapToMapFromObject(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> idData,
 			Map<String, Object> data,
 			Object obj) {

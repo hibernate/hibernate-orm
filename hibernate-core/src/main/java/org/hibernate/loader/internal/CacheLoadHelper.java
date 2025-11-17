@@ -13,7 +13,6 @@ import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -228,7 +227,7 @@ public class CacheLoadHelper {
 			entityHolder.setEntityEntry( entityEntry );
 		}
 		else {
-			TwoPhaseLoad.addUninitializedCachedEntity(
+			addUninitializedCachedEntity(
 					entityKey,
 					entity,
 					referenceCacheEntry.getSubclassPersister(),
@@ -413,6 +412,46 @@ public class CacheLoadHelper {
 			}
 		}
 		return cachedEntry;
+	}
+
+	/**
+	 *
+	 * @param key The entity key
+	 * @param object The entity instance
+	 * @param persister The entity persister
+	 * @param lockMode The lock mode
+	 * @param version The version
+	 * @param session The Session
+	 */
+	static void addUninitializedCachedEntity(
+			final EntityKey key,
+			final Object object,
+			final EntityPersister persister,
+			final LockMode lockMode,
+			final Object version,
+			final SharedSessionContractImplementor session) {
+		final var persistenceContext = session.getPersistenceContextInternal();
+		final var entityHolder = persistenceContext.addEntityHolder( key, object );
+		final var entityEntry = persistenceContext.addEntry(
+				object,
+				Status.LOADING,
+				null,
+				null,
+				key.getIdentifier(),
+				version,
+				lockMode,
+				true,
+				persister,
+				false
+		);
+		entityHolder.setEntityEntry( entityEntry );
+		final Object proxy = entityHolder.getProxy();
+		if ( proxy != null ) {
+			// there is already a proxy for this impl
+			final var lazyInitializer = extractLazyInitializer( proxy );
+			assert lazyInitializer != null;
+			lazyInitializer.setImplementation( object );
+		}
 	}
 
 	public record PersistenceContextEntry(Object entity, EntityStatus status) {

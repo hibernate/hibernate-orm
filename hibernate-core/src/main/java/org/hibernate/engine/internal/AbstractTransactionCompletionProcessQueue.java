@@ -16,23 +16,23 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractTransactionCompletionProcessQueue<T extends CompletionCallback> {
-	protected SharedSessionContractImplementor session;
+abstract class AbstractTransactionCompletionProcessQueue<T extends CompletionCallback> {
+	SharedSessionContractImplementor session;
 	// Concurrency handling required when transaction completion process is dynamically registered
 	// inside event listener (HHH-7478).
-	protected ConcurrentLinkedQueue<@NonNull T> processes = new ConcurrentLinkedQueue<>();
+	ConcurrentLinkedQueue<@NonNull T> processes = new ConcurrentLinkedQueue<>();
 
-	protected AbstractTransactionCompletionProcessQueue(SharedSessionContractImplementor session) {
+	AbstractTransactionCompletionProcessQueue(SharedSessionContractImplementor session) {
 		this.session = session;
 	}
 
-	public void register(@Nullable T process) {
+	void register(@Nullable T process) {
 		if ( process != null ) {
 			processes.add( process );
 		}
 	}
 
-	public boolean hasActions() {
+	boolean hasActions() {
 		return !processes.isEmpty();
 	}
 }

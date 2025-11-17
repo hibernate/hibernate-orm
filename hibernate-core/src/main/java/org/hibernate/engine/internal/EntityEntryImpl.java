@@ -508,6 +508,8 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	/**
 	 * Custom deserialization routine used during deserialization
 	 * of a {@link PersistenceContext} for increased performance.
+	 * <p>
+	 * This method is called reflectively by {@link EntityEntryContext}.
 	 *
 	 * @param ois The stream from which to read the entry
 	 * @param persistenceContext The context being deserialized

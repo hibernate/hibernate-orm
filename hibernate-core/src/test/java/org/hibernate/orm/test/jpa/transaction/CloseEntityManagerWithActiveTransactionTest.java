@@ -21,10 +21,9 @@ import jakarta.persistence.OneToOne;
 import jakarta.transaction.Status;
 import jakarta.transaction.TransactionManager;
 
-import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
-import org.hibernate.internal.SessionImpl;
+import org.hibernate.engine.spi.SessionImplementor;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
@@ -303,7 +302,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 						Box box = new Box();
 						box.setColor( "red-and-white" );
 						em.persist( box );
-						final SessionImpl session = (SessionImpl) em.unwrap( Session.class );
+						final SessionImplementor session = em.unwrap( SessionImplementor.class );
 						return (JdbcCoordinatorImpl) session.getJdbcCoordinator();
 					}
 			);

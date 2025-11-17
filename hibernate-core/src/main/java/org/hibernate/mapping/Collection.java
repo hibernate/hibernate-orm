@@ -14,7 +14,6 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Expectation;

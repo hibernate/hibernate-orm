@@ -153,7 +153,7 @@ import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DEL
  * @author Steve Ebersole
  * @author Chris Cranford
  */
-public class SessionFactoryImpl implements SessionFactoryImplementor {
+class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private final String name;
 	private final String jndiName;
@@ -205,7 +205,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	final transient ParameterMarkerStrategy parameterMarkerStrategy;
 	final transient JdbcValuesMappingProducerProvider jdbcValuesMappingProducerProvider;
 
-	public SessionFactoryImpl(
+	SessionFactoryImpl(
 			final MetadataImplementor bootMetamodel,
 			final SessionFactoryOptions options,
 			final BootstrapContext bootstrapContext) {

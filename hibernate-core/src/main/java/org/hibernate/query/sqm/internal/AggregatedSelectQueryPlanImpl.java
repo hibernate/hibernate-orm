@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.ScrollMode;
-import org.hibernate.internal.EmptyScrollableResults;
+import org.hibernate.internal.scrollable.EmptyScrollableResults;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.ScrollableResultsImplementor;

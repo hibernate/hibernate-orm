@@ -12,7 +12,6 @@ import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.internal.SessionImpl;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -480,13 +479,12 @@ public class ProxyTest {
 										Container.class )
 								.setParameter( "l", lastContainerId )
 								.list();
-						Container container = (Container) all.get( 0 );
+						Container container = all.get( 0 );
 						session.remove( container );
 						// force a snapshot retrieval of the proxied container
-						SessionImpl sImpl = (SessionImpl) session;
-						sImpl.getPersistenceContext().getDatabaseSnapshot(
+						session.getPersistenceContext().getDatabaseSnapshot(
 								lastContainerId,
-								sImpl.getFactory().getMappingMetamodel()
+								session.getFactory().getMappingMetamodel()
 										.getEntityDescriptor( Container.class.getName() )
 						);
 						assertThat( Hibernate.isInitialized( proxy ) ).isFalse();

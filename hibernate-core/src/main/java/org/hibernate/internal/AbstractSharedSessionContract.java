@@ -139,7 +139,7 @@ import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsSelectStatement;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractSharedSessionContract implements SharedSessionContractImplementor {
+abstract class AbstractSharedSessionContract implements SharedSessionContractImplementor {
 
 	private transient SessionFactoryImpl factory;
 	private transient SessionFactoryOptions factoryOptions;
@@ -186,7 +186,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private transient ExceptionConverter exceptionConverter;
 	private transient SessionAssociationMarkers sessionAssociationMarkers;
 
-	public AbstractSharedSessionContract(SessionFactoryImpl factory, SessionCreationOptions options) {
+	AbstractSharedSessionContract(SessionFactoryImpl factory, SessionCreationOptions options) {
 		this.factory = factory;
 
 		factoryOptions = factory.getSessionFactoryOptions();

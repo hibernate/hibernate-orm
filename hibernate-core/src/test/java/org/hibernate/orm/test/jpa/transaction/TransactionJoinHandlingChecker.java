@@ -8,8 +8,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Status;
 import jakarta.transaction.TransactionManager;
 
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.internal.SessionImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
@@ -28,7 +28,7 @@ public class TransactionJoinHandlingChecker {
 	public static void validateExplicitJoiningHandling(EntityManager entityManager) throws Exception {
 		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 
-		try (SessionImpl session = entityManager.unwrap( SessionImpl.class )) {
+		try (SessionImplementor session = entityManager.unwrap( SessionImplementor.class )) {
 
 			ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
 			JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();

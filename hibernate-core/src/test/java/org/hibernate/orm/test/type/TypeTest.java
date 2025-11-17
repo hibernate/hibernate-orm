@@ -5,7 +5,7 @@
 package org.hibernate.orm.test.type;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.internal.SessionImpl;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -332,7 +332,7 @@ public class TypeTest {
 	}
 
 	protected <T> void runBasicTests(Type type, T original, T copy, T different) {
-		final SessionImpl session = null; //Not really used
+		final SharedSessionContractImplementor session = null; //Not really used
 		final boolean nonCopyable = original instanceof Class || original instanceof Currency;
 		if ( ! nonCopyable ) {
 			// these checks exclude classes which cannot really be cloned (singetons/enums)

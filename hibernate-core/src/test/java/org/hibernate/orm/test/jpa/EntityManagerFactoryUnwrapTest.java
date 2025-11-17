@@ -6,7 +6,6 @@ package org.hibernate.orm.test.jpa;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.SessionFactoryImpl;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -46,8 +45,8 @@ public class EntityManagerFactoryUnwrapTest {
 
 	@Test
 	public void testEntityManagerCanBeUnwrappedToSessionFactoryImpl(EntityManagerFactoryScope scope) {
-		SessionFactoryImpl sessionFactory = scope.getEntityManagerFactory().unwrap( SessionFactoryImpl.class );
-		assertNotNull( sessionFactory, "Unwrapping to SessionFactoryImpl should be ok" );
+		SessionFactoryImplementor sessionFactory = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		assertNotNull( sessionFactory, "Unwrapping to SessionFactoryImplementor should be ok" );
 	}
 
 	@Test

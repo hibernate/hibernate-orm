@@ -11,8 +11,8 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.Transaction;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
-import org.hibernate.internal.AbstractSharedSessionContract;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -24,7 +24,7 @@ import java.util.TimeZone;
 /**
  * Wraps a {@link CommonSharedSessionCreationOptions} as a
  * {@link SharedSessionCreationOptions} to pass to
- * {@link org.hibernate.internal.AbstractSharedSessionContract}
+ * {@code org.hibernate.internal.AbstractSharedSessionContract}
  * during construction.
  *
  * @param factory The {@code SessionFactoryImplementor}
@@ -33,7 +33,7 @@ import java.util.TimeZone;
 public record SessionCreationOptionsAdaptor(
 		SessionFactoryImplementor factory,
 		CommonSharedSessionCreationOptions options,
-		AbstractSharedSessionContract originalSession)
+		SharedSessionContractImplementor originalSession)
 			implements SharedSessionCreationOptions {
 
 	@Override

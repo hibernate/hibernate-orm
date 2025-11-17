@@ -8,8 +8,8 @@ import jakarta.transaction.Synchronization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.TransactionException;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
-import org.hibernate.internal.AbstractSharedSessionContract;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
@@ -24,13 +24,13 @@ public class TransactionImpl implements TransactionImplementor {
 
 	private final TransactionCoordinator transactionCoordinator;
 	private final boolean jpaCompliance;
-	private final AbstractSharedSessionContract session;
+	private final SharedSessionContractImplementor session;
 
 	private TransactionDriver transactionDriverControl;
 
 	public TransactionImpl(
 			TransactionCoordinator transactionCoordinator,
-			AbstractSharedSessionContract session) {
+			SharedSessionContractImplementor session) {
 		this.transactionCoordinator = transactionCoordinator;
 		this.session = session;
 

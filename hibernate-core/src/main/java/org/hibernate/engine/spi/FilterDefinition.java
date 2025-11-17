@@ -97,7 +97,7 @@ public class FilterDefinition implements Serializable {
 	}
 
 	public @Nullable Supplier<?> getParameterResolver(String parameterName) {
-		final ManagedBean<? extends Supplier<?>> resolver = parameterResolverMap.get( parameterName );
+		final var resolver = parameterResolverMap.get( parameterName );
 		return resolver == null ? null : resolver.getBeanInstance();
 	}
 

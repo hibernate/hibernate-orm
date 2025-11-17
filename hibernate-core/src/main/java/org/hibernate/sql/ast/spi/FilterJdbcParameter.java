@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.internal;
+package org.hibernate.sql.ast.spi;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -19,11 +19,11 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 /**
  * @author Nathan Xu
  */
-public class FilterJdbcParameter implements JdbcParameter, JdbcParameterBinder {
+class FilterJdbcParameter implements JdbcParameter, JdbcParameterBinder {
 	private final JdbcMapping jdbcMapping;
 	private final Object jdbcParameterValue;
 
-	public FilterJdbcParameter(JdbcMapping jdbcMapping, Object jdbcParameterValue) {
+	FilterJdbcParameter(JdbcMapping jdbcMapping, Object jdbcParameterValue) {
 		this.jdbcMapping = jdbcMapping;
 		this.jdbcParameterValue = jdbcParameterValue;
 	}

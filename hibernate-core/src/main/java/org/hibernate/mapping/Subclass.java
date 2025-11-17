@@ -11,7 +11,6 @@ import java.util.List;
 import org.hibernate.Internal;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.JoinedList;
 
 /**
@@ -286,7 +285,7 @@ public sealed class Subclass extends PersistentClass
 
 	@Override
 	public java.util.List<FilterConfiguration> getFilters() {
-		final ArrayList<FilterConfiguration> filters = new ArrayList<>( super.getFilters() );
+		final var filters = new ArrayList<>( super.getFilters() );
 		filters.addAll( getSuperclass().getFilters() );
 		return filters;
 	}

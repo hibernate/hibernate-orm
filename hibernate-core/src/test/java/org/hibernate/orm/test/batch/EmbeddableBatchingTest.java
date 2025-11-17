@@ -9,7 +9,7 @@ import java.util.Objects;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.internal.SessionImpl;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -76,9 +76,9 @@ class EmbeddableBatchingTest {
 
 					assertThat( entityA ).isEqualTo( ENTITY_A );
 
-					EntityEntry entry = ( (SessionImpl) entityManager ).getPersistenceContext().getEntry( entityA );
+					EntityEntry entry = ( (SessionImplementor) entityManager ).getPersistenceContext().getEntry( entityA );
 					Object[] loadedState = entry.getLoadedState();
-					EntityPersister persister = ( (SessionImpl) entityManager ).getEntityPersister(
+					EntityPersister persister = ( (SessionImplementor) entityManager ).getEntityPersister(
 							"EntityA",
 							entityA
 					);

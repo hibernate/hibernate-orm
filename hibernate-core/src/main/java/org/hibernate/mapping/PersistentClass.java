@@ -23,7 +23,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jpa.event.spi.CallbackDefinition;

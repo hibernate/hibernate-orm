@@ -41,8 +41,7 @@ public class EnhancementHelper {
 		if ( ! isEnhanced ) {
 			if ( value instanceof ToOne toOne ) {
 				if ( toOne.isUnwrapProxy() ) {
-					BYTECODE_INTERCEPTOR_LOGGER.debugf(
-							"To-one property `%s#%s` was mapped with LAZY + NO_PROXY but the class was not enhanced",
+					BYTECODE_INTERCEPTOR_LOGGER.toOneLazyNoProxyButNotEnhanced(
 							bootMapping.getPersistentClass().getEntityName(),
 							bootMapping.getName()
 					);
@@ -73,9 +72,9 @@ public class EnhancementHelper {
 				// we simply log a message that we are ignoring the `@LazyGroup` for to-ones
 
 				BYTECODE_INTERCEPTOR_LOGGER.lazyGroupIgnoredForToOne(
+						bootMapping.getLazyGroup(),
 						bootMapping.getPersistentClass().getEntityName(),
-						bootMapping.getName(),
-						bootMapping.getLazyGroup()
+						bootMapping.getName()
 				);
 
 				// at a later time - for example 6.0 when we can implement the join solution
@@ -105,8 +104,7 @@ public class EnhancementHelper {
 				// the associated type has subclasses - we cannot use the enhanced proxy and will generate a HibernateProxy
 				if ( unwrapExplicitlyRequested ) {
 					// NO_PROXY was explicitly requested
-					BytecodeInterceptorLogging.LOGGER.debugf(
-							"`%s#%s` was mapped with LAZY and explicit NO_PROXY but the associated entity (`%s`) has subclasses",
+					BYTECODE_INTERCEPTOR_LOGGER.lazyNoProxyButAssociatedHasSubclasses(
 							bootMapping.getPersistentClass().getEntityName(),
 							bootMapping.getName(),
 							toOne.getReferencedEntityName()
@@ -118,9 +116,7 @@ public class EnhancementHelper {
 
 			if ( toOne instanceof ManyToOne manyToOne && manyToOne.isIgnoreNotFound() ) {
 				if ( unwrapExplicitlyRequested ) {
-					BytecodeInterceptorLogging.LOGGER.debugf(
-							"%s#%s specified NotFoundAction.IGNORE & LazyToOneOption.NO_PROXY; " +
-									"skipping FK selection to more efficiently handle NotFoundAction.IGNORE",
+					BYTECODE_INTERCEPTOR_LOGGER.notFoundIgnoreWithNoProxySkippingFkSelection(
 							bootMapping.getPersistentClass().getEntityName(),
 							bootMapping.getName()
 					);
@@ -186,7 +182,7 @@ public class EnhancementHelper {
 
 		// If we are using a temporary Session, begin a transaction if necessary
 		if ( isTempSession ) {
-			BytecodeInterceptorLogging.LOGGER.debug( "Enhancement interception Helper#performWork started temporary Session" );
+			BYTECODE_INTERCEPTOR_LOGGER.enhancementHelperStartedTemporarySession();
 
 			isJta = session.getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta();
 
@@ -196,7 +192,7 @@ public class EnhancementHelper {
 				// be created even if a current session and transaction are
 				// open (ex: session.clear() was used).  We must prevent
 				// multiple transactions.
-				BytecodeInterceptorLogging.LOGGER.debug( "Enhancement interception Helper#performWork starting transaction on temporary Session" );
+				BYTECODE_INTERCEPTOR_LOGGER.enhancementHelperStartingTransactionOnTemporarySession();
 				session.beginTransaction();
 			}
 		}
@@ -213,24 +209,21 @@ public class EnhancementHelper {
 				try {
 					// Commit the JDBC transaction if we started one.
 					if ( !isJta ) {
-						BytecodeInterceptorLogging.LOGGER.debug( "Enhancement interception Helper#performWork committing transaction on temporary Session" );
+						BYTECODE_INTERCEPTOR_LOGGER.enhancementHelperCommittingTransactionOnTemporarySession();
 						session.getTransaction().commit();
 					}
 				}
 				catch (Exception e) {
-					BytecodeInterceptorLogging.LOGGER.warn(
-							"Unable to commit JDBC transaction on temporary session used to load lazy " +
-									"collection associated to no session"
-					);
+					BYTECODE_INTERCEPTOR_LOGGER.unableToCommitTransactionOnTemporarySession();
 				}
 
 				// Close the just opened temp Session
 				try {
-					BytecodeInterceptorLogging.LOGGER.debug( "Enhancement interception Helper#performWork closing temporary Session" );
+					BYTECODE_INTERCEPTOR_LOGGER.enhancementHelperClosingTemporarySession();
 					session.close();
 				}
 				catch (Exception e) {
-					BytecodeInterceptorLogging.LOGGER.warn( "Unable to close temporary session used to load lazy collection associated to no session" );
+					BYTECODE_INTERCEPTOR_LOGGER.unableToCloseTemporarySession();
 				}
 			}
 		}

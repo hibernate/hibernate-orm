@@ -5,7 +5,6 @@
 package org.hibernate.bytecode.enhance.spi.interceptor;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,11 +12,10 @@ import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.persister.entity.EntityPersister;
 
+import static java.util.Collections.emptySet;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTracker;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTracker;
 
@@ -27,7 +25,9 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTra
  * @author Luis Barreiro
  * @author Steve Ebersole
  */
-public class LazyAttributeLoadingInterceptor extends AbstractInterceptor implements BytecodeLazyAttributeInterceptor {
+public class LazyAttributeLoadingInterceptor
+		extends AbstractInterceptor
+		implements BytecodeLazyAttributeInterceptor {
 
 	private final Object identifier;
 	private EntityRelatedState entityMeta;
@@ -55,7 +55,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractInterceptor impleme
 	@Override
 	protected Object handleRead(Object target, String attributeName, Object value) {
 		if ( !isAttributeLoaded( attributeName ) ) {
-			Object loadedValue = fetchAttribute( target, attributeName );
+			final Object loadedValue = fetchAttribute( target, attributeName );
 			attributeInitialized( attributeName );
 			return loadedValue;
 		}
@@ -79,9 +79,9 @@ public class LazyAttributeLoadingInterceptor extends AbstractInterceptor impleme
 		return EnhancementHelper.performWork(
 				this,
 				(session, isTemporarySession) -> {
-					final EntityPersister persister = session.getFactory()
-							.getMappingMetamodel()
-							.getEntityDescriptor( getEntityName() );
+					final var persister =
+							session.getFactory().getMappingMetamodel()
+									.getEntityDescriptor( getEntityName() );
 
 					if ( isTemporarySession ) {
 						final Object id = persister.getIdentifier( target, session );
@@ -105,12 +105,9 @@ public class LazyAttributeLoadingInterceptor extends AbstractInterceptor impleme
 						);
 					}
 
-					final LazyPropertyInitializer initializer = (LazyPropertyInitializer) persister;
-					final Object loadedValue = initializer.initializeLazyProperty(
-							attributeName,
-							target,
-							session
-					);
+					final var initializer = (LazyPropertyInitializer) persister;
+					final Object loadedValue =
+							initializer.initializeLazyProperty( attributeName, target, session );
 
 					takeCollectionSizeSnapshot( target, attributeName, loadedValue );
 					return loadedValue;
@@ -136,36 +133,30 @@ public class LazyAttributeLoadingInterceptor extends AbstractInterceptor impleme
 		if ( entityMeta.lazyFields.isEmpty() ) {
 			return false;
 		}
-
-		if ( initializedLazyFields == null ) {
+		else if ( initializedLazyFields == null ) {
 			return true;
 		}
-
-		for ( String fieldName : entityMeta.lazyFields ) {
-			if ( !initializedLazyFields.contains( fieldName ) ) {
-				return true;
+		else {
+			for ( String fieldName : entityMeta.lazyFields ) {
+				if ( !initializedLazyFields.contains( fieldName ) ) {
+					return true;
+				}
 			}
+			return false;
 		}
-
-		return false;
 	}
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + "(entityName=" + getEntityName() + " ,lazyFields=" + entityMeta.lazyFields + ')';
+		return getClass().getSimpleName()
+			+ "(entityName=" + getEntityName() + " ,lazyFields=" + entityMeta.lazyFields + ')';
 	}
 
 	private void takeCollectionSizeSnapshot(Object target, String fieldName, Object value) {
 		if ( value instanceof Collection<?> collection && isSelfDirtinessTracker( target ) ) {
 			// This must be called first, so that we remember that there is a collection out there,
 			// even if we don't know its size (see below).
-			final SelfDirtinessTracker targetSDT = asSelfDirtinessTracker( target );
-			CollectionTracker tracker = targetSDT.$$_hibernate_getCollectionTracker();
-			if ( tracker == null ) {
-				targetSDT.$$_hibernate_clearDirtyAttributes();
-				tracker = targetSDT.$$_hibernate_getCollectionTracker();
-			}
-
+			var tracker = getCollectionTracker( target );
 			if ( value instanceof PersistentCollection<?> persistentCollection
 					&& !persistentCollection.wasInitialized() ) {
 				// Cannot take a snapshot of an uninitialized collection.
@@ -175,20 +166,31 @@ public class LazyAttributeLoadingInterceptor extends AbstractInterceptor impleme
 		}
 	}
 
+	private static CollectionTracker getCollectionTracker(Object target) {
+		final var selfDirtinessTracker = asSelfDirtinessTracker( target );
+		final var tracker = selfDirtinessTracker.$$_hibernate_getCollectionTracker();
+		if ( tracker == null ) {
+			selfDirtinessTracker.$$_hibernate_clearDirtyAttributes();
+			return selfDirtinessTracker.$$_hibernate_getCollectionTracker();
+		}
+		else {
+			return tracker;
+		}
+	}
+
 	@Override
 	public void attributeInitialized(String name) {
-		if ( !isLazyAttribute( name ) ) {
-			return;
+		if ( isLazyAttribute( name ) ) {
+			if ( initializedLazyFields == null ) {
+				initializedLazyFields = new HashSet<>();
+			}
+			initializedLazyFields.add( name );
 		}
-		if ( initializedLazyFields == null ) {
-			initializedLazyFields = new HashSet<>();
-		}
-		initializedLazyFields.add( name );
 	}
 
 	@Override
 	public Set<String> getInitializedLazyAttributeNames() {
-		return initializedLazyFields == null ? Collections.emptySet() : initializedLazyFields;
+		return initializedLazyFields == null ? emptySet() : initializedLazyFields;
 	}
 
 	public void addLazyFieldByGraph(String fieldName) {

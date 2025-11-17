@@ -48,7 +48,7 @@ public class LazyAttributesMetadata implements Serializable {
 					property,
 					isEnhanced,
 					entityName -> {
-						final PersistentClass entityBinding = metadata.getEntityBinding( entityName );
+						final var entityBinding = metadata.getEntityBinding( entityName );
 						assert entityBinding != null;
 						return entityBinding.hasSubclasses();
 					},
@@ -58,7 +58,7 @@ public class LazyAttributesMetadata implements Serializable {
 				final var lazyAttributeDescriptor = LazyAttributeDescriptor.from( property, i, x++ );
 				lazyAttributeDescriptorMap.put( lazyAttributeDescriptor.getName(), lazyAttributeDescriptor );
 
-				final Set<String> attributeSet = fetchGroupToAttributesMap.computeIfAbsent(
+				final var attributeSet = fetchGroupToAttributesMap.computeIfAbsent(
 						lazyAttributeDescriptor.getFetchGroupName(),
 						k -> new LinkedHashSet<>()
 				);
@@ -143,8 +143,9 @@ public class LazyAttributesMetadata implements Serializable {
 	}
 
 	public List<LazyAttributeDescriptor> getFetchGroupAttributeDescriptors(String groupName) {
-		final List<LazyAttributeDescriptor> list = new ArrayList<>();
-		for ( String attributeName : fetchGroupToAttributeMap.get( groupName ) ) {
+		final var attributeNames = fetchGroupToAttributeMap.get( groupName );
+		final List<LazyAttributeDescriptor> list = new ArrayList<>( attributeNames.size() );
+		for ( String attributeName : attributeNames ) {
 			list.add( lazyAttributeDescriptorMap.get( attributeName ) );
 		}
 		return list;

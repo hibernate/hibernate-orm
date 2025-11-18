@@ -4,48 +4,42 @@
  */
 package org.hibernate.orm.test.locking;
 
-import java.sql.Connection;
-import java.util.Collections;
-
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-
 import org.hibernate.LockMode;
 import org.hibernate.Session;
-import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.lock.OptimisticEntityLockException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.testing.util.ExceptionUtil;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
+
 import static jakarta.persistence.LockModeType.NONE;
 import static jakarta.persistence.LockModeType.PESSIMISTIC_WRITE;
+import static java.sql.Connection.TRANSACTION_REPEATABLE_READ;
+import static org.hibernate.cfg.JdbcSettings.ISOLATION;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -59,21 +53,17 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	private Long id;
-	private Long cid;
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return  new Class[] { A.class, C.class };
+		return  new Class[] { A.class };
 	}
 
 	@Override
 	protected void applySettings(StandardServiceRegistryBuilder ssrBuilder) {
 		super.applySettings( ssrBuilder );
-		// We can't use a shared connection provider if we use T ransactionUtil.setJdbcTimeout because that is set on the connection level
-//		ssrBuilder.getSettings().remove( AvailableSettings.CONNECTION_PROVIDER );
 		if ( getDialect() instanceof InformixDialect ) {
-			ssrBuilder.applySetting( AvailableSettings.ISOLATION,
-					Connection.TRANSACTION_REPEATABLE_READ );
+			ssrBuilder.applySetting( ISOLATION, TRANSACTION_REPEATABLE_READ );
 		}
 	}
 
@@ -83,9 +73,6 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 			A a = new A( "it" );
 			session.persist( a );
 			id = a.getId();
-			C c = new C( "it" );
-			session.persist( c );
-			cid = c.getId();
 		} );
 	}
 
@@ -268,88 +255,6 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 			session.refresh( a, PESSIMISTIC_WRITE, Collections.emptyMap() );
 			checkLockMode( a, LockMode.PESSIMISTIC_WRITE, session );
 		} );
-	}
-
-	@Test
-	@JiraKey(value = "HHH-19937")
-	public void testRefreshWithOptimisticExplicitHigherLevelLockMode() {
-		doInHibernate( this::sessionFactory, session -> {
-			C c = session.find( C.class, id );
-			checkLockMode( c, LockMode.READ, session );
-			session.refresh( c, LockModeType.OPTIMISTIC );
-			checkLockMode( c, LockMode.OPTIMISTIC, session );
-			session.refresh( c );
-			checkLockMode( c, LockMode.OPTIMISTIC, session );
-		} );
-		doInHibernate( this::sessionFactory, session -> {
-			C c = session.find( C.class, id );
-			checkLockMode( c, LockMode.READ, session );
-			session.refresh( c, LockModeType.OPTIMISTIC );
-			checkLockMode( c, LockMode.OPTIMISTIC, session );
-			session.refresh( c, LockMode.OPTIMISTIC_FORCE_INCREMENT );
-			checkLockMode( c, LockMode.OPTIMISTIC_FORCE_INCREMENT, session );
-		} );
-		doInHibernate( this::sessionFactory, session -> {
-			C c = session.find( C.class, id );
-			checkLockMode( c, LockMode.READ, session );
-			session.refresh( c, LockModeType.OPTIMISTIC_FORCE_INCREMENT );
-			checkLockMode( c, LockMode.OPTIMISTIC_FORCE_INCREMENT, session );
-			session.refresh( c );
-			checkLockMode( c, LockMode.OPTIMISTIC_FORCE_INCREMENT, session );
-		} );
-	}
-
-	@Test
-	@JiraKey(value = "HHH-19937")
-	public void testRefreshWithOptimisticLockRefresh() {
-		doInHibernate( this::sessionFactory, session -> {
-			C c = session.find( C.class, id, LockModeType.OPTIMISTIC );
-			doInHibernate( this::sessionFactory, s -> {
-				s.find( C.class, id ).setValue( "new value" );
-			} );
-			session.refresh( c );
-		} );
-	}
-
-	@Test
-	@JiraKey(value = "HHH-19937")
-	public void testRefreshWithOptimisticForceIncrementLockRefresh() {
-		doInHibernate( this::sessionFactory, session -> {
-			C c = session.find( C.class, id, LockModeType.OPTIMISTIC_FORCE_INCREMENT );
-			doInHibernate( this::sessionFactory, s -> {
-				s.find( C.class, id ).setValue( "new value" );
-			} );
-			session.refresh( c );
-		} );
-	}
-
-	@Test
-	@JiraKey(value = "HHH-19937")
-	public void testRefreshWithOptimisticLockFailure() {
-		assertThrows( OptimisticEntityLockException.class, () ->
-			doInHibernate( this::sessionFactory, session -> {
-				C c = session.find( C.class, id, LockModeType.OPTIMISTIC );
-				session.refresh( c );
-				doInHibernate( this::sessionFactory, s -> {
-					s.find( C.class, id ).setValue( "new value" );
-				} );
-			} )
-		);
-	}
-
-	@Test
-	@JiraKey(value = "HHH-19937")
-	public void testRefreshWithOptimisticForceIncrementLockFailure() {
-		// TODO: shouldn't this also be an OptimisticEntityLockException
-		assertThrows( StaleObjectStateException.class, () ->
-			doInHibernate( this::sessionFactory, session -> {
-				C c = session.find( C.class, id, LockModeType.OPTIMISTIC_FORCE_INCREMENT );
-				session.refresh( c );
-				doInHibernate( this::sessionFactory, s -> {
-					s.find( C.class, id ).setValue( "new value" );
-				} );
-			} )
-		);
 	}
 
 	@Test

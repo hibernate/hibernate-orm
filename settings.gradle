@@ -230,7 +230,7 @@ dependencyResolutionManagement {
             def hsqldbVersion = version "hsqldb", overrideableVersion( "gradle.libs.versions.hsqldb", "2.7.4" )
             def informixVersion = version "informix", "15.0.0.1.1"
             def mariadbVersion = version "mariadb", "3.5.5"
-            def mssqlVersion = version "mssql", "13.2.0.jre11"
+            def mssqlVersion = version "mssql", "13.2.1.jre11"
             def mysqlVersion = version "mysql", "9.4.0"
             def oracleVersion = version "oracle", "23.9.0.25.07"
             def oracleJacksonOsonExtension = version "oracleJacksonOsonExtension", "1.0.4"

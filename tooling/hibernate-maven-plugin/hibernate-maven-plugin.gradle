@@ -4,9 +4,7 @@
  */
 
 plugins {
-    id "local.java-module"
-    id "local.publishing"
-    id "local.code-quality"
+    id "local.publishing-java-module"
     id "org.gradlex.maven-plugin-development" version "1.0.3"
 }
 
@@ -42,21 +40,6 @@ dependencies {
     intTestRuntimeOnly 'org.apache.maven.resolver:maven-resolver-connector-basic:1.9.24'
 }
 
-def releasePrepareTask = tasks.register("releasePrepare") {
-    group "release-prepare"
-    description "See :release:releasePrepare for details.  Here we hook in the `check` task."
-
-    dependsOn tasks.check
-}
-
-// used from the h2 CI job
-tasks.register("preVerifyRelease") {
-    group "release-prepare"
-    description "Delegates to `releasePrepare` task"
-
-    dependsOn releasePrepareTask
-}
-
 tasks.register('integrationTest', Test) {
     description = 'Runs integration tests.'
     group = 'verification'
@@ -75,8 +58,6 @@ tasks.forbiddenApisIntTest {
 
 var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
 publishingExtension.publications.named("publishedArtifacts") {
-    from components.java
-
     // Adjust the pom for 3 things:
     //      1. set packaging to maven-plugin (org.gradlex.maven-plugin-development does not in my testing)
     //      2. scope of org.apache.maven dependencies

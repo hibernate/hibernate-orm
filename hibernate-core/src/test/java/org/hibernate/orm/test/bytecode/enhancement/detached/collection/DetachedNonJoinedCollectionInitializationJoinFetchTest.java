@@ -71,6 +71,14 @@ public class DetachedNonJoinedCollectionInitializationJoinFetchTest {
 		} );
 	}
 
+	@Test
+	public void testExistingPersistentInstance(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityA = session.find( EntityA.class, 1L );
+			fetchQuery( new ArrayList<>( entityA.getB() ), session );
+		} );
+	}
+
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {

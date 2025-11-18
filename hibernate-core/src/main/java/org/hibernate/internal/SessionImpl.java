@@ -1634,6 +1634,7 @@ class SessionImpl
 		pulseTransactionCoordinator();
 
 		if ( object == null ) {
+			//TODO: this should throw IllegalArgumentException
 			return false;
 		}
 
@@ -1662,25 +1663,10 @@ class SessionImpl
 			// an entry in the session's persistence context and the entry reports
 			// that the entity has not been removed
 			final var entry = persistenceContext.getEntry( object );
-			delayedAfterCompletion();
-
 			if ( entry == null ) {
-				if ( lazyInitializer == null && persistenceContext.getEntry( object ) == null ) {
-					// check if it is even an entity -> if not throw an exception (per JPA)
-					try {
-						final String entityName = getEntityNameResolver().resolveEntityName( object );
-						if ( entityName == null ) {
-							throw new IllegalArgumentException( "Could not resolve entity name for class '"
-									+ object.getClass() + "'" );
-						}
-						else {
-							requireEntityPersister( entityName );
-						}
-					}
-					catch ( HibernateException e ) {
-						throw new IllegalArgumentException( "Class '" + object.getClass()
-								+ "' is not an entity class", e );
-					}
+				if ( lazyInitializer == null ) {
+					// if not an entity, throw an exception, as required by spec
+					assertInstanceOfEntityType( object );
 				}
 				return false;
 			}
@@ -1693,6 +1679,23 @@ class SessionImpl
 		}
 		catch ( RuntimeException e ) {
 			throw getExceptionConverter().convert( e );
+		}
+	}
+
+	private void assertInstanceOfEntityType(Object object) {
+		try {
+			final String entityName = getEntityNameResolver().resolveEntityName( object );
+			if ( entityName == null ) {
+				throw new IllegalArgumentException( "Could not resolve entity name for class '"
+													+ object.getClass() + "'" );
+			}
+			else {
+				requireEntityPersister( entityName );
+			}
+		}
+		catch ( HibernateException e ) {
+			throw new IllegalArgumentException( "Class '" + object.getClass()
+												+ "' is not an entity class", e );
 		}
 	}
 
@@ -1739,7 +1742,6 @@ class SessionImpl
 			// an entry in the session's persistence context and the entry reports
 			// that the entity has not been removed
 			final var entry = persistenceContext.getEntry( object );
-			delayedAfterCompletion();
 			return entry != null && !entry.getStatus().isDeletedOrGone();
 		}
 		catch ( MappingException e ) {

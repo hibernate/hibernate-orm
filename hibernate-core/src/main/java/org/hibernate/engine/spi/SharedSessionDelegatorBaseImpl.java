@@ -742,4 +742,9 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	public TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor() {
 		return delegate.getTransactionCompletionCallbacksImplementor();
 	}
+
+	@Override
+	public boolean isManaged(Object entity) {
+		return delegate.isManaged( entity );
+	}
 }

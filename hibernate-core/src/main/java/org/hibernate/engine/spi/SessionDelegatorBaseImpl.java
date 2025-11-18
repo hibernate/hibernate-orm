@@ -801,6 +801,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public boolean isManaged(Object entity) {
+		return delegate.isManaged( entity );
+	}
+
+	@Override
 	public LockModeType getLockMode(Object entity) {
 		return delegate.getLockMode( entity );
 	}

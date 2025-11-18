@@ -504,6 +504,15 @@ public interface SharedSessionContractImplementor
 	PersistenceContext getPersistenceContextInternal();
 
 	/**
+	 * Is the given entity managed by this session?
+	 *
+	 * @return true if this is a stateful session and
+	 *         the entity belongs to its persistence
+	 *         context and was not removed
+	 */
+	boolean isManaged(Object entity);
+
+	/**
 	 * detect in-memory changes, determine if the changes are to tables
 	 * named in the query and, if so, complete execution the flush
 	 *

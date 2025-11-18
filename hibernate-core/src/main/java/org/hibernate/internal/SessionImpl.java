@@ -1338,13 +1338,45 @@ class SessionImpl
 	}
 
 	private void checkEntityManaged(String entityName, Object entity) {
-		if ( !managed( entityName, entity ) ) {
+		if ( !isManaged( entity ) ) {
 			throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
 		}
 	}
 
-	private boolean managed(String entityName, Object entity) {
-		return entityName == null ? contains( entity ) : contains( entityName, entity );
+	@Override
+	public boolean isManaged(Object entity) {
+		try {
+			final var lazyInitializer = extractLazyInitializer( entity );
+			if ( lazyInitializer != null ) {
+				//do not use proxiesByKey, since not all
+				//proxies that point to this session's
+				//instances are in that collection!
+				if ( lazyInitializer.isUninitialized() ) {
+					//if it is an uninitialized proxy, pointing
+					//with this session, then when it is accessed,
+					//the underlying instance will be "contained"
+					return lazyInitializer.getSession() == this;
+				}
+				else {
+					//if it is initialized, see if the underlying
+					//instance is contained, since we need to
+					//account for the fact that it might have been
+					//evicted
+					entity = lazyInitializer.getImplementation();
+				}
+			}
+			// A session is considered to contain an entity only if the entity has
+			// an entry in the session's persistence context and the entry reports
+			// that the entity has not been removed
+			final var entry = persistenceContext.getEntry( entity );
+			return entry != null && !entry.getStatus().isDeletedOrGone();
+		}
+		catch ( MappingException e ) {
+			throw new IllegalArgumentException( e.getMessage(), e );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
 	}
 
 	// replicate() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1632,8 +1664,10 @@ class SessionImpl
 	public boolean contains(Object object) {
 		checkOpen();
 		pulseTransactionCoordinator();
+		delayedAfterCompletion();
 
 		if ( object == null ) {
+			//TODO: this should throw IllegalArgumentException
 			return false;
 		}
 
@@ -1662,25 +1696,10 @@ class SessionImpl
 			// an entry in the session's persistence context and the entry reports
 			// that the entity has not been removed
 			final var entry = persistenceContext.getEntry( object );
-			delayedAfterCompletion();
-
 			if ( entry == null ) {
-				if ( lazyInitializer == null && persistenceContext.getEntry( object ) == null ) {
-					// check if it is even an entity -> if not throw an exception (per JPA)
-					try {
-						final String entityName = getEntityNameResolver().resolveEntityName( object );
-						if ( entityName == null ) {
-							throw new IllegalArgumentException( "Could not resolve entity name for class '"
-									+ object.getClass() + "'" );
-						}
-						else {
-							requireEntityPersister( entityName );
-						}
-					}
-					catch ( HibernateException e ) {
-						throw new IllegalArgumentException( "Class '" + object.getClass()
-								+ "' is not an entity class", e );
-					}
+				if ( lazyInitializer == null ) {
+					// if not an entity, throw an exception, as required by spec
+					assertInstanceOfEntityType( object );
 				}
 				return false;
 			}
@@ -1696,58 +1715,26 @@ class SessionImpl
 		}
 	}
 
-	@Override
-	public boolean contains(String entityName, Object object) {
-		checkOpenOrWaitingForAutoClose();
-		pulseTransactionCoordinator();
-
-		if ( object == null ) {
-			return false;
-		}
-
+	private void assertInstanceOfEntityType(Object object) {
 		try {
-			final var lazyInitializer = extractLazyInitializer( object );
-			if ( lazyInitializer == null && persistenceContext.getEntry( object ) == null ) {
-				// check if it is an entity -> if not throw an exception (per JPA)
-				try {
-					requireEntityPersister( entityName );
-				}
-				catch (HibernateException e) {
-					throw new IllegalArgumentException( "Not an entity [" + entityName + "] : " + object );
-				}
+			final String entityName = getEntityNameResolver().resolveEntityName( object );
+			if ( entityName == null ) {
+				throw new IllegalArgumentException( "Could not resolve entity name for class '"
+													+ object.getClass() + "'" );
 			}
+			else {
+				requireEntityPersister( entityName );
+			}
+		}
+		catch ( HibernateException e ) {
+			throw new IllegalArgumentException( "Class '" + object.getClass()
+												+ "' is not an entity class", e );
+		}
+	}
 
-			if ( lazyInitializer != null ) {
-				//do not use proxiesByKey, since not all
-				//proxies that point to this session's
-				//instances are in that collection!
-				if ( lazyInitializer.isUninitialized() ) {
-					//if it is an uninitialized proxy, pointing
-					//with this session, then when it is accessed,
-					//the underlying instance will be "contained"
-					return lazyInitializer.getSession() == this;
-				}
-				else {
-					//if it is initialized, see if the underlying
-					//instance is contained, since we need to
-					//account for the fact that it might have been
-					//evicted
-					object = lazyInitializer.getImplementation();
-				}
-			}
-			// A session is considered to contain an entity only if the entity has
-			// an entry in the session's persistence context and the entry reports
-			// that the entity has not been removed
-			final var entry = persistenceContext.getEntry( object );
-			delayedAfterCompletion();
-			return entry != null && !entry.getStatus().isDeletedOrGone();
-		}
-		catch ( MappingException e ) {
-			throw new IllegalArgumentException( e.getMessage(), e );
-		}
-		catch ( RuntimeException e ) {
-			throw getExceptionConverter().convert( e );
-		}
+	@Override @Deprecated(forRemoval = true)
+	public boolean contains(String entityName, Object object) {
+		return contains( object );
 	}
 
 	@Override

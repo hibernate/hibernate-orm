@@ -20,7 +20,6 @@ import org.hibernate.StatelessSession;
 import org.hibernate.TransientObjectException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.id.enhanced.StandardNamingStrategy;
@@ -82,16 +81,15 @@ public final class IdentifierGeneratorHelper {
 
 	public static Object getForeignId(
 			String entityName, String propertyName, SharedSessionContractImplementor sessionImplementor, Object object) {
-		final var persister =
-				sessionImplementor.getFactory().getMappingMetamodel()
-						.getEntityDescriptor( entityName );
-		if ( sessionImplementor instanceof SessionImplementor statefulSession
-				&& statefulSession.contains( entityName, object ) ) {
+		if ( sessionImplementor.isManaged( object ) ) {
 			//abort the save (the object is already saved by a circular cascade)
 			return SHORT_CIRCUIT_INDICATOR;
 			//throw new IdentifierGenerationException("save associated object first, or disable cascade for inverse association");
 		}
 		else {
+			final var persister =
+					sessionImplementor.getFactory().getMappingMetamodel()
+							.getEntityDescriptor( entityName );
 			return identifier( sessionImplementor, entityType( propertyName, persister ),
 					associatedEntity( entityName, propertyName, object, persister ) );
 		}

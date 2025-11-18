@@ -74,7 +74,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			EventSource source,
 			Object object,
 			PersistenceContext persistenceContext) {
-		final boolean isTransient = isTransient( event, source, object );
+		final boolean isTransient = !source.isManaged( object );
 		// If refreshAlready is nonempty then the refresh is the result of a cascade refresh and the
 		// refresh of the parent will take care of initializing the lazy entity and setting the
 		// correct lock. This is needed only when the refresh is called directly on a lazy entity.
@@ -115,11 +115,6 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		else {
 			return source.getPersistenceContextInternal().getEntry( object ).getPersister();
 		}
-	}
-
-	private static boolean isTransient(RefreshEvent event, EventSource source, Object object) {
-		final String entityName = event.getEntityName();
-		return entityName == null ? !source.contains( object ) : !source.contains( entityName, object );
 	}
 
 	private static void refresh(RefreshEvent event, RefreshContext refreshedAlready, Object object) {

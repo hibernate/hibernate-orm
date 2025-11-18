@@ -11,8 +11,9 @@ import static org.hibernate.engine.transaction.internal.jta.JtaStatusHelper.isRo
 import static org.hibernate.resource.transaction.backend.jta.internal.JtaLogging.JTA_LOGGER;
 
 /**
- * Extension of SynchronizationCallbackCoordinatorNonTrackingImpl that adds checking of whether a rollback comes from
- * a thread other than the application thread (thread used to register the Synchronization)
+ * Extension of {@link SynchronizationCallbackCoordinatorNonTrackingImpl} that adds
+ * checking of whether a rollback comes from a thread other than the application
+ * thread (thread used to register the {@code Synchronization})
  *
  * @author Steve Ebersole
  * @author Brett Meyer

@@ -1632,6 +1632,7 @@ class SessionImpl
 	public boolean contains(Object object) {
 		checkOpen();
 		pulseTransactionCoordinator();
+		delayedAfterCompletion();
 
 		if ( object == null ) {
 			//TODO: this should throw IllegalArgumentException
@@ -1703,6 +1704,7 @@ class SessionImpl
 	public boolean contains(String entityName, Object object) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
+		delayedAfterCompletion();
 
 		if ( object == null ) {
 			return false;

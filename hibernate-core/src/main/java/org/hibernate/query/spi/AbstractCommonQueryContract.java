@@ -38,7 +38,6 @@ import org.hibernate.query.TypedParameterValue;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.expression.NullSqmExpressible;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -197,9 +196,10 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	protected void collectHints(Map<String, Object> hints) {
 		final var queryOptions = getQueryOptions();
 
-		if ( queryOptions.getTimeout() != null ) {
-			hints.put( HINT_TIMEOUT, queryOptions.getTimeout() );
-			hints.put( HINT_SPEC_QUERY_TIMEOUT, queryOptions.getTimeout() * 1000 );
+		final Integer timeout = queryOptions.getTimeout();
+		if ( timeout != null ) {
+			hints.put( HINT_TIMEOUT, timeout );
+			hints.put( HINT_SPEC_QUERY_TIMEOUT, timeout * 1000 );
 		}
 
 		putIfNotNull( hints, HINT_COMMENT, getComment() );
@@ -644,7 +644,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		checkOpenNoRollback();
 
 		try {
-			//noinspection rawtypes
+			@SuppressWarnings("rawtypes")
 			final QueryParameterImplementor parameter = getParameterMetadata().getQueryParameter( name );
 			if ( !type.isAssignableFrom( parameter.getParameterType() ) ) {
 				throw new IllegalArgumentException(
@@ -671,11 +671,12 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 	}
 
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
+	@SuppressWarnings("unchecked")
 	public <T> QueryParameterImplementor<T> getParameter(int position, Class<T> type) {
 		checkOpenNoRollback();
 
 		try {
+			@SuppressWarnings("rawtypes")
 			final QueryParameterImplementor parameter = getParameterMetadata().getQueryParameter( position );
 			if ( !type.isAssignableFrom( parameter.getParameterType() ) ) {
 				throw new IllegalArgumentException(
@@ -816,13 +817,13 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	private boolean multipleBinding(QueryParameter<Object> parameter, Object value){
 		if ( parameter.allowsMultiValuedBinding() ) {
 			final var hibernateType = parameter.getHibernateType();
-			if ( hibernateType == null
+			return hibernateType == null
 				|| hibernateType instanceof NullSqmExpressible
-				|| isInstance( hibernateType, value ) ) {
-				return true;
-			}
+				|| isInstance( hibernateType, value );
 		}
-		return false;
+		else {
+			return false;
+		}
 	}
 
 	private <T> void setTypedParameter(String name, TypedParameterValue<T> typedValue) {
@@ -834,12 +835,12 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	private boolean isInstance(Type<?> parameterType, Object value) {
-		final SqmExpressible<?> sqmExpressible = getNodeuilder().resolveExpressible( parameterType );
+		final var sqmExpressible = getNodeBuilder().resolveExpressible( parameterType );
 		assert sqmExpressible != null;
 		return sqmExpressible.getExpressibleJavaType().isInstance( value );
 	}
 
-	private NodeBuilder getNodeuilder() {
+	private NodeBuilder getNodeBuilder() {
 		return getSessionFactory().getQueryEngine().getCriteriaBuilder();
 	}
 

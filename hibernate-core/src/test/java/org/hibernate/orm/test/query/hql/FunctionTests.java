@@ -2493,6 +2493,18 @@ public class FunctionTests {
 									.setParameterList("list",List.of())
 									.list().size() );
 					assertEquals( 1,
+							session.createQuery("select 1 where 1 in (:list)", Integer.class)
+									.setParameter("list",List.of(1))
+									.list().size() );
+					assertEquals( 0,
+							session.createQuery("select 1 where 1 in (:list)", Integer.class)
+									.setParameter("list",List.of())
+									.list().size() );
+					assertEquals( 0,
+							session.createQuery("select 1 where 1 in (:list)", Integer.class)
+									.setParameter("list",null)
+									.list().size() );
+					assertEquals( 1,
 							session.createQuery("select 1 where 1 in :list", Integer.class)
 									.setParameterList("list",List.of(1,2))
 									.list().size() );

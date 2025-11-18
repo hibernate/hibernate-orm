@@ -4,7 +4,6 @@
  */
 package org.hibernate.internal;
 
-import org.hibernate.CacheMode;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -13,9 +12,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.stat.internal.StatsHelper;
 
 import static org.hibernate.cache.spi.entry.CacheEntryHelper.buildStructuredCacheEntry;
+import static org.hibernate.stat.internal.StatsHelper.getRootEntityRole;
 
 public final class OptimisticLockHelper {
 
@@ -53,14 +52,15 @@ public final class OptimisticLockHelper {
 					persister,
 					session
 			);
-			session.getTransactionCompletionCallbacks().registerCallback( new CacheCleanupProcess(
-					cacheKey,
-					persister,
-					previousVersion,
-					nextVersion,
-					lock,
-					cacheEntry
-			) );
+			session.getTransactionCompletionCallbacks()
+					.registerCallback( new CacheCleanupProcess(
+							cacheKey,
+							persister,
+							previousVersion,
+							nextVersion,
+							lock,
+							cacheEntry
+					) );
 		}
 	}
 
@@ -80,11 +80,10 @@ public final class OptimisticLockHelper {
 			final Object cacheEntry =
 					buildStructuredCacheEntry( entity, nextVersion, entry.getLoadedState(), persister, session );
 			final boolean put = updateCache( persister, cacheEntry, previousVersion, nextVersion, cacheKey, session );
-
 			final var statistics = session.getFactory().getStatistics();
 			if ( put && statistics.isStatisticsEnabled() ) {
 				statistics.entityCachePut(
-						StatsHelper.getRootEntityRole( persister ),
+						getRootEntityRole( persister ),
 						persister.getCacheAccessStrategy().getRegion().getName()
 				);
 			}
@@ -126,10 +125,9 @@ public final class OptimisticLockHelper {
 	private static boolean isCacheInvalidationRequired(
 			EntityPersister persister,
 			SharedSessionContractImplementor session) {
-		// the cache has to be invalidated when CacheMode is equal to GET or IGNORE
 		return persister.isCacheInvalidationRequired()
-			|| session.getCacheMode() == CacheMode.GET
-			|| session.getCacheMode() == CacheMode.IGNORE;
+			// the cache has to be invalidated when CacheMode is GET or IGNORE
+			|| !session.getCacheMode().isPutEnabled();
 	}
 
 	private static class CacheCleanupProcess implements AfterTransactionCompletionProcess {
@@ -193,7 +191,7 @@ public final class OptimisticLockHelper {
 				final var statistics = session.getFactory().getStatistics();
 				if ( put && statistics.isStatisticsEnabled() ) {
 					statistics.entityCachePut(
-							StatsHelper.getRootEntityRole( persister ),
+							getRootEntityRole( persister ),
 							cache.getRegion().getName()
 					);
 				}

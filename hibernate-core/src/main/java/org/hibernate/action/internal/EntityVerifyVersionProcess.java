@@ -7,7 +7,8 @@ package org.hibernate.action.internal;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.dialect.lock.OptimisticEntityLockException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.pretty.MessageHelper;
+
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * A {@link BeforeTransactionCompletionProcess} impl to verify an entity
@@ -40,7 +41,7 @@ public class EntityVerifyVersionProcess implements BeforeTransactionCompletionPr
 						"Newer version ["
 								+ latestVersion
 								+ "] of entity ["
-								+ MessageHelper.infoString( entry.getEntityName(), entry.getId() )
+								+ infoString( entry.getEntityName(), entry.getId() )
 								+ "] found in database"
 				);
 			}

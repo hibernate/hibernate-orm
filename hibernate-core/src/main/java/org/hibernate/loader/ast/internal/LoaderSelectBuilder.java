@@ -72,6 +72,7 @@ import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.results.graph.BiDirectionalFetch;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.EntityGraphTraversalState;
@@ -624,7 +625,7 @@ public class LoaderSelectBuilder {
 										selection
 								);
 						if ( numberOfKeysToLoad == 1 ) {
-							final JdbcParameter jdbcParameter = new JdbcParameterImpl( selection.getJdbcMapping() );
+							final JdbcParameter jdbcParameter = new SqlTypedMappingJdbcParameter( selection );
 							jdbcParameterConsumer.accept( jdbcParameter );
 
 							rootQuerySpec.applyPredicate(
@@ -634,11 +635,9 @@ public class LoaderSelectBuilder {
 						else {
 							final InListPredicate predicate = new InListPredicate( columnRef );
 							for ( int i = 0; i < numberOfKeysToLoad; i++ ) {
-								for ( int j = 0; j < numberColumns; j++ ) {
-									final JdbcParameter jdbcParameter = new JdbcParameterImpl( columnRef.getJdbcMapping() );
-									jdbcParameterConsumer.accept( jdbcParameter );
-									predicate.addExpression( jdbcParameter );
-								}
+								final JdbcParameter jdbcParameter = new SqlTypedMappingJdbcParameter( selection );
+								jdbcParameterConsumer.accept( jdbcParameter );
+								predicate.addExpression( jdbcParameter );
 							}
 							rootQuerySpec.applyPredicate( predicate );
 						}
@@ -666,12 +665,13 @@ public class LoaderSelectBuilder {
 
 			for ( int i = 0; i < numberOfKeysToLoad; i++ ) {
 				final List<JdbcParameter> tupleParams = new ArrayList<>( numberColumns );
-				for ( int j = 0; j < numberColumns; j++ ) {
-					final ColumnReference columnReference = columnReferences.get( j );
-					final JdbcParameter jdbcParameter = new JdbcParameterImpl( columnReference.getJdbcMapping() );
-					jdbcParameterConsumer.accept( jdbcParameter );
-					tupleParams.add( jdbcParameter );
-				}
+				restrictedPart.forEachSelectable(
+						(columnIndex, selection) -> {
+							final JdbcParameter jdbcParameter = new SqlTypedMappingJdbcParameter( selection );
+							jdbcParameterConsumer.accept( jdbcParameter );
+							tupleParams.add( jdbcParameter );
+						}
+				);
 				final SqlTuple paramTuple = new SqlTuple( tupleParams, restrictedPart );
 				predicate.addExpression( paramTuple );
 			}

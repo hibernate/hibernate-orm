@@ -313,8 +313,7 @@ public class EntityEntryContext {
 	private void removeXref(Object entity, ManagedEntity managedEntity) {
 		if ( managedEntity instanceof ImmutableManagedEntityHolder holder ) {
 			assert entity == holder.managedEntity;
-			final var entry = holder.$$_hibernate_getEntityEntry();
-			if ( entry != null && !isReferenceCachingEnabled( entry.getPersister() ) ) {
+			if ( !isReferenceCachingEnabled( holder.$$_hibernate_getEntityEntry().getPersister() ) ) {
 				immutableManagedEntityXref.remove( managedEntity.$$_hibernate_getInstanceId(), entity );
 			}
 			else {
@@ -724,9 +723,6 @@ public class EntityEntryContext {
 		// Check instance type of EntityEntry and if type is ImmutableEntityEntry,
 		// check to see if entity is referenced cached in the second level cache
 		private static boolean canClearEntityEntryReference(EntityEntry entityEntry) {
-			if (entityEntry == null) {
-				return false;
-			}
 			final EntityPersister persister = entityEntry.getPersister();
 			return persister.isMutable() || !isReferenceCachingEnabled( persister );
 		}

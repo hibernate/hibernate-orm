@@ -6,6 +6,7 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import java.lang.reflect.Array;
 import java.util.Collections;
 import java.util.List;
 
@@ -18,16 +19,17 @@ import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
+import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.BasicTypeRegistry;
 
 /**
  * Standard MultiNaturalIdLoader implementation
@@ -79,15 +81,25 @@ public class MultiNaturalIdLoaderArrayParam<E> implements MultiNaturalIdLoader<E
 				? new LockOptions( LockMode.NONE )
 				: loadOptions.getLockOptions();
 
-		final BasicTypeRegistry basicTypeRegistry = sessionFactory.getTypeConfiguration().getBasicTypeRegistry();
-		final BasicType<?> arrayBasicType = basicTypeRegistry.getRegisteredType( keyArrayClass );
-		final JdbcMapping arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
-				arrayBasicType,
-				getNaturalIdMapping().getSingleJdbcMapping(),
-				keyArrayClass,
-				sessionFactory
+		final SelectableMapping selectable = getNaturalIdAttribute().getSelectable( 0 );
+		final JdbcMapping jdbcMapping = selectable.getJdbcMapping();
+		final Class<?> jdbcArrayClass = Array.newInstance( jdbcMapping.getJdbcJavaType().getJavaTypeClass(), 0 )
+				.getClass();
+
+		final SqlTypedMapping arraySqlTypedMapping = new SqlTypedMappingImpl(
+				selectable.getColumnDefinition(),
+				selectable.getLength(),
+				selectable.getPrecision(),
+				selectable.getScale(),
+				selectable.getTemporalPrecision(),
+				MultiKeyLoadHelper.resolveArrayJdbcMapping(
+						sessionFactory.getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( jdbcArrayClass ),
+						jdbcMapping,
+						jdbcArrayClass,
+						sessionFactory
+				)
 		);
-		final JdbcParameter jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );
+		final JdbcParameter jdbcParameter = new SqlTypedMappingJdbcParameter( arraySqlTypedMapping );
 
 		final SelectStatement sqlAst = LoaderSelectBuilder.createSelectBySingleArrayParameter(
 				getLoadable(),
@@ -108,7 +120,7 @@ public class MultiNaturalIdLoaderArrayParam<E> implements MultiNaturalIdLoader<E
 				sqlAst,
 				jdbcSelectOperation,
 				jdbcParameter,
-				arrayJdbcMapping,
+				arraySqlTypedMapping.getJdbcMapping(),
 				null,
 				null,
 				null,

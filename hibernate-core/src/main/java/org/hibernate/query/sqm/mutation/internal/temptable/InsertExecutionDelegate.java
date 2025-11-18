@@ -72,13 +72,12 @@ import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
-import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -430,7 +429,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 					new ComparisonPredicate(
 							columnReference,
 							ComparisonOperator.EQUAL,
-							new JdbcParameterImpl( identifierMapping.getJdbcMapping() )
+							new SqlTypedMappingJdbcParameter( identifierMapping )
 					)
 			);
 		}
@@ -444,8 +443,8 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 							.noneMatch( c -> keyColumns[0].equals( c.getColumnExpression() ) ) ) {
 				final BasicEntityIdentifierMapping identifierMapping =
 						(BasicEntityIdentifierMapping) entityDescriptor.getIdentifierMapping();
-				final JdbcParameter rowNumber = new JdbcParameterImpl( identifierMapping.getJdbcMapping() );
-				final JdbcParameter rootIdentity = new JdbcParameterImpl( identifierMapping.getJdbcMapping() );
+				final JdbcParameter rowNumber = new SqlTypedMappingJdbcParameter( identifierMapping );
+				final JdbcParameter rootIdentity = new SqlTypedMappingJdbcParameter( identifierMapping );
 				final List<Assignment> temporaryTableAssignments = new ArrayList<>( 1 );
 				final ColumnReference idColumnReference = new ColumnReference( (String) null, identifierMapping );
 				temporaryTableAssignments.add( new Assignment( idColumnReference, rootIdentity ) );
@@ -594,8 +593,8 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				entry.setValue( rootIdentity );
 			}
 
-			final JdbcParameter entityIdentity = new JdbcParameterImpl( identifierMapping.getJdbcMapping() );
-			final JdbcParameter rootIdentity = new JdbcParameterImpl( identifierMapping.getJdbcMapping() );
+			final JdbcParameter entityIdentity = new SqlTypedMappingJdbcParameter( identifierMapping );
+			final JdbcParameter rootIdentity = new SqlTypedMappingJdbcParameter( identifierMapping );
 			final List<Assignment> temporaryTableAssignments = new ArrayList<>( 1 );
 			temporaryTableAssignments.add(
 					new Assignment(

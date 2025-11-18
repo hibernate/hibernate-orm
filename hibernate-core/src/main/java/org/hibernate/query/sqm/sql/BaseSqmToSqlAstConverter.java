@@ -5889,43 +5889,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final QueryParameterImplementor<?> queryParameter = domainParameterXref.getQueryParameter( sqmParameter );
 		final QueryParameterBinding binding = domainParameterBindings.getBinding( queryParameter );
-		if ( binding.setType( valueMapping ) ) {
-			replaceJdbcParametersType(
-					sqmParameter,
-					domainParameterXref.getSqmParameters( queryParameter ),
-					valueMapping
-			);
-		}
+		binding.setType( valueMapping );
 		return new SqmParameterInterpretation(
 				jdbcParametersForSqm,
 				valueMapping
 		);
-	}
-
-	private void replaceJdbcParametersType(
-			SqmParameter<?> sourceSqmParameter,
-			List<SqmParameter<?>> sqmParameters,
-			MappingModelExpressible<?> valueMapping) {
-		final JdbcMapping jdbcMapping = valueMapping.getSingleJdbcMapping();
-		for ( SqmParameter<?> sqmParameter : sqmParameters ) {
-			if ( sqmParameter == sourceSqmParameter ) {
-				continue;
-			}
-			sqmParameterMappingModelTypes.put( sqmParameter, valueMapping );
-			final List<List<JdbcParameter>> jdbcParamsForSqmParameter = jdbcParamsBySqmParam.get( sqmParameter );
-			if ( jdbcParamsForSqmParameter != null ) {
-				for ( List<JdbcParameter> parameters : jdbcParamsForSqmParameter ) {
-					assert parameters.size() == 1;
-					final JdbcParameter jdbcParameter = parameters.get( 0 );
-					if ( ( (SqlExpressible) jdbcParameter ).getJdbcMapping() != jdbcMapping ) {
-						final JdbcParameter newJdbcParameter = new JdbcParameterImpl( jdbcMapping );
-						parameters.set( 0, newJdbcParameter );
-						jdbcParameters.getJdbcParameters().remove( jdbcParameter );
-						jdbcParameters.getJdbcParameters().add( newJdbcParameter );
-					}
-				}
-			}
-		}
 	}
 
 	protected Expression consumeSqmParameter(SqmParameter<?> sqmParameter) {

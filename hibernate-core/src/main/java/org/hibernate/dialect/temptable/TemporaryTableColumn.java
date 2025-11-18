@@ -8,6 +8,9 @@ package org.hibernate.dialect.temptable;
 
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A column in a IdTable.  As these columns mirror the entity id columns, we know a few things about it inherently,
@@ -15,7 +18,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
  *
  * @author Steve Ebersole
  */
-public class TemporaryTableColumn {
+public class TemporaryTableColumn implements SqlTypedMapping {
 	private final TemporaryTable containingTable;
 	private final String columnName;
 	private final JdbcMapping jdbcMapping;
@@ -59,6 +62,7 @@ public class TemporaryTableColumn {
 		return columnName;
 	}
 
+	@Override
 	public JdbcMapping getJdbcMapping() {
 		return jdbcMapping;
 	}
@@ -81,5 +85,30 @@ public class TemporaryTableColumn {
 
 	public boolean isPrimaryKey() {
 		return primaryKey;
+	}
+
+	@Override
+	public @Nullable String getColumnDefinition() {
+		return sqlTypeName;
+	}
+
+	@Override
+	public @Nullable Long getLength() {
+		return size.getLength();
+	}
+
+	@Override
+	public @Nullable Integer getPrecision() {
+		return size.getPrecision();
+	}
+
+	@Override
+	public @Nullable Integer getScale() {
+		return size.getScale();
+	}
+
+	@Override
+	public @Nullable Integer getTemporalPrecision() {
+		return getJdbcMapping().getJdbcType().isTemporal() ? size.getPrecision() : null;
 	}
 }

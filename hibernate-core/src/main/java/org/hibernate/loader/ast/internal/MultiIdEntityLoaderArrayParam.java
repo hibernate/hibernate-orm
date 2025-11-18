@@ -27,14 +27,18 @@ import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper.PersistenceCont
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
@@ -49,19 +53,30 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
  * @author Steve Ebersole
  */
 public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoader<E> implements SqlArrayMultiKeyLoader {
-	private final JdbcMapping arrayJdbcMapping;
+	private final SqlTypedMapping arraySqlTypedMapping;
 	private final JdbcParameter jdbcParameter;
 
 	public MultiIdEntityLoaderArrayParam(EntityMappingType entityDescriptor, SessionFactoryImplementor sessionFactory) {
 		super( entityDescriptor, sessionFactory );
-		final Class<?> arrayClass = createTypedArray( 0 ).getClass();
-		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
-				getSessionFactory().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( arrayClass ),
-				getIdentifierMapping().getJdbcMapping(),
-				arrayClass,
-				getSessionFactory()
+		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+		final SelectableMapping selectable = identifierMapping.getSelectable( 0 );
+		final JdbcMapping jdbcMapping = selectable.getJdbcMapping();
+		final Class<?> jdbcArrayClass = Array.newInstance( jdbcMapping.getJdbcJavaType().getJavaTypeClass(), 0 )
+				.getClass();
+		arraySqlTypedMapping = new SqlTypedMappingImpl(
+				selectable.getColumnDefinition(),
+				selectable.getLength(),
+				selectable.getPrecision(),
+				selectable.getScale(),
+				selectable.getTemporalPrecision(),
+				MultiKeyLoadHelper.resolveArrayJdbcMapping(
+						sessionFactory.getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( jdbcArrayClass ),
+						jdbcMapping,
+						jdbcArrayClass,
+						sessionFactory
+				)
 		);
-		jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );
+		jdbcParameter = new SqlTypedMappingJdbcParameter( arraySqlTypedMapping );
 	}
 
 	@Override
@@ -177,7 +192,10 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(1);
 		jdbcParameterBindings.addBinding(
 				jdbcParameter,
-				new JdbcParameterBindingImpl( arrayJdbcMapping, idsToLoadFromDatabase.toArray( createTypedArray(0 ) ) )
+				new JdbcParameterBindingImpl(
+						arraySqlTypedMapping.getJdbcMapping(),
+						idsToLoadFromDatabase.toArray( createTypedArray( 0 ) )
+				)
 		);
 
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
@@ -274,7 +292,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 				sqlAst,
 				jdbcSelectOperation,
 				jdbcParameter,
-				arrayJdbcMapping,
+				arraySqlTypedMapping.getJdbcMapping(),
 				null,
 				null,
 				null,
@@ -395,6 +413,12 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 
 	private <X> X[] createTypedArray(@SuppressWarnings("SameParameterValue") int length) {
 		//noinspection unchecked
-		return (X[]) Array.newInstance( getIdentifierMapping().getJavaType().getJavaTypeClass(), length );
+		return (X[]) Array.newInstance(
+				getIdentifierMapping().getSelectable( 0 )
+						.getJdbcMapping()
+						.getJdbcJavaType()
+						.getJavaTypeClass(),
+				length
+		);
 	}
 }

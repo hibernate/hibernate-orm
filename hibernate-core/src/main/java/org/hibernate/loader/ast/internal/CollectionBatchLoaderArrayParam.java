@@ -16,14 +16,15 @@ import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.loader.ast.spi.CollectionBatchLoader;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
@@ -44,7 +45,7 @@ public class CollectionBatchLoaderArrayParam
 		extends AbstractCollectionBatchLoader
 		implements SqlArrayMultiKeyLoader {
 
-	private final JdbcMapping arrayJdbcMapping;
+	private final SqlTypedMapping arraySqlTypedMapping;
 	private final JdbcParameter jdbcParameter;
 	private final SelectStatement sqlSelect;
 	private final JdbcOperationQuerySelect jdbcSelectOperation;
@@ -64,16 +65,24 @@ public class CollectionBatchLoaderArrayParam
 		}
 
 		final var keyDescriptor = getLoadable().getKeyDescriptor();
-		final var jdbcMapping = keyDescriptor.getSingleJdbcMapping();
+		final var selectable = keyDescriptor.getSelectable( 0 );
+		final var jdbcMapping = selectable.getJdbcMapping();
 		final var jdbcJavaTypeClass = jdbcMapping.getJdbcJavaType().getJavaTypeClass();
 
-		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
-				jdbcMapping,
-				jdbcJavaTypeClass,
-				getSessionFactory()
+		arraySqlTypedMapping = new SqlTypedMappingImpl(
+				selectable.getColumnDefinition(),
+				selectable.getLength(),
+				selectable.getPrecision(),
+				selectable.getScale(),
+				selectable.getTemporalPrecision(),
+				MultiKeyLoadHelper.resolveArrayJdbcMapping(
+						jdbcMapping,
+						jdbcJavaTypeClass,
+						getSessionFactory()
+				)
 		);
 
-		jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );
+		jdbcParameter = new SqlTypedMappingJdbcParameter( arraySqlTypedMapping );
 		sqlSelect = LoaderSelectBuilder.createSelectBySingleArrayParameter(
 				getLoadable(),
 				keyDescriptor.getKeyPart(),
@@ -169,7 +178,7 @@ public class CollectionBatchLoaderArrayParam
 		final var jdbcParameterBindings = new JdbcParameterBindingsImpl(1);
 		jdbcParameterBindings.addBinding(
 				jdbcParameter,
-				new JdbcParameterBindingImpl( arrayJdbcMapping, keysToInitialize )
+				new JdbcParameterBindingImpl( arraySqlTypedMapping.getJdbcMapping(), keysToInitialize )
 		);
 
 		session.getJdbcServices().getJdbcSelectExecutor().list(

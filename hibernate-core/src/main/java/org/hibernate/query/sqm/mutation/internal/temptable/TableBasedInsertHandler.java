@@ -92,7 +92,7 @@ import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
@@ -149,7 +149,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 			this.sessionUidParameter = null;
 		}
 		else {
-			this.sessionUidParameter = new JdbcParameterImpl( sessionUidColumn.getJdbcMapping() );
+			this.sessionUidParameter = new SqlTypedMappingJdbcParameter( sessionUidColumn );
 		}
 		final SqmJdbcExecutionContextAdapter executionContext = SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( context );
 		final MultiTableSqmMutationConverter sqmConverter = new MultiTableSqmMutationConverter(
@@ -606,7 +606,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 					new ComparisonPredicate(
 							columnReference,
 							ComparisonOperator.EQUAL,
-							new JdbcParameterImpl( identifierMapping.getJdbcMapping() )
+							new SqlTypedMappingJdbcParameter( identifierMapping )
 					)
 			);
 		}
@@ -643,7 +643,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 				}
 				if ( needsIdentifierGeneration( generator, assignsId ) ) {
 					final BasicEntityIdentifierMapping basicIdentifierMapping = (BasicEntityIdentifierMapping) identifierMapping;
-					final JdbcParameter rootIdentity = new JdbcParameterImpl( basicIdentifierMapping.getJdbcMapping() );
+					final JdbcParameter rootIdentity = new SqlTypedMappingJdbcParameter( basicIdentifierMapping );
 					final List<Assignment> temporaryTableAssignments = new ArrayList<>( 1 );
 					final ColumnReference idColumnReference = new ColumnReference( (String) null, basicIdentifierMapping );
 					temporaryTableAssignments.add( new Assignment( idColumnReference, rootIdentity ) );
@@ -651,7 +651,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 					final int rowNumberIndex =
 							entityTable.getColumns().size() - (entityTable.getSessionUidColumn() == null ? 1 : 2);
 					final TemporaryTableColumn rowNumberColumn = entityTable.getColumns().get( rowNumberIndex );
-					final JdbcParameter rowNumber = new JdbcParameterImpl( rowNumberColumn.getJdbcMapping() );
+					final JdbcParameter rowNumber = new SqlTypedMappingJdbcParameter( rowNumberColumn );
 
 					final UpdateStatement updateStatement = new UpdateStatement(
 							temporaryTableReference,
@@ -748,8 +748,8 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 					getPrimaryKeyTableColumns( getEntityDescriptor(), entityTable );
 			assert primaryKeyTableColumns.size() == 1;
 
-			final JdbcParameter entityIdentity = new JdbcParameterImpl( identifierMapping.getJdbcMapping() );
-			final JdbcParameter rootIdentity = new JdbcParameterImpl( identifierMapping.getJdbcMapping() );
+			final JdbcParameter entityIdentity = new SqlTypedMappingJdbcParameter( identifierMapping );
+			final JdbcParameter rootIdentity = new SqlTypedMappingJdbcParameter( identifierMapping );
 			final List<Assignment> temporaryTableAssignments = new ArrayList<>( 1 );
 			temporaryTableAssignments.add(
 					new Assignment(

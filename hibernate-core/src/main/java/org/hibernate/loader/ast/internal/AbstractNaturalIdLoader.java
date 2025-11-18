@@ -35,7 +35,7 @@ import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -355,7 +355,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			predicateConsumer.accept( new NullnessPredicate( columnReference ) );
 		}
 		else {
-			final var jdbcParameter = new JdbcParameterImpl( jdbcValueMapping.getJdbcMapping() );
+			final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
 			final var predicate =
 					new ComparisonPredicate( columnReference, ComparisonOperator.EQUAL, jdbcParameter );
 			predicateConsumer.accept( predicate );

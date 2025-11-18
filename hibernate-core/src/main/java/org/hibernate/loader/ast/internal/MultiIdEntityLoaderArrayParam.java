@@ -16,14 +16,18 @@ import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryOptionsAdapter;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ManagedResultConsumer;
@@ -43,7 +47,7 @@ import static org.hibernate.sql.exec.spi.JdbcParameterBindings.NO_BINDINGS;
  */
 public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoader<E>
 		implements SqlArrayMultiKeyLoader {
-	private final JdbcMapping arrayJdbcMapping;
+	private final SqlTypedMapping arraySqlTypedMapping;
 	private final JdbcParameter jdbcParameter;
 	protected final Object[] idArray;
 
@@ -52,11 +56,24 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 			EntityMappingType entityDescriptor,
 			SessionFactoryImplementor sessionFactory) {
 		super( entityDescriptor, sessionFactory );
+		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+		final SelectableMapping selectable = identifierMapping.getSelectable( 0 );
+		final JdbcMapping jdbcMapping = selectable.getJdbcMapping();
 		final var idClass = identifierMapping.getJavaType().getJavaTypeClass();
 		idArray = (Object[]) Array.newInstance( idClass, 0 );
-		arrayJdbcMapping =
-				resolveArrayJdbcMapping( getIdentifierMapping().getJdbcMapping(), idClass, getSessionFactory() );
-		jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );
+		arraySqlTypedMapping = new SqlTypedMappingImpl(
+				selectable.getColumnDefinition(),
+				selectable.getLength(),
+				selectable.getPrecision(),
+				selectable.getScale(),
+				selectable.getTemporalPrecision(),
+				resolveArrayJdbcMapping(
+						jdbcMapping,
+						jdbcMapping.getJdbcJavaType().getJavaTypeClass(),
+						sessionFactory
+				)
+		);
+		jdbcParameter = new SqlTypedMappingJdbcParameter( arraySqlTypedMapping );
 	}
 
 	@Override
@@ -90,8 +107,10 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 				);
 
 		final var bindings = new JdbcParameterBindingsImpl(1);
-		bindings.addBinding( jdbcParameter,
-				new JdbcParameterBindingImpl( arrayJdbcMapping, toIdArray( idsInBatch ) ) );
+		bindings.addBinding(
+				jdbcParameter,
+				new JdbcParameterBindingImpl( arraySqlTypedMapping.getJdbcMapping(), toIdArray( idsInBatch ) )
+		);
 
 		final var sqlAstTranslator =
 				getSqlAstTranslatorFactory()
@@ -156,7 +175,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 				sqlAst,
 				jdbcSelectOperation,
 				jdbcParameter,
-				arrayJdbcMapping,
+				arraySqlTypedMapping.getJdbcMapping(),
 				null,
 				null,
 				null,

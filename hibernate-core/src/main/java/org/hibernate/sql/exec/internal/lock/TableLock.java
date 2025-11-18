@@ -17,6 +17,7 @@ import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -29,7 +30,7 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.internal.StandardStatementCreator;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -196,7 +197,7 @@ public class TableLock {
 				entityKey.getIdentifierValue(),
 				(valueIndex, value, jdbcValueMapping) -> {
 					final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
-					final var jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+					final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
 					restriction.addExpression( jdbcParameter );
 					jdbcParameterBindings.addBinding( jdbcParameter,
 							new JdbcParameterBindingImpl( jdbcMapping, value ) );
@@ -218,12 +219,12 @@ public class TableLock {
 		querySpec.applyPredicate( restriction );
 
 		entityKeys.forEach( (entityKey) -> {
-			final List<JdbcParameterImpl> valueParams = arrayList( tableDetails.getKeyDetails().getColumnCount() );
+			final List<JdbcParameter> valueParams = arrayList( tableDetails.getKeyDetails().getColumnCount() );
 			identifierMapping.breakDownJdbcValues(
 					entityKey.getIdentifierValue(),
 					(valueIndex, value, jdbcValueMapping) -> {
 						final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
-						final var jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+						final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
 						valueParams.add( jdbcParameter );
 						jdbcParameterBindings.addBinding( jdbcParameter,
 								new JdbcParameterBindingImpl( jdbcMapping, value ) );

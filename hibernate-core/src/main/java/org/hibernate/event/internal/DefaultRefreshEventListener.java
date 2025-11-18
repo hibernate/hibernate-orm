@@ -242,50 +242,52 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			LazyInitializer lazyInitializer,
 			Object id,
 			PersistenceContext persistenceContext) {
-		// Handle the requested lock-mode (if one) in relation to the entry's (if one) current lock-mode
+		// Handle the requested lock mode, if any, in relation to the current
+		// lock mode, if any, of the entry.
 		var lockOptionsToUse = event.getLockOptions();
 		final LockMode requestedLockMode = lockOptionsToUse.getLockMode();
 		final LockMode postRefreshLockMode;
-		if ( entry != null ) {
-			final LockMode currentLockMode = entry.getLockMode();
-			if ( currentLockMode.greaterThan( requestedLockMode ) ) {
-				// the requested lock-mode is less restrictive than the current one
-				//		- pass along the current lock-mode (after accounting for WRITE)
-				lockOptionsToUse = lockOptionsToUse.makeCopy();
-				if ( currentLockMode == LockMode.WRITE
-						|| currentLockMode == LockMode.PESSIMISTIC_WRITE
-						|| currentLockMode == LockMode.PESSIMISTIC_READ ) {
-					// our transaction should already hold the exclusive lock on
-					// the underlying row - so READ should be sufficient.
-					//
-					// in fact, this really holds true for any current lock-mode that indicates we
-					// hold an exclusive lock on the underlying row - but we *need* to handle
-					// WRITE specially because the Loader/Locker mechanism does not allow for WRITE
-					// locks
-					lockOptionsToUse.setLockMode( LockMode.READ );
-					// and prepare to reset the entry lock-mode to the previous lock mode after
-					// the refresh completes
-					postRefreshLockMode = currentLockMode;
-				}
-				else {
-					lockOptionsToUse.setLockMode( currentLockMode );
-					postRefreshLockMode = null;
-				}
-			}
-			else {
-				postRefreshLockMode = null;
-			}
-		}
-		else {
+		if ( entry == null ) {
+			// Should never happen now that we can't refresh detached entities.
 			postRefreshLockMode = null;
 		}
+		else {
+			final LockMode currentLockMode = entry.getLockMode();
+			if ( requestedLockMode.greaterThan( currentLockMode )
+					|| currentLockMode == LockMode.NONE
+					|| currentLockMode == LockMode.READ ) {
+				// Either the current transaction does not hold an exclusive
+				// lock or we're upgrading to a more restrictive lock mode.
+				// Nothing special to do in this case.
+				postRefreshLockMode = null;
+			}
+			else {
+				// The requested lock mode is no more restrictive than the
+				// exclusive lock already held. Preserve the current mode.
+				lockOptionsToUse = lockOptionsToUse.makeCopy();
+				// The current transaction already holds an exclusive lock,
+				// so refreshing with READ is sufficient. Also see HHH-19937;
+				// we want to avoid dupe version checks.
+				lockOptionsToUse.setLockMode( LockMode.READ );
+				// But prepare to reset the entry lock mode to the previous
+				// lock mode after the refresh completes, except in the case
+				// where the two lock modes belong to the same level, in which
+				// case we will need to reset the entry to the requested mode.
+				postRefreshLockMode =
+						requestedLockMode.lessThan( currentLockMode )
+								? currentLockMode
+								: requestedLockMode;
+			}
+		}
 
+		// Go ahead and reload the entity from the database.
 		final Object result = persister.load( id, object, lockOptionsToUse, source );
 		if ( result != null ) {
-			// apply postRefreshLockMode, if needed
+			// Apply the preserved postRefreshLockMode, if any.
 			if ( postRefreshLockMode != null ) {
-				// if we get here, there was a previous entry, and we need to reset its lock mode
-				//		- however, the refresh operation actually creates a new entry, so get it
+				// If we get here, there was a previous entry, and a lock was already held.
+				// But the refresh operation created a new entry with a less restrictive
+				// lock mode recorded. So we need to reset the lock mode of the new entry.
 				persistenceContext.getEntry( result ).setLockMode( postRefreshLockMode );
 			}
 			source.setReadOnly( result, isReadOnly( entry, persister, lazyInitializer, source ) );

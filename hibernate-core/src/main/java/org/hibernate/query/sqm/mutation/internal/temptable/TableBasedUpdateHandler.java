@@ -59,7 +59,7 @@ import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -119,7 +119,7 @@ public class TableBasedUpdateHandler
 			this.sessionUidParameter = null;
 		}
 		else {
-			this.sessionUidParameter = new JdbcParameterImpl( sessionUidColumn.getJdbcMapping() );
+			this.sessionUidParameter = new SqlTypedMappingJdbcParameter( sessionUidColumn );
 		}
 		final SessionFactoryImplementor sessionFactory = getSessionFactory();
 		final MappingMetamodel domainModel = sessionFactory.getMappingMetamodel();

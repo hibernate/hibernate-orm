@@ -30,7 +30,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.internal.lock.LockingHelper;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
@@ -216,8 +216,7 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 			LoaderSqlAstCreationState sqlAstCreationState,
 			TableGroup rootTableGroup,
 			JdbcParameterBindings jdbcParameterBindings) {
-		final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
-		final var jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+		final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
 		rootQuerySpec.applyPredicate(
 				new ComparisonPredicate(
 						sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
@@ -229,8 +228,8 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 				)
 		);
 
-		jdbcParameterBindings.addBinding( jdbcParameter,
-				new JdbcParameterBindingImpl( jdbcMapping, value ) );
+		final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
+		jdbcParameterBindings.addBinding( jdbcParameter, new JdbcParameterBindingImpl( jdbcMapping, value ) );
 	}
 
 }

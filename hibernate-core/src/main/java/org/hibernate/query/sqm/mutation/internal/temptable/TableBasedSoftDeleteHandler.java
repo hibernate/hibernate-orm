@@ -46,7 +46,7 @@ import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -105,7 +105,7 @@ public class TableBasedSoftDeleteHandler
 			this.sessionUidParameter = null;
 		}
 		else {
-			this.sessionUidParameter = new JdbcParameterImpl( sessionUidColumn.getJdbcMapping() );
+			this.sessionUidParameter = new SqlTypedMappingJdbcParameter( sessionUidColumn );
 		}
 
 		final MultiTableSqmMutationConverter converter = new MultiTableSqmMutationConverter(

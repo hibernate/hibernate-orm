@@ -33,7 +33,7 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.internal.StandardStatementCreator;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -108,7 +108,7 @@ public class LockingHelper {
 		final ComparisonPredicate restriction;
 		if ( jdbcTypeCount == 1 ) {
 			final var jdbcParameter =
-					new JdbcParameterImpl( keyPart.getSelectable( 0 ).getJdbcMapping() );
+					new SqlTypedMappingJdbcParameter( keyPart.getSelectable( 0 ) );
 			keyDescriptor.breakDownJdbcValues(
 					collectionToLock.getKey(),
 					(valueIndex, value, jdbcValueMapping) -> {
@@ -127,7 +127,7 @@ public class LockingHelper {
 					(valueIndex, value, jdbcValueMapping) -> {
 						columnReferences.add( new ColumnReference( tableReference, jdbcValueMapping ) );
 						final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
-						final var jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+						final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
 						jdbcParameters.add( jdbcParameter );
 						parameterBindings.addBinding( jdbcParameter,
 								new JdbcParameterBindingImpl( jdbcMapping, value ) );
@@ -248,7 +248,7 @@ public static void lockCollectionTable(
 					collectionInstance.getKey(),
 					(valueIndex, value, jdbcValueMapping) -> {
 						final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
-						final var jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+						final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
 						restriction.addExpression( jdbcParameter );
 						parameterBindings.addBinding( jdbcParameter,
 								new JdbcParameterBindingImpl( jdbcMapping, value ) );
@@ -291,7 +291,7 @@ public static void lockCollectionTable(
 					collectionKeyValue,
 					(valueIndex, value, jdbcValueMapping) -> {
 						final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
-						final var jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+						final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
 						jdbcParameters.add( jdbcParameter );
 						parameterBindings.addBinding( jdbcParameter,
 								new JdbcParameterBindingImpl( jdbcMapping, value ) );
@@ -389,7 +389,7 @@ public static void lockCollectionTable(
 					collectionKey.getKey(),
 					(valueIndex, value, jdbcValueMapping) -> {
 						final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
-						final var jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+						final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
 						restriction.addExpression( jdbcParameter );
 						parameterBindings.addBinding( jdbcParameter,
 								new JdbcParameterBindingImpl( jdbcMapping, value ) );
@@ -427,7 +427,7 @@ public static void lockCollectionTable(
 					collectionKey.getKey(),
 					(valueIndex, value, jdbcValueMapping) -> {
 						final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
-						final var jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+						final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
 						jdbcParameters.add( jdbcParameter );
 						parameterBindings.addBinding( jdbcParameter,
 								new JdbcParameterBindingImpl( jdbcMapping, value ) );

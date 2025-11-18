@@ -14,6 +14,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.LockMode;
 import org.hibernate.Session;
+import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
@@ -22,6 +23,7 @@ import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.lock.OptimisticEntityLockException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
@@ -43,6 +45,7 @@ import static jakarta.persistence.LockModeType.PESSIMISTIC_WRITE;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -56,10 +59,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	private Long id;
+	private Long cid;
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return  new Class[] { A.class };
+		return  new Class[] { A.class, C.class };
 	}
 
 	@Override
@@ -79,6 +83,9 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 			A a = new A( "it" );
 			session.persist( a );
 			id = a.getId();
+			C c = new C( "it" );
+			session.persist( c );
+			cid = c.getId();
 		} );
 	}
 
@@ -261,6 +268,88 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 			session.refresh( a, PESSIMISTIC_WRITE, Collections.emptyMap() );
 			checkLockMode( a, LockMode.PESSIMISTIC_WRITE, session );
 		} );
+	}
+
+	@Test
+	@JiraKey(value = "HHH-19937")
+	public void testRefreshWithOptimisticExplicitHigherLevelLockMode() {
+		doInHibernate( this::sessionFactory, session -> {
+			C c = session.find( C.class, id );
+			checkLockMode( c, LockMode.READ, session );
+			session.refresh( c, LockModeType.OPTIMISTIC );
+			checkLockMode( c, LockMode.OPTIMISTIC, session );
+			session.refresh( c );
+			checkLockMode( c, LockMode.OPTIMISTIC, session );
+		} );
+		doInHibernate( this::sessionFactory, session -> {
+			C c = session.find( C.class, id );
+			checkLockMode( c, LockMode.READ, session );
+			session.refresh( c, LockModeType.OPTIMISTIC );
+			checkLockMode( c, LockMode.OPTIMISTIC, session );
+			session.refresh( c, LockMode.OPTIMISTIC_FORCE_INCREMENT );
+			checkLockMode( c, LockMode.OPTIMISTIC_FORCE_INCREMENT, session );
+		} );
+		doInHibernate( this::sessionFactory, session -> {
+			C c = session.find( C.class, id );
+			checkLockMode( c, LockMode.READ, session );
+			session.refresh( c, LockModeType.OPTIMISTIC_FORCE_INCREMENT );
+			checkLockMode( c, LockMode.OPTIMISTIC_FORCE_INCREMENT, session );
+			session.refresh( c );
+			checkLockMode( c, LockMode.OPTIMISTIC_FORCE_INCREMENT, session );
+		} );
+	}
+
+	@Test
+	@JiraKey(value = "HHH-19937")
+	public void testRefreshWithOptimisticLockRefresh() {
+		doInHibernate( this::sessionFactory, session -> {
+			C c = session.find( C.class, id, LockModeType.OPTIMISTIC );
+			doInHibernate( this::sessionFactory, s -> {
+				s.find( C.class, id ).setValue( "new value" );
+			} );
+			session.refresh( c );
+		} );
+	}
+
+	@Test
+	@JiraKey(value = "HHH-19937")
+	public void testRefreshWithOptimisticForceIncrementLockRefresh() {
+		doInHibernate( this::sessionFactory, session -> {
+			C c = session.find( C.class, id, LockModeType.OPTIMISTIC_FORCE_INCREMENT );
+			doInHibernate( this::sessionFactory, s -> {
+				s.find( C.class, id ).setValue( "new value" );
+			} );
+			session.refresh( c );
+		} );
+	}
+
+	@Test
+	@JiraKey(value = "HHH-19937")
+	public void testRefreshWithOptimisticLockFailure() {
+		assertThrows( OptimisticEntityLockException.class, () ->
+			doInHibernate( this::sessionFactory, session -> {
+				C c = session.find( C.class, id, LockModeType.OPTIMISTIC );
+				session.refresh( c );
+				doInHibernate( this::sessionFactory, s -> {
+					s.find( C.class, id ).setValue( "new value" );
+				} );
+			} )
+		);
+	}
+
+	@Test
+	@JiraKey(value = "HHH-19937")
+	public void testRefreshWithOptimisticForceIncrementLockFailure() {
+		// TODO: shouldn't this also be an OptimisticEntityLockException
+		assertThrows( StaleObjectStateException.class, () ->
+			doInHibernate( this::sessionFactory, session -> {
+				C c = session.find( C.class, id, LockModeType.OPTIMISTIC_FORCE_INCREMENT );
+				session.refresh( c );
+				doInHibernate( this::sessionFactory, s -> {
+					s.find( C.class, id ).setValue( "new value" );
+				} );
+			} )
+		);
 	}
 
 	@Test

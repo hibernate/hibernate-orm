@@ -6,6 +6,7 @@ package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.UnresolvableObjectException;
@@ -244,27 +245,30 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			PersistenceContext persistenceContext) {
 		// Handle the requested lock mode, if any, in relation to the current
 		// lock mode, if any, of the entry.
-		var lockOptionsToUse = event.getLockOptions();
-		final LockMode requestedLockMode = lockOptionsToUse.getLockMode();
+		final var lockOptions = event.getLockOptions();
+		final var requestedLockMode = lockOptions.getLockMode();
+		final LockOptions lockOptionsToUse;
 		final LockMode postRefreshLockMode;
 		if ( entry == null ) {
 			// Should never happen now that we can't refresh detached entities.
+			lockOptionsToUse = lockOptions;
 			postRefreshLockMode = null;
 		}
 		else {
-			final LockMode currentLockMode = entry.getLockMode();
+			final var currentLockMode = entry.getLockMode();
 			if ( requestedLockMode.greaterThan( currentLockMode )
 					|| currentLockMode == LockMode.NONE
 					|| currentLockMode == LockMode.READ ) {
 				// Either the current transaction does not hold an exclusive
 				// lock or we're upgrading to a more restrictive lock mode.
 				// Nothing special to do in this case.
+				lockOptionsToUse = lockOptions;
 				postRefreshLockMode = null;
 			}
 			else {
 				// The requested lock mode is no more restrictive than the
 				// exclusive lock already held. Preserve the current mode.
-				lockOptionsToUse = lockOptionsToUse.makeCopy();
+				lockOptionsToUse = lockOptions.makeCopy();
 				// The current transaction already holds an exclusive lock,
 				// so refreshing with READ is sufficient. Also see HHH-19937;
 				// we want to avoid dupe version checks.

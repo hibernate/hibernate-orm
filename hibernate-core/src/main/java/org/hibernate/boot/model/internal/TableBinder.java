@@ -542,8 +542,7 @@ public class TableBinder {
 					logicalName.render(),
 					subselect,
 					isAbstract,
-					buildingContext,
-					logicalName.isExplicit()
+					buildingContext
 			);
 		}
 	}

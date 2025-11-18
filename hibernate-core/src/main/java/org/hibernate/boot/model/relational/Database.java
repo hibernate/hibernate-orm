@@ -103,24 +103,7 @@ public class Database {
 	 * @return The wrapped Identifier form
 	 */
 	public Identifier toIdentifier(String text) {
-		return toIdentifier( text, false );
-	}
-
-	/**
-	 * Wrap the raw name of a database object in its Identifier form accounting
-	 * for quoting from any of:
-	 * <ul>
-	 *     <li>explicit quoting in the name itself</li>
-	 *     <li>global request to quote all identifiers</li>
-	 * </ul>
-	 *
-	 * @param text The raw object name
-	 * @param isExplicit Whether the name is explicitly set
-	 * @return The wrapped Identifier form
-	 * @implNote Quoting from database keywords happens only when building physical identifiers.
-	 */
-	public Identifier toIdentifier(String text, boolean isExplicit) {
-		return text == null ? null : jdbcEnvironment.getIdentifierHelper().toIdentifier( text, false, isExplicit );
+		return text == null ? null : jdbcEnvironment.getIdentifierHelper().toIdentifier( text );
 	}
 
 	public PhysicalNamingStrategy getPhysicalNamingStrategy() {

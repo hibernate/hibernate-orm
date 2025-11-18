@@ -960,11 +960,6 @@ public class HANADialect extends Dialect {
 			}
 
 			@Override
-			public Identifier toIdentifier(String text, boolean quoted, boolean isExplicit) {
-				return normalizeQuoting( Identifier.toIdentifier( text, quoted, isExplicit ) );
-			}
-
-			@Override
 			public Identifier normalizeQuoting(Identifier identifier) {
 				Identifier normalizedIdentifier = this.helper.normalizeQuoting( identifier );
 

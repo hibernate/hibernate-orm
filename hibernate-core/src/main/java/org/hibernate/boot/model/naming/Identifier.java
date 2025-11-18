@@ -23,7 +23,6 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
 public class Identifier implements Comparable<Identifier> {
 	private final String text;
 	private final boolean isQuoted;
-	private final boolean isExplicit;
 
 	/**
 	 * Means to generate an {@link Identifier} instance from its simple text form.
@@ -63,7 +62,7 @@ public class Identifier implements Comparable<Identifier> {
 	 * @return The identifier form, or {@code null} if text was {@code null}
 	 */
 	public static Identifier toIdentifier(String text, boolean quote) {
-		return toIdentifier( text, quote, true, false );
+		return toIdentifier( text, quote, true );
 	}
 
 	/**
@@ -82,25 +81,6 @@ public class Identifier implements Comparable<Identifier> {
 	 * @return The identifier form, or {@code null} if text was {@code null}
 	 */
 	public static Identifier toIdentifier(String text, boolean quote, boolean autoquote) {
-		return toIdentifier( text, quote, autoquote, false );
-	}
-
-	/**
-	 * Means to generate an {@link Identifier} instance from its simple text form.
-	 * <p>
-	 * If passed {@code text} is {@code null}, {@code null} is returned.
-	 * <p>
-	 * If passed {@code text} is surrounded in quote markers, the returned Identifier
-	 * is considered quoted. Quote markers include back-ticks (`), double-quotes ("),
-	 * and brackets ([ and ]).
-	 *
-	 * @param text The text form
-	 * @param quote Whether to quote unquoted text forms
-	 * @param autoquote Whether to quote the result if it contains special characters
-	 * @param isExplicit Whether the name is explicitly set
-	 * @return The identifier form, or {@code null} if text was {@code null}
-	 */
-	public static Identifier toIdentifier(String text, boolean quote, boolean autoquote, boolean isExplicit) {
 		if ( isBlank( text ) ) {
 			return null;
 		}
@@ -126,7 +106,7 @@ public class Identifier implements Comparable<Identifier> {
 		else if ( autoquote && !quote ) {
 			quote = autoquote( text, start, end );
 		}
-		return new Identifier( text.substring( start, end ), quote, isExplicit );
+		return new Identifier( text.substring( start, end ), quote );
 	}
 
 	private static boolean autoquote(String text, int start, int end) {
@@ -204,17 +184,6 @@ public class Identifier implements Comparable<Identifier> {
 	 * @param quoted Is this a quoted identifier?
 	 */
 	public Identifier(String text, boolean quoted) {
-		this( text, quoted, false );
-	}
-
-	/**
-	 * Constructs an identifier instance.
-	 *
-	 * @param text The identifier text.
-	 * @param quoted Is this a quoted identifier?
-	 * @param isExplicit Whether the name is explicitly set
-	 */
-	public Identifier(String text, boolean quoted, boolean isExplicit) {
 		if ( isEmpty( text ) ) {
 			throw new IllegalIdentifierException( "Identifier text cannot be null" );
 		}
@@ -223,7 +192,6 @@ public class Identifier implements Comparable<Identifier> {
 		}
 		this.text = text;
 		this.isQuoted = quoted;
-		this.isExplicit = isExplicit;
 	}
 
 	/**
@@ -234,7 +202,6 @@ public class Identifier implements Comparable<Identifier> {
 	protected Identifier(String text) {
 		this.text = text;
 		this.isQuoted = false;
-		this.isExplicit = false;
 	}
 
 	/**
@@ -327,9 +294,5 @@ public class Identifier implements Comparable<Identifier> {
 	@Deprecated(since = "7.1", forRemoval = true)
 	public static Identifier quote(Identifier identifier) {
 		return identifier.quoted();
-	}
-
-	public boolean isExplicit() {
-		return isExplicit;
 	}
 }

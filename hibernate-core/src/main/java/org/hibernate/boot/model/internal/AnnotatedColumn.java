@@ -353,10 +353,9 @@ if ( BOOT_LOGGER.isDebugEnabled() && logicalColumnName != null ) {
 	 * @return {@code true} if a name could be inferred
 	 */
 	boolean inferColumnNameIfPossible(String columnName, String propertyName, boolean applyNamingStrategy) {
-		if ( isNotEmpty( columnName ) || isNotEmpty( propertyName ) ) {
+		if ( !isEmpty( columnName ) || !isEmpty( propertyName ) ) {
 			final String logicalColumnName = resolveLogicalColumnName( columnName, propertyName );
-			mappingColumn.setName(
-					processColumnName( logicalColumnName, applyNamingStrategy, isNotEmpty( columnName ) ) );
+			mappingColumn.setName( processColumnName( logicalColumnName, applyNamingStrategy ) );
 			return true;
 		}
 		else {
@@ -404,12 +403,11 @@ if ( BOOT_LOGGER.isDebugEnabled() && logicalColumnName != null ) {
 		return result;
 	}
 
-	protected String processColumnName(String columnName, boolean applyNamingStrategy, boolean isExplicit) {
+	protected String processColumnName(String columnName, boolean applyNamingStrategy) {
 		if ( applyNamingStrategy ) {
 			final var database = getDatabase();
 			return getPhysicalNamingStrategy()
-					.toPhysicalColumnName( database.toIdentifier( columnName, isExplicit ),
-							database.getJdbcEnvironment() )
+					.toPhysicalColumnName( database.toIdentifier( columnName ), database.getJdbcEnvironment() )
 					.render( database.getDialect() );
 		}
 		else {

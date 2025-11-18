@@ -60,7 +60,12 @@ class Person {
 
 The annotation is only legal on top-level embedded.  Placement on nested embedded values will be ignored.
 
-[[MultiFindOption]]
+[[read-only-replicas]]
+== Read-only replicas
+
+This release features experimental support for accessing data held in {versionDocBase}/introduction/html_single/#read-only-replicas[read only replicas] of the main database.
+
+[[FindMultipleOption]]
 == Introduction of FindMultipleOption
 
 Previous versions of Hibernate supported loading multiple entities of a type via the `Session#byMultipleIds` method.
@@ -131,3 +136,16 @@ Also, support for vectors in the following databases was added:
 * https://www.ibm.com/docs/en/db2/12.1.0?topic=list-vector-values[DB2 12.1+]
 * https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-vector-engine-guide/sap-hana-cloud-sap-hana-database-vector-engine-guide[SAP HANA Cloud QRC 4/2024+]
 * https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type?view=sql-server-ver17[SQL Server 2025+]
+
+== Enhancements to SchemaManager
+
+Two new methods were added to `SchemaManager`:
+
+- `resynchronizeGenerators()` force all sequences to catch up with data imported to their corresponding tables
+- `truncateTable()` truncates a single table and resets its corresponding primary key sequence
+
+In addition, `truncate()` now automatically resets all primary key sequences and tables backing table generators.
+
+== Regular expression support in HQL
+
+The operators `like regexp` and `ilike regexp` were added to HQL, allowing {versionDocBase}/querylanguage/html_single/#like-predicate[patterns to be written as regular expressions].

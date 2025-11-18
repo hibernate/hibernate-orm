@@ -48,6 +48,17 @@ See the link:{releaseSeriesBase}#whats-new[website] for the list of new features
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#api[API].
 
+[[contains]]
+=== Session.contains(String,Object) deprecated
+
+The method `contains(String,Object)` of `Session` was deprecated.
+Use `contains(Object)` instead.
+
+[[noInterceptor]]
+== SharedSessionBuilder.noInterceptor()
+
+The behavior of `SharedSessionBuilder.noInterceptor()` was changed to reflect its documented semantics.
+
 [[jpa]]
 === @Jpa (hibernate-testing)
 

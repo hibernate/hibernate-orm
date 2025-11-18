@@ -308,8 +308,8 @@ public class LockOptions implements Serializable {
 
 	public boolean hasNonDefaultOptions() {
 		return timeout != Timeouts.WAIT_FOREVER_MILLI
-				|| scope != Locking.Scope.ROOT_ONLY
-				|| followOnStrategy != Locking.FollowOn.ALLOW;
+			|| scope != Locking.Scope.ROOT_ONLY
+			|| followOnStrategy != Locking.FollowOn.ALLOW;
 	}
 
 
@@ -588,7 +588,7 @@ public class LockOptions implements Serializable {
 	 */
 	@Deprecated(since = "7", forRemoval = true)
 	public LockOptions makeCopy() {
-		final LockOptions copy = new LockOptions();
+		final var copy = new LockOptions();
 		copy( this, copy );
 		return copy;
 	}
@@ -606,7 +606,7 @@ public class LockOptions implements Serializable {
 			return this;
 		}
 		else {
-			final LockOptions copy = new LockOptions();
+			final var copy = new LockOptions();
 			copy( this, copy );
 			return copy;
 		}

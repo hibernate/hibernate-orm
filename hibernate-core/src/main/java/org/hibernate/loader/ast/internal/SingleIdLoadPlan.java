@@ -5,8 +5,6 @@
 package org.hibernate.loader.ast.internal;
 
 import org.hibernate.LockOptions;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.Loadable;
@@ -15,7 +13,6 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.internal.SimpleQueryOptions;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryOptionsAdapter;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.CallbackImpl;
@@ -54,21 +51,21 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 			SessionFactoryImplementor sessionFactory) {
 		this.entityMappingType = entityMappingType;
 		this.restrictivePart = restrictivePart;
-		this.lockOptions = lockOptions.makeCopy();
+		this.lockOptions = lockOptions.makeDefensiveCopy();
 		this.jdbcParameters = jdbcParameters;
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
-		this.jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
-				.translate(
-						null,
-						new QueryOptionsAdapter() {
-							@Override
-							public LockOptions getLockOptions() {
-								return lockOptions;
-							}
-						}
-				);
+		this.jdbcSelect =
+				sessionFactory.getJdbcServices().getJdbcEnvironment()
+						.getSqlAstTranslatorFactory()
+						.buildSelectTranslator( sessionFactory, sqlAst )
+						.translate(
+								null,
+								new QueryOptionsAdapter() {
+									@Override
+									public LockOptions getLockOptions() {
+										return lockOptions;
+									}
+								}
+						);
 	}
 
 	protected LockOptions getLockOptions() {

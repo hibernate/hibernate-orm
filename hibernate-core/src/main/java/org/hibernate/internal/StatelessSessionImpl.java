@@ -1302,6 +1302,11 @@ class StatelessSessionImpl extends AbstractSharedSessionContract implements Stat
 		return false;
 	}
 
+	@Override
+	public boolean isManaged(Object entity) {
+		return false;
+	}
+
 	/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//TODO: COPY/PASTE FROM SessionImpl, pull up!

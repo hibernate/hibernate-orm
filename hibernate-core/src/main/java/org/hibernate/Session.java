@@ -470,7 +470,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param object an instance of a persistent class
 	 *
 	 * @return {@code true} if the given instance is associated with this {@code Session}
+	 *
+	 * @deprecated Use {@link #contains(Object)} instead.
 	 */
+	@Deprecated(since = "7.2", forRemoval = true)
 	boolean contains(String entityName, Object object);
 
 	/**

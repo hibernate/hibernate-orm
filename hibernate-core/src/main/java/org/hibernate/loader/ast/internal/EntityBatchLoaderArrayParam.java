@@ -14,15 +14,17 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
-import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
@@ -43,8 +45,8 @@ public class EntityBatchLoaderArrayParam<T>
 		implements SqlArrayMultiKeyLoader {
 	private final int domainBatchSize;
 
-	private final BasicEntityIdentifierMapping identifierMapping;
-	private final JdbcMapping arrayJdbcMapping;
+	private final EntityIdentifierMapping identifierMapping;
+	private final SqlTypedMapping arraySqlTypedMapping;
 	private final JdbcParameter jdbcParameter;
 	private final SelectStatement sqlAst;
 	private final JdbcOperationQuerySelect jdbcSelectOperation;
@@ -76,14 +78,23 @@ public class EntityBatchLoaderArrayParam<T>
 			);
 		}
 
-		identifierMapping = (BasicEntityIdentifierMapping) getLoadable().getIdentifierMapping();
-		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
-				identifierMapping.getJdbcMapping(),
-				identifierMapping.getJavaType().getJavaTypeClass(),
-				sessionFactory
+		identifierMapping = getLoadable().getIdentifierMapping();
+		final SelectableMapping selectable = identifierMapping.getSelectable( 0 );
+		final JdbcMapping jdbcMapping = selectable.getJdbcMapping();
+		arraySqlTypedMapping = new SqlTypedMappingImpl(
+				selectable.getColumnDefinition(),
+				selectable.getLength(),
+				selectable.getPrecision(),
+				selectable.getScale(),
+				selectable.getTemporalPrecision(),
+				MultiKeyLoadHelper.resolveArrayJdbcMapping(
+					jdbcMapping,
+					jdbcMapping.getJdbcJavaType().getJavaTypeClass(),
+					sessionFactory
+				)
 		);
 
-		jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );
+		jdbcParameter = new SqlTypedMappingJdbcParameter( arraySqlTypedMapping );
 		sqlAst = LoaderSelectBuilder.createSelectBySingleArrayParameter(
 				getLoadable(),
 				identifierMapping,
@@ -140,7 +151,7 @@ public class EntityBatchLoaderArrayParam<T>
 				sqlAst,
 				jdbcSelectOperation,
 				jdbcParameter,
-				arrayJdbcMapping,
+				arraySqlTypedMapping.getJdbcMapping(),
 				id,
 				entityInstance,
 				getLoadable().getRootEntityDescriptor(),

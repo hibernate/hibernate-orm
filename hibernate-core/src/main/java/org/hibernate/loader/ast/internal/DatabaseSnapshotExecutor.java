@@ -32,7 +32,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
@@ -110,7 +110,7 @@ class DatabaseSnapshotExecutor {
 							selection.getContainingTableExpression()
 					);
 
-					final JdbcParameter jdbcParameter = new JdbcParameterImpl( selection.getJdbcMapping() );
+					final JdbcParameter jdbcParameter = new SqlTypedMappingJdbcParameter( selection );
 					jdbcParametersBuilder.add( jdbcParameter );
 
 					final ColumnReference columnReference = (ColumnReference) sqlExpressionResolver

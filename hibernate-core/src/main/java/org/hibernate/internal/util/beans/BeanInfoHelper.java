@@ -22,14 +22,14 @@ public class BeanInfoHelper {
 		T processBeanInfo(BeanInfo beanInfo) throws Exception;
 	}
 
-	private final Class beanClass;
-	private final Class stopClass;
+	private final Class<?> beanClass;
+	private final Class<?> stopClass;
 
-	public BeanInfoHelper(Class beanClass) {
+	public BeanInfoHelper(Class<?> beanClass) {
 		this( beanClass, Object.class );
 	}
 
-	public BeanInfoHelper(Class beanClass, Class stopClass) {
+	public BeanInfoHelper(Class<?> beanClass, Class<?> stopClass) {
 		this.beanClass = beanClass;
 		this.stopClass = stopClass;
 	}
@@ -46,7 +46,7 @@ public class BeanInfoHelper {
 		visitBeanInfo( beanClass, Object.class, delegate );
 	}
 
-	public static void visitBeanInfo(Class beanClass, Class stopClass, BeanInfoDelegate delegate) {
+	public static void visitBeanInfo(Class<?> beanClass, Class<?> stopClass, BeanInfoDelegate delegate) {
 		try {
 			BeanInfo info = Introspector.getBeanInfo( beanClass, stopClass );
 			try {
@@ -70,11 +70,11 @@ public class BeanInfoHelper {
 		}
 	}
 
-	public static <T> T visitBeanInfo(Class beanClass, ReturningBeanInfoDelegate<T> delegate) {
+	public static <T> T visitBeanInfo(Class<?> beanClass, ReturningBeanInfoDelegate<T> delegate) {
 		return visitBeanInfo( beanClass, null, delegate );
 	}
 
-	public static <T> T visitBeanInfo(Class beanClass, Class stopClass, ReturningBeanInfoDelegate<T> delegate) {
+	public static <T> T visitBeanInfo(Class<?> beanClass, Class<?> stopClass, ReturningBeanInfoDelegate<T> delegate) {
 		try {
 			BeanInfo info = Introspector.getBeanInfo( beanClass, stopClass );
 			try {

@@ -249,10 +249,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 
 	@Override
 	public QueryParameterImplementor<?> findQueryParameter(String name) {
-		if ( queryParametersByName == null ) {
-			return null;
-		}
-		return queryParametersByName.get( name );
+		return queryParametersByName == null ? null : queryParametersByName.get( name );
 	}
 
 	@Override

@@ -278,12 +278,12 @@ public interface MappingSettings {
 	String PREFER_NATIVE_ENUM_TYPES = "hibernate.type.prefer_native_enum_types";
 
 	/**
-	 * Indicates whether {@link Locale#toLanguageTag()} should be preferred over {@link Locale#toString()}
-	 * when converting a value to a {@linkplain String}.
+	 * Indicates whether {@link Locale#toLanguageTag()} should be preferred over
+	 * {@link Locale#toString()} when converting a {@code Locale} to a {@code String}.
 	 * <p/>
 	 * This configuration property is used to specify a global preference,
 	 * but Hibernate ORM can always read both formats, so no data needs to be migrated.
-	 * The setting simply configures how {@link Locale} data is to be stored.
+	 * The setting only affects how {@link Locale} data is stored.
 	 *
 	 * @settingDefault false
 	 *

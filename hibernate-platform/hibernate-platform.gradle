@@ -64,6 +64,16 @@ dependencies {
     }
 }
 
+
+tasks.register("releasePrepare") {
+    group "release-prepare"
+    description "See :release:releasePrepare for details."
+
+    dependsOn tasks.generateMetadataFileForPublishedArtifactsPublication
+    dependsOn tasks.generatePomFileForPublishedArtifactsPublication
+    dependsOn tasks.publishAllPublicationsToStagingRepository
+}
+
 var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
 publishingExtension.publications.named("publishedArtifacts", MavenPublication) {
     from components.javaPlatform

@@ -76,22 +76,22 @@ dependencyResolutionManagement {
             def antlrVersion = version "antlr", "4.13.2"
             // WARNING: When upgrading to a version of bytebuddy that supports a new bytecode version,
             // make sure to remove the now unnecessary net.bytebuddy.experimental=true in relevant CI jobs (Jenkinsfile).
-            def byteBuddyVersion = version "byteBuddy", "1.17.6"
+            def byteBuddyVersion = version "byteBuddy", "1.17.8"
             def checkerFrameworkVersion = version "checkerFramework", "3.52.0"
-            def classmateVersion = version "classmate", "1.7.0"
+            def classmateVersion = version "classmate", "1.7.1"
             def geolatteVersion = version "geolatte", "1.10"
             def hibernateModelsVersion = version "hibernateModels", "1.0.1"
-            def jandexVersion = version "jandex", "3.3.1"
-            def jacksonVersion = version "jackson", "2.19.1"
+            def jandexVersion = version "jandex", "3.3.2"
+            def jacksonVersion = version "jackson", "2.19.4"
             def jbossLoggingVersion = version "jbossLogging", "3.6.1.Final"
             def jbossLoggingToolVersion = version "jbossLoggingTool", "3.0.4.Final"
 
-            def agroalVersion = version "agroal", "2.7.1"
+            def agroalVersion = version "agroal", "2.8"
             def c3poVersion = version "c3p0", "0.11.2"
-            def hikaricpVersion = version "hikaricp", "6.3.0"
+            def hikaricpVersion = version "hikaricp", "7.0.2"
 
             def jcacheVersion = version "jcache", "1.1.1"
-            def ehcache3Version = version "ehcache3", "3.10.8"
+            def ehcacheVersion = version "ehcache", "3.11.1"
 
             def micrometerVersion = version "micrometer", "1.15.1"
 
@@ -127,7 +127,7 @@ dependencyResolutionManagement {
             library( "geolatte", "org.geolatte", "geolatte-geom" ).versionRef( geolatteVersion )
 
             library( "jcache", "javax.cache", "cache-api" ).versionRef( jcacheVersion )
-            library( "ehcache3", "org.ehcache", "ehcache" ).versionRef( ehcache3Version )
+            library( "ehcache", "org.ehcache", "ehcache" ).versionRef( ehcacheVersion )
 
             library( "micrometer", "io.micrometer", "micrometer-core" ).versionRef( micrometerVersion )
 
@@ -143,8 +143,8 @@ dependencyResolutionManagement {
             def interceptorsVersion = version "interceptors", "2.2.0"
             def dataVersion = version "data", "1.0.1"
             def jaccVersion = version "jacc", "3.0.0"
-            def jaxbApiVersion = version "jaxbApi", "4.0.2"
-            def jaxbRuntimeVersion = version "jaxbRuntime", "4.0.5"
+            def jaxbApiVersion = version "jaxbApi", "4.0.4"
+            def jaxbRuntimeVersion = version "jaxbRuntime", "4.0.6"
             def jsonbApiVersion = version "jsonbApi", "3.0.1"
             def jsonbRuntimeVersion = version "jsonbRuntime", "3.0.4"
             def jtaVersion = version "jta", "2.0.1"
@@ -166,14 +166,14 @@ dependencyResolutionManagement {
             library( "jaxb", "org.glassfish.jaxb", "jaxb-runtime" ).versionRef( jaxbRuntimeVersion )
         }
         testLibs {
-            def junitJupiterVersion = version "junitJupiter", "6.0.0"
+            def junitJupiterVersion = version "junitJupiter", "6.0.1"
             def junit4Version = version "junit4", "4.13.2"
-            def junitJupiterLauncherVersion = version "junitJupiterLauncher", "6.0.0"
+            def junitJupiterLauncherVersion = version "junitJupiterLauncher", "6.0.1"
 
             def assertjVersion = version "assertj", "3.26.3"
             def hamcrestVersion = version "hamcrest", "3.0"
             def bytemanVersion = version "byteman", "4.0.24"
-            def jbossJtaVersion = version "jbossJta", "7.2.2.Final"
+            def jbossJtaVersion = version "jbossJta", "7.3.3.Final"
             def jbossTxSpiVersion = version "jbossTxSpi", "8.0.0.Final"
             def log4jVersion = version "log4j", "2.24.3"
             def mockitoVersion = version "mockito", "5.20.0"
@@ -184,7 +184,7 @@ dependencyResolutionManagement {
 
             def jfrUnitVersion = version "jfrUnit", "1.0.0.Alpha2"
 
-            def hibernateValidatorVersion = version "hibernateValidator", "9.0.0.Final"
+            def hibernateValidatorVersion = version "hibernateValidator", "9.1.0.Final"
 
             library( "validator", "org.hibernate.validator", "hibernate-validator" ).versionRef( hibernateValidatorVersion )
 

@@ -93,7 +93,7 @@ dependencyResolutionManagement {
             def jcacheVersion = version "jcache", "1.1.1"
             def ehcacheVersion = version "ehcache", "3.11.1"
 
-            def micrometerVersion = version "micrometer", "1.15.1"
+            def micrometerVersion = version "micrometer", "1.16.0"
 
             def antVersion = version "ant", "1.10.15"
 

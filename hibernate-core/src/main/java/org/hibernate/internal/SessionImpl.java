@@ -152,7 +152,8 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Chris Cranford
  * @author Sanne Grinovero
  */
-class SessionImpl
+// Extended by Hibernate Reactive
+public class SessionImpl
 		extends AbstractSharedSessionContract
 		implements Serializable, SharedSessionContractImplementor, JdbcSessionOwner, SessionImplementor, EventSource,
 				TransactionCoordinatorBuilder.Options, WrapperOptions, LoadAccessContext {
@@ -181,7 +182,7 @@ class SessionImpl
 
 	private transient TransactionObserver transactionObserver;
 
-	SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
+	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 
 		final var sessionOpenEvent = getEventMonitor().beginSessionOpenEvent();

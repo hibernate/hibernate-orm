@@ -116,7 +116,8 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Gavin King
  * @author Steve Ebersole
  */
-class StatelessSessionImpl extends AbstractSharedSessionContract implements StatelessSessionImplementor {
+// Extended by Hibernate Reactive
+public class StatelessSessionImpl extends AbstractSharedSessionContract implements StatelessSessionImplementor {
 
 	public static final MultiIdLoadOptions MULTI_ID_LOAD_OPTIONS = new MultiLoadOptions();
 
@@ -128,7 +129,7 @@ class StatelessSessionImpl extends AbstractSharedSessionContract implements Stat
 	private final FlushMode flushMode;
 	private final EventListenerGroups eventListenerGroups;
 
-	StatelessSessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
+	public StatelessSessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 		connectionProvided = options.getConnection() != null;
 		if ( options instanceof SharedSessionCreationOptions sharedOptions

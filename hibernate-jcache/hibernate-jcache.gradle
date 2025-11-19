@@ -11,7 +11,7 @@ dependencies {
 
     testImplementation project( ':hibernate-testing' )
 
-    testRuntimeOnly(libs.ehcache3) {
+    testRuntimeOnly(libs.ehcache) {
         capabilities {
             requireCapability 'org.ehcache.modules:ehcache-xml-jakarta'
         }

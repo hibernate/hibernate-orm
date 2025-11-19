@@ -364,12 +364,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 	private <T, X> T withCacheableSqmInterpretation(DomainQueryExecutionContext executionContext, X context, SqmInterpreter<T, X> interpreter) {
 		final var session = executionContext.getSession();
-		final boolean preFlush =
-				executionContext.getQueryParameterBindings()
-						.hasAnyTransientEntityBindings( session );
-		if ( preFlush ) {
-			session.autoPreFlush( null );
-		}
+
+		final boolean preFlushed = session.autoPreFlushIfRequired( executionContext.getQueryParameterBindings() );
 
 		// IMPORTANT NOTE: Intentional double-lock checking
 		// Another solution would be to use ReadWriteLock
@@ -428,7 +424,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			jdbcParameterBindings = createJdbcParameterBindings( localCopy, executionContext );
 		}
 
-		return interpreter.interpret( context, executionContext, localCopy, jdbcParameterBindings, preFlush );
+		return interpreter.interpret( context, executionContext, localCopy, jdbcParameterBindings, preFlushed );
 	}
 
 	// For Hibernate Reactive

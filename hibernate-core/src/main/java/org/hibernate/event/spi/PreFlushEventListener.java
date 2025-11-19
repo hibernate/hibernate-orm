@@ -5,11 +5,15 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 
 /**
+ * A listener for events of type {@link PreFlushEvent}.
+ *
  * @author Gavin King
  * @since 7.2
  */
+@Incubating
 public interface PreFlushEventListener {
-	void onAutoPreFlush(AutoFlushEvent event) throws HibernateException;
+	void onAutoPreFlush(PreFlushEvent event) throws HibernateException;
 }

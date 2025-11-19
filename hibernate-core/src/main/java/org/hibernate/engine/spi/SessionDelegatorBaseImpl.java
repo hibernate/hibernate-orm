@@ -60,6 +60,7 @@ import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
@@ -418,8 +419,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void autoPreFlush(Set<String> querySpaces) {
-		delegate.autoPreFlush( querySpaces );
+	public boolean autoPreFlushIfRequired(QueryParameterBindings parameterBindings) {
+		return delegate.autoPreFlushIfRequired( parameterBindings );
 	}
 
 	@Override

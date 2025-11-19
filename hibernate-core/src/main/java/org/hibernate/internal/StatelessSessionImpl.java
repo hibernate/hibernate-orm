@@ -69,6 +69,7 @@ import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.internal.CacheLoadHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import java.util.List;
@@ -1325,7 +1326,8 @@ class StatelessSessionImpl extends AbstractSharedSessionContract implements Stat
 	}
 
 	@Override
-	public void autoPreFlush(Set<String> querySpaces) {
+	public boolean autoPreFlushIfRequired(QueryParameterBindings parameterBindings) {
+		return false;
 	}
 
 	@Override

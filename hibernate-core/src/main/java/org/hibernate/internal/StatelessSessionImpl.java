@@ -1325,7 +1325,7 @@ class StatelessSessionImpl extends AbstractSharedSessionContract implements Stat
 	}
 
 	@Override
-	public void autoPreFlush() {
+	public void autoPreFlush(Set<String> querySpaces) {
 	}
 
 	@Override

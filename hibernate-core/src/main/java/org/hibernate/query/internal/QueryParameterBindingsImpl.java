@@ -19,6 +19,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -28,8 +29,10 @@ import org.hibernate.type.descriptor.java.JavaTypedExpressible;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.engine.internal.CacheHelper.addBasicValueToCacheKey;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedMapOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Manages the group of QueryParameterBinding for a particular query.
@@ -176,6 +179,34 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public boolean hasAnyTransientEntityBindings(SharedSessionContractImplementor session) {
+		for ( var binding : parameterBindingMap.values() ) {
+			if ( binding.isMultiValued() ) {
+				for ( var value : binding.getBindValues() ) {
+					if ( isTransientEntityBinding( session, binding, value ) ) {
+						return true;
+					}
+				}
+			}
+			else {
+				if ( isTransientEntityBinding( session, binding, binding.getBindValue() ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private static boolean isTransientEntityBinding(
+			SharedSessionContractImplementor session, QueryParameterBinding<?> binding, Object value) {
+		return value != null && !isHibernateProxy( value ) && extractLazyInitializer( value ) == null
+			&& binding.getBindType() instanceof EntityDomainType<?> entityDomainType
+			&& session.getFactory().getMappingMetamodel()
+					.getEntityDescriptor( entityDomainType.getHibernateEntityName() )
+					.isTransient( value, session ) == Boolean.TRUE;
 	}
 
 	@Override

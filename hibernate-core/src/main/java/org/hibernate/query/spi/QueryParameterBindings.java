@@ -76,6 +76,8 @@ public interface QueryParameterBindings {
 
 	boolean hasAnyMultiValuedBindings();
 
+	boolean hasAnyTransientEntityBindings(SharedSessionContractImplementor factory);
+
 	/**
 	 * Generate a "memento" for these parameter bindings that can be used
 	 * in creating a {@link QueryKey}
@@ -124,6 +126,11 @@ public interface QueryParameterBindings {
 
 		@Override
 		public boolean hasAnyMultiValuedBindings() {
+			return false;
+		}
+
+		@Override
+		public boolean hasAnyTransientEntityBindings(SharedSessionContractImplementor factory) {
 			return false;
 		}
 

@@ -121,6 +121,11 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 	}
 
 	@Override
+	public boolean hasAnyTransientEntityBindings(SharedSessionContractImplementor factory) {
+		return false;
+	}
+
+	@Override
 	public void visitBindings(BiConsumer<? super QueryParameter<?>, ? super QueryParameterBinding<?>> action) {
 		bindingMap.forEach( action );
 	}

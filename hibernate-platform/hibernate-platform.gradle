@@ -67,6 +67,17 @@ dependencies {
     }
 }
 
+task releasePrepare {
+	group "release-prepare"
+	description "See :release:releasePrepare for details."
+
+	dependsOn generateMetadataFileForPublishedArtifactsPublication
+	dependsOn generatePomFileForPublishedArtifactsPublication
+	// we depend on publishAllPublicationsToStagingRepository to make sure that the artifacts are "published" to a local staging directory
+	// used by JReleaser during the release process
+	dependsOn publishAllPublicationsToStagingRepository
+}
+
 publishing {
     publications {
         publishedArtifacts {

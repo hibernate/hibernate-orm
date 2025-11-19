@@ -588,25 +588,20 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 				return true;
 			}
 		}
-		if ( unresolvedInsertions == null ) {
-			return false;
-		}
-		return areTablesToBeUpdated( unresolvedInsertions, tables );
+		return unresolvedInsertions != null
+			&& areTablesToBeUpdated( unresolvedInsertions, tables );
 	}
 
 	private static boolean areTablesToBeUpdated(@Nullable ExecutableList<?> queue, Set<? extends Serializable> tableSpaces) {
-		if ( queue == null || queue.isEmpty() ) {
-			return false;
-		}
-		else {
+		if ( queue != null && !queue.isEmpty() ) {
 			for ( var actionSpace : queue.getQuerySpaces() ) {
 				if ( tableSpaces.contains( actionSpace ) ) {
 					ACTION_LOGGER.changesMustBeFlushedToSpace( actionSpace );
 					return true;
 				}
 			}
-			return false;
 		}
+		return false;
 	}
 
 	private static boolean areTablesToBeUpdated(UnresolvedEntityInsertActions actions, Set<? extends Serializable> tableSpaces) {

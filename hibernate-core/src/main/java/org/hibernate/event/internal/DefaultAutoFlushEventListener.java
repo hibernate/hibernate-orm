@@ -34,8 +34,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 		final var partialFlushEvent = eventMonitor.beginPartialFlushEvent();
 		try {
 			eventListenerManager.partialFlushStart();
-
-			if ( flushMightBeNeeded( source ) ) {
+			if ( flushMightBeNeeded( event, source ) ) {
 				// Need to get the number of collection removals before flushing to executions
 				// (because flushing to executions can add collection removal actions to the action queue).
 				final var actionQueue = source.getActionQueue();
@@ -89,7 +88,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 		final var eventMonitor = source.getEventMonitor();
 		final var diagnosticEvent = eventMonitor.beginPrePartialFlush();
 		try {
-			if ( flushMightBeNeeded( source ) ) {
+			if ( flushMightBeNeeded( null, source ) ) {
 				preFlush( source, source.getPersistenceContextInternal() );
 			}
 		}
@@ -99,15 +98,27 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 		}
 	}
 
-	private boolean flushIsReallyNeeded(AutoFlushEvent event, final EventSource source) {
+	private boolean flushIsReallyNeeded(AutoFlushEvent event, EventSource source) {
 		return source.getHibernateFlushMode() == FlushMode.ALWAYS
 			|| source.getActionQueue().areTablesToBeUpdated( event.getQuerySpaces() );
 	}
 
-	private boolean flushMightBeNeeded(final EventSource source) {
+	private boolean flushMightBeNeeded(AutoFlushEvent event, EventSource source) {
+		return flushMightBeNeededForMode( event, source )
+			&& nonEmpty( source );
+	}
+
+	private static boolean flushMightBeNeededForMode(AutoFlushEvent event, EventSource source) {
+		return switch ( source.getHibernateFlushMode() ) {
+			case ALWAYS -> true;
+			case AUTO -> event == null || !event.getQuerySpaces().isEmpty();
+			case MANUAL, COMMIT -> false;
+		};
+	}
+
+	private static boolean nonEmpty(EventSource source) {
 		final var persistenceContext = source.getPersistenceContextInternal();
-		return !source.getHibernateFlushMode().lessThan( FlushMode.AUTO )
-			&& ( persistenceContext.getNumberOfManagedEntities() > 0
-				|| persistenceContext.getCollectionEntriesSize() > 0 );
+		return persistenceContext.getNumberOfManagedEntities() > 0
+			|| persistenceContext.getCollectionEntriesSize() > 0;
 	}
 }

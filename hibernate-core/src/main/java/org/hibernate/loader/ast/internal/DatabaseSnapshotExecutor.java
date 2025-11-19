@@ -4,9 +4,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -25,13 +22,16 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.StandardBasicTypes;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_OBJECT_ARRAY;
 import static org.hibernate.loader.LoaderLogging.LOADER_LOGGER;
@@ -44,7 +44,7 @@ class DatabaseSnapshotExecutor {
 
 	private final EntityMappingType entityDescriptor;
 
-	private final JdbcOperationQuerySelect jdbcSelect;
+	private final JdbcSelect jdbcSelect;
 	private final JdbcParametersList jdbcParameters;
 
 	DatabaseSnapshotExecutor(

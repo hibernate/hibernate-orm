@@ -48,7 +48,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
@@ -458,10 +458,10 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 							type
 					)
 			) );
-			final SqlAstTranslator<JdbcOperationQuerySelect> translator =
+			final SqlAstTranslator<JdbcSelect> translator =
 					creationContext.getDialect().getSqlAstTranslatorFactory()
 							.buildSelectTranslator( creationContext.getSessionFactory(), new SelectStatement( fakeQuery ) );
-			final JdbcOperationQuerySelect operation = translator.translate( null, QueryOptions.NONE );
+			final JdbcSelect operation = translator.translate( null, QueryOptions.NONE );
 			final String sqlString = operation.getSqlString();
 			assert sqlString.startsWith( "select " );
 

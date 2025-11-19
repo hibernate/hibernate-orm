@@ -12,7 +12,7 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.model.ast.TableMutation;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
@@ -24,7 +24,7 @@ import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 public class StandardSqlAstTranslatorFactory implements SqlAstTranslatorFactory {
 
 	@Override
-	public SqlAstTranslator<JdbcOperationQuerySelect> buildSelectTranslator(SessionFactoryImplementor sessionFactory, SelectStatement statement) {
+	public SqlAstTranslator<JdbcSelect> buildSelectTranslator(SessionFactoryImplementor sessionFactory, SelectStatement statement) {
 		return buildTranslator( sessionFactory, statement );
 	}
 

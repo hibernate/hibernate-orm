@@ -7,9 +7,14 @@ package org.hibernate.loader.ast.spi;
 import org.hibernate.SessionCheckMode;
 import org.hibernate.engine.spi.SessionImplementor;
 
-/**
- * Encapsulation of the options for loading multiple entities by id
- */
+
+/// Encapsulation of the options for loading multiple entities (of a type)
+/// by [id][org.hibernate.KeyType#IDENTIFIER].
+///
+/// @see org.hibernate.Session#findMultiple
+/// @see MultiIdEntityLoader
+///
+/// @author Steve Ebersole
 public interface MultiIdLoadOptions extends MultiLoadOptions {
 	/**
 	 * Controls whether to check the current status of each identified entity

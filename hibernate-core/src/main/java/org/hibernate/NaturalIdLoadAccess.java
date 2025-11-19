@@ -5,7 +5,6 @@
 package org.hibernate;
 
 import jakarta.persistence.EntityGraph;
-
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.SingularAttribute;
@@ -35,7 +34,10 @@ import java.util.Optional;
  * @see Session#byNaturalId(Class)
  * @see org.hibernate.annotations.NaturalId
  * @see SimpleNaturalIdLoadAccess
+ *
+ * @deprecated (since 7.3) Use {@linkplain Session#findByNaturalId} instead.
  */
+@Deprecated
 public interface NaturalIdLoadAccess<T> {
 
 	/**

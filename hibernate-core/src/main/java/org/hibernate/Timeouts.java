@@ -146,4 +146,17 @@ public interface Timeouts {
 		}
 		return Integer.parseInt( factoryHint.toString() );
 	}
+
+	static Timeout fromHintTimeout(Object factoryHint) {
+		if ( factoryHint == null ) {
+			return WAIT_FOREVER;
+		}
+		if ( factoryHint instanceof Timeout timeout ) {
+			return timeout;
+		}
+		if ( factoryHint instanceof Integer number ) {
+			return Timeout.milliseconds( number );
+		}
+		return Timeout.milliseconds( Integer.parseInt( factoryHint.toString() ) );
+	}
 }

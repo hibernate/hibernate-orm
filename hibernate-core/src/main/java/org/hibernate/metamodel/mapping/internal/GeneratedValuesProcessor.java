@@ -4,9 +4,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -25,10 +22,13 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.hibernate.sql.results.spi.ListResultsConsumer.UniqueSemantic.FILTER;
 
@@ -51,7 +51,7 @@ import static org.hibernate.sql.results.spi.ListResultsConsumer.UniqueSemantic.F
 @Incubating
 public class GeneratedValuesProcessor {
 	private final SelectStatement selectStatement;
-	private final JdbcOperationQuerySelect jdbcSelect;
+	private final JdbcSelect jdbcSelect;
 	private final List<AttributeMapping> generatedValuesToSelect;
 	private final JdbcParametersList jdbcParameters;
 
@@ -217,7 +217,7 @@ public class GeneratedValuesProcessor {
 		return entityDescriptor;
 	}
 
-	public JdbcOperationQuerySelect getJdbcSelect() {
+	public JdbcSelect getJdbcSelect() {
 		return jdbcSelect;
 	}
 }

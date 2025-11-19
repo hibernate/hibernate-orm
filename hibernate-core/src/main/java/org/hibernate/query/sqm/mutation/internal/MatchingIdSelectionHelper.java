@@ -4,10 +4,6 @@
  */
 package org.hibernate.query.sqm.mutation.internal;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -44,17 +40,20 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
 import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
-
 import org.jboss.logging.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Helper used to generate the SELECT for selection of an entity's identifier, here specifically intended to be used
@@ -162,7 +161,7 @@ public class MatchingIdSelectionHelper {
 	 * Centralized selection of ids matching the restriction of the DELETE
 	 * or UPDATE SQM query
 	 */
-	public static CacheableSqmInterpretation<SelectStatement, JdbcOperationQuerySelect> createMatchingIdsSelect(
+	public static CacheableSqmInterpretation<SelectStatement, JdbcSelect> createMatchingIdsSelect(
 			SqmDeleteOrUpdateStatement<?> sqmMutationStatement,
 			DomainParameterXref domainParameterXref,
 			DomainQueryExecutionContext executionContext,
@@ -215,7 +214,7 @@ public class MatchingIdSelectionHelper {
 		final SqmTranslation<SelectStatement> translation = translator.translate();
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslator<JdbcOperationQuerySelect> sqlAstSelectTranslator = jdbcEnvironment
+		final SqlAstTranslator<JdbcSelect> sqlAstSelectTranslator = jdbcEnvironment
 				.getSqlAstTranslatorFactory()
 				.buildSelectTranslator( factory, translation.getSqlAst() );
 
@@ -267,13 +266,13 @@ public class MatchingIdSelectionHelper {
 			DomainParameterXref domainParameterXref,
 			DomainQueryExecutionContext executionContext) {
 		final MutableObject<JdbcParameterBindings> jdbcParameterBindings = new MutableObject<>();
-		final CacheableSqmInterpretation<SelectStatement, JdbcOperationQuerySelect> interpretation =
+		final CacheableSqmInterpretation<SelectStatement, JdbcSelect> interpretation =
 				createMatchingIdsSelect( sqmMutationStatement, domainParameterXref, executionContext, jdbcParameterBindings );
 		return selectMatchingIds( interpretation, jdbcParameterBindings.get(), executionContext );
 	}
 
 	public static List<Object> selectMatchingIds(
-			CacheableSqmInterpretation<SelectStatement, JdbcOperationQuerySelect> interpretation,
+			CacheableSqmInterpretation<SelectStatement, JdbcSelect> interpretation,
 			JdbcParameterBindings jdbcParameterBindings,
 			DomainQueryExecutionContext executionContext) {
 		final RowTransformer<?> rowTransformer;

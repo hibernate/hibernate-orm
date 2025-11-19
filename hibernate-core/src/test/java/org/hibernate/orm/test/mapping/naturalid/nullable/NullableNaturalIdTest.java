@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.mapping.naturalid.nullable;
 
+import org.hibernate.KeyType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
@@ -14,6 +15,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.Matchers.is;
@@ -28,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DomainModel(
 		annotatedClasses = { A.class, B.class, C.class, D.class },
-		xmlMappings = "/org/hibernate/orm/test/mapping/naturalid/nullable/User.hbm.xml"
+		xmlMappings = "mappings/natural-id/nullable/User.hbm.xml"
 )
 @SessionFactory
 public class NullableNaturalIdTest {
@@ -195,6 +197,22 @@ public class NullableNaturalIdTest {
 					assertThat( b.assA, notNullValue() );
 				}
 		);
+	}
+
+	@Test
+	void testNullability(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			session.persist( new C( 1, null ) );
+			session.persist( new C( 2, "something" ) );
+		} );
+
+		factoryScope.inTransaction( (session) -> {
+			final C c1 = session.find( C.class, null, KeyType.NATURAL );
+			Assertions.assertEquals( 1, c1.oid );
+
+			final C c2 = session.find( C.class, "something", KeyType.NATURAL );
+			Assertions.assertEquals( 2, c2.oid );
+		} );
 	}
 
 	@Test

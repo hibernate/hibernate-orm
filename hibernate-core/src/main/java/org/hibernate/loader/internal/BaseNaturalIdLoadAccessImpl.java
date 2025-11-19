@@ -15,6 +15,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.IdentifierLoadAccess;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
@@ -67,6 +68,14 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 		}
 		lockOptions.setLockMode( lockMode );
 		lockOptions.setLockScope( lockScope );
+		return this;
+	}
+
+	protected Object with(Locking.Scope lockScope) {
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions();
+		}
+		lockOptions.setScope( lockScope );
 		return this;
 	}
 

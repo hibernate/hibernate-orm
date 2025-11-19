@@ -20,8 +20,8 @@ import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 
 
 /**
@@ -34,7 +34,7 @@ public abstract class AbstractInlineHandler implements Handler {
 	private final MatchingIdRestrictionProducer matchingIdsPredicateProducer;
 	private final EntityPersister entityDescriptor;
 	private final DomainParameterXref domainParameterXref;
-	private final CacheableSqmInterpretation<SelectStatement, JdbcOperationQuerySelect> matchingIdsInterpretation;
+	private final CacheableSqmInterpretation<SelectStatement, JdbcSelect> matchingIdsInterpretation;
 
 	protected AbstractInlineHandler(
 			MatchingIdRestrictionProducer matchingIdsPredicateProducer,
@@ -95,7 +95,7 @@ public abstract class AbstractInlineHandler implements Handler {
 		return domainParameterXref;
 	}
 
-	protected CacheableSqmInterpretation<SelectStatement, JdbcOperationQuerySelect> getMatchingIdsInterpretation() {
+	protected CacheableSqmInterpretation<SelectStatement, JdbcSelect> getMatchingIdsInterpretation() {
 		return matchingIdsInterpretation;
 	}
 }

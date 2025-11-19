@@ -38,11 +38,11 @@ import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcOperationQueryDelete;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.internal.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 
 /// Utilities for helping test HQL translation
 ///
@@ -190,7 +190,7 @@ public class HqlHelper {
 		}
 	}
 
-	private static class SqmSelectInterpreter<R> extends SqmInterpreter<R, SqmSelectStatement<R>, SelectStatement, JdbcOperationQuerySelect> {
+	private static class SqmSelectInterpreter<R> extends SqmInterpreter<R, SqmSelectStatement<R>, SelectStatement, JdbcSelect> {
 		public SqmSelectInterpreter(
 				String hql,
 				SessionFactoryImplementor sessionFactory) {
@@ -214,7 +214,7 @@ public class HqlHelper {
 		}
 
 		@Override
-		protected SqlAstTranslator<JdbcOperationQuerySelect> createSqlAstTranslator(
+		protected SqlAstTranslator<JdbcSelect> createSqlAstTranslator(
 				SqmTranslation<SelectStatement> sqmTranslation) {
 			final SqlAstTranslatorFactory sqlAstTranslatorFactory = sessionFactory
 					.getJdbcServices()

@@ -276,6 +276,7 @@ Modifications are automatically detected when the session is <<flush,flushed>>.
 
 On the other hand, except for `getReference()`, the following operations all result in immediate access to the database:
 
+[[methods-for-reading]]
 .Methods for reading and locking data
 [%breakable,cols="30,~"]
 |===
@@ -368,8 +369,29 @@ The following code results in a single SQL `select` statement:
 List<Book> books = session.findMultiple(Book.class, bookIds);
 ----
 
+[[load-by-natural-id]]
+As discussed <<natural-id-attributes,earlier>>, Hibernate offers the ability to map a natural id and perform load operations using that natural id.
+This is accomplished using the `KeyType#NATURAL` `FindOption` -
+
+[source,java]
+----
+var bookKey = new BookKey(...);
+var book = session.find(Book.class, bookKey, NATURAL);
+var books = session.findMultiple(Book.class, List.of(bookKey), NATURAL);
+----
+
+When loading by natural id, the type of value accepted depends on the type of natural id.
+For single-attribute natural ids, whether defined by a basic or embedded type, the attribute type should be used.
+For multi-attribute natural ids, Hibernate will accept a number of forms:
+
+* If a link:{doc-javadoc-url}org/hibernate/annotations/NaturalIdClass.html[`@NaturalIdClass`] is defined, an instance of the natural id class may be used.
+* A `List` of the individual attribute values, ordered alphabetically by name, may be used.
+* A `Map` of the individual attribute values, keyed by the attribute name, may be used.
+
 Each of the operations we've seen so far affects a single entity instance passed as an argument.
 But there's a way to set things up so that an operation will propagate to associated entities.
+
+See the link:{doc-user-guide-url}#find-by-natural-id[User Guide] for more details about loading by natural ids.
 
 [[cascade]]
 === Cascading persistence operations
@@ -595,7 +617,8 @@ Therefore, Hibernate has some APIs that streamline certain more complicated look
 
 [NOTE]
 ====
-Since the introduction of `FindOption` in JPA 3.2, `byId()` is now much less useful.
+Since the introduction of `FindOption` in JPA 3.2, `byId()` is now much less useful and deprecated.
+Instead, use `find()` and `findMultiple()` as discussed <<methods-for-reading,earlier>>.
 ====
 
 Batch loading is very useful when we need to retrieve multiple instances of the same entity class by id:
@@ -626,6 +649,8 @@ We also have some operations for working with lookups by <<natural-identifiers, 
 | `byNaturalId()` | For an entity with multiple attributes are annotated `@NaturalId`
 | `byMultipleNaturalId()` | Lets us load a _batch_ of natural ids at the same time
 |===
+
+Again, see the link:{doc-user-guide-url}#find-by-natural-id[User Guide] for more details about loading by natural ids.
 
 Here's how we can retrieve an entity by its composite natural id:
 

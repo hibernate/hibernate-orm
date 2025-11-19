@@ -9,9 +9,13 @@ import java.util.Map;
 
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-/**
- * Manages all of the MessageKeyWatcher defined by LoggingInspectionsScope
- */
+/// Manages all the MessageKeyWatcher defined by LoggingInspectionsScope
+///
+/// @see LoggingInspections
+/// @see LoggingInspectionsExtension
+/// @see LoggingInspectionsScopeResolver
+///
+/// @author Steve Ebersole
 public class LoggingInspectionsScope {
 	private final Map<String, Map<String,MessageKeyWatcherImpl>> watcherMap = new HashMap<>();
 

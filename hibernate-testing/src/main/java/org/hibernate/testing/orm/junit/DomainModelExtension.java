@@ -32,15 +32,15 @@ import org.junit.platform.commons.support.AnnotationSupport;
 
 import jakarta.persistence.SharedCacheMode;
 
-/**
- * hibernate-testing implementation of a few JUnit5 contracts to support SessionFactory-based testing,
- * including argument injection (or see {@link DomainModelScopeAware})
- *
- * @see ServiceRegistryScope
- * @see DomainModelExtension
- *
- * @author Steve Ebersole
- */
+/// Support for defining the [domain model][MetadataImplementor] used in a test.
+///
+/// @see DomainModel
+/// @see DomainModelFunctionalTesting
+/// @see DomainModelProducer
+///
+/// @implNote Leverages the [service registry][ServiceRegistryScope] defined using the [ServiceRegistryExtension].
+///
+/// @author Steve Ebersole
 public class DomainModelExtension
 		implements TestInstancePostProcessor, BeforeEachCallback, TestExecutionExceptionHandler {
 

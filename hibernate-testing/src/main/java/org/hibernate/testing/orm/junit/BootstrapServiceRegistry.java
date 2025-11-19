@@ -12,9 +12,11 @@ import java.lang.annotation.Target;
 
 import org.hibernate.integrator.spi.Integrator;
 
-/**
- * Used to define the bootstrap ServiceRegistry to be used for testing.
- */
+/// Used to define the bootstrap [org.hibernate.boot.registry.BootstrapServiceRegistry] to be used for testing.
+///
+/// @see ServiceRegistryExtension
+///
+/// @author Steve Ebersole
 @Inherited
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

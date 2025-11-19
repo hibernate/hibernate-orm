@@ -12,15 +12,13 @@ import java.lang.annotation.Target;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 
-/**
- * Annotation that can be used, in conjunction with {@link ExpectedExceptionExtension},
- * to indicate that a specific test is expected to fail in a particular way
- * (throw the specified exception) as its "success condition".
- *
- * @see ExpectedExceptionExtension
- *
- * @author Steve Ebersole
- */
+/// Annotation that can be used, in conjunction with [ExpectedExceptionExtension],
+/// to indicate that a specific test is expected to fail in a particular way
+/// (throw the specified exception) as its "success condition".
+///
+/// @see ExpectedExceptionExtension
+///
+/// @author Steve Ebersole
 @Inherited
 @Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)

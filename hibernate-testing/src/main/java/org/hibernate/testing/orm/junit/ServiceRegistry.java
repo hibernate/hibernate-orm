@@ -12,55 +12,26 @@ import java.lang.annotation.Target;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.spi.ServiceContributor;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-/**
- * @asciidoc
- *
- * Used to define the ServiceRegistry to be used for testing.  Can be used alone:
- *
- * [source, java, indent=0]
- * ----
- * @ServiceRegistry ( ... )
- * class MyTest extends ServiceRegistryAware {
- * 		@Test
- * 		public void doTheTest() {
- *		    // use the injected registry...
- *
- *		    ...
- * 		}
- *
- * 		private StandardServiceRegistry registry;
- *
- * 		@Override
- * 		public void injectServiceRegistryScope(StandardServiceRegistry registry) {
- * 			this.registry = registry;
- * 		}
- * }
- * ----
- *
- * It can also be used as the basis for building a
- * {@link org.hibernate.boot.spi.MetadataImplementor} via {@link DomainModel}
- * or {@link SessionFactoryImplementor} via {@link SessionFactory},
- * with or without {@link ServiceRegistryScopeAware}.  E.g.
- *
- * [source, java, indent=0]
- * ----
- * @ServiceRegistry ( ... )
- * @TestDomain ( ... )
- * class MyTest ... {
- * }
- * ----
- *
- * Here, the managed ServiceRegistry is used to create the
- * {@link org.hibernate.boot.spi.MetadataImplementor}
- *
- * @see ServiceRegistryScopeAware
- *
- * @author Steve Ebersole
- */
+/// Used to define the [org.hibernate.service.ServiceRegistry] to be used for testing.
+/// Produces a [ServiceRegistryScope] which can be injected via [JUnit ParameterResolver][ServiceRegistryParameterResolver]
+/// or via [ServiceRegistryScopeAware]; the ParameterResolver should be preferred.
+///
+/// ```java
+/// @ServiceRegistry(settings=@Setting(name=LOG_SQL, value="true"))
+/// class SomeTest {
+///     @Test
+///     void testStuff(ServiceRegistryScope registryScope) {
+///         ...
+///     }
+/// }
+/// ```
+///
+/// @see ServiceRegistryExtension
+///
+/// @author Steve Ebersole
 @Inherited
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention( RetentionPolicy.RUNTIME )

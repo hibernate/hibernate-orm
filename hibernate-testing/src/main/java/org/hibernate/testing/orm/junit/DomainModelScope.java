@@ -11,9 +11,11 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 
-/**
- * @author Steve Ebersole
- */
+/// Access to the domain model for testing as defined by either [@DomainModel][DomainModel]
+/// or [DomainModelProducer].
+/// Can be injected via [JUnit][DomainModelParameterResolver] or via [DomainModelScopeAware].
+///
+/// @author Steve Ebersole
 public interface DomainModelScope {
 	MetadataImplementor getDomainModel();
 	void releaseModel();

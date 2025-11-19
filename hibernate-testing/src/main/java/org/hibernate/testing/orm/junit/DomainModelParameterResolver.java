@@ -11,9 +11,10 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-/**
- * @author Steve Ebersole
- */
+/// ParameterResolver for [DomainModelExtension], capable of resolving
+/// either [DomainModelScope] or [MetadataImplementor].
+///
+/// @author Steve Ebersole
 public class DomainModelParameterResolver implements ParameterResolver {
 	@Override
 	public boolean supportsParameter(

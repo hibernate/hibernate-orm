@@ -13,11 +13,13 @@ import java.lang.annotation.Target;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-/**
- * Injects the ability to watch for a log messages being triggered.
- *
- * For watching a multiple message-keys, see {@link LoggingInspections}
- */
+/// Injects the ability to watch for a log messages being triggered.
+///
+/// @see MessageKeyWatcher
+/// @see MessageKeyInspectionExtension
+/// @see MessageKeyWatcherResolver
+///
+/// @apiNote For watching multiple message-keys, see [LoggingInspections]
 @Inherited
 @Target({ ElementType.TYPE, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)

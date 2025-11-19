@@ -12,9 +12,12 @@ import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 
 import static org.junit.jupiter.api.extension.ExtensionContext.Namespace.create;
 
-/**
- * @author Steve Ebersole
- */
+///  Support for [MessageKeyWatcher]
+///
+/// @see MessageKeyInspection
+/// @see MessageKeyWatcherResolver
+///
+/// @author Steve Ebersole
 public class MessageKeyInspectionExtension implements TestInstancePostProcessor, BeforeEachCallback {
 	public static final String KEY = LoggingInspectionsExtension.class.getName();
 

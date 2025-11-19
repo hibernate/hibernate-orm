@@ -6,9 +6,12 @@ package org.hibernate.testing.orm.junit;
 
 import java.util.List;
 
-/**
- * @author Steve Ebersole
- */
+/// Allows watching of log messages.
+///
+/// @see LoggingInspections
+/// @see MessageKeyInspection
+///
+/// @author Steve Ebersole
 public interface MessageKeyWatcher {
 	String getMessageKey();
 

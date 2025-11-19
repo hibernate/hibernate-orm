@@ -32,7 +32,6 @@ import static org.hibernate.engine.internal.CacheHelper.addBasicValueToCacheKey;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedMapOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
-import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Manages the group of QueryParameterBinding for a particular query.
@@ -202,7 +201,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	private static boolean isTransientEntityBinding(
 			SharedSessionContractImplementor session, QueryParameterBinding<?> binding, Object value) {
-		return value != null && !isHibernateProxy( value ) && extractLazyInitializer( value ) == null
+		return value != null && !isHibernateProxy( value )
 			&& binding.getBindType() instanceof EntityDomainType<?> entityDomainType
 			&& session.getFactory().getMappingMetamodel()
 					.getEntityDescriptor( entityDomainType.getHibernateEntityName() )

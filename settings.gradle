@@ -149,7 +149,6 @@ dependencyResolutionManagement {
             def jsonbRuntimeVersion = version "jsonbRuntime", "3.0.4"
             def jtaVersion = version "jta", "2.0.1"
             def validationVersion = version "validation", "3.1.1"
-            def xjcVersion = version "jaxbRuntime", jaxbRuntimeVersion
 
             library( "jpa", "jakarta.persistence", "jakarta.persistence-api" ).versionRef( jpaVersion )
             library( "jta", "jakarta.transaction", "jakarta.transaction-api" ).versionRef( jtaVersion )
@@ -222,7 +221,6 @@ dependencyResolutionManagement {
             def h2Version = version "h2", overrideableVersion( "gradle.libs.versions.h2", "2.4.240" )
 
             def db2Version = version "db2", "12.1.3.0"
-            // Latest Derby version 10.16.1.1 only supports JDK 17+, but 10.15.2 should be compatible
             def derbyVersion = version "derby", overrideableVersion( "gradle.libs.versions.derby", "10.17.1.0" )
             def firebirdVersion = version "firebird", "6.0.3"
             def hanaVersion = version "hana", "2.26.11"

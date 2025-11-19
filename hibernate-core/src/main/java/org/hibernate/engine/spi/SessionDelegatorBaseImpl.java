@@ -418,8 +418,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void autoPreFlush() {
-		delegate.autoPreFlush();
+	public void autoPreFlush(Set<String> querySpaces) {
+		delegate.autoPreFlush( querySpaces );
 	}
 
 	@Override

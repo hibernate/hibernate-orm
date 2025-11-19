@@ -81,29 +81,12 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 		}
 	}
 
-	@Override
-	public void onAutoPreFlush(EventSource source) throws HibernateException {
-		final var eventListenerManager = source.getEventListenerManager();
-		eventListenerManager.prePartialFlushStart();
-		final var eventMonitor = source.getEventMonitor();
-		final var diagnosticEvent = eventMonitor.beginPrePartialFlush();
-		try {
-			if ( flushMightBeNeeded( null, source ) ) {
-				preFlush( source, source.getPersistenceContextInternal() );
-			}
-		}
-		finally {
-			eventMonitor.completePrePartialFlush( diagnosticEvent, source );
-			eventListenerManager.prePartialFlushEnd();
-		}
-	}
-
-	private boolean flushIsReallyNeeded(AutoFlushEvent event, EventSource source) {
+	static boolean flushIsReallyNeeded(AutoFlushEvent event, EventSource source) {
 		return source.getHibernateFlushMode() == FlushMode.ALWAYS
 			|| source.getActionQueue().areTablesToBeUpdated( event.getQuerySpaces() );
 	}
 
-	private boolean flushMightBeNeeded(AutoFlushEvent event, EventSource source) {
+	static boolean flushMightBeNeeded(AutoFlushEvent event, EventSource source) {
 		return flushMightBeNeededForMode( event, source )
 			&& nonEmpty( source );
 	}
@@ -111,7 +94,10 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 	private static boolean flushMightBeNeededForMode(AutoFlushEvent event, EventSource source) {
 		return switch ( source.getHibernateFlushMode() ) {
 			case ALWAYS -> true;
-			case AUTO -> event == null || !event.getQuerySpaces().isEmpty();
+			case AUTO -> {
+				final var querySpaces = event.getQuerySpaces();
+				yield querySpaces == null || !querySpaces.isEmpty();
+			}
 			case MANUAL, COMMIT -> false;
 		};
 	}

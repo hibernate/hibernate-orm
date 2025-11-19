@@ -31,6 +31,7 @@ import org.hibernate.event.spi.PreCollectionRecreateEventListener;
 import org.hibernate.event.spi.PreCollectionRemoveEventListener;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.event.spi.PreDeleteEventListener;
+import org.hibernate.event.spi.PreFlushEventListener;
 import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.event.spi.PreUpdateEventListener;
@@ -57,6 +58,7 @@ public final class EventListenerGroups {
 	// All session events need to be iterated frequently;
 	// CollectionAction and EventAction also need most of these very frequently:
 	public final EventListenerGroup<AutoFlushEventListener> eventListenerGroup_AUTO_FLUSH;
+	public final EventListenerGroup<PreFlushEventListener> eventListenerGroup_PRE_FLUSH;
 	public final EventListenerGroup<ClearEventListener> eventListenerGroup_CLEAR;
 	public final EventListenerGroup<DeleteEventListener> eventListenerGroup_DELETE;
 	public final EventListenerGroup<DirtyCheckEventListener> eventListenerGroup_DIRTY_CHECK;
@@ -103,6 +105,7 @@ public final class EventListenerGroups {
 		// Pre-compute all iterators on Event listeners:
 
 		eventListenerGroup_AUTO_FLUSH = listeners( eventListenerRegistry, AUTO_FLUSH );
+		eventListenerGroup_PRE_FLUSH = listeners( eventListenerRegistry, PRE_FLUSH );
 		eventListenerGroup_CLEAR = listeners( eventListenerRegistry, CLEAR );
 		eventListenerGroup_DELETE = listeners( eventListenerRegistry, DELETE );
 		eventListenerGroup_DIRTY_CHECK = listeners( eventListenerRegistry, DIRTY_CHECK );

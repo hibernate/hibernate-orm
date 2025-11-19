@@ -569,8 +569,8 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public void autoPreFlush() {
-		delegate.autoPreFlush();
+	public void autoPreFlush(Set<String> querySpaces) {
+		delegate.autoPreFlush( querySpaces );
 	}
 
 	@Override

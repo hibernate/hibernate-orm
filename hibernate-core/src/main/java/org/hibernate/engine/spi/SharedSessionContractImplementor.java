@@ -535,7 +535,7 @@ public interface SharedSessionContractImplementor
 	 */
 	boolean autoFlushIfRequired(Set<String> querySpaces, boolean skipPreFlush);
 
-	void autoPreFlush();
+	void autoPreFlush(Set<String> querySpaces);
 
 	/**
 	 * Check if there is a Hibernate or JTA transaction in progress and,

@@ -1437,13 +1437,14 @@ class SessionImpl
 	}
 
 	@Override
-	public void autoPreFlush() {
+	public void autoPreFlush(Set<String> querySpaces) {
 		checkOpen();
 		// do not auto-flush while outside a transaction
 		if ( isTransactionInProgress() ) {
-			eventListenerGroups.eventListenerGroup_AUTO_FLUSH
-					.fireEventOnEachListener( this,
-							AutoFlushEventListener::onAutoPreFlush );
+			final var autoFlushEvent = new AutoFlushEvent( querySpaces, false, this );
+			eventListenerGroups.eventListenerGroup_PRE_FLUSH
+					.fireEventOnEachListener( autoFlushEvent,
+							PreFlushEventListener::onAutoPreFlush );
 		}
 	}
 

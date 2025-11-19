@@ -113,9 +113,9 @@ public abstract class AbstractFlushingEventListener {
 	}
 
 	/**
-	 * Process cascade save/update at the start of a flush to discover
-	 * any newly referenced entity that must be passed to saveOrUpdate(),
-	 * and also apply orphan delete
+	 * Process {@link CascadingActions#PERSIST_ON_FLUSH} at the start of a
+	 * flush to discover any newly referenced entity that must be passed to
+	 * {@code persist()}, and also apply orphan delete.
 	 */
 	private void prepareEntityFlushes(EventSource session, PersistenceContext persistenceContext)
 			throws HibernateException {

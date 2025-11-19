@@ -4,30 +4,38 @@
  */
 package org.hibernate.internal;
 
-import java.util.List;
-
 import jakarta.persistence.EntityGraph;
-
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
+import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
+import org.hibernate.KeyType;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.NaturalIdMultiLoadAccess;
+import org.hibernate.NaturalIdSynchronization;
 import org.hibernate.OrderingMode;
+import org.hibernate.ReadOnlyMode;
 import org.hibernate.RemovalsMode;
+import org.hibernate.SessionCheckMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.internal.find.FindMultipleByKeyOperation;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
+import org.hibernate.loader.internal.LoadAccessContext;
 import org.hibernate.persister.entity.EntityPersister;
 
-import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossReferenceSynchronizations;
+import java.util.List;
 
-/**
- * @author Steve Ebersole
- */
-class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAccess<T>, MultiNaturalIdLoadOptions {
+/// Implementation of NaturalIdMultiLoadAccess.
+///
+/// @deprecated Use [FindMultipleByKeyOperation] instead.
+///
+/// @author Steve Ebersole
+@Deprecated
+public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAccess<T>, MultiNaturalIdLoadOptions {
 	private final EntityPersister entityDescriptor;
 	private final SharedSessionContractImplementor session;
 
@@ -41,7 +49,7 @@ class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAccess<T>
 	private RemovalsMode removalsMode = RemovalsMode.REPLACE;
 	private OrderingMode orderingMode = OrderingMode.ORDERED;
 
-	NaturalIdMultiLoadAccessStandard(EntityPersister entityDescriptor, SharedSessionContractImplementor session) {
+	public NaturalIdMultiLoadAccessStandard(EntityPersister entityDescriptor, SharedSessionContractImplementor session) {
 		this.entityDescriptor = entityDescriptor;
 		this.session = session;
 	}
@@ -54,6 +62,13 @@ class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAccess<T>
 		lockOptions.setLockMode( lockMode );
 		lockOptions.setLockScope( lockScope );
 		return this;
+	}
+
+	public void with(Locking.Scope scope) {
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions();
+		}
+		lockOptions.setScope( scope );
 	}
 
 	@Override
@@ -96,72 +111,48 @@ class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAccess<T>
 		return this;
 	}
 
+	public void with(RemovalsMode removalsMode) {
+		this.removalsMode = removalsMode;
+	}
+
 	@Override
 	public NaturalIdMultiLoadAccess<T> enableOrderedReturn(boolean enabled) {
 		this.orderingMode = enabled ? OrderingMode.ORDERED : OrderingMode.UNORDERED;
 		return this;
 	}
 
+	public void with(OrderingMode orderingMode) {
+		this.orderingMode = orderingMode;
+	}
+
 	@Override
 	@SuppressWarnings( "unchecked" )
 	public List<T> multiLoad(Object... ids) {
-		performAnyNeededCrossReferenceSynchronizations( true, entityDescriptor, session );
-
-		final CacheMode sessionCacheMode = session.getCacheMode();
-		boolean cacheModeChanged = false;
-
-		if ( cacheMode != null ) {
-			// naive check for now...
-			// todo : account for "conceptually equal"
-			if ( cacheMode != sessionCacheMode ) {
-				session.setCacheMode( cacheMode );
-				cacheModeChanged = true;
-			}
-		}
-
-		final var loadQueryInfluencers = session.getLoadQueryInfluencers();
-
-		try {
-			final var effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
-			final var initialGraphSemantic = effectiveEntityGraph.getSemantic();
-			final var initialGraph = effectiveEntityGraph.getGraph();
-			final boolean hadInitialGraph = initialGraphSemantic != null;
-
-			if ( graphSemantic != null ) {
-				if ( rootGraph == null ) {
-					throw new IllegalArgumentException( "Graph semantic specified, but no RootGraph was supplied" );
-				}
-				effectiveEntityGraph.applyGraph( rootGraph, graphSemantic );
-			}
-
-			try {
-				return (List<T>)
-						entityDescriptor.getMultiNaturalIdLoader()
-								.multiLoad( ids, this, session );
-			}
-			finally {
-				if ( graphSemantic != null ) {
-					if ( hadInitialGraph ) {
-						effectiveEntityGraph.applyGraph( initialGraph, initialGraphSemantic );
-					}
-					else {
-						effectiveEntityGraph.clear();
-					}
-				}
-			}
-		}
-		finally {
-			if ( cacheModeChanged ) {
-				// change it back
-				session.setCacheMode( sessionCacheMode );
-			}
-		}
-
+		return buildOperation()
+				.performFind( List.of( ids ), graphSemantic, rootGraph, (LoadAccessContext) session );
 	}
 
 	@Override
 	public List<T> multiLoad(List<?> ids) {
-		return multiLoad( ids.toArray( new Object[ 0 ] ) );
+		return buildOperation()
+				.performFind( (List<Object>) ids, graphSemantic, rootGraph, (LoadAccessContext) session );
+	}
+
+	private FindMultipleByKeyOperation<T> buildOperation() {
+		return new FindMultipleByKeyOperation<T>(
+				entityDescriptor,
+				KeyType.NATURAL,
+				batchSize == null ? null : new BatchSize( batchSize ),
+				SessionCheckMode.ENABLED,
+				removalsMode,
+				orderingMode,
+				cacheMode,
+				lockOptions,
+				session.isDefaultReadOnly() ? ReadOnlyMode.READ_ONLY : ReadOnlyMode.READ_WRITE,
+				null,
+				null,
+				NaturalIdSynchronization.ENABLED
+		);
 	}
 
 	@Override

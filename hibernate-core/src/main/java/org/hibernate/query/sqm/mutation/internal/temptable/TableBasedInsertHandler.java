@@ -4,18 +4,6 @@
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-import java.util.stream.IntStream;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableColumn;
@@ -95,17 +83,28 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.BasicType;
-
 import org.hibernate.type.descriptor.ValueBinder;
 import org.jboss.logging.Logger;
+
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.stream.IntStream;
 
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper.isId;
@@ -476,7 +475,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 	}
 
 	protected record RootTableInserter(
-			@Nullable JdbcOperationQuerySelect temporaryTableIdentitySelect,
+			@Nullable JdbcSelect temporaryTableIdentitySelect,
 			@Nullable JdbcOperationQueryMutation temporaryTableIdUpdate,
 			@Nullable String temporaryTableRowNumberSelectSql,
 			JdbcOperationQueryMutation rootTableInsert,
@@ -541,7 +540,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 		applyAssignments( assignments, insertStatement, temporaryTableReference, getEntityDescriptor() );
 		final JdbcServices jdbcServices = getSessionFactory().getJdbcServices();
 		final SharedSessionContractImplementor session = executionContext.getSession();
-		final JdbcOperationQuerySelect temporaryTableIdentitySelect;
+		final JdbcSelect temporaryTableIdentitySelect;
 		final JdbcOperationQueryMutation temporaryTableIdUpdate;
 		final String temporaryTableRowNumberSelectSql;
 		final JdbcOperationQueryMutation rootTableInsert;

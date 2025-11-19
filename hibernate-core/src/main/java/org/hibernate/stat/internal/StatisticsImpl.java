@@ -1044,4 +1044,9 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	public void slowQuery(String sql, long executionTime) {
 		slowQueries.merge( sql, executionTime, Math::max );
 	}
+
+	@Override
+	public void normalizeNaturalId(String entityName) {
+		getNaturalIdStatistics( entityName ).valueNormalized();
+	}
 }

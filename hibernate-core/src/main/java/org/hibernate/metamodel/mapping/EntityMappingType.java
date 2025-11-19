@@ -5,7 +5,10 @@
 package org.hibernate.metamodel.mapping;
 
 import jakarta.persistence.Entity;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Filter;
+import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.annotations.ConcreteProxy;
@@ -45,6 +48,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static java.lang.String.format;
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 
 /**
@@ -363,7 +367,16 @@ public interface EntityMappingType
 	/**
 	 * The mapping for the natural-id of the entity, if one is defined
 	 */
-	NaturalIdMapping getNaturalIdMapping();
+	@Nullable NaturalIdMapping getNaturalIdMapping();
+
+	@NonNull
+	default NaturalIdMapping requireNaturalIdMapping() {
+		var mapping = getNaturalIdMapping();
+		if ( mapping == null ) {
+			throw new HibernateException( format( "Entity %s does not specify a natural id", getEntityName() ) );
+		}
+		return mapping;
+	}
 
 	/**
 	 * The mapping for the row-id of the entity, if one is defined.

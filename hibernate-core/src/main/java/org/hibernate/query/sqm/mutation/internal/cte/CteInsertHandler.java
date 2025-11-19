@@ -91,9 +91,9 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
@@ -124,7 +124,7 @@ public class CteInsertHandler implements InsertHandler {
 	private final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref;
 	private final Map<SqmParameter<?>, MappingModelExpressible<?>> resolvedParameterMappingModelTypes;
 
-	private final JdbcOperationQuerySelect select;
+	private final JdbcSelect select;
 
 	public CteInsertHandler(
 			CteTable cteTable,
@@ -552,7 +552,7 @@ public class CteInsertHandler implements InsertHandler {
 
 		// Execute the statement
 		final JdbcServices jdbcServices = factory.getJdbcServices();
-		final SqlAstTranslator<JdbcOperationQuerySelect> translator = jdbcServices.getJdbcEnvironment()
+		final SqlAstTranslator<JdbcSelect> translator = jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
 				.buildSelectTranslator( factory, statement );
 
@@ -622,7 +622,7 @@ public class CteInsertHandler implements InsertHandler {
 	}
 
 	// For Hibernate Reactive
-	protected JdbcOperationQuerySelect getSelect() {
+	protected JdbcSelect getSelect() {
 		return select;
 	}
 

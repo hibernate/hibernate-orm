@@ -41,8 +41,9 @@ import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.event.spi.*;
 import org.hibernate.event.spi.LoadEventListener.LoadType;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.internal.find.FindByKeyOperation;
+import org.hibernate.internal.find.FindMultipleByKeyOperation;
 import org.hibernate.internal.util.ExceptionHelper;
 import org.hibernate.jpa.internal.LegacySpecHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
@@ -931,80 +932,46 @@ public class SessionImpl
 		fireLoad( new LoadEvent( id, object, this, getReadOnlyFromLoadQueryInfluencers() ), LoadEventListener.RELOAD );
 	}
 
-	private <T> void setMultiIdentifierLoadAccessOptions(FindOption[] options, MultiIdentifierLoadAccess<T> loadAccess) {
-		CacheStoreMode storeMode = getCacheStoreMode();
-		CacheRetrieveMode retrieveMode = getCacheRetrieveMode();
-		LockOptions lockOptions = copySessionLockOptions();
-		int batchSize = -1;
-		for ( var option : options ) {
-			if ( option instanceof CacheStoreMode cacheStoreMode ) {
-				storeMode = cacheStoreMode;
-			}
-			else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
-				retrieveMode = cacheRetrieveMode;
-			}
-			else if ( option instanceof CacheMode cacheMode ) {
-				storeMode = cacheMode.getJpaStoreMode();
-				retrieveMode = cacheMode.getJpaRetrieveMode();
-			}
-			else if ( option instanceof LockModeType lockModeType ) {
-				lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
-			}
-			else if ( option instanceof LockMode lockMode ) {
-				lockOptions.setLockMode( lockMode );
-			}
-			else if ( option instanceof LockOptions lockOpts ) {
-				lockOptions = lockOpts;
-			}
-			else if ( option instanceof PessimisticLockScope pessimisticLockScope ) {
-				lockOptions.setLockScope( pessimisticLockScope );
-			}
-			else if ( option instanceof Timeout timeout ) {
-				lockOptions.setTimeOut( timeout.milliseconds() );
-			}
-			else if ( option instanceof EnabledFetchProfile enabledFetchProfile ) {
-				loadAccess.enableFetchProfile( enabledFetchProfile.profileName() );
-			}
-			else if ( option instanceof ReadOnlyMode ) {
-				loadAccess.withReadOnly( option == ReadOnlyMode.READ_ONLY );
-			}
-			else if ( option instanceof BatchSize batchSizeOption ) {
-				batchSize = batchSizeOption.batchSize();
-			}
-			else if ( option instanceof SessionCheckMode ) {
-				loadAccess.enableSessionCheck( option == SessionCheckMode.ENABLED );
-			}
-			else if ( option instanceof OrderingMode ) {
-				loadAccess.enableOrderedReturn( option == OrderingMode.ORDERED );
-			}
-			else if ( option instanceof RemovalsMode ) {
-				loadAccess.enableReturnOfDeletedEntities( option == RemovalsMode.INCLUDE );
-			}
-		}
-		loadAccess.with( lockOptions )
-				.with( interpretCacheMode( storeMode, retrieveMode ) )
-				.withBatchSize( batchSize );
+	@Override
+	public <E> List<E> findMultiple(Class<E> entityType, List<?> keys, FindOption... options) {
+		//noinspection unchecked
+		return findMultiple(
+				requireEntityPersister( entityType ),
+				loadQueryInfluencers.getEffectiveEntityGraph().getSemantic(),
+				(RootGraphImplementor<E>) loadQueryInfluencers.getEffectiveEntityGraph().getGraph(),
+				(List<Object>) keys,
+				options
+		);
+	}
+
+	private <E> List<E> findMultiple(
+			EntityPersister entityDescriptor,
+			GraphSemantic graphSemantic,
+			RootGraphImplementor<E> rootGraph,
+			List<Object> keys,
+			FindOption... options) {
+		final var operation = new FindMultipleByKeyOperation<E>(
+				entityDescriptor,
+				lockOptions,
+				getCacheMode(),
+				isDefaultReadOnly(),
+				getFactory(),
+				options
+		);
+		return operation.performFind( keys, graphSemantic, rootGraph, this );
 	}
 
 	@Override
-	public <E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption... options) {
-		final var loadAccess = byMultipleIds( entityType );
-		setMultiIdentifierLoadAccessOptions( options, loadAccess );
-		return loadAccess.multiLoad( ids );
-	}
-
-	@Override
-	public <E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> ids, FindOption... options) {
-		final var rootGraph = (RootGraph<E>) entityGraph;
+	public <E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> keys, FindOption... options) {
+		final var rootGraph = (RootGraphImplementor<E>) entityGraph;
 		final var type = rootGraph.getGraphedType();
-		final MultiIdentifierLoadAccess<E> loadAccess =
-				switch ( type.getRepresentationMode() ) {
-					case MAP -> byMultipleIds( type.getTypeName() );
-					case POJO -> byMultipleIds( type.getJavaType() );
-				};
-		loadAccess.withLoadGraph( rootGraph );
-		setMultiIdentifierLoadAccessOptions( options, loadAccess );
-		return loadAccess.multiLoad( ids );
+		final var entityDescriptor = switch ( type.getRepresentationMode() ) {
+			case POJO -> requireEntityPersister( type.getJavaType() );
+			case MAP -> requireEntityPersister( type.getTypeName() );
+		};
+
+		//noinspection unchecked
+		return findMultiple( entityDescriptor, GraphSemantic.LOAD, rootGraph, (List<Object>) keys, options );
 	}
 
 	@Override
@@ -2256,81 +2223,24 @@ public class SessionImpl
 		}
 	}
 
-	private <T> void setLoadAccessOptions(FindOption[] options, IdentifierLoadAccessImpl<T> loadAccess) {
-		CacheStoreMode storeMode = getCacheStoreMode();
-		CacheRetrieveMode retrieveMode = getCacheRetrieveMode();
-		LockOptions lockOptions = copySessionLockOptions();
-		for ( var option : options ) {
-			if ( option instanceof CacheStoreMode cacheStoreMode ) {
-				storeMode = cacheStoreMode;
-			}
-			else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
-				retrieveMode = cacheRetrieveMode;
-			}
-			else if ( option instanceof CacheMode cacheMode ) {
-				storeMode = cacheMode.getJpaStoreMode();
-				retrieveMode = cacheMode.getJpaRetrieveMode();
-			}
-			else if ( option instanceof LockModeType lockModeType ) {
-				lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
-			}
-			else if ( option instanceof LockMode lockMode ) {
-				lockOptions.setLockMode( lockMode );
-			}
-			else if ( option instanceof LockOptions lockOpts ) {
-				lockOptions = lockOpts;
-			}
-			else if ( option instanceof Locking.Scope lockScope ) {
-				lockOptions.setScope( lockScope );
-			}
-			else if ( option instanceof PessimisticLockScope pessimisticLockScope ) {
-				lockOptions.setScope( Locking.Scope.fromJpaScope( pessimisticLockScope ) );
-			}
-			else if ( option instanceof Locking.FollowOn followOn ) {
-				lockOptions.setFollowOnStrategy( followOn );
-			}
-			else if ( option instanceof Timeout timeout ) {
-				lockOptions.setTimeout( timeout );
-			}
-			else if ( option instanceof EnabledFetchProfile enabledFetchProfile ) {
-				loadAccess.enableFetchProfile( enabledFetchProfile.profileName() );
-			}
-			else if ( option instanceof ReadOnlyMode ) {
-				loadAccess.withReadOnly( option == ReadOnlyMode.READ_ONLY );
-			}
-			else if ( option instanceof FindMultipleOption findMultipleOption ) {
-				throw new IllegalArgumentException( "Option '" + findMultipleOption
-							+ "' can only be used in 'findMultiple()'" );
-			}
-		}
-		if ( lockOptions.getLockMode().isPessimistic()
-				&& lockOptions.getTimeOut() == WAIT_FOREVER_MILLI ) {
-			final Object factoryHint = getFactory().getProperties().get( HINT_SPEC_LOCK_TIMEOUT );
-			if ( factoryHint != null ) {
-				lockOptions.setTimeOut( Timeouts.fromHint( factoryHint ) );
-			}
-		}
-		loadAccess.with( lockOptions ).with( interpretCacheMode( storeMode, retrieveMode ) );
+	@Override
+	public <T> T find(Class<T> entityClass, Object key, FindOption... options) {
+		//noinspection unchecked
+		return (T) byKey( requireEntityPersister( entityClass ), options ).performFind( key, this );
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, FindOption... options) {
-		final IdentifierLoadAccessImpl<T> loadAccess = byId( entityClass );
-		setLoadAccessOptions( options, loadAccess );
-		return loadAccess.load( primaryKey );
-	}
-
-	@Override
-	public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
-		final var graph = (RootGraph<T>) entityGraph;
+	public <T> T find(EntityGraph<T> entityGraph, Object key, FindOption... options) {
+		final var graph = (RootGraphImplementor<T>) entityGraph;
 		final var type = graph.getGraphedType();
-		final IdentifierLoadAccessImpl<T> loadAccess =
-				switch ( type.getRepresentationMode() ) {
-					case MAP -> byId( type.getTypeName() );
-					case POJO -> byId( type.getJavaType() );
-				};
-		setLoadAccessOptions( options, loadAccess );
-		return loadAccess.withLoadGraph( graph ).load( primaryKey );
+
+		final EntityPersister entityDescriptor = switch ( type.getRepresentationMode() ) {
+			case POJO -> requireEntityPersister( type.getJavaType() );
+			case MAP -> requireEntityPersister( type.getTypeName() );
+		};
+
+		//noinspection unchecked
+		return (T) byKey( entityDescriptor, GraphSemantic.LOAD, graph, options ).performFind( key, this );
 	}
 
 	// Hibernate Reactive may need to use this
@@ -2393,16 +2303,34 @@ public class SessionImpl
 	}
 
 	@Override
-	public Object find(String entityName, Object primaryKey) {
-		final IdentifierLoadAccessImpl<?> loadAccess = byId( entityName );
-		return loadAccess.load( primaryKey );
+	public Object find(String entityName, Object key) {
+		return byKey( requireEntityPersister( entityName ) ).performFind( key, this );
 	}
 
 	@Override
-	public Object find(String entityName, Object primaryKey, FindOption... options) {
-		final IdentifierLoadAccessImpl<?> loadAccess = byId( entityName );
-		setLoadAccessOptions( options, loadAccess );
-		return loadAccess.load( primaryKey );
+	public Object find(String entityName, Object key, FindOption... options) {
+		return byKey( requireEntityPersister( entityName ), options ).performFind( key, this );
+	}
+
+	private <T> FindByKeyOperation<T> byKey(EntityPersister entityDescriptor, FindOption... options) {
+		return byKey( entityDescriptor, null, null, options );
+	}
+
+	private <T> FindByKeyOperation<T> byKey(
+			EntityPersister entityDescriptor,
+			GraphSemantic graphSemantic,
+			RootGraphImplementor<?> rootGraph,
+			FindOption... options) {
+		return new FindByKeyOperation<>(
+				entityDescriptor,
+				graphSemantic,
+				rootGraph,
+				lockOptions,
+				getCacheMode(),
+				isReadOnly(),
+				getFactory(),
+				options
+		);
 	}
 
 	@Override

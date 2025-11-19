@@ -4,8 +4,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.Locale;
-
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -21,7 +19,9 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
+import org.hibernate.sql.exec.spi.JdbcSelect;
+
+import java.util.Locale;
 
 import static org.hibernate.loader.ast.internal.LoaderHelper.loadByArrayParameter;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.trimIdBatch;
@@ -44,7 +44,7 @@ public class EntityBatchLoaderArrayParam<T>
 	private final SqlTypedMapping arraySqlTypedMapping;
 	private final JdbcParameter jdbcParameter;
 	private final SelectStatement sqlAst;
-	private final JdbcOperationQuerySelect jdbcSelectOperation;
+	private final JdbcSelect jdbcSelectOperation;
 
 
 	/**

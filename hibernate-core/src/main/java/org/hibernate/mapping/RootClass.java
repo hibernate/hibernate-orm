@@ -12,6 +12,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.models.spi.ClassDetails;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.overridesEquals;
@@ -34,6 +35,7 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	private String cacheConcurrencyStrategy;
 	private String cacheRegionName;
 	private boolean lazyPropertiesCacheable = true;
+	private ClassDetails naturalIdClass;
 	private String naturalIdCacheRegionName;
 
 	private Value discriminator;
@@ -363,6 +365,14 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 
 	public void setLazyPropertiesCacheable(boolean lazyPropertiesCacheable) {
 		this.lazyPropertiesCacheable = lazyPropertiesCacheable;
+	}
+
+	public ClassDetails getNaturalIdClass() {
+		return naturalIdClass;
+	}
+
+	public void setNaturalIdClass(ClassDetails naturalIdClass) {
+		this.naturalIdClass = naturalIdClass;
 	}
 
 	@Override

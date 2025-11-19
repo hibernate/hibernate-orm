@@ -14,8 +14,8 @@ import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.countIds;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
@@ -34,7 +34,7 @@ public class CollectionBatchLoaderInPredicate
 	private final int sqlBatchSize;
 	private final JdbcParametersList jdbcParameters;
 	private final SelectStatement sqlAst;
-	private final JdbcOperationQuerySelect jdbcSelect;
+	private final JdbcSelect jdbcSelect;
 
 	public CollectionBatchLoaderInPredicate(
 			int domainBatchSize,

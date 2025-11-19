@@ -25,9 +25,9 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -48,7 +48,7 @@ public class CollectionBatchLoaderArrayParam
 	private final SqlTypedMapping arraySqlTypedMapping;
 	private final JdbcParameter jdbcParameter;
 	private final SelectStatement sqlSelect;
-	private final JdbcOperationQuerySelect jdbcSelectOperation;
+	private final JdbcSelect jdbcSelectOperation;
 
 	public CollectionBatchLoaderArrayParam(
 			int domainBatchSize,

@@ -24,8 +24,8 @@ import java.lang.reflect.Field;
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.hibernate.cfg.AvailableSettings.USE_QUERY_CACHE;
 import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
+import static org.junit.Assert.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 				@Setting( name = GENERATE_STATISTICS, value = "true" ),
 		}
 )
-@DomainModel( xmlMappings = "org/hibernate/orm/test/mapping/naturalid/mutable/User.hbm.xml" )
+@DomainModel( xmlMappings = "mappings/natural-id/mutable/User.hbm.xml" )
 @SessionFactory
 public class MutableNaturalIdTest {
 

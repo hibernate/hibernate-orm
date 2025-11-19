@@ -4,8 +4,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.Locale;
-
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -16,8 +14,10 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.exec.spi.JdbcSelect;
+
+import java.util.Locale;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
@@ -41,7 +41,7 @@ public class EntityBatchLoaderInPredicate<T>
 
 	private final JdbcParametersList jdbcParameters;
 	private final SelectStatement sqlAst;
-	private final JdbcOperationQuerySelect jdbcSelectOperation;
+	private final JdbcSelect jdbcSelectOperation;
 
 	/**
 	 * @param domainBatchSize The maximum number of entities we will initialize for each load

@@ -4,18 +4,15 @@
  */
 package org.hibernate.orm.integrationtest.java.module.test;
 
-
-
 import org.hibernate.Session;
 import org.hibernate.envers.boot.internal.EnversIntegrator;
 import org.hibernate.orm.integrationtest.java.module.test.service.AuthorService;
-
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class JavaModulePathIT {
 
@@ -67,9 +64,8 @@ public class JavaModulePathIT {
 	}
 
 	private void checkIsInModulePath(Class<?> clazz) {
-		Assert.assertTrue(
-				clazz + " should be part of a named module - there is a problem in test setup",
-				clazz.getModule().isNamed()
+		assertTrue( clazz.getModule().isNamed(),
+				clazz + " should be part of a named module - there is a problem in test setup"
 		);
 	}
 }

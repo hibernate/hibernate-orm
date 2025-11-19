@@ -20,7 +20,6 @@ import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Consumer;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
@@ -453,7 +452,7 @@ public class EntityEntryContext {
 			oos.writeBoolean( managedEntity == instance );
 			oos.writeObject( instance );
 			// we need to know which implementation of EntityEntry is being serialized
-			final var entry = Objects.requireNonNull(managedEntity.$$_hibernate_getEntityEntry());
+			final var entry = managedEntity.$$_hibernate_getEntityEntry();
 			oos.writeInt( entry.getClass().getName().length() );
 			oos.writeChars( entry.getClass().getName() );
 			entry.serialize( oos );

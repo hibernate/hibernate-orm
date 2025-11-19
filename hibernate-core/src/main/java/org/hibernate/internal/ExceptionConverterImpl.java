@@ -45,12 +45,13 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 /**
  * @author Andrea Boriero
  */
-class ExceptionConverterImpl implements ExceptionConverter {
+// Extended by Hibernate Reactive
+public class ExceptionConverterImpl implements ExceptionConverter {
 
 	private final SharedSessionContractImplementor session;
 	private final boolean isJpaBootstrap;
 
-	ExceptionConverterImpl(SharedSessionContractImplementor session) {
+	public ExceptionConverterImpl(SharedSessionContractImplementor session) {
 		this.session = session;
 		isJpaBootstrap = session.getFactory().getSessionFactoryOptions().isJpaBootstrap();
 	}

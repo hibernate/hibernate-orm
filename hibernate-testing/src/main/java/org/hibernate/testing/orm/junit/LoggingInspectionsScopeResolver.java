@@ -9,10 +9,9 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-/**
- * ParameterResolver implementation for resolving
- * {@link LoggingInspectionsScope} ParameterResolver
- */
+/// ParameterResolver implementation for resolving [LoggingInspectionsScope]
+///
+/// @author Steve Ebersole
 public class LoggingInspectionsScopeResolver implements ParameterResolver {
 	@Override
 	public boolean supportsParameter(

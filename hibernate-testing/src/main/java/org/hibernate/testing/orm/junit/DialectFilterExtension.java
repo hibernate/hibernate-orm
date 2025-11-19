@@ -18,12 +18,10 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 
 import org.jboss.logging.Logger;
 
-/**
- * JUnit Jupiter extension used to add {@link RequiresDialect} and {@link SkipForDialect}
- * handling
- *
- * @author Steve Ebersole
- */
+/// JUnit Jupiter extension used to add [RequiresDialect] and [SkipForDialect]
+/// handling
+///
+/// @author Steve Ebersole
 public class DialectFilterExtension implements ExecutionCondition {
 	private static final Logger log = Logger.getLogger( DialectFilterExtension.class );
 

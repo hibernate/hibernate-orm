@@ -6,6 +6,7 @@ package org.hibernate.orm.test.flush;
 
 import org.hibernate.Hibernate;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.ActionQueue;
@@ -15,10 +16,10 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistryProducer;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistryFunctionalTesting;
-import org.hibernate.testing.orm.junit.ServiceRegistryProducer;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Assertions;
@@ -36,7 +37,7 @@ import java.util.Set;
 @ServiceRegistryFunctionalTesting
 @DomainModel(annotatedClasses = { Author.class, Book.class, Publisher.class, UnrelatedEntity.class })
 @SessionFactory
-public class TestAutoFlushBeforeQueryExecution implements ServiceRegistryProducer {
+public class TestAutoFlushBeforeQueryExecution implements BootstrapServiceRegistryProducer {
 
 	@Test
 	public void testAutoflushIsRequired(SessionFactoryScope factoryScope) {
@@ -211,7 +212,7 @@ public class TestAutoFlushBeforeQueryExecution implements ServiceRegistryProduce
 	}
 
 	@Override
-	public void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
+	public BootstrapServiceRegistry produceServiceRegistry(BootstrapServiceRegistryBuilder builder) {
 		builder.applyIntegrator(
 				new Integrator() {
 					@Override
@@ -229,6 +230,7 @@ public class TestAutoFlushBeforeQueryExecution implements ServiceRegistryProduce
 					}
 				}
 		);
+		return builder.build();
 	}
 
 	public static class InitializingPreUpdateEventListener implements PreUpdateEventListener {

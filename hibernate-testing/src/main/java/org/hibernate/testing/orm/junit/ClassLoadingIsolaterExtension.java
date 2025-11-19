@@ -10,6 +10,17 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 
 import org.jboss.logging.Logger;
 
+/// Provides [ClassLoader] isolation for tests.
+/// Used in combination with the test class implementing the [IsolatedClassLoaderProvider], e.g.
+///
+/// ```java
+/// @ExtendWith(ClassLoadingIsolaterExtension.class)
+/// class SomeTestClass implements IsolatedClassLoaderProvider {
+///     ...
+/// }
+/// ```
+///
+/// @author Andrea Boriero
 public class ClassLoadingIsolaterExtension implements AfterEachCallback, BeforeEachCallback {
 
 	private static final Logger log = Logger.getLogger( ClassLoadingIsolaterExtension.class );

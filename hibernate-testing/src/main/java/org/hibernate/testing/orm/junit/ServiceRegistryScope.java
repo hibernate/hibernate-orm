@@ -14,9 +14,15 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.service.Service;
 
-/**
- * @author Steve Ebersole
- */
+/// Access to the service registry used for testing.
+/// Can be injected via [JUnit][ServiceRegistryParameterResolver] or via [ServiceRegistryScopeAware].
+///
+/// @see BootstrapServiceRegistry
+/// @see BootstrapServiceRegistryProducer
+/// @see ServiceRegistry
+/// @see ServiceRegistryProducer
+///
+/// @author Steve Ebersole
 public interface ServiceRegistryScope {
 	/**
 	 * Generalized support for running exception-safe code using a ServiceRegistry to

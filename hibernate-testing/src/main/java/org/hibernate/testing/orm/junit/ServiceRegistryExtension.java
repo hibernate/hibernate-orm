@@ -33,12 +33,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * JUnit extension used to manage the StandardServiceRegistry used by a test including
- * creating the StandardServiceRegistry and releasing it afterwards
- *
- * @author Steve Ebersole
- */
+/// JUnit extension used to manage the StandardServiceRegistry used by a test including
+/// creating the StandardServiceRegistry and releasing it afterwards
+///
+/// @see BootstrapServiceRegistry
+/// @see ServiceRegistry
+/// @see ServiceRegistryFunctionalTesting
+/// @see ServiceRegistryProducer
+/// @see ServiceRegistryScopeAware
+/// @see ServiceRegistryParameterResolver
+///
+/// @author Steve Ebersole
 public class ServiceRegistryExtension
 		implements TestInstancePostProcessor, BeforeEachCallback, TestExecutionExceptionHandler {
 	private static final Logger log = Logger.getLogger( ServiceRegistryExtension.class );
@@ -357,7 +362,6 @@ public class ServiceRegistryExtension
 		private StandardServiceRegistry createRegistry() {
 			BootstrapServiceRegistryBuilder bsrb = new BootstrapServiceRegistryBuilder().enableAutoClose();
 			bsrb.applyClassLoader( Thread.currentThread().getContextClassLoader() );
-			ssrProducer.prepareBootstrapRegistryBuilder( bsrb );
 
 			final org.hibernate.boot.registry.BootstrapServiceRegistry bsr = bsrProducer.produceServiceRegistry( bsrb );
 			try {

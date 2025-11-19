@@ -12,9 +12,9 @@ import org.hibernate.testing.logger.LogListener;
 
 import org.jboss.logging.Logger;
 
-/**
- * MessageIdWatcher implementation
- */
+/// MessageKeyWatcher implementation
+///
+/// @author Steve Ebersole
 public class MessageKeyWatcherImpl implements MessageKeyWatcher, LogListener {
 	private final String messageKey;
 	private final boolean resetBeforeEach;

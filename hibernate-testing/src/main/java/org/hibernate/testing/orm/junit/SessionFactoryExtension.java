@@ -35,15 +35,15 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-/**
- * hibernate-testing implementation of a few JUnit5 contracts to support SessionFactory-based testing,
- * including argument injection (or see {@link SessionFactoryScopeAware})
- *
- * @see SessionFactoryScope
- * @see DomainModelExtension
- *
- * @author Steve Ebersole
- */
+/// JUnit Jupiter [extension][org.junit.jupiter.api.extension.Extension] to support
+/// SessionFactory-based functional testing.
+///
+/// @see SessionFactoryScope
+/// @see DomainModelExtension
+///
+/// @implNote Leverages the [domain model][DomainModelScope] defined using the [DomainModelExtension].
+///
+/// @author Steve Ebersole
 public class SessionFactoryExtension
 		implements TestInstancePostProcessor, BeforeEachCallback, TestExecutionExceptionHandler {
 

@@ -13,12 +13,12 @@ import java.lang.annotation.Target;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-/**
- * Composite annotation for applying extensions needed for managing
- * a StandardServiceRegistry as part of the test lifecycle.
- *
- * @author Steve Ebersole
- */
+/// Applies extensions needed for managing a ServiceRegistry as part of the test lifecycle.
+/// Used in combination with [BootstrapServiceRegistryProducer] /
+/// [ServiceRegistryProducer] as an alternative to [@BootstrapServiceRegistry][BootstrapServiceRegistry] /
+/// [@ServiceRegistry][ServiceRegistry].
+///
+/// @author Steve Ebersole
 @Inherited
 @Retention( RetentionPolicy.RUNTIME )
 @Target({ElementType.TYPE, ElementType.METHOD})

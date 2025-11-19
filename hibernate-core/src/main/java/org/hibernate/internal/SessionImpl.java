@@ -2401,6 +2401,92 @@ public class SessionImpl
 	}
 
 	@Override
+	public <T> T findByNaturalId(Class<T> entityType, Object naturalId, FindOption... options) {
+		final SimpleNaturalIdLoadAccessImpl<T> access = (SimpleNaturalIdLoadAccessImpl<T>) bySimpleNaturalId( entityType );
+		setOptions( options, access );
+		return access.load( naturalId );
+	}
+
+	private <T> void setOptions(FindOption[] options, SimpleNaturalIdLoadAccessImpl<T> access) {
+		for ( FindOption option : options ) {
+			if ( option instanceof LockMode lockMode ) {
+				access.with( lockMode );
+			}
+			else if ( option instanceof LockModeType lockModeType ) {
+				access.with( LockMode.fromJpaLockMode(  lockModeType ) );
+			}
+			else if ( option instanceof Locking.Scope scope ) {
+				access.with( scope );
+			}
+			else if ( option instanceof PessimisticLockScope scope ) {
+				access.with( Locking.Scope.fromJpaScope( scope ) );
+			}
+			else if ( option instanceof Timeout timeout ) {
+				access.with( timeout );
+			}
+			else {
+				throw new IllegalArgumentException( "Illegal option: " + option );
+			}
+		}
+	}
+
+	@Override
+	public Object findByNaturalId(String entityName, Object naturalId, FindOption... options) {
+		final SimpleNaturalIdLoadAccessImpl<?> access = (SimpleNaturalIdLoadAccessImpl<?>) bySimpleNaturalId( entityName );
+		setOptions( options, access );
+		return access.load( naturalId );
+	}
+
+	@Override
+	public <T> List<T> findMultipleByNaturalId(Class<T> entityType, List<Object> naturalIds, FindOption... options) {
+		final NaturalIdMultiLoadAccessStandard<T> access = (NaturalIdMultiLoadAccessStandard<T>) byMultipleNaturalId( entityType );
+		setOptions( options, access );
+		return access.multiLoad( naturalIds );
+	}
+
+	private <T> void setOptions(FindOption[] options, NaturalIdMultiLoadAccessStandard<T> access) {
+		for ( FindOption option : options ) {
+			if ( option instanceof LockMode lockMode ) {
+				access.with( lockMode );
+			}
+			else if ( option instanceof LockModeType lockModeType ) {
+				access.with( LockMode.fromJpaLockMode(  lockModeType ) );
+			}
+			else if ( option instanceof Locking.Scope scope ) {
+				access.with( scope );
+			}
+			else if ( option instanceof PessimisticLockScope scope ) {
+				access.with( Locking.Scope.fromJpaScope( scope ) );
+			}
+			else if ( option instanceof Timeout timeout ) {
+				access.with( timeout );
+			}
+			else if ( option instanceof CacheMode cacheMode ) {
+				access.with( cacheMode );
+			}
+			else if ( option instanceof BatchSize batchSize ) {
+				access.withBatchSize( batchSize.batchSize() );
+			}
+			else if ( option instanceof RemovalsMode removalsMode ) {
+				access.with( removalsMode );
+			}
+			else if ( option instanceof OrderingMode orderingMode ) {
+				access.with( orderingMode );
+			}
+			else {
+				throw new IllegalArgumentException( "Illegal option: " + option );
+			}
+		}
+	}
+
+	@Override
+	public List<Object> findMultipleByNaturalId(String entityName, List<Object> naturalIds, FindOption... options) {
+		final NaturalIdMultiLoadAccessStandard<Object> access = (NaturalIdMultiLoadAccessStandard<Object>) byMultipleNaturalId( entityName );
+		setOptions( options, access );
+		return access.multiLoad( naturalIds );
+	}
+
+	@Override
 	public <T> T getReference(Class<T> entityClass, Object id) {
 		checkOpen();
 

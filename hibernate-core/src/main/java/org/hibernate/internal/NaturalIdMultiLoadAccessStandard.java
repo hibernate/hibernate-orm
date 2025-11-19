@@ -13,6 +13,7 @@ import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.OrderingMode;
 import org.hibernate.RemovalsMode;
@@ -56,6 +57,13 @@ class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAccess<T>
 		return this;
 	}
 
+	public void with(Locking.Scope scope) {
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions();
+		}
+		lockOptions.setScope( scope );
+	}
+
 	@Override
 	public NaturalIdMultiLoadAccess<T> with(Timeout timeout) {
 		if ( lockOptions == null ) {
@@ -96,10 +104,18 @@ class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAccess<T>
 		return this;
 	}
 
+	public void with(RemovalsMode removalsMode) {
+		this.removalsMode = removalsMode;
+	}
+
 	@Override
 	public NaturalIdMultiLoadAccess<T> enableOrderedReturn(boolean enabled) {
 		this.orderingMode = enabled ? OrderingMode.ORDERED : OrderingMode.UNORDERED;
 		return this;
+	}
+
+	public void with(OrderingMode orderingMode) {
+		this.orderingMode = orderingMode;
 	}
 
 	@Override

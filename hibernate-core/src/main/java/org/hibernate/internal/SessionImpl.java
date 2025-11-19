@@ -61,6 +61,7 @@ import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownSqlResultSetMappingException;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -1437,15 +1438,17 @@ class SessionImpl
 	}
 
 	@Override
-	public void autoPreFlush(Set<String> querySpaces) {
+	public boolean autoPreFlushIfRequired(QueryParameterBindings parameterBindings) {
 		checkOpen();
-		// do not auto-flush while outside a transaction
-		if ( isTransactionInProgress() ) {
-			final var autoFlushEvent = new AutoFlushEvent( querySpaces, false, this );
-			eventListenerGroups.eventListenerGroup_PRE_FLUSH
-					.fireEventOnEachListener( autoFlushEvent,
-							PreFlushEventListener::onAutoPreFlush );
+		if ( !isTransactionInProgress() ) {
+			// do not auto-flush while outside a transaction
+			return false;
 		}
+		final var preFlushEvent = new PreFlushEvent( parameterBindings, this );
+		eventListenerGroups.eventListenerGroup_PRE_FLUSH
+				.fireEventOnEachListener( preFlushEvent,
+						PreFlushEventListener::onAutoPreFlush );
+		return preFlushEvent.isPreFlushRequired();
 	}
 
 	@Override

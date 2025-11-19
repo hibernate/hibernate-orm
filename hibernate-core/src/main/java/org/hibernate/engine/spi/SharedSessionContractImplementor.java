@@ -29,6 +29,7 @@ import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -535,7 +536,7 @@ public interface SharedSessionContractImplementor
 	 */
 	boolean autoFlushIfRequired(Set<String> querySpaces, boolean skipPreFlush);
 
-	void autoPreFlush(Set<String> querySpaces);
+	boolean autoPreFlushIfRequired(QueryParameterBindings parameterBindings);
 
 	/**
 	 * Check if there is a Hibernate or JTA transaction in progress and,

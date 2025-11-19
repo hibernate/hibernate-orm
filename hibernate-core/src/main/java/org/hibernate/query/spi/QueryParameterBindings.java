@@ -76,13 +76,13 @@ public interface QueryParameterBindings {
 
 	boolean hasAnyMultiValuedBindings();
 
-	boolean hasAnyTransientEntityBindings(SharedSessionContractImplementor factory);
+	boolean hasAnyTransientEntityBindings(SharedSessionContractImplementor session);
 
 	/**
 	 * Generate a "memento" for these parameter bindings that can be used
 	 * in creating a {@link QueryKey}
 	 */
-	QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor persistenceContext);
+	QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor session);
 
 	void visitBindings(BiConsumer<? super QueryParameter<?>, ? super QueryParameterBinding<?>> action);
 
@@ -130,7 +130,7 @@ public interface QueryParameterBindings {
 		}
 
 		@Override
-		public boolean hasAnyTransientEntityBindings(SharedSessionContractImplementor factory) {
+		public boolean hasAnyTransientEntityBindings(SharedSessionContractImplementor session) {
 			return false;
 		}
 

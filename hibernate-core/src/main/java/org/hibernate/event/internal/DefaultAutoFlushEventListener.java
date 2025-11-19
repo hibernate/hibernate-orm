@@ -81,12 +81,12 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 		}
 	}
 
-	static boolean flushIsReallyNeeded(AutoFlushEvent event, EventSource source) {
+	private static boolean flushIsReallyNeeded(AutoFlushEvent event, EventSource source) {
 		return source.getHibernateFlushMode() == FlushMode.ALWAYS
 			|| source.getActionQueue().areTablesToBeUpdated( event.getQuerySpaces() );
 	}
 
-	static boolean flushMightBeNeeded(AutoFlushEvent event, EventSource source) {
+	private static boolean flushMightBeNeeded(AutoFlushEvent event, EventSource source) {
 		return flushMightBeNeededForMode( event, source )
 			&& nonEmpty( source );
 	}

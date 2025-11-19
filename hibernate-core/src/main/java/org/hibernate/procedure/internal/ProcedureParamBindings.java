@@ -121,7 +121,7 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 	}
 
 	@Override
-	public boolean hasAnyTransientEntityBindings(SharedSessionContractImplementor factory) {
+	public boolean hasAnyTransientEntityBindings(SharedSessionContractImplementor session) {
 		return false;
 	}
 
@@ -131,7 +131,7 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 	}
 
 	@Override
-	public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor persistenceContext) {
+	public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor session) {
 		return NO_PARAMETER_BINDING_MEMENTO;
 	}
 }

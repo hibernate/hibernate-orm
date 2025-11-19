@@ -24,9 +24,7 @@ dependencies {
 	api project( ':hibernate-envers' )
 	implementation project( ':hibernate-scan-jandex' )
 
-    // todo : to get rid of these
-    testImplementation testLibs.junit4
-    testImplementation testLibs.junit4Engine
+    testImplementation testLibs.junitJupiterApi
 
 	//Provide the jakarta.cdi module, as it's required by module jakarta.transaction
 	//but not provided as transitive dependency of Narayana.

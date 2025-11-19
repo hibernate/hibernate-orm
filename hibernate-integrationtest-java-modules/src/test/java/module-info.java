@@ -22,6 +22,6 @@ module org.hibernate.orm.integrationtest.java.module.test {
 	 * Test-only configuration.
 	 */
 
-	opens org.hibernate.orm.integrationtest.java.module.test to junit;
-	requires junit;
+	opens org.hibernate.orm.integrationtest.java.module.test to org.junit.platform.commons;
+	requires org.junit.jupiter.api;
 }

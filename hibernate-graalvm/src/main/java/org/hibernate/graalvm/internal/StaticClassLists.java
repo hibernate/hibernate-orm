@@ -51,6 +51,7 @@ final class StaticClassLists {
 				org.hibernate.event.spi.ReplicateEventListener[].class,
 				org.hibernate.event.spi.FlushEventListener[].class,
 				org.hibernate.event.spi.AutoFlushEventListener[].class,
+				org.hibernate.event.spi.PreFlushEventListener[].class,
 				org.hibernate.event.spi.DirtyCheckEventListener[].class,
 				org.hibernate.event.spi.FlushEntityEventListener[].class,
 				org.hibernate.event.spi.ClearEventListener[].class,

@@ -34,6 +34,7 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	private String cacheConcurrencyStrategy;
 	private String cacheRegionName;
 	private boolean lazyPropertiesCacheable = true;
+	private Class<?> naturalIdClass;
 	private String naturalIdCacheRegionName;
 
 	private Value discriminator;
@@ -363,6 +364,14 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 
 	public void setLazyPropertiesCacheable(boolean lazyPropertiesCacheable) {
 		this.lazyPropertiesCacheable = lazyPropertiesCacheable;
+	}
+
+	public Class<?> getNaturalIdClass() {
+		return naturalIdClass;
+	}
+
+	public void setNaturalIdClass(Class<?> naturalIdClass) {
+		this.naturalIdClass = naturalIdClass;
 	}
 
 	@Override

@@ -6,6 +6,7 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -41,6 +42,10 @@ import org.hibernate.loader.ast.spi.NaturalIdLoader;
 @Incubating
 public interface NaturalIdMapping extends VirtualModelPart {
 	String PART_NAME = "{natural-id}";
+
+	/// A class which used as a wrapper for natural-id values
+	/// during load similar to [jakarta.persistence.IdClass].
+	@Nullable Class<?> getNaturalIdClass();
 
 	/**
 	 * The attribute(s) making up the natural-id.

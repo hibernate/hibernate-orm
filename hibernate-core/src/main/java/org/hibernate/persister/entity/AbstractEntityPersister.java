@@ -4844,8 +4844,9 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	protected NaturalIdMapping generateNaturalIdMapping
-			(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
+	protected NaturalIdMapping generateNaturalIdMapping(
+			MappingModelCreationProcess creationProcess,
+			PersistentClass bootEntityDescriptor) {
 		//noinspection AssertWithSideEffects
 		assert bootEntityDescriptor.hasNaturalId();
 
@@ -4853,9 +4854,16 @@ public abstract class AbstractEntityPersister
 		assert naturalIdAttributeIndexes.length > 0;
 
 		if ( naturalIdAttributeIndexes.length == 1 ) {
+			if ( bootEntityDescriptor.getRootClass().getNaturalIdClass() != null ) {
+				throw new UnsupportedMappingException( "NaturalIdClass not supported for simple naturaal-id mappings" );
+			}
 			final String propertyName = getPropertyNames()[ naturalIdAttributeIndexes[ 0 ] ];
 			final var attributeMapping = (SingularAttributeMapping) findAttributeMapping( propertyName );
-			return new SimpleNaturalIdMapping( attributeMapping, this, creationProcess );
+			return new SimpleNaturalIdMapping(
+					attributeMapping,
+					this,
+					creationProcess
+			);
 		}
 
 		// collect the names of the attributes making up the natural-id.
@@ -4879,7 +4887,12 @@ public abstract class AbstractEntityPersister
 			throw new MappingException( "Expected multiple natural-id attributes, but found only one: " + getEntityName() );
 		}
 
-		return new CompoundNaturalIdMapping(this, collectedAttrMappings, creationProcess );
+		return new CompoundNaturalIdMapping(
+				this,
+				bootEntityDescriptor.getRootClass().getNaturalIdClass(),
+				collectedAttrMappings,
+				creationProcess
+		);
 	}
 
 	protected static SqmMultiTableMutationStrategy interpretSqmMultiTableStrategy(

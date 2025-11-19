@@ -16,10 +16,12 @@ import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Implementation of {@link SimpleNaturalIdLoadAccess}.
@@ -55,6 +57,11 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 	public SimpleNaturalIdLoadAccess<T> with(LockMode lockMode, PessimisticLockScope lockScope) {
 		//noinspection unchecked
 		return (SimpleNaturalIdLoadAccess<T>) super.with( lockMode, lockScope );
+	}
+
+	public SimpleNaturalIdLoadAccess<T> with(Locking.Scope lockScope) {
+		super.with( lockScope );
+		return this;
 	}
 
 	@Override
@@ -99,7 +106,8 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 		if ( !hasSimpleNaturalId
 				&& !naturalIdValue.getClass().isArray()
 				&& !(naturalIdValue instanceof List)
-				&& !(naturalIdValue instanceof Map) ) {
+				&& !(naturalIdValue instanceof Map)
+				&& ! ( isNaturalIdClass( naturalIdValue ) ) ) {
 			throw new HibernateException(
 					String.format(
 							Locale.ROOT,
@@ -109,6 +117,11 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 					)
 			);
 		}
+	}
+
+	private boolean isNaturalIdClass(Object naturalIdValue) {
+		final EntityPersister entityPersister = entityPersister();
+		return entityPersister.getNaturalIdMapping().getNaturalIdClass().isInstance(  naturalIdValue );
 	}
 
 	@Override

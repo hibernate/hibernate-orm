@@ -475,6 +475,10 @@ public interface HibernateAnnotations {
 			NaturalIdCache.class,
 			NaturalIdCacheAnnotation.class
 	);
+	OrmAnnotationDescriptor<NaturalIdClass, NaturalIdClassAnnotation> NATURAL_ID_CLASS = new OrmAnnotationDescriptor<>(
+			NaturalIdClass.class,
+			NaturalIdClassAnnotation.class
+	);
 	OrmAnnotationDescriptor<NotFound, NotFoundAnnotation> NOT_FOUND = new OrmAnnotationDescriptor<>(
 			NotFound.class,
 			NotFoundAnnotation.class

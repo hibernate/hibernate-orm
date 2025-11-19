@@ -558,6 +558,42 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 */
 	Object find(String entityName, Object primaryKey, FindOption... options);
 
+	/// Find an entity by [natural-id][org.hibernate.annotations.NaturalId].
+	///
+	/// @param entityType The type of entity to load.
+	/// @param naturalId The natural-id value.
+	/// @param options The options to apply to the find operation.
+	///
+	/// @apiNote For non-aggregated composite natural-ids, consider leveraging a [org.hibernate.annotations.NaturalIdClass].
+	<T> T findByNaturalId(Class<T> entityType, Object naturalId, FindOption... options);
+
+	/// Find an entity by [natural-id][org.hibernate.annotations.NaturalId].
+	///
+	/// @param entityName The name of the entity type to load.
+	/// @param naturalId The natural-id value.
+	/// @param options The options to apply to the find operation.
+	///
+	/// @apiNote For non-aggregated composite natural-ids, consider leveraging a [org.hibernate.annotations.NaturalIdClass].
+	Object findByNaturalId(String entityName, Object naturalId, FindOption... options);
+
+	/// Find multiple entities by [natural-id][org.hibernate.annotations.NaturalId].
+	///
+	/// @param entityType The type of entity to load.
+	/// @param naturalIds The natural-id values.
+	/// @param options The options to apply to the find operation.  May contain [FindMultipleOption] values.
+	///
+	/// @apiNote For non-aggregated composite natural-ids, consider leveraging a [org.hibernate.annotations.NaturalIdClass].
+	<T> List<T> findMultipleByNaturalId(Class<T> entityType, List<Object> naturalIds, FindOption... options);
+
+	/// Find multiple entities by [natural-id][org.hibernate.annotations.NaturalId].
+	///
+	/// @param entityName The name of the entity type to load.
+	/// @param naturalIds The natural-id values.
+	/// @param options The options to apply to the find operation.  May contain [FindMultipleOption] values.
+	///
+	/// @apiNote For non-aggregated composite natural-ids, consider leveraging a [org.hibernate.annotations.NaturalIdClass].
+	List<Object> findMultipleByNaturalId(String entityName, List<Object> naturalIds, FindOption... options);
+
 	/**
 	 * Return the persistent instances of the given entity class with the given identifiers
 	 * as a list. The position of an instance in the returned list matches the position of its
@@ -1203,7 +1239,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @throws HibernateException If the given class does not resolve as a mapped entity,
 	 *                            or if the entity does not declare a natural id
+	 *
+	 * @deprecated (since 7.3) : Use {@linkplain #findByNaturalId} instead.
 	 */
+	@Deprecated
 	<T> NaturalIdLoadAccess<T> byNaturalId(Class<T> entityClass);
 
 	/**
@@ -1218,7 +1257,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @throws HibernateException If the given name does not resolve to a mapped entity,
 	 *                            or if the entity does not declare a natural id
+	 *
+	 * @deprecated (since 7.3) : Use {@linkplain #findByNaturalId} instead.
 	 */
+	@Deprecated
 	<T> NaturalIdLoadAccess<T> byNaturalId(String entityName);
 
 	/**
@@ -1233,7 +1275,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @throws HibernateException If the given class does not resolve as a mapped entity,
 	 *                            or if the entity does not declare a natural id
+	 *
+	 * @deprecated (since 7.3) : Use {@linkplain #findByNaturalId} instead.
 	 */
+	@Deprecated
 	<T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(Class<T> entityClass);
 
 	/**
@@ -1248,7 +1293,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @throws HibernateException If the given name does not resolve to a mapped entity,
 	 *                            or if the entity does not declare a natural id
+	 *
+	 * @deprecated (since 7.3) : Use {@linkplain #findByNaturalId} instead.
 	 */
+	@Deprecated
 	<T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(String entityName);
 
 	/**
@@ -1262,7 +1310,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @throws HibernateException If the given class does not resolve as a mapped entity,
 	 *                            or if the entity does not declare a natural id
+	 *
+	 * @deprecated (since 7.3) : Use {@linkplain #findMultipleByNaturalId} instead.
 	 */
+	@Deprecated
 	<T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(Class<T> entityClass);
 
 	/**
@@ -1276,7 +1327,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @throws HibernateException If the given name does not resolve to a mapped entity,
 	 *                            or if the entity does not declare a natural id
+	 *
+	 * @deprecated (since 7.3) : Use {@linkplain #findMultipleByNaturalId} instead.
 	 */
+	@Deprecated
 	<T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(String entityName);
 
 	/**

@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -49,9 +50,8 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implements MappingType, FetchableContainer {
 
-	// todo (6.0) : create a composite MappingType for this descriptor's Object[]?
-
 	private final List<SingularAttributeMapping> attributes;
+	private final Class<?> naturalIdClass;
 
 	private List<JdbcMapping> jdbcMappings;
 	/*
@@ -62,9 +62,11 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	public CompoundNaturalIdMapping(
 			EntityMappingType declaringType,
+			Class<?> naturalIdClass,
 			List<SingularAttributeMapping> attributes,
 			MappingModelCreationProcess creationProcess) {
 		super( declaringType, isMutable( attributes ) );
+		this.naturalIdClass = naturalIdClass;
 		this.attributes = attributes;
 
 		int maxIndex = 0;
@@ -100,6 +102,12 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
+	@Nullable
+	public Class<?> getNaturalIdClass() {
+		return naturalIdClass;
+	}
+
+	@Override
 	public Object[] extractNaturalIdFromEntityState(Object[] state) {
 		if ( state == null ) {
 			return null;
@@ -128,7 +136,11 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Override
 	public Object[] normalizeInput(Object incoming) {
-		if ( incoming instanceof Object[] array ) {
+		if ( getNaturalIdClass() != null
+			&& getNaturalIdClass().isInstance( incoming ) ) {
+			throw new UnsupportedOperationException( "NaturalIdClass support not implemented yet" );
+		}
+		else if ( incoming instanceof Object[] array ) {
 			return array;
 		}
 		else if ( incoming instanceof Map<?,?> valueMap ) {

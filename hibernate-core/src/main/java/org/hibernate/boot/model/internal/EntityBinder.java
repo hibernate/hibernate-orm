@@ -159,6 +159,7 @@ public class EntityBinder {
 	private String cacheRegion;
 	private boolean cacheLazyProperty;
 	private String naturalIdCacheRegion;
+	private Class<?> naturalIdClass;
 	private CacheLayout queryCacheLayout;
 
 	private ModelsContext modelsContext() {
@@ -1264,6 +1265,7 @@ public class EntityBinder {
 		bindSqlRestriction();
 		bindCache();
 		bindNaturalIdCache();
+		bindNaturalIdClass();
 		bindFiltersInHierarchy();
 
 		persistentClass.setAbstract( annotatedClass.isAbstract() );
@@ -1338,6 +1340,7 @@ public class EntityBinder {
 			rootClass.setLazyPropertiesCacheable( cacheLazyProperty );
 		}
 		rootClass.setNaturalIdCacheRegionName( naturalIdCacheRegion );
+		rootClass.setNaturalIdClass(  naturalIdClass );
 	}
 
 	private void bindCustomSql() {
@@ -1611,6 +1614,11 @@ public class EntityBinder {
 			classToCheck = classToCheck.getSuperClass();
 		}
 		return null;
+	}
+
+	private void bindNaturalIdClass() {
+		final var ann = annotatedClass.getAnnotationUsage( NaturalIdClass.class, modelsContext() );
+		naturalIdClass = ann != null ? ann.value() : null;
 	}
 
 	private void bindNaturalIdCache() {

@@ -12,7 +12,6 @@ import org.hibernate.annotations.NaturalIdClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
-import org.hibernate.testing.orm.junit.ExpectedException;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -38,7 +37,7 @@ public class SimpleNaturalIdClassTests {
 	void testBootModel(DomainModelScope modelScope) {
 		modelScope.getDomainModel().validate();
 		final RootClass entity1Binding = (RootClass) modelScope.getEntityBinding( TestEntity.class );
-		assertEquals( Key.class, entity1Binding.getNaturalIdClass() );
+		assertEquals( Key.class, entity1Binding.getNaturalIdClass().toJavaClass() );
 		final RootClass entity2Binding = (RootClass) modelScope.getEntityBinding( TestEntity2.class );
 		assertNull( entity2Binding.getNaturalIdClass() );
 	}
@@ -61,7 +60,6 @@ public class SimpleNaturalIdClassTests {
 
 	@Test
 	@SessionFactory
-	@ExpectedException( UnsupportedOperationException.class )
 	void findByClassSmokeTest(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			session.findByNaturalId( TestEntity.class, new Key("steve", "ebersole") );
@@ -70,7 +68,6 @@ public class SimpleNaturalIdClassTests {
 
 	@Test
 	@SessionFactory
-	@ExpectedException( UnsupportedOperationException.class )
 	void findMultipleByClassSmokeTest(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			session.findMultipleByNaturalId( TestEntity.class, List.of( new Key("steve", "ebersole") ) );

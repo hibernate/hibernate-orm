@@ -76,7 +76,6 @@ import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.spi.NavigablePath;
@@ -88,6 +87,7 @@ import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.AliasedExpression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -134,6 +134,7 @@ import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.jdbc.Expectations.createExpectation;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
+import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 import static org.hibernate.sql.Template.renderWhereStringTemplate;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
@@ -938,7 +939,7 @@ public abstract class AbstractCollectionPersister
 				rootQuerySpec,
 				new SqlAliasBaseManager(),
 				new SimpleFromClauseAccessImpl(),
-				new LockOptions(),
+				LockOptions.NONE,
 				(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
 				true,
 				new LoadQueryInfluencers( factory ),
@@ -964,52 +965,27 @@ public abstract class AbstractCollectionPersister
 		final var sqlSelections = rootQuerySpec.getSelectClause().getSqlSelections();
 		int i = 0;
 		for ( String keyAlias : keyColumnAliases ) {
-			sqlSelections.set(
-					i,
-					new SqlSelectionImpl(
-							i,
-							new AliasedExpression( sqlSelections.get( i ).getExpression(),
-									keyAlias + columnSuffix )
-					)
-			);
+			sqlSelections.set( i,
+					sqlSelection( columnSuffix, keyAlias, i, sqlSelections ) );
 			i++;
 		}
 
 		if ( hasIndex() ) {
 			for ( String indexAlias : indexColumnAliases ) {
-				sqlSelections.set(
-						i,
-						new SqlSelectionImpl(
-								i,
-								new AliasedExpression( sqlSelections.get( i ).getExpression(),
-										indexAlias + columnSuffix )
-						)
-				);
+				sqlSelections.set( i,
+						sqlSelection( columnSuffix, indexAlias, i, sqlSelections ) );
 				i++;
 			}
 		}
 		if ( hasId() ) {
-			sqlSelections.set(
-					i,
-					new SqlSelectionImpl(
-							i,
-							new AliasedExpression( sqlSelections.get( i ).getExpression(),
-									identifierColumnAlias + columnSuffix )
-					)
-			);
+			sqlSelections.set( i,
+					sqlSelection( columnSuffix, identifierColumnAlias, i, sqlSelections ) );
 			i++;
 		}
 
 		for ( int columnIndex = 0; i < sqlSelections.size(); i++, columnIndex++ ) {
-			final var sqlSelection = sqlSelections.get( i );
-			sqlSelections.set(
-					i,
-					new SqlSelectionImpl(
-							sqlSelection.getValuesArrayPosition(),
-							new AliasedExpression( sqlSelection.getExpression(),
-									elementColumnAliases[columnIndex] + columnSuffix )
-					)
-			);
+			sqlSelections.set( i,
+					sqlSelection( columnSuffix, elementColumnAliases[columnIndex], i, sqlSelections ) );
 		}
 
 		final String sql =
@@ -1018,9 +994,16 @@ public abstract class AbstractCollectionPersister
 						.translate( null, QueryOptions.NONE )
 						.getSqlString();
 		final int fromIndex = sql.lastIndexOf( " from" );
-		return fromIndex != -1
-						? sql.substring( "select ".length(), fromIndex )
-						: sql.substring( "select ".length() );
+		final int selectLength = "select ".length();
+		return fromIndex < 0
+				? sql.substring( selectLength )
+				: sql.substring( selectLength, fromIndex );
+	}
+
+	private static SqlSelectionImpl sqlSelection(String columnSuffix, String keyAlias, int i, List<SqlSelection> sqlSelections) {
+		return new SqlSelectionImpl( sqlSelections.get( i ).getValuesArrayPosition(),
+				new AliasedExpression( sqlSelections.get( i ).getExpression(),
+						keyAlias + columnSuffix ) );
 	}
 
 	protected String generateSelectSizeString(boolean isIntegerIndexed) {
@@ -1378,13 +1361,19 @@ public abstract class AbstractCollectionPersister
 
 		//TODO: this code is almost certainly obsolete and can be removed
 		if ( type instanceof ComponentType || type instanceof AnyType ) {
-			var compositeType = (CompositeType) type;
+			final var compositeType = (CompositeType) type;
 			final String[] propertyNames = compositeType.getPropertyNames();
 			for ( int i = 0; i < propertyNames.length; i++ ) {
 				final String name = propertyNames[i];
 				collectionPropertyColumnAliases.put( aliasName + "." + name, new String[] {columnAliases[i]} );
 			}
 		}
+	}
+
+	int baseIndex() {
+		final int listIndexBase = getAttributeMapping().getIndexMetadata().getListIndexBase();
+		//noinspection ManualMinMaxCalculation
+		return listIndexBase < 0 ? 0 : listIndexBase;
 	}
 
 	@Override
@@ -1397,8 +1386,7 @@ public abstract class AbstractCollectionPersister
 				getKeyType().nullSafeSet( statement, key, 1, session );
 				final var resultSet = jdbcCoordinator.getResultSetReturn().extract( statement, sqlSelectSizeString );
 				try {
-					final int baseIndex = Math.max( attributeMapping.getIndexMetadata().getListIndexBase(), 0 );
-					return resultSet.next() ? resultSet.getInt( 1 ) - baseIndex : 0;
+					return resultSet.next() ? resultSet.getInt( 1 ) - baseIndex() : 0;
 				}
 				finally {
 					resourceRegistry.release( resultSet, statement );
@@ -1413,7 +1401,7 @@ public abstract class AbstractCollectionPersister
 			throw getSQLExceptionHelper().convert(
 					sqle,
 					"could not retrieve collection size: " +
-							MessageHelper.collectionInfoString( this, key, getFactory() ),
+							collectionInfoString( this, key, getFactory() ),
 					sqlSelectSizeString
 			);
 		}
@@ -1457,7 +1445,7 @@ public abstract class AbstractCollectionPersister
 			throw getSQLExceptionHelper().convert(
 					sqle,
 					"could not check row existence: " +
-							MessageHelper.collectionInfoString( this, key, getFactory() ),
+							collectionInfoString( this, key, getFactory() ),
 					sqlSelectSizeString
 			);
 		}
@@ -1652,37 +1640,57 @@ public abstract class AbstractCollectionPersister
 				spaces,
 				!collectionBootDescriptor.isOneToMany(),
 				collectionBootDescriptor.isInverse(),
-				new MutationDetails(
-						MutationType.INSERT,
-						createExpectation( collectionBootDescriptor.getInsertExpectation(),
-								collectionBootDescriptor.isCustomInsertCallable()),
-						collectionBootDescriptor.getCustomSQLInsert(),
-						collectionBootDescriptor.isCustomInsertCallable()
-				),
-				new MutationDetails(
-						MutationType.UPDATE,
-						createExpectation( collectionBootDescriptor.getUpdateExpectation(),
-								collectionBootDescriptor.isCustomUpdateCallable()),
-						collectionBootDescriptor.getCustomSQLUpdate(),
-						collectionBootDescriptor.isCustomUpdateCallable()
-				),
+				buildInsertMutationDetails( collectionBootDescriptor ),
+				buildUpdateMutationDetails( collectionBootDescriptor ),
 				collectionBootDescriptor.getKey().isCascadeDeleteEnabled(),
-				new MutationDetails(
-						MutationType.DELETE,
-						collectionBootDescriptor.isCustomDeleteAllCallable() || collectionBootDescriptor.getDeleteAllExpectation() != null
-								? createExpectation( collectionBootDescriptor.getDeleteAllExpectation(),
-										collectionBootDescriptor.isCustomDeleteAllCallable() )
-								: new Expectation.None(),
-						collectionBootDescriptor.getCustomSQLDeleteAll(),
-						collectionBootDescriptor.isCustomDeleteAllCallable()
-				),
-				new MutationDetails(
-						MutationType.DELETE,
-						createExpectation( collectionBootDescriptor.getDeleteExpectation(),
-								collectionBootDescriptor.isCustomDeleteCallable()),
-						collectionBootDescriptor.getCustomSQLDelete(),
-						collectionBootDescriptor.isCustomDeleteCallable()
-				)
+				buildDeleteAllMutationDetails( collectionBootDescriptor ),
+				buildDeleteMutationDetails( collectionBootDescriptor )
+		);
+	}
+
+	private static MutationDetails buildUpdateMutationDetails(Collection collectionBootDescriptor) {
+		final boolean customUpdateCallable = collectionBootDescriptor.isCustomUpdateCallable();
+		return new MutationDetails(
+				MutationType.UPDATE,
+				createExpectation( collectionBootDescriptor.getUpdateExpectation(),
+						customUpdateCallable ),
+				collectionBootDescriptor.getCustomSQLUpdate(),
+				customUpdateCallable
+		);
+	}
+
+	private static MutationDetails buildInsertMutationDetails(Collection collectionBootDescriptor) {
+		return new MutationDetails(
+				MutationType.INSERT,
+				createExpectation( collectionBootDescriptor.getInsertExpectation(),
+						collectionBootDescriptor.isCustomInsertCallable() ),
+				collectionBootDescriptor.getCustomSQLInsert(),
+				collectionBootDescriptor.isCustomInsertCallable()
+		);
+	}
+
+	private static MutationDetails buildDeleteMutationDetails(Collection collectionBootDescriptor) {
+		final boolean customDeleteCallable = collectionBootDescriptor.isCustomDeleteCallable();
+		return new MutationDetails(
+				MutationType.DELETE,
+				createExpectation( collectionBootDescriptor.getDeleteExpectation(),
+						customDeleteCallable ),
+				collectionBootDescriptor.getCustomSQLDelete(),
+				customDeleteCallable
+		);
+	}
+
+	private static MutationDetails buildDeleteAllMutationDetails(Collection collectionBootDescriptor) {
+		final boolean customDeleteAllCallable = collectionBootDescriptor.isCustomDeleteAllCallable();
+		final var deleteAllExpectation = collectionBootDescriptor.getDeleteAllExpectation();
+		return new MutationDetails(
+				MutationType.DELETE,
+				customDeleteAllCallable || deleteAllExpectation != null
+						? createExpectation( deleteAllExpectation,
+						customDeleteAllCallable )
+						: new Expectation.None(),
+				collectionBootDescriptor.getCustomSQLDeleteAll(),
+				customDeleteAllCallable
 		);
 	}
 
@@ -1699,12 +1707,13 @@ public abstract class AbstractCollectionPersister
 				new ColumnValueParameterList( tableReference, ParameterUsage.RESTRICT, keyDescriptor.getJdbcTypeCount() );
 		keyDescriptor.getKeyPart().forEachSelectable( parameterBinders );
 		final var tableMapping = tableReference.getTableMapping();
+		final var deleteDetails = tableMapping.getDeleteDetails();
 		return new JdbcDeleteMutation(
 				tableMapping,
 				this,
-				tableMapping.getDeleteDetails().getCustomSql(),
-				tableMapping.getDeleteDetails().isCallable(),
-				tableMapping.getDeleteDetails().getExpectation(),
+				deleteDetails.getCustomSql(),
+				deleteDetails.isCallable(),
+				deleteDetails.getExpectation(),
 				parameterBinders
 		);
 	}
@@ -1743,10 +1752,9 @@ public abstract class AbstractCollectionPersister
 		assert foreignKeyDescriptor != null;
 		foreignKeyDescriptor.getKeyPart().forEachSelectable( (selectionIndex, selectableMapping) -> {
 			final var columnValueParameter = parameterList.addColumValueParameter( selectableMapping );
-			final var columnReference = columnValueParameter.getColumnReference();
 			restrictionBindings.add(
 					new ColumnValueBinding(
-							columnReference,
+							columnValueParameter.getColumnReference(),
 							new ColumnWriteFragment(
 									"?",
 									columnValueParameter,

@@ -318,7 +318,7 @@ public class DiscriminatedAssociationAttributeMapping
 		}
 		else {
 			if ( value.getClass().isArray() ) {
-				final Object[] values = (Object[]) value;
+				final var values = (Object[]) value;
 				valuesConsumer.consume(
 						offset,
 						x,

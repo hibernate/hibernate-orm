@@ -5,19 +5,18 @@
 package org.hibernate.persister.collection.mutation;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
-import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
+
+import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.noOperations;
+import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
  * UpdateRowsCoordinator implementation for cases with a separate collection table
@@ -41,17 +40,17 @@ public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator
 
 	@Override
 	protected int doUpdate(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
-		final MutationOperationGroup operationGroup = getOperationGroup();
+		final var operationGroup = getOperationGroup();
 
-		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
+		final var mutationExecutor = mutationExecutorService.createExecutor(
 				() -> new BasicBatchKey( getMutationTarget().getRolePath() + "#UPDATE" ),
 				operationGroup,
 				session
 		);
 
 		try {
-			final Iterator<?> entries = collection.entries( getMutationTarget().getTargetPart()
-					.getCollectionDescriptor() );
+			final var entries =
+					collection.entries( getMutationTarget().getTargetPart().getCollectionDescriptor() );
 			int count = 0;
 
 			if ( collection.isElementRemoved() ) {
@@ -110,7 +109,7 @@ public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator
 			MutationExecutor mutationExecutor,
 			SharedSessionContractImplementor session) {
 		if ( rowMutationOperations.getUpdateRowOperation() != null ) {
-			final PluralAttributeMapping attribute = getMutationTarget().getTargetPart();
+			final var attribute = getMutationTarget().getTargetPart();
 			if ( !collection.needsUpdating( entry, entryPosition, attribute ) ) {
 				return false;
 			}
@@ -143,13 +142,10 @@ public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator
 
 	protected MutationOperationGroup getOperationGroup() {
 		if ( operationGroup == null ) {
-			final JdbcMutationOperation updateRowOperation = rowMutationOperations.getUpdateRowOperation();
-			if ( updateRowOperation == null ) {
-				operationGroup = MutationOperationGroupFactory.noOperations( MutationType.UPDATE, getMutationTarget() );
-			}
-			else {
-				operationGroup = MutationOperationGroupFactory.singleOperation( MutationType.UPDATE, getMutationTarget(), updateRowOperation );
-			}
+			final var updateRowOperation = rowMutationOperations.getUpdateRowOperation();
+			operationGroup = updateRowOperation == null
+					? noOperations( MutationType.UPDATE, getMutationTarget() )
+					: singleOperation( MutationType.UPDATE, getMutationTarget(), updateRowOperation );
 		}
 		return operationGroup;
 	}

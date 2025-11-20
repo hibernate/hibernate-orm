@@ -8,12 +8,13 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
+
+import static org.hibernate.internal.util.NullnessHelper.areSameNullness;
 
 /**
  * Composition of the {@link MutationOperation} references for a collection mapping.
@@ -57,9 +58,9 @@ public class RowMutationOperations {
 			Restrictions deleteRowRestrictions) {
 		this.target = target;
 
-		assert NullnessHelper.areSameNullness( insertRowOperationProducer, insertRowValues );
-		assert NullnessHelper.areSameNullness( updateRowOperationProducer, updateRowValues, updateRowRestrictions );
-		assert NullnessHelper.areSameNullness( deleteRowOperationProducer, deleteRowRestrictions );
+		assert areSameNullness( insertRowOperationProducer, insertRowValues );
+		assert areSameNullness( updateRowOperationProducer, updateRowValues, updateRowRestrictions );
+		assert areSameNullness( deleteRowOperationProducer, deleteRowRestrictions );
 
 		this.insertRowOperationProducer = insertRowOperationProducer;
 		this.insertRowValues = insertRowValues;
@@ -93,23 +94,24 @@ public class RowMutationOperations {
 		if ( !hasInsertRow() ) {
 			return null;
 		}
-
-		JdbcMutationOperation local = insertRowOperation;
-		if ( local == null ) {
-			final MutatingTableReference tableReference = new MutatingTableReference( target.getCollectionTableMapping() );
-			insertRowOperation = local = insertRowOperationProducer.createOperation( tableReference );
+		else {
+			JdbcMutationOperation local = insertRowOperation;
+			if ( local == null ) {
+				final var tableReference = new MutatingTableReference( target.getCollectionTableMapping() );
+				insertRowOperation = local = insertRowOperationProducer.createOperation( tableReference );
+			}
+			return local;
 		}
-
-		return local;
 	}
 
 	public JdbcMutationOperation getInsertRowOperation(TableMapping tableMapping) {
 		if ( !hasInsertRow() ) {
 			return null;
 		}
-
-		final MutatingTableReference tableReference = new MutatingTableReference( tableMapping );
-		return insertRowOperationProducer.createOperation( tableReference );
+		else {
+			final var tableReference = new MutatingTableReference( tableMapping );
+			return insertRowOperationProducer.createOperation( tableReference );
+		}
 	}
 
 
@@ -124,14 +126,14 @@ public class RowMutationOperations {
 		if ( !hasUpdateRow() ) {
 			return null;
 		}
-
-		JdbcMutationOperation local = updateRowOperation;
-		if ( local == null ) {
-			final MutatingTableReference tableReference = new MutatingTableReference( target.getCollectionTableMapping() );
-			updateRowOperation = local = updateRowOperationProducer.createOperation( tableReference );
+		else {
+			JdbcMutationOperation local = updateRowOperation;
+			if ( local == null ) {
+				final var tableReference = new MutatingTableReference( target.getCollectionTableMapping() );
+				updateRowOperation = local = updateRowOperationProducer.createOperation( tableReference );
+			}
+			return local;
 		}
-
-		return local;
 	}
 
 	public Values getUpdateRowValues() {
@@ -158,23 +160,24 @@ public class RowMutationOperations {
 		if ( !hasDeleteRow() ) {
 			return null;
 		}
-
-		JdbcMutationOperation local = deleteRowOperation;
-		if ( local == null ) {
-			final MutatingTableReference tableReference = new MutatingTableReference( target.getCollectionTableMapping() );
-			deleteRowOperation = local = deleteRowOperationProducer.createOperation( tableReference );
+		else {
+			JdbcMutationOperation local = deleteRowOperation;
+			if ( local == null ) {
+				final var tableReference = new MutatingTableReference( target.getCollectionTableMapping() );
+				deleteRowOperation = local = deleteRowOperationProducer.createOperation( tableReference );
+			}
+			return local;
 		}
-
-		return local;
 	}
 
 	public JdbcMutationOperation getDeleteRowOperation(TableMapping tableMapping) {
 		if ( !hasInsertRow() ) {
 			return null;
 		}
-
-		final MutatingTableReference tableReference = new MutatingTableReference( tableMapping );
-		return deleteRowOperationProducer.createOperation( tableReference );
+		else {
+			final var tableReference = new MutatingTableReference( tableMapping );
+			return deleteRowOperationProducer.createOperation( tableReference );
+		}
 	}
 
 

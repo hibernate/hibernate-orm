@@ -4,8 +4,8 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -17,7 +17,6 @@ import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.model.MutationType;
@@ -29,6 +28,8 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Objects;
+
+import static org.hibernate.internal.util.collections.ArrayHelper.contains;
 
 /**
  * Descriptor for the mapping of a table relative to an entity
@@ -151,7 +152,7 @@ public class EntityTableMapping implements TableMapping {
 	}
 
 	public boolean containsAttributeColumns(int attributeIndex) {
-		return ArrayHelper.contains( attributeIndexes, attributeIndex );
+		return contains( attributeIndexes, attributeIndex );
 	}
 
 	public int[] getAttributeIndexes() {
@@ -211,15 +212,16 @@ public class EntityTableMapping implements TableMapping {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !(object instanceof EntityTableMapping that) ) {
 			return false;
 		}
-		final EntityTableMapping that = (EntityTableMapping) o;
-		return tableName.equals( that.tableName );
+		else {
+			return tableName.equals( that.tableName );
+		}
 	}
 
 	@Override
@@ -239,9 +241,12 @@ public class EntityTableMapping implements TableMapping {
 		if ( identifierPart instanceof EmbeddableValuedModelPart embeddedModelPart ) {
 			return new CompositeKeyMapping( keyColumns, embeddedModelPart );
 		}
-		else {
+		else if ( identifierPart instanceof BasicValuedModelPart basicModelPart ) {
 			assert keyColumns.size() == 1;
-			return new SimpleKeyMapping( keyColumns, (BasicValuedModelPart) identifierPart );
+			return new SimpleKeyMapping( keyColumns, basicModelPart );
+		}
+		else {
+			throw new AssertionFailure( "Unexpected identifier part type" );
 		}
 	}
 
@@ -271,8 +276,9 @@ public class EntityTableMapping implements TableMapping {
 
 		@Override
 		public void forEachKeyColumn(KeyColumnConsumer consumer) {
-			for ( int i = 0; i < getKeyColumns().size(); i++ ) {
-				consumer.consume( i, getKeyColumns().get( i ) );
+			final var keyColumns = getKeyColumns();
+			for ( int i = 0; i < keyColumns.size(); i++ ) {
+				consumer.consume( i, keyColumns.get( i ) );
 			}
 		}
 
@@ -288,10 +294,10 @@ public class EntityTableMapping implements TableMapping {
 
 		@Override
 		public int forEachSelectable(int offset, SelectableConsumer consumer) {
-			for ( int i = 0; i < getKeyColumns().size(); i++ ) {
-				consumer.accept( i, getKeyColumns().get( i ) );
+			final var keyColumns = getKeyColumns();
+			for ( int i = 0; i < keyColumns.size(); i++ ) {
+				consumer.accept( i, keyColumns.get( i ) );
 			}
-
 			return getJdbcTypeCount();
 		}
 
@@ -315,7 +321,7 @@ public class EntityTableMapping implements TableMapping {
 				TableReference tableReference,
 				KeyColumn keyColumn,
 				SqlAstCreationState creationState) {
-			final SqlExpressionResolver expressionResolver = creationState.getSqlExpressionResolver();
+			final var expressionResolver = creationState.getSqlExpressionResolver();
 			return expressionResolver.resolveSqlSelection(
 					expressionResolver.resolveSqlExpression( tableReference, keyColumn ),
 					keyColumn.getJdbcMapping().getJdbcJavaType(),
@@ -346,7 +352,7 @@ public class EntityTableMapping implements TableMapping {
 				String resultVariable,
 				DomainResultCreationState creationState) {
 			// create SqlSelection based on the underlying JdbcMapping
-			final SqlSelection sqlSelection = resolveSqlSelection(
+			final var sqlSelection = resolveSqlSelection(
 					tableReference,
 					keyColumn,
 					creationState.getSqlAstCreationState()

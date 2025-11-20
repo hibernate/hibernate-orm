@@ -928,12 +928,17 @@ public class SessionImpl
 		fireLoad( new LoadEvent( id, object, this, getReadOnlyFromLoadQueryInfluencers() ), LoadEventListener.RELOAD );
 	}
 
-	private <T> void setMultiIdentifierLoadAccessOptions(FindOption[] options, MultiIdentifierLoadAccess<T> loadAccess) {
+	private <T> boolean setMultiIdentifierLoadAccessOptions(FindOption[] options, MultiIdentifierLoadAccess<T> loadAccess) {
 		CacheStoreMode storeMode = getCacheStoreMode();
 		CacheRetrieveMode retrieveMode = getCacheRetrieveMode();
 		LockOptions lockOptions = copySessionLockOptions();
 		int batchSize = -1;
 		for ( FindOption option : options ) {
+			if ( option instanceof FindBy findBy ) {
+				if ( findBy == FindBy.NATURAL_ID ) {
+					return true;
+				}
+			}
 			if ( option instanceof CacheStoreMode cacheStoreMode ) {
 				storeMode = cacheStoreMode;
 			}
@@ -981,12 +986,17 @@ public class SessionImpl
 		loadAccess.with( lockOptions )
 				.with( interpretCacheMode( storeMode, retrieveMode ) )
 				.withBatchSize( batchSize );
+
+		return false;
 	}
 
 	@Override
 	public <E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption... options) {
 		final var loadAccess = byMultipleIds( entityType );
-		setMultiIdentifierLoadAccessOptions( options, loadAccess );
+		final boolean isFindByNaturalId = setMultiIdentifierLoadAccessOptions( options, loadAccess );
+		if ( isFindByNaturalId ) {
+			return findMultipleByNaturalId( entityType, ids, options );
+		}
 		return loadAccess.multiLoad( ids );
 	}
 
@@ -1000,7 +1010,10 @@ public class SessionImpl
 					case POJO -> byMultipleIds( type.getJavaType() );
 				};
 		loadAccess.withLoadGraph( rootGraph );
-		setMultiIdentifierLoadAccessOptions( options, loadAccess );
+		final boolean isFindByNaturalId = setMultiIdentifierLoadAccessOptions( options, loadAccess );
+		if ( isFindByNaturalId ) {
+			throw new UnsupportedOperationException( "Find by natural-id with entity-graph is not supported" );
+		}
 		return loadAccess.multiLoad( ids );
 	}
 
@@ -2251,12 +2264,18 @@ public class SessionImpl
 		}
 	}
 
-	private <T> void setLoadAccessOptions(FindOption[] options, IdentifierLoadAccessImpl<T> loadAccess) {
+	/// @return `true` if [FindBy#NATURAL_ID] was found
+	private <T> boolean setLoadAccessOptions(FindOption[] options, IdentifierLoadAccessImpl<T> loadAccess) {
 		CacheStoreMode storeMode = getCacheStoreMode();
 		CacheRetrieveMode retrieveMode = getCacheRetrieveMode();
 		LockOptions lockOptions = copySessionLockOptions();
 		for ( FindOption option : options ) {
-			if ( option instanceof CacheStoreMode cacheStoreMode ) {
+			if ( option instanceof FindBy findBy ) {
+				if ( findBy == FindBy.NATURAL_ID ) {
+					return true;
+				}
+			}
+			else if ( option instanceof CacheStoreMode cacheStoreMode ) {
 				storeMode = cacheStoreMode;
 			}
 			else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
@@ -2306,13 +2325,18 @@ public class SessionImpl
 			}
 		}
 		loadAccess.with( lockOptions ).with( interpretCacheMode( storeMode, retrieveMode ) );
+
+		return false;
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, FindOption... options) {
+	public <T> T find(Class<T> entityClass, Object key, FindOption... options) {
 		final IdentifierLoadAccessImpl<T> loadAccess = byId( entityClass );
-		setLoadAccessOptions( options, loadAccess );
-		return loadAccess.load( primaryKey );
+		final boolean isFindByNaturalId = setLoadAccessOptions( options, loadAccess );
+		if ( isFindByNaturalId ) {
+			return findByNaturalId( entityClass, key, options );
+		}
+		return loadAccess.load( key );
 	}
 
 	@Override
@@ -2324,7 +2348,10 @@ public class SessionImpl
 					case MAP -> byId( type.getTypeName() );
 					case POJO -> byId( type.getJavaType() );
 				};
-		setLoadAccessOptions( options, loadAccess );
+		final boolean isFindByNaturalId = setLoadAccessOptions( options, loadAccess );
+		if (  isFindByNaturalId ) {
+			throw new UnsupportedOperationException( "Find by natural-id with entity-graph is not supported" );
+		}
 		return loadAccess.withLoadGraph( graph ).load( primaryKey );
 	}
 
@@ -2396,7 +2423,10 @@ public class SessionImpl
 	@Override
 	public Object find(String entityName, Object primaryKey, FindOption... options) {
 		final IdentifierLoadAccessImpl<?> loadAccess = byId( entityName );
-		setLoadAccessOptions( options, loadAccess );
+		final boolean isFindByNaturalId = setLoadAccessOptions( options, loadAccess );
+		if ( isFindByNaturalId ) {
+			return findByNaturalId( entityName, primaryKey, options );
+		}
 		return loadAccess.load( primaryKey );
 	}
 
@@ -2409,7 +2439,12 @@ public class SessionImpl
 
 	private <T> void setOptions(FindOption[] options, SimpleNaturalIdLoadAccessImpl<T> access) {
 		for ( FindOption option : options ) {
-			if ( option instanceof LockMode lockMode ) {
+			if ( option instanceof FindBy findBy ) {
+				if ( findBy == FindBy.ID ) {
+					throw new IllegalArgumentException( "Cannot use FindBy#ID with findByNaturalId" );
+				}
+			}
+			else if ( option instanceof LockMode lockMode ) {
 				access.with( lockMode );
 			}
 			else if ( option instanceof LockModeType lockModeType ) {
@@ -2438,7 +2473,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public <T> List<T> findMultipleByNaturalId(Class<T> entityType, List<Object> naturalIds, FindOption... options) {
+	public <T> List<T> findMultipleByNaturalId(Class<T> entityType, List<?> naturalIds, FindOption... options) {
 		final NaturalIdMultiLoadAccessStandard<T> access = (NaturalIdMultiLoadAccessStandard<T>) byMultipleNaturalId( entityType );
 		setOptions( options, access );
 		return access.multiLoad( naturalIds );
@@ -2446,7 +2481,12 @@ public class SessionImpl
 
 	private <T> void setOptions(FindOption[] options, NaturalIdMultiLoadAccessStandard<T> access) {
 		for ( FindOption option : options ) {
-			if ( option instanceof LockMode lockMode ) {
+			if ( option instanceof FindBy findBy ) {
+				if ( findBy == FindBy.ID ) {
+					throw new IllegalArgumentException( "Cannot use FindBy#ID with findMultipleByNaturalId" );
+				}
+			}
+			else if ( option instanceof LockMode lockMode ) {
 				access.with( lockMode );
 			}
 			else if ( option instanceof LockModeType lockModeType ) {
@@ -2480,7 +2520,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public List<Object> findMultipleByNaturalId(String entityName, List<Object> naturalIds, FindOption... options) {
+	public List<Object> findMultipleByNaturalId(String entityName, List<?> naturalIds, FindOption... options) {
 		final NaturalIdMultiLoadAccessStandard<Object> access = (NaturalIdMultiLoadAccessStandard<Object>) byMultipleNaturalId( entityName );
 		setOptions( options, access );
 		return access.multiLoad( naturalIds );

@@ -917,12 +917,12 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> List<T> findMultipleByNaturalId(Class<T> entityType, List<Object> naturalIds, FindOption... options) {
+	public <T> List<T> findMultipleByNaturalId(Class<T> entityType, List<?> naturalIds, FindOption... options) {
 		return delegate.findMultipleByNaturalId( entityType, naturalIds, options );
 	}
 
 	@Override
-	public List<Object> findMultipleByNaturalId(String entityName, List<Object> naturalIds, FindOption... options) {
+	public List<Object> findMultipleByNaturalId(String entityName, List<?> naturalIds, FindOption... options) {
 		return delegate.findMultipleByNaturalId( entityName, naturalIds, options );
 	}
 

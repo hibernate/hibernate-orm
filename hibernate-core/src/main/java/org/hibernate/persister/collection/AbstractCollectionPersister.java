@@ -54,7 +54,6 @@ import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -247,6 +246,7 @@ public abstract class AbstractCollectionPersister
 			RuntimeModelCreationContext creationContext)
 					throws MappingException, CacheException {
 		factory = creationContext.getSessionFactory();
+		final var factoryOptions = creationContext.getSessionFactoryOptions();
 
 		this.collectionBootDescriptor = collectionBootDescriptor;
 		this.collectionSemantics =
@@ -256,10 +256,10 @@ public abstract class AbstractCollectionPersister
 
 
 		this.cacheAccessStrategy = cacheAccessStrategy;
-		cacheEntryStructure = cacheEntryStructure( collectionBootDescriptor, creationContext );
+		cacheEntryStructure =
+				cacheEntryStructure( collectionBootDescriptor, factoryOptions );
 		useShallowQueryCacheLayout =
-				shouldUseShallowCacheLayout( collectionBootDescriptor.getQueryCacheLayout(),
-						creationContext.getSessionFactoryOptions() );
+				shouldUseShallowCacheLayout( collectionBootDescriptor.getQueryCacheLayout(), factoryOptions );
 
 		dialect = creationContext.getDialect();
 		sqlExceptionHelper = creationContext.getJdbcServices().getSqlExceptionHelper();
@@ -292,7 +292,7 @@ public abstract class AbstractCollectionPersister
 
 		hasOrphanDelete = collectionBootDescriptor.hasOrphanDelete();
 
-		batchSize = batchSize( collectionBootDescriptor, creationContext );
+		batchSize = batchSize( collectionBootDescriptor, factoryOptions );
 
 		isVersioned = collectionBootDescriptor.isOptimisticLocked();
 
@@ -384,7 +384,7 @@ public abstract class AbstractCollectionPersister
 		if ( collectionBootDescriptor instanceof IndexedCollection indexedCollection ) {
 			assert collectionBootDescriptor.isIndexed();
 			// NativeSQL: collect index column and auto-aliases
-			final Value index = indexedCollection.getIndex();
+			final var index = indexedCollection.getIndex();
 			indexType = index.getType();
 			final int indexSpan = index.getColumnSpan();
 			final boolean[] indexColumnInsertability = index.getColumnInsertability();
@@ -511,7 +511,8 @@ public abstract class AbstractCollectionPersister
 
 	private FilterHelper filterHelper(
 			Collection collection, EntityPersister elementPersister, RuntimeModelCreationContext context) {
-		if ( collection.getFilters().isEmpty() ) {
+		final var filters = collection.getFilters();
+		if ( filters.isEmpty() ) {
 			return null;
 		}
 		else {
@@ -522,18 +523,19 @@ public abstract class AbstractCollectionPersister
 									context.getBootModel().getEntityBinding( elementPersister.getEntityName() ),
 									context.getSessionFactory().getSqlStringGenerationContext()
 							);
-			return new FilterHelper( collection.getFilters(), entityNameByTableNameMap, factory );
+			return new FilterHelper( filters, entityNameByTableNameMap, factory );
 		}
 	}
 
-	private static int batchSize(Collection collection, RuntimeModelCreationContext context) {
-		return collection.getBatchSize() < 0
-				? context.getSessionFactoryOptions().getDefaultBatchFetchSize()
-				: collection.getBatchSize();
+	private static int batchSize(Collection collection, SessionFactoryOptions options) {
+		int batchSize = collection.getBatchSize();
+		return batchSize >= 0
+				? batchSize
+				: options.getDefaultBatchFetchSize();
 	}
 
-	private static CacheEntryStructure cacheEntryStructure(Collection collection, RuntimeModelCreationContext context) {
-		if ( context.getSessionFactoryOptions().isStructuredCacheEntriesEnabled() ) {
+	private static CacheEntryStructure cacheEntryStructure(Collection collection, SessionFactoryOptions options) {
+		if ( options.isStructuredCacheEntriesEnabled() ) {
 			return collection.isMap()
 							? StructuredMapCacheEntry.INSTANCE
 							: StructuredCollectionCacheEntry.INSTANCE;

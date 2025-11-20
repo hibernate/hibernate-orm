@@ -116,12 +116,14 @@ public class CollectionBatchLoaderArrayParam
 				.buildSelectTranslator( getSessionFactory(), sqlSelect )
 				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
 	}
+
 	@Override
 	public PersistentCollection<?> load(Object keyBeingLoaded, SharedSessionContractImplementor session) {
 		final ForeignKeyDescriptor keyDescriptor = getLoadable().getKeyDescriptor();
-		if ( keyDescriptor.isEmbedded() ) {
+		if ( keyDescriptor.isEmbedded()
+			|| keyDescriptor.getKeyPart().getSingleJdbcMapping().getValueConverter() != null ) {
 			assert keyDescriptor.getJdbcTypeCount() == 1;
-			return loadEmbeddable( keyBeingLoaded, session, keyDescriptor );
+			return loadWithConversion( keyBeingLoaded, session, keyDescriptor );
 		}
 		else {
 			return super.load( keyBeingLoaded, session );
@@ -129,7 +131,7 @@ public class CollectionBatchLoaderArrayParam
 
 	}
 
-	private PersistentCollection<?> loadEmbeddable(
+	private PersistentCollection<?> loadWithConversion(
 			Object keyBeingLoaded,
 			SharedSessionContractImplementor session,
 			ForeignKeyDescriptor keyDescriptor) {
@@ -149,14 +151,14 @@ public class CollectionBatchLoaderArrayParam
 						.getComponentType(),
 				length
 		);
-		final Object[] embeddedKeys = (Object[]) Array.newInstance( keyDomainType, length );
+		final Object[] domainKeys = (Object[]) Array.newInstance( keyDomainType, length );
 		session.getPersistenceContextInternal().getBatchFetchQueue()
 				.collectBatchLoadableCollectionKeys(
 						length,
 						(index, key) ->
 								keyDescriptor.forEachJdbcValue( key, (i, value, jdbcMapping) -> {
 									keysToInitialize[index] = value;
-									embeddedKeys[index] = key;
+									domainKeys[index] = key;
 								}, session )
 						,
 						keyBeingLoaded,
@@ -171,7 +173,7 @@ public class CollectionBatchLoaderArrayParam
 
 		initializeKeys( keyBeingLoaded, keys, session );
 
-		for ( Object initializedKey : embeddedKeys ) {
+		for ( Object initializedKey : domainKeys ) {
 			if ( initializedKey != null ) {
 				finishInitializingKey( initializedKey, session );
 			}
@@ -231,25 +233,9 @@ public class CollectionBatchLoaderArrayParam
 
 	@Override
 	Object[] resolveKeysToInitialize(Object keyBeingLoaded, SharedSessionContractImplementor session) {
-		final ForeignKeyDescriptor keyDescriptor = getLoadable().getKeyDescriptor();
-		if( keyDescriptor.isEmbedded()){
-			assert keyDescriptor.getJdbcTypeCount() == 1;
-			final int length = getDomainBatchSize();
-			final Object[] keysToInitialize = (Object[]) Array.newInstance( keyDescriptor.getSingleJdbcMapping().getJdbcJavaType().getJavaTypeClass(), length );
-			session.getPersistenceContextInternal().getBatchFetchQueue()
-					.collectBatchLoadableCollectionKeys(
-							length,
-							(index, key) ->
-								keyDescriptor.forEachJdbcValue( key, (i, value, jdbcMapping) -> {
-									keysToInitialize[index] = value;
-								}, session )
-							,
-							keyBeingLoaded,
-							getLoadable()
-					);
-			// now trim down the array to the number of keys we found
-			return trimIdBatch( length, keysToInitialize );
-		}
+		assert !getLoadable().getKeyDescriptor().isEmbedded()
+			&& getLoadable().getKeyDescriptor().getKeyPart().getSingleJdbcMapping().getValueConverter() == null
+				: "Should use loadWithConversion() instead";
 		return super.resolveKeysToInitialize( keyBeingLoaded, session );
 	}
 }

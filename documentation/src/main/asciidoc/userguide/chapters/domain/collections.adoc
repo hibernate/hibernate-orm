@@ -285,7 +285,7 @@ is available to have Hibernate interpret a `List` with no `@OrderColumn` and no 
 An ID_BAG is similar to a BAG, except that it maps a generated, per-row identifier into the collection
 table.  `@CollectionId` is the annotation to configure this identifier.
 
-For details about defining an id-bad identifier, see the Javadocs for:
+For details about defining an id-bag identifier, see the Javadocs for:
 
 * link:{javadoc-base}/org/hibernate/annotations/CollectionId.html[@CollectionId]
 * link:{javadoc-base}/org/hibernate/annotations/CollectionIdJavaClass.html[@CollectionIdJavaClass]

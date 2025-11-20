@@ -33,11 +33,6 @@ pipeline {
     stages {
         stage('Build') {
         	steps {
-				script {
-					docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-						docker.image('eclipse-temurin:11').pull()
-					}
-				}
 				dir('hibernate') {
 					checkout scm
 					sh './gradlew publishToMavenLocal -PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com -DjakartaJpaVersion=3.1.0'

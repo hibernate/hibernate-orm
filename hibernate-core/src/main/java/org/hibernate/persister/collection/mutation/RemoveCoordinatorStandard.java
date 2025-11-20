@@ -5,12 +5,8 @@
 package org.hibernate.persister.collection.mutation;
 
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
-import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
-import org.hibernate.engine.jdbc.mutation.MutationExecutor;
-import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
@@ -18,6 +14,7 @@ import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
+import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
  * Handles complete removal of a collection by its key
@@ -45,8 +42,8 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 		this.mutationTarget = mutationTarget;
 		this.operationProducer = operationProducer;
 
-		this.batchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#REMOVE" );
-		this.mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
+		batchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#REMOVE" );
+		mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
 	@Override
@@ -66,7 +63,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 			operationGroup = buildOperationGroup();
 		}
 
-		final JdbcMutationOperation operation = (JdbcMutationOperation) operationGroup.getSingleOperation();
+		final var operation = (JdbcMutationOperation) operationGroup.getSingleOperation();
 		return operation.getSqlString();
 	}
 
@@ -81,16 +78,16 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 			operationGroup = buildOperationGroup();
 		}
 
-		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
+		final var mutationExecutor = mutationExecutorService.createExecutor(
 				() -> batchKey,
 				operationGroup,
 				session
 		);
 
 		try {
-			final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
-			final ForeignKeyDescriptor fkDescriptor = mutationTarget.getTargetPart().getKeyDescriptor();
-			fkDescriptor.getKeyPart().decompose(
+			final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
+			final var foreignKeyDescriptor = mutationTarget.getTargetPart().getKeyDescriptor();
+			foreignKeyDescriptor.getKeyPart().decompose(
 					key,
 					0,
 					jdbcValueBindings,
@@ -113,21 +110,17 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 	}
 
 	private MutationOperationGroup buildOperationGroup() {
-		assert mutationTarget.getTargetPart() != null;
-		assert mutationTarget.getTargetPart().getKeyDescriptor() != null;
+		assert mutationTarget.getTargetPart() != null
+			&& mutationTarget.getTargetPart().getKeyDescriptor() != null;
 
 //		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 //			MODEL_MUTATION_LOGGER.tracef( "Starting RemoveCoordinator#buildOperationGroup - %s",
 //					mutationTarget.getRolePath() );
 //		}
 
-		final CollectionTableMapping tableMapping = mutationTarget.getCollectionTableMapping();
-		final MutatingTableReference tableReference = new MutatingTableReference( tableMapping );
-
-		return MutationOperationGroupFactory.singleOperation(
-				MutationType.DELETE,
-				mutationTarget,
-				operationProducer.createOperation( tableReference )
-		);
+		final var tableMapping = mutationTarget.getCollectionTableMapping();
+		final var tableReference = new MutatingTableReference( tableMapping );
+		return singleOperation( MutationType.DELETE, mutationTarget,
+				operationProducer.createOperation( tableReference ) );
 	}
 }

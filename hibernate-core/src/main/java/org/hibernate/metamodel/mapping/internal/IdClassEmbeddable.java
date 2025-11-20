@@ -161,7 +161,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
 		final Object id = representationStrategy.getInstantiator().instantiate( null );
 
-		final Object[] propertyValues = new Object[virtualIdEmbeddable.getNumberOfAttributeMappings()];
+		final var propertyValues = new Object[virtualIdEmbeddable.getNumberOfAttributeMappings()];
 
 		for ( int i = 0; i < propertyValues.length; i++ ) {
 			final var attributeMapping = virtualIdEmbeddable.getAttributeMapping( i );
@@ -203,7 +203,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		final var entityDescriptor =
 				factory.getMappingMetamodel()
 						.getEntityDescriptor( entity.getClass() );
-		final Object[] propertyValues = new Object[attributeMappings.size()];
+		final var propertyValues = new Object[attributeMappings.size()];
 		virtualIdEmbeddable.forEachAttribute(
 				(position, virtualIdAttribute) -> {
 					final var idClassAttribute = attributeMappings.get( position );

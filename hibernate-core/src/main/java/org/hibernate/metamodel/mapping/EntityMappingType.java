@@ -493,8 +493,7 @@ public interface EntityMappingType
 			Map<AttributeMapping, DomainResultAssembler> assemblerMapping,
 			RowProcessingState rowProcessingState) {
 		// todo (6.0) : getNumberOfAttributeMappings() needs to be fixed for this to work - bad walking of hierarchy
-		final Object[] values = new Object[ getNumberOfAttributeMappings() ];
-
+		final var values = new Object[ getNumberOfAttributeMappings() ];
 		forEachAttributeMapping(
 				attribute -> {
 					final DomainResultAssembler<?> assembler = assemblerMapping.get( attribute );
@@ -509,7 +508,6 @@ public interface EntityMappingType
 					values[attribute.getStateArrayPosition()] = value;
 				}
 		);
-
 		return values;
 	}
 

@@ -58,7 +58,6 @@ import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.ast.TableUpdate;
 import org.hibernate.sql.model.ast.builder.CollectionRowDeleteByUpdateSetNullBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
-import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
@@ -68,6 +67,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 import static org.hibernate.persister.collection.mutation.RowMutationOperations.DEFAULT_RESTRICTOR;
 import static org.hibernate.persister.collection.mutation.RowMutationOperations.DEFAULT_VALUE_SETTER;
 import static org.hibernate.sql.model.ast.builder.TableUpdateBuilder.NULL;
+import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
  * A {@link CollectionPersister} for {@linkplain jakarta.persistence.OneToMany
@@ -198,7 +198,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 			final var mutationExecutor = mutationExecutorService.createExecutor(
 					() -> new BasicBatchKey( getNavigableRole() + "#INDEX" ),
-					MutationOperationGroupFactory.singleOperation( MutationType.UPDATE, this, updateRowOperation ),
+					singleOperation( MutationType.UPDATE, this, updateRowOperation ),
 					session
 			);
 

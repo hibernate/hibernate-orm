@@ -871,7 +871,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		}
 		else {
 			final int numberOfAttributes = getNumberOfAttributeMappings();
-			final Object[] results = new Object[numberOfAttributes + 1];
+			final var results = new Object[numberOfAttributes + 1];
 			final var concreteEmbeddableType = findSubtypeBySubclass( compositeInstance.getClass().getName() );
 			int i = 0;
 			for ( ; i < numberOfAttributes; i++ ) {

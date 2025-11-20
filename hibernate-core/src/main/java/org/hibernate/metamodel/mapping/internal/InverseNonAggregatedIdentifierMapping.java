@@ -196,7 +196,7 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 		if ( hasContainingClass() ) {
 			final Object id = identifierValueMapper.getRepresentationStrategy().getInstantiator().instantiate( null );
 			final var embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
-			final Object[] propertyValues = new Object[embeddableTypeDescriptor.getNumberOfAttributeMappings()];
+			final var propertyValues = new Object[embeddableTypeDescriptor.getNumberOfAttributeMappings()];
 			for ( int i = 0; i < propertyValues.length; i++ ) {
 				final var attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
 				final Object object = attributeMapping.getValue( entity );
@@ -247,7 +247,7 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 
 	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
-		final Object[] propertyValues = new Object[identifierValueMapper.getNumberOfAttributeMappings()];
+		final var propertyValues = new Object[identifierValueMapper.getNumberOfAttributeMappings()];
 		final var embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
 		for ( int position = 0; position < propertyValues.length; position++ ) {
 			final var attribute = embeddableTypeDescriptor.getAttributeMapping( position );

@@ -4,26 +4,21 @@
  */
 package org.hibernate.persister.collection.mutation;
 
-import java.util.Iterator;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
-import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
+import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
  * OneToMany insert coordinator if the element is a {@link org.hibernate.persister.entity.UnionSubclassEntityPersister}.
@@ -41,12 +36,12 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 			ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
 		this.rowMutationOperations = rowMutationOperations;
-		this.subclassEntries =
+		subclassEntries =
 				new SubclassEntry[mutationTarget.getElementPersister()
 						.getRootEntityDescriptor()
 						.getSubclassEntityNames()
 						.size()];
-		this.mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
+		mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
 	@Override
@@ -69,27 +64,27 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 			MODEL_MUTATION_LOGGER.insertingNewCollectionRows( mutationTarget.getRolePath(), id );
 		}
 
-		final PluralAttributeMapping pluralAttribute = mutationTarget.getTargetPart();
-		final CollectionPersister collectionDescriptor = pluralAttribute.getCollectionDescriptor();
+		final var pluralAttribute = mutationTarget.getTargetPart();
+		final var collectionDescriptor = pluralAttribute.getCollectionDescriptor();
 
-		final Iterator<?> entries = collection.entries( collectionDescriptor );
+		final var entries = collection.entries( collectionDescriptor );
 		collection.preInsert( collectionDescriptor );
 		if ( !entries.hasNext() ) {
 			MODEL_MUTATION_LOGGER.noCollectionRowsToInsert( mutationTarget.getRolePath(), id );
 			return;
 		}
-		final MutationExecutor[] executors = new MutationExecutor[subclassEntries.length];
+		final var executors = new MutationExecutor[subclassEntries.length];
 		try {
 			int entryCount = 0;
 			while ( entries.hasNext() ) {
 				final Object entry = entries.next();
 
 				if ( entryChecker == null || entryChecker.include( entry, entryCount, collection, pluralAttribute ) ) {
-					final EntityEntry entityEntry = session.getPersistenceContextInternal().getEntry( entry );
+					final var entityEntry = session.getPersistenceContextInternal().getEntry( entry );
 					final int subclassId = entityEntry.getPersister().getSubclassId();
 					final MutationExecutor mutationExecutor;
 					if ( executors[subclassId] == null ) {
-						final SubclassEntry subclassEntry = getSubclassEntry( entityEntry.getPersister() );
+						final var subclassEntry = getSubclassEntry( entityEntry.getPersister() );
 						mutationExecutor = executors[subclassId] = mutationExecutorService.createExecutor(
 								subclassEntry.batchKeySupplier,
 								subclassEntry.operationGroup,
@@ -118,7 +113,7 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 
 		}
 		finally {
-			for ( MutationExecutor executor : executors ) {
+			for ( var executor : executors ) {
 				if ( executor != null ) {
 					executor.release();
 				}
@@ -128,11 +123,11 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 
 	private SubclassEntry getSubclassEntry(EntityPersister elementPersister) {
 		final int subclassId = elementPersister.getSubclassId();
-		final SubclassEntry subclassEntry = subclassEntries[subclassId];
+		final var subclassEntry = subclassEntries[subclassId];
 		if ( subclassEntry != null ) {
 			return subclassEntry;
 		}
-		final BasicBatchKey basicBatchKey =
+		final var basicBatchKey =
 				new BasicBatchKey( mutationTarget.getRolePath() + "#INSERT#" + subclassId );
 		return subclassEntries[subclassId] = new SubclassEntry(
 				() -> basicBatchKey,
@@ -141,11 +136,11 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 	}
 
 	private MutationOperationGroup createOperationGroup(EntityPersister elementPersister) {
-		assert mutationTarget.getTargetPart() != null;
-		assert mutationTarget.getTargetPart().getKeyDescriptor() != null;
+		assert mutationTarget.getTargetPart() != null
+			&& mutationTarget.getTargetPart().getKeyDescriptor() != null;
 
-		final CollectionTableMapping collectionTableMapping = mutationTarget.getCollectionTableMapping();
-		final JdbcMutationOperation operation = rowMutationOperations.getInsertRowOperation(
+		final var collectionTableMapping = mutationTarget.getCollectionTableMapping();
+		final var operation = rowMutationOperations.getInsertRowOperation(
 				new CollectionTableMapping(
 						elementPersister.getMappedTableDetails().getTableName(),
 						collectionTableMapping.getSpaces(),
@@ -158,7 +153,7 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 						collectionTableMapping.getDeleteRowDetails()
 				)
 		);
-		return MutationOperationGroupFactory.singleOperation( MutationType.INSERT, mutationTarget, operation );
+		return singleOperation( MutationType.INSERT, mutationTarget, operation );
 	}
 
 	private static class SubclassEntry {

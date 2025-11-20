@@ -4,23 +4,19 @@
  */
 package org.hibernate.persister.collection.mutation;
 
-import java.util.Iterator;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
-import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
+
+import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
  * OneToMany update coordinator if the element is a {@link org.hibernate.persister.entity.UnionSubclassEntityPersister}.
@@ -37,8 +33,11 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 			SessionFactoryImplementor sessionFactory) {
 		super( mutationTarget, sessionFactory );
 		this.rowMutationOperations = rowMutationOperations;
-		this.deleteSubclassEntries = new SubclassEntry[mutationTarget.getElementPersister().getRootEntityDescriptor().getSubclassEntityNames().size()];
-		this.insertSubclassEntries = new SubclassEntry[mutationTarget.getElementPersister().getRootEntityDescriptor().getSubclassEntityNames().size()];
+		final int size =
+				mutationTarget.getElementPersister().getRootEntityDescriptor()
+						.getSubclassEntityNames().size();
+		deleteSubclassEntries = new SubclassEntry[size];
+		insertSubclassEntries = new SubclassEntry[size];
 	}
 
 	@Override
@@ -55,56 +54,50 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 	}
 
 	private void deleteRows(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
-		final PluralAttributeMapping attributeMapping = getMutationTarget().getTargetPart();
-		final CollectionPersister collectionDescriptor = attributeMapping.getCollectionDescriptor();
-		final Iterator<?> entries = collection.entries( collectionDescriptor );
-		if ( !entries.hasNext() ) {
-			return;
-		}
+		final var attributeMapping = getMutationTarget().getTargetPart();
+		final var collectionDescriptor = attributeMapping.getCollectionDescriptor();
+		final var entries = collection.entries( collectionDescriptor );
+		if ( entries.hasNext() ) {
+			final var executors = new MutationExecutor[deleteSubclassEntries.length];
+			try {
+				int entryPosition = -1;
+				while ( entries.hasNext() ) {
+					final Object entry = entries.next();
+					entryPosition++;
+					if ( collection.needsUpdating( entry, entryPosition, attributeMapping ) ) {
+						final Object entryToUpdate = collection.getSnapshotElement( entry, entryPosition );
+						final var entityEntry = session.getPersistenceContextInternal().getEntry( entryToUpdate );
+						final int subclassId = entityEntry.getPersister().getSubclassId();
+						final MutationExecutor mutationExecutor;
+						if ( executors[subclassId] == null ) {
+							final var subclassEntry = getDeleteSubclassEntry( entityEntry.getPersister() );
+							mutationExecutor = executors[subclassId] = mutationExecutorService.createExecutor(
+									subclassEntry.batchKeySupplier,
+									subclassEntry.operationGroup,
+									session
+							);
+						}
+						else {
+							mutationExecutor = executors[subclassId];
+						}
+						rowMutationOperations.getDeleteRowRestrictions().applyRestrictions(
+								collection,
+								key,
+								entryToUpdate,
+								entryPosition,
+								session,
+								mutationExecutor.getJdbcValueBindings()
+						);
 
-		final MutationExecutor[] executors = new MutationExecutor[deleteSubclassEntries.length];
-		try {
-			int entryPosition = -1;
-
-			while ( entries.hasNext() ) {
-				final Object entry = entries.next();
-				entryPosition++;
-
-				if ( !collection.needsUpdating( entry, entryPosition, attributeMapping ) ) {
-					continue;
+						mutationExecutor.execute( entryToUpdate, null, null, null, session );
+					}
 				}
-				final Object entryToUpdate = collection.getSnapshotElement( entry, entryPosition );
-
-				final EntityEntry entityEntry = session.getPersistenceContextInternal().getEntry( entryToUpdate );
-				final int subclassId = entityEntry.getPersister().getSubclassId();
-				final MutationExecutor mutationExecutor;
-				if ( executors[subclassId] == null ) {
-					final SubclassEntry subclassEntry = getDeleteSubclassEntry( entityEntry.getPersister() );
-					mutationExecutor = executors[subclassId] = mutationExecutorService.createExecutor(
-							subclassEntry.batchKeySupplier,
-							subclassEntry.operationGroup,
-							session
-					);
-				}
-				else {
-					mutationExecutor = executors[subclassId];
-				}
-				rowMutationOperations.getDeleteRowRestrictions().applyRestrictions(
-						collection,
-						key,
-						entryToUpdate,
-						entryPosition,
-						session,
-						mutationExecutor.getJdbcValueBindings()
-				);
-
-				mutationExecutor.execute( entryToUpdate, null, null, null, session );
 			}
-		}
-		finally {
-			for ( MutationExecutor executor : executors ) {
-				if ( executor != null ) {
-					executor.release();
+			finally {
+				for ( var executor : executors ) {
+					if ( executor != null ) {
+						executor.release();
+					}
 				}
 			}
 		}
@@ -112,11 +105,11 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 
 	private SubclassEntry getDeleteSubclassEntry( EntityPersister elementPersister) {
 		final int subclassId = elementPersister.getSubclassId();
-		final SubclassEntry subclassEntry = deleteSubclassEntries[subclassId];
+		final var subclassEntry = deleteSubclassEntries[subclassId];
 		if ( subclassEntry != null ) {
 			return subclassEntry;
 		}
-		final BasicBatchKey basicBatchKey = new BasicBatchKey( getMutationTarget().getRolePath() + "#UPDATE-DELETE#" + subclassId );
+		final var basicBatchKey = new BasicBatchKey( getMutationTarget().getRolePath() + "#UPDATE-DELETE#" + subclassId );
 		return deleteSubclassEntries[subclassId] = new SubclassEntry(
 				() -> basicBatchKey,
 				resolveDeleteGroup( elementPersister )
@@ -124,8 +117,8 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 	}
 
 	private MutationOperationGroup resolveDeleteGroup(EntityPersister elementPersister) {
-		final CollectionTableMapping collectionTableMapping = getMutationTarget().getCollectionTableMapping();
-		final JdbcMutationOperation operation = rowMutationOperations.getDeleteRowOperation(
+		final var collectionTableMapping = getMutationTarget().getCollectionTableMapping();
+		final var operation = rowMutationOperations.getDeleteRowOperation(
 				new CollectionTableMapping(
 						elementPersister.getMappedTableDetails().getTableName(),
 						collectionTableMapping.getSpaces(),
@@ -139,59 +132,53 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 				)
 		);
 
-		return MutationOperationGroupFactory.singleOperation( MutationType.DELETE, getMutationTarget(), operation );
+		return singleOperation( MutationType.DELETE, getMutationTarget(), operation );
 	}
 
 	private int insertRows(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
-		final PluralAttributeMapping attributeMapping = getMutationTarget().getTargetPart();
-		final CollectionPersister collectionDescriptor = attributeMapping.getCollectionDescriptor();
-		final Iterator<?> entries = collection.entries( collectionDescriptor );
+		final var attributeMapping = getMutationTarget().getTargetPart();
+		final var collectionDescriptor = attributeMapping.getCollectionDescriptor();
+		final var entries = collection.entries( collectionDescriptor );
 		if ( !entries.hasNext() ) {
 			return -1;
 		}
 
-		final MutationExecutor[] executors = new MutationExecutor[insertSubclassEntries.length];
+		final var executors = new MutationExecutor[insertSubclassEntries.length];
 		try {
 			int entryPosition = -1;
-
 			while ( entries.hasNext() ) {
 				final Object entry = entries.next();
 				entryPosition++;
-
-				if ( !collection.needsUpdating( entry, entryPosition, attributeMapping ) ) {
-					continue;
-				}
-
-				final EntityEntry entityEntry = session.getPersistenceContextInternal().getEntry( entry );
-				final int subclassId = entityEntry.getPersister().getSubclassId();
-				final MutationExecutor mutationExecutor;
-				if ( executors[subclassId] == null ) {
-					final SubclassEntry subclassEntry = getInsertSubclassEntry( entityEntry.getPersister() );
-					mutationExecutor = executors[subclassId] = mutationExecutorService.createExecutor(
-							subclassEntry.batchKeySupplier,
-							subclassEntry.operationGroup,
-							session
+				if ( collection.needsUpdating( entry, entryPosition, attributeMapping ) ) {
+					final var entityEntry = session.getPersistenceContextInternal().getEntry( entry );
+					final int subclassId = entityEntry.getPersister().getSubclassId();
+					final MutationExecutor mutationExecutor;
+					if ( executors[subclassId] == null ) {
+						final var subclassEntry = getInsertSubclassEntry( entityEntry.getPersister() );
+						mutationExecutor = executors[subclassId] = mutationExecutorService.createExecutor(
+								subclassEntry.batchKeySupplier,
+								subclassEntry.operationGroup,
+								session
+						);
+					}
+					else {
+						mutationExecutor = executors[subclassId];
+					}
+					rowMutationOperations.getInsertRowValues().applyValues(
+							collection,
+							key,
+							entry,
+							entryPosition,
+							session,
+							mutationExecutor.getJdbcValueBindings()
 					);
+					mutationExecutor.execute( entry, null, null, null, session );
 				}
-				else {
-					mutationExecutor = executors[subclassId];
-				}
-				rowMutationOperations.getInsertRowValues().applyValues(
-						collection,
-						key,
-						entry,
-						entryPosition,
-						session,
-						mutationExecutor.getJdbcValueBindings()
-				);
-
-				mutationExecutor.execute( entry, null, null, null, session );
 			}
-
 			return entryPosition;
 		}
 		finally {
-			for ( MutationExecutor executor : executors ) {
+			for ( var executor : executors ) {
 				if ( executor != null ) {
 					executor.release();
 				}
@@ -201,20 +188,23 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 
 	private SubclassEntry getInsertSubclassEntry( EntityPersister elementPersister) {
 		final int subclassId = elementPersister.getSubclassId();
-		final SubclassEntry subclassEntry = insertSubclassEntries[subclassId];
+		final var subclassEntry = insertSubclassEntries[subclassId];
 		if ( subclassEntry != null ) {
 			return subclassEntry;
 		}
-		final BasicBatchKey basicBatchKey = new BasicBatchKey( getMutationTarget().getRolePath() + "#UPDATE-INSERT#" + subclassId );
-		return insertSubclassEntries[subclassId] = new SubclassEntry(
-				() -> basicBatchKey,
-				resolveInsertGroup( elementPersister )
-		);
+		else {
+			final var basicBatchKey =
+					new BasicBatchKey( getMutationTarget().getRolePath() + "#UPDATE-INSERT#" + subclassId );
+			return insertSubclassEntries[subclassId] = new SubclassEntry(
+					() -> basicBatchKey,
+					resolveInsertGroup( elementPersister )
+			);
+		}
 	}
 
 	private MutationOperationGroup resolveInsertGroup(EntityPersister elementPersister) {
-		final CollectionTableMapping collectionTableMapping = getMutationTarget().getCollectionTableMapping();
-		final JdbcMutationOperation operation = rowMutationOperations.getInsertRowOperation(
+		final var collectionTableMapping = getMutationTarget().getCollectionTableMapping();
+		final var operation = rowMutationOperations.getInsertRowOperation(
 				new CollectionTableMapping(
 						elementPersister.getMappedTableDetails().getTableName(),
 						collectionTableMapping.getSpaces(),
@@ -228,7 +218,7 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 				)
 		);
 
-		return MutationOperationGroupFactory.singleOperation( MutationType.INSERT, getMutationTarget(), operation );
+		return singleOperation( MutationType.INSERT, getMutationTarget(), operation );
 	}
 
 	private static class SubclassEntry {

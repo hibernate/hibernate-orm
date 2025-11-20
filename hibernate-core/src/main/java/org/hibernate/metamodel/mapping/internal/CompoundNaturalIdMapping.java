@@ -108,7 +108,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			return state;
 		}
 		else {
-			final Object[] values = new Object[attributes.size()];
+			final var values = new Object[attributes.size()];
 			for ( int i = 0; i <= attributes.size() - 1; i++ ) {
 				final var attributeMapping = attributes.get( i );
 				values[i] = state[attributeMapping.getStateArrayPosition()];
@@ -119,7 +119,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Override
 	public Object[] extractNaturalIdFromEntity(Object entity) {
-		final Object[] values = new Object[ attributes.size() ];
+		final var values = new Object[ attributes.size() ];
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			values[i] = attributes.get( i ).getPropertyAccess().getGetter().get( entity );
 		}
@@ -133,7 +133,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 		else if ( incoming instanceof Map<?,?> valueMap ) {
 			final var attributes = getNaturalIdAttributes();
-			final Object[] values = new Object[ attributes.size() ];
+			final var values = new Object[ attributes.size() ];
 			for ( int i = 0; i < attributes.size(); i++ ) {
 				values[ i ] = valueMap.get( attributes.get( i ).getAttributeName() );
 			}
@@ -169,7 +169,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			return 0;
 		}
 		else {
-			final Object[] values = (Object[]) value;
+			final var values = (Object[]) value;
 			int hashcode = 0;
 			for ( int i = 0; i < attributes.size(); i++ ) {
 				final Object o = values[i];
@@ -222,8 +222,8 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Override
 	public boolean areEqual(Object one, Object other, SharedSessionContractImplementor session) {
-		final Object[] oneArray = (Object[]) one;
-		final Object[] otherArray = (Object[]) other;
+		final var oneArray = (Object[]) one;
+		final var otherArray = (Object[]) other;
 		final var naturalIdAttributes = getNaturalIdAttributes();
 		for ( int i = 0; i < naturalIdAttributes.size(); i++ ) {
 			if ( !naturalIdAttributes.get( i ).areEqual( oneArray[i], otherArray[i], session ) ) {
@@ -387,7 +387,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 		else if ( value instanceof Object[] incoming ) {
 			assert incoming.length == attributes.size();
-			final Object[] outgoing = new Object[incoming.length];
+			final var outgoing = new Object[incoming.length];
 			for ( int i = 0; i < attributes.size(); i++ ) {
 				outgoing[i] = attributes.get( i ).disassemble( incoming[i], session );
 			}
@@ -630,7 +630,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 		@Override
 		public Object[] assemble(RowProcessingState rowProcessingState) {
-			final Object[] result = new Object[ subAssemblers.length ];
+			final var result = new Object[ subAssemblers.length ];
 			for ( int i = 0; i < subAssemblers.length; i++ ) {
 				result[ i ] = subAssemblers[i].assemble( rowProcessingState );
 			}

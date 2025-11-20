@@ -112,7 +112,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 			final var naturalIdValueClass = naturalIdValue.getClass();
 			if ( naturalIdValueClass.isArray() && !naturalIdValueClass.getComponentType().isPrimitive() ) {
 				// be flexible
-				final Object[] values = (Object[]) naturalIdValue;
+				final var values = (Object[]) naturalIdValue;
 				if ( values.length == 1 ) {
 					naturalIdValue = values[0];
 				}

@@ -51,7 +51,10 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyEntry;
@@ -116,6 +119,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	private final boolean isPartOfKey;
 	private final boolean isResultInitializer;
 	private final boolean hasKeyManyToOne;
+	private final boolean isReadOnly;
 	/**
 	 * Indicates whether there is a high chance of the previous row to have the same entity key as the current row
 	 * and hence enable a check in the {@link #resolveKey(RowProcessingState)} phase which compare the previously read
@@ -239,6 +243,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		this.parent = parent;
 		this.isResultInitializer = isResultInitializer;
 		this.isPartOfKey = Initializer.isPartOfKey( navigablePath, parent );
+		this.isReadOnly = isReadOnly( referencedModelPart );
 		// If the parent already has previous row reuse enabled, we can skip that here
 		this.previousRowReuse = !isPreviousRowReuse( parent ) && (
 				// If this entity domain result contains a collection join fetch, this usually means that the entity data is
@@ -903,7 +908,13 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	@Override
 	public void resolveInstance(Object instance, EntityInitializerData data) {
 		if ( instance == null ) {
-			setMissing( data );
+			if ( isReadOnly ) {
+				// When the mapping is read-only, we can't trust the state of the persistence context
+				resolveKey( data );
+			}
+			else {
+				setMissing( data );
+			}
 			return;
 		}
 		final LazyInitializer lazyInitializer = extractLazyInitializer( instance );
@@ -911,12 +922,21 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		final SharedSessionContractImplementor session = rowProcessingState.getSession();
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		if ( lazyInitializer == null ) {
-			// Entity is most probably initialized
-			data.concreteDescriptor = session.getEntityPersister( null, instance );
-			resolveEntityKey(
-					data,
-					data.concreteDescriptor.getIdentifier( instance, session )
-			);
+			if ( isReadOnly ) {
+				// Read-only associations might be inconsistent
+				resolveKey( data, true );
+				if ( data.getState() == State.MISSING ) {
+					return;
+				}
+			}
+			else {
+				// Entity is most probably initialized
+				data.concreteDescriptor = session.getEntityPersister( null, instance );
+				resolveEntityKey(
+						data,
+						data.concreteDescriptor.getIdentifier( instance, session )
+				);
+			}
 			data.entityHolder = persistenceContext.claimEntityHolderIfPossible(
 					data.entityKey,
 					null,
@@ -982,13 +1002,23 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			}
 		}
 		else if ( lazyInitializer.isUninitialized() ) {
-			data.setState( State.RESOLVED );
-			// Read the discriminator from the result set if necessary
-			data.concreteDescriptor = discriminatorAssembler == null
-					? entityDescriptor
-					: determineConcreteEntityDescriptor( rowProcessingState, discriminatorAssembler, entityDescriptor );
-			assert data.concreteDescriptor != null;
-			resolveEntityKey( data, lazyInitializer.getInternalIdentifier() );
+			if ( isReadOnly ) {
+				// Read-only associations might be inconsistent
+				resolveKey( data, true );
+				if ( data.getState() == State.MISSING ) {
+					return;
+				}
+				data.setState( State.RESOLVED );
+			}
+			else {
+				data.setState( State.RESOLVED );
+				// Read the discriminator from the result set if necessary
+				data.concreteDescriptor = discriminatorAssembler == null
+						? entityDescriptor
+						: determineConcreteEntityDescriptor( rowProcessingState, discriminatorAssembler, entityDescriptor );
+				assert data.concreteDescriptor != null;
+				resolveEntityKey( data, lazyInitializer.getInternalIdentifier() );
+			}
 			data.entityHolder = persistenceContext.claimEntityHolderIfPossible(
 					data.entityKey,
 					null,
@@ -1014,8 +1044,17 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		}
 		else {
 			final var implementation = lazyInitializer.getImplementation();
-			data.concreteDescriptor = session.getEntityPersister( null, implementation );
-			resolveEntityKey( data, lazyInitializer.getInternalIdentifier() );
+			if ( isReadOnly ) {
+				// Read-only associations might be inconsistent
+				resolveKey( data, true );
+				if ( data.getState() == State.MISSING ) {
+					return;
+				}
+			}
+			else {
+				data.concreteDescriptor = session.getEntityPersister( null, implementation );
+				resolveEntityKey( data, lazyInitializer.getInternalIdentifier() );
+			}
 			data.entityHolder = persistenceContext.getEntityHolder( data.entityKey );
 			if ( data.entityHolder.getProxy() == instance ) {
 				data.entityInstanceForNotify = implementation;
@@ -1057,6 +1096,26 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		}
 		else {
 			resolveKeySubInitializers( data );
+		}
+	}
+
+	public static boolean isReadOnly(EntityValuedModelPart entityValuedModelPart) {
+		if ( entityValuedModelPart instanceof ToOneAttributeMapping ) {
+			final ToOneAttributeMapping toOne = (ToOneAttributeMapping) entityValuedModelPart;
+			if ( toOne.getSideNature() == ForeignKeyDescriptor.Nature.KEY ) {
+				final ValuedModelPart modelPart = toOne.getForeignKeyDescriptor().getKeyPart();
+				final int jdbcTypeCount = modelPart.getJdbcTypeCount();
+				for ( int i = 0; i < jdbcTypeCount; i++ ) {
+					final SelectableMapping selectableMapping = modelPart.getSelectable( i );
+					if ( selectableMapping.isInsertable() || selectableMapping.isUpdateable() ) {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		else {
+			return false;
 		}
 	}
 

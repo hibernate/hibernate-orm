@@ -831,12 +831,12 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <T> List<T> findMultipleByNaturalId(Class<T> entityType, List<Object> naturalIds, FindOption... options) {
+	public <T> List<T> findMultipleByNaturalId(Class<T> entityType, List<?> naturalIds, FindOption... options) {
 		return lazySession.get().findMultipleByNaturalId( entityType, naturalIds, options );
 	}
 
 	@Override
-	public List<Object> findMultipleByNaturalId(String entityName, List<Object> naturalIds, FindOption... options) {
+	public List<Object> findMultipleByNaturalId(String entityName, List<?> naturalIds, FindOption... options) {
 		return lazySession.get().findMultipleByNaturalId( entityName, naturalIds, options );
 	}
 

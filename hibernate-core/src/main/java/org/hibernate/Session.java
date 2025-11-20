@@ -583,7 +583,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @param options The options to apply to the find operation.  May contain [FindMultipleOption] values.
 	///
 	/// @apiNote For non-aggregated composite natural-ids, consider leveraging a [org.hibernate.annotations.NaturalIdClass].
-	<T> List<T> findMultipleByNaturalId(Class<T> entityType, List<Object> naturalIds, FindOption... options);
+	<T> List<T> findMultipleByNaturalId(Class<T> entityType, List<?> naturalIds, FindOption... options);
 
 	/// Find multiple entities by [natural-id][org.hibernate.annotations.NaturalId].
 	///
@@ -592,7 +592,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @param options The options to apply to the find operation.  May contain [FindMultipleOption] values.
 	///
 	/// @apiNote For non-aggregated composite natural-ids, consider leveraging a [org.hibernate.annotations.NaturalIdClass].
-	List<Object> findMultipleByNaturalId(String entityName, List<Object> naturalIds, FindOption... options);
+	List<Object> findMultipleByNaturalId(String entityName, List<?> naturalIds, FindOption... options);
 
 	/**
 	 * Return the persistent instances of the given entity class with the given identifiers

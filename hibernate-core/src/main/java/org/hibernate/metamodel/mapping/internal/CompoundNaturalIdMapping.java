@@ -727,6 +727,10 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 						naturalIdClassComponents,
 						modelsContext
 				);
+				// todo (natural-id-class) : atm there is functionally no difference
+				//		between BasicAttributeMapperImpl and ToOneAttributeMapperImpl.
+				//		ideally we'd eventually support usage of the associated key entity's
+				//		id and then there would.  see the note in ToOneAttributeMapperImpl#extractFrom
 				final AttributeMapper<Object,T> attrMapper;
 				if ( keyAttribute instanceof ToOneAttributeMapping ) {
 					attrMapper = new ToOneAttributeMapperImpl<>( keyAttribute, extractor );
@@ -852,6 +856,12 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		@Override
 		public Object extractFrom(T keyValue) {
 			// todo (natural-id-class) : handle "key -> to-one" resolutions
+			//		this requires some contract changes though to pass Session
+			//		to be able to resolve key -> entity for the to-one.
+			//		+
+			/// 	the other difficulty is handling "derived id" structures
+			//
+			//		see `NaturalIdMapping#normalizeInput`
 			return keyClassExtractor.get( keyValue );
 		}
 	}

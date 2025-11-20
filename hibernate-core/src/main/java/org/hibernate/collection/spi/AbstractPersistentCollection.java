@@ -177,9 +177,6 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 									read();
 								}
 							}
-							else {
-								throwLazyInitializationExceptionIfNotConnected();
-							}
 							return false;
 						}
 				);
@@ -193,9 +190,9 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			return cachedSize;
 		}
 		else {
+			throwLazyInitializationExceptionIfNotConnected();
 			final var entry = getCollectionEntry();
 			if ( entry == null ) {
-				throwLazyInitializationExceptionIfNotConnected();
 				throwLazyInitializationException( "collection not associated with session" );
 				throw new AssertionFailure( "impossible" );
 			}
@@ -373,9 +370,9 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	@Override
 	public boolean elementExists(Object element) {
+		throwLazyInitializationExceptionIfNotConnected();
 		final var entry = getCollectionEntry();
 		if ( entry == null ) {
-			throwLazyInitializationExceptionIfNotConnected();
 			throwLazyInitializationException( "collection not associated with session" );
 			throw new AssertionFailure( "impossible" );
 		}
@@ -413,9 +410,9 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	@Override
 	public Object elementByIndex(Object index) {
+		throwLazyInitializationExceptionIfNotConnected();
 		final var entry = getCollectionEntry();
 		if ( entry == null ) {
-			throwLazyInitializationExceptionIfNotConnected();
 			throwLazyInitializationException( "collection not associated with session" );
 			throw new AssertionFailure( "impossible" );
 		}

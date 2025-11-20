@@ -151,6 +151,11 @@ class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAccess<T>
 			}
 
 			try {
+				// normalize the incoming natural-id values
+				for ( int i = 0; i < ids.length; i++ ) {
+					ids[i] = entityDescriptor.getNaturalIdMapping().normalizeInput( ids[ i ] );
+				}
+
 				return (List<T>)
 						entityDescriptor.getMultiNaturalIdLoader()
 								.multiLoad( ids, this, session );

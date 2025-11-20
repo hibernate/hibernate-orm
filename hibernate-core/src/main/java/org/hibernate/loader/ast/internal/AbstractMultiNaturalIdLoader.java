@@ -144,9 +144,8 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 			Consumer<E> results ) {
 		final List<K> unresolvedIds = arrayList( naturalIds.length );
 		final var context = session.getPersistenceContextInternal();
-		final var naturalIdMapping = getEntityDescriptor().getNaturalIdMapping();
 		for ( K naturalId : naturalIds ) {
-			final Object entity = entityForNaturalId( context, naturalIdMapping.normalizeInput( naturalId ) );
+			final Object entity = entityForNaturalId( context, naturalId );
 			if ( entity != null ) {
 				// Entity is already in the persistence context
 				final var entry = context.getEntry( entity );

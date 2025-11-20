@@ -1506,7 +1506,7 @@ public abstract class AbstractEntityPersister
 
 		// see if there is already a collection instance associated with the session
 		// NOTE: can this ever happen?
-		var collection = getCollection( entity, collectionType, session, persister );
+		final var collection = getCollection( entity, collectionType, session, persister );
 
 		final var interceptor = asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 		assert interceptor != null : "Expecting bytecode interceptor to be non-null";
@@ -1607,7 +1607,7 @@ public abstract class AbstractEntityPersister
 		final var lazySelectLoadPlan = getSQLLazySelectLoadPlan( fetchGroup );
 		try {
 			Object finalResult = null;
-			final Object[] results = lazySelectLoadPlan.load( id, session );
+			final var results = lazySelectLoadPlan.load( id, session );
 			final var initializedLazyAttributeNames = interceptor.getInitializedLazyAttributeNames();
 			int i = 0;
 			for ( var fetchGroupAttributeDescriptor : fetchGroupAttributeDescriptors ) {
@@ -1660,7 +1660,7 @@ public abstract class AbstractEntityPersister
 				getOrCreateLazyLoadPlan( fieldName,
 						List.of( getAttributeMapping( propertyIndex ) ) );
 		try {
-			final Object[] results = lazyLoanPlan.load( id, session );
+			final var results = lazyLoanPlan.load( id, session );
 			assert results.length > 0;
 			final Object result = results[0];
 			initializeLazyProperty( entity, entry, result, propertyIndex, getPropertyTypes()[propertyIndex] );
@@ -1731,8 +1731,9 @@ public abstract class AbstractEntityPersister
 			final Object propValue) {
 		final int propertyNumber = lazyPropertyNumbers[index];
 		setPropertyValue( entity, propertyNumber, propValue );
-		if ( entry.getMaybeLazySet() != null ) {
-			final var bitSet = entry.getMaybeLazySet().toBitSet();
+		final var maybeLazySet = entry.getMaybeLazySet();
+		if ( maybeLazySet != null ) {
+			final var bitSet = maybeLazySet.toBitSet();
 			bitSet.set( propertyNumber );
 			entry.setMaybeLazySet( ImmutableBitSet.valueOf( bitSet ) );
 		}
@@ -1868,7 +1869,7 @@ public abstract class AbstractEntityPersister
 				rootQuerySpec,
 				new SqlAliasBaseManager(),
 				new SimpleFromClauseAccessImpl(),
-				new LockOptions(),
+				LockOptions.NONE,
 				this::fetchProcessor,
 				true,
 				new LoadQueryInfluencers( factory ),

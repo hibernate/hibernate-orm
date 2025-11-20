@@ -50,6 +50,8 @@ import java.util.List;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.isAnyTrue;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+import static org.hibernate.persister.collection.mutation.RowMutationOperations.DEFAULT_RESTRICTOR;
+import static org.hibernate.persister.collection.mutation.RowMutationOperations.DEFAULT_VALUE_SETTER;
 
 /**
  * A {@link CollectionPersister} for {@linkplain jakarta.persistence.ElementCollection
@@ -127,14 +129,14 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		// nothing to do
 	}
 
+	private boolean isPerformingUpdates() {
+		return getCollectionSemantics().getCollectionClassification().isRowUpdatePossible()
+			&& isAnyTrue( elementColumnIsSettable )
+			&& !isInverse();
+	}
 
 	private UpdateRowsCoordinator buildUpdateRowCoordinator() {
-		final boolean performUpdates =
-				getCollectionSemantics().getCollectionClassification().isRowUpdatePossible()
-						&& isAnyTrue( elementColumnIsSettable )
-						&& !isInverse();
-
-		if ( !performUpdates ) {
+		if ( !isPerformingUpdates() ) {
 //			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 //				MODEL_MUTATION_LOGGER.tracef(
 //						"Skipping collection row updates - %s",
@@ -256,9 +258,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		final OperationProducer updateRowOperationProducer;
 		final RowMutationOperations.Values updateRowValues;
 		final RowMutationOperations.Restrictions updateRowRestrictions;
-		if ( getCollectionSemantics().getCollectionClassification().isRowUpdatePossible()
-				&& isAnyTrue( elementColumnIsSettable )
-				&& !isInverse() ) {
+		if ( isPerformingUpdates() ) {
 			updateRowOperationProducer = this::generateUpdateRowOperation;
 			updateRowValues = this::applyUpdateRowValues;
 			updateRowRestrictions = this::applyUpdateRowRestrictions;
@@ -359,50 +359,53 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			throw new IllegalArgumentException( "null key for collection: " + getNavigableRole().getFullPath() );
 		}
 		final var attributeMapping = getAttributeMapping();
-		final var foreignKeyDescriptor = attributeMapping.getKeyDescriptor();
-		foreignKeyDescriptor.getKeyPart().decompose(
+		attributeMapping.getKeyDescriptor().getKeyPart().decompose(
 				key,
 				0,
 				jdbcValueBindings,
 				null,
-				RowMutationOperations.DEFAULT_VALUE_SETTER,
+				DEFAULT_VALUE_SETTER,
 				session
 		);
 
-		if ( attributeMapping.getIdentifierDescriptor() != null ) {
-			attributeMapping.getIdentifierDescriptor().decompose(
+		final var identifierDescriptor = attributeMapping.getIdentifierDescriptor();
+		if ( identifierDescriptor != null ) {
+			identifierDescriptor.decompose(
 					collection.getIdentifier( rowValue, rowPosition ),
 					0,
 					jdbcValueBindings,
 					null,
-					RowMutationOperations.DEFAULT_VALUE_SETTER,
+					DEFAULT_VALUE_SETTER,
 					session
 			);
 		}
-		else if ( attributeMapping.getIndexDescriptor() != null ) {
-			// todo (mutation) : this would be more efficient if we exposed the "containing table"
-			//		per value-mapping model-parts which is what we effectively support anyway.
-			//
-			// this would need to kind of like a union of ModelPart and ValueMapping, except:
-			// 		1) not the managed-type structure from ModelPart
-			//		2) not BasicType from ValueMapping
-			//	essentially any basic or composite mapping of column(s)
-			attributeMapping.getIndexDescriptor().decompose(
-					incrementIndexByBase( collection.getIndex( rowValue, rowPosition, this ) ),
-					0,
-					indexColumnIsSettable,
-					jdbcValueBindings,
-					(valueIndex, settable, bindings, jdbcValue, jdbcValueMapping) -> {
-						if ( jdbcValueMapping.getContainingTableExpression().equals( getTableName() ) ) {
-							if ( settable[valueIndex] ) {
+		else {
+			final var indexDescriptor = attributeMapping.getIndexDescriptor();
+			if ( indexDescriptor != null ) {
+				// todo (mutation) : this would be more efficient if we exposed the "containing table"
+				//		per value-mapping model-parts which is what we effectively support anyway.
+				//
+				// this would need to kind of like a union of ModelPart and ValueMapping, except:
+				// 		1) not the managed-type structure from ModelPart
+				//		2) not BasicType from ValueMapping
+				//	essentially any basic or composite mapping of column(s)
+				indexDescriptor.decompose(
+						incrementIndexByBase( collection.getIndex( rowValue, rowPosition, this ) ),
+						0,
+						indexColumnIsSettable,
+						jdbcValueBindings,
+						(valueIndex, settable, bindings, jdbcValue, jdbcValueMapping) -> {
+							if ( settable[valueIndex]
+									&& jdbcValueMapping.getContainingTableExpression()
+											.equals( getTableName() ) ) {
 								bindings.bindValue( jdbcValue, jdbcValueMapping, ParameterUsage.SET );
 							}
-						}
-						// otherwise a many-to-many mapping and the index is defined
-						// on the associated entity table - we skip it here
-					},
-					session
-			);
+							// otherwise a many-to-many mapping and the index is defined
+							// on the associated entity table - we skip it here
+						},
+						session
+				);
+			}
 		}
 
 		attributeMapping.getElementDescriptor().decompose(
@@ -449,13 +452,15 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// WHERE
 
-		if ( attribute.getIdentifierDescriptor() != null ) {
-			updateBuilder.addKeyRestrictionsLeniently( attribute.getIdentifierDescriptor() );
+		final var identifierDescriptor = attribute.getIdentifierDescriptor();
+		if ( identifierDescriptor != null ) {
+			updateBuilder.addKeyRestrictionsLeniently( identifierDescriptor );
 		}
 		else {
 			updateBuilder.addKeyRestrictionsLeniently( attribute.getKeyDescriptor().getKeyPart() );
-			if ( attribute.getIndexDescriptor() != null && !indexContainsFormula ) {
-				updateBuilder.addKeyRestrictionsLeniently( attribute.getIndexDescriptor() );
+			final var indexDescriptor = attribute.getIndexDescriptor();
+			if ( indexDescriptor != null && !indexContainsFormula ) {
+				updateBuilder.addKeyRestrictionsLeniently( indexDescriptor );
 			}
 			else {
 				updateBuilder.addKeyRestrictions( attribute.getElementDescriptor() );
@@ -495,13 +500,14 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings) {
 		final var attributeMapping = getAttributeMapping();
-		if ( attributeMapping.getIdentifierDescriptor() != null ) {
-			attributeMapping.getIdentifierDescriptor().decompose(
+		final var identifierDescriptor = attributeMapping.getIdentifierDescriptor();
+		if ( identifierDescriptor != null ) {
+			identifierDescriptor.decompose(
 					collection.getIdentifier( entry, entryPosition ),
 					0,
 					jdbcValueBindings,
 					null,
-					RowMutationOperations.DEFAULT_RESTRICTOR,
+					DEFAULT_RESTRICTOR,
 					session
 			);
 		}
@@ -511,21 +517,21 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 					0,
 					jdbcValueBindings,
 					null,
-					RowMutationOperations.DEFAULT_RESTRICTOR,
+					DEFAULT_RESTRICTOR,
 					session
 			);
 
-			if ( attributeMapping.getIndexDescriptor() != null && !indexContainsFormula ) {
+			final var indexDescriptor = attributeMapping.getIndexDescriptor();
+			if ( indexDescriptor != null && !indexContainsFormula ) {
 				final Object index =
 						collection.getIndex( entry, entryPosition,
 								attributeMapping.getCollectionDescriptor() );
-				final Object adjustedIndex = incrementIndexByBase( index );
-				attributeMapping.getIndexDescriptor().decompose(
-						adjustedIndex,
+				indexDescriptor.decompose(
+						incrementIndexByBase( index ),
 						0,
 						jdbcValueBindings,
 						null,
-						RowMutationOperations.DEFAULT_RESTRICTOR,
+						DEFAULT_RESTRICTOR,
 						session
 				);
 			}
@@ -566,15 +572,16 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		else {
 			final var foreignKeyDescriptor = pluralAttribute.getKeyDescriptor();
 			assert foreignKeyDescriptor != null;
-			// note that custom sql delete row details are handled by CollectionRowDeleteBuilder
+			// note that custom SQL delete row details are handled by CollectionRowDeleteBuilder
 			final var deleteBuilder = new CollectionRowDeleteBuilder(
 					this,
 					tableReference,
 					getFactory(),
 					sqlWhereString
 			);
-			if ( pluralAttribute.getIdentifierDescriptor() != null ) {
-				deleteBuilder.addKeyRestrictionsLeniently( pluralAttribute.getIdentifierDescriptor() );
+			final var identifierDescriptor = pluralAttribute.getIdentifierDescriptor();
+			if ( identifierDescriptor != null ) {
+				deleteBuilder.addKeyRestrictionsLeniently( identifierDescriptor );
 			}
 			else {
 				deleteBuilder.addKeyRestrictionsLeniently( foreignKeyDescriptor.getKeyPart() );
@@ -603,8 +610,9 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				getFactory(),
 				sqlWhereString
 		);
-		if ( attributeMapping.getIdentifierDescriptor() != null ) {
-			updateBuilder.addKeyRestrictionsLeniently( attributeMapping.getIdentifierDescriptor() );
+		final var identifierDescriptor = attributeMapping.getIdentifierDescriptor();
+		if ( identifierDescriptor != null ) {
+			updateBuilder.addKeyRestrictionsLeniently( identifierDescriptor );
 		}
 		else {
 			updateBuilder.addKeyRestrictionsLeniently( foreignKeyDescriptor.getKeyPart() );
@@ -633,13 +641,14 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings) {
 		final var attributeMapping = getAttributeMapping();
-		if ( attributeMapping.getIdentifierDescriptor() != null ) {
-			attributeMapping.getIdentifierDescriptor().decompose(
+		final var identifierDescriptor = attributeMapping.getIdentifierDescriptor();
+		if ( identifierDescriptor != null ) {
+			identifierDescriptor.decompose(
 					rowValue,
 					0,
 					jdbcValueBindings,
 					null,
-					RowMutationOperations.DEFAULT_RESTRICTOR,
+					DEFAULT_RESTRICTOR,
 					session
 			);
 		}
@@ -649,7 +658,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 					0,
 					jdbcValueBindings,
 					null,
-					RowMutationOperations.DEFAULT_RESTRICTOR,
+					DEFAULT_RESTRICTOR,
 					session
 			);
 			if ( hasPhysicalIndexColumn() ) {
@@ -658,7 +667,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 						0,
 						jdbcValueBindings,
 						null,
-						RowMutationOperations.DEFAULT_RESTRICTOR,
+						DEFAULT_RESTRICTOR,
 						session
 				);
 			}

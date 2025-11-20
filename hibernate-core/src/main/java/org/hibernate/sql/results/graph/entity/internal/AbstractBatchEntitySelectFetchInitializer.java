@@ -129,104 +129,87 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 
 	@Override
 	public void resolveInstance(Object instance, Data data) {
-		if ( instance == null ) {
+		final boolean identifierResolved = resolveIdentifier( instance, data );
+		if ( data.entityIdentifier == null ) {
 			data.setState( State.MISSING );
 			data.entityKey = null;
 			data.setInstance( null );
 		}
 		else {
-			resolve( instance, data );
-		}
-	}
-
-	private void resolve(Object instance, Data data) {
-		final var rowProcessingState = data.getRowProcessingState();
-		final var session = rowProcessingState.getSession();
-		final var persistenceContext = session.getPersistenceContextInternal();
-		// Only need to extract the identifier if the identifier has a many to one
-		final var lazyInitializer = extractLazyInitializer( instance );
-		data.entityIdentifier = null;
-		if ( lazyInitializer == null ) {
-			// Entity is most probably initialized
-			data.setInstance( instance );
-			if ( concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
+			final var rowProcessingState = data.getRowProcessingState();
+			final var session = rowProcessingState.getSession();
+			final var persistenceContext = session.getPersistenceContextInternal();
+			final var lazyInitializer = extractLazyInitializer( instance );
+			if ( lazyInitializer == null ) {
+				// Entity is most probably initialized
+				if ( concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
 					&& isPersistentAttributeInterceptable( instance )
 					&& getAttributeInterceptor( instance )
 							instanceof EnhancementAsProxyLazinessInterceptor enhancementInterceptor ) {
-				if ( enhancementInterceptor.isInitialized() ) {
-					data.setState( State.INITIALIZED );
+					if ( enhancementInterceptor.isInitialized() ) {
+						data.setState( State.INITIALIZED );
+					}
+					else {
+						data.setState( State.RESOLVED );
+					}
 				}
 				else {
+					// If the entity initializer is null, we know the entity is fully initialized,
+					// otherwise it will be initialized by some other initializer
 					data.setState( State.RESOLVED );
-					data.entityIdentifier = enhancementInterceptor.getIdentifier();
 				}
-				if ( data.entityIdentifier == null ) {
-					data.entityIdentifier = concreteDescriptor.getIdentifier( instance, session );
-				}
+			}
+			else if ( lazyInitializer.isUninitialized() ) {
+				data.setState( State.RESOLVED );
 			}
 			else {
-				// If the entity initializer is null, we know the entity is fully initialized;
-				// otherwise, it will be initialized by some other initializer
-				data.setState( State.RESOLVED );
-				data.entityIdentifier = concreteDescriptor.getIdentifier( instance, session );
+				// Entity is initialized
+				data.setState( State.INITIALIZED );
 			}
-		}
-		else if ( lazyInitializer.isUninitialized() ) {
-			data.setState( State.RESOLVED );
-			data.entityIdentifier = lazyInitializer.getInternalIdentifier();
-		}
-		else {
-			// Entity is initialized
-			data.setState( State.INITIALIZED );
-			data.entityIdentifier = lazyInitializer.getInternalIdentifier();
-			data.setInstance( lazyInitializer.getImplementation() );
-		}
 
-		data.entityKey = new EntityKey( data.entityIdentifier, concreteDescriptor );
-		final var entityHolder = persistenceContext.getEntityHolder(
-				data.entityKey
-		);
+			data.entityKey = new EntityKey( data.entityIdentifier, concreteDescriptor );
+			final var entityHolder = persistenceContext.getEntityHolder( data.entityKey );
 
-		if ( entityHolder == null || entityHolder.getEntity() != instance && entityHolder.getProxy() != instance ) {
-			// the existing entity instance is detached or transient
-			if ( entityHolder != null ) {
-				final var managed = entityHolder.getManagedObject();
-				data.setInstance( managed );
-				data.entityKey = entityHolder.getEntityKey();
-				data.entityIdentifier = data.entityKey.getIdentifier();
-				if ( entityHolder.isInitialized() ) {
-					data.setState( State.INITIALIZED );
+			if ( entityHolder == null || instance == null
+					|| entityHolder.getEntity() != instance && entityHolder.getProxy() != instance ) {
+				// the existing entity instance is detached or transient
+				if ( entityHolder != null ) {
+					final var managed = entityHolder.getManagedObject();
+					data.setInstance( managed );
+					data.entityKey = entityHolder.getEntityKey();
+					data.entityIdentifier = data.entityKey.getIdentifier();
+					data.setState( entityHolder.isInitialized() ? State.INITIALIZED : State.RESOLVED );
 				}
 				else {
 					data.setState( State.RESOLVED );
 				}
 			}
 			else {
-				data.setState( State.RESOLVED );
+				data.setInstance( instance );
 			}
-		}
 
-		if ( data.getState() == State.RESOLVED ) {
-			// similar to resolveInstanceFromIdentifier, but we already have the holder here
-			if ( data.batchDisabled ) {
-				initialize( data, entityHolder, session, persistenceContext );
+			if ( data.getState() == State.RESOLVED ) {
+				// similar to resolveInstanceFromIdentifier, but we already have the holder here
+				if ( data.batchDisabled ) {
+					initialize( data, entityHolder, session, persistenceContext );
+				}
+				else if ( entityHolder == null || !entityHolder.isEventuallyInitialized() ) {
+					// need to add the key to the batch queue only when the entity has not been already loaded or
+					// there isn't another initializer that is loading it
+					registerResolutionListener( data );
+					registerToBatchFetchQueue( data );
+				}
 			}
-			else if ( entityHolder == null || !entityHolder.isEventuallyInitialized() ) {
-				// need to add the key to the batch queue only when the entity has not been already loaded or
-				// there isn't another initializer that is loading it
-				registerResolutionListener( data );
-				registerToBatchFetchQueue( data );
-			}
-		}
 
-		if ( keyIsEager ) {
-			final var initializer = keyAssembler.getInitializer();
-			assert initializer != null;
-			initializer.resolveInstance( data.entityIdentifier, rowProcessingState );
-		}
-		else if ( rowProcessingState.needsResolveState() ) {
-			// Resolve the state of the identifier if result caching is enabled and this is not a query cache hit
-			keyAssembler.resolveState( rowProcessingState );
+			if ( keyIsEager && !identifierResolved ) {
+				final var initializer = keyAssembler.getInitializer();
+				assert initializer != null;
+				initializer.resolveInstance( data.entityIdentifier, rowProcessingState );
+			}
+			else if ( rowProcessingState.needsResolveState() && !identifierResolved ) {
+				// Resolve the state of the identifier if result caching is enabled and this is not a query cache hit
+				keyAssembler.resolveState( rowProcessingState );
+			}
 		}
 	}
 

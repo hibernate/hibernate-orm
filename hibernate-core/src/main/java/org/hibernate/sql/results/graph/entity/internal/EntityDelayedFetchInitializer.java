@@ -55,6 +55,7 @@ public class EntityDelayedFetchInitializer
 	private final @Nullable BasicResultAssembler<?> discriminatorAssembler;
 	private final boolean keyIsEager;
 	private final boolean hasLazySubInitializer;
+	private final boolean isReadOnly;
 
 	public static class EntityDelayedFetchInitializerData extends InitializerData {
 		// per-row state
@@ -100,6 +101,7 @@ public class EntityDelayedFetchInitializer
 			keyIsEager = identifierAssembler.isEager();
 			hasLazySubInitializer = identifierAssembler.hasLazySubInitializers();
 		}
+		this.isReadOnly = referencedModelPart.isReadOnly();
 	}
 
 	@Override
@@ -147,31 +149,42 @@ public class EntityDelayedFetchInitializer
 				data.setState( State.MISSING );
 			}
 			else {
-				final var entityPersister = getEntityDescriptor();
-				final EntityPersister concreteDescriptor;
-				if ( discriminatorAssembler != null ) {
-					concreteDescriptor = determineConcreteEntityDescriptor(
-							rowProcessingState,
-							discriminatorAssembler,
-							entityPersister
-					);
-					if ( concreteDescriptor == null ) {
-						// If we find no discriminator, it means there's no entity in the target table
-						if ( !referencedModelPart.isOptional() ) {
-							throw new FetchNotFoundException( entityPersister.getEntityName(), data.entityIdentifier );
-						}
-						data.setInstance( null );
-						data.setState( State.MISSING );
-						return;
+				final var concreteDescriptor = resolveConcreteEntityDescriptor( data );
+				if ( concreteDescriptor == null ) {
+					// If we find no discriminator it means there's no entity in the target table
+					if ( !referencedModelPart.isOptional() ) {
+						throw new FetchNotFoundException( getEntityDescriptor().getEntityName(),
+								data.entityIdentifier );
 					}
-				}
-				else {
-					concreteDescriptor = entityPersister;
+					data.setInstance( null );
+					data.setState( State.MISSING );
+					return;
 				}
 
 				initialize( data, null, concreteDescriptor );
 			}
 		}
+	}
+
+	private @Nullable EntityPersister resolveConcreteEntityDescriptor(EntityDelayedFetchInitializerData data) {
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		final EntityPersister entityPersister = getEntityDescriptor();
+		final EntityPersister concreteDescriptor;
+		if ( discriminatorAssembler != null ) {
+			concreteDescriptor = determineConcreteEntityDescriptor(
+					rowProcessingState,
+					discriminatorAssembler,
+					entityPersister
+			);
+			if ( concreteDescriptor == null ) {
+				// If we find no discriminator it means there's no entity in the target table
+				return null;
+			}
+		}
+		else {
+			concreteDescriptor = entityPersister;
+		}
+		return concreteDescriptor;
 	}
 
 	protected void initialize(
@@ -313,9 +326,28 @@ public class EntityDelayedFetchInitializer
 
 	@Override
 	public void resolveInstance(Object instance, EntityDelayedFetchInitializerData data) {
-		if ( instance == null ) {
-			data.setState( State.MISSING );
+		boolean identifierResolved;
+		if ( instance == null && !isReadOnly ) {
 			data.entityIdentifier = null;
+			identifierResolved = true;
+		}
+		else if ( isReadOnly ) {
+			// When the mapping is read-only, we can't trust the state of the persistence context
+			resolveKey( data );
+			final RowProcessingState rowProcessingState = data.getRowProcessingState();
+			data.entityIdentifier = identifierAssembler.assemble( rowProcessingState );
+			identifierResolved = true;
+		}
+		else {
+			final var rowProcessingState = data.getRowProcessingState();
+			final var session = rowProcessingState.getSession();
+			final var entityDescriptor = getEntityDescriptor();
+			data.entityIdentifier = entityDescriptor.getIdentifier( instance, session );
+			assert data.entityIdentifier != null;
+			identifierResolved = false;
+		}
+		if ( data.entityIdentifier == null ) {
+			data.setState( State.MISSING );
 			data.setInstance( null );
 		}
 		else {
@@ -324,15 +356,28 @@ public class EntityDelayedFetchInitializer
 			data.setInstance( instance );
 			final var rowProcessingState = data.getRowProcessingState();
 			final var session = rowProcessingState.getSession();
-			final var entityDescriptor = getEntityDescriptor();
-			data.entityIdentifier = entityDescriptor.getIdentifier( instance, session );
+			final EntityPersister entityDescriptor;
+			if ( isReadOnly ) {
+				entityDescriptor = resolveConcreteEntityDescriptor( data );
+			}
+			else {
+				final var lazyInitializer = extractLazyInitializer( instance );
+				if ( lazyInitializer == null ) {
+					entityDescriptor = session.getEntityPersister( null, instance );
+				}
+				else if ( lazyInitializer.isUninitialized() ) {
+					entityDescriptor = resolveConcreteEntityDescriptor( data );
+				}
+				else {
+					entityDescriptor = session.getEntityPersister( null, lazyInitializer.getImplementation() );
+				}
+			}
 
 			final var entityKey = new EntityKey( data.entityIdentifier, entityDescriptor );
-			final var entityHolder = session.getPersistenceContextInternal().getEntityHolder(
-					entityKey
-			);
+			final var entityHolder = session.getPersistenceContextInternal().getEntityHolder( entityKey );
 
-			if ( entityHolder == null || entityHolder.getEntity() != instance && entityHolder.getProxy() != instance ) {
+			if ( entityHolder == null || instance == null
+					|| entityHolder.getEntity() != instance && entityHolder.getProxy() != instance ) {
 				// the existing entity instance is detached or transient
 				if ( entityHolder != null ) {
 					final var managed = entityHolder.getManagedObject();
@@ -344,14 +389,20 @@ public class EntityDelayedFetchInitializer
 				}
 			}
 
-			if ( keyIsEager ) {
+			if ( keyIsEager && !identifierResolved ) {
 				final var initializer = identifierAssembler.getInitializer();
 				assert initializer != null;
 				initializer.resolveInstance( data.entityIdentifier, rowProcessingState );
+				identifierResolved = true;
 			}
-			else if ( rowProcessingState.needsResolveState() ) {
+			if ( rowProcessingState.needsResolveState() ) {
 				// Resolve the state of the identifier if result caching is enabled, and this is not a query cache hit
-				identifierAssembler.resolveState( rowProcessingState );
+				if ( !identifierResolved ) {
+					identifierAssembler.resolveState( rowProcessingState );
+				}
+				if ( discriminatorAssembler != null ) {
+					discriminatorAssembler.resolveState( rowProcessingState );
+				}
 			}
 		}
 	}

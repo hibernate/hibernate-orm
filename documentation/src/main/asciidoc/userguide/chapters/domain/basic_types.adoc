@@ -1366,6 +1366,8 @@ include::{example-dir-basic-mapping}/basic/JsonMappingTests.java[tags=basic-json
 ----
 ====
 
+It is recommended to override the `equals`/`hash`-methods in custom java types in order to guarantee that the dirty-checking mechanism works as expected and to avoid unnecessary update-statements.
+
 [[basic-mapping-xml]]
 ==== XML mapping
 

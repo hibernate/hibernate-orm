@@ -821,26 +821,6 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <T> T findByNaturalId(Class<T> entityType, Object naturalId, FindOption... options) {
-		return lazySession.get().findByNaturalId( entityType, naturalId, options );
-	}
-
-	@Override
-	public Object findByNaturalId(String entityName, Object naturalId, FindOption... options) {
-		return lazySession.get().findByNaturalId( entityName, naturalId, options );
-	}
-
-	@Override
-	public <T> List<T> findMultipleByNaturalId(Class<T> entityType, List<?> naturalIds, FindOption... options) {
-		return lazySession.get().findMultipleByNaturalId( entityType, naturalIds, options );
-	}
-
-	@Override
-	public List<Object> findMultipleByNaturalId(String entityName, List<?> naturalIds, FindOption... options) {
-		return lazySession.get().findMultipleByNaturalId( entityName, naturalIds, options );
-	}
-
-	@Override
 	public void lock(Object entity, LockModeType lockMode) {
 		this.lazySession.get().lock( entity, lockMode );
 	}

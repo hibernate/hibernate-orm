@@ -5,7 +5,10 @@
 package org.hibernate.loader.ast.internal;
 
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
+import org.hibernate.Timeouts;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -86,13 +89,28 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 	}
 
 	@Override
-	public T load(Object naturalIdValue, NaturalIdLoadOptions options, SharedSessionContractImplementor session) {
-		final var factory = session.getFactory();
+	public T load(Object naturalIdToLoad, Options options, SharedSessionContractImplementor session) {
+		final var lockOptions = makeLockOptions( options );
+		return load( naturalIdToLoad, lockOptions, session );
+	}
 
-		final var lockOptions =
-				options.getLockOptions() == null
-						? new LockOptions()
-						: options.getLockOptions();
+	private LockOptions makeLockOptions(Options options) {
+		if ( options.getLockMode() == null || options.getLockMode() == LockMode.NONE ) {
+			return LockOptions.NONE;
+		}
+		if ( options.getLockMode() == LockMode.READ ) {
+			return LockOptions.READ;
+		}
+
+		final var lockOptions = new LockOptions( options.getLockMode() );
+		lockOptions.setScope( options.getLockScope() != null ? options.getLockScope() : Locking.Scope.ROOT_ONLY );
+		lockOptions.setTimeout( options.getLockTimeout() != null ? options.getLockTimeout() : Timeouts.WAIT_FOREVER );
+		lockOptions.setFollowOnStrategy( options.getLockFollowOn() != null ? options.getLockFollowOn() : Locking.FollowOn.ALLOW );
+		return lockOptions;
+	}
+
+	private T load(Object naturalIdValue, LockOptions lockOptions, SharedSessionContractImplementor session) {
+		final var factory = session.getFactory();
 
 		final var sqlSelect = LoaderSelectBuilder.createSelect(
 				getLoadable(),
@@ -126,6 +144,14 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				),
 				session
 		);
+	}
+
+	@Override
+	public T load(Object naturalIdValue, NaturalIdLoadOptions options, SharedSessionContractImplementor session) {
+		final var lockOptions = options.getLockOptions() == null
+				? new LockOptions()
+				: options.getLockOptions();
+		return load( naturalIdValue, lockOptions, session );
 	}
 
 	/**

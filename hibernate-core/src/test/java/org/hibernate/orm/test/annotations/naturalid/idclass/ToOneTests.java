@@ -59,9 +59,10 @@ public class ToOneTests {
 		// However, this is not supported atm.
 		// See comments in `CompoundNaturalIdMapping.ToOneAttributeMapperImpl#extractFrom`.
 		factoryScope.inTransaction( (session) -> {
-			session.findByNaturalId(
+			session.find(
 					Order.class,
-					Map.of( "customer", 1, "invoiceNumber", 1001 )
+					Map.of( "customer", 1, "invoiceNumber", 1001 ),
+					FindBy.NATURAL_ID
 			);
 		} );
 	}

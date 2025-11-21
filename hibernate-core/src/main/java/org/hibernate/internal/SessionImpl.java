@@ -41,8 +41,9 @@ import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.event.spi.*;
 import org.hibernate.event.spi.LoadEventListener.LoadType;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.internal.find.FindByKeyOperation;
+import org.hibernate.internal.find.FindMultipleByKeyOperation;
 import org.hibernate.internal.util.ExceptionHelper;
 import org.hibernate.jpa.internal.LegacySpecHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
@@ -991,30 +992,45 @@ public class SessionImpl
 	}
 
 	@Override
-	public <E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption... options) {
-		final var loadAccess = byMultipleIds( entityType );
-		final boolean isFindByNaturalId = setMultiIdentifierLoadAccessOptions( options, loadAccess );
-		if ( isFindByNaturalId ) {
-			return findMultipleByNaturalId( entityType, ids, options );
-		}
-		return loadAccess.multiLoad( ids );
+	public <E> List<E> findMultiple(Class<E> entityType, List<?> keys, FindOption... options) {
+		//noinspection unchecked
+		return findMultiple(
+				requireEntityPersister( entityType ),
+				loadQueryInfluencers.getEffectiveEntityGraph().getSemantic(),
+				(RootGraphImplementor<E>) loadQueryInfluencers.getEffectiveEntityGraph().getGraph(),
+				(List<Object>) keys,
+				options
+		);
+	}
+
+	private <E> List<E> findMultiple(
+			EntityPersister entityDescriptor,
+			GraphSemantic graphSemantic,
+			RootGraphImplementor<E> rootGraph,
+			List<Object> keys,
+			FindOption... options) {
+		final var operation = new FindMultipleByKeyOperation<E>(
+				entityDescriptor,
+				lockOptions,
+				getCacheMode(),
+				isDefaultReadOnly(),
+				getFactory(),
+				options
+		);
+		return operation.performFind( keys, graphSemantic, rootGraph, this );
 	}
 
 	@Override
-	public <E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> ids, FindOption... options) {
-		final var rootGraph = (RootGraph<E>) entityGraph;
+	public <E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> keys, FindOption... options) {
+		final var rootGraph = (RootGraphImplementor<E>) entityGraph;
 		final var type = rootGraph.getGraphedType();
-		final MultiIdentifierLoadAccess<E> loadAccess =
-				switch ( type.getRepresentationMode() ) {
-					case MAP -> byMultipleIds( type.getTypeName() );
-					case POJO -> byMultipleIds( type.getJavaType() );
-				};
-		loadAccess.withLoadGraph( rootGraph );
-		final boolean isFindByNaturalId = setMultiIdentifierLoadAccessOptions( options, loadAccess );
-		if ( isFindByNaturalId ) {
-			throw new UnsupportedOperationException( "Find by natural-id with entity-graph is not supported" );
-		}
-		return loadAccess.multiLoad( ids );
+		final var entityDescriptor = switch ( type.getRepresentationMode() ) {
+			case POJO -> requireEntityPersister( type.getJavaType() );
+			case MAP -> requireEntityPersister( type.getTypeName() );
+		};
+
+		//noinspection unchecked
+		return findMultiple( entityDescriptor, GraphSemantic.LOAD, rootGraph, (List<Object>) keys, options );
 	}
 
 	@Override
@@ -2331,28 +2347,22 @@ public class SessionImpl
 
 	@Override
 	public <T> T find(Class<T> entityClass, Object key, FindOption... options) {
-		final IdentifierLoadAccessImpl<T> loadAccess = byId( entityClass );
-		final boolean isFindByNaturalId = setLoadAccessOptions( options, loadAccess );
-		if ( isFindByNaturalId ) {
-			return findByNaturalId( entityClass, key, options );
-		}
-		return loadAccess.load( key );
+		//noinspection unchecked
+		return (T) byKey( requireEntityPersister( entityClass ), options ).performFind( key, this );
 	}
 
 	@Override
-	public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
-		final var graph = (RootGraph<T>) entityGraph;
+	public <T> T find(EntityGraph<T> entityGraph, Object key, FindOption... options) {
+		final var graph = (RootGraphImplementor<T>) entityGraph;
 		final var type = graph.getGraphedType();
-		final IdentifierLoadAccessImpl<T> loadAccess =
-				switch ( type.getRepresentationMode() ) {
-					case MAP -> byId( type.getTypeName() );
-					case POJO -> byId( type.getJavaType() );
-				};
-		final boolean isFindByNaturalId = setLoadAccessOptions( options, loadAccess );
-		if (  isFindByNaturalId ) {
-			throw new UnsupportedOperationException( "Find by natural-id with entity-graph is not supported" );
-		}
-		return loadAccess.withLoadGraph( graph ).load( primaryKey );
+
+		final EntityPersister entityDescriptor = switch ( type.getRepresentationMode() ) {
+			case POJO -> requireEntityPersister( type.getJavaType() );
+			case MAP -> requireEntityPersister( type.getTypeName() );
+		};
+
+		//noinspection unchecked
+		return (T) byKey( entityDescriptor, GraphSemantic.LOAD, graph, options ).performFind( key, this );
 	}
 
 	// Hibernate Reactive may need to use this
@@ -2415,115 +2425,34 @@ public class SessionImpl
 	}
 
 	@Override
-	public Object find(String entityName, Object primaryKey) {
-		final IdentifierLoadAccessImpl<?> loadAccess = byId( entityName );
-		return loadAccess.load( primaryKey );
+	public Object find(String entityName, Object key) {
+		return byKey( requireEntityPersister( entityName ) ).performFind( key, this );
 	}
 
 	@Override
-	public Object find(String entityName, Object primaryKey, FindOption... options) {
-		final IdentifierLoadAccessImpl<?> loadAccess = byId( entityName );
-		final boolean isFindByNaturalId = setLoadAccessOptions( options, loadAccess );
-		if ( isFindByNaturalId ) {
-			return findByNaturalId( entityName, primaryKey, options );
-		}
-		return loadAccess.load( primaryKey );
+	public Object find(String entityName, Object key, FindOption... options) {
+		return byKey( requireEntityPersister( entityName ), options ).performFind( key, this );
 	}
 
-	@Override
-	public <T> T findByNaturalId(Class<T> entityType, Object naturalId, FindOption... options) {
-		final SimpleNaturalIdLoadAccessImpl<T> access = (SimpleNaturalIdLoadAccessImpl<T>) bySimpleNaturalId( entityType );
-		setOptions( options, access );
-		return access.load( naturalId );
+	private <T> FindByKeyOperation<T> byKey(EntityPersister entityDescriptor, FindOption... options) {
+		return byKey( entityDescriptor, null, null, options );
 	}
 
-	private <T> void setOptions(FindOption[] options, SimpleNaturalIdLoadAccessImpl<T> access) {
-		for ( FindOption option : options ) {
-			if ( option instanceof FindBy findBy ) {
-				if ( findBy == FindBy.ID ) {
-					throw new IllegalArgumentException( "Cannot use FindBy#ID with findByNaturalId" );
-				}
-			}
-			else if ( option instanceof LockMode lockMode ) {
-				access.with( lockMode );
-			}
-			else if ( option instanceof LockModeType lockModeType ) {
-				access.with( LockMode.fromJpaLockMode(  lockModeType ) );
-			}
-			else if ( option instanceof Locking.Scope scope ) {
-				access.with( scope );
-			}
-			else if ( option instanceof PessimisticLockScope scope ) {
-				access.with( Locking.Scope.fromJpaScope( scope ) );
-			}
-			else if ( option instanceof Timeout timeout ) {
-				access.with( timeout );
-			}
-			else {
-				throw new IllegalArgumentException( "Illegal option: " + option );
-			}
-		}
-	}
-
-	@Override
-	public Object findByNaturalId(String entityName, Object naturalId, FindOption... options) {
-		final SimpleNaturalIdLoadAccessImpl<?> access = (SimpleNaturalIdLoadAccessImpl<?>) bySimpleNaturalId( entityName );
-		setOptions( options, access );
-		return access.load( naturalId );
-	}
-
-	@Override
-	public <T> List<T> findMultipleByNaturalId(Class<T> entityType, List<?> naturalIds, FindOption... options) {
-		final NaturalIdMultiLoadAccessStandard<T> access = (NaturalIdMultiLoadAccessStandard<T>) byMultipleNaturalId( entityType );
-		setOptions( options, access );
-		return access.multiLoad( naturalIds );
-	}
-
-	private <T> void setOptions(FindOption[] options, NaturalIdMultiLoadAccessStandard<T> access) {
-		for ( FindOption option : options ) {
-			if ( option instanceof FindBy findBy ) {
-				if ( findBy == FindBy.ID ) {
-					throw new IllegalArgumentException( "Cannot use FindBy#ID with findMultipleByNaturalId" );
-				}
-			}
-			else if ( option instanceof LockMode lockMode ) {
-				access.with( lockMode );
-			}
-			else if ( option instanceof LockModeType lockModeType ) {
-				access.with( LockMode.fromJpaLockMode(  lockModeType ) );
-			}
-			else if ( option instanceof Locking.Scope scope ) {
-				access.with( scope );
-			}
-			else if ( option instanceof PessimisticLockScope scope ) {
-				access.with( Locking.Scope.fromJpaScope( scope ) );
-			}
-			else if ( option instanceof Timeout timeout ) {
-				access.with( timeout );
-			}
-			else if ( option instanceof CacheMode cacheMode ) {
-				access.with( cacheMode );
-			}
-			else if ( option instanceof BatchSize batchSize ) {
-				access.withBatchSize( batchSize.batchSize() );
-			}
-			else if ( option instanceof RemovalsMode removalsMode ) {
-				access.with( removalsMode );
-			}
-			else if ( option instanceof OrderingMode orderingMode ) {
-				access.with( orderingMode );
-			}
-			else {
-				throw new IllegalArgumentException( "Illegal option: " + option );
-			}
-		}
-	}
-
-	@Override
-	public List<Object> findMultipleByNaturalId(String entityName, List<?> naturalIds, FindOption... options) {
-		final NaturalIdMultiLoadAccessStandard<Object> access = (NaturalIdMultiLoadAccessStandard<Object>) byMultipleNaturalId( entityName );
-		setOptions( options, access );
-		return access.multiLoad( naturalIds );
+	private <T> FindByKeyOperation<T> byKey(
+			EntityPersister entityDescriptor,
+			GraphSemantic graphSemantic,
+			RootGraphImplementor<?> rootGraph,
+			FindOption... options) {
+		return new FindByKeyOperation<>(
+				entityDescriptor,
+				graphSemantic,
+				rootGraph,
+				lockOptions,
+				getCacheMode(),
+				isReadOnly(),
+				getFactory(),
+				options
+		);
 	}
 
 	@Override

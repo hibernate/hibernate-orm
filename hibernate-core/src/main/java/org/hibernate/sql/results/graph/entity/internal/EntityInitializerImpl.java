@@ -1329,7 +1329,8 @@ public class EntityInitializerImpl
 		}
 	}
 
-	private boolean isProxyInstance(Object proxy) {
+	// Used by Hibernate Reactive
+	protected boolean isProxyInstance(Object proxy) {
 		return proxy != null
 			&& ( proxy instanceof MapProxy || entityDescriptor.getJavaType().getJavaTypeClass().isInstance( proxy ) );
 	}
@@ -1421,7 +1422,8 @@ public class EntityInitializerImpl
 				.instantiate( data.concreteDescriptor, data.entityKey.getIdentifier() );
 	}
 
-	private Object resolveToOptionalInstance(EntityInitializerData data) {
+	// Used by Hibernate Reactive
+	protected Object resolveToOptionalInstance(EntityInitializerData data) {
 		if ( isResultInitializer() ) {
 			// this isEntityReturn bit is just for entity loaders, not hql/criteria
 			final var processingOptions =
@@ -1437,7 +1439,8 @@ public class EntityInitializerImpl
 		}
 	}
 
-	private boolean matchesOptionalInstance(
+	// Used by Hibernate Reactive
+	protected boolean matchesOptionalInstance(
 			EntityInitializerData data,
 			JdbcValuesSourceProcessingOptions processingOptions) {
 		final Object optionalEntityInstance = processingOptions.getEffectiveOptionalObject();
@@ -1447,7 +1450,8 @@ public class EntityInitializerImpl
 			&& areKeysEqual( requestedEntityId, data.entityKey.getIdentifier() );
 	}
 
-	private Object resolveInstanceFromCache(EntityInitializerData data) {
+	// Used by Hibernate Reactive
+	protected Object resolveInstanceFromCache(EntityInitializerData data) {
 		return loadFromSecondLevelCache(
 				data.getRowProcessingState().getSession().asEventSource(),
 				null,
@@ -2035,6 +2039,25 @@ public class EntityInitializerImpl
 	//#########################
 	// For Hibernate Reactive
 	//#########################
+	protected EntityPersister getRootEntityDescriptor() {
+		return rootEntityDescriptor;
+	}
+
+	protected @Nullable Initializer<?>[][] getEagerSubInitializers() {
+		return eagerSubInitializers;
+	}
+
+	protected @Nullable Initializer<?>[][] getCollectionContainingSubInitializers() {
+		return collectionContainingSubInitializers;
+	}
+
+	protected ImmutableBitSet[] getLazySets() {
+		return lazySets;
+	}
+
+	public boolean isHasLazyInitializingSubAssemblers() {
+		return hasLazyInitializingSubAssemblers;
+	}
 
 	protected @Nullable DomainResultAssembler<?> getVersionAssembler() {
 		return versionAssembler;

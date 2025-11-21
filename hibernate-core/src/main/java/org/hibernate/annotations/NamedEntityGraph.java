@@ -39,6 +39,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 @Repeatable(NamedEntityGraphs.class)
 public @interface NamedEntityGraph {
+
+	/**
+	 * The entity that is the root of the {@linkplain #graph graph}.
+	 * When the annotation is applied to a class, the class itself is assumed.
+	 * When applied to a package, this attribute is required.
+	 */
+	Class<?> root() default void.class;
+
 	/**
 	 * The name used to identify the entity graph in calls to
 	 * {@linkplain org.hibernate.Session#getEntityGraph(String)}.

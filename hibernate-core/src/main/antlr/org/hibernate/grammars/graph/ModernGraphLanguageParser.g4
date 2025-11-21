@@ -1,7 +1,7 @@
-parser grammar GraphLanguageParser;
+parser grammar ModernGraphLanguageParser;
 
 options {
-	tokenVocab=GraphLanguageLexer;
+	tokenVocab=ModernGraphLanguageLexer;
 }
 
 @header {
@@ -17,17 +17,34 @@ package org.hibernate.grammars.graph;
  * Antlr grammar describing the Hibernate EntityGraph Language - for parsing a structured
  * textual representation of an entity graph
  *
- * `GraphLanguageParser.g4`
+ * `ModernGraphLanguageParser.g4`
  */
 }
 
-
 graph
-    : typeIndicator? attributeList
- 	;
+    : graphElementList
+    ;
+
+graphElementList
+    : graphElement (COMMA graphElement)*
+    ;
+
+
+graphElement
+    : subGraph
+    | attributeNode
+    ;
+
+subGraph
+    : subTypeIndicator? LPAREN attributeList RPAREN
+    ;
 
 typeIndicator
     : TYPE_NAME COLON
+    ;
+
+subTypeIndicator
+    : COLON TYPE_NAME
     ;
 
 attributeList
@@ -45,8 +62,3 @@ attributePath
 attributeQualifier
 	: DOT ATTR_NAME
 	;
-
-subGraph
-	: LPAREN typeIndicator? attributeList RPAREN
-	;
-

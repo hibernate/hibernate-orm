@@ -3675,10 +3675,9 @@ public abstract class AbstractEntityPersister
 		if ( filterHelper != null && loadQueryInfluencers.hasEnabledFilters() ) {
 			return filterHelper.isAffectedBy( loadQueryInfluencers.getEnabledFilters(), onlyApplyForLoadByKeyFilters )
 				|| isAffectedByEnabledFilters( new HashSet<>(), loadQueryInfluencers, onlyApplyForLoadByKeyFilters );
-
 		}
 		else {
-			return false;
+			return isAffectedByEnabledFilters( new HashSet<>(), loadQueryInfluencers, onlyApplyForLoadByKeyFilters );
 		}
 	}
 

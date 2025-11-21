@@ -63,7 +63,7 @@ public class SimpleNaturalIdClassTests {
 	@Test
 	void findBySimpleSmokeTest(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			var result = session.findByNaturalId( TestEntity2.class, "steve" );
+			var result = session.find( TestEntity2.class, "steve", FindBy.NATURAL_ID );
 			assertEquals( 1, result.id );
 		} );
 	}
@@ -71,7 +71,14 @@ public class SimpleNaturalIdClassTests {
 	@Test
 	void findMultipleBySimpleSmokeTest(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			var results = session.findMultipleByNaturalId( TestEntity2.class, List.of( "steve", "john" ) );
+			var results = session.findMultiple( TestEntity2.class, List.of( "steve", "john" ), FindBy.NATURAL_ID );
+			assertThat( results ).hasSize( 2 );
+			assertEquals( 1,  results.get( 0 ).id );
+			assertNull( results.get( 1 ) );
+		} );
+		// baseline
+		factoryScope.inTransaction( (session) -> {
+			var results = session.findMultiple( TestEntity2.class, List.of( 1, 2 ), FindBy.ID );
 			assertThat( results ).hasSize( 2 );
 			assertEquals( 1,  results.get( 0 ).id );
 			assertNull( results.get( 1 ) );
@@ -81,7 +88,7 @@ public class SimpleNaturalIdClassTests {
 	@Test
 	void findByClassSmokeTest(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			var result = session.findByNaturalId( TestEntity.class, new Key("steve", "ebersole") );
+			var result = session.find( TestEntity.class, new Key("steve", "ebersole"), FindBy.NATURAL_ID );
 			assertEquals( 1, result.id );
 		} );
 	}
@@ -97,7 +104,7 @@ public class SimpleNaturalIdClassTests {
 	@Test
 	void findMultipleByClassSmokeTest(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			var results = session.findMultipleByNaturalId( TestEntity.class, List.of( new Key("steve", "ebersole") ) );
+			var results = session.findMultiple( TestEntity.class, List.of( new Key("steve", "ebersole") ), FindBy.NATURAL_ID );
 			assertThat( results ).hasSize( 1 );
 			assertEquals( 1,  results.get( 0 ).id );
 		} );

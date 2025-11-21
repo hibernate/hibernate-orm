@@ -824,7 +824,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		final QueryParameter<Object> param = binding.getQueryParameter();
 		if ( param.allowsMultiValuedBinding() ) {
 			final BindableType<?> hibernateType = param.getHibernateType();
-			if ( hibernateType == null || isInstance( hibernateType, value ) ) {
+			if ( hibernateType == null || value == null || isInstance( hibernateType, value ) ) {
 				if ( value instanceof Collection && !isRegisteredAsBasicType( value.getClass() ) ) {
 					//noinspection rawtypes
 					return setParameterList( name, (Collection) value );

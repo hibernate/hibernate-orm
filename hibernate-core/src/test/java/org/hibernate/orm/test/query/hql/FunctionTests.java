@@ -2386,9 +2386,14 @@ public class FunctionTests {
 							session.createQuery("select 1 where 1 in :list", Integer.class)
 									.setParameterList("list",List.of())
 									.list().size() );
+					assertEquals( 0,
+							session.createQuery( "select e from EntityWithOneToOne e where e.other in (:list)" )
+									.setParameter( "list", null )
+									.list().size() );
 				}
 		);
 	}
+
 
 	@Test
 	public void testMaxGreatest(SessionFactoryScope scope) {

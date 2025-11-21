@@ -35,10 +35,13 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorConverter;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.persister.entity.DiscriminatorHelper;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.type.ComponentType;
@@ -782,7 +785,28 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 
 		@Override
 		public Object locateGenerationContext(SharedSessionContractImplementor session, Object incomingObject) {
-			return session.getEntityPersister( entityName, incomingObject ).getIdentifier( incomingObject, session );
+			final var persister = session.getEntityPersister( entityName, incomingObject );
+			final var context = persister.getIdentifier( incomingObject, session );
+			if ( context != null ) {
+				return context;
+			}
+
+			if ( persister.getIdentifierMapping() instanceof EmbeddableValuedModelPart embeddableId && containsMapsId( persister ) ) {
+				final var strategy = embeddableId.getEmbeddableTypeDescriptor().getRepresentationStrategy();
+				return strategy.getInstantiator().instantiate( null );
+			}
+			return null;
+		}
+
+		private static boolean containsMapsId(EntityPersister persister) {
+			final var attributeMappings = persister.getAttributeMappings();
+			for ( var i = 0; i < attributeMappings.size(); i++ ) {
+				final var attributeMapping = attributeMappings.get( i );
+				if ( attributeMapping instanceof ToOneAttributeMapping toOneMapping && toOneMapping.hasMapsId() ) {
+						return true;
+				}
+			}
+			return false;
 		}
 	}
 

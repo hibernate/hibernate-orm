@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.dialect.Dialect;
@@ -168,6 +169,12 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 	@Override
 	public List<SingularAttributeMapping> getNaturalIdAttributes() {
 		return Collections.singletonList( attribute );
+	}
+
+	@Override
+	@Nullable
+	public Class<?> getNaturalIdClass() {
+		return null;
 	}
 
 	@Override

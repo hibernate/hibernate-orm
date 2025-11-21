@@ -47,9 +47,12 @@ import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossRefere
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
-/**
- * @author Steve Ebersole
- */
+/// Support for loading a single entity by key (either [id][FindBy#ID] or [natural-id][FindBy#NATURAL_ID]).
+///
+/// @see org.hibernate.Session#find
+/// @see FindBy
+///
+/// @author Steve Ebersole
 public class FindByKeyOperation<T> implements NaturalIdLoader.Options {
 	private final EntityPersister entityDescriptor;
 

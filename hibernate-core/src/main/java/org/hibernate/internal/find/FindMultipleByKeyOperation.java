@@ -45,19 +45,21 @@ import static org.hibernate.Timeouts.WAIT_FOREVER;
 import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossReferenceSynchronizations;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 
-/**
- * @author Steve Ebersole
- */
-public class FindMultipleByKeyOperation<T>
-		implements MultiIdLoadOptions, MultiNaturalIdLoadOptions {
+/// Support for loading multiple entities (of a type) by key (either [id][FindBy#ID] or [natural-id][FindBy#NATURAL_ID]).
+///
+/// @see org.hibernate.Session#findMultiple
+/// @see FindBy
+///
+/// @author Steve Ebersole
+public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiNaturalIdLoadOptions {
 	private final EntityPersister entityDescriptor;
+
+	private FindBy findBy = FindBy.ID;
 
 	private BatchSize batchSize;
 	private SessionCheckMode sessionCheckMode = SessionCheckMode.DISABLED;
 	private RemovalsMode removalsMode = RemovalsMode.REPLACE;
 	private OrderingMode orderingMode = OrderingMode.ORDERED;
-
-	private FindBy findBy = FindBy.ID;
 
 	private CacheStoreMode cacheStoreMode;
 	private CacheRetrieveMode cacheRetrieveMode;
@@ -70,9 +72,11 @@ public class FindMultipleByKeyOperation<T>
 	private ReadOnlyMode readOnlyMode;
 
 	private Set<String> enabledFetchProfiles;
+	private Set<String> disabledFetchProfiles;
 
 	private NaturalIdSynchronization naturalIdSynchronization;
 
+	@SuppressWarnings("PatternVariableHidesField")
 	public FindMultipleByKeyOperation(
 			@NonNull EntityPersister entityDescriptor,
 			@Nullable LockOptions defaultLockOptions,
@@ -213,7 +217,7 @@ public class FindMultipleByKeyOperation<T>
 			Supplier<List<T>> action) {
 		final var session = loadAccessContext.getSession();
 		final var influencers = session.getLoadQueryInfluencers();
-		final var fetchProfiles = influencers.adjustFetchProfiles( null, enabledFetchProfiles );
+		final var fetchProfiles = influencers.adjustFetchProfiles( disabledFetchProfiles, enabledFetchProfiles );
 		final var effectiveEntityGraph = rootGraph == null
 				? null
 				: influencers.applyEntityGraph( rootGraph, graphSemantic );
@@ -306,34 +310,38 @@ public class FindMultipleByKeyOperation<T>
 	@Deprecated
 	public FindMultipleByKeyOperation(
 			EntityPersister entityDescriptor,
+			FindBy findBy,
 			BatchSize batchSize,
 			SessionCheckMode sessionCheckMode,
 			RemovalsMode removalsMode,
 			OrderingMode orderingMode,
-			FindBy findBy,
-			CacheStoreMode cacheStoreMode,
-			CacheRetrieveMode cacheRetrieveMode,
-			LockMode lockMode,
-			Locking.Scope lockScope,
-			Locking.FollowOn lockFollowOn,
-			Timeout lockTimeout,
+			CacheMode cacheMode,
+			LockOptions lockOptions,
 			ReadOnlyMode readOnlyMode,
 			Set<String> enabledFetchProfiles,
+			Set<String> disabledFetchProfiles,
 			NaturalIdSynchronization naturalIdSynchronization) {
+		if ( cacheMode == null ) {
+			cacheMode = CacheMode.NORMAL;
+		}
+		if ( lockOptions == null ) {
+			lockOptions = LockOptions.NONE;
+		}
 		this.entityDescriptor = entityDescriptor;
+		this.findBy = findBy;
 		this.batchSize = batchSize;
 		this.sessionCheckMode = sessionCheckMode;
 		this.removalsMode = removalsMode;
 		this.orderingMode = orderingMode;
-		this.findBy = findBy;
-		this.cacheStoreMode = cacheStoreMode;
-		this.cacheRetrieveMode = cacheRetrieveMode;
-		this.lockMode = lockMode;
-		this.lockScope = lockScope;
-		this.lockFollowOn = lockFollowOn;
-		this.lockTimeout = lockTimeout;
+		this.cacheStoreMode = cacheMode.getJpaStoreMode();
+		this.cacheRetrieveMode = cacheMode.getJpaRetrieveMode();
+		this.lockMode = lockOptions.getLockMode();
+		this.lockScope = lockOptions.getScope();
+		this.lockFollowOn = lockOptions.getFollowOnStrategy();
+		this.lockTimeout = lockOptions.getTimeout();
 		this.readOnlyMode = readOnlyMode;
 		this.enabledFetchProfiles = enabledFetchProfiles;
+		this.disabledFetchProfiles = disabledFetchProfiles;
 		this.naturalIdSynchronization = naturalIdSynchronization;
 	}
 }

@@ -110,6 +110,29 @@ public class AttributeJoinWithTablePerClassInheritanceTest {
 	}
 
 	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	public void testTreatedJoinWithCondition(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			final ChildEntityA childEntityA1 = new SubChildEntityA1( 11 );
+			childEntityA1.setName( "childA1" );
+			s.persist( childEntityA1 );
+			final ChildEntityA childEntityA2 = new SubChildEntityA2( 21 );
+			childEntityA2.setName( "childA2" );
+			s.persist( childEntityA2 );
+			s.persist( new RootOne( 1, childEntityA1 ) );
+			s.persist( new RootOne( 2, childEntityA2 ) );
+		} );
+		scope.inTransaction( s -> {
+			final Tuple tuple = s.createQuery(
+					"select r, ce " +
+					"from RootOne r join treat(r.child as ChildEntityA) ce on ce.name = 'childA1'",
+					Tuple.class
+			).getSingleResult();
+			assertResult( tuple, 1, 11, 11, SubChildEntityA1.class );
+		} );
+	}
+
+	@Test
 	public void testRightJoin(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			final SubChildEntityA1 subChildEntityA1 = new SubChildEntityA1( 11 );
@@ -228,6 +251,7 @@ public class AttributeJoinWithTablePerClassInheritanceTest {
 	public static class BaseClass {
 		@Id
 		private Integer id;
+		private String name;
 
 		public BaseClass() {
 		}
@@ -238,6 +262,14 @@ public class AttributeJoinWithTablePerClassInheritanceTest {
 
 		public Integer getId() {
 			return id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
 		}
 	}
 

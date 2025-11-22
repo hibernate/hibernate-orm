@@ -38,7 +38,7 @@ class DetachedSessionArgumentsTest {
 					c.accept( thing );
 				}
 				catch ( IllegalArgumentException e ) {
-					assertTrue( e.getMessage().startsWith( "Given entity is not associated with the persistence context" ) );
+					assertTrue( e.getMessage().contains( "Given entity is not associated with the persistence context" ) );
 				}
 			} );
 		} );

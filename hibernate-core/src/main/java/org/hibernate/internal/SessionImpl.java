@@ -624,7 +624,6 @@ public class SessionImpl
 
 	private void fireLock(final LockEvent lockEvent) {
 		checkOpen();
-		checkEntityManaged( lockEvent.getEntityName(), lockEvent.getObject() );
 		try {
 			pulseTransactionCoordinator();
 			checkTransactionNeededForLock( lockEvent.getLockMode() );
@@ -642,7 +641,11 @@ public class SessionImpl
 
 	private void convertIfJpaBootstrap(RuntimeException exception, LockOptions lockOptions) {
 		if ( !isJpaBootstrap() && exception instanceof HibernateException ) {
-			throw exception;
+			throw exception instanceof DetachedObjectException
+					// convert to IllegalArgumentException for backward compatibility
+					// TODO: drop this conversion in Hibernate 8
+					? new IllegalArgumentException( exception )
+					: exception;
 		}
 		else if ( exception instanceof MappingException ) {
 			// I believe this is now obsolete everywhere we do it,
@@ -1308,7 +1311,6 @@ public class SessionImpl
 
 	private void fireRefresh(final RefreshEvent refreshEvent) {
 		checkOpen();
-		checkEntityManaged( refreshEvent.getEntityName(), refreshEvent.getObject() );
 		try {
 			pulseTransactionCoordinator();
 			checkTransactionNeededForLock( refreshEvent.getLockMode() );
@@ -1327,7 +1329,6 @@ public class SessionImpl
 	private void fireRefresh(final RefreshContext refreshedAlready, final RefreshEvent refreshEvent) {
 		// called from cascades
 		checkOpenOrWaitingForAutoClose();
-		checkEntityManaged( refreshEvent.getEntityName(), refreshEvent.getObject() );
 		try {
 			pulseTransactionCoordinator();
 			eventListenerGroups.eventListenerGroup_REFRESH
@@ -1336,12 +1337,6 @@ public class SessionImpl
 		}
 		finally {
 			delayedAfterCompletion();
-		}
-	}
-
-	private void checkEntityManaged(String entityName, Object entity) {
-		if ( !isManaged( entity ) ) {
-			throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
 		}
 	}
 

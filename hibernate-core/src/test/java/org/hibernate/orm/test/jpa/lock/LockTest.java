@@ -405,10 +405,9 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 	}
 
 	protected String updateStatement() {
-		if( SQLServerDialect.class.isAssignableFrom( getDialect().getClass() ) ) {
-			return "UPDATE Lock_ WITH(NOWAIT) SET name = :name where id = :id";
-		}
-		return "UPDATE Lock_ SET name = :name where id = :id";
+		return SQLServerDialect.class.isAssignableFrom( getDialect().getClass() )
+				? "UPDATE Lock_ WITH(NOWAIT) SET name = :name where id = :id"
+				: "UPDATE Lock_ SET name = :name where id = :id";
 	}
 
 	@Test

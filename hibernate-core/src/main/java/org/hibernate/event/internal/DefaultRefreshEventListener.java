@@ -4,11 +4,10 @@
  */
 package org.hibernate.event.internal;
 
+import org.hibernate.DetachedObjectException;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.NonUniqueObjectException;
-import org.hibernate.TransientObjectException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.internal.Cascade;
@@ -54,11 +53,14 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		final var source = event.getSession();
 		final var persistenceContext = source.getPersistenceContextInternal();
 		final Object object = event.getObject();
-		if ( persistenceContext.reassociateIfUninitializedProxy( object ) ) {
+		if ( object == null ) {
+			throw new NullPointerException( "Attempted to refresh null" );
+		}
+		else if ( persistenceContext.isUninitializedProxy( object ) ) {
 			handleUninitializedProxy( event, refreshedAlready, source, object, persistenceContext );
 		}
 		else {
-			final Object entity = persistenceContext.unproxyAndReassociate( object );
+			final Object entity = persistenceContext.unproxyLoadingIfNecessary( object );
 			if ( refreshedAlready.add( entity) ) {
 				refresh( event, refreshedAlready, entity );
 			}
@@ -125,34 +127,18 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		final EntityPersister persister;
 		final Object id;
 		if ( entry == null ) {
-			//refresh() does not pass an entityName
-			persister = source.getEntityPersister( event.getEntityName(), object );
-			id = persister.getIdentifier( object, event.getSession() );
-			if ( id == null ) {
-				throw new TransientObjectException( "Cannot refresh instance of entity '" + persister.getEntityName()
-						+ "' because it has a null identifier" );
-			}
-			if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
-				EVENT_LISTENER_LOGGER.refreshingTransient(
-						infoString( persister, id, event.getFactory() ) );
-			}
-			if ( persistenceContext.getEntry( source.generateEntityKey( id, persister ) ) != null ) {
-				throw new NonUniqueObjectException( id, persister.getEntityName() );
-			}
+			throw new DetachedObjectException( "Given entity is not associated with the persistence context" );
 		}
 		else {
-			if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
-				EVENT_LISTENER_LOGGER.refreshing(
-						infoString( entry.getPersister(), entry.getId(), event.getFactory() ) );
-			}
-			if ( !entry.isExistsInDatabase() ) {
-				throw new UnresolvableObjectException(
-						entry.getId(),
-						"this instance does not yet exist as a row in the database"
-				);
-			}
 			persister = entry.getPersister();
 			id = entry.getId();
+			if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
+				EVENT_LISTENER_LOGGER.refreshing(
+						infoString( persister, id, event.getFactory() ) );
+			}
+			if ( !entry.isExistsInDatabase() ) {
+				throw new UnresolvableObjectException( id, persister.getEntityName() );
+			}
 		}
 
 		// cascade the refresh prior to refreshing this entity

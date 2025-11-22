@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.sql.SQLException;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.DetachedObjectException;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockOptions;
@@ -140,6 +141,16 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			}
 			//Spec 3.2.3 Synchronization rules
 			return new IllegalStateException( exception );
+		}
+		else if ( exception instanceof DetachedObjectException ) {
+			try {
+				session.markForRollbackOnly();
+			}
+			catch (Exception ne) {
+				//we do not want the subsequent exception to swallow the original one
+				CORE_LOGGER.unableToMarkForRollbackOnDetachedObjectException( ne );
+			}
+			throw new IllegalArgumentException( exception );
 		}
 		else if ( exception instanceof TransactionSerializationException ) {
 			final var converted = new RollbackException( exception.getMessage(), exception );

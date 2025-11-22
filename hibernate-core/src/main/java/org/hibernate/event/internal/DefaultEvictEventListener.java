@@ -13,7 +13,6 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EvictEvent;
 import org.hibernate.event.spi.EvictEventListener;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.LazyInitializer;
 
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
@@ -43,7 +42,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 		if ( object == null ) {
 			throw new NullPointerException( "null passed to Session.evict()" );
 		}
-		final LazyInitializer lazyInitializer = extractLazyInitializer( object );
+		final var lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
 			final Object id = lazyInitializer.getInternalIdentifier();
 			if ( id == null ) {

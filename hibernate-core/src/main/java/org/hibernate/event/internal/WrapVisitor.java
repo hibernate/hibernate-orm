@@ -22,7 +22,7 @@ import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_L
 import static org.hibernate.persister.entity.AbstractEntityPersister.getCollectionKey;
 
 /**
- * Wrap collections in a Hibernate collection wrapper.
+ * Wrap collections in {@linkplain PersistentCollection collection wrappers}.
  *
  * @author Gavin King
  */

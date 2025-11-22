@@ -9,25 +9,17 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.EntityType;
 
 /**
- * Reassociates uninitialized proxies with the session
+ * A visitor able to reattach {@linkplain PersistentCollection collections}
+ * to the current session.
+ *
  * @author Gavin King
  */
 public abstract class ProxyVisitor extends AbstractVisitor {
 
 	public ProxyVisitor(EventSource session) {
 		super(session);
-	}
-
-	Object processEntity(Object value, EntityType entityType) {
-		if ( value != null ) {
-			getSession().getPersistenceContext().reassociateIfUninitializedProxy( value );
-			// if it is an initialized proxy, let cascade
-			// handle it later on
-		}
-		return null;
 	}
 
 	/**
@@ -63,7 +55,7 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 		}
 		else {
 			if ( !isCollectionSnapshotValid( collection ) ) {
-				throw new HibernateException( "could not re-associate uninitialized transient collection" );
+				throw new HibernateException( "Could not reassociate uninitialized transient collection" );
 			}
 			final var persister = metamodel.getCollectionDescriptor( collection.getRole() );
 			context.addUninitializedDetachedCollection( persister, collection );

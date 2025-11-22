@@ -178,6 +178,7 @@ public final class IdMetadataGenerator extends AbstractMetadataGenerator {
 						referencedEntityName,
 						prefixedMapper,
 						true,
+						false,
 						false
 				);
 			}

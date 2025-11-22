@@ -20,6 +20,7 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.event.internal.EntityState.getEntityState;
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
+import static org.hibernate.event.internal.EventUtil.getLoggableName;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
@@ -62,7 +63,7 @@ public class DefaultPersistEventListener
 		if ( lazyInitializer != null ) {
 			if ( lazyInitializer.isUninitialized() ) {
 				if ( lazyInitializer.getSession() != event.getSession() ) {
-					throw new PersistentObjectException( "uninitialized proxy passed to persist()" );
+					throw new PersistentObjectException( "Uninitialized proxy passed to persist()" );
 				}
 			}
 			else {
@@ -81,7 +82,7 @@ public class DefaultPersistEventListener
 		switch ( getEntityState( entity, entityName, entityEntry, source, true ) ) {
 			case DETACHED:
 				throw new PersistentObjectException( "Detached entity passed to persist: "
-						+ EventUtil.getLoggableName( event.getEntityName(), entity) );
+										+ getLoggableName( event.getEntityName(), entity) );
 			case PERSISTENT:
 				entityIsPersistent( event, createCache );
 				break;
@@ -95,17 +96,15 @@ public class DefaultPersistEventListener
 				entityIsDeleted( event, createCache );
 				break;
 			default:
-				throw new ObjectDeletedException(
-						"Deleted entity passed to persist",
-						null,
-						EventUtil.getLoggableName( event.getEntityName(), entity )
-				);
+				throw new ObjectDeletedException( "Deleted entity passed to persist", null,
+										getLoggableName( entityName, entity ) );
 		}
 	}
 
 	private static String entityName(PersistEvent event, Object entity, EntityEntry entityEntry) {
-		if ( event.getEntityName() != null ) {
-			return event.getEntityName();
+		final String explicitEntityName = event.getEntityName();
+		if ( explicitEntityName != null ) {
+			return explicitEntityName;
 		}
 		else {
 			// changes event.entityName by side effect!

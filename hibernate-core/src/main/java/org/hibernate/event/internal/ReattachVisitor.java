@@ -9,13 +9,15 @@ import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.CompositeType;
+import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
- * Abstract superclass of visitors that reattach collections.
+ * Abstract superclass of visitors that reattach collections
+ * and reassociate uninitialized proxies with the session.
  *
  * @author Gavin King
  */
@@ -28,6 +30,17 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 		super( session );
 		this.ownerIdentifier = ownerIdentifier;
 		this.owner = owner;
+	}
+
+	@Override
+	Object processEntity(Object value, EntityType entityType) {
+		if ( value != null ) {
+			getSession().getPersistenceContext()
+					.reassociateIfUninitializedProxy( value );
+			// if it is an initialized proxy,
+			// let cascade handle it later on
+		}
+		return null;
 	}
 
 	/**

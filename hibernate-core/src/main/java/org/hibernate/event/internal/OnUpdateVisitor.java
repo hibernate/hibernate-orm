@@ -10,12 +10,15 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.type.CollectionType;
 
 /**
- * When an entity is passed to update(), we must inspect all its collections and
- * 1. associate any uninitialized PersistentCollections with this session
- * 2. associate any initialized PersistentCollections with this session, using the
- *	existing snapshot
- * 3. execute a collection removal (SQL DELETE) for each null collection property
- *	or "new" collection
+ * When a detached entity is passed to {@link org.hibernate.Session#remove(Object)},
+ * we must inspect all its collections and:
+ * <ol>
+ * <li>associate any uninitialized PersistentCollections with this session
+ * <li>associate any initialized PersistentCollections with this session, using the
+ *     existing snapshot
+ * <li>execute a collection removal (SQL DELETE) for each null collection property
+ *     or "new" collection
+ *</ol>
  *
  * @author Gavin King
  */

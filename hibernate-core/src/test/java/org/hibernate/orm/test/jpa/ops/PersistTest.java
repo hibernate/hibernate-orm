@@ -6,6 +6,8 @@ package org.hibernate.orm.test.jpa.ops;
 
 import java.util.ArrayList;
 import java.util.Collection;
+
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.RollbackException;
 
@@ -177,7 +179,7 @@ public class PersistTest {
 						entityManager.persist( dupe );
 						fail();
 					}
-					catch (PersistenceException poe) {
+					catch (EntityExistsException eee) {
 						//verify that an exception is thrown!
 					}
 					finally {

@@ -362,20 +362,17 @@ public class DefaultMergeEventListener
 		@Override
 		protected Object processCollection(Object collection, CollectionType collectionType) {
 			if ( collection instanceof PersistentCollection<?> persistentCollection ) {
+				final var session = getSession();
 				final var persister =
-						getSession().getFactory().getMappingMetamodel()
+						session.getFactory().getMappingMetamodel()
 								.getCollectionDescriptor( collectionType.getRole() );
 				final var collectionEntry =
-						getSession().getPersistenceContextInternal()
+						session.getPersistenceContextInternal()
 								.getCollectionEntry( persistentCollection );
 				if ( !persistentCollection.equalsSnapshot( persister ) ) {
 					collectionEntry.resetStoredSnapshot( persistentCollection, persistentCollection.getSnapshot( persister ) );
 				}
 			}
-			return null;
-		}
-		@Override
-		Object processEntity(Object value, EntityType entityType) {
 			return null;
 		}
 	}

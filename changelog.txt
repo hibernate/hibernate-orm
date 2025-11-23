@@ -1,6 +1,16 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.1.10.Final (November 23, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/36278
+
+
+** Bug
+    * HHH-19038 Hibernate.get does not work on detached entities
+    * HHH-16991 EnhancedUserType cannot be used when defining relations
+
 Changes in 7.1.9.Final (November 20, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

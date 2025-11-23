@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +27,8 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Checks;
 import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.CollectionTableOverride;
+import org.hibernate.annotations.CollectionTableOverrides;
 import org.hibernate.annotations.CollectionIdJavaType;
 import org.hibernate.annotations.CollectionIdJdbcType;
 import org.hibernate.annotations.CollectionIdJdbcTypeCode;
@@ -168,6 +171,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.getCascadeStrategy;
 import static org.hibernate.boot.model.internal.BinderHelper.getFetchMode;
 import static org.hibernate.boot.model.internal.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
+import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
 import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.isPrimitive;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasEntityMap;
@@ -679,9 +683,18 @@ public abstract class CollectionBinder {
 		final TableBinder associationTableBinder = new TableBinder();
 		final JoinTable assocTable = propertyHolder.getJoinTable( property );
 		final CollectionTable collectionTable = property.getAnnotation( CollectionTable.class );
+
+		// Check for @CollectionTableOverride
+		final CollectionTableOverride collectionTableOverride = findCollectionTableOverride(
+				propertyHolder,
+				property,
+				inferredData,
+				buildingContext
+		);
+
 		final JoinColumn[] annJoins;
 		final JoinColumn[] annInverseJoins;
-		if ( assocTable != null || collectionTable != null ) {
+		if ( assocTable != null || collectionTable != null || collectionTableOverride != null ) {
 
 			final String catalog;
 			final String schema;
@@ -691,8 +704,31 @@ public abstract class CollectionBinder {
 			final JoinColumn[] inverseJoins;
 			final Index[] jpaIndexes;
 
+			// @CollectionTableOverride has highest priority
+			if ( collectionTableOverride != null ) {
+				// Override table name, but use other settings from CollectionTable if available
+				if ( collectionTable != null ) {
+					catalog = collectionTable.catalog();
+					schema = collectionTable.schema();
+					tableName = collectionTableOverride.table(); // Override table name
+					uniqueConstraints = collectionTable.uniqueConstraints();
+					joins = collectionTable.joinColumns();
+					inverseJoins = null;
+					jpaIndexes = collectionTable.indexes();
+				}
+				else {
+					// No CollectionTable, use defaults but override table name
+					catalog = "";
+					schema = "";
+					tableName = collectionTableOverride.table();
+					uniqueConstraints = new UniqueConstraint[0];
+					joins = new JoinColumn[0];
+					inverseJoins = null;
+					jpaIndexes = new Index[0];
+				}
+			}
 			//JPA 2 has priority
-			if ( collectionTable != null ) {
+			else if ( collectionTable != null ) {
 				catalog = collectionTable.catalog();
 				schema = collectionTable.schema();
 				tableName = collectionTable.name();
@@ -2919,6 +2955,158 @@ public abstract class CollectionBinder {
 				LOG.debugf( "Binding a collection of element: %s", safeCollectionRole() );
 			}
 		}
+	}
+
+	/**
+	 * Finds a @CollectionTableOverride annotation for the given collection property.
+	 * 
+	 * @param propertyHolder The PropertyHolder containing the property
+	 * @param property The collection property XProperty
+	 * @param inferredData The PropertyData for the property
+	 * @param buildingContext The MetadataBuildingContext
+	 * @return The CollectionTableOverride if found, null otherwise
+	 */
+	private static CollectionTableOverride findCollectionTableOverride(
+			PropertyHolder propertyHolder,
+			XProperty property,
+			PropertyData inferredData,
+			MetadataBuildingContext buildingContext) {
+
+		// Get the entity's XClass through PersistentClass
+		final PersistentClass persistentClass = propertyHolder.getPersistentClass();
+		if (persistentClass == null) {
+			return null;
+		}
+		
+		// Get the mapped Class from PersistentClass
+		final Class<?> mappedClass = persistentClass.getMappedClass();
+		if (mappedClass == null) {
+			return null;
+		}
+		
+		// Get the XClass from reflection manager
+		final ReflectionManager reflectionManager = buildingContext.getBootstrapContext().getReflectionManager();
+		final XClass entityClass = reflectionManager.toXClass(mappedClass);
+		
+		if (entityClass == null) {
+			return null;
+		}
+
+		// Get the full relative path (e.g., "japanSetting.bots")
+		final String fullPath = getRelativePath(propertyHolder, property.getName());
+		
+		// Extract the first part of the path (e.g., "japanSetting" from "japanSetting.bots")
+		// This is the field name in the entity class where @CollectionTableOverride is attached
+		final String fieldName;
+		if (fullPath.contains(".")) {
+			fieldName = fullPath.substring(0, fullPath.indexOf('.'));
+		} else {
+			// Direct collection on entity, use property name directly
+			fieldName = property.getName();
+		}
+
+		// Find the field property in the entity class
+		XProperty entityField = null;
+		try {
+			// Try to get the property from the entity class
+			final List<XProperty> allProperties = new ArrayList<>();
+			allProperties.addAll(entityClass.getDeclaredProperties(AccessType.FIELD.getType()));
+			allProperties.addAll(entityClass.getDeclaredProperties(AccessType.PROPERTY.getType()));
+			
+			for (XProperty xProp : allProperties) {
+				if (xProp.getName().equals(fieldName)) {
+					entityField = xProp;
+					break;
+				}
+			}
+		} catch (Exception e) {
+			// Ignore and fall back to class-level annotation
+		}
+
+		// Check field-level annotations first (if field found)
+		if (entityField != null) {
+			// Check for @CollectionTableOverrides (plural) on field
+			if (entityField.isAnnotationPresent( CollectionTableOverrides.class ) ) {
+				final CollectionTableOverrides overrides = entityField.getAnnotation( CollectionTableOverrides.class );
+				if (overrides != null) {
+					for (CollectionTableOverride override : overrides.value()) {
+						if (matchesPath(override.name(), propertyHolder, property, inferredData)) {
+							return override;
+						}
+					}
+				}
+			}
+
+			// Check for @CollectionTableOverride (singular) on field
+			if (entityField.isAnnotationPresent( CollectionTableOverride.class ) ) {
+				final CollectionTableOverride singleOverride = entityField.getAnnotation( CollectionTableOverride.class );
+				if (singleOverride != null && matchesPath(
+						singleOverride.name(), 
+						propertyHolder, 
+						property, 
+						inferredData)) {
+					return singleOverride;
+				}
+			}
+		}
+
+		// Fall back to class-level annotations
+		// Check for @CollectionTableOverrides (plural) on class
+		if (entityClass.isAnnotationPresent( CollectionTableOverrides.class ) ) {
+			final CollectionTableOverrides overrides = entityClass.getAnnotation( CollectionTableOverrides.class );
+			if (overrides != null) {
+				for (CollectionTableOverride override : overrides.value()) {
+					if (matchesPath(override.name(), propertyHolder, property, inferredData)) {
+						return override;
+					}
+				}
+			}
+		}
+
+		// Check for @CollectionTableOverride (singular) on class
+		if (entityClass.isAnnotationPresent( CollectionTableOverride.class ) ) {
+			final CollectionTableOverride singleOverride = entityClass.getAnnotation( CollectionTableOverride.class );
+			if (singleOverride != null && matchesPath(
+					singleOverride.name(), 
+					propertyHolder, 
+					property, 
+					inferredData)) {
+				return singleOverride;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Checks if the override name matches the current collection property path.
+	 * 
+	 * @param overrideName The name from @CollectionTableOverride
+	 * @param propertyHolder The PropertyHolder containing the property
+	 * @param property The collection property XProperty
+	 * @param inferredData The PropertyData for the property
+	 * @return true if the path matches
+	 */
+	private static boolean matchesPath(
+			String overrideName,
+			PropertyHolder propertyHolder,
+			XProperty property,
+			PropertyData inferredData) {
+
+		// Get the full relative path (e.g., "address.phones" for embeddable collections)
+		final String fullPath = getRelativePath(propertyHolder, property.getName());
+		
+		// Direct match: override name matches the full path
+		if (overrideName.equals(fullPath)) {
+			return true;
+		}
+		
+		// Simple case: property name directly matches (for direct entity collections)
+		if (overrideName.equals(property.getName())) {
+			return true;
+		}
+
+		return false;
 	}
 
 }

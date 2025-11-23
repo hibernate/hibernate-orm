@@ -9,7 +9,7 @@
 /*
  * See https://github.com/hibernate/hibernate-jenkins-pipeline-helpers
  */
-@Library('hibernate-jenkins-pipeline-helpers@1.17') _
+@Library('hibernate-jenkins-pipeline-helpers') _
 
 import org.hibernate.jenkins.pipeline.helpers.version.Version
 
@@ -223,15 +223,9 @@ pipeline {
 								withEnv([
 										"DISABLE_REMOTE_GRADLE_CACHE=true"
 								]) {
-                                    def notesFiles = findFiles(glob: 'release_notes.md')
-                                    if ( notesFiles.length < 1 ) {
-                                        throw new IllegalStateException( "Could not locate `release_notes.md`" )
-                                    }
-                                    if ( notesFiles.length > 1 ) {
-                                        throw new IllegalStateException( "Located more than 1 `release_notes.md`" )
-                                    }
+                                    def ghReleaseNote = sh('realpath -e release_notes.md 2>/dev/null', returnStdout: true).trim()
 
-									sh ".release/scripts/publish.sh -j --notes=${notesFiles[0].path} ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION} ${env.GIT_BRANCH} "
+									sh ".release/scripts/publish.sh -j ${ghReleaseNote != '' ? '--notes=' + ghReleaseNote : ''} ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION} ${env.GIT_BRANCH} "
 								}
 							}
 						}

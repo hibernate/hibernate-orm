@@ -179,7 +179,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		if ( cachedSize>=0 ) {
 			return cachedSize;
 		}
-        throwLazyInitializationExceptionIfNotConnected();
+		throwLazyInitializationExceptionIfNotConnected();
 		final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( this );
 		if ( entry == null ) {
 			throwLazyInitializationException("collection not associated with session");
@@ -355,7 +355,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	@Override
 	public boolean elementExists(Object element) {
-        throwLazyInitializationExceptionIfNotConnected();
+		throwLazyInitializationExceptionIfNotConnected();
 		final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( this );
 		if ( entry == null ) {
 			throwLazyInitializationException("collection not associated with session");
@@ -409,7 +409,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	@Override
 	public Object elementByIndex(Object index) {
-        throwLazyInitializationExceptionIfNotConnected();
+		throwLazyInitializationExceptionIfNotConnected();
 		final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( this );
 		if ( entry == null ) {
 			throwLazyInitializationException("collection not associated with session");

@@ -39,7 +39,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * }
  * </pre>
  */
-@Target({TYPE, METHOD, FIELD})
+@Target({ TYPE, METHOD, FIELD })
 @Retention(RUNTIME)
 public @interface CollectionTableOverride {
 	/**

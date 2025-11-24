@@ -22,7 +22,9 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+
 import org.hibernate.orm.test.util.SchemaUtil;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -36,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for @CollectionTableOverride annotation functionality.
- *
+ * <p>
  * This test verifies that the @CollectionTableOverride annotation correctly
  * overrides collection table names for collections within embeddable classes.
  *
@@ -54,7 +56,7 @@ public class CollectionTableOverrideTest {
 
 	/**
 	 * Test purpose: Verify that @CollectionTableOverride is correctly applied at the metadata level.
-	 *
+	 * <p>
 	 * Verification:
 	 * 1. Verify that Person entity's address.phones collection is overridden to table name "person_phones"
 	 * 2. Verify that Company entity's address.phones collection is overridden to table name "company_phones"
@@ -71,7 +73,7 @@ public class CollectionTableOverrideTest {
 		assertThat(
 				"Collection table name should be overridden to 'person_phones'",
 				personPhonesCollection.getCollectionTable().getName(),
-				is("person_phones")
+				is( "person_phones" )
 		);
 
 		// Verify Company entity's address.phones collection table name
@@ -81,7 +83,7 @@ public class CollectionTableOverrideTest {
 		assertThat(
 				"Collection table name should be overridden to 'company_phones'",
 				companyPhonesCollection.getCollectionTable().getName(),
-				is("company_phones")
+				is( "company_phones" )
 		);
 
 		// Verify Organization entity's contactInfo.emails collection table name (using @CollectionTableOverrides)
@@ -91,13 +93,13 @@ public class CollectionTableOverrideTest {
 		assertThat(
 				"Collection table name should be overridden to 'organization_emails'",
 				orgEmailsCollection.getCollectionTable().getName(),
-				is("organization_emails")
+				is( "organization_emails" )
 		);
 	}
 
 	/**
 	 * Test purpose: Verify that overridden table names are correctly reflected in the schema during DDL generation.
-	 *
+	 * <p>
 	 * Verification:
 	 * 1. Verify that overridden table names (person_phones, company_phones, organization_emails) exist in the schema
 	 * 2. Verify that default table names (default_phones, default_emails) do NOT exist in the schema
@@ -108,28 +110,32 @@ public class CollectionTableOverrideTest {
 
 		// Verify that overridden table names exist in the schema
 		assertTrue(
-				SchemaUtil.isTablePresent("person_phones", metadata),
+				SchemaUtil.isTablePresent( "person_phones", metadata ),
 				"Table 'person_phones' should be present in schema"
 		);
 		assertTrue(
-				SchemaUtil.isTablePresent("company_phones", metadata),
+				SchemaUtil.isTablePresent( "company_phones", metadata ),
 				"Table 'company_phones' should be present in schema"
 		);
 		assertTrue(
-				SchemaUtil.isTablePresent("organization_emails", metadata),
+				SchemaUtil.isTablePresent( "organization_emails", metadata ),
 				"Table 'organization_emails' should be present in schema"
 		);
 
 		// Verify that default table names do NOT exist in the schema
-		assertFalse( SchemaUtil.isTablePresent( "default_phones", metadata ),
-				"Default table 'default_phones' should NOT be present in schema" );
-		assertFalse( SchemaUtil.isTablePresent( "default_emails", metadata ),
-				"Default table 'default_emails' should NOT be present in schema" );
+		assertFalse(
+				SchemaUtil.isTablePresent( "default_phones", metadata ),
+				"Default table 'default_phones' should NOT be present in schema"
+		);
+		assertFalse(
+				SchemaUtil.isTablePresent( "default_emails", metadata ),
+				"Default table 'default_emails' should NOT be present in schema"
+		);
 	}
 
 	/**
 	 * Test purpose: Verify that actual database operations (save/retrieve) work correctly with overridden table names.
-	 *
+	 * <p>
 	 * Verification:
 	 * 1. Verify that when saving Person, Company, Organization entities, data is stored in the overridden tables
 	 * 2. Verify that saved data can be retrieved correctly
@@ -137,61 +143,62 @@ public class CollectionTableOverrideTest {
 	@Test
 	public void testQueryExecution(SessionFactoryScope scope) {
 		// Test data persistence
-		scope.inTransaction(session -> {
+		scope.inTransaction( session -> {
 			// Persist Person entity
 			Person person = new Person();
-			person.setName("John Doe");
+			person.setName( "John Doe" );
 			Address address = new Address();
-			address.setStreet("123 Main St");
-			address.setCity("New York");
-			address.getPhones().add("123-456-7890");
-			address.getPhones().add("098-765-4321");
-			person.setAddress(address);
-			session.persist(person);
+			address.setStreet( "123 Main St" );
+			address.setCity( "New York" );
+			address.getPhones().add( "123-456-7890" );
+			address.getPhones().add( "098-765-4321" );
+			person.setAddress( address );
+			session.persist( person );
 
 			// Persist Company entity
 			Company company = new Company();
-			company.setName("Acme Corp");
+			company.setName( "Acme Corp" );
 			Address companyAddress = new Address();
-			companyAddress.setStreet("456 Business Ave");
-			companyAddress.setCity("Boston");
-			companyAddress.getPhones().add("555-123-4567");
-			company.setAddress(companyAddress);
-			session.persist(company);
+			companyAddress.setStreet( "456 Business Ave" );
+			companyAddress.setCity( "Boston" );
+			companyAddress.getPhones().add( "555-123-4567" );
+			company.setAddress( companyAddress );
+			session.persist( company );
 
 			// Persist Organization entity
 			Organization organization = new Organization();
-			organization.setName("Tech Inc");
+			organization.setName( "Tech Inc" );
 			ContactInfo contactInfo = new ContactInfo();
-			contactInfo.getEmails().add("info@techinc.com");
-			contactInfo.getEmails().add("support@techinc.com");
-			organization.setContactInfo(contactInfo);
-			session.persist(organization);
-		});
+			contactInfo.getEmails().add( "info@techinc.com" );
+			contactInfo.getEmails().add( "support@techinc.com" );
+			organization.setContactInfo( contactInfo );
+			session.persist( organization );
+		} );
 
 		// Test data retrieval
-		scope.inTransaction(session -> {
-			Person person = session.createQuery("from Person", Person.class).getSingleResult();
-			assertThat(person.getName(), is("John Doe"));
-			assertThat(person.getAddress().getPhones().size(), is(2));
+		scope.inTransaction( session -> {
+			Person person = session.createQuery( "from Person", Person.class ).getSingleResult();
+			assertThat( person.getName(), is( "John Doe" ) );
+			assertThat( person.getAddress().getPhones().size(), is( 2 ) );
 
-			Company company = session.createQuery("from Company", Company.class).getSingleResult();
-			assertThat(company.getName(), is("Acme Corp"));
-			assertThat(company.getAddress().getPhones().size(), is(1));
+			Company company = session.createQuery( "from Company", Company.class ).getSingleResult();
+			assertThat( company.getName(), is( "Acme Corp" ) );
+			assertThat( company.getAddress().getPhones().size(), is( 1 ) );
 
-			Organization organization = session.createQuery("from Organization", Organization.class).getSingleResult();
-			assertThat(organization.getName(), is("Tech Inc"));
-			assertThat(organization.getContactInfo().getEmails().size(), is(2));
-		});
+			Organization organization = session.createQuery( "from Organization", Organization.class )
+					.getSingleResult();
+			assertThat( organization.getName(), is( "Tech Inc" ) );
+			assertThat( organization.getContactInfo().getEmails().size(), is( 2 ) );
+		} );
 	}
 
 	@AfterEach
 	public void cleanupTestData(SessionFactoryScope scope) {
-		scope.inTransaction(session -> {
-			session.createQuery("delete from Person").executeUpdate();
-			session.createQuery("delete from Company").executeUpdate();
-			session.createQuery("delete from Organization").executeUpdate();
-		});
+		scope.inTransaction( session -> {
+			session.createQuery( "delete from Person" ).executeUpdate();
+			session.createQuery( "delete from Company" ).executeUpdate();
+			session.createQuery( "delete from Organization" ).executeUpdate();
+		} );
 	}
 
 	@Embeddable
@@ -330,7 +337,7 @@ public class CollectionTableOverrideTest {
 
 		@Embedded
 		@CollectionTableOverrides({
-			@CollectionTableOverride(name = "emails", table = "organization_emails")
+				@CollectionTableOverride(name = "emails", table = "organization_emails")
 		})
 		private ContactInfo contactInfo;
 

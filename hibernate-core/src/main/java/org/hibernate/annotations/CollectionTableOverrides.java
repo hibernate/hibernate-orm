@@ -15,7 +15,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Container for multiple {@link CollectionTableOverride} annotations.
  */
-@Target({TYPE, METHOD, FIELD})
+@Target({ TYPE, METHOD, FIELD })
 @Retention(RUNTIME)
 public @interface CollectionTableOverrides {
 	CollectionTableOverride[] value();

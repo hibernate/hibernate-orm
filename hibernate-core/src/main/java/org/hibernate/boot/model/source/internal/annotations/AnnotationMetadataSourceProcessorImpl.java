@@ -31,6 +31,7 @@ import static org.hibernate.boot.model.internal.AnnotationBinder.bindFetchProfil
 import static org.hibernate.boot.model.internal.AnnotationBinder.bindFetchProfilesForPackage;
 import static org.hibernate.boot.model.internal.AnnotationBinder.buildInheritanceStates;
 import static org.hibernate.boot.model.process.spi.MetadataBuildingProcess.processManagedResources;
+import static org.hibernate.internal.util.ReflectHelper.OBJECT_CLASS_NAME;
 
 /**
  * @author Steve Ebersole
@@ -219,7 +220,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 				copy.add( clazz );
 				ClassDetails superClass = clazz.getSuperClass();
 				while ( superClass != null
-						&& !Object.class.getName().equals( superClass.getName() )
+						&& !OBJECT_CLASS_NAME.equals( superClass.getName() )
 						&& !copy.contains( superClass ) ) {
 					if ( superClass.hasDirectAnnotationUsage( Entity.class )
 							|| superClass.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
@@ -232,7 +233,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	}
 
 	private void orderHierarchy(List<ClassDetails> copy, List<ClassDetails> newList, LinkedHashSet<ClassDetails> original, ClassDetails clazz) {
-		if ( clazz != null && !Object.class.getName().equals( clazz.getName() ) ) {
+		if ( clazz != null && !OBJECT_CLASS_NAME.equals( clazz.getName() ) ) {
 			//process superclass first
 			orderHierarchy( copy, newList, original, clazz.getSuperClass() );
 			if ( original.contains( clazz ) ) {

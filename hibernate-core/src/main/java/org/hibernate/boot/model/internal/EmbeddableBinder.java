@@ -72,6 +72,8 @@ import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClas
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+import static org.hibernate.internal.util.ReflectHelper.OBJECT_CLASS_NAME;
+import static org.hibernate.internal.util.ReflectHelper.RECORD_CLASS_NAME;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.unqualify;
@@ -825,8 +827,8 @@ public class EmbeddableBinder {
 		}
 		else if ( isIdClass ) {
 			final String superClassName = superClass.getName();
-			return !superClassName.equals( Object.class.getName() )
-				&& !superClassName.equals( "java.lang.Record" );
+			return !superClassName.equals( OBJECT_CLASS_NAME )
+				&& !superClassName.equals( RECORD_CLASS_NAME );
 		}
 		else {
 			return false;
@@ -842,9 +844,8 @@ public class EmbeddableBinder {
 			final List<PropertyData> baseClassElements = new ArrayList<>();
 			// iterate from base returned class up hierarchy to handle cases where the @Id attributes
 			// might be spread across the subclasses and super classes.
-			final String objectClassName = Object.class.getName();
 			TypeDetails baseReturnedClassOrElement = baseInferredData.getClassOrElementType();
-			while ( !objectClassName.equals( baseReturnedClassOrElement.getName() ) ) {
+			while ( !OBJECT_CLASS_NAME.equals( baseReturnedClassOrElement.getName() ) ) {
 				final var rawClass = baseReturnedClassOrElement.determineRawClass();
 				final var container = new PropertyContainer( rawClass, entityAtStake, propertyAccessor );
 				addElementsOfClass( baseClassElements, container, context, 0 );

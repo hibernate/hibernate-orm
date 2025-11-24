@@ -56,6 +56,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 
 import static org.hibernate.internal.util.NullnessHelper.nullif;
+import static org.hibernate.internal.util.ReflectHelper.OBJECT_CLASS_NAME;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.models.internal.ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS;
 
@@ -432,7 +433,7 @@ public class DynamicModelHelper {
 			case MAP -> {
 				collectionClassDetails = mapType( jaxbPluralAttribute, classDetailsRegistry );
 				// for now, just use wildcard for the key
-				final ClassDetails objectClassDetails = classDetailsRegistry.resolveClassDetails( Object.class.getName() );
+				final ClassDetails objectClassDetails = classDetailsRegistry.resolveClassDetails( OBJECT_CLASS_NAME );
 				typeParams = List.of(
 						new WildcardTypeDetailsImpl( new ClassTypeDetailsImpl( objectClassDetails, TypeDetails.Kind.CLASS ), true ),
 						elementType
@@ -711,7 +712,7 @@ public class DynamicModelHelper {
 		// Logically this is Object, which is what we return here for now.
 		// todo : might be nice to allow specifying a "common interface"
 		final ModelsContext modelsContext = xmlDocumentContext.getBootstrapContext().getModelsContext();
-		final ClassDetails objectClassDetails = modelsContext.getClassDetailsRegistry().resolveClassDetails( Object.class.getName() );
+		final ClassDetails objectClassDetails = modelsContext.getClassDetailsRegistry().resolveClassDetails( OBJECT_CLASS_NAME );
 		return new ClassTypeDetailsImpl( objectClassDetails, TypeDetails.Kind.CLASS );
 	}
 

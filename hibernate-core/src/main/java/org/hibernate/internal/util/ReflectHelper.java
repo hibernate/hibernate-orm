@@ -42,6 +42,9 @@ import static java.lang.Thread.currentThread;
  */
 public final class ReflectHelper {
 
+	public static final String RECORD_CLASS_NAME = Record.class.getName();
+	public static final String OBJECT_CLASS_NAME = Object.class.getName();
+
 	public static final Class<?>[] NO_PARAM_SIGNATURE = ArrayHelper.EMPTY_CLASS_ARRAY;
 
 	public static final Class<?>[] SINGLE_OBJECT_PARAM_SIGNATURE = new Class[] { Object.class };

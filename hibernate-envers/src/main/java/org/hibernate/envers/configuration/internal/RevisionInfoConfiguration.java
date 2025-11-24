@@ -50,6 +50,7 @@ import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.service.ServiceRegistry;
 
 import static org.hibernate.envers.configuration.internal.ModelsHelper.getMemberDetails;
+import static org.hibernate.internal.util.ReflectHelper.OBJECT_CLASS_NAME;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -452,7 +453,7 @@ public class RevisionInfoConfiguration {
 
 		private void resolveConfiguration(ClassDetails classDetails) {
 			final ClassDetails superclass = classDetails.getSuperClass();
-			if ( !Object.class.getName().equals( superclass.getName() ) ) {
+			if ( !OBJECT_CLASS_NAME.equals( superclass.getName() ) ) {
 				// traverse to the top of the entity hierarchy
 				resolveConfiguration( superclass );
 			}

@@ -16,6 +16,7 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.internal.ProxyUtil;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -293,14 +294,12 @@ public interface PersistenceContext {
 	 * Get the entity instance underlying the given proxy, throwing
 	 * an exception if the proxy is uninitialized. If the given object
 	 * is not a proxy, simply return the argument.
+	 * @deprecated No longer used
 	 */
-	Object unproxy(Object maybeProxy);
-
-	@Incubating
-	Object unproxyLoadingIfNecessary(final Object maybeProxy);
-
-	@Incubating
-	boolean isUninitializedProxy(Object value);
+	@Deprecated(since = "7.2", forRemoval = true)
+	default Object unproxy(Object maybeProxy) {
+		return ProxyUtil.assertInitialized( maybeProxy );
+	}
 
 	/**
 	 * Possibly unproxy the given reference and reassociate it with the current session.

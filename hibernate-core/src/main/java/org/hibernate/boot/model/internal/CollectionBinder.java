@@ -357,7 +357,7 @@ public abstract class CollectionBinder {
 		if ( notFound != null ) {
 			if ( manyToManyAnn == null ) {
 				throw new AnnotationException( "Collection '" + getPath( propertyHolder, inferredData )
-													   + "' annotated '@NotFound' is not a '@ManyToMany' association" );
+													+ "' annotated '@NotFound' is not a '@ManyToMany' association" );
 			}
 			return notFound.action();
 		}
@@ -405,8 +405,8 @@ public abstract class CollectionBinder {
 		if ( ( oneToMany != null || manyToMany != null || elementCollection != null )
 				&& isToManyAssociationWithinEmbeddableCollection( propertyHolder ) ) {
 			throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData ) +
-												   "' belongs to an '@Embeddable' class that is contained in an '@ElementCollection' and may not be a "
-												   + annotationName( oneToMany, manyToMany, elementCollection ) );
+												"' belongs to an '@Embeddable' class that is contained in an '@ElementCollection' and may not be a "
+												+ annotationName( oneToMany, manyToMany, elementCollection ) );
 		}
 
 		if ( oneToMany != null && property.hasDirectAnnotationUsage( SoftDelete.class ) ) {
@@ -420,20 +420,20 @@ public abstract class CollectionBinder {
 				&& manyToMany != null
 				&& isNotBlank( manyToMany.mappedBy() ) ) {
 			throw new AnnotationException( "Collection '" + getPath( propertyHolder, inferredData ) +
-												   "' is the unowned side of a bidirectional '@ManyToMany' and may not have an '@OrderColumn'" );
+												"' is the unowned side of a bidirectional '@ManyToMany' and may not have an '@OrderColumn'" );
 		}
 
 		if ( manyToMany != null || elementCollection != null ) {
 			if ( property.hasDirectAnnotationUsage( JoinColumn.class )
 					|| property.hasDirectAnnotationUsage( JoinColumns.class ) ) {
 				throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData )
-													   + "' is a " + annotationName(
+													+ "' is a " + annotationName(
 						oneToMany,
 						manyToMany,
 						elementCollection
 				)
-													   + " and is directly annotated '@JoinColumn'"
-													   + " (specify '@JoinColumn' inside '@JoinTable' or '@CollectionTable')" );
+													+ " and is directly annotated '@JoinColumn'"
+													+ " (specify '@JoinColumn' inside '@JoinTable' or '@CollectionTable')" );
 			}
 		}
 	}
@@ -476,13 +476,13 @@ public abstract class CollectionBinder {
 		//TODO enhance exception with @ManyToAny and @CollectionOfElements
 		if ( oneToManyAnn != null && manyToManyAnn != null ) {
 			throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData )
-												   + "' is annotated both '@OneToMany' and '@ManyToMany'" );
+												+ "' is annotated both '@OneToMany' and '@ManyToMany'" );
 		}
 		final String mappedBy;
 		if ( oneToManyAnn != null ) {
 			if ( joinColumns.isSecondary() ) {
 				throw new AnnotationException( "Collection '" + getPath( propertyHolder, inferredData )
-													   + "' has foreign key in secondary table" );
+													+ "' has foreign key in secondary table" );
 			}
 			collectionBinder.setFkJoinColumns( joinColumns );
 			mappedBy = nullIfEmpty( oneToManyAnn.mappedBy() );
@@ -497,7 +497,7 @@ public abstract class CollectionBinder {
 		else if ( elementCollectionAnn != null ) {
 			if ( joinColumns.isSecondary() ) {
 				throw new AnnotationException( "Collection '" + getPath( propertyHolder, inferredData )
-													   + "' has foreign key in secondary table" );
+													+ "' has foreign key in secondary table" );
 			}
 			collectionBinder.setFkJoinColumns( joinColumns );
 			mappedBy = null;
@@ -657,9 +657,14 @@ public abstract class CollectionBinder {
 				buildingContext
 		);
 
+		// If @CollectionTableOverride is present, use its collectionTable annotation
+		final CollectionTable effectiveCollectionTable = collectionTableOverride != null
+				? collectionTableOverride.collectionTable()
+				: collectionTable;
+
 		final JoinColumn[] annJoins;
 		final JoinColumn[] annInverseJoins;
-		if ( assocTable != null || collectionTable != null ) {
+		if ( assocTable != null || effectiveCollectionTable != null ) {
 			final String catalog;
 			final String schema;
 			final String tableName;
@@ -670,18 +675,15 @@ public abstract class CollectionBinder {
 			final String options;
 
 			//JPA 2 has priority
-			if ( collectionTable != null ) {
-				catalog = collectionTable.catalog();
-				schema = collectionTable.schema();
-				// Use overridden table name if @CollectionTableOverride is present
-				tableName = collectionTableOverride != null
-						? collectionTableOverride.table()
-						: collectionTable.name();
-				uniqueConstraints = collectionTable.uniqueConstraints();
-				joins = collectionTable.joinColumns();
+			if ( effectiveCollectionTable != null ) {
+				catalog = effectiveCollectionTable.catalog();
+				schema = effectiveCollectionTable.schema();
+				tableName = effectiveCollectionTable.name();
+				uniqueConstraints = effectiveCollectionTable.uniqueConstraints();
+				joins = effectiveCollectionTable.joinColumns();
 				inverseJoins = null;
-				jpaIndexes = collectionTable.indexes();
-				options = collectionTable.options();
+				jpaIndexes = effectiveCollectionTable.indexes();
+				options = effectiveCollectionTable.options();
 			}
 			else {
 				catalog = assocTable.catalog();
@@ -928,20 +930,20 @@ public abstract class CollectionBinder {
 
 		if ( property.hasAnnotationUsage( OrderColumn.class, modelsContext ) ) {
 			throw new AnnotationException( "Attribute '"
-												   + qualify(
+												+ qualify(
 					property.getDeclaringType().getName(),
 					property.getName()
 			)
-												   + "' is annotated '@Bag' and may not also be annotated '@OrderColumn'" );
+												+ "' is annotated '@Bag' and may not also be annotated '@OrderColumn'" );
 		}
 
 		if ( property.hasAnnotationUsage( ListIndexBase.class, modelsContext ) ) {
 			throw new AnnotationException( "Attribute '"
-												   + qualify(
+												+ qualify(
 					property.getDeclaringType().getName(),
 					property.getName()
 			)
-												   + "' is annotated '@Bag' and may not also be annotated '@ListIndexBase'" );
+												+ "' is annotated '@Bag' and may not also be annotated '@ListIndexBase'" );
 		}
 
 		final var collectionJavaType = property.getType().determineRawClass().toJavaClass();
@@ -1078,7 +1080,7 @@ public abstract class CollectionBinder {
 
 	private void setTargetEntity(Class<?> targetEntity) {
 		setTargetEntity( modelsContext().getClassDetailsRegistry()
-								 .resolveClassDetails( targetEntity.getName() ) );
+								.resolveClassDetails( targetEntity.getName() ) );
 	}
 
 	private void setTargetEntity(ClassDetails targetEntity) {
@@ -1151,7 +1153,7 @@ public abstract class CollectionBinder {
 	private void checkMapKeyColumn() {
 		if ( property.hasDirectAnnotationUsage( MapKeyColumn.class ) && hasMapKeyProperty ) {
 			throw new AnnotationException( "Collection '" + qualify( propertyHolder.getPath(), propertyName )
-												   + "' is annotated both '@MapKey' and '@MapKeyColumn'" );
+												+ "' is annotated both '@MapKey' and '@MapKeyColumn'" );
 		}
 	}
 
@@ -1188,40 +1190,40 @@ public abstract class CollectionBinder {
 			if ( property.hasDirectAnnotationUsage( JoinColumn.class )
 					|| property.hasDirectAnnotationUsage( JoinColumns.class ) ) {
 				throw new AnnotationException( "Association '"
-													   + qualify( propertyHolder.getPath(), propertyName )
-													   + "' is 'mappedBy' another entity and may not specify the '@JoinColumn'" );
+													+ qualify( propertyHolder.getPath(), propertyName )
+													+ "' is 'mappedBy' another entity and may not specify the '@JoinColumn'" );
 			}
 			if ( propertyHolder.getJoinTable( property ) != null ) {
 				throw new AnnotationException( "Association '"
-													   + qualify( propertyHolder.getPath(), propertyName )
-													   + "' is 'mappedBy' another entity and may not specify the '@JoinTable'" );
+													+ qualify( propertyHolder.getPath(), propertyName )
+													+ "' is 'mappedBy' another entity and may not specify the '@JoinTable'" );
 			}
 			if ( oneToMany ) {
 				if ( property.hasDirectAnnotationUsage( MapKeyColumn.class ) ) {
 					BOOT_LOGGER.warn( "Association '"
-											  + qualify( propertyHolder.getPath(), propertyName )
-											  + "' is 'mappedBy' another entity and should not specify a '@MapKeyColumn'"
-											  + " (use '@MapKey' instead)" );
+											+ qualify( propertyHolder.getPath(), propertyName )
+											+ "' is 'mappedBy' another entity and should not specify a '@MapKeyColumn'"
+											+ " (use '@MapKey' instead)" );
 				}
 				if ( property.hasDirectAnnotationUsage( OrderColumn.class ) ) {
 					BOOT_LOGGER.warn( "Association '"
-											  + qualify( propertyHolder.getPath(), propertyName )
-											  + "' is 'mappedBy' another entity and should not specify an '@OrderColumn'"
-											  + " (use '@OrderBy' instead)" );
+											+ qualify( propertyHolder.getPath(), propertyName )
+											+ "' is 'mappedBy' another entity and should not specify an '@OrderColumn'"
+											+ " (use '@OrderBy' instead)" );
 				}
 			}
 			else {
 				if ( property.hasDirectAnnotationUsage( MapKeyColumn.class ) ) {
 					throw new AnnotationException( "Association '"
-														   + qualify( propertyHolder.getPath(), propertyName )
-														   + "' is 'mappedBy' another entity and may not specify a '@MapKeyColumn'"
-														   + " (use '@MapKey' instead)" );
+														+ qualify( propertyHolder.getPath(), propertyName )
+														+ "' is 'mappedBy' another entity and may not specify a '@MapKeyColumn'"
+														+ " (use '@MapKey' instead)" );
 				}
 				if ( property.hasDirectAnnotationUsage( OrderColumn.class ) ) {
 					throw new AnnotationException( "Association '"
-														   + qualify( propertyHolder.getPath(), propertyName )
-														   + "' is 'mappedBy' another entity and may not specify an '@OrderColumn'"
-														   + " (use '@OrderBy' instead)" );
+														+ qualify( propertyHolder.getPath(), propertyName )
+														+ "' is 'mappedBy' another entity and may not specify an '@OrderColumn'"
+														+ " (use '@OrderBy' instead)" );
 				}
 			}
 		}
@@ -1229,8 +1231,8 @@ public abstract class CollectionBinder {
 				&& property.hasDirectAnnotationUsage( OnDelete.class )
 				&& !hasExplicitJoinColumn() ) {
 			throw new AnnotationException( "Unidirectional '@OneToMany' association '"
-												   + qualify( propertyHolder.getPath(), propertyName )
-												   + "' is annotated '@OnDelete' and must explicitly specify a '@JoinColumn'" );
+												+ qualify( propertyHolder.getPath(), propertyName )
+												+ "' is annotated '@OnDelete' and must explicitly specify a '@JoinColumn'" );
 		}
 	}
 
@@ -1524,7 +1526,7 @@ public abstract class CollectionBinder {
 			}
 			else {
 				throw new AnnotationException( "Collection '" + safeCollectionRole()
-													   + "' is declared with a raw type and has an explicit 'targetEntity'" );
+													+ "' is declared with a raw type and has an explicit 'targetEntity'" );
 			}
 		}
 		else {
@@ -1842,7 +1844,7 @@ public abstract class CollectionBinder {
 		}
 		else {
 			throw new AnnotationException( "Collection '" + qualify( propertyHolder.getPath(), propertyName )
-												   + "' is an association with no join table and may not have a '@FilterJoinTable'" );
+												+ "' is an association with no join table and may not have a '@FilterJoinTable'" );
 		}
 	}
 
@@ -1864,15 +1866,15 @@ public abstract class CollectionBinder {
 		final var definition = getMetadataCollector().getFilterDefinition( name );
 		if ( definition == null ) {
 			throw new AnnotationException( "Collection '" + qualify( propertyHolder.getPath(), propertyName )
-												   + "' has a '@" + annotation.annotationType().getSimpleName()
-												   + "' for an undefined filter named '" + name + "'" );
+												+ "' has a '@" + annotation.annotationType().getSimpleName()
+												+ "' for an undefined filter named '" + name + "'" );
 		}
 		final String defaultCondition = definition.getDefaultFilterCondition();
 		if ( isBlank( defaultCondition ) ) {
 			throw new AnnotationException( "Collection '" + qualify( propertyHolder.getPath(), propertyName ) +
-												   "' has a '@" + annotation.annotationType().getSimpleName()
-												   + "' with no 'condition' and no default condition was given by the '@FilterDef' named '"
-												   + name + "'" );
+												"' has a '@" + annotation.annotationType().getSimpleName()
+												+ "' with no 'condition' and no default condition was given by the '@FilterDef' named '"
+												+ name + "'" );
 		}
 		return defaultCondition;
 	}
@@ -2483,8 +2485,8 @@ public abstract class CollectionBinder {
 		final String name = check.name();
 		final String constraint = check.constraints();
 		collectionTable.addCheck( name.isBlank()
-										  ? new CheckConstraint( constraint )
-										  : new CheckConstraint( name, constraint ) );
+										? new CheckConstraint( constraint )
+										: new CheckConstraint( name, constraint ) );
 	}
 
 	private void processSoftDeletes() {
@@ -2513,7 +2515,7 @@ public abstract class CollectionBinder {
 			boolean isCollectionOfEntities) {
 		if ( !isCollectionOfEntities ) {
 			throw new AnnotationException( "Association '" + safeCollectionRole() + "'"
-												   + targetEntityMessage( elementType ) );
+												+ targetEntityMessage( elementType ) );
 		}
 
 		joinColumns.setManyToManyOwnerSideEntityName( collectionEntity.getEntityName() );
@@ -2536,7 +2538,7 @@ public abstract class CollectionBinder {
 		if ( property.hasDirectAnnotationUsage( Checks.class )
 				|| property.hasDirectAnnotationUsage( Check.class ) ) {
 			throw new AnnotationException( "Association '" + safeCollectionRole()
-												   + " is an unowned collection and may not be annotated '@Check'" );
+												+ " is an unowned collection and may not be annotated '@Check'" );
 		}
 	}
 
@@ -2549,20 +2551,20 @@ public abstract class CollectionBinder {
 			if ( property.hasDirectAnnotationUsage( ManyToMany.class )
 					|| property.hasDirectAnnotationUsage( OneToMany.class ) ) {
 				throw new AnnotationException( "Association '" + safeCollectionRole() + "'"
-													   + targetEntityMessage( elementType ) );
+													+ targetEntityMessage( elementType ) );
 			}
 			else if ( isManyToAny ) {
 				if ( propertyHolder.getJoinTable( property ) == null ) {
 					throw new AnnotationException( "Association '" + safeCollectionRole()
-														   + "' is a '@ManyToAny' and must specify a '@JoinTable'" );
+														+ "' is a '@ManyToAny' and must specify a '@JoinTable'" );
 				}
 			}
 			else {
 				final var joinTableAnn = propertyHolder.getJoinTable( property );
 				if ( joinTableAnn != null && !ArrayHelper.isEmpty( joinTableAnn.inverseJoinColumns() ) ) {
 					throw new AnnotationException( "Association '" + safeCollectionRole()
-														   + " has a '@JoinTable' with 'inverseJoinColumns' and"
-														   + targetEntityMessage( elementType ) );
+														+ " has a '@JoinTable' with 'inverseJoinColumns' and"
+														+ targetEntityMessage( elementType ) );
 				}
 			}
 		}

@@ -7,16 +7,18 @@ package org.hibernate.annotations;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import jakarta.persistence.CollectionTable;
+
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Used to override the collection table name for a collection
+ * Used to override the collection table configuration for a collection
  * that is nested within an embeddable class.
  *
- * <p>This annotation allows overriding the collection table name
+ * <p>This annotation allows overriding the collection table configuration
  * for collections that are defined within an embeddable class.
  *
  * <p>Example:
@@ -33,7 +35,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     &#064;Embedded
  *     &#064;CollectionTableOverride(
  *         name = "phones",
- *         table = "person_phones"
+ *         collectionTable = &#064;CollectionTable(name = "person_phones")
  *     )
  *     Address address;
  * }
@@ -50,7 +52,9 @@ public @interface CollectionTableOverride {
 	String name();
 
 	/**
-	 * The name of the collection table to use instead of the default.
+	 * The collection table configuration to use instead of the default.
+	 * This allows specifying the full {@link CollectionTable} annotation
+	 * with all its attributes (name, schema, catalog, joinColumns, indexes, etc.).
 	 */
-	String table();
+	CollectionTable collectionTable();
 }

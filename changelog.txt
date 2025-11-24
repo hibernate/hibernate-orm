@@ -1,6 +1,20 @@
 Hibernate 6 Changelog
 =======================
 
+Changes in 6.6.37.Final (November 24, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/36080
+
+
+** Bug
+    * HHH-19936 Parameter casts for by-id lookups don't take column definition into account
+    * HHH-19926 NullPointerException when executing JPQL IN clause with null parameter on entity association
+    * HHH-19922 org.hibernate.orm:hibernate-platform:pom:7.1.7.Final is missing
+    * HHH-19910 EntityInitializer#resolveInstance wrongly initializes existing detached instance
+    * HHH-19038 Hibernate.get does not work on detached entities
+    * HHH-16991 EnhancedUserType cannot be used when defining relations
+
 Changes in 6.6.36.Final (November 16, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

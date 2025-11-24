@@ -347,7 +347,7 @@ public class ToOneBinder {
 			toOne.setUnwrapProxy( true );
 		}
 		else {
-			boolean eager = isEager( property );
+			final boolean eager = isEager( property );
 			toOne.setLazy( !eager );
 			toOne.setUnwrapProxy( eager );
 			toOne.setUnwrapProxyImplicit( true );

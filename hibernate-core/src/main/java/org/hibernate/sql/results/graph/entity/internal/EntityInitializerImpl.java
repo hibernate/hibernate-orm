@@ -37,6 +37,7 @@ import org.hibernate.internal.util.ImmutableBitSet;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
@@ -100,6 +101,7 @@ public class EntityInitializerImpl
 	private final boolean isPartOfKey;
 	private final boolean isResultInitializer;
 	private final boolean hasKeyManyToOne;
+	private final boolean isReadOnly;
 	/**
 	 * Indicates whether there is a high chance of the previous row to have the same entity key as the current row
 	 * and hence enable a check in the {@link #resolveKey(RowProcessingState)} phase which compare the previously read
@@ -232,6 +234,7 @@ public class EntityInitializerImpl
 
 		navigablePath = resultDescriptor.getNavigablePath();
 		isPartOfKey = Initializer.isPartOfKey( navigablePath, parent );
+		this.isReadOnly = isReadOnly( referencedModelPart );
 		// If the parent already has previous row reuse enabled, we can skip that here
 		previousRowReuse = !isPreviousRowReuse( parent ) && (
 				// If this entity domain result contains a collection join fetch, this usually means that the entity data is
@@ -984,20 +987,32 @@ public class EntityInitializerImpl
 	@Override
 	public void resolveInstance(Object instance, EntityInitializerData data) {
 		if ( instance == null ) {
-			setMissing( data );
+			if ( isReadOnly ) {
+				// When the mapping is read-only, we can't trust the state of the persistence context
+				resolveKey( data );
+			}
+			else {
+				setMissing( data );
+			}
 		}
 		else {
-			final var lazyInitializer = extractLazyInitializer( instance );
+			final var  lazyInitializer = extractLazyInitializer( instance );
 			final var rowProcessingState = data.getRowProcessingState();
 			final var session = rowProcessingState.getSession();
 			final var persistenceContext = session.getPersistenceContextInternal();
 			if ( lazyInitializer == null ) {
-				// Entity is most probably initialized
-				data.concreteDescriptor = session.getEntityPersister( null, instance );
-				resolveEntityKey(
-						data,
-						data.concreteDescriptor.getIdentifier( instance, session )
-				);
+				if ( isReadOnly ) {
+					// Read-only associations might be inconsistent
+					resolveKey( data, true );
+					if ( data.getState() == State.MISSING ) {
+						return;
+					}
+				}
+				else {
+					// Entity is most probably initialized
+					data.concreteDescriptor = session.getEntityPersister( null, instance );
+					resolveEntityKey( data, data.concreteDescriptor.getIdentifier( instance, session ) );
+				}
 				data.entityHolder = persistenceContext.claimEntityHolderIfPossible(
 						data.entityKey,
 						null,
@@ -1005,8 +1020,7 @@ public class EntityInitializerImpl
 						this
 				);
 				if ( data.entityHolder.getManagedObject() == null ) {
-					final EntityEntry entry = persistenceContext.getEntry(
-							instance ); // make sure an EntityEntry exists
+					final EntityEntry entry = persistenceContext.getEntry( instance ); // make sure an EntityEntry exists
 					if ( entry == null ) {
 						// We cannot reuse an entity instance that has no entry in the PC,
 						// this can happen if the parent entity contained a detached instance.
@@ -1030,8 +1044,7 @@ public class EntityInitializerImpl
 					instance = resolveEntityInstance( data );
 					data.entityKey = data.entityHolder.getEntityKey();
 					if ( data.entityHolder.getProxy() != null ) {
-						castNonNull( extractLazyInitializer( data.entityHolder.getProxy() ) )
-								.setImplementation( instance );
+						castNonNull( extractLazyInitializer( data.entityHolder.getProxy() ) ).setImplementation( instance );
 					}
 				}
 				else if ( data.entityHolder.getEntity() != instance ) {
@@ -1066,7 +1079,15 @@ public class EntityInitializerImpl
 				}
 			}
 			else if ( lazyInitializer.isUninitialized() ) {
+				if ( isReadOnly ) {
+				// Read-only associations might be inconsistent
+				resolveKey( data, true );
+				if ( data.getState() == State.MISSING ) {
+					return;
+				}
 				data.setState( State.RESOLVED );
+			}
+			else {data.setState( State.RESOLVED );
 				// Read the discriminator from the result set if necessary
 				data.concreteDescriptor =
 						discriminatorAssembler == null
@@ -1075,7 +1096,7 @@ public class EntityInitializerImpl
 										discriminatorAssembler, entityDescriptor );
 				assert data.concreteDescriptor != null;
 				resolveEntityKey( data, lazyInitializer.getInternalIdentifier() );
-				data.entityHolder = persistenceContext.claimEntityHolderIfPossible(
+				}data.entityHolder = persistenceContext.claimEntityHolderIfPossible(
 						data.entityKey,
 						null,
 						rowProcessingState.getJdbcValuesSourceProcessingState(),
@@ -1100,8 +1121,15 @@ public class EntityInitializerImpl
 			}
 			else {
 				final var implementation = lazyInitializer.getImplementation();
-				data.concreteDescriptor = session.getEntityPersister( null, implementation );
-				resolveEntityKey( data, lazyInitializer.getInternalIdentifier() );
+				if ( isReadOnly ) {
+				// Read-only associations might be inconsistent
+				resolveKey( data, true );
+				if ( data.getState() == State.MISSING ) {
+					return;
+				}
+			}
+			else {data.concreteDescriptor = session.getEntityPersister( null, implementation );
+				resolveEntityKey( data, lazyInitializer.getInternalIdentifier() );}
 				data.entityHolder = persistenceContext.getEntityHolder( data.entityKey );
 				if ( data.entityHolder.getProxy() == instance ) {
 					data.entityInstanceForNotify = implementation;
@@ -1146,6 +1174,11 @@ public class EntityInitializerImpl
 				resolveKeySubInitializers( data );
 			}
 		}
+	}
+
+	private static boolean isReadOnly(EntityValuedModelPart entityValuedModelPart) {
+		return entityValuedModelPart instanceof ValuedModelPart
+				&& ( (ValuedModelPart) entityValuedModelPart ).isReadOnly();
 	}
 
 	@Override

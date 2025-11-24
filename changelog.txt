@@ -1,6 +1,17 @@
 Hibernate 6 Changelog
 =======================
 
+Changes in 6.2.49.Final (November 24, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/35684
+
+
+** Bug
+    * HHH-19922 org.hibernate.orm:hibernate-platform:pom:7.1.7.Final is missing
+    * HHH-19739 Exceptions during load of entity with different persistent fields with same name
+    * HHH-16991 EnhancedUserType cannot be used when defining relations
+
 Note: Please refer to JIRA to learn more about each issue.
 
 Changes in 6.2.48.Final (October 10, 2025)

@@ -60,7 +60,7 @@ public class RegistryHelper {
 			return typeConfiguration.createMutabilityPlan( annotation.value() );
 		}
 
-		if ( javaTypeClass.isEnum() || javaTypeClass.isPrimitive() || ReflectHelper.isRecord( javaTypeClass ) ) {
+		if ( javaTypeClass.isEnum() || javaTypeClass.isPrimitive() || javaTypeClass.isRecord() ) {
 			return ImmutableMutabilityPlan.instance();
 		}
 

@@ -19,8 +19,6 @@ import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import static org.hibernate.internal.util.ReflectHelper.isRecord;
-
 /**
  * EmbeddableRepresentationStrategy for an IdClass mapping
  */
@@ -34,7 +32,7 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 			Supplier<String[]> attributeNamesAccess) {
 		idClassType = idClassEmbeddable.getMappedJavaType();
 		final var javaTypeClass = idClassType.getJavaTypeClass();
-		if ( isRecord( javaTypeClass ) ) {
+		if ( javaTypeClass.isRecord() ) {
 			instantiator = simplePropertyOrder
 					? new EmbeddableInstantiatorRecordStandard( javaTypeClass )
 					: EmbeddableInstantiatorRecordIndirecting.of( javaTypeClass, attributeNamesAccess.get() );

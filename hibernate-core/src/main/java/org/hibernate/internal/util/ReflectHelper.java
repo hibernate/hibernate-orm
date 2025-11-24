@@ -574,15 +574,14 @@ public final class ReflectHelper {
 			Method getMethod,
 			String stemName) {
 		// verify that the Class<?> does not also define a method with the same stem name with 'is'
-		try {
-			final Method isMethod = containerClass.getDeclaredMethod( "is" + stemName );
-			if ( !Modifier.isStatic( isMethod.getModifiers() ) && isMethod.getAnnotation( Transient.class ) == null ) {
-				// No such method should throw the caught exception.  So if we get here, there was
-				// such a method.
-				checkGetAndIsVariants( containerClass, propertyName, getMethod, isMethod );
+		for ( Method declaredMethod : containerClass.getDeclaredMethods() ) {
+			if ( declaredMethod.getParameterCount() == 0
+				&& !Modifier.isStatic( declaredMethod.getModifiers() )
+				&& declaredMethod.getName().startsWith( "is" )
+				&& declaredMethod.getName().regionMatches( 2, stemName, 0, stemName.length() )
+				&& declaredMethod.getAnnotation( Transient.class ) == null ) {
+				checkGetAndIsVariants( containerClass, propertyName, getMethod, declaredMethod );
 			}
-		}
-		catch (NoSuchMethodException ignore) {
 		}
 	}
 
@@ -614,16 +613,14 @@ public final class ReflectHelper {
 			Method isMethod,
 			String stemName) {
 		// verify that the Class<?> does not also define a method with the same stem name with 'is'
-		try {
-			final Method getMethod = containerClass.getDeclaredMethod( "get" + stemName );
-			// No such method should throw the caught exception.  So if we get here, there was
-			// such a method.
-			if ( !Modifier.isStatic( getMethod.getModifiers() )
-					&& getMethod.getAnnotation( Transient.class ) == null ) {
-				checkGetAndIsVariants( containerClass, propertyName, getMethod, isMethod );
+		for ( Method declaredMethod : containerClass.getDeclaredMethods() ) {
+			if ( declaredMethod.getParameterCount() == 0
+				&& !Modifier.isStatic( declaredMethod.getModifiers() )
+				&& declaredMethod.getName().startsWith( "get" )
+				&& declaredMethod.getName().regionMatches( 3, stemName, 0, stemName.length() )
+				&& declaredMethod.getAnnotation( Transient.class ) == null ) {
+				checkGetAndIsVariants( containerClass, propertyName, declaredMethod, isMethod );
 			}
-		}
-		catch (NoSuchMethodException ignore) {
 		}
 	}
 

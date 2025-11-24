@@ -223,7 +223,7 @@ pipeline {
 								withEnv([
 										"DISABLE_REMOTE_GRADLE_CACHE=true"
 								]) {
-                                    def ghReleaseNote = sh('realpath -e release_notes.md 2>/dev/null', returnStdout: true).trim()
+                                    def ghReleaseNote = sh(script: 'realpath -e release_notes.md 2>/dev/null', returnStdout: true).trim()
 
 									sh ".release/scripts/publish.sh -j ${ghReleaseNote != '' ? '--notes=' + ghReleaseNote : ''} ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION} ${env.GIT_BRANCH} "
 								}

@@ -132,6 +132,8 @@ public @interface NamedNativeQuery {
 	 *
 	 * @see org.hibernate.query.Query#setCacheMode(CacheMode)
 	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_CACHE_STORE_MODE
+	 *
+	 * @since 6.2
 	 */
 	CacheStoreMode cacheStoreMode() default CacheStoreMode.USE;
 
@@ -140,6 +142,8 @@ public @interface NamedNativeQuery {
 	 *
 	 * @see org.hibernate.query.Query#setCacheMode(CacheMode)
 	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_CACHE_RETRIEVE_MODE
+	 *
+	 * @since 6.2
 	 */
 	CacheRetrieveMode cacheRetrieveMode() default CacheRetrieveMode.USE;
 

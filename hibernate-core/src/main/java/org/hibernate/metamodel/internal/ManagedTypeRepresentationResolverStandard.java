@@ -19,8 +19,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.usertype.CompositeUserType;
 
-import static org.hibernate.internal.util.ReflectHelper.isRecord;
-
 /**
  * @author Steve Ebersole
  */
@@ -107,7 +105,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			return new EmbeddableCompositeUserTypeInstantiator( (CompositeUserType) compositeUserType );
 		}
 		else if ( bootDescriptor.getComponentClassName() != null
-				&& isRecord( bootDescriptor.getComponentClass() ) ) {
+				&& bootDescriptor.getComponentClass().isRecord() ) {
 			if ( bootDescriptor.sortProperties() == null ) {
 				return new EmbeddableInstantiatorRecordStandard( bootDescriptor.getComponentClass() );
 			}

@@ -11,7 +11,7 @@ import org.hibernate.event.spi.LockEvent;
 import org.hibernate.event.spi.LockEventListener;
 
 
-
+import static org.hibernate.engine.internal.ProxyUtil.forceInitialize;
 import static org.hibernate.loader.ast.internal.LoaderHelper.upgradeLock;
 
 /**
@@ -41,16 +41,15 @@ public class DefaultLockEventListener implements LockEventListener {
 		}
 
 		final var source = event.getSession();
-		final var persistenceContext = source.getPersistenceContextInternal();
-		final Object entity = persistenceContext.unproxyLoadingIfNecessary( instance );
+		final Object entity = forceInitialize( instance, source );
 		//TODO: if instance was an uninitialized proxy, this is inefficient,
 		//      resulting in two SQL selects
 
-		final var entry = persistenceContext.getEntry( entity );
+		final var entry = source.getPersistenceContextInternal().getEntry( entity );
 		if ( entry == null && instance == entity ) {
 			throw new DetachedObjectException( "Given entity is not associated with the persistence context" );
 		}
 
-		upgradeLock( entity, entry, event.getLockOptions(), event.getSession() );
+		upgradeLock( entity, entry, event.getLockOptions(), source );
 	}
 }

@@ -19,7 +19,7 @@ By default, the statistics are not collected because this incurs an additional p
 === org.hibernate.stat.Statistics methods
 
 The Hibernate statistics are made available via the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/stat/Statistics.html[`Statistics`] interface which exposes the following methods:
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/stat/Statistics.html[`Statistics`] interface which exposes the following methods:
 
 [[statistics-general]]
 ==== General statistics methods

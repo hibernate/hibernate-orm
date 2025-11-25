@@ -188,10 +188,10 @@ but also inefficient.
 
 While the Jakarta Persistence standard does not support retrieving multiple entities at once, other than running a JPQL or Criteria API query,
 Hibernate offers this functionality via the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#byMultipleIds-java.lang.Class-[`byMultipleIds` method] of the Hibernate `Session`.
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#byMultipleIds-java.lang.Class-[`byMultipleIds` method] of the Hibernate `Session`.
 
 The `byMultipleIds` method returns a
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/MultiIdentifierLoadAccess.html[`MultiIdentifierLoadAccess`]
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/MultiIdentifierLoadAccess.html[`MultiIdentifierLoadAccess`]
 which you can use to customize the multi-load request.
 
 The `MultiIdentifierLoadAccess` interface provides several methods which you can use to
@@ -221,10 +221,10 @@ When enabled, the result set will contain deleted entities.
 When disabled (which is the default behavior), deleted entities are not included in the returning `List`.
 `with(LockOptions lockOptions)`::
 This setting allows you to pass a given
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/LockOptions.html[`LockOptions`] mode to the multi-load query.
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/LockOptions.html[`LockOptions`] mode to the multi-load query.
 `with(CacheMode cacheMode)`::
 This setting allows you to pass a given
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/CacheMode.html[`CacheMode`]
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/CacheMode.html[`CacheMode`]
 strategy so that we can load entities from the second-level cache, therefore skipping the cached entities from being fetched via the multi-load query.
 `withBatchSize(int batchSize)`::
 This setting allows you to specify a batch size for loading the entities (e.g. how many at a time).
@@ -256,11 +256,11 @@ include::{extrasdir}/pc-by-multiple-ids-example.sql[]
 ====
 
 Notice that only one SQL SELECT statement was executed since the second call uses the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/MultiIdentifierLoadAccess.html#enableSessionCheck-boolean-[`enableSessionCheck`] method of the `MultiIdentifierLoadAccess`
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/MultiIdentifierLoadAccess.html#enableSessionCheck-boolean-[`enableSessionCheck`] method of the `MultiIdentifierLoadAccess`
 to instruct Hibernate to skip entities that are already loaded in the current Persistence Context.
 
 If the entities are not available in the current Persistence Context but they could be loaded from the second-level cache, you can use the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/MultiIdentifierLoadAccess.html#with-org.hibernate.CacheMode-[`with(CacheMode)`] method of the `MultiIdentifierLoadAccess` object.
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/MultiIdentifierLoadAccess.html#with-org.hibernate.CacheMode-[`with(CacheMode)`] method of the `MultiIdentifierLoadAccess` object.
 
 [[tag::pc-by-multiple-ids-second-level-cache-example]]
 .Loading multiple entities from the second-level cache
@@ -280,7 +280,7 @@ shared cache.
 
 Afterward, when executing the second `byMultipleIds` call for the same entities in a new Hibernate `Session`,
 we set the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/CacheMode.html#NORMAL[`CacheMode.NORMAL`] second-level cache mode so that entities are going to be returned from the second-level cache.
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/CacheMode.html#NORMAL[`CacheMode.NORMAL`] second-level cache mode so that entities are going to be returned from the second-level cache.
 
 The `getSecondLevelCacheHitCount` statistics method returns 3 this time, since the 3 entities were loaded from the second-level cache, and, as illustrated by `sqlStatementInterceptor.getSqlQueries()`, no multi-load SELECT statement was executed this time.
 
@@ -648,7 +648,7 @@ For this reason, the second-level collection cache is limited to storing whole c
 
 When using the `@Filter` annotation and working with entities that are mapped onto multiple database tables,
 you will need to use the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SqlFragmentAlias.html[`@SqlFragmentAlias`] annotation
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SqlFragmentAlias.html[`@SqlFragmentAlias`] annotation
 if the `@Filter` defines a condition that uses predicates across multiple tables.
 
 [[pc-filter-sql-fragment-alias-example]]
@@ -1425,18 +1425,18 @@ Certain methods of the Jakarta Persistence `EntityManager` or the Hibernate `Ses
 Rolling back the database transaction does not put your business objects back into the state they were at the start of the transaction. This means that the database state and the business objects will be out of sync. Usually, this is not a problem because exceptions are not recoverable and you will have to start over after rollback anyway.
 
 The Jakarta Persistence {jpaJavadocUrlPrefix}PersistenceException.html[`PersistenceException`] or the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/HibernateException.html[`HibernateException`] wraps most of the errors that can occur in a Hibernate persistence layer.
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/HibernateException.html[`HibernateException`] wraps most of the errors that can occur in a Hibernate persistence layer.
 
 Both the `PersistenceException` and the `HibernateException` are runtime exceptions because, in our opinion, we should not force the application developer to catch an unrecoverable exception at a low layer. In most systems, unchecked and fatal exceptions are handled in one of the first frames of the method call stack (i.e., in higher layers) and either an error message is presented to the application user or some other appropriate action is taken. Note that Hibernate might also throw other unchecked exceptions that are not a `HibernateException`. These are not recoverable either, and appropriate action should be taken.
 
 Hibernate wraps the JDBC `SQLException`, thrown while interacting with the database, in a
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/JDBCException.html[`JDBCException`].
-In fact, Hibernate will attempt to convert the exception into a more meaningful subclass of `JDBCException`. The underlying `SQLException` is always available via https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/JDBCException.html#getSQLException--[`JDBCException.getSQLException()`]. Hibernate converts the `SQLException` into an appropriate JDBCException subclass using the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/exception/spi/SQLExceptionConverter.html[`SQLExceptionConverter`]
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/JDBCException.html[`JDBCException`].
+In fact, Hibernate will attempt to convert the exception into a more meaningful subclass of `JDBCException`. The underlying `SQLException` is always available via https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/JDBCException.html#getSQLException--[`JDBCException.getSQLException()`]. Hibernate converts the `SQLException` into an appropriate JDBCException subclass using the
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/exception/spi/SQLExceptionConverter.html[`SQLExceptionConverter`]
 attached to the current `SessionFactory`.
 
 By default, the `SQLExceptionConverter` is defined by the configured Hibernate `Dialect` via the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#buildSQLExceptionConversionDelegate--[`buildSQLExceptionConversionDelegate`] method
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#buildSQLExceptionConversionDelegate--[`buildSQLExceptionConversionDelegate`] method
 which is overridden by several database-specific ``Dialect``s.
 
 The standard `JDBCException` subtypes are:
@@ -1465,8 +1465,8 @@ SQLGrammarException::
 ====
 Starting with Hibernate 5.2, the Hibernate `Session` extends the Jakarta Persistence `EntityManager`. For this reason, when a `SessionFactory` is built via Hibernate's native bootstrapping,
 the `HibernateException` or `SQLException` can be wrapped in a Jakarta Persistence {jpaJavadocUrlPrefix}PersistenceException.html[`PersistenceException`] when thrown
-by `Session` methods that implement `EntityManager` methods (e.g., https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#merge-java.lang.Object-[Session.merge(Object object)],
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#flush--[Session.flush()]).
+by `Session` methods that implement `EntityManager` methods (e.g., https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#merge-java.lang.Object-[Session.merge(Object object)],
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#flush--[Session.flush()]).
 
 If your `SessionFactory` is built via Hibernate's native bootstrapping, and you don't want the Hibernate exceptions to be wrapped in the Jakarta Persistence `PersistenceException`, you need to set the
 `hibernate.native_exception_handling_51_compliance` configuration property to `true`. See the

@@ -405,7 +405,7 @@ For details on mapping the identifier, see the <<chapters/domain/identifiers.ado
 [[entity-sql-query-mapping]]
 ==== Mapping the entity to a SQL query
 
-You can map an entity to a SQL query using the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Subselect.html[`@Subselect`] annotation.
+You can map an entity to a SQL query using the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Subselect.html[`@Subselect`] annotation.
 
 [[mapping-Subselect-example]]
 .`@Subselect` entity mapping
@@ -475,7 +475,7 @@ include::{example-dir-proxy}/ProxyInterfaceTest.java[tag=entity-proxy-interface-
 ----
 ====
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Proxy.html[`@Proxy`]
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Proxy.html[`@Proxy`]
 annotation is used to specify a custom proxy implementation for the current annotated entity.
 
 When loading the `Book` entity proxy, Hibernate is going to proxy the `Identifiable` interface instead as illustrated by the following example:
@@ -502,7 +502,7 @@ constructed without needing to fetch the actual entity POJO.
 
 When working with lazy associations or entity references for types that define and inheritance hierarchy Hibernate often creates proxies starting from the root class, with no information about the actual subtype that's referenced by the lazy instance. This can be a problem when using `instanceof` to check the type of said lazy entity references or when trying to cast to the concrete subtype.
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ConcreteProxy.html[`@ConcreteProxy`] annotation can be used on an entity hierarchy root mapping to specify that Hibernate should always try to resolve the actual subtype corresponding to the proxy instance created. This effectively means that proxies for that entity hierarchy will always be created from the correct subclass, allowing to preserve laziness and enable using type checks and casts.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ConcreteProxy.html[`@ConcreteProxy`] annotation can be used on an entity hierarchy root mapping to specify that Hibernate should always try to resolve the actual subtype corresponding to the proxy instance created. This effectively means that proxies for that entity hierarchy will always be created from the correct subclass, allowing to preserve laziness and enable using type checks and casts.
 
 [[entity-concrete-proxy-mapping]]
 .Root entity class annotated with `@ConcreteProxy`
@@ -556,11 +556,11 @@ include::{extrasdir}/entity/entity-concrete-proxy-reference.sql[]
 [[entity-persister]]
 ==== Define a custom entity persister
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Persister.html[`@Persister`] annotation is used to specify a custom entity or collection persister.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Persister.html[`@Persister`] annotation is used to specify a custom entity or collection persister.
 
-For entities, the custom persister must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/entity/EntityPersister.html[`EntityPersister`] interface.
+For entities, the custom persister must implement the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/entity/EntityPersister.html[`EntityPersister`] interface.
 
-For collections, the custom persister must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/collection/CollectionPersister.html[`CollectionPersister`] interface.
+For collections, the custom persister must implement the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/collection/CollectionPersister.html[`CollectionPersister`] interface.
 
 NOTE: Supplying a custom persister has been allowed historically, but has never been fully supported.
 Hibernate 6 provides better, alternative ways to accomplish the use cases for a custom persister.  As

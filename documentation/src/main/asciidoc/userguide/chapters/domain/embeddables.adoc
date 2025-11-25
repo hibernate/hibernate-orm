@@ -161,7 +161,7 @@ Embeddable types that are used as collection entries, map keys or entity type id
 [[embeddable-Target]]
 ==== `@Target` mapping
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Target.html[`@Target`] annotation is used to specify the implementation class of a given association that is mapped via an interface.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Target.html[`@Target`] annotation is used to specify the implementation class of a given association that is mapped via an interface.
 The
 {jpaJavadocUrlPrefix}ManyToOne.html[`@ManyToOne`],
 {jpaJavadocUrlPrefix}OneToOne.html[`@OneToOne`],

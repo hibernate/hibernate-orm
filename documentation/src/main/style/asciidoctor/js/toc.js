@@ -24,7 +24,7 @@ $(document).ready(function() {
     $('#vchooser').append('<option>Choose version</option>');
 
     for(var version in versions) {
-        var path = 'http://docs.jboss.org/hibernate/orm' + versions[version];
+        var path = 'https://docs.hibernate.org/orm' + versions[version];
         $('#vchooser').append('<option value="' + path + '" ' + '>' + version + '</option>');
     };
 

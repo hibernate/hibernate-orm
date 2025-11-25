@@ -2023,7 +2023,7 @@ include::{example-dir-resources}/mapping/converter/hbm/MoneyConverterHbmTest.hbm
 A basic type that's converted by a Jakarta Persistence `AttributeConverter` is immutable if the underlying Java type is immutable
 and is mutable if the associated attribute type is mutable as well.
 
-Therefore, mutability is given by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/type/descriptor/java/JavaType.html#getMutabilityPlan--[`JavaType#getMutabilityPlan`]
+Therefore, mutability is given by the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/type/descriptor/java/JavaType.html#getMutabilityPlan--[`JavaType#getMutabilityPlan`]
 of the associated entity attribute type.
 
 This can be adjusted by using `@Immutable` or `@Mutability` on any of:
@@ -2603,8 +2603,8 @@ include::{example-dir-generated}/temporals/GeneratedUuidTests.java[tags=mapping-
 ----
 ====
 
-See https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ValueGenerationType.html[`@ValueGenerationType`]
-and https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tuple/AnnotationValueGeneration.html[`AnnotationValueGeneration`]
+See https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ValueGenerationType.html[`@ValueGenerationType`]
+and https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/generator/tuple/AnnotationValueGeneration.html[`AnnotationBasedGenerator`]
 for details of each contract
 
 

@@ -2898,10 +2898,16 @@ public abstract class CollectionBinder {
 			return null;
 		}
 
+		// Get the class name - may be null for dynamic models (DynamicMap, DynamicModel)
+		final String className = persistentClass.getClassName();
+		if ( className == null ) {
+			return null;
+		}
+
 		// Get the ClassDetails from the models context
 		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 		final var entityClassDetails = modelsContext.getClassDetailsRegistry()
-				.resolveClassDetails( persistentClass.getClassName() );
+				.resolveClassDetails( className );
 
 		if ( entityClassDetails == null ) {
 			return null;

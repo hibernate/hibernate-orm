@@ -21,7 +21,7 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
-import org.hibernate.boot.model.source.spi.*;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.internal.FkSecondPass;
@@ -37,8 +37,8 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
+import org.hibernate.boot.model.source.spi.*;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.InFlightMetadataCollector.EntityTableXref;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -75,7 +75,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.PrimitiveArray;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Set;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
@@ -93,7 +92,6 @@ import org.hibernate.type.CustomType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.internal.BasicTypeImpl;
-import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
@@ -129,16 +127,16 @@ public class ModelBinder {
 		return new ModelBinder( context );
 	}
 
-	public ModelBinder(final MetadataBuildingContext context) {
+	public ModelBinder(MetadataBuildingContext context) {
 		this.metadataBuildingContext = context;
-
 		this.database = context.getMetadataCollector().getDatabase();
 		this.implicitNamingStrategy = context.getBuildingOptions().getImplicitNamingStrategy();
 		this.relationalObjectBinder = new RelationalObjectBinder( context );
 	}
 
 	public void bindEntityHierarchy(EntityHierarchySourceImpl hierarchySource) {
-		final var rootEntityDescriptor = new RootClass( hierarchySource.getRootEntityMappingDocument() );
+		final var rootEntityDescriptor =
+				new RootClass( hierarchySource.getRootEntityMappingDocument() );
 		bindRootEntity( hierarchySource, rootEntityDescriptor );
 		final var root = hierarchySource.getRoot();
 		root.getLocalMetadataBuildingContext().getMetadataCollector()
@@ -166,7 +164,7 @@ public class ModelBinder {
 
 		bindBasicEntityValues( mappingDocument, root, rootEntityDescriptor );
 
-		final Table primaryTable = bindEntityTableSpecification(
+		final var primaryTable = bindEntityTableSpecification(
 				mappingDocument,
 				root.getPrimaryTable(),
 				null,
@@ -209,7 +207,7 @@ public class ModelBinder {
 
 		bindAllEntityAttributes( mappingDocument, root, rootEntityDescriptor );
 
-		final Caching naturalIdCaching = hierarchySource.getNaturalIdCaching();
+		final var naturalIdCaching = hierarchySource.getNaturalIdCaching();
 		if ( naturalIdCaching != null && naturalIdCaching.isRequested() ) {
 			rootEntityDescriptor.setNaturalIdCacheRegionName( naturalIdCaching.getRegion() );
 		}
@@ -233,7 +231,7 @@ public class ModelBinder {
 	private static boolean isCacheEnabled(MappingDocument mappingDocument, Caching caching) {
 		return switch ( mappingDocument.getBuildingOptions().getSharedCacheMode() ) {
 			case UNSPECIFIED, ENABLE_SELECTIVE ->
-				// this is default behavior for hbm.xml
+				// this is the default behavior for hbm.xml
 					caching != null && caching.isRequested(false);
 			case NONE ->
 				// this option is actually really useful
@@ -278,7 +276,7 @@ public class ModelBinder {
 
 	private void bindBasicEntityValues(
 			MappingDocument sourceDocument,
-			AbstractEntitySourceImpl entitySource,
+			EntitySource entitySource,
 			PersistentClass entityDescriptor) {
 		final var entityNamingSource = entitySource.getEntityNamingSource();
 		final String entityName = entityNamingSource.getEntityName();
@@ -292,12 +290,7 @@ public class ModelBinder {
 			metadataBuildingContext.getMetadataCollector().addImport( jpaEntityName, className );
 		}
 
-		final String discriminatorMatchValue = entitySource.getDiscriminatorMatchValue();
-		entityDescriptor.setDiscriminatorValue(
-				discriminatorMatchValue == null
-						? entityDescriptor.getEntityName()
-						: discriminatorMatchValue
-		);
+		entityDescriptor.setDiscriminatorValue( discriminatorValue( entitySource ) );
 
 		setupProxying( sourceDocument, entitySource, entityDescriptor );
 
@@ -336,6 +329,13 @@ public class ModelBinder {
 		entityDescriptor.setMetaAttributes( entitySource.getToolingHintContext().getMetaAttributeMap() );
 	}
 
+	private static String discriminatorValue(EntitySource entitySource) {
+		final String discriminatorMatchValue = entitySource.getDiscriminatorMatchValue();
+		return discriminatorMatchValue == null
+				? entitySource.getEntityNamingSource().getEntityName()
+				: discriminatorMatchValue;
+	}
+
 	private static void setupImports(MappingDocument sourceDocument, String entityName) {
 		final var metadataCollector = sourceDocument.getMetadataCollector();
 		metadataCollector.addImport( entityName, entityName );
@@ -347,7 +347,7 @@ public class ModelBinder {
 
 	private static void setupProxying(
 			MappingDocument sourceDocument,
-			AbstractEntitySourceImpl entitySource,
+			EntitySource entitySource,
 			PersistentClass entityDescriptor) {
 		// NOTE: entitySource#isLazy already accounts for MappingDefaults#areEntitiesImplicitlyLazy
 		if ( isNotEmpty( entitySource.getProxy() ) ) {
@@ -412,7 +412,7 @@ public class ModelBinder {
 
 		bindBasicEntityValues( sourceDocument, entitySource, entityDescriptor );
 
-		final EntityTableXref superEntityTableXref =
+		final var superEntityTableXref =
 				superEntityTableXref( sourceDocument, entitySource, entityDescriptor, localMetadataCollector );
 
 		localMetadataCollector.addEntityTableXref(
@@ -448,7 +448,7 @@ public class ModelBinder {
 
 		bindBasicEntityValues( mappingDocument, entitySource, entityDescriptor );
 
-		final Table primaryTable = bindEntityTableSpecification(
+		final var primaryTable = bindEntityTableSpecification(
 				mappingDocument,
 				entitySource.getPrimaryTable(),
 				null,
@@ -464,7 +464,7 @@ public class ModelBinder {
 		}
 
 		// KEY
-		final DependantValue keyBinding =
+		final var keyBinding =
 				new DependantValue( mappingDocument, primaryTable, entityDescriptor.getIdentifier() );
 		if ( mappingDocument.getBuildingOptions().useNationalizedCharacterData() ) {
 			keyBinding.makeNationalized();
@@ -518,7 +518,7 @@ public class ModelBinder {
 
 		bindBasicEntityValues( mappingDocument, entitySource, entityDescriptor );
 
-		final Table primaryTable = bindEntityTableSpecification(
+		final var primaryTable = bindEntityTableSpecification(
 				mappingDocument,
 				entitySource.getPrimaryTable(),
 				entityDescriptor.getSuperclass().getTable(),
@@ -546,7 +546,7 @@ public class ModelBinder {
 
 	private void bindSimpleEntityIdentifier(
 			MappingDocument sourceDocument,
-			final EntityHierarchySourceImpl hierarchySource,
+			final EntityHierarchySource hierarchySource,
 			RootClass rootEntityDescriptor) {
 		final var idSource = (IdentifierSourceSimple) hierarchySource.getIdentifierSource();
 
@@ -572,9 +572,12 @@ public class ModelBinder {
 			idValue.setTypeUsingReflection( rootEntityDescriptor.getClassName(), propertyName );
 		}
 
+		final var identifierAttributeSource =
+				(RelationalValueSourceContainer)
+						idSource.getIdentifierAttributeSource();
 		relationalObjectBinder.bindColumnsAndFormulas(
 				sourceDocument,
-				( (RelationalValueSourceContainer) idSource.getIdentifierAttributeSource() ).getRelationalValueSources(),
+				identifierAttributeSource.getRelationalValueSources(),
 				idValue,
 				false,
 				context -> {
@@ -751,13 +754,8 @@ public class ModelBinder {
 		if ( propertyName == null ) {
 			rootEntityDescriptor.setEmbeddedIdentifier( cid.isEmbedded() );
 			if ( cid.isEmbedded() ) {
-				// todo : what is the implication of this?
+				//TODO: what is the implication of this?
 				cid.setDynamic( !rootEntityDescriptor.hasPojoRepresentation() );
-				/*
-				 * Property prop = new Property(); prop.setName("id");
-				 * prop.setPropertyAccessorName(EMBEDDED.getExternalName()); prop.setValue(id);
-				 * entity.setIdentifierProperty(prop);
-				 */
 			}
 		}
 		else {
@@ -877,7 +875,7 @@ public class ModelBinder {
 
 		// make sure we bind secondary tables first!
 		for ( var secondaryTableSource : entitySource.getSecondaryTableMap().values() ) {
-			final Join secondaryTableJoin = new Join();
+			final var secondaryTableJoin = new Join();
 			secondaryTableJoin.setPersistentClass( entityDescriptor );
 			bindSecondaryTable( mappingDocument, secondaryTableSource, secondaryTableJoin, entityTableXref );
 			entityDescriptor.addJoin( secondaryTableJoin );
@@ -896,9 +894,9 @@ public class ModelBinder {
 				if ( attributeSource instanceof SingularAttributeSourceBasic basicAttributeSource ) {
 					final Identifier tableName =
 							determineTable( mappingDocument, basicAttributeSource.getName(), basicAttributeSource );
+					final var secondaryTableJoin = entityTableXref.locateJoin( tableName );
 					final AttributeContainer attributeContainer;
 					final Table table;
-					final Join secondaryTableJoin = entityTableXref.locateJoin( tableName );
 					if ( secondaryTableJoin == null ) {
 						table = entityDescriptor.getTable();
 						attributeContainer = entityDescriptor;
@@ -915,18 +913,14 @@ public class ModelBinder {
 							entityDescriptor.getClassName()
 					);
 
-					attribute.setOptional( isOptional( secondaryTableJoin, attribute ) );
-
-					attributeContainer.addProperty( attribute );
-
-					handleNaturalIdBinding( mappingDocument, entityDescriptor, attribute,
-							basicAttributeSource.getNaturalIdMutability() );
+					handleAttribute( attribute, secondaryTableJoin, attributeContainer, mappingDocument, entityDescriptor,
+							basicAttributeSource );
 				}
 				else if ( attributeSource instanceof SingularAttributeSourceEmbedded embeddedAttributeSource ) {
 					final Identifier tableName = determineTable( mappingDocument, embeddedAttributeSource );
+					final var secondaryTableJoin = entityTableXref.locateJoin( tableName );
 					final AttributeContainer attributeContainer;
 					final Table table;
-					final Join secondaryTableJoin = entityTableXref.locateJoin( tableName );
 					if ( secondaryTableJoin == null ) {
 						table = entityDescriptor.getTable();
 						attributeContainer = entityDescriptor;
@@ -943,19 +937,21 @@ public class ModelBinder {
 							entityDescriptor.getClassName()
 					);
 
-					attribute.setOptional( isOptional( secondaryTableJoin, attribute ) );
-
-					attributeContainer.addProperty( attribute );
-
-					handleNaturalIdBinding( mappingDocument, entityDescriptor, attribute,
-							embeddedAttributeSource.getNaturalIdMutability() );
+					handleAttribute(
+							attribute,
+							secondaryTableJoin,
+							attributeContainer,
+							mappingDocument,
+							entityDescriptor,
+							embeddedAttributeSource
+					);
 				}
 				else if ( attributeSource instanceof SingularAttributeSourceManyToOne manyToOneAttributeSource ) {
 					final Identifier tableName =
 							determineTable( mappingDocument, manyToOneAttributeSource.getName(), manyToOneAttributeSource );
+					final var secondaryTableJoin = entityTableXref.locateJoin( tableName );
 					final AttributeContainer attributeContainer;
 					final Table table;
-					final Join secondaryTableJoin = entityTableXref.locateJoin( tableName );
 					if ( secondaryTableJoin == null ) {
 						table = entityDescriptor.getTable();
 						attributeContainer = entityDescriptor;
@@ -972,15 +968,17 @@ public class ModelBinder {
 							entityDescriptor.getClassName()
 					);
 
-					attribute.setOptional( isOptional( secondaryTableJoin, attribute ) );
-
-					attributeContainer.addProperty( attribute );
-
-					handleNaturalIdBinding( mappingDocument, entityDescriptor, attribute,
-							manyToOneAttributeSource.getNaturalIdMutability() );
+					handleAttribute(
+							attribute,
+							secondaryTableJoin,
+							attributeContainer,
+							mappingDocument,
+							entityDescriptor,
+							manyToOneAttributeSource
+					);
 				}
 				else if ( attributeSource instanceof SingularAttributeSourceOneToOne oneToOneAttributeSource ) {
-					final Table table = entityDescriptor.getTable();
+					final var table = entityDescriptor.getTable();
 					final var attribute = createOneToOneAttribute(
 							mappingDocument,
 							oneToOneAttributeSource,
@@ -1001,9 +999,9 @@ public class ModelBinder {
 							anyAttributeSource.getName(),
 							anyAttributeSource.getKeySource().getRelationalValueSources()
 					);
+					final var secondaryTableJoin = entityTableXref.locateJoin( tableName );
 					final AttributeContainer attributeContainer;
 					final Table table;
-					final Join secondaryTableJoin = entityTableXref.locateJoin( tableName );
 					if ( secondaryTableJoin == null ) {
 						table = entityDescriptor.getTable();
 						attributeContainer = entityDescriptor;
@@ -1020,15 +1018,30 @@ public class ModelBinder {
 							entityDescriptor.getEntityName()
 					);
 
-					attribute.setOptional( isOptional( secondaryTableJoin, attribute ) );
-
-					attributeContainer.addProperty( attribute );
-
-					handleNaturalIdBinding( mappingDocument, entityDescriptor, attribute,
-							anyAttributeSource.getNaturalIdMutability() );
+					handleAttribute(
+							attribute,
+							secondaryTableJoin,
+							attributeContainer,
+							mappingDocument,
+							entityDescriptor,
+							anyAttributeSource
+					);
 				}
 			}
 		}
+	}
+
+	private void handleAttribute(
+			Property attribute,
+			Join secondaryTableJoin,
+			AttributeContainer attributeContainer,
+			MappingDocument mappingDocument,
+			PersistentClass entityDescriptor,
+			SingularAttributeSource attributeSource) {
+		attribute.setOptional( isOptional( secondaryTableJoin, attribute ) );
+		attributeContainer.addProperty( attribute );
+		handleNaturalIdBinding( mappingDocument, entityDescriptor, attribute,
+				attributeSource.getNaturalIdMutability() );
 	}
 
 	private static boolean isOptional(Join secondaryTableJoin, Property attribute) {
@@ -1050,7 +1063,7 @@ public class ModelBinder {
 
 			final var metadataCollector = mappingDocument.getMetadataCollector();
 			final String entityName = entityBinding.getEntityName();
-			NaturalIdUniqueKeyBinder ukBinder = metadataCollector.locateNaturalIdUniqueKeyBinder( entityName );
+			var ukBinder = metadataCollector.locateNaturalIdUniqueKeyBinder( entityName );
 			if ( ukBinder == null ) {
 				ukBinder = new NaturalIdUniqueKeyBinderImpl( mappingDocument, entityBinding );
 				metadataCollector.registerNaturalIdUniqueKeyBinder( entityName, ukBinder );
@@ -1141,7 +1154,7 @@ public class ModelBinder {
 		}
 		else {
 			throw new AssertionFailure(
-					"Unexpected PluralAttributeSource type : " + attributeSource.getClass().getName()
+					"Unexpected PluralAttributeSource type: " + attributeSource.getClass().getName()
 			);
 		}
 
@@ -1184,7 +1197,7 @@ public class ModelBinder {
 				}
 			}
 			else {
-				// it could be a unqualified class name, in which case we should qualify
+				// it could be an unqualified class name, in which case we should qualify
 				// it with the implicit package name for this context, if one.
 				typeName = mappingDocument.qualifyClassName( typeName );
 			}
@@ -1216,8 +1229,9 @@ public class ModelBinder {
 		if ( source instanceof Sortable sortable ) {
 			if ( sortable.isSorted() ) {
 				binding.setSorted( true );
-				if ( ! sortable.getComparatorName().equals( "natural" ) ) {
-					binding.setComparatorClassName( sortable.getComparatorName() );
+				final String comparatorName = sortable.getComparatorName();
+				if ( !comparatorName.equals( "natural" ) ) {
+					binding.setComparatorClassName( comparatorName );
 				}
 			}
 			else {
@@ -1236,7 +1250,7 @@ public class ModelBinder {
 			binding.setOrphanDelete( true );
 		}
 
-		for ( FilterSource filterSource : source.getFilterSources() ) {
+		for ( var filterSource : source.getFilterSources() ) {
 			binding.addFilter(
 					filterSource.getName(),
 					filterCondition( filterSource, mappingDocument ),
@@ -1360,7 +1374,6 @@ public class ModelBinder {
 				tableName = determinedName;
 			}
 		}
-
 		return tableName;
 	}
 
@@ -1385,11 +1398,9 @@ public class ModelBinder {
 							mappingDocument.getOrigin()
 					);
 				}
-
 				tableName = relationalValueSource.getContainingTableName();
 			}
 		}
-
 		return database.toIdentifier( tableName );
 	}
 
@@ -1400,37 +1411,33 @@ public class ModelBinder {
 			final EntityTableXref entityTableXref) {
 		final var persistentClass = secondaryTableJoin.getPersistentClass();
 
-		final Identifier catalogName = determineCatalogName( secondaryTableSource.getTableSource() );
-		final Identifier schemaName = determineSchemaName( secondaryTableSource.getTableSource() );
-		final var namespace = database.locateNamespace( catalogName, schemaName );
+		final var tableSpecificationSource = secondaryTableSource.getTableSource();
+		final var namespace = locateTableNamespace( tableSpecificationSource );
 
 		Table secondaryTable;
 		final Identifier logicalTableName;
-
-		if ( secondaryTableSource.getTableSource() instanceof TableSource tableSource ) {
+		if ( tableSpecificationSource instanceof TableSource tableSource ) {
 			logicalTableName = database.toIdentifier( tableSource.getExplicitTableName() );
 			secondaryTable = namespace.locateTable( logicalTableName );
 			if ( secondaryTable == null ) {
-				secondaryTable = namespace.createTable(
-						logicalTableName,
-						identifier -> new Table( mappingDocument.getCurrentContributorName(), namespace, identifier, false )
-				);
+				secondaryTable =
+						namespace.createTable( logicalTableName,
+								identifier -> new Table( mappingDocument.getCurrentContributorName(), namespace, identifier, false ) );
 			}
 			else {
 				secondaryTable.setAbstract( false );
 			}
-
 			secondaryTable.setComment( tableSource.getComment() );
 		}
 		else {
-			final InLineViewSource inLineViewSource = (InLineViewSource) secondaryTableSource.getTableSource();
+			final var inLineViewSource = (InLineViewSource) tableSpecificationSource;
+			logicalTableName = toIdentifier( inLineViewSource.getLogicalName() );
 			secondaryTable = new Table(
 					metadataBuildingContext.getCurrentContributorName(),
 					namespace,
 					inLineViewSource.getSelectStatement(),
 					false
 			);
-			logicalTableName = toIdentifier( inLineViewSource.getLogicalName() );
 		}
 
 		secondaryTableJoin.setTable( secondaryTable );
@@ -1457,7 +1464,7 @@ public class ModelBinder {
 
 		keyBinding.setOnDeleteAction( getOnDeleteAction( secondaryTableSource.isCascadeDeleteEnabled() ) );
 
-		// NOTE : no Type info to bind...
+		// NOTE: no Type info to bind...
 
 		relationalObjectBinder.bindColumns(
 				mappingDocument,
@@ -1483,19 +1490,13 @@ public class ModelBinder {
 			secondaryTableJoin.createForeignKey();
 		}
 	}
-//
-//	private List<ColumnSource> sortColumns(List<ColumnSource> primaryKeyColumnSources, KeyValue identifier) {
-//		if ( primaryKeyColumnSources.size() == 1 || !identifier.getType().isComponentType() ) {
-//			return primaryKeyColumnSources;
-//		}
-//		final ComponentType componentType = (ComponentType) identifier.getType();
-//		final List<ColumnSource> sortedColumnSource = new ArrayList<>( primaryKeyColumnSources.size() );
-//		final int[] originalPropertyOrder = componentType.getOriginalPropertyOrder();
-//		for ( int originalIndex : originalPropertyOrder ) {
-//			sortedColumnSource.add( primaryKeyColumnSources.get( originalIndex ) );
-//		}
-//		return sortedColumnSource;
-//	}
+
+	private Namespace locateTableNamespace(TableSpecificationSource tableSpecificationSource) {
+		return database.locateNamespace(
+				determineCatalogName( tableSpecificationSource ),
+				determineSchemaName( tableSpecificationSource )
+		);
+	}
 
 	private Property createEmbeddedAttribute(
 			MappingDocument sourceDocument,
@@ -1537,7 +1538,6 @@ public class ModelBinder {
 			final SingularAttributeSourceBasic attributeSource,
 			SimpleValue value,
 			String containingClassName) {
-		final String attributeName = attributeSource.getName();
 
 		bindSimpleValueType( sourceDocument, attributeSource.getTypeInformation(), value );
 
@@ -1554,30 +1554,11 @@ public class ModelBinder {
 				sourceDocument,
 				value,
 				containingClassName,
-				attributeName,
+				attributeSource.getName(),
 				attributeSource.getAttributeRole()
 		);
 
-		resolveLob( attributeSource, value );
-
-//		// this is done here 'cos we might only know the type here (ugly!)
-//		// TODO: improve this a lot:
-//		if ( value instanceof ToOne ) {
-//			ToOne toOne = (ToOne) value;
-//			String propertyRef = toOne.getReferencedEntityAttributeName();
-//			if ( propertyRef != null ) {
-//				mappings.addUniquePropertyReference( toOne.getReferencedEntityName(), propertyRef );
-//			}
-//			toOne.setCascadeDeleteEnabled( "cascade".equals( subnode.attributeValue( "on-delete" ) ) );
-//		}
-//		else if ( value instanceof Collection ) {
-//			Collection coll = (Collection) value;
-//			String propertyRef = coll.getReferencedEntityAttributeName();
-//			// not necessarily a *unique* property reference
-//			if ( propertyRef != null ) {
-//				mappings.addPropertyReference( coll.getOwnerEntityName(), propertyRef );
-//			}
-//		}
+		markAsLobIfNecessary( attributeSource, value );
 
 		value.createForeignKey();
 
@@ -1588,28 +1569,21 @@ public class ModelBinder {
 		return property;
 	}
 
-	private void resolveLob(final SingularAttributeSourceBasic attributeSource, SimpleValue value) {
-		// Resolves whether the property is LOB based on the type attribute on the attribute property source.
-		// Essentially, this expects the type to map to a CLOB/NCLOB/BLOB SQL type internally and compares.
-		if ( !value.isLob() && value.getTypeName() != null ) {
+	private void markAsLobIfNecessary(SingularAttributeSourceBasic attributeSource, SimpleValue value) {
+		if ( !value.isLob() ) {
+			// Determine whether the property is a LOB based on the type attribute on the attribute
+			// property source. Expects the type to map to a CLOB, NCLOB, or BLOB SQL type internally.
 			final String typeName = value.getTypeName();
-			final var context = attributeSource.getBuildingContext();
-			final var basicType =
-					typeName.startsWith( BasicTypeImpl.EXTERNALIZED_PREFIX )
-							? context.getBootstrapContext().resolveAdHocBasicType( typeName )
-							: context.getMetadataCollector().getTypeConfiguration()
-									.getBasicTypeRegistry().getRegisteredType( typeName );
-
-			if ( basicType instanceof AbstractSingleColumnStandardBasicType ) {
-				if ( isLob( basicType.getJdbcType().getDdlTypeCode(), null ) ) {
+			if ( typeName != null ) {
+				final var basicType = getBasicType( attributeSource, typeName );
+				if ( basicType instanceof AbstractSingleColumnStandardBasicType
+						&& isLob( basicType.getJdbcType().getDdlTypeCode(), null ) ) {
 					value.makeLob();
+					return; // EARLY EXIT!
 				}
 			}
-		}
-
-		// If the prior check didn't set the lob flag, this will inspect the column sql-type attribute value and
-		// if this maps to CLOB/NCLOB/BLOB then the value will be marked as lob.
-		if ( !value.isLob() ) {
+			// If the prior check didn't set the LOB flag, inspect the column SQL type,
+			// and if it is a CLOB, NCLOB, or BLOB, then mark the value as a LOB
 			for ( var relationalValueSource : attributeSource.getRelationalValueSources() ) {
 				if ( relationalValueSource instanceof ColumnSource columnSource ) {
 					if ( isLob( null, columnSource.getSqlType() ) ) {
@@ -1618,6 +1592,14 @@ public class ModelBinder {
 				}
 			}
 		}
+	}
+
+	private static BasicType<?> getBasicType(SingularAttributeSourceBasic attributeSource, String typeName) {
+		final var context = attributeSource.getBuildingContext();
+		return typeName.startsWith( BasicTypeImpl.EXTERNALIZED_PREFIX )
+				? context.getBootstrapContext().resolveAdHocBasicType( typeName )
+				: context.getMetadataCollector().getTypeConfiguration()
+						.getBasicTypeRegistry().getRegisteredType( typeName );
 	}
 
 	private static boolean isLob(Integer sqlType, String sqlTypeName) {
@@ -1661,9 +1643,12 @@ public class ModelBinder {
 			);
 		}
 
-		// Defer the creation of the foreign key as we need the associated entity persister to be initialized
-		// so that we can observe the properties/columns of a possible component in the correct order
-		metadataBuildingContext.getMetadataCollector().addSecondPass( new OneToOneFkSecondPass( oneToOneBinding ) );
+		// Defer the creation of the foreign key as we need the
+		// associated entity persister to be initialized so that
+		// we can observe the properties/columns of a possible
+		// component in the correct order
+		metadataBuildingContext.getMetadataCollector()
+				.addSecondPass( new OneToOneFkSecondPass( oneToOneBinding ) );
 
 		final var property = new Property();
 		property.setValue( oneToOneBinding );
@@ -1746,8 +1731,8 @@ public class ModelBinder {
 
 
 		if ( oneToOneSource.isConstrained() ) {
-			if ( oneToOneSource.getCascadeStyleName() != null
-					&& oneToOneSource.getCascadeStyleName().contains( "delete-orphan" ) ) {
+			final String cascadeStyleName = oneToOneSource.getCascadeStyleName();
+			if ( cascadeStyleName != null && cascadeStyleName.contains( "delete-orphan" ) ) {
 				throw new MappingException(
 						String.format(
 								Locale.ENGLISH,
@@ -1978,43 +1963,77 @@ public class ModelBinder {
 
 	private void bindAny(
 			MappingDocument sourceDocument,
-			final AnyMappingSource anyMapping,
+			AnyMappingSource anyMapping,
 			Any anyBinding,
-			final AttributeRole attributeRole) {
+			AttributeRole attributeRole) {
 
 		anyBinding.setLazy( anyMapping.isLazy() );
 
 		final var keyTypeResolution =
-				resolveType( sourceDocument, anyMapping.getKeySource().getTypeSource() );
+				resolveType( sourceDocument,
+						anyMapping.getKeySource().getTypeSource() );
 		if ( keyTypeResolution != null ) {
 			anyBinding.setIdentifierType( keyTypeResolution.typeName );
 		}
 
-		final var discriminatorTypeResolution =
-				resolveType( sourceDocument, anyMapping.getDiscriminatorSource().getTypeSource() );
+		final var discriminatorSource = anyMapping.getDiscriminatorSource();
 
-		final String discriminatorTypeName;
-		final BasicType<?> discriminatorType;
-		if ( discriminatorTypeResolution != null && discriminatorTypeResolution.typeName != null ) {
-			discriminatorTypeName = discriminatorTypeResolution.typeName;
-			discriminatorType = resolveExplicitlyNamedAnyDiscriminatorType(
+		final var discriminatorTypeResolution =
+				resolveType( sourceDocument, discriminatorSource.getTypeSource() );
+		anyBinding.setMetaType( discriminatorTypeName( discriminatorTypeResolution ) );
+		anyBinding.setMetaValues( discriminatorValueToEntityNameMap( sourceDocument, anyMapping, attributeRole,
+				anyDiscriminatorType( anyBinding, discriminatorTypeResolution ) ) );
+
+		relationalObjectBinder.bindColumnOrFormula(
+				sourceDocument,
+				discriminatorSource.getRelationalValueSource(),
+				anyBinding.getMetaMapping(),
+				true,
+				context -> implicitNamingStrategy.determineAnyDiscriminatorColumnName(
+						discriminatorSource
+				)
+		);
+
+		relationalObjectBinder.bindColumnsAndFormulas(
+				sourceDocument,
+				anyMapping.getKeySource().getRelationalValueSources(),
+				anyBinding.getKeyMapping(),
+				true,
+				context -> implicitNamingStrategy.determineAnyKeyColumnName(
+						anyMapping.getKeySource()
+				)
+		);
+	}
+
+	private static String discriminatorTypeName(TypeResolution discriminatorTypeResolution) {
+		return discriminatorTypeResolution != null
+			&& discriminatorTypeResolution.typeName != null
+				? discriminatorTypeResolution.typeName
+				: StandardBasicTypes.STRING.getName();
+	}
+
+	private BasicType<?> anyDiscriminatorType(Any anyBinding, TypeResolution discriminatorTypeResolution) {
+		if ( discriminatorTypeResolution != null
+				&& discriminatorTypeResolution.typeName != null ) {
+			return resolveExplicitlyNamedAnyDiscriminatorType(
 					discriminatorTypeResolution.typeName,
 					discriminatorTypeResolution.parameters,
 					anyBinding.getMetaMapping()
 			);
 		}
 		else {
-			discriminatorTypeName = StandardBasicTypes.STRING.getName();
-			discriminatorType =
-					metadataBuildingContext.getBootstrapContext()
-							.getTypeConfiguration().getBasicTypeRegistry()
-							.resolve( StandardBasicTypes.STRING );
+			return metadataBuildingContext.getBootstrapContext()
+					.getTypeConfiguration().getBasicTypeRegistry()
+					.resolve( StandardBasicTypes.STRING );
 		}
+	}
 
-		anyBinding.setMetaType( discriminatorTypeName );
-
+	private static HashMap<Object, String> discriminatorValueToEntityNameMap(
+			MappingDocument sourceDocument,
+			AnyMappingSource anyMapping,
+			AttributeRole attributeRole,
+			BasicType<?> discriminatorType) {
 		final HashMap<Object,String> discriminatorValueToEntityNameMap = new HashMap<>();
-
 		anyMapping.getDiscriminatorSource().getValueMappings().forEach(
 				(discriminatorValueString, entityName) -> {
 					try {
@@ -2038,40 +2057,21 @@ public class ModelBinder {
 					}
 				}
 		);
-		anyBinding.setMetaValues( discriminatorValueToEntityNameMap );
-
-		relationalObjectBinder.bindColumnOrFormula(
-				sourceDocument,
-				anyMapping.getDiscriminatorSource().getRelationalValueSource(),
-				anyBinding.getMetaMapping(),
-				true,
-				context -> implicitNamingStrategy.determineAnyDiscriminatorColumnName(
-						anyMapping.getDiscriminatorSource()
-				)
-		);
-
-		relationalObjectBinder.bindColumnsAndFormulas(
-				sourceDocument,
-				anyMapping.getKeySource().getRelationalValueSources(),
-				anyBinding.getKeyMapping(),
-				true,
-				context -> implicitNamingStrategy.determineAnyKeyColumnName(
-						anyMapping.getKeySource()
-				)
-		);
+		return discriminatorValueToEntityNameMap;
 	}
 
 	private BasicType<?> resolveExplicitlyNamedAnyDiscriminatorType(
 			String typeName,
 			Map<String,String> parameters,
 			Any.MetaValue discriminatorMapping) {
-		final BootstrapContext bootstrapContext = metadataBuildingContext.getBootstrapContext();
-		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
+		final var bootstrapContext = metadataBuildingContext.getBootstrapContext();
+		final var typeConfiguration = bootstrapContext.getTypeConfiguration();
 
 		if ( isEmpty( parameters ) ) {
 			// can use a standard one
-			final BasicType<?> basicTypeByName =
-					typeConfiguration.getBasicTypeRegistry().getRegisteredType( typeName );
+			final var basicTypeByName =
+					typeConfiguration.getBasicTypeRegistry()
+							.getRegisteredType( typeName );
 			if ( basicTypeByName != null ) {
 				return basicTypeByName;
 			}
@@ -2079,7 +2079,8 @@ public class ModelBinder {
 
 		// see if it is a named TypeDefinition
 		final var typeDefinition =
-				metadataBuildingContext.getTypeDefinitionRegistry().resolve( typeName );
+				metadataBuildingContext.getTypeDefinitionRegistry()
+						.resolve( typeName );
 		if ( typeDefinition != null ) {
 			final var resolution =
 					typeDefinition.resolve( parameters, metadataBuildingContext,
@@ -2087,27 +2088,23 @@ public class ModelBinder {
 			if ( resolution.getCombinedTypeParameters() != null ) {
 				discriminatorMapping.setTypeParameters( resolution.getCombinedTypeParameters() );
 			}
-
 			return resolution.getLegacyResolvedBasicType();
 		}
 		else {
 			final var classLoaderService = bootstrapContext.getClassLoaderService();
 			try {
-				final Object typeInstance = typeInstance( typeName, classLoaderService.classForName( typeName ) );
-
-				if ( typeInstance instanceof ParameterizedType parameterizedType ) {
-					if ( parameters != null ) {
-						final Properties properties = new Properties();
-						properties.putAll( parameters );
-						parameterizedType.setParameterValues( properties );
-					}
+				final Object typeInstance =
+						typeInstance( typeName,
+								classLoaderService.classForName( typeName ) );
+				if ( typeInstance instanceof ParameterizedType parameterizedType
+						&& parameters != null ) {
+					final var properties = new Properties();
+					properties.putAll( parameters );
+					parameterizedType.setParameterValues( properties );
 				}
-
-				if ( typeInstance instanceof UserType<?> userType ) {
-					return new CustomType<>( userType, typeConfiguration);
-				}
-
-				return (BasicType<?>) typeInstance;
+				return typeInstance instanceof UserType<?> userType
+						? new CustomType<>( userType, typeConfiguration )
+						: (BasicType<?>) typeInstance;
 			}
 			catch (ClassLoadingException e) {
 				BOOT_LOGGER.unableToLoadExplicitAnyDiscriminatorType( typeName );
@@ -2177,18 +2174,16 @@ public class ModelBinder {
 			Property property) {
 		property.setName( propertySource.getName() );
 
-		property.setPropertyAccessorName(
-				isNotEmpty( propertySource.getPropertyAccessorName() )
-						? propertySource.getPropertyAccessorName()
-						: mappingDocument.getEffectiveDefaults().getDefaultAccessStrategyName()
-		);
+		final String propertyAccessorName = propertySource.getPropertyAccessorName();
+		property.setPropertyAccessorName( isNotEmpty( propertyAccessorName )
+				? propertyAccessorName
+				: mappingDocument.getEffectiveDefaults().getDefaultAccessStrategyName() );
 
 		if ( propertySource instanceof CascadeStyleSource cascadeStyleSource ) {
-			property.setCascade(
-					isNotEmpty( cascadeStyleSource.getCascadeStyleName() )
-							? cascadeStyleSource.getCascadeStyleName()
-							: toCascadeString( mappingDocument.getEffectiveDefaults().getDefaultCascadeTypes() )
-			);
+			final String cascadeStyleName = cascadeStyleSource.getCascadeStyleName();
+			property.setCascade( isNotEmpty( cascadeStyleName )
+					? cascadeStyleName
+					: toCascadeString( mappingDocument.getEffectiveDefaults().getDefaultCascadeTypes() ) );
 		}
 
 		property.setOptimisticLocked( propertySource.isIncludedInOptimisticLocking() );
@@ -2197,7 +2192,7 @@ public class ModelBinder {
 			final var singularAttributeSource = (SingularAttributeSource) propertySource;
 			property.setInsertable( singularAttributeSource.isInsertable() );
 			property.setUpdatable( singularAttributeSource.isUpdatable() );
-			// NOTE: Property#is refers to whether a property is lazy via bytecode enhancement (not proxies)
+			// isBytecodeLazy() refers to whether a property is lazy via bytecode enhancement (not proxies)
 			property.setLazy( singularAttributeSource.isBytecodeLazy() );
 			handleGenerationTiming( mappingDocument, propertySource, property, singularAttributeSource.getGenerationTiming() );
 		}
@@ -2310,88 +2305,117 @@ public class ModelBinder {
 			boolean isDynamic) {
 
 		componentBinding.setMetaAttributes( embeddableSource.getToolingHintContext().getMetaAttributeMap() );
-
 		componentBinding.setRoleName( role );
-
 		componentBinding.setEmbedded( isComponentEmbedded );
 
 		// todo : better define the conditions in this if/else
 		if ( isDynamic ) {
-			// dynamic is represented as a Map
-			BOOT_LOGGER.bindingDynamicComponent( role );
-			componentBinding.setDynamic( true );
+			bindDynamic( role, componentBinding );
 		}
 		else if ( isVirtual ) {
-			// virtual (what used to be called embedded) is just a conceptual composition...
-			// <properties/> for example
-			if ( componentBinding.getOwner().hasPojoRepresentation() ) {
-				BOOT_LOGGER.bindingVirtualComponentToOwner( role, componentBinding.getOwner().getClassName() );
-				componentBinding.setComponentClassName( componentBinding.getOwner().getClassName() );
-			}
-			else {
-				BOOT_LOGGER.bindingVirtualComponentAsDynamic( role );
-				componentBinding.setDynamic( true );
-			}
+			bindVirtual( role, componentBinding );
 		}
 		else {
-			BOOT_LOGGER.bindingComponent( role );
-			if ( isNotEmpty( explicitComponentClassName ) ) {
-				try {
-					final Class<?> componentClass =
-							sourceDocument.getBootstrapContext().getClassLoaderAccess()
-								.classForName( explicitComponentClassName );
-					if ( CompositeUserType.class.isAssignableFrom( componentClass ) ) {
-						@SuppressWarnings("unchecked") // Safe, we just chacked
-						final var compositeTypeClass =
-								(Class<? extends CompositeUserType<?>>)
-										componentClass;
-						componentBinding.setTypeName( explicitComponentClassName );
-						explicitComponentClassName =
-								compositeUserType( sourceDocument, compositeTypeClass )
-										.embeddable().getName();
-					}
-				}
-				catch (ClassLoadingException ex) {
-					BOOT_LOGGER.couldLoadComponentClass( explicitComponentClassName, ex );
-				}
-				BOOT_LOGGER.bindingComponentToExplicitClass( role, explicitComponentClassName );
-				componentBinding.setComponentClassName( explicitComponentClassName );
-			}
-			else if ( componentBinding.getOwner().hasPojoRepresentation() ) {
-				BOOT_LOGGER.attemptingToDetermineComponentClassByReflection( role );
-				final var reflectedComponentClass =
-						isNotEmpty( containingClassName ) && isNotEmpty( propertyName )
-								? reflectedPropertyClass( sourceDocument, containingClassName, propertyName )
-								: null;
-				if ( reflectedComponentClass == null ) {
-					BOOT_LOGGER.unableToDetermineComponentClassByReflection( role );
-				}
-				else {
-					componentBinding.setComponentClassName( reflectedComponentClass.getName() );
-				}
-			}
-			else {
-				componentBinding.setDynamic( true );
-			}
+			bindComponent(
+					sourceDocument,
+					role,
+					componentBinding,
+					explicitComponentClassName,
+					containingClassName,
+					propertyName
+			);
 		}
 
 		// todo : anything else to pass along?
 		bindAllCompositeAttributes( sourceDocument, embeddableSource, componentBinding );
 
-		final String parentReferenceAttributeName = embeddableSource.getParentReferenceAttributeName();
+		final String parentReferenceAttributeName =
+				embeddableSource.getParentReferenceAttributeName();
 		if ( parentReferenceAttributeName != null ) {
 			componentBinding.setParentProperty( parentReferenceAttributeName );
 		}
 
 		if ( embeddableSource.isUnique() ) {
-			final ArrayList<Column> cols = new ArrayList<>();
-			for ( var selectable: componentBinding.getSelectables() ) {
-				if ( selectable instanceof Column column ) {
-					cols.add( column );
+			createUniqueKeyForEmbeddable( componentBinding );
+		}
+	}
+
+	private void createUniqueKeyForEmbeddable(Component componentBinding) {
+		final ArrayList<Column> columns = new ArrayList<>();
+		for ( var selectable: componentBinding.getSelectables() ) {
+			if ( selectable instanceof Column column ) {
+				columns.add( column );
+			}
+		}
+		//TODO: we may need to delay this
+		componentBinding.getOwner().getTable()
+				.createUniqueKey( columns, metadataBuildingContext );
+	}
+
+	private static void bindDynamic(String role, Component componentBinding) {
+		// dynamic is represented as a Map
+		BOOT_LOGGER.bindingDynamicComponent( role );
+		componentBinding.setDynamic( true );
+	}
+
+	private static void bindVirtual(String role, Component componentBinding) {
+		// virtual (what used to be called embedded) is just a conceptual composition...
+		// <properties/> for example
+		if ( componentBinding.getOwner().hasPojoRepresentation() ) {
+			BOOT_LOGGER.bindingVirtualComponentToOwner( role, componentBinding.getOwner().getClassName() );
+			componentBinding.setComponentClassName( componentBinding.getOwner().getClassName() );
+		}
+		else {
+			BOOT_LOGGER.bindingVirtualComponentAsDynamic( role );
+			componentBinding.setDynamic( true );
+		}
+	}
+
+	private static void bindComponent(
+			MappingDocument sourceDocument,
+			String role,
+			Component componentBinding,
+			String explicitComponentClassName,
+			String containingClassName,
+			String propertyName) {
+		BOOT_LOGGER.bindingComponent( role );
+		if ( isNotEmpty( explicitComponentClassName ) ) {
+			try {
+				final Class<?> componentClass =
+						sourceDocument.getBootstrapContext().getClassLoaderAccess()
+							.classForName( explicitComponentClassName );
+				if ( CompositeUserType.class.isAssignableFrom( componentClass ) ) {
+					@SuppressWarnings("unchecked") // Safe, we just checked
+					final var compositeTypeClass =
+							(Class<? extends CompositeUserType<?>>)
+									componentClass;
+					componentBinding.setTypeName( explicitComponentClassName );
+					explicitComponentClassName =
+							compositeUserType( sourceDocument, compositeTypeClass )
+									.embeddable().getName();
 				}
 			}
-			// todo : we may need to delay this
-			componentBinding.getOwner().getTable().createUniqueKey( cols, metadataBuildingContext );
+			catch (ClassLoadingException ex) {
+				BOOT_LOGGER.couldLoadComponentClass( explicitComponentClassName, ex );
+			}
+			BOOT_LOGGER.bindingComponentToExplicitClass( role, explicitComponentClassName );
+			componentBinding.setComponentClassName( explicitComponentClassName );
+		}
+		else if ( componentBinding.getOwner().hasPojoRepresentation() ) {
+			BOOT_LOGGER.attemptingToDetermineComponentClassByReflection( role );
+			final var reflectedComponentClass =
+					isNotEmpty( containingClassName ) && isNotEmpty( propertyName )
+							? reflectedPropertyClass( sourceDocument, containingClassName, propertyName )
+							: null;
+			if ( reflectedComponentClass == null ) {
+				BOOT_LOGGER.unableToDetermineComponentClassByReflection( role );
+			}
+			else {
+				componentBinding.setComponentClassName( reflectedComponentClass.getName() );
+			}
+		}
+		else {
+			componentBinding.setDynamic( true );
 		}
 	}
 
@@ -2548,81 +2572,32 @@ public class ModelBinder {
 			Table denormalizedSuperTable,
 			final EntitySource entitySource,
 			PersistentClass entityDescriptor) {
-		final var namespace = database.locateNamespace(
-				determineCatalogName( tableSpecSource ),
-				determineSchemaName( tableSpecSource )
-		);
-
 		final String contributorName = mappingDocument.getCurrentContributorName();
 		final boolean isTable = tableSpecSource instanceof TableSource;
 		final boolean isAbstract = entityDescriptor.isAbstract() != null && entityDescriptor.isAbstract();
-		final String subselect;
 		final Identifier logicalTableName;
 		final Table table;
 		if ( isTable ) {
 			final var tableSource = (TableSource) tableSpecSource;
-
-			if ( isNotEmpty( tableSource.getExplicitTableName() ) ) {
-				logicalTableName = database.toIdentifier( tableSource.getExplicitTableName() );
-			}
-			else {
-				final ImplicitEntityNameSource implicitNamingSource = new ImplicitEntityNameSource() {
-					@Override
-					public EntityNaming getEntityNaming() {
-						return entitySource.getEntityNamingSource();
-					}
-
-					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return mappingDocument;
-					}
-				};
-				logicalTableName =
-						mappingDocument.getBuildingOptions().getImplicitNamingStrategy()
-								.determinePrimaryTableName( implicitNamingSource );
-			}
-
-			if ( denormalizedSuperTable == null ) {
-				table = namespace.createTable(
-						logicalTableName,
-						(identifier) -> new Table(
-								contributorName,
-								namespace,
-								identifier,
-								isAbstract
-						)
-				);
-			}
-			else {
-				table = namespace.createDenormalizedTable(
-						logicalTableName,
-						(physicalTableName) -> new DenormalizedTable(
-								contributorName,
-								namespace,
-								physicalTableName,
-								isAbstract,
-								denormalizedSuperTable
-						)
-				);
-			}
+			logicalTableName = logicalTableName( mappingDocument, entitySource, tableSource );
+			table = tableForEntity(
+					tableSource,
+					denormalizedSuperTable,
+					logicalTableName,
+					contributorName,
+					isAbstract
+			);
 		}
 		else {
-			final var inLineViewSource = (InLineViewSource) tableSpecSource;
-			subselect = inLineViewSource.getSelectStatement();
-			logicalTableName = database.toIdentifier( inLineViewSource.getLogicalName() );
-			if ( denormalizedSuperTable == null ) {
-				table = new Table( contributorName, namespace, subselect, isAbstract );
-			}
-			else {
-				table = new DenormalizedTable(
-						contributorName,
-						namespace,
-						subselect,
-						isAbstract,
-						denormalizedSuperTable
-				);
-			}
-			table.setName( logicalTableName.render() );
+			final var inlineViewSource = (InLineViewSource) tableSpecSource;
+			logicalTableName = database.toIdentifier( inlineViewSource.getLogicalName() );
+			table = tableForSubselect(
+					inlineViewSource,
+					denormalizedSuperTable,
+					contributorName,
+					isAbstract,
+					logicalTableName
+			);
 		}
 
 		final var metadataCollector = mappingDocument.getMetadataCollector();
@@ -2635,17 +2610,95 @@ public class ModelBinder {
 		);
 
 		if ( isTable ) {
-			final TableSource tableSource = (TableSource) tableSpecSource;
+			final var tableSource = (TableSource) tableSpecSource;
 			table.setRowId( tableSource.getRowId() );
-			if ( isNotEmpty( tableSource.getCheckConstraint() ) ) {
-				table.addCheckConstraint( tableSource.getCheckConstraint() );
+			final String checkConstraint = tableSource.getCheckConstraint();
+			if ( isNotEmpty( checkConstraint ) ) {
+				table.addCheckConstraint( checkConstraint );
 			}
 		}
 
-		table.setComment(tableSpecSource.getComment());
+		table.setComment( tableSpecSource.getComment() );
 
 		metadataCollector.addTableNameBinding( logicalTableName, table );
 
+		return table;
+	}
+
+	private Identifier logicalTableName(
+			MappingDocument mappingDocument, EntitySource entitySource, TableSource tableSource) {
+		if ( isNotEmpty( tableSource.getExplicitTableName() ) ) {
+			return database.toIdentifier( tableSource.getExplicitTableName() );
+		}
+		else {
+			return mappingDocument.getBuildingOptions().getImplicitNamingStrategy()
+					.determinePrimaryTableName( new ImplicitEntityNameSource() {
+						@Override
+						public EntityNaming getEntityNaming() {
+							return entitySource.getEntityNamingSource();
+						}
+						@Override
+						public MetadataBuildingContext getBuildingContext() {
+							return mappingDocument;
+						}
+					} );
+		}
+	}
+
+	private Table tableForEntity(
+			TableSource table,
+			Table denormalizedSuperTable,
+			Identifier logicalTableName,
+			String contributorName,
+			boolean isAbstract) {
+		final var namespace = locateTableNamespace( table );
+		if ( denormalizedSuperTable == null ) {
+			return namespace.createTable(
+					logicalTableName,
+					(identifier) -> new Table(
+							contributorName,
+							namespace,
+							identifier,
+							isAbstract
+					)
+			);
+		}
+		else {
+			return namespace.createDenormalizedTable(
+					logicalTableName,
+					(physicalTableName) -> new DenormalizedTable(
+							contributorName,
+							namespace,
+							physicalTableName,
+							isAbstract,
+							denormalizedSuperTable
+					)
+			);
+		}
+	}
+
+	private Table tableForSubselect(
+			InLineViewSource inlineView,
+			Table denormalizedSuperTable,
+			String contributorName,
+			boolean isAbstract,
+			Identifier logicalTableName) {
+		final var namespace = locateTableNamespace( inlineView );
+		final String subselect = inlineView.getSelectStatement();
+		final Table table;
+		if ( denormalizedSuperTable == null ) {
+			table = new Table( contributorName, namespace, subselect, isAbstract );
+		}
+		else {
+			table = new DenormalizedTable(
+					contributorName,
+					namespace,
+					subselect,
+					isAbstract,
+					denormalizedSuperTable
+			);
+		}
+		table.setName( logicalTableName.render() );
 		return table;
 	}
 
@@ -2654,8 +2707,9 @@ public class ModelBinder {
 			EntitySource entitySource,
 			PersistentClass entityDescriptor,
 			InFlightMetadataCollector metadataCollector) {
-		if ( entitySource.getSuperType() != null ) {
-			final var supertype = (EntitySource) entitySource.getSuperType();
+		final var superType = entitySource.getSuperType();
+		if ( superType != null ) {
+			final var supertype = (EntitySource) superType;
 			final String superEntityName = supertype.getEntityNamingSource().getEntityName();
 			final var superEntityTableXref = metadataCollector.getEntityTableXref( superEntityName );
 			if ( superEntityTableXref == null ) {
@@ -2781,7 +2835,7 @@ public class ModelBinder {
 					sourceElementSynopsis
 			);
 
-			PersistentClass entityBinding = metadataCollector.getEntityBinding( referencedEntityName );
+			final var entityBinding = metadataCollector.getEntityBinding( referencedEntityName );
 			if ( entityBinding == null ) {
 				throw new MappingException(
 						String.format(
@@ -2794,7 +2848,7 @@ public class ModelBinder {
 				);
 			}
 
-			Property propertyBinding = entityBinding.getReferencedProperty( referencedPropertyName );
+			final var propertyBinding = entityBinding.getReferencedProperty( referencedPropertyName );
 			if ( propertyBinding == null ) {
 				throw new MappingException(
 						String.format(
@@ -2950,7 +3004,7 @@ public class ModelBinder {
 						owner.getClassName(),
 						owner.getJpaEntityName()
 				);
-				final ImplicitCollectionTableNameSource implicitNamingSource =
+				final var implicitNamingSource =
 						new ImplicitCollectionTableNameSource() {
 							@Override
 							public Identifier getOwningPhysicalTableName() {
@@ -3162,7 +3216,7 @@ public class ModelBinder {
 				elementBinding.setIgnoreNotFound( elementSource.isIgnoreNotFound() );
 			}
 			else if ( pluralElementSource instanceof PluralAttributeElementSourceManyToMany elementSource ) {
-				final ManyToOne elementBinding =
+				final var elementBinding =
 						new ManyToOne( mappingDocument, collectionBinding.getCollectionTable() );
 
 				relationalObjectBinder.bindColumnsAndFormulas(
@@ -3229,7 +3283,7 @@ public class ModelBinder {
 					}
 				}
 
-				for ( FilterSource filterSource : elementSource.getFilterSources() ) {
+				for ( var filterSource : elementSource.getFilterSources() ) {
 					if ( filterSource.getName() == null ) {
 						if ( BOOT_LOGGER.isTraceEnabled() ) {
 							BOOT_LOGGER.tracef(
@@ -3271,7 +3325,7 @@ public class ModelBinder {
 				}
 			}
 			else if ( pluralElementSource instanceof PluralAttributeElementSourceManyToAny elementSource ) {
-				final Any elementBinding = new Any( mappingDocument, collectionBinding.getCollectionTable() );
+				final var elementBinding = new Any( mappingDocument, collectionBinding.getCollectionTable() );
 				bindAny(
 						this.mappingDocument,
 						elementSource,
@@ -3287,8 +3341,9 @@ public class ModelBinder {
 		}
 
 		private PersistentClass getReferencedEntityBinding(String referencedEntityName) {
-			final PersistentClass entityBinding =
-					mappingDocument.getMetadataCollector().getEntityBinding( referencedEntityName );
+			final var entityBinding =
+					mappingDocument.getMetadataCollector()
+							.getEntityBinding( referencedEntityName );
 			if ( entityBinding == null ) {
 				throw new MappingException(
 						String.format(
@@ -3567,7 +3622,7 @@ public class ModelBinder {
 			final MappingDocument mappingDocument,
 			final IndexedPluralAttributeSource pluralAttributeSource,
 			final org.hibernate.mapping.Map collectionBinding) {
-		final PluralAttributeIndexSource indexSource = pluralAttributeSource.getIndexSource();
+		final var indexSource = pluralAttributeSource.getIndexSource();
 		if ( indexSource instanceof PluralAttributeMapKeySourceBasic mapKeySource ) {
 			final var value = new BasicValue( mappingDocument, collectionBinding.getCollectionTable() );
 			bindSimpleValueType( mappingDocument, mapKeySource.getTypeInformation(), value );
@@ -3796,9 +3851,11 @@ public class ModelBinder {
 			//
 			// There is an assumption here that the columns making up the FK have been bound.
 			// We assume the caller checks that
-			final PersistentClass referencedEntityBinding =
-					mappingDocument.getMetadataCollector().getEntityBinding( referencedEntityName );
-			return referencedEntityBinding != null && referencedEntityAttributeName != null;
+			final var referencedEntityBinding =
+					mappingDocument.getMetadataCollector()
+							.getEntityBinding( referencedEntityName );
+			return referencedEntityBinding != null
+				&& referencedEntityAttributeName != null;
 
 		}
 	}
@@ -3854,7 +3911,7 @@ public class ModelBinder {
 
 			final var uniqueKey = new UniqueKey( entityBinding.getTable() );
 			for ( var attributeBinding : attributeBindings ) {
-				for ( Selectable selectable : attributeBinding.getSelectables() ) {
+				for ( var selectable : attributeBinding.getSelectables() ) {
 					if ( selectable instanceof Column column ) {
 						uniqueKey.addColumn( column );
 						columnNames.add( column.getNameIdentifier( mappingDocument ) );

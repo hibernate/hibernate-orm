@@ -181,7 +181,7 @@ pipeline {
 							configFile(fileId: 'release.config.ssh', targetLocation: "${env.HOME}/.ssh/config"),
 							configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: "${env.HOME}/.ssh/known_hosts")
 					]) {
-						sshagent(['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'hibernate-ci.frs.sourceforge.net']) {
+						sshagent(['ed25519.Hibernate-CI.github.com', 'hibernate-ci.frs.sourceforge.net']) {
 							// set release version
 							// update changelog from JIRA
 							// tags the version
@@ -216,7 +216,7 @@ pipeline {
 							string(credentialsId: 'release.gpg.passphrase', variable: 'JRELEASER_GPG_PASSPHRASE'),
 							string(credentialsId: 'Hibernate-CI.github.com', variable: 'JRELEASER_GITHUB_TOKEN')
 						]) {
-							sshagent(['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'jenkins.in.relation.to', 'hibernate-ci.frs.sourceforge.net']) {
+							sshagent(['ed25519.Hibernate-CI.github.com', 'jenkins.in.relation.to', 'hibernate-ci.frs.sourceforge.net']) {
 								// performs documentation upload and Sonatype release
 								// push to github
 								withEnv([
@@ -261,7 +261,7 @@ pipeline {
 						withCredentials([
 								gitUsernamePassword(credentialsId: 'username-and-token.Hibernate-CI.github.com', gitToolName: 'Default')
 						]) {
-							sshagent( ['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'hibernate-ci.frs.sourceforge.net'] ) {
+							sshagent( ['ed25519.Hibernate-CI.github.com', 'hibernate-ci.frs.sourceforge.net'] ) {
 								dir( '.release/hibernate.org' ) {
                                     // Lock to avoid rejected pushes when multiple releases try to clone-commit-push
                                     lock('hibernate.org-git') {

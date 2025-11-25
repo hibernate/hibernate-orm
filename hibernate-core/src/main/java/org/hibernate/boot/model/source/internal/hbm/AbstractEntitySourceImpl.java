@@ -41,6 +41,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
 import static java.util.Collections.emptyMap;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.unqualify;
 
 /**
  * @author Steve Ebersole
@@ -97,19 +99,20 @@ public abstract class AbstractEntitySourceImpl
 		);
 	}
 
-	public static EntityNamingSourceImpl extractEntityNamingSource(
+	static EntityNamingSourceImpl extractEntityNamingSource(
 			MappingDocument sourceMappingDocument,
 			EntityInfo jaxbEntityMapping) {
 		final String className = sourceMappingDocument.qualifyClassName( jaxbEntityMapping.getName() );
+		final String mappingEntityName = jaxbEntityMapping.getEntityName();
 		final String entityName;
 		final String jpaEntityName;
-		if ( StringHelper.isNotEmpty( jaxbEntityMapping.getEntityName() ) ) {
-			entityName = jaxbEntityMapping.getEntityName();
-			jpaEntityName = jaxbEntityMapping.getEntityName();
+		if ( isNotEmpty( mappingEntityName ) ) {
+			entityName = mappingEntityName;
+			jpaEntityName = mappingEntityName;
 		}
 		else {
 			entityName = className;
-			jpaEntityName = StringHelper.unqualify( className );
+			jpaEntityName = unqualify( className );
 		}
 		return new EntityNamingSourceImpl( entityName, className, jpaEntityName );
 	}
@@ -122,7 +125,7 @@ public abstract class AbstractEntitySourceImpl
 				return NO_FILTER_SOURCES;
 			}
 
-			FilterSource[] results = new FilterSource[size];
+			final var results = new FilterSource[size];
 			for ( int i = 0; i < size; i++ ) {
 				JaxbHbmFilterType element = jaxbClassElement.getFilter().get( i );
 				results[i] = new FilterSourceImpl( sourceMappingDocument(), element );

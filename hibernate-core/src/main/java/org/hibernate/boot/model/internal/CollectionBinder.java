@@ -2900,7 +2900,7 @@ public abstract class CollectionBinder {
 
 		// Get the ClassDetails from the models context
 		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
-		final ClassDetails entityClassDetails = modelsContext.getClassDetailsRegistry()
+		final var entityClassDetails = modelsContext.getClassDetailsRegistry()
 				.resolveClassDetails( persistentClass.getClassName() );
 
 		if ( entityClassDetails == null ) {

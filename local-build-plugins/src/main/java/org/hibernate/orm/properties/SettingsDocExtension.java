@@ -56,7 +56,7 @@ public class SettingsDocExtension {
 	 * The base URL for the published doc server.  This is used to
 	 * replace local hrefs with hrefs on the doc sever
 	 * <p/>
-	 * Defaults to {@code https://docs.jboss.org/hibernate/orm}
+	 * Defaults to {@code https://docs.hibernate.org/orm}
 	 */
 	public Property<String> getPublishedDocsUrl() {
 		return publishedDocsUrl;

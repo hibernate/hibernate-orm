@@ -42,7 +42,7 @@ or provide a custom `org.hibernate.resource.transaction.TransactionCoordinatorBu
 [NOTE]
 ====
 For details on implementing a custom `TransactionCoordinatorBuilder`, or simply better understanding how it works, see the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/integrationguide/html_single/Hibernate_Integration_Guide.html[Integration Guide] .
+https://docs.hibernate.org/orm/{majorMinorVersion}/integrationguide/html_single/Hibernate_Integration_Guide.html[Integration Guide] .
 ====
 
 Hibernate uses JDBC connections and JTA resources directly, without adding any additional locking behavior.
@@ -164,7 +164,7 @@ However, as of version 3.1, the processing behind `SessionFactory.getCurrentSess
 To that end, a new extension interface, `org.hibernate.context.spi.CurrentSessionContext`,
 and a new configuration parameter, `hibernate.current_session_context_class`, have been added to allow pluggability of the scope and context of defining current sessions.
 
-See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/spi/CurrentSessionContext.html[Javadocs] for the `org.hibernate.context.spi.CurrentSessionContext` interface for a detailed discussion of its contract.
+See the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/context/spi/CurrentSessionContext.html[Javadocs] for the `org.hibernate.context.spi.CurrentSessionContext` interface for a detailed discussion of its contract.
 It defines a single method, `currentSession()`, by which the implementation is responsible for tracking the current contextual session.
 Out-of-the-box, Hibernate comes with three implementations of this interface:
 
@@ -172,7 +172,7 @@ Out-of-the-box, Hibernate comes with three implementations of this interface:
 current sessions are tracked and scoped by a `JTA` transaction.
 The processing here is exactly the same as in the older JTA-only approach.
 `org.hibernate.context.internal.ThreadLocalSessionContext`::
-current sessions are tracked by thread of execution. See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/internal/ThreadLocalSessionContext.html[Javadocs] for more details.
+current sessions are tracked by thread of execution. See the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/context/internal/ThreadLocalSessionContext.html[Javadocs] for more details.
 `org.hibernate.context.internal.ManagedSessionContext`::
 current sessions are tracked by thread of execution.
 However, you are responsible to bind and unbind a `Session` instance with static methods on this class; it does not open, flush, or close a `Session`.

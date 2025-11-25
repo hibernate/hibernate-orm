@@ -89,8 +89,8 @@ In any case, before the release:
 #### Performing the release
 
 Once you trigger the CI job, it automatically pushes artifacts to the
-[OSSRH Maven Repository](https://repo1.maven.org/maven2/org/hibernate/orm/),
-and the documentation to [docs.jboss.org](https://docs.jboss.org/hibernate/orm/).
+[Maven Central Repository](https://repo1.maven.org/maven2/org/hibernate/orm/),
+and the documentation to [docs.hibernate.org](https://docs.hibernate.org/orm/).
 
 * Do *not* mark the Jira Release as "released" or close issues,
   the release job does it for you.

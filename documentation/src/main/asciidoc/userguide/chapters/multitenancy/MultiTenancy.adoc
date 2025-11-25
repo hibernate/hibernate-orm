@@ -121,7 +121,7 @@ It could name a `MultiTenantConnectionProvider` instance, a `MultiTenantConnecti
 * Passed directly to the `org.hibernate.boot.registry.StandardServiceRegistryBuilder`.
 * If none of the above options match, but the settings do specify a `hibernate.connection.datasource` value,
 Hibernate will assume it should use the specific `DataSourceBasedMultiTenantConnectionProviderImpl` implementation which works on a number of pretty reasonable assumptions when running inside of an app server and using one `javax.sql.DataSource` per tenant.
-See its https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/connections/spi/DataSourceBasedMultiTenantConnectionProviderImpl.html[Javadocs] for more details.
+See its https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/connections/spi/DataSourceBasedMultiTenantConnectionProviderImpl.html[Javadocs] for more details.
 
 The following example portrays a `MultiTenantConnectionProvider` implementation that handles multiple ``ConnectionProvider``s.
 

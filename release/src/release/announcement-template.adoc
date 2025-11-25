@@ -6,7 +6,7 @@ Steve Ebersole
 :version: 6.4.0.CR1
 :family: 6.4
 
-:docs-url: https://docs.jboss.org/hibernate/orm/{family}
+:docs-url: https://docs.hibernate.org/orm/{family}
 :javadocs-url: {docs-url}/javadocs
 :migration-guide-url: {docs-url}/migration-guide/migration-guide.html
 :intro-guide-url: {docs-url}/introduction/html_single/Hibernate_Introduction.html

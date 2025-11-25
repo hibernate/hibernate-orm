@@ -4,7 +4,7 @@
 
 include::./common-attributes.adoc[]
 
-:doc-base-url: https://docs.jboss.org/hibernate/orm
+:doc-base-url: https://docs.hibernate.org/orm
 :doc-version-base-url: {doc-base-url}/{majorMinorVersion}
 :doc-migration-guide-url: {doc-version-base-url}/migration-guide/migration-guide.html
 :doc-quick-start-url: {doc-version-base-url}/quickstart/html_single/

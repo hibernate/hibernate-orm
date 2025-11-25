@@ -526,7 +526,7 @@ include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-multiple-sc
 ----
 ====
 
-You can also use the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedNativeQuery.html[`@NamedNativeQuery`] Hibernate annotation
+You can also use the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedNativeQuery.html[`@NamedNativeQuery`] Hibernate annotation
 to customize the named query using various configurations such as fetch mode, cacheability, time out interval.
 
 [[sql-multiple-scalar-values-dto-NamedNativeQuery-hibernate-example]]

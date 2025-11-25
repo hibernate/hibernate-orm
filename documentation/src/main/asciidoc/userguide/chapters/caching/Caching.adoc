@@ -39,7 +39,7 @@ Besides provider specific configuration, there are a number of configurations op
 
 `hibernate.cache.use_second_level_cache`::
 	Enable or disable second level caching overall. By default, if the currently configured
-	https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/cache/spi/RegionFactory.html[`RegionFactory`] is not the `NoCachingRegionFactory`, then the second-level cache is going to be enabled. Otherwise, the second-level cache is disabled.
+	https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/cache/spi/RegionFactory.html[`RegionFactory`] is not the `NoCachingRegionFactory`, then the second-level cache is going to be enabled. Otherwise, the second-level cache is disabled.
 `hibernate.cache.use_query_cache`::
 	Enable or disable second level caching of query results. The default is false.
 `hibernate.cache.query_cache_factory`::
@@ -120,7 +120,7 @@ transactional::
 ====
 Rather than using a global setting, it is recommended to define the cache concurrency strategy on a per entity basis.
 
-Use the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Cache.html[`@org.hibernate.annotations.Cache`] annotation for this purpose.
+Use the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Cache.html[`@org.hibernate.annotations.Cache`] annotation for this purpose.
 ====
 
 The `@Cache` annotation define three attributes:
@@ -383,7 +383,7 @@ include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-query-regi
 
 [NOTE]
 ====
-When using {jpaJavadocUrlPrefix}CacheStoreMode.html#REFRESH[`CacheStoreMode.REFRESH`] or https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/CacheMode.html#REFRESH[`CacheMode.REFRESH`] in conjunction with the region you have defined for the given query,
+When using {jpaJavadocUrlPrefix}CacheStoreMode.html#REFRESH[`CacheStoreMode.REFRESH`] or https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/CacheMode.html#REFRESH[`CacheMode.REFRESH`] in conjunction with the region you have defined for the given query,
 Hibernate will selectively force the results cached in that particular region to be refreshed.
 
 This behavior is particularly useful in cases when the underlying data may have been updated via a separate process
@@ -398,7 +398,7 @@ include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-query-regi
 [[caching-management]]
 === Managing the cached data
 
-Traditionally, Hibernate defined the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/CacheMode.html[`CacheMode`] enumeration to describe
+Traditionally, Hibernate defined the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/CacheMode.html[`CacheMode`] enumeration to describe
 the ways of interactions with the cached data.
 Jakarta Persistence split cache modes by storage ({jpaJavadocUrlPrefix}CacheStoreMode.html[`CacheStoreMode`])
 and retrieval ({jpaJavadocUrlPrefix}CacheRetrieveMode.html[`CacheRetrieveMode`]).
@@ -474,7 +474,7 @@ include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-management
 ====
 
 Hibernate is much more flexible in this regard as it offers fine-grained control over what needs to be evicted.
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Cache.html[`org.hibernate.Cache`] interface defines various evicting strategies:
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/Cache.html[`org.hibernate.Cache`] interface defines various evicting strategies:
 
 - entities (by their class or region)
 - entities stored using the natural-id (by their class or region)
@@ -497,7 +497,7 @@ If you enable the `hibernate.generate_statistics` configuration property,
 Hibernate will expose a number of metrics via `SessionFactory.getStatistics()`.
 Hibernate can even be configured to expose these statistics via JMX.
 
-This way, you can get access to the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/stat/Statistics.html[`Statistics`] class which comprises all sort of
+This way, you can get access to the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/stat/Statistics.html[`Statistics`] class which comprises all sort of
 second-level cache metrics.
 
 [[caching-statistics-example]]

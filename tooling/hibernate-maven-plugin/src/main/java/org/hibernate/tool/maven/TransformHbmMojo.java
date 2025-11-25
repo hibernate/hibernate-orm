@@ -48,6 +48,7 @@ import org.hibernate.service.ServiceRegistry;
 
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
+import org.hibernate.tool.api.xml.XMLPrettyPrinter;
 
 @Mojo(
 	name = "hbm2orm", 
@@ -57,6 +58,9 @@ public class TransformHbmMojo extends AbstractMojo {
 
     @Parameter(defaultValue = "${project.basedir}/src/main/resources")
     private File inputFolder;
+
+    @Parameter(defaultValue = "true")
+    private boolean format;
 
     @Override
     public void execute() {
@@ -119,12 +123,19 @@ public class TransformHbmMojo extends AbstractMojo {
         getLog().info("Marshalling file: " + hbmXmlFile.getAbsolutePath() + " into " + mappingXmlFile.getAbsolutePath());
         try {
             marshaller.marshal( mappings, mappingXmlFile );
+            if (format) {
+                XMLPrettyPrinter.prettyPrintFile(mappingXmlFile);
+            }
         }
         catch (JAXBException e) {
             throw new RuntimeException(
                     "Unable to marshall mapping JAXB representation to file `" + mappingXmlFile.getAbsolutePath() + "`",
-                    e
-            );
+                    e);
+        }
+        catch (IOException e) {
+            throw new RuntimeException(
+                    "Unable to format XML file `" + mappingXmlFile.getAbsolutePath() + "`",
+                    e);
         }
     }
 

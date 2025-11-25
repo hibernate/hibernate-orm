@@ -12,22 +12,34 @@ import java.nio.file.Paths;
 import java.util.Objects;
 
 import org.apache.maven.cli.MavenCli;
+import org.hibernate.tool.api.version.Version;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 public class TransformHbmTestIT {
 
     public static final String MVN_HOME = "maven.multiModuleProjectDirectory";
+    private static File baseFolder;
+    private static File localRepo;
  
     @TempDir
     private Path projectPath;
 
+    @BeforeAll
+    public static void beforeAll() throws Exception {
+        // The needed resource for this test are put in place
+        // in the 'baseFolder' (normally 'target/test-classes')
+        // by the 'build-helper-maven-plugin' execution.
+        // See the 'pom.xml'
+        baseFolder = determineBaseFolder();
+        localRepo = new File(baseFolder.getParentFile(), "local-repo");
+    }
     @Test
     public void testSimpleHbmTransformation() throws Exception {
     	System.setProperty(MVN_HOME, projectPath.toAbsolutePath().toString());
         writePomFile();
-        copyHbmFile();
-        
+        copyHbmFile();  
         runTransformHbmToOrm();
      }
 
@@ -51,16 +63,29 @@ public class TransformHbmTestIT {
     	assertTrue(destinationFile.exists());
     }
     
-    private void runTransformHbmToOrm() {
+    private void runTransformHbmToOrm() throws Exception {
     	File destinationDir = new File(projectPath.toFile(), "src/main/resources/");
     	File ormXmlFile = new File(destinationDir, "simple.mapping.xml");
     	assertFalse(ormXmlFile.exists());
         new MavenCli().doMain(
-                new String[]{"org.hibernate.tool:hibernate-tools-maven:7.2.0.CR2:hbm2orm", "generate-sources"},
+                new String[]{
+                		"-Dmaven.repo.local=" + localRepo.getAbsolutePath(),
+                		"org.hibernate.tool:hibernate-tools-maven:" + Version.versionString() + ":hbm2orm", 
+                		"generate-sources"},
                 projectPath.toAbsolutePath().toString(),
                 null,
                 null);
+        // Check the existaence of the transformed file
         assertTrue(ormXmlFile.exists());
+        // Check if it's pretty printed
+        assertTrue(Files.readString(ormXmlFile.toPath()).contains("\n        <table name=\"Foo\"/>\n"));
+    }
+
+    private static File determineBaseFolder() throws Exception {
+    	URL classUrl = TransformHbmTestIT.class.getResource(
+    			"/" + TransformHbmTestIT.class.getName().replace(".", "/") + ".class");
+    	return new File(classUrl.toURI())
+    			.getParentFile().getParentFile().getParentFile().getParentFile().getParentFile();
     }
 
     private static final String simplePomContents =

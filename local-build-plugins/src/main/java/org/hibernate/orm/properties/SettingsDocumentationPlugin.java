@@ -31,7 +31,7 @@ public class SettingsDocumentationPlugin implements Plugin<Project> {
 		final SettingsDocExtension dslExtension = new SettingsDocExtension( project );
 		project.getExtensions().add( EXTENSION_NAME, dslExtension );
 		dslExtension.getJavadocDirectory().convention( project.getLayout().getBuildDirectory().dir( "javadocs" ) );
-		dslExtension.getPublishedDocsUrl().convention( "https://docs.jboss.org/hibernate/orm" );
+		dslExtension.getPublishedDocsUrl().convention( "https://docs.hibernate.org/orm" );
 		dslExtension.getOutputFile().convention( project.getLayout().getBuildDirectory().file( "asciidoc/fragments/config-settings.adoc" ) );
 
 		// create the generation task

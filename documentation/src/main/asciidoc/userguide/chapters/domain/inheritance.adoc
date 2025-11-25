@@ -336,7 +336,7 @@ include::{example-dir-inheritance}/polymorphism/DomainModelEntity.java[tags=enti
 
 If we have two entity mappings, a `Book` and a `Blog`,
 and the `Blog` entity is mapped with the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Polymorphism.html[`@Polymorphism`] annotation
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Polymorphism.html[`@Polymorphism`] annotation
 and taking the `PolymorphismType.EXPLICIT` setting:
 
 [[entity-inheritance-polymorphism-mapping-example]]

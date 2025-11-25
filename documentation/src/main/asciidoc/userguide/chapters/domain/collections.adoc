@@ -5,7 +5,7 @@
 :core-project-dir: {root-project-dir}/hibernate-core
 :core-test-base: {core-project-dir}/src/test/java
 :example-dir-collection: {core-test-base}/org/hibernate/orm/test/mapping/collections
-:docs-base: https://docs.jboss.org/hibernate/orm/{majorMinorVersion}
+:docs-base: https://docs.hibernate.org/orm/{majorMinorVersion}
 :javadoc-base: {docs-base}/javadoc
 :java-javadoc-base: https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 :extrasdir: extras/collections
@@ -684,7 +684,7 @@ When fetching the collection, Hibernate will use the fetched ordered columns to 
 [[collections-customizing-ordered-list-ordinal]]
 ===== Customizing ordered list ordinal
 
-You can customize the ordinal of the underlying ordered list by using the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ListIndexBase.html[`@ListIndexBase`] annotation.
+You can customize the ordinal of the underlying ordered list by using the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ListIndexBase.html[`@ListIndexBase`] annotation.
 
 [[collections-customizing-ordered-list-ordinal-mapping-example]]
 .`@ListIndexBase` mapping example
@@ -717,7 +717,7 @@ include::{extrasdir}/collections-customizing-ordered-list-ordinal-persist-exampl
 While the Jakarta Persistence
 {jpaJavadocUrlPrefix}OrderBy.html[`@OrderBy`] annotation allows you to specify the entity attributes used for sorting
 when fetching the current annotated collection, the Hibernate specific
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OrderBy.html[`@OrderBy`] annotation is used to specify a *SQL* clause instead.
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OrderBy.html[`@OrderBy`] annotation is used to specify a *SQL* clause instead.
 
 In the following example, the `@OrderBy` annotation uses the `CHAR_LENGTH` SQL function to order the `Article` entities
 by the number of characters of the `name` attribute.
@@ -898,7 +898,7 @@ include::{extrasdir}/collections-map-value-type-entity-key-add-example.sql[]
 ===== Maps with a custom key type
 
 Hibernate defines the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/MapKeyType.html[`@MapKeyType`] annotation
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/MapKeyType.html[`@MapKeyType`] annotation
 which you can use to customize the `Map` key type.
 
 Considering you have the following tables in your database:

@@ -626,7 +626,7 @@ The special function `extract()` obtains a single field of a date, time, or date
 - Its second argument is a date/time _field type_.
 
 Field types include: `day`, `month`, `year`, `second`, `minute`, `hour`, `day of week`, `day of month`, `week of year`, `date`, `time`, `epoch` and more.
-For a full list of field types, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/query/TemporalUnit.html[`TemporalUnit`].
+For a full list of field types, see the Javadoc for https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/query/TemporalUnit.html[`TemporalUnit`].
 
 [source, hql]
 ----
@@ -669,7 +669,7 @@ The `format()` function formats a date, time, or datetime according to a pattern
 
 The pattern must be written in a subset of the pattern language defined by Java's `java.time.format.DateTimeFormatter`.
 
-For a full list of `format()` pattern elements, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#appendDatetimeFormat[`Dialect.appendDatetimeFormat`].
+For a full list of `format()` pattern elements, see the Javadoc for https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#appendDatetimeFormat[`Dialect.appendDatetimeFormat`].
 
 [[function-trunc-datetime]]
 [discrete]

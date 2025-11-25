@@ -1,7 +1,7 @@
 = 6.2 Migration Guide
 :toc:
 :toclevels: 4
-:docsBase: https://docs.jboss.org/hibernate/orm
+:docsBase: https://docs.hibernate.org/orm
 :versionDocBase: {docsBase}/6.2
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
 :javadocsBase: {versionDocBase}/javadocs

@@ -2,7 +2,7 @@
 :toc:
 :toclevels: 4
 :version: 7.1
-:docsBase: https://docs.jboss.org/hibernate/orm
+:docsBase: https://docs.hibernate.org/orm
 :versionDocBase: {docsBase}/{version}
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
 :whatsNewBase: {versionDocBase}/whats-new/whats-new.html

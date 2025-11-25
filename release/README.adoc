@@ -47,5 +47,5 @@ See https://plugins.gradle.org/plugin/org.hibernate.orm
 
 === Documentation
 
-All documentation for the release is generated, assembled and then published to the https://docs.jboss.org/hibernate/orm/[documentation server].
+All documentation for the release is generated, assembled and then published to the https://docs.hibernate.org/orm/[documentation server].
 

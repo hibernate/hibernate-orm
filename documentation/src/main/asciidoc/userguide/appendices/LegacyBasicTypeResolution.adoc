@@ -122,7 +122,7 @@ But first, let's explore how implicit resolution works and how applications can 
 ====
 A thorough discussion of `BasicTypeRegistry` and all the different ways to contribute types is beyond the scope of this documentation.
 
-Please see the http://docs.jboss.org/hibernate/orm/{majorMinorVersion}/integrationguide/html_single/Hibernate_Integration_Guide.html[Integration Guide] for complete details.
+Please see the http://docs.hibernate.org/orm/{majorMinorVersion}/integrationguide/html_single/Hibernate_Integration_Guide.html[Integration Guide] for complete details.
 ====
 
 As an example, take a String attribute such as we saw before with Product#sku.

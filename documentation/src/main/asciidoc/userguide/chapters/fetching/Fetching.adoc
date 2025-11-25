@@ -421,7 +421,7 @@ However, if the `Employee` data is not resolved in cache, the `Employee` and `Pr
 [[fetching-batch]]
 === Batch fetching
 
-Hibernate offers the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/BatchSize.html[`@BatchSize`] annotation,
+Hibernate offers the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/BatchSize.html[`@BatchSize`] annotation,
 which can be used when fetching uninitialized entity proxies.
 
 Considering the following entity mapping:

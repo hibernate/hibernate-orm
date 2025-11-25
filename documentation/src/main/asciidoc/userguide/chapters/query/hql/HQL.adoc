@@ -72,7 +72,7 @@ include::{sourcedir}/HQLTest.java[tags=jpql-api-named-query-example, indent=0]
 ====
 
 Hibernate offers a specific
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedQuery.html[`@NamedQuery`] annotation
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedQuery.html[`@NamedQuery`] annotation
 which provides ways to configure various query features, like flush mode, cacheability, time out interval.
 
 [[jpql-api-hibernate-named-query-example]]
@@ -224,7 +224,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-api-basic-usage-example]
 ----
 ====
 
-For complete details, see the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Query.html[Query] Javadocs.
+For complete details, see the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/Query.html[Query] Javadocs.
 
 [IMPORTANT]
 ====
@@ -241,7 +241,7 @@ Locking is covered in detail in <<chapters/locking/Locking.adoc#locking,Locking>
 The concept of read-only state is covered in <<chapters/pc/PersistenceContext.adoc#pc,Persistence Contexts>>.
 
 Hibernate also allows an application to hook into the process of building the query results via the `org.hibernate.transform.ResultTransformer` contract.
-See its https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/transform/ResultTransformer.html[Javadocs] as well as the Hibernate-provided implementations for additional details.
+See its https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/transform/ResultTransformer.html[Javadocs] as well as the Hibernate-provided implementations for additional details.
 
 The last thing that needs to happen before we can execute the query is to bind the values for any parameters defined in the query.
 Query defines many overloaded methods for this purpose.
@@ -338,7 +338,7 @@ Hibernate offers additional, specialized methods for scrolling the query and han
 The `Query#scroll` method is overloaded:
 
 * The main form accepts a single argument of type `org.hibernate.ScrollMode` which indicates the type of scrolling to be used.
-See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/ScrollMode.html[Javadocs] for the details on each.
+See the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/ScrollMode.html[Javadocs] for the details on each.
 * The second form takes no argument and will use the `ScrollMode` indicated by `Dialect#defaultScrollMode`.
 
 `Query#scroll` returns a `org.hibernate.ScrollableResults` which wraps the underlying JDBC (scrollable) `ResultSet` and provides access to the results.
@@ -381,7 +381,7 @@ In cases where many of the entities do not exist in the second-level cache, this
 
 The `Iterator` returned from `Query#iterate` is actually a specially typed Iterator: `org.hibernate.engine.HibernateIterator`.
 It is specialized to expose a `close()` method (again, inherited from `java.io.Closeable`).
-When you are done with this `Iterator` you should close it, either by casting to `HibernateIterator` or `Closeable`, or by calling https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Hibernate.html#close-java.util.Iterator-[`Hibernate#close(java.util.Iterator)`].
+When you are done with this `Iterator` you should close it, either by casting to `HibernateIterator` or `Closeable`, or by calling https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/Hibernate.html#close-java.util.Iterator-[`Hibernate#close(java.util.Iterator)`].
 
 Since 5.2, Hibernate offers support for returning a `Stream` which can be later used to transform the underlying `ResultSet`.
 

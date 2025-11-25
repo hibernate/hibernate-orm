@@ -624,13 +624,13 @@ See the <<chapters/locking/Locking.adoc#locking-optimistic, Optimistic locking m
 [[annotations-hibernate-accesstype]]
 ==== [line-through]#`@AccessType`#
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AccessType.html[[line-through]#`@AccessType`#] annotation is deprecated.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AccessType.html[[line-through]#`@AccessType`#] annotation is deprecated.
 You should use either the JPA <<annotations-jpa-access>> or the Hibernate native <<annotations-hibernate-attributeaccessor>> annotation.
 
 [[annotations-hibernate-any]]
 ==== `@Any`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Any.html[`@Any`] annotation is used to define the *any-to-one* association
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Any.html[`@Any`] annotation is used to define the *any-to-one* association
 which can point to one one of several entity types.
 
 See the <<chapters/domain/basic_types.adoc#mapping-column-any,`@Any` mapping>> section for more info.
@@ -638,19 +638,19 @@ See the <<chapters/domain/basic_types.adoc#mapping-column-any,`@Any` mapping>> s
 [[annotations-hibernate-anymetadef]]
 ==== `@AnyMetaDef`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AnyMetaDef.html[`@AnyMetaDef`] annotation is used to provide metadata about an `@Any` or `@ManyToAny` mapping.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AnyMetaDef.html[`@AnyMetaDef`] annotation is used to provide metadata about an `@Any` or `@ManyToAny` mapping.
 
 See the <<chapters/domain/basic_types.adoc#mapping-column-any,`@Any` mapping>> section for more info.
 
 [[annotations-hibernate-anymetadefs]]
 ==== `@AnyMetaDefs`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AnyMetaDefs.html[`@AnyMetaDefs`] annotation is used to group multiple <<annotations-hibernate-anymetadef>> annotations.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AnyMetaDefs.html[`@AnyMetaDefs`] annotation is used to group multiple <<annotations-hibernate-anymetadef>> annotations.
 
 [[annotations-hibernate-attributeaccessor]]
 ==== `@AttributeAccessor`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AttributeAccessor.html[`@AttributeAccessor`] annotation is used to specify a custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/property/access/spi/PropertyAccessStrategy.html[`PropertyAccessStrategy`].
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AttributeAccessor.html[`@AttributeAccessor`] annotation is used to specify a custom https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/property/access/spi/PropertyAccessStrategy.html[`PropertyAccessStrategy`].
 
 Should only be used to name a custom `PropertyAccessStrategy`.
 For property/field access type, the JPA <<annotations-jpa-access>> annotation should be preferred.
@@ -660,21 +660,21 @@ However, if this annotation is used with either value="property" or value="field
 [[annotations-hibernate-batchsize]]
 ==== `@BatchSize`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/BatchSize.html[`@BatchSize`] annotation is used to specify the size for batch loading the entries of a lazy collection.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/BatchSize.html[`@BatchSize`] annotation is used to specify the size for batch loading the entries of a lazy collection.
 
 See the <<chapters/fetching/Fetching.adoc#fetching-batch, Batch fetching>> section for more info.
 
 [[annotations-hibernate-cache]]
 ==== `@Cache`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Cache.html[`@Cache`] annotation is used to specify the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CacheConcurrencyStrategy.html[`CacheConcurrencyStrategy`] of a root entity or a collection.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Cache.html[`@Cache`] annotation is used to specify the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CacheConcurrencyStrategy.html[`CacheConcurrencyStrategy`] of a root entity or a collection.
 
 See the <<chapters/caching/Caching.adoc#caching,Caching>> chapter for more info.
 
 [[annotations-hibernate-cascade]]
 ==== `@Cascade`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Cascade.html[`@Cascade`] annotation is used to apply the Hibernate specific http://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CascadeType.html[`CascadeType`] strategies (e.g. `CascadeType.LOCK`, `CascadeType.SAVE_UPDATE`, `CascadeType.REPLICATE`) on a given association.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Cascade.html[`@Cascade`] annotation is used to apply the Hibernate specific http://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CascadeType.html[`CascadeType`] strategies (e.g. `CascadeType.LOCK`, `CascadeType.SAVE_UPDATE`, `CascadeType.REPLICATE`) on a given association.
 
 For JPA cascading, prefer using the http://docs.oracle.com/javaee/7/api/javax/persistence/CascadeType.html[`javax.persistence.CascadeType`] instead.
 
@@ -685,21 +685,21 @@ See the <<chapters/pc/PersistenceContext.adoc#pc-cascade,Cascading>> chapter for
 [[annotations-hibernate-check]]
 ==== `@Check`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Check.html[`@Check`] annotation is used to specify an arbitrary SQL CHECK constraint which can be defined at the class level.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Check.html[`@Check`] annotation is used to specify an arbitrary SQL CHECK constraint which can be defined at the class level.
 
 See the <<chapters/schema/Schema.adoc#schema-generation-database-checks,Database-level checks>> chapter for more info.
 
 [[annotations-hibernate-collectionid]]
 ==== `@CollectionId`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CollectionId.html[`@CollectionId`] annotation is used to specify an identifier column for an idbag collection.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CollectionId.html[`@CollectionId`] annotation is used to specify an identifier column for an idbag collection.
 
 You might want to use the JPA <<annotations-jpa-ordercolumn>> instead.
 
 [[annotations-hibernate-collectiontype]]
 ==== `@CollectionType`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CollectionType.html[`@CollectionType`] annotation is used to specify a custom collection type.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CollectionType.html[`@CollectionType`] annotation is used to specify a custom collection type.
 
 The collection can also name a <<annotations-hibernate-type>>, which defines the Hibernate Type of the collection elements.
 
@@ -708,7 +708,7 @@ See the <<chapters/domain/collections.adoc#collections-custom,Custom collection 
 [[annotations-hibernate-columndefault]]
 ==== `@ColumnDefault`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ColumnDefault.html[`@ColumnDefault`] annotation is used to specify the `DEFAULT` DDL value to apply when using the automated schema generator.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ColumnDefault.html[`@ColumnDefault`] annotation is used to specify the `DEFAULT` DDL value to apply when using the automated schema generator.
 
 The same behavior can be achieved using the `definition` attribute of the JPA <<annotations-jpa-column>> annotation.
 
@@ -717,47 +717,47 @@ See the <<chapters/schema/Schema.adoc#schema-generation-column-default-value,Def
 [[annotations-hibernate-columns]]
 ==== `@Columns`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Columns.html[`@Columns`] annotation is used to group multiple JPA <<annotations-jpa-column>> annotations.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Columns.html[`@Columns`] annotation is used to group multiple JPA <<annotations-jpa-column>> annotations.
 
 See the <<chapters/domain/basic_types.adoc#mapping-column-read-and-write-composite-type-example,`@Columns` mapping>> section for more info.
 
 [[annotations-hibernate-columntransformer]]
 ==== `@ColumnTransformer`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ColumnTransformer.html[`@ColumnTransformer`] annotation is used to customize how a given column value is read from or write into the database.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ColumnTransformer.html[`@ColumnTransformer`] annotation is used to customize how a given column value is read from or write into the database.
 
 See the <<chapters/domain/basic_types.adoc#mapping-column-read-and-write-example,`@ColumnTransformer` mapping>> section for more info.
 
 [[annotations-hibernate-columntransformers]]
 ==== `@ColumnTransformers`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ColumnTransformers.html[`@ColumnTransformers`] annotation iis used to group multiple <<annotations-hibernate-columntransformer>> annotations.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ColumnTransformers.html[`@ColumnTransformers`] annotation iis used to group multiple <<annotations-hibernate-columntransformer>> annotations.
 
 [[annotations-hibernate-creationtimestamp]]
 ==== `@CreationTimestamp`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CreationTimestamp.html[`@CreationTimestamp`] annotation is used to specify that the currently annotated temporal type must be initialized with the current JVM timestamp value.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CreationTimestamp.html[`@CreationTimestamp`] annotation is used to specify that the currently annotated temporal type must be initialized with the current JVM timestamp value.
 
 See the <<chapters/domain/basic_types.adoc#mapping-generated-CreationTimestamp,`@CreationTimestamp` mapping>> section for more info.
 
 [[annotations-hibernate-discriminatorformula]]
 ==== `@DiscriminatorFormula`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/DiscriminatorFormula.html[`@DiscriminatorFormula`] annotation is used to specify a Hibernate <<annotations-hibernate-formula>> to resolve the inheritance discriminator value.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/DiscriminatorFormula.html[`@DiscriminatorFormula`] annotation is used to specify a Hibernate <<annotations-hibernate-formula>> to resolve the inheritance discriminator value.
 
 See the <<chapters/domain/inheritance.adoc#entity-inheritance-single-table-discriminator-formula-example, `@DiscriminatorFormula`>> section for more info.
 
 [[annotations-hibernate-discriminatoroptions]]
 ==== `@DiscriminatorOptions`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/DiscriminatorOptions.html[`@DiscriminatorOptions`] annotation is used to provide the `force` and `insert` Discriminator properties.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/DiscriminatorOptions.html[`@DiscriminatorOptions`] annotation is used to provide the `force` and `insert` Discriminator properties.
 
 See the <<chapters/domain/inheritance.adoc#entity-inheritance-discriminator, Discriminator>> section for more info.
 
 [[annotations-hibernate-dynamicinsert]]
 ==== `@DynamicInsert`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/DynamicInsert.html[`@DynamicInsert`] annotation is used to specify that the `INSERT` SQL statement should be generated whenever an entity is to be persisted.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/DynamicInsert.html[`@DynamicInsert`] annotation is used to specify that the `INSERT` SQL statement should be generated whenever an entity is to be persisted.
 
 By default, Hibernate uses a cached `INSERT` statement that sets all table columns.
 When the entity is annotated with the `@DynamicInsert` annotation, the `PreparedStatement` is going to include only the non-null columns.
@@ -767,7 +767,7 @@ See the <<chapters/domain/basic_types.adoc#mapping-generated-CreationTimestamp,`
 [[annotations-hibernate-dynamicupdate]]
 ==== `@DynamicUpdate`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/DynamicUpdate.html[`@DynamicUpdate`] annotation is used to specify that the `UPDATE` SQL statement should be generated whenever an entity is modified.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/DynamicUpdate.html[`@DynamicUpdate`] annotation is used to specify that the `UPDATE` SQL statement should be generated whenever an entity is modified.
 
 By default, Hibernate uses a cached `UPDATE` statement that sets all table columns.
 When the entity is annotated with the `@DynamicUpdate` annotation, the `PreparedStatement` is going to include only the columns whose values have been changed.
@@ -782,26 +782,26 @@ For reattachment of detached entities, the dynamic update is not possible withou
 [[annotations-hibernate-entity]]
 ==== [line-through]#`@Entity`#
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Entity.html[[line-through]#`@Entity`#] annotation is deprecated. Use the JPA <<annotations-jpa-entity>> annotation instead.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Entity.html[[line-through]#`@Entity`#] annotation is deprecated. Use the JPA <<annotations-jpa-entity>> annotation instead.
 
 [[annotations-hibernate-fetch]]
 ==== `@Fetch`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Fetch.html[`@Fetch`] annotation is used to specify the Hibernate specific https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FetchMode.html[`FetchMode`] (e.g. `JOIN`, `SELECT`, `SUBSELECT`) used for the currently annotated association:
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Fetch.html[`@Fetch`] annotation is used to specify the Hibernate specific https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FetchMode.html[`FetchMode`] (e.g. `JOIN`, `SELECT`, `SUBSELECT`) used for the currently annotated association:
 
 See the <<chapters/fetching/Fetching.adoc#fetching-fetch-annotation, `@Fetch` mapping>> section for more info.
 
 [[annotations-hibernate-fetchprofile]]
 ==== `@FetchProfile`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FetchProfile.html[`@FetchProfile`] annotation is used to specify a custom fetching profile, similar to a JPA Entity Graph.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FetchProfile.html[`@FetchProfile`] annotation is used to specify a custom fetching profile, similar to a JPA Entity Graph.
 
 See the <<chapters/fetching/Fetching.adoc#fetching-strategies-dynamic-fetching-profile-example, Fetch mapping>> section for more info.
 
 [[annotations-hibernate-fetchprofile-fetchoverride]]
 ==== `@FetchProfile.FetchOverride`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FetchProfile.FetchOverride.html[`@FetchProfile.FetchOverride`] annotation is used in conjunction with the <<annotations-hibernate-fetchprofile>> annotation,
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FetchProfile.FetchOverride.html[`@FetchProfile.FetchOverride`] annotation is used in conjunction with the <<annotations-hibernate-fetchprofile>> annotation,
 and it's used for overriding the fetching strategy of a particular entity association.
 
 See the <<chapters/fetching/Fetching.adoc#fetching-strategies-dynamic-fetching-profile-example, Fetch profile>> section for more info.
@@ -809,122 +809,122 @@ See the <<chapters/fetching/Fetching.adoc#fetching-strategies-dynamic-fetching-p
 [[annotations-hibernate-fetchprofiles]]
 ==== `@FetchProfiles`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FetchProfiles.html[`@FetchProfiles`] annotation is used to group multiple <<annotations-hibernate-fetchprofile>> annotations.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FetchProfiles.html[`@FetchProfiles`] annotation is used to group multiple <<annotations-hibernate-fetchprofile>> annotations.
 
 [[annotations-hibernate-filter]]
 ==== `@Filter`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Filter.html[`@Filter`] annotation is used to add filters to an entity or the target entity of a collection.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Filter.html[`@Filter`] annotation is used to add filters to an entity or the target entity of a collection.
 
 See the <<chapters/domain/basic_types.adoc#mapping-filter-example,Filter mapping>> section for more info.
 
 [[annotations-hibernate-filterdef]]
 ==== `@FilterDef`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FilterDef.html[`@FilterDef`] annotation is used to specify a `@Filter` definition (name, default condition and parameter types, if any).
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FilterDef.html[`@FilterDef`] annotation is used to specify a `@Filter` definition (name, default condition and parameter types, if any).
 
 See the <<chapters/domain/basic_types.adoc#mapping-filter-example,Filter mapping>> section for more info.
 
 [[annotations-hibernate-filterdefs]]
 ==== `@FilterDefs`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FilterDefs.html[`@FilterDefs`] annotation is used to group multiple <<annotations-hibernate-filterdef>> annotations.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FilterDefs.html[`@FilterDefs`] annotation is used to group multiple <<annotations-hibernate-filterdef>> annotations.
 
 [[annotations-hibernate-filterjointable]]
 ==== `@FilterJoinTable`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FilterJoinTable.html[`@FilterJoinTable`] annotation is used to add `@Filter` capabilities to a join table collection.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FilterJoinTable.html[`@FilterJoinTable`] annotation is used to add `@Filter` capabilities to a join table collection.
 
 See the <<chapters/domain/basic_types.adoc#mapping-column-filter-join-table,FilterJoinTable mapping>> section for more info.
 
 [[annotations-hibernate-filterjointables]]
 ==== `@FilterJoinTables`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FilterJoinTables.html[`@FilterJoinTables`] annotation is used to group multiple <<annotations-hibernate-filterjointable>> annotations.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FilterJoinTables.html[`@FilterJoinTables`] annotation is used to group multiple <<annotations-hibernate-filterjointable>> annotations.
 
 [[annotations-hibernate-filters]]
 ==== `@Filters`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Filters.html[`@Filters`] annotation is used to group multiple <<annotations-hibernate-filter>> annotations.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Filters.html[`@Filters`] annotation is used to group multiple <<annotations-hibernate-filter>> annotations.
 
 ==== [line-through]#`@ForeignKey`#
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ForeignKey.html[[line-through]#`@ForeignKey`#] annotation is deprecated. Use the JPA 2.1 <<annotations-jpa-foreignkey>> annotation instead.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ForeignKey.html[[line-through]#`@ForeignKey`#] annotation is deprecated. Use the JPA 2.1 <<annotations-jpa-foreignkey>> annotation instead.
 
 [[annotations-hibernate-formula]]
 ==== `@Formula`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Formula.html[`@Formula`] annotation is used to specify an SQL fragment that is executed in order to populate a given entity attribute.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Formula.html[`@Formula`] annotation is used to specify an SQL fragment that is executed in order to populate a given entity attribute.
 
 See the <<chapters/domain/basic_types.adoc#mapping-column-formula-example,`@Formula` mapping>> section for more info.
 
 [[annotations-hibernate-generated]]
 ==== `@Generated`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Generated.html[`@Generated`] annotation is used to specify that the currently annotated entity attribute is generated by the database.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Generated.html[`@Generated`] annotation is used to specify that the currently annotated entity attribute is generated by the database.
 
 See the <<chapters/domain/basic_types.adoc#mapping-generated-Generated,`@Generated` mapping>> section for more info.
 
 [[annotations-hibernate-generatortype]]
 ==== `@GeneratorType`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GeneratorType.html[`@GeneratorType`] annotation is used to provide a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tuple/ValueGenerator.html[`ValueGenerator`]
-and a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenerationTime.html[`GenerationTime`] for the currently annotated generated attribute.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GeneratorType.html[`@GeneratorType`] annotation is used to provide a https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/tuple/ValueGenerator.html[`ValueGenerator`]
+and a https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenerationTime.html[`GenerationTime`] for the currently annotated generated attribute.
 
 See the <<chapters/domain/basic_types.adoc#mapping-generated-GeneratorType-example,`@GeneratorType` mapping>> section for more info.
 
 [[annotations-hibernate-genericgenerator]]
 ==== `@GenericGenerator`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenericGenerator.html[`@GenericGenerator`] annotation can be used to configure any Hibernate identifier generator.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenericGenerator.html[`@GenericGenerator`] annotation can be used to configure any Hibernate identifier generator.
 
 See the <<chapters/domain/identifiers.adoc#identifiers-generators-GenericGenerator,`@GenericGenerator` mapping>> section for more info.
 
 [[annotations-hibernate-genericgenerators]]
 ==== `@GenericGenerators`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenericGenerators.html[`@GenericGenerators`] annotation is used to group multiple <<annotations-hibernate-genericgenerator>> annotations.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenericGenerators.html[`@GenericGenerators`] annotation is used to group multiple <<annotations-hibernate-genericgenerator>> annotations.
 
 [[annotations-hibernate-immutable]]
 ==== `@Immutable`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Immutable.html[`@Immutable`] annotation is used to specify that the annotated entity, attribute, or collection is immutable.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Immutable.html[`@Immutable`] annotation is used to specify that the annotated entity, attribute, or collection is immutable.
 
 See the <<chapters/domain/immutability.adoc#entity-immutability,`@Immutable` mapping>> section for more info.
 
 [[annotations-hibernate-index]]
 ==== [line-through]#`@Index`#
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Index.html[[line-through]#`@Index`#] annotation is deprecated. Use the JPA <<annotations-jpa-index>> annotation instead.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Index.html[[line-through]#`@Index`#] annotation is deprecated. Use the JPA <<annotations-jpa-index>> annotation instead.
 
 [[annotations-hibernate-indexcolumn]]
 ==== [line-through]#`@IndexColumn`#
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/IndexColumn.html[[line-through]#`@IndexColumn`#] annotation is deprecated. Use the JPA <<annotations-jpa-ordercolumn>> annotation instead.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/IndexColumn.html[[line-through]#`@IndexColumn`#] annotation is deprecated. Use the JPA <<annotations-jpa-ordercolumn>> annotation instead.
 
 [[annotations-hibernate-joincolumnorformula]]
 ==== `@JoinColumnOrFormula`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinColumnOrFormula.html[`@JoinColumnOrFormula`] annotation is used to specify that the entity association is resolved either through a FOREIGN KEY join (e.g. <<annotations-jpa-joincolumn>>) or using the result of a given SQL formula (e.g. <<annotations-hibernate-joinformula>>).
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinColumnOrFormula.html[`@JoinColumnOrFormula`] annotation is used to specify that the entity association is resolved either through a FOREIGN KEY join (e.g. <<annotations-jpa-joincolumn>>) or using the result of a given SQL formula (e.g. <<annotations-hibernate-joinformula>>).
 
 See the <<chapters/domain/basic_types.adoc#mapping-JoinColumnOrFormula,`@JoinColumnOrFormula` mapping>> section for more info.
 
 [[annotations-hibernate-joincolumnsorformulas]]
 ==== `@JoinColumnsOrFormulas`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinColumnsOrFormulas.html[`@JoinColumnsOrFormulas`] annotation is used to group multiple <<annotations-hibernate-joincolumnorformula>> annotations.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinColumnsOrFormulas.html[`@JoinColumnsOrFormulas`] annotation is used to group multiple <<annotations-hibernate-joincolumnorformula>> annotations.
 [[annotations-hibernate-joinformula]]
 ==== `@JoinFormula`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinFormula.html[`@JoinFormula`] annotation is used as a replacement for <<annotations-jpa-joincolumn>> when the association does not have a dedicated FOREIGN KEY column.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinFormula.html[`@JoinFormula`] annotation is used as a replacement for <<annotations-jpa-joincolumn>> when the association does not have a dedicated FOREIGN KEY column.
 
 See the <<chapters/domain/basic_types.adoc#mapping-JoinFormula,`@JoinFormula` mapping>> section for more info.
 
 [[annotations-hibernate-lazycollection]]
 ==== `@LazyCollection`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyCollection.html[`@LazyCollection`] annotation is used to specify the lazy fetching behavior of a given collection.
-The possible values are given by the `https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyCollectionOption.html[LazyCollectionOption]` enumeration:
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyCollection.html[`@LazyCollection`] annotation is used to specify the lazy fetching behavior of a given collection.
+The possible values are given by the `https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyCollectionOption.html[LazyCollectionOption]` enumeration:
 
 `TRUE`:: Load it when the state is requested.
 `FALSE`:: Eagerly load it.
@@ -940,7 +940,7 @@ See the <<chapters/fetching/Fetching.adoc#fetching-LazyCollection, `@LazyCollect
 [[annotations-hibernate-lazygroup]]
 ==== `@LazyGroup`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyGroup.html[`@LazyGroup`] annotation is used to specify that an entity attribute should be fetched along with all the other attributes belonging to the same group.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyGroup.html[`@LazyGroup`] annotation is used to specify that an entity attribute should be fetched along with all the other attributes belonging to the same group.
 
 To load entity attributes lazily, bytecode enhancement is needed.
 By default, all non-collection attributes are loaded in one group named "DEFAULT".
@@ -952,7 +952,7 @@ See the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement-lazy-loading-
 [[annotations-hibernate-lazytoone]]
 ==== `@LazyToOne`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyToOne.html[`@LazyToOne`] annotation is used to specify the laziness options, represented by https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyToOneOption.html[`LazyToOneOption`], available for a `@OneToOne` or `@ManyToOne` association.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyToOne.html[`@LazyToOne`] annotation is used to specify the laziness options, represented by https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyToOneOption.html[`LazyToOneOption`], available for a `@OneToOne` or `@ManyToOne` association.
 
 `LazyToOneOption` defines the following alternatives:
 
@@ -965,7 +965,7 @@ See the <<chapters/domain/associations.adoc#associations-one-to-one-bidirectiona
 [[annotations-hibernate-listindexbase]]
 ==== `@ListIndexBase`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ListIndexBase.html[`@ListIndexBase`] annotation is used to specify the start value for a list index, as stored in the database.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ListIndexBase.html[`@ListIndexBase`] annotation is used to specify the start value for a list index, as stored in the database.
 
 By default, `List` indexes are stored starting at zero. Generally used in conjunction with <<annotations-jpa-ordercolumn>>.
 
@@ -974,40 +974,40 @@ See the <<chapters/domain/collections.adoc#collections-customizing-ordered-list-
 [[annotations-hibernate-loader]]
 ==== `@Loader`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Loader.html[`@Loader`] annotation is used to override the default `SELECT` query used for loading an entity loading.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Loader.html[`@Loader`] annotation is used to override the default `SELECT` query used for loading an entity loading.
 
 See the <<chapters/query/native/Native.adoc#sql-custom-crud-example, Custom CRUD mapping>> section for more info.
 
 [[annotations-hibernate-manytoany]]
 ==== `@ManyToAny`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ManyToAny.html[`@ManyToAny`] annotation is used to specify a many-to-one association when the target type is dynamically resolved.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ManyToAny.html[`@ManyToAny`] annotation is used to specify a many-to-one association when the target type is dynamically resolved.
 
 See the <<chapters/domain/basic_types.adoc#mapping-column-many-to-any, `@ManyToAny` mapping>> section for more info.
 
 [[annotations-hibernate-mapkeytype]]
 ==== `@MapKeyType`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/MapKeyType.html[`@MapKeyType`] annotation is used to specify the map key type.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/MapKeyType.html[`@MapKeyType`] annotation is used to specify the map key type.
 
 See the <<chapters/domain/collections.adoc#collections-map-custom-key-type, `@MapKeyType` mapping>> section for more info.
 
 [[annotations-hibernate-metavalue]]
 ==== `@MetaValue`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/MetaValue.html[`@MetaValue`] annotation is used by the <<annotations-hibernate-anymetadef>> annotation to specify the association between a given discriminator value and an entity type.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/MetaValue.html[`@MetaValue`] annotation is used by the <<annotations-hibernate-anymetadef>> annotation to specify the association between a given discriminator value and an entity type.
 
 See the <<chapters/domain/basic_types.adoc#mapping-column-any,`@Any` mapping>> section for more info.
 
 [[annotations-hibernate-namednativequeries]]
 ==== `@NamedNativeQueries`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedNativeQueries.html[`@NamedNativeQueries`] annotation is used to group multiple <<annotations-hibernate-namednativequery>> annotations.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedNativeQueries.html[`@NamedNativeQueries`] annotation is used to group multiple <<annotations-hibernate-namednativequery>> annotations.
 
 [[annotations-hibernate-namednativequery]]
 ==== `@NamedNativeQuery`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedNativeQuery.html[`@NamedNativeQuery`] annotation extends the JPA <<annotations-jpa-namednativequery>> with Hibernate specific features, like:
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedNativeQuery.html[`@NamedNativeQuery`] annotation extends the JPA <<annotations-jpa-namednativequery>> with Hibernate specific features, like:
 
 - flush mode for this particular query
 - if the query should be cached, and which cache region should be used
@@ -1023,12 +1023,12 @@ See the <<chapters/query/native/Native.adoc#sql-multiple-scalar-values-dto-Named
 [[annotations-hibernate-namedqueries]]
 ==== `@NamedQueries`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedQueries.html[`@NamedQueries`] annotation is used to group multiple <<annotations-hibernate-namedquery>> annotations.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedQueries.html[`@NamedQueries`] annotation is used to group multiple <<annotations-hibernate-namedquery>> annotations.
 
 [[annotations-hibernate-namedquery]]
 ==== `@NamedQuery`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedQuery.html[`@NamedQuery`] annotation extends the JPA <<annotations-jpa-namedquery>> with Hibernate specific features, like:
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedQuery.html[`@NamedQuery`] annotation extends the JPA <<annotations-jpa-namedquery>> with Hibernate specific features, like:
 
 - flush mode for this particular query
 - if the query should be cached, and which cache region should be used
@@ -1044,28 +1044,28 @@ See the <<chapters/query/hql/HQL.adoc#jpql-api-hibernate-named-query-example, `@
 [[annotations-hibernate-nationalized]]
 ==== `@Nationalized`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Nationalized.html[`@Nationalized`] annotation is used to specify that the currently annotated attribute is a character type (e.g. `String`, `Character`, `Clob`) that is stored in a nationalized column type (`NVARCHAR`, `NCHAR`, `NCLOB`).
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Nationalized.html[`@Nationalized`] annotation is used to specify that the currently annotated attribute is a character type (e.g. `String`, `Character`, `Clob`) that is stored in a nationalized column type (`NVARCHAR`, `NCHAR`, `NCLOB`).
 
 See the <<chapters/domain/basic_types.adoc#basic-nationalized-example,`@Nationalized` mapping>> section for more info.
 
 [[annotations-hibernate-naturalid]]
 ==== `@NaturalId`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NaturalId.html[`@NaturalId`] annotation is used to specify that the currently annotated attribute is part of the natural id of the entity.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NaturalId.html[`@NaturalId`] annotation is used to specify that the currently annotated attribute is part of the natural id of the entity.
 
 See the <<chapters/domain/natural_id.adoc#naturalid,Natural Ids>> section for more info.
 
 [[annotations-hibernate-naturalidcache]]
 ==== `@NaturalIdCache`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NaturalIdCache.html[`@NaturalIdCache`] annotation is used to specify that the natural id values associated with the annotated entity should be stored in the second-level cache.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NaturalIdCache.html[`@NaturalIdCache`] annotation is used to specify that the natural id values associated with the annotated entity should be stored in the second-level cache.
 
 See the <<chapters/domain/natural_id.adoc#naturalid-caching,`@NaturalIdCache` mapping>> section for more info.
 
 [[annotations-hibernate-notfound]]
 ==== `@NotFound`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NotFound.html[`@NotFound`] annotation is used to specify the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NotFoundAction.html[`NotFoundAction`] strategy for when an element is not found in a given association.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NotFound.html[`@NotFound`] annotation is used to specify the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NotFoundAction.html[`NotFoundAction`] strategy for when an element is not found in a given association.
 
 The `NotFoundAction` defines with two possibilities:
 
@@ -1077,10 +1077,10 @@ See the <<chapters/domain/associations.adoc#associations-not-found,`@NotFound` m
 [[annotations-hibernate-ondelete]]
 ==== `@OnDelete`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OnDelete.html[`@OnDelete`] annotation is used to specify the delete strategy employed by the currently annotated collection, array or joined subclasses.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OnDelete.html[`@OnDelete`] annotation is used to specify the delete strategy employed by the currently annotated collection, array or joined subclasses.
 This annotation is used by the automated schema generation tool to generated the appropriate FOREIGN KEY DDL cascade directive.
 
-The two possible strategies are defined by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OnDeleteAction.html[`OnDeleteAction`] enumeration:
+The two possible strategies are defined by the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OnDeleteAction.html[`OnDeleteAction`] enumeration:
 
 CASCADE:: Use the database FOREIGN KEY cascade capabilities.
 NO_ACTION:: Take no action.
@@ -1090,16 +1090,16 @@ See the <<chapters/pc/PersistenceContext.adoc#pc-cascade-on-delete, `@OnDelete` 
 [[annotations-hibernate-optimisticlock]]
 ==== `@OptimisticLock`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLock.html[`@OptimisticLock`] annotation is used to specify if the currently annotated attribute will trigger an entity version increment upon being modified.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLock.html[`@OptimisticLock`] annotation is used to specify if the currently annotated attribute will trigger an entity version increment upon being modified.
 
 See the <<chapters/locking/Locking.adoc#locking-optimistic-exclude-attribute, Excluding attributes>> section for more info.
 
 [[annotations-hibernate-optimisticlocking]]
 ==== `@OptimisticLocking`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLocking.html[`@OptimisticLocking`] annotation is used to specify the currently annotated an entity optimistic locking strategy.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLocking.html[`@OptimisticLocking`] annotation is used to specify the currently annotated an entity optimistic locking strategy.
 
-The four possible strategies are defined by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLockType.html[`OptimisticLockType`] enumeration:
+The four possible strategies are defined by the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLockType.html[`OptimisticLockType`] enumeration:
 
 NONE:: The implicit optimistic locking mechanism is disabled.
 VERSION:: The implicit optimistic locking mechanism is using a dedicated version column.
@@ -1111,7 +1111,7 @@ See the <<chapters/locking/Locking.adoc#locking-optimistic-versionless, Versionl
 [[annotations-hibernate-orderby]]
 ==== `@OrderBy`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OrderBy.html[`@OrderBy`] annotation is used to specify a *SQL* ordering directive for sorting the currently annotated collection.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OrderBy.html[`@OrderBy`] annotation is used to specify a *SQL* ordering directive for sorting the currently annotated collection.
 
 It differs from the JPA <<annotations-jpa-orderby>> annotation because the JPA annotation expects a JPQL order-by fragment, not an SQL directive.
 
@@ -1120,38 +1120,38 @@ See the <<chapters/domain/collections.adoc#collections-customizing-ordered-by-sq
 [[annotations-hibernate-paramdef]]
 ==== `@ParamDef`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ParamDef.html[`@ParamDef`] annotation is used in conjunction with <<annotations-hibernate-filterdef>> so that the Hibernate Filter can be customized with runtime-provided parameter values.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ParamDef.html[`@ParamDef`] annotation is used in conjunction with <<annotations-hibernate-filterdef>> so that the Hibernate Filter can be customized with runtime-provided parameter values.
 
 See the <<chapters/domain/basic_types.adoc#mapping-filter-example,Filter mapping>> section for more info.
 
 [[annotations-hibernate-parameter]]
 ==== `@Parameter`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Parameter.html[`@Parameter`] annotation is a generic parameter (basically a key/value combination) used to parametrize other annotations,
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Parameter.html[`@Parameter`] annotation is a generic parameter (basically a key/value combination) used to parametrize other annotations,
 like <<annotations-hibernate-collectiontype>>, <<annotations-hibernate-genericgenerator>>, and <<annotations-hibernate-type>>, <<annotations-hibernate-typedef>>.
 
 [[annotations-hibernate-parent]]
 ==== `@Parent`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Parent.html[`@Parent`] annotation is used to specify that the currently annotated embeddable attribute references back the owning entity.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Parent.html[`@Parent`] annotation is used to specify that the currently annotated embeddable attribute references back the owning entity.
 
 See the <<chapters/domain/basic_types.adoc#mapping-Parent,`@Parent` mapping>> section for more info.
 
 [[annotations-hibernate-persister]]
 ==== `@Persister`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Persister.html[`@Persister`] annotation is used to specify a custom entity or collection persister.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Persister.html[`@Persister`] annotation is used to specify a custom entity or collection persister.
 
-For entities, the custom persister must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/entity/EntityPersister.html[`EntityPersister`] interface.
+For entities, the custom persister must implement the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/entity/EntityPersister.html[`EntityPersister`] interface.
 
-For collections, the custom persister must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/collection/CollectionPersister.html[`CollectionPersister`] interface.
+For collections, the custom persister must implement the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/collection/CollectionPersister.html[`CollectionPersister`] interface.
 
 See the <<chapters/domain/entity.adoc#entity-persister, `@Persister` mapping>> section for more info.
 
 [[annotations-hibernate-polymorphism]]
 ==== `@Polymorphism`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Polymorphism.html[`@Polymorphism`] annotation is used to define the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/PolymorphismType.html[`PolymorphismType`] Hibernate will apply to entity hierarchies.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Polymorphism.html[`@Polymorphism`] annotation is used to define the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/PolymorphismType.html[`PolymorphismType`] Hibernate will apply to entity hierarchies.
 
 There are two possible `PolymorphismType` options:
 
@@ -1163,14 +1163,14 @@ See the <<chapters/domain/inheritance.adoc#entity-inheritance-polymorphism, `@Po
 [[annotations-hibernate-proxy]]
 ==== `@Proxy`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Proxy.html[`@Proxy`] annotation is used to specify a custom proxy implementation for the currently annotated entity.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Proxy.html[`@Proxy`] annotation is used to specify a custom proxy implementation for the currently annotated entity.
 
 See the <<chapters/domain/entity.adoc#entity-proxy, `@Proxy` mapping>> section for more info.
 
 [[annotations-hibernate-rowid]]
 ==== `@RowId`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/RowId.html[`@RowId`] annotation is used to specify the database column used as a `ROWID` pseudocolumn.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/RowId.html[`@RowId`] annotation is used to specify the database column used as a `ROWID` pseudocolumn.
 For instance, Oracle defines the https://docs.oracle.com/cd/B19306_01/server.102/b14200/pseudocolumns008.htm[`ROWID` pseudocolumn] which provides the address of every table row.
 
 According to Oracle documentation, `ROWID` is the fastest way to access a single row from a table.
@@ -1180,34 +1180,34 @@ See the <<chapters/domain/identifiers.adoc#identifiers-rowid, `@RowId` mapping>>
 [[annotations-hibernate-selectbeforeupdate]]
 ==== `@SelectBeforeUpdate`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SelectBeforeUpdate.html[`@SelectBeforeUpdate`] annotation is used to specify that the currently annotated entity state be selected from the database when determining whether to perform an update when the detached entity is reattached.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SelectBeforeUpdate.html[`@SelectBeforeUpdate`] annotation is used to specify that the currently annotated entity state be selected from the database when determining whether to perform an update when the detached entity is reattached.
 
 See the <<chapters/domain/entity.adoc#locking-optimistic-lock-type-dirty-example, `OptimisticLockType.DIRTY` mapping>> section for more info on how `@SelectBeforeUpdate` works.
 
 [[annotations-hibernate-sort]]
 ==== [line-through]#`@Sort`#
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Sort.html[[line-through]#`@Sort`#] annotation is deprecated. Use the Hibernate specific <<annotations-hibernate-sortcomparator>> or <<annotations-hibernate-sortnatural>> annotations instead.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Sort.html[[line-through]#`@Sort`#] annotation is deprecated. Use the Hibernate specific <<annotations-hibernate-sortcomparator>> or <<annotations-hibernate-sortnatural>> annotations instead.
 
 [[annotations-hibernate-sortcomparator]]
 ==== `@SortComparator`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SortComparator.html[`@SortComparator`] annotation is used to specify a `Comparator` for sorting the `Set`/`Map` in-memory.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SortComparator.html[`@SortComparator`] annotation is used to specify a `Comparator` for sorting the `Set`/`Map` in-memory.
 
 See the <<chapters/domain/collections.adoc#collections-unidirectional-sorted-set-custom-comparator-example, `@SortComparator` mapping>> section for more info.
 
 [[annotations-hibernate-sortnatural]]
 ==== `@SortNatural`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SortNatural.html[`@SortNatural`] annotation is used to specify that the `Set`/`Map` should be sorted using natural sorting.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SortNatural.html[`@SortNatural`] annotation is used to specify that the `Set`/`Map` should be sorted using natural sorting.
 
 See the <<chapters/domain/collections.adoc#collections-bidirectional-sorted-set-example, `@SortNatural` mapping>> section for more info.
 
 [[annotations-hibernate-source]]
 ==== `@Source`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Source.html[`@Source`] annotation is used in conjunction with a `@Version` timestamp entity attribute indicating
-the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SourceType.html[`SourceType`] of the timestamp value.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Source.html[`@Source`] annotation is used in conjunction with a `@Version` timestamp entity attribute indicating
+the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SourceType.html[`SourceType`] of the timestamp value.
 
 The `SourceType` offers two options:
 
@@ -1219,21 +1219,21 @@ See the <<chapters/locking/Locking.adoc#locking-optimistic-version-timestamp-sou
 [[annotations-hibernate-sqldelete]]
 ==== `@SQLDelete`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SQLDelete.html[`@SQLDelete`] annotation is used to specify a custom SQL `DELETE` statement for the currently annotated entity or collection.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SQLDelete.html[`@SQLDelete`] annotation is used to specify a custom SQL `DELETE` statement for the currently annotated entity or collection.
 
 See the <<chapters/query/native/Native.adoc#sql-custom-crud-example, Custom CRUD mapping>> section for more info.
 
 [[annotations-hibernate-sqldeleteall]]
 ==== `@SQLDeleteAll`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SQLDeleteAll.html[`@SQLDeleteAll`] annotation is used to specify a custom SQL `DELETE` statement when removing all elements of the currently annotated collection.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SQLDeleteAll.html[`@SQLDeleteAll`] annotation is used to specify a custom SQL `DELETE` statement when removing all elements of the currently annotated collection.
 
 See the <<chapters/query/native/Native.adoc#sql-custom-crud-example, Custom CRUD mapping>> section for more info.
 
 [[annotations-hibernate-sqlfragmentalias]]
 ==== `@SqlFragmentAlias`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SqlFragmentAlias.html[`@SqlFragmentAlias`] annotation is used to specify an alias for a Hibernate <<annotations-hibernate-filter>>.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SqlFragmentAlias.html[`@SqlFragmentAlias`] annotation is used to specify an alias for a Hibernate <<annotations-hibernate-filter>>.
 
 The alias (e.g. `myAlias`) can then be used in the `@Filter` `condition` clause using the `{alias}` (e.g. `{myAlias}`) placeholder.
 
@@ -1242,28 +1242,28 @@ See the <<chapters/domain/basic_types.adoc#mapping-column-filter-sql-fragment-al
 [[annotations-hibernate-sqlinsert]]
 ==== `@SQLInsert`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SQLInsert.html[`@SQLInsert`] annotation is used to specify a custom SQL `INSERT` statement for the currently annotated entity or collection.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SQLInsert.html[`@SQLInsert`] annotation is used to specify a custom SQL `INSERT` statement for the currently annotated entity or collection.
 
 See the <<chapters/query/native/Native.adoc#sql-custom-crud-example, Custom CRUD mapping>> section for more info.
 
 [[annotations-hibernate-sqlupdate]]
 ==== `@SQLUpdate`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SQLUpdate.html[`@SQLUpdate`] annotation is used to specify a custom SQL `UPDATE` statement for the currently annotated entity or collection.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SQLUpdate.html[`@SQLUpdate`] annotation is used to specify a custom SQL `UPDATE` statement for the currently annotated entity or collection.
 
 See the <<chapters/query/native/Native.adoc#sql-custom-crud-example, Custom CRUD mapping>> section for more info.
 
 [[annotations-hibernate-subselect]]
 ==== `@Subselect`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Subselect.html[`@Subselect`] annotation is used to specify an immutable and read-only entity using a custom SQL `SELECT` statement.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Subselect.html[`@Subselect`] annotation is used to specify an immutable and read-only entity using a custom SQL `SELECT` statement.
 
 See the <<chapters/domain/entity.adoc#entity-sql-query-mapping, Mapping the entity to a SQL query>> section for more info.
 
 [[annotations-hibernate-synchronize]]
 ==== `@Synchronize`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Synchronize.html[`@Synchronize`] annotation is usually used in conjunction with the <<annotations-hibernate-subselect>> annotation to specify the list of database tables used by the `@Subselect` SQL query.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Synchronize.html[`@Synchronize`] annotation is usually used in conjunction with the <<annotations-hibernate-subselect>> annotation to specify the list of database tables used by the `@Subselect` SQL query.
 
 With this information in place, Hibernate will properly trigger an entity flush whenever a query targeting the `@Subselect` entity is to be executed while the Persistence Context has scheduled some insert/update/delete actions against the database tables used by the `@Subselect` SQL query.
 
@@ -1274,60 +1274,60 @@ See the <<chapters/domain/entity.adoc#entity-sql-query-mapping, Mapping the enti
 [[annotations-hibernate-table]]
 ==== `@Table`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Table.html[`@Table`] annotation is used to specify additional information to a JPA <<annotations-hibernate-table>> annotation, like custom `INSERT`, `UPDATE` or `DELETE` statements or a specific https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/FetchMode.html[`FetchMode`].
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Table.html[`@Table`] annotation is used to specify additional information to a JPA <<annotations-hibernate-table>> annotation, like custom `INSERT`, `UPDATE` or `DELETE` statements or a specific https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/FetchMode.html[`FetchMode`].
 
 See the <<chapters/query/native/Native.adoc#sql-custom-crud-secondary-table-example, `@SecondaryTable` mapping>> section for more info about Hibernate-specific `@Table` mapping.
 
 [[annotations-hibernate-tables]]
 ==== `@Tables`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Tables.html[`@Tables`] annotation is used to group multiple <<annotations-hibernate-table>> annotations.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Tables.html[`@Tables`] annotation is used to group multiple <<annotations-hibernate-table>> annotations.
 
 [[annotations-hibernate-target]]
 ==== `@Target`
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Target.html[`@Target`] annotation is used to specify an explicit target implementation when the currently annotated association is using an interface type.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Target.html[`@Target`] annotation is used to specify an explicit target implementation when the currently annotated association is using an interface type.
 
 See the <<chapters/domain/basic_types.adoc#mapping-Target,`@Target` mapping>> section for more info.
 
 [[annotations-hibernate-tuplizer]]
 ==== `@Tuplizer`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Tuplizer.html[`@Tuplizer`] annotation is used to specify a custom tuplizer for the currently annotated entity or embeddable.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Tuplizer.html[`@Tuplizer`] annotation is used to specify a custom tuplizer for the currently annotated entity or embeddable.
 
-For entities, the tupelizer must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tuple/entity/EntityTuplizer.html[`EntityTuplizer`] interface.
+For entities, the tupelizer must implement the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/tuple/entity/EntityTuplizer.html[`EntityTuplizer`] interface.
 
-For embeddables, the tupelizer must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tuple/component/ComponentTuplizer.html[`ComponentTuplizer`] interface.
+For embeddables, the tupelizer must implement the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/tuple/component/ComponentTuplizer.html[`ComponentTuplizer`] interface.
 
 See the <<chapters/domain/entity.adoc#entity-tuplizer, `@Tuplizer` mapping>> section for more info.
 
 [[annotations-hibernate-tuplizers]]
 ==== `@Tuplizers`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Tuplizers.html[`@Tuplizers`] annotation is used to group multiple <<annotations-hibernate-tuplizer>> annotations.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Tuplizers.html[`@Tuplizers`] annotation is used to group multiple <<annotations-hibernate-tuplizer>> annotations.
 
 [[annotations-hibernate-type]]
 ==== `@Type`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Type.html[`@Type`] annotation is used to specify the Hibernate https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/type/Type.html[`@Type`] used by the currently annotated basic attribute.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Type.html[`@Type`] annotation is used to specify the Hibernate https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/type/Type.html[`@Type`] used by the currently annotated basic attribute.
 
 See the <<chapters/domain/basic_types.adoc#basic-custom-type-BitSetType-mapping-example, `@Type` mapping>> section for more info.
 
 [[annotations-hibernate-typedef]]
 ==== `@TypeDef`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/TypeDef.html[`@TypeDef`] annotation is used to specify a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/type/Type.html[`@Type`] definition which can later be reused for multiple basic attribute mappings.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/TypeDef.html[`@TypeDef`] annotation is used to specify a https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/type/Type.html[`@Type`] definition which can later be reused for multiple basic attribute mappings.
 
 See the <<chapters/domain/basic_types.adoc#basic-custom-type-BitSetTypeDef-mapping-example, `@TypeDef` mapping>> section for more info.
 
 [[annotations-hibernate-typedefs]]
 ==== `@TypeDefs`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/TypeDefs.html[`@TypeDefs`] annotation is used to group multiple <<annotations-hibernate-typedef>> annotations.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/TypeDefs.html[`@TypeDefs`] annotation is used to group multiple <<annotations-hibernate-typedef>> annotations.
 
 [[annotations-hibernate-updatetimestamp]]
 ==== `@UpdateTimestamp`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/UpdateTimestamp.html[`@UpdateTimestamp`] annotation is used to specify that the currently annotated timestamp attribute should be updated with the current JVM timestamp whenever the owning entity gets modified.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/UpdateTimestamp.html[`@UpdateTimestamp`] annotation is used to specify that the currently annotated timestamp attribute should be updated with the current JVM timestamp whenever the owning entity gets modified.
 
 - `java.util.Date`
 - `java.util.Calendar`
@@ -1340,20 +1340,20 @@ See the <<chapters/domain/basic_types.adoc#mapping-generated-UpdateTimestamp,`@U
 [[annotations-hibernate-valuegenerationtype]]
 ==== `@ValueGenerationType`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ValueGenerationType.html[`@ValueGenerationType`] annotation is used to specify that the current annotation type should be used as a generator annotation type.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ValueGenerationType.html[`@ValueGenerationType`] annotation is used to specify that the current annotation type should be used as a generator annotation type.
 
 See the <<chapters/domain/basic_types.adoc#mapping-database-generated-value-example,`@ValueGenerationType` mapping>> section for more info.
 
 [[annotations-hibernate-where]]
 ==== `@Where`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Where.html[`@Where`] annotation is used to specify a custom SQL `WHERE` clause used when fetching an entity or a collection.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Where.html[`@Where`] annotation is used to specify a custom SQL `WHERE` clause used when fetching an entity or a collection.
 
 See the <<chapters/domain/basic_types.adoc#mapping-where-example,`@Where` mapping>> section for more info.
 
 [[annotations-hibernate-wherejointable]]
 ==== `@WhereJoinTable`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/WhereJoinTable.html[`@WhereJoinTable`] annotation is used to specify a custom SQL `WHERE` clause used when fetching a join collection table.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/WhereJoinTable.html[`@WhereJoinTable`] annotation is used to specify a custom SQL `WHERE` clause used when fetching a join collection table.
 
 See the <<chapters/domain/basic_types.adoc#mapping-where-join-table, `@WhereJoinTable` mapping>> section for more info.

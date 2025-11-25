@@ -28,7 +28,7 @@ List cats = crit.list();
 [[criteria-entity-name]]
 === JPA vs. Hibernate entity name
 
-When using the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/SharedSessionContract.html#createCriteria-java.lang.String-[`Session#createCriteria(String entityName)` or `StatelessSession#createCriteria(String entityName)`],
+When using the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/SharedSessionContract.html#createCriteria-java.lang.String-[`Session#createCriteria(String entityName)` or `StatelessSession#createCriteria(String entityName)`],
 the *entityName* means the fully-qualified name of the underlying entity and not the name denoted by the `name` attribute of the JPA `@Entity` annotation.
 
 Considering you have the following entity:

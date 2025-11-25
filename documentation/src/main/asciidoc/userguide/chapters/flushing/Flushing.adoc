@@ -16,7 +16,7 @@ Because DML statements are grouped together, Hibernate can apply batching transp
 See the <<chapters/batch/Batching.adoc#batch,Batching chapter>> for more information.
 ====
 
-The flushing strategy is given by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#getFlushMode--[`flushMode`] of the current running Hibernate `Session`.
+The flushing strategy is given by the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#getFlushMode--[`flushMode`] of the current running Hibernate `Session`.
 Although JPA defines only two flushing strategies (https://javaee.github.io/javaee-spec/javadocs/javax/persistence/FlushModeType.html#AUTO[`AUTO`] and https://javaee.github.io/javaee-spec/javadocs/javax/persistence/FlushModeType.html#COMMIT[`COMMIT`]),
 Hibernate has a much broader spectrum of flush types:
 

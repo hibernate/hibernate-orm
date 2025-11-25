@@ -87,25 +87,25 @@ following pre-existing `org.hibernate.Query` methods were changed to be specifie
 methods: `getFirstResult()`, `setFirstResult(int)`, `getMaxResults()`, and `setMaxResults()`.
 
 In 5.3.2, the following methods were temporarily added to
-http://docs.jboss.org/hibernate/orm/5.3/javadocs/org/hibernate/Query.html[`org.hibernate.Query`] to make it
+http://docs.hibernate.org/orm/5.3/javadocs/org/hibernate/Query.html[`org.hibernate.Query`] to make it
 easier to migrate native applications from Hibernate ORM 5.1 to 5.3, and maintain 5.1 pagination behavior:
 
-* http://docs.jboss.org/hibernate/orm/5.3/javadocs/org/hibernate/Query.html#setHibernateFirstResult-int-[`setHibernateFirstResult(int)`] 
+* http://docs.hibernate.org/orm/5.3/javadocs/org/hibernate/Query.html#setHibernateFirstResult-int-[`setHibernateFirstResult(int)`] 
 behaves the same as the 5.1 version of `setFirstResult()`, with a small difference -- calling 
 `setHibernateFirstResult(int)` with a negative value will result in `getHibernateFirstResult()` returning 0, instead 
 of the negative value. Note that this behavior differs from JPA in that `javax.persistence.Query.setFirstResult(int)` 
 throws `IllegalArgumentException` when called with a negative value.
-* http://docs.jboss.org/hibernate/orm/5.3/javadocs/org/hibernate/Query.html#getHibernateFirstResult--[`getHibernateFirstResult()`] 
+* http://docs.hibernate.org/orm/5.3/javadocs/org/hibernate/Query.html#getHibernateFirstResult--[`getHibernateFirstResult()`] 
 behaves the same as the 5.1 version of `getFirstResult()`, except for the difference mentioned above when `setHibernateFirstResult(int)` is called with a negative number. This method returns `null` if no value was set 
 via `setHibernateFirstResult(int)` (or `setFirstResult(int)`). Note that this behavior differs from JPA in that
 `javax.persistence.Query.getFirstResult()` returns 0 when uninitialized.
-* http://docs.jboss.org/hibernate/orm/5.3/javadocs/org/hibernate/Query.html#setHibernateMaxResults-int-[`setHibernateMaxResults`] 
+* http://docs.hibernate.org/orm/5.3/javadocs/org/hibernate/Query.html#setHibernateMaxResults-int-[`setHibernateMaxResults`] 
 behaves the same as the 5.1 version of `setMaxResults()`; setting a value less than or equal to 0 is 
 considered uninitialized, resulting in *no limit* on the number of results. Note that this behavior differs 
 from JPA `javax.persistence.Query.setMaxResults(int)`, which, when called with a negative value, 
 throws `IllegalArgumentException`, and when called with a value of 0, indicates that the query should return 
 *no results*.
-* http://docs.jboss.org/hibernate/orm/5.3/javadocs/org/hibernate/Query.html#getHibernateMaxResults--[`getHibernateMaxResults`]
+* http://docs.hibernate.org/orm/5.3/javadocs/org/hibernate/Query.html#getHibernateMaxResults--[`getHibernateMaxResults`]
 behaves the same as the 5.1 version of `#getMaxResults`. This method returns `null` if uninitialized or
 a value less than or equal to 0 was set via `setHibernateMaxResults(int)` (or `setMaxResults(int)`).
 Note that this behavior differs from JPA in that `javax.persistence.Query.getMaxResults() returns 

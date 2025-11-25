@@ -254,7 +254,7 @@ The `IdGeneratorStrategyInterpreter` has two implementations:
 	If the underlying database supports sequences, then a SEQUENCE generator is used. Otherwise, a TABLE generator is going to be used instead.
 `LegacyFallbackInterpreter`::
 	This is a legacy mechanism that was used by Hibernate prior to version 5.0 or when the <<appendices/Configurations.adoc#configurations-mapping,`hibernate.id.new_generator_mappings`>> configuration property is false.
-	The legacy strategy maps `AUTO` to the `native` generator strategy which uses the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#getNativeIdentifierGeneratorStrategy--[Dialect#getNativeIdentifierGeneratorStrategy] to resolve the actual identifier generator (e.g. `identity` or `sequence`).
+	The legacy strategy maps `AUTO` to the `native` generator strategy which uses the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#getNativeIdentifierGeneratorStrategy--[Dialect#getNativeIdentifierGeneratorStrategy] to resolve the actual identifier generator (e.g. `identity` or `sequence`).
 
 [[identifiers-generators-sequence]]
 ==== Using sequences
@@ -456,7 +456,7 @@ Applications can also implement and use their own optimizer strategies, as defin
 `@GenericGenerator` allows integration of any Hibernate `org.hibernate.id.IdentifierGenerator` implementation, including any of the specific ones discussed here and any custom ones.
 
 To make use of the pooled or pooled-lo optimizers,
-the entity mapping must use the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenericGenerator.html[`@GenericGenerator`] annotation:
+the entity mapping must use the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenericGenerator.html[`@GenericGenerator`] annotation:
 
 [[identifiers-generators-pooled-lo-optimizer-mapping-example]]
 .Pooled-lo optimizer mapping using `@GenericGenerator` mapping

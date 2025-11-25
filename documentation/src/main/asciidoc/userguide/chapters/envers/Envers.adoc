@@ -101,7 +101,7 @@ include::{extrasdir}/envers-audited-delete-example.sql[]
 ----
 ====
 
-The `REVTYPE` column value is taken from the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/RevisionType.html[`RevisionType`] Enum.
+The `REVTYPE` column value is taken from the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/RevisionType.html[`RevisionType`] Enum.
 
 [[envers-revtype-column]]
 .`REVTYPE` column values
@@ -175,7 +175,7 @@ include::{sourcedir}/DefaultAuditTest.java[tags=envers-audited-rev3-example]
 ====
 
 You can use the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/query/AuditQueryCreator.html#forEntitiesAtRevision-java.lang.Class-java.lang.String-java.lang.Number-boolean-[`forEntitiesAtRevision(Class<T> cls, String entityName, Number revision, boolean includeDeletions)`]
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/query/AuditQueryCreator.html#forEntitiesAtRevision-java.lang.Class-java.lang.String-java.lang.Number-boolean-[`forEntitiesAtRevision(Class<T> cls, String entityName, Number revision, boolean includeDeletions)`]
 method to get the deleted entity revision so that, instead of a `NoResultException`,
 all attributes, except for the entity identifier, are going to be `null`.
 
@@ -188,7 +188,7 @@ include::{sourcedir}/DefaultAuditTest.java[tags=envers-audited-rev4-example]
 ----
 ====
 
-See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/AuditReader.html[Javadocs] for details on other functionality offered.
+See the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/AuditReader.html[Javadocs] for details on other functionality offered.
 
 [[envers-configuration]]
 === Configuration Properties
@@ -451,7 +451,7 @@ Simply add the custom revision entity as you do your normal entities and Envers 
 NOTE: It is an error for there to be multiple entities marked as `@org.hibernate.envers.RevisionEntity`
 
 . Second, you need to tell Envers how to create instances of your revision entity which is handled by the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/RevisionListener.html#newRevision-java.lang.Object-[`newRevision( Object revisionEntity )`]
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/RevisionListener.html#newRevision-java.lang.Object-[`newRevision( Object revisionEntity )`]
 method of the `org.hibernate.envers.RevisionListener` interface.
 +
 You tell Envers your custom `org.hibernate.envers.RevisionListener` implementation to use by specifying it on the `@org.hibernate.envers.RevisionEntity` annotation, using the value attribute.
@@ -530,7 +530,7 @@ As demonstrated by the example above, the username is properly set and propagate
 **This strategy is deprecated since version 5.2.  The alternative is to use dependency injection offered as of version 5.3.**
 
 An alternative method to using the `org.hibernate.envers.RevisionListener` is to instead call the
-[line-through]#https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/AuditReader.html#getCurrentRevision-java.lang.Class-boolean-[`getCurrentRevision( Class<T> revisionEntityClass, boolean persist )`]#
+[line-through]#https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/AuditReader.html#getCurrentRevision-java.lang.Class-boolean-[`getCurrentRevision( Class<T> revisionEntityClass, boolean persist )`]#
 method of the `org.hibernate.envers.AuditReader` interface to obtain the current revision,
 and fill it with desired information.
 

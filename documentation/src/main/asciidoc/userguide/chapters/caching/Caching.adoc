@@ -115,7 +115,7 @@ transactional::
 [NOTE]
 ====
 Rather than using a global cache concurrency strategy, it is recommended to define this setting on a per entity basis.
-Use the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Cache.html[`@org.hibernate.annotations.Cache`] annotation for that.
+Use the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Cache.html[`@org.hibernate.annotations.Cache`] annotation for that.
 ====
 
 The `@Cache` annotation define three attributes:
@@ -376,7 +376,7 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-region-store-m
 
 [NOTE]
 ====
-When using http://docs.oracle.com/javaee/7/api/javax/persistence/CacheStoreMode.html#REFRESH[`CacheStoreMode.REFRESH`] or https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/CacheMode.html#REFRESH[`CacheMode.REFRESH`] in conjunction with the region you have defined for the given query,
+When using http://docs.oracle.com/javaee/7/api/javax/persistence/CacheStoreMode.html#REFRESH[`CacheStoreMode.REFRESH`] or https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/CacheMode.html#REFRESH[`CacheMode.REFRESH`] in conjunction with the region you have defined for the given query,
 Hibernate will selectively force the results cached in that particular region to be refreshed.
 
 This is particularly useful in cases where underlying data may have been updated via a separate process
@@ -391,7 +391,7 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-region-native-
 [[caching-management]]
 === Managing the cached data
 
-Traditionally, Hibernate defined the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/CacheMode.html[`CacheMode`] enumeration to describe
+Traditionally, Hibernate defined the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/CacheMode.html[`CacheMode`] enumeration to describe
 the ways of interactions with the cached data.
 JPA split cache modes by storage (http://docs.oracle.com/javaee/7/api/javax/persistence/CacheStoreMode.html[`CacheStoreMode`])
 and retrieval (http://docs.oracle.com/javaee/7/api/javax/persistence/CacheRetrieveMode.html[`CacheRetrieveMode`]).
@@ -467,7 +467,7 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-management-evict-jpa
 ====
 
 Hibernate is much more flexible in this regard as it offers fine-grained control over what needs to be evicted.
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Cache.html[`org.hibernate.Cache`] interface defines various evicting strategies:
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/Cache.html[`org.hibernate.Cache`] interface defines various evicting strategies:
 
 - entities (by their class or region)
 - entities stored using the natural-id (by their class or region)
@@ -490,7 +490,7 @@ If you enable the `hibernate.generate_statistics` configuration property,
 Hibernate will expose a number of metrics via `SessionFactory.getStatistics()`.
 Hibernate can even be configured to expose these statistics via JMX.
 
-This way, you can get access to the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/stat/Statistics.html[`Statistics`] class which comprises all sort of
+This way, you can get access to the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/stat/Statistics.html[`Statistics`] class which comprises all sort of
 second-level cache metrics.
 
 [[caching-statistics-example]]

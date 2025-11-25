@@ -1218,7 +1218,7 @@ This way, Hibernate will also know how to handle a specific Java Object type at 
 A basic type that's converted by a JPA `AttributeConverter` is immutable if the underlying Java type is immutable
 and is mutable if the associated attribute type is mutable as well.
 
-Therefore, mutability is given by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/type/descriptor/java/JavaTypeDescriptor.html#getMutabilityPlan--[`JavaTypeDescriptor#getMutabilityPlan`]
+Therefore, mutability is given by the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/type/descriptor/java/JavaTypeDescriptor.html#getMutabilityPlan--[`JavaTypeDescriptor#getMutabilityPlan`]
 of the associated entity attribute type.
 
 ====== Immutable types
@@ -1368,8 +1368,8 @@ To mark a property as generated, use The Hibernate specific `@Generated` annotat
 [[mapping-generated-Generated]]
 ===== `@Generated` annotation
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Generated.html[`@Generated`] annotation is used so that Hibernate can fetch the currently annotated property after the entity has been persisted or updated.
-For this reason, the `@Generated` annotation accepts a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenerationTime.html[`GenerationTime`] enum value.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Generated.html[`@Generated`] annotation is used so that Hibernate can fetch the currently annotated property after the entity has been persisted or updated.
+For this reason, the `@Generated` annotation accepts a https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenerationTime.html[`GenerationTime`] enum value.
 
 Considering the following entity:
 
@@ -1419,11 +1419,11 @@ include::{extrasdir}/basic/mapping-generated-Generated-update-example.sql[]
 [[mapping-generated-GeneratorType]]
 ===== `@GeneratorType` annotation
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GeneratorType.html[`@GeneratorType`] annotation is used so that
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GeneratorType.html[`@GeneratorType`] annotation is used so that
 you can provide a custom generator to set the value of the currently annotated property.
 
-For this reason, the `@GeneratorType` annotation accepts a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenerationTime.html[`GenerationTime`] enum value
-and a custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ValueGenerator.html[`ValueGenerator`] class type.
+For this reason, the `@GeneratorType` annotation accepts a https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenerationTime.html[`GenerationTime`] enum value
+and a custom https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ValueGenerator.html[`ValueGenerator`] class type.
 
 Considering the following entity:
 
@@ -2055,7 +2055,7 @@ include::{extrasdir}/basic/mapping-filter-join-table-collection-query-example.sq
 
 When using the `@Filter` annotation and working with entities that are mapped onto multiple database tables,
 you will need to use the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SqlFragmentAlias.html[`@SqlFragmentAlias`] annotation
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SqlFragmentAlias.html[`@SqlFragmentAlias`] annotation
 if the `@Filter` defines a condition that uses predicates across multiple tables.
 
 [[mapping-filter-sql-fragment-alias-example]]
@@ -2260,7 +2260,7 @@ include::{extrasdir}/basic/mapping-column-many-to-any-query-example.sql[]
 [[mapping-JoinFormula]]
 ==== `@JoinFormula` mapping
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinFormula.html[`@JoinFormula`] annotation is used to customize the join between a child Foreign Key and a parent row Primary Key.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinFormula.html[`@JoinFormula`] annotation is used to customize the join between a child Foreign Key and a parent row Primary Key.
 
 [[mapping-JoinFormula-example]]
 .`@JoinFormula` mapping usage
@@ -2310,7 +2310,7 @@ Therefore, the `@JoinFormula` annotation is used to define a custom join associa
 [[mapping-JoinColumnOrFormula]]
 ==== `@JoinColumnOrFormula` mapping
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinColumnOrFormula.html[`@JoinColumnOrFormula`] annotation is used to customize the join between a child Foreign Key and a parent row Primary Key when we need to take into consideration a column value as well as a `@JoinFormula`.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinColumnOrFormula.html[`@JoinColumnOrFormula`] annotation is used to customize the join between a child Foreign Key and a parent row Primary Key when we need to take into consideration a column value as well as a `@JoinFormula`.
 
 [[mapping-JoinColumnOrFormula-example]]
 .`@JoinColumnOrFormula` mapping usage
@@ -2360,7 +2360,7 @@ Therefore, the `@JoinColumnOrFormula` annotation is used to define a custom join
 [[mapping-Target]]
 ==== `@Target` mapping
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Target.html[`@Target`] annotation is used to specify the implementation class of a given association that is mapped via an interface.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Target.html[`@Target`] annotation is used to specify the implementation class of a given association that is mapped via an interface.
 The
 http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToOne.html[`@ManyToOne`],
 http://docs.oracle.com/javaee/7/api/javax/persistence/OneToOne.html[`@OneToOne`],

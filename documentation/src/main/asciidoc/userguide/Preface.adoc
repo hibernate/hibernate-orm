@@ -35,8 +35,8 @@ When building Hibernate 5.1 or older from sources, you need Java 1.7 due to a bu
 
 === Getting Started Guide
 
-New users may want to first look through the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/quickstart/html_single/[Hibernate Getting Started Guide] for basic information as well as tutorials.
-There is also a series of http://docs.jboss.org/hibernate/orm/{majorMinorVersion}/topical/html_single/[topical guides] providing deep dives into various topics.
+New users may want to first look through the https://docs.hibernate.org/orm/{majorMinorVersion}/quickstart/html_single/[Hibernate Getting Started Guide] for basic information as well as tutorials.
+There is also a series of http://docs.hibernate.org/orm/{majorMinorVersion}/topical/html_single/[topical guides] providing deep dives into various topics.
 
 [NOTE]
 ====

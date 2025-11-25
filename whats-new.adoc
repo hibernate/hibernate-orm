@@ -1,7 +1,7 @@
 = What's New in 7.1
 :toc:
 :toclevels: 4
-:docsBase: https://docs.jboss.org/hibernate/orm
+:docsBase: https://docs.hibernate.org/orm
 :versionDocBase: {docsBase}/7.1
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
 :migrationGuide: {versionDocBase}/migration-guide/migration-guide.html

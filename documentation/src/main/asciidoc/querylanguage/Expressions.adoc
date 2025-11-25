@@ -763,7 +763,7 @@ Recognized Field types are listed below.
 | `offset minute` | `Integer` | 0-59 | Minutes of offset | ✖
 |===
 
-For a full list of field types, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/query/TemporalUnit.html[`TemporalUnit`].
+For a full list of field types, see the Javadoc for https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/query/TemporalUnit.html[`TemporalUnit`].
 
 [source, hql]
 ----
@@ -811,7 +811,7 @@ The pattern must be written in a subset of the pattern language defined by Java'
 select format(local datetime as 'yyyy-MM-dd HH:mm:ss')
 ----
 
-For a full list of `format()` pattern elements, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#appendDatetimeFormat[`Dialect.appendDatetimeFormat`].
+For a full list of `format()` pattern elements, see the Javadoc for https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#appendDatetimeFormat[`Dialect.appendDatetimeFormat`].
 
 [[function-trunc-datetime]]
 [discrete]

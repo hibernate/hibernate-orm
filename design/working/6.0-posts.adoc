@@ -2,7 +2,7 @@
 Steve Ebersole
 :awestruct-tags: ["Hibernate ORM"]
 :awestruct-layout: blog-post
-:docs-url: https://docs.jboss.org/hibernate/orm/6.0
+:docs-url: https://docs.hibernate.org/orm/6.0
 :javadocs-url: {docs-url}/javadocs
 :migration-guide-url: {docs-url}/migration-guide/migration-guide.html
 :user-guide-url: {docs-url}/userguide/html_single/Hibernate_User_Guide.html

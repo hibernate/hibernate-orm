@@ -1,6 +1,51 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.2.0.CR3 (November 25, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/36014
+
+
+** Bug
+    * HHH-19939 broken caching for MERGE and REFRESH load plans
+    * HHH-19937 duplicate version check after refresh
+    * HHH-19936 Parameter casts for by-id lookups don't take column definition into account
+    * HHH-19932 NullPointerException in SqmInterpretationsKey::toString
+    * HHH-19926 NullPointerException when executing JPQL IN clause with null parameter on entity association
+    * HHH-19925 Locking root(s) should be based on select-clause, not from-clause
+    * HHH-19924 Session#find with LockMode.UPGRADE_NOWAIT casues AssetionError when no entity with the provided id exists in the database
+    * HHH-19922 org.hibernate.orm:hibernate-platform:pom:7.1.7.Final is missing
+    * HHH-19918 Avoid reflection when instantiating known FormatMapper
+    * HHH-19910 EntityInitializer#resolveInstance wrongly initializes existing detached instance
+    * HHH-19906 JsonGeneratingVisitor#visit doesn't handle plural types correctly
+    * HHH-19905 Implicit join re-use with nested inner and left joins causes ParsingException
+    * HHH-19895 hibernate-core 6.6.30.Final breaks compatibility on entities with composite keys for multiple variants of DB2
+    * HHH-19758 HQL parse failure with SLL can lead to wrong parse
+    * HHH-19749 [Oracle] Merge with @SecondaryTable may generate invalid NUMERIC type casts
+    * HHH-19739 Exceptions during load of entity with different persistent fields with same name
+    * HHH-19240 Significant increase in heap allocation for queries after migrating Hibernate ORM 6.5 to 6.6
+    * HHH-19038 Hibernate.get does not work on detached entities
+    * HHH-18860 Updates on SecondaryTable cause incorrect cast for BigDecimal
+    * HHH-16991 EnhancedUserType cannot be used when defining relations
+    * HHH-14032 Locales with scripts are not round-tripped properly
+
+** Deprecation
+    * HHH-19941 deprecate Session.contains(String, Object)
+
+** Improvement
+    * HHH-19953 Relax scopes of methods in EntityInitializerImpl (for Hibernate Reactive)
+    * HHH-19827 Apply the unified Hibernate Documentation theme
+
+** New Feature
+    * HHH-19931 SchemaManager.truncateTable()
+
+** Task
+    * HHH-19944 Upgrade MS SQL JDBC driver to remediate CVE-2025-59250
+    * HHH-19940 Include maven plugin in the release staging directory
+    * HHH-19921 Drop last JUnit 4 usages in Hibernate Envers 
+    * HHH-19916 More drop JUnit 4 usage work
+
 Note: Please refer to JIRA to learn more about each issue.
 
 Changes in 7.2.0.CR2 (November 10, 2025)

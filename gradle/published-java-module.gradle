@@ -115,7 +115,7 @@ javadoc {
 		encoding = 'UTF-8'
 		links += [
 				'https://docs.oracle.com/javase/8/docs/api/',
-				'http://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
+				'https://docs.hibernate.org/beanvalidation/spec/2.0/api/',
 				'http://docs.jboss.org/cdi/api/2.0/',
 				'https://javaee.github.io/javaee-spec/javadocs/'
 		]

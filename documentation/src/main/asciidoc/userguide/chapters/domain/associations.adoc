@@ -236,7 +236,7 @@ Because this can lead to N+1 query issues, it's much more efficient to use unidi
 
 However, if you really need to use a bidirectional association and want to make sure that this is always going to be fetched lazily,
 then you need to enable lazy state initialization bytecode enhancement and use the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyToOne.html[`@LazyToOne`] annotation as well.
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyToOne.html[`@LazyToOne`] annotation as well.
 
 [[associations-one-to-one-bidirectional-lazy-example]]
 .Bidirectional `@OneToOne` lazy parent-side association

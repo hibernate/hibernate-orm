@@ -312,7 +312,7 @@ For details on mapping the identifier, see the <<chapters/domain/identifiers.ado
 [[entity-sql-query-mapping]]
 ==== Mapping the entity to a SQL query
 
-You can map an entity to a SQL query using the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Subselect.html[`@Subselect`] annotation.
+You can map an entity to a SQL query using the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Subselect.html[`@Subselect`] annotation.
 
 [[mapping-Subselect-example]]
 .`@Subselect` entity mapping
@@ -379,7 +379,7 @@ include::{sourcedir-proxy}/ProxyInterfaceTest.java[tag=entity-proxy-interface-ma
 ----
 ====
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Proxy.html[`@Proxy`]
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Proxy.html[`@Proxy`]
 annotation is used to specify a custom proxy implementation for the current annotated entity.
 
 When loading the `Book` entity proxy, Hibernate is going to proxy the `Identifiable` interface instead as illustrated by the following example:
@@ -405,7 +405,7 @@ constructed without needing to fetch the actual entity Pojo.
 ==== Dynamic entity proxies using the @Tuplizer annotation
 
 It is possible to map your entities as dynamic proxies using
-the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Tuplizer.html[`@Tuplizer`] annotation.
+the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Tuplizer.html[`@Tuplizer`] annotation.
 
 In the following entity mapping, both the embeddable and the entity are mapped as interfaces, not Pojos.
 
@@ -472,11 +472,11 @@ include::{sourcedir-proxy}/tuplizer/TuplizerTest.java[tag=entity-tuplizer-dynami
 [[entity-persister]]
 ==== Define a custom entity persister
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Persister.html[`@Persister`] annotation is used to specify a custom entity or collection persister.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Persister.html[`@Persister`] annotation is used to specify a custom entity or collection persister.
 
-For entities, the custom persister must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/entity/EntityPersister.html[`EntityPersister`] interface.
+For entities, the custom persister must implement the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/entity/EntityPersister.html[`EntityPersister`] interface.
 
-For collections, the custom persister must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/collection/CollectionPersister.html[`CollectionPersister`] interface.
+For collections, the custom persister must implement the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/collection/CollectionPersister.html[`CollectionPersister`] interface.
 
 [[entity-persister-mapping]]
 .Entity persister mapping

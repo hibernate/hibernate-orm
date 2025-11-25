@@ -20,7 +20,6 @@ import org.junit.jupiter.api.io.TempDir;
 public class TransformHbmTestIT {
 
     public static final String MVN_HOME = "maven.multiModuleProjectDirectory";
-    private static File baseFolder;
     private static File localRepo;
  
     @TempDir
@@ -28,12 +27,7 @@ public class TransformHbmTestIT {
 
     @BeforeAll
     public static void beforeAll() throws Exception {
-        // The needed resource for this test are put in place
-        // in the 'baseFolder' (normally 'target/test-classes')
-        // by the 'build-helper-maven-plugin' execution.
-        // See the 'pom.xml'
-        baseFolder = determineBaseFolder();
-        localRepo = new File(baseFolder.getParentFile(), "local-repo");
+        localRepo = new File(determineBaseFolder().getParentFile(), "local-repo");
     }
     @Test
     public void testSimpleHbmTransformation() throws Exception {
@@ -75,17 +69,21 @@ public class TransformHbmTestIT {
                 projectPath.toAbsolutePath().toString(),
                 null,
                 null);
-        // Check the existaence of the transformed file
+        // Check the existence of the transformed file
         assertTrue(ormXmlFile.exists());
         // Check if it's pretty printed
         assertTrue(Files.readString(ormXmlFile.toPath()).contains("\n        <table name=\"Foo\"/>\n"));
     }
 
     private static File determineBaseFolder() throws Exception {
-    	URL classUrl = TransformHbmTestIT.class.getResource(
-    			"/" + TransformHbmTestIT.class.getName().replace(".", "/") + ".class");
-    	return new File(classUrl.toURI())
-    			.getParentFile().getParentFile().getParentFile().getParentFile().getParentFile();
+        Class<?> thisClass = TransformHbmTestIT.class;
+    	URL classUrl = thisClass.getResource("/" + thisClass.getName().replace(".", "/") + ".class");
+        assert classUrl != null;
+        File result = new File(classUrl.toURI());
+        for (int i = 0; i < thisClass.getName().chars().filter(ch -> ch == '.').count() + 1; i++) {
+        	result = result.getParentFile();
+        }
+        return result;
     }
 
     private static final String simplePomContents =

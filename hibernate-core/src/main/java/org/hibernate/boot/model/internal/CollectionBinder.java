@@ -2925,14 +2925,14 @@ public abstract class CollectionBinder {
 		MemberDetails entityField = null;
 		try {
 			// Try to get the property from the entity class
-			for ( MemberDetails member : entityClassDetails.getFields() ) {
+			for ( var member : entityClassDetails.getFields() ) {
 				if ( member.getName().equals( fieldName ) ) {
 					entityField = member;
 					break;
 				}
 			}
 			if ( entityField == null ) {
-				for ( MemberDetails member : entityClassDetails.getMethods() ) {
+				for ( var member : entityClassDetails.getMethods() ) {
 					if ( member.getName().equals( fieldName ) ||
 							( member.getName().startsWith( "get" ) &&
 									member.getName()

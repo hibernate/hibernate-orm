@@ -63,8 +63,9 @@ public class TransformHbmTestIT {
     	assertFalse(ormXmlFile.exists());
         new MavenCli().doMain(
                 new String[] {
-                		"-Dmaven.repo.local=" + localRepo.getAbsolutePath(),
-                		"org.hibernate.tool:hibernate-tools-maven:" + Version.versionString() + ":hbm2orm"
+                        "-Dmaven.repo.local=" + localRepo.getAbsolutePath(),
+                        "compile",
+                        "org.hibernate.tool:hibernate-tools-maven:" + Version.versionString() + ":hbm2orm"
                 },
                 projectPath.toAbsolutePath().toString(),
                 null,

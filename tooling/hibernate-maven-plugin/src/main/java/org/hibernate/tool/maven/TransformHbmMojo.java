@@ -23,14 +23,19 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Serial;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.project.MavenProject;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
@@ -62,14 +67,25 @@ public class TransformHbmMojo extends AbstractMojo {
     @Parameter(defaultValue = "true")
     private boolean format;
 
+    @Parameter(defaultValue = "${project}", readonly = true, required = true)
+    private MavenProject project;
+
     @Override
     public void execute() {
-        MappingBinder mappingBinder = new MappingBinder(
-                MappingBinder.class.getClassLoader()::getResourceAsStream,
-                UnsupportedFeatureHandling.ERROR);
-        List<File> hbmFiles = getHbmFiles(inputFolder);
-        List<Binding<JaxbHbmHibernateMapping>> hbmMappings = getHbmMappings(hbmFiles, mappingBinder);
-        performTransformation(hbmMappings, mappingBinder, createServiceRegistry());
+        ClassLoader original = Thread.currentThread().getContextClassLoader();
+        try {
+            Thread.currentThread().setContextClassLoader(createClassLoader(original));
+            getLog().info("Starting " + this.getClass().getSimpleName() + "...");
+            MappingBinder mappingBinder = new MappingBinder(
+                    MappingBinder.class.getClassLoader()::getResourceAsStream,
+                    UnsupportedFeatureHandling.ERROR);
+            List<File> hbmFiles = getHbmFiles(inputFolder);
+            List<Binding<JaxbHbmHibernateMapping>> hbmMappings = getHbmMappings(hbmFiles, mappingBinder);
+            performTransformation(hbmMappings, mappingBinder, createServiceRegistry());
+            getLog().info("Finished " + this.getClass().getSimpleName() + "!");
+        } finally {
+            Thread.currentThread().setContextClassLoader(original);
+        }
     }
 
     private ServiceRegistry createServiceRegistry() {
@@ -172,6 +188,18 @@ public class TransformHbmMojo extends AbstractMojo {
             }
         }
         return result;
+    }
+
+    private ClassLoader createClassLoader(ClassLoader parent) {
+        ArrayList<URL> urls = new ArrayList<>();
+        try {
+            for (String cpe : project.getRuntimeClasspathElements()) {
+                urls.add(new File(cpe).toURI().toURL());
+            }
+        } catch (DependencyResolutionRequiredException | MalformedURLException e) {
+            throw new RuntimeException("Problem while constructing project classloader", e);
+        }
+        return new URLClassLoader(urls.toArray(new URL[0]), parent);
     }
 
     private static class HbmXmlOrigin extends Origin {

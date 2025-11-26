@@ -13,6 +13,64 @@ if ( !env.CHANGE_ID ) {
     return
 }
 
+void runBuildOnNode(String label, Closure body) {
+	node( label ) {
+		pruneDockerContainers()
+    tryFinally(body, {
+      cleanWs()
+      pruneDockerContainers()
+    })
+	}
+}
+
+// try-finally construct that properly suppresses exceptions thrown in the finally block.
+def tryFinally(Closure main, Closure ... finallies) {
+	def mainFailure = null
+	try {
+		main()
+	}
+	catch (Throwable t) {
+		mainFailure = t
+		throw t
+	}
+	finally {
+		finallies.each {it ->
+			try {
+				it()
+			}
+			catch (Throwable t) {
+				if ( mainFailure ) {
+					mainFailure.addSuppressed( t )
+				}
+				else {
+					mainFailure = t
+				}
+			}
+		}
+	}
+	if ( mainFailure ) { // We may reach here if only the "finally" failed
+		throw mainFailure
+	}
+}
+
+class BuildConfiguration {
+	String name
+	String projects
+	boolean nativeProfile = false
+}
+
+// See data category from https://github.com/quarkusio/quarkus/blob/main/.github/native-tests.json
+def configurations = [
+    new BuildConfiguration( name: "JVM test", projects: "!integration-tests/kafka-oauth-keycloak,!integration-tests/kafka-sasl-elytron,!integration-tests/hibernate-search-orm-opensearch,!integration-tests/hibernate-search-orm-elasticsearch-outbox-polling,!integration-tests/hibernate-search-orm-elasticsearch-tenancy,!integration-tests/maven,!integration-tests/quartz,!integration-tests/reactive-messaging-kafka,!integration-tests/resteasy-reactive-kotlin/standard,!integration-tests/opentelemetry-reactive-messaging,!integration-tests/virtual-threads/kafka-virtual-threads,!integration-tests/smallrye-jwt-oidc-webapp,!extensions/oidc-db-token-state-manager/deployment,!docs",
+    new BuildConfiguration( name: "Data1", nativeProfile: true, projects: "jpa-h2, jpa-h2-embedded, jpa-mariadb, jpa-mssql, jpa-without-entity, hibernate-orm-tenancy/datasource, hibernate-orm-tenancy/connection-resolver, hibernate-orm-tenancy/connection-resolver-legacy-qualifiers",
+    new BuildConfiguration( name: "Data2", nativeProfile: true, projects: "jpa, jpa-mapping-xml/legacy-app, jpa-mapping-xml/modern-app, jpa-mysql, jpa-db2, jpa-oracle",
+    new BuildConfiguration( name: "Data3", nativeProfile: true, projects: "flyway, hibernate-orm-panache, hibernate-orm-panache-kotlin, hibernate-orm-envers, liquibase, liquibase-mongodb",
+    new BuildConfiguration( name: "Data4", nativeProfile: true, projects: "mongodb-client, mongodb-devservices, mongodb-panache, mongodb-rest-data-panache, mongodb-panache-kotlin, redis-client, hibernate-orm-rest-data-panache",
+    new BuildConfiguration( name: "Data5", nativeProfile: true, projects: "jpa-postgresql, jpa-postgresql-withxml, narayana-stm, narayana-jta, reactive-pg-client, hibernate-reactive-postgresql, hibernate-orm-tenancy/schema, hibernate-orm-tenancy/schema-mariadb",
+    new BuildConfiguration( name: "Data6", nativeProfile: true, projects: "elasticsearch-rest-client, elasticsearch-java-client, hibernate-search-orm-elasticsearch, hibernate-search-orm-elasticsearch-tenancy, hibernate-search-orm-opensearch, hibernate-search-orm-elasticsearch-outbox-polling, hibernate-search-standalone-elasticsearch, hibernate-search-standalone-opensearch",
+    new BuildConfiguration( name: "Data7", nativeProfile: true, projects: "reactive-oracle-client, reactive-mysql-client, reactive-db2-client, hibernate-reactive-db2, hibernate-reactive-mariadb, hibernate-reactive-mssql, hibernate-reactive-mysql, hibernate-reactive-mysql-agroal-flyway, hibernate-reactive-panache, hibernate-reactive-panache-kotlin, hibernate-reactive-oracle"
+]
+
 pipeline {
     agent none
     tools {
@@ -31,46 +89,72 @@ pipeline {
             }
         }
         stage('Build') {
-            agent {
-                label 'LongDuration'
-            }
             steps {
-                script {
-                    dir('hibernate') {
-                        checkout scm
-                        sh "./gradlew clean publishToMavenLocal -x test --no-scan --no-daemon --no-build-cache --stacktrace -PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com -Dmaven.repo.local=${env.WORKSPACE}/.m2repository"
-                        script {
-                            env.HIBERNATE_VERSION = sh (
-                                    script: "grep hibernateVersion gradle/version.properties|cut -d'=' -f2",
-                                    returnStdout: true
-                            ).trim()
+                stage('Build Hibernate ORM') {
+                    agent {
+                        label 'LongDuration'
+                    }
+                    script {
+                        dir('hibernate') {
+                            checkout scm
+                            sh "./gradlew clean publishToMavenLocal -x test --no-scan --no-daemon --no-build-cache --stacktrace -PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com -Dmaven.repo.local=${env.WORKSPACE}/.m2repository"
+                            script {
+                                env.HIBERNATE_VERSION = sh (
+                                        script: "grep hibernateVersion gradle/version.properties|cut -d'=' -f2",
+                                        returnStdout: true
+                                ).trim()
+                            }
                         }
                     }
-                    dir('quarkus') {
-                        def quarkusVersionToTest = '3.27'
-                        sh "git clone -b ${quarkusVersionToTest} --single-branch https://github.com/quarkusio/quarkus.git . || git reset --hard && git clean -fx && git pull"
-                        script {
-                            def sedStatus = sh (script: "sed -i 's@<hibernate-orm.version>.*</hibernate-orm.version>@<hibernate-orm.version>${env.HIBERNATE_VERSION}</hibernate-orm.version>@' pom.xml", returnStatus: true)
-                            if ( sedStatus != 0 ) {
-                                throw new IllegalArgumentException( "Unable to replace hibernate version in Quarkus pom. Got exit code $sedStatus" )
-                            }
+                }
+                stage('Build Quarkus') {
+                    agent {
+                        label 'LongDuration'
+                    }
+                    script {
+                        Map<String, Closure> executions = [:]
+
+                        configurations.each { BuildConfiguration configuration ->
+                            executions.put(configuration.name, {
+                                dir('quarkus') {
+                                    def quarkusVersionToTest = '3.27'
+                                    sh "git clone -b ${quarkusVersionToTest} --single-branch https://github.com/quarkusio/quarkus.git . || git reset --hard && git clean -fx && git pull"
+                                    script {
+                                        def sedStatus = sh (script: "sed -i 's@<hibernate-orm.version>.*</hibernate-orm.version>@<hibernate-orm.version>${env.HIBERNATE_VERSION}</hibernate-orm.version>@' pom.xml", returnStatus: true)
+                                        if ( sedStatus != 0 ) {
+                                            throw new IllegalArgumentException( "Unable to replace hibernate version in Quarkus pom. Got exit code $sedStatus" )
+                                        }
+                                    }
+                                    // Need to override the default maven configuration this way, because there is no other way to do it
+                                    sh "sed -i 's/-Xmx5g/-Xmx2048m/' ./.mvn/jvm.config"
+                                    sh "echo -e '\\n-XX:MaxMetaspaceSize=1024m'>>./.mvn/jvm.config"
+                                    withMaven(mavenLocalRepo: env.WORKSPACE + '/.m2repository', publisherStrategy: 'EXPLICIT') {
+                                        // to account for script-only maven wrapper use in Quarkus:
+                                        withEnv(["MAVEN_ARGS=${env.MAVEN_ARGS?:""} ${env.MAVEN_CONFIG}"]) {
+                                            sh "./mvnw -pl !docs -Dquickly install"
+                                            // Need to kill the gradle daemons started during the Maven install run
+                                            sh "sudo pkill -f '.*GradleDaemon.*' || true"
+                                            // Need to override the default maven configuration this way, because there is no other way to do it
+                                            sh "sed -i 's/-Xmx2048m/-Xmx1340m/' ./.mvn/jvm.config"
+                                            sh "sed -i 's/MaxMetaspaceSize=1024m/MaxMetaspaceSize=512m/' ./.mvn/jvm.config"
+                                            def projects = configuration.projects.join(", ")
+                                            def additionalArguments
+                                            def additionalOptions
+                                            if ( configuration.nativeProfile ) {
+                                                additionalArguments = "-f integration-tests"
+                                                additionalOptions = "-Dquarkus.native.native-image-xmx=6g -Dnative -Dnative.surefire.skip -Dno-descriptor-tests"
+                                            }
+                                            else {
+                                                additionalArguments = "-pl :quarkus-hibernate-orm -amd"
+                                                additionalOptions = ""
+                                            }
+                                            sh "TESTCONTAINERS_RYUK_CONTAINER_PRIVILEGED=true ./mvnw -Dinsecure.repositories=WARN ${additionalArguments} -pl '${projects}' verify -Dstart-containers -Dtest-containers -Dskip.gradle.build ${additionalOptions}"
+                                        }
+                                    }
+                                }
+                            })
                         }
-                        // Need to override the default maven configuration this way, because there is no other way to do it
-                        sh "sed -i 's/-Xmx5g/-Xmx2048m/' ./.mvn/jvm.config"
-                        sh "echo -e '\\n-XX:MaxMetaspaceSize=1024m'>>./.mvn/jvm.config"
-                        withMaven(mavenLocalRepo: env.WORKSPACE + '/.m2repository', publisherStrategy: 'EXPLICIT') {
-                            // to account for script-only maven wrapper use in Quarkus:
-                            withEnv(["MAVEN_ARGS=${env.MAVEN_ARGS?:""} ${env.MAVEN_CONFIG}"]) {
-                                sh "./mvnw -pl !docs -Dquickly install"
-                                // Need to kill the gradle daemons started during the Maven install run
-                                sh "sudo pkill -f '.*GradleDaemon.*' || true"
-                                // Need to override the default maven configuration this way, because there is no other way to do it
-                                sh "sed -i 's/-Xmx2048m/-Xmx1340m/' ./.mvn/jvm.config"
-                                sh "sed -i 's/MaxMetaspaceSize=1024m/MaxMetaspaceSize=512m/' ./.mvn/jvm.config"
-                                def excludes = "'!integration-tests/kafka-oauth-keycloak,!integration-tests/kafka-sasl-elytron,!integration-tests/hibernate-search-orm-opensearch,!integration-tests/hibernate-search-orm-elasticsearch-outbox-polling,!integration-tests/hibernate-search-orm-elasticsearch-tenancy,!integration-tests/maven,!integration-tests/quartz,!integration-tests/reactive-messaging-kafka,!integration-tests/resteasy-reactive-kotlin/standard,!integration-tests/opentelemetry-reactive-messaging,!integration-tests/virtual-threads/kafka-virtual-threads,!integration-tests/smallrye-jwt-oidc-webapp,!extensions/oidc-db-token-state-manager/deployment,!docs'"
-                                sh "TESTCONTAINERS_RYUK_CONTAINER_PRIVILEGED=true ./mvnw -Dinsecure.repositories=WARN -pl :quarkus-hibernate-orm -amd -pl ${excludes} verify -Dstart-containers -Dtest-containers -Dskip.gradle.build"
-                            }
-                        }
+                        parallel executions
                     }
                 }
             }

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.hibernate.tool.api.version.Version;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -12,10 +13,12 @@ import org.junit.jupiter.api.io.TempDir;
 import org.apache.maven.cli.MavenCli;
 
 import java.io.File;
+import java.net.URL;
 import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
+import java.util.Objects;
 
 public class ExamplesTestIT {
 
@@ -24,7 +27,6 @@ public class ExamplesTestIT {
     private static File localRepo;
 
     private File projectFolder;
-    private MavenCli mavenCli;
 
     @TempDir
     private File tempFolder;
@@ -94,7 +96,7 @@ public class ExamplesTestIT {
         assertFalse(outputDirectory.exists());
         assertFalse(personFile.exists());
         runGenerateSources();
-        assertEquals(1, outputDirectory.list().length); // 1 file is generated in 'generated-classes'
+        assertEquals(1, Objects.requireNonNull(outputDirectory.list()).length); // 1 file is generated in 'generated-classes'
         assertTrue(personFile.exists()); // The Person.java file should have been generated
     }
 
@@ -122,6 +124,17 @@ public class ExamplesTestIT {
         assertGeneratedContains("Person.java", "Set<Item>");
     }
 
+    @Test
+    public void testHbm2OrmSimpleDefault() throws Exception {
+        projectFolder = new File(baseFolder, "hbm2orm/simple-default");
+        File ormXmlFile = new File(projectFolder, "src/main/resources/simple.mapping.xml");
+        assertFalse(ormXmlFile.exists());
+        runMavenCommand("org.hibernate.tool:hibernate-tools-maven:" + Version.versionString() + ":hbm2orm");
+        assertTrue(ormXmlFile.exists());
+        String ormXmlContents = Files.readString( ormXmlFile.toPath() );
+        assertTrue(ormXmlContents.contains("entity-mappings"));
+    }
+
     private void prepareProject(String projectName) throws Exception {
         projectFolder = new File(baseFolder, projectName);
         assertTrue(projectFolder.exists());
@@ -132,7 +145,7 @@ public class ExamplesTestIT {
 
     private void createHibernatePropertiesFile(File projectFolder) throws Exception {
         File projectResourcesFolder = new File(projectFolder, "src/main/resources");
-        projectResourcesFolder.mkdirs();
+        assertTrue(projectResourcesFolder.mkdirs());
         File hibernatePropertiesFile = new File(projectResourcesFolder, "hibernate.properties");
         assertFalse(hibernatePropertiesFile.exists());
         String hibernatePropertiesFileContents =
@@ -147,8 +160,14 @@ public class ExamplesTestIT {
     }
 
     private void runGenerateSources() {
+        runMavenCommand("generate-sources");
+    }
+
+    private void runMavenCommand(String command) {
         new MavenCli().doMain(
-                new String[]{"-Dmaven.repo.local=" + localRepo.getAbsolutePath(), "generate-sources"},
+                new String[]{
+                        "-Dmaven.repo.local=" + localRepo.getAbsolutePath(),
+                        command},
                 projectFolder.getAbsolutePath(),
                 null,
                 null);
@@ -166,8 +185,11 @@ public class ExamplesTestIT {
         assertFalse(readGeneratedContents(fileName).contains(contents));
     }
 
-    private void assertNumberOfGeneratedFiles(int amount) throws Exception {
-        assertEquals(amount, new File(projectFolder, "target/generated-sources").list().length);
+    private void assertNumberOfGeneratedFiles(int amount) {
+        assertEquals(
+                amount,
+                Objects.requireNonNull(
+                    new File(projectFolder, "target/generated-sources").list()).length);
     }
 
     private String readGeneratedContents(String fileName) throws Exception {
@@ -177,8 +199,14 @@ public class ExamplesTestIT {
     }
 
     private static File determineBaseFolder() throws Exception {
-        return new File(ExamplesTestIT.class.getClassLoader().getResource("5-minute-tutorial/pom.xml").toURI())
-                .getParentFile().getParentFile();
+        Class<?> thisClass = ExamplesTestIT.class;
+        URL classUrl = thisClass.getResource("/" + thisClass.getName().replace(".", "/") + ".class");
+        assert classUrl != null;
+        File result = new File(classUrl.toURI());
+        for (int i = 0; i < thisClass.getName().chars().filter(ch -> ch == '.').count() + 1; i++) {
+            result = result.getParentFile();
+        }
+        return result;
     }
 
     private void createDatabase() throws Exception {

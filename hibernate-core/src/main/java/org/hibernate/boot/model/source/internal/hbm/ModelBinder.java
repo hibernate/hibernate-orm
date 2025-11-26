@@ -1059,11 +1059,9 @@ public class ModelBinder {
 			NaturalIdMutability naturalIdMutability) {
 		if ( naturalIdMutability != NaturalIdMutability.NOT_NATURAL_ID ) {
 			attributeBinding.setNaturalIdentifier( true );
-
 			if ( naturalIdMutability == NaturalIdMutability.IMMUTABLE ) {
 				attributeBinding.setUpdatable( false );
 			}
-
 			final var metadataCollector = mappingDocument.getMetadataCollector();
 			final String entityName = entityBinding.getEntityName();
 			var ukBinder = metadataCollector.locateNaturalIdUniqueKeyBinder( entityName );
@@ -1071,7 +1069,6 @@ public class ModelBinder {
 				ukBinder = new NaturalIdUniqueKeyBinderImpl( mappingDocument, entityBinding );
 				metadataCollector.registerNaturalIdUniqueKeyBinder( entityName, ukBinder );
 			}
-
 			ukBinder.addAttributeBinding( attributeBinding );
 		}
 	}
@@ -1081,12 +1078,10 @@ public class ModelBinder {
 			PluralAttributeSource attributeSource,
 			PersistentClass entityDescriptor) {
 		final Collection collectionBinding;
-
 		if ( attributeSource instanceof PluralAttributeSourceListImpl pluralAttributeSourceList ) {
 			final var list = new org.hibernate.mapping.List(sourceDocument, entityDescriptor);
 			collectionBinding = list;
 			bindCollectionMetadata( sourceDocument, attributeSource, collectionBinding );
-
 			registerSecondPass(
 					new PluralAttributeListSecondPass( sourceDocument, pluralAttributeSourceList, list ),
 					sourceDocument
@@ -1095,7 +1090,6 @@ public class ModelBinder {
 		else if ( attributeSource instanceof PluralAttributeSourceSetImpl ) {
 			collectionBinding = new Set( sourceDocument, entityDescriptor );
 			bindCollectionMetadata( sourceDocument, attributeSource, collectionBinding );
-
 			registerSecondPass(
 					new PluralAttributeSetSecondPass( sourceDocument, attributeSource, collectionBinding ),
 					sourceDocument
@@ -1105,7 +1099,6 @@ public class ModelBinder {
 			final var map = new org.hibernate.mapping.Map( sourceDocument, entityDescriptor );
 			collectionBinding = map;
 			bindCollectionMetadata( sourceDocument, attributeSource, collectionBinding );
-
 			registerSecondPass(
 					new PluralAttributeMapSecondPass( sourceDocument, pluralAttributeSourceMap, map ),
 					sourceDocument
@@ -1114,7 +1107,6 @@ public class ModelBinder {
 		else if ( attributeSource instanceof PluralAttributeSourceBagImpl ) {
 			collectionBinding = new Bag( sourceDocument, entityDescriptor );
 			bindCollectionMetadata( sourceDocument, attributeSource, collectionBinding );
-
 			registerSecondPass(
 					new PluralAttributeBagSecondPass( sourceDocument, attributeSource, collectionBinding ),
 					sourceDocument
@@ -1123,7 +1115,6 @@ public class ModelBinder {
 		else if ( attributeSource instanceof PluralAttributeSourceIdBagImpl ) {
 			collectionBinding = new IdentifierBag( sourceDocument, entityDescriptor );
 			bindCollectionMetadata( sourceDocument, attributeSource, collectionBinding );
-
 			registerSecondPass(
 					new PluralAttributeIdBagSecondPass( sourceDocument, attributeSource, collectionBinding ),
 					sourceDocument
@@ -1133,9 +1124,7 @@ public class ModelBinder {
 			final var array = new Array(sourceDocument, entityDescriptor);
 			collectionBinding = array;
 			bindCollectionMetadata( sourceDocument, attributeSource, collectionBinding );
-
 			array.setElementClassName( sourceDocument.qualifyClassName( arraySource.getElementClass() ) );
-
 			registerSecondPass(
 					new PluralAttributeArraySecondPass( sourceDocument, arraySource, array ),
 					sourceDocument
@@ -1145,7 +1134,6 @@ public class ModelBinder {
 			final var primitiveArray = new PrimitiveArray( sourceDocument, entityDescriptor );
 			collectionBinding = primitiveArray;
 			bindCollectionMetadata( sourceDocument, attributeSource, collectionBinding );
-
 			registerSecondPass(
 					new PluralAttributePrimitiveArraySecondPass(
 							sourceDocument,
@@ -1161,16 +1149,17 @@ public class ModelBinder {
 			);
 		}
 
-		sourceDocument.getMetadataCollector().addCollectionBinding( collectionBinding );
+		sourceDocument.getMetadataCollector()
+				.addCollectionBinding( collectionBinding );
 
 		final var attribute = new Property();
 		attribute.setValue( collectionBinding );
 		bindProperty( sourceDocument, attributeSource, attribute );
-
 		return attribute;
 	}
 
-	private void bindCollectionMetadata(MappingDocument mappingDocument, PluralAttributeSource source, Collection binding) {
+	private void bindCollectionMetadata(
+			MappingDocument mappingDocument, PluralAttributeSource source, Collection binding) {
 		binding.setRole( source.getAttributeRole().getFullPath() );
 		binding.setInverse( source.isInverse() );
 		binding.setMutable( source.isMutable() );
@@ -1186,40 +1175,11 @@ public class ModelBinder {
 
 		applyCaching( mappingDocument, source.getCaching(), binding );
 
-		// bind the collection type info
-		String typeName = source.getTypeInformation().getName();
-		final Map<String,String> typeParameters = new HashMap<>();
-		if ( typeName != null ) {
-			// see if there is a corresponding type-def
-			final var typeDefinition =
-					mappingDocument.getMetadataCollector().getTypeDefinition( typeName );
-			if ( typeDefinition != null ) {
-				typeName = typeDefinition.getTypeImplementorClass().getName();
-				if ( typeDefinition.getParameters() != null ) {
-					typeParameters.putAll( typeDefinition.getParameters() );
-				}
-			}
-			else {
-				// it could be an unqualified class name, in which case we should qualify
-				// it with the implicit package name for this context, if one.
-				typeName = mappingDocument.qualifyClassName( typeName );
-			}
-		}
-		if ( source.getTypeInformation().getParameters() != null ) {
-			typeParameters.putAll( source.getTypeInformation().getParameters() );
-		}
-
-		binding.setTypeName( typeName );
-		binding.setTypeParameters( typeParameters );
+		bindCollectionType( mappingDocument, source, binding );
 
 		final var fetchCharacteristics = source.getFetchCharacteristics();
-		if ( fetchCharacteristics.getFetchTiming() == FetchTiming.DELAYED ) {
-			binding.setLazy( true );
-			binding.setExtraLazy( fetchCharacteristics.isExtraLazy() );
-		}
-		else {
-			binding.setLazy( false );
-		}
+		binding.setLazy( fetchCharacteristics.getFetchTiming() == FetchTiming.DELAYED );
+		binding.setExtraLazy( fetchCharacteristics.isExtraLazy() );
 
 		setupFetching( source, binding );
 
@@ -1230,23 +1190,16 @@ public class ModelBinder {
 		binding.setLoaderName( source.getCustomLoaderName() );
 		bindCustomSql( source, binding );
 
-		if ( source instanceof Sortable sortable ) {
-			if ( sortable.isSorted() ) {
-				binding.setSorted( true );
-				final String comparatorName = sortable.getComparatorName();
-				if ( !comparatorName.equals( "natural" ) ) {
-					binding.setComparatorClassName( comparatorName );
-				}
-			}
-			else {
-				binding.setSorted( false );
+		if ( source instanceof Sortable sortable && sortable.isSorted() ) {
+			binding.setSorted( true );
+			final String comparatorName = sortable.getComparatorName();
+			if ( !comparatorName.equals( "natural" ) ) {
+				binding.setComparatorClassName( comparatorName );
 			}
 		}
 
-		if ( source instanceof Orderable orderable ) {
-			if ( orderable.isOrdered() ) {
-				binding.setOrderBy( orderable.getOrder() );
-			}
+		if ( source instanceof Orderable orderable && orderable.isOrdered() ) {
+			binding.setOrderBy( orderable.getOrder() );
 		}
 
 		final String cascadeStyle = source.getCascadeStyleName();
@@ -1263,6 +1216,41 @@ public class ModelBinder {
 					filterSource.getAliasToEntityMap()
 			);
 		}
+	}
+
+	private static void bindCollectionType(
+			MappingDocument mappingDocument, PluralAttributeSource source, Collection binding) {
+		// bind the collection type info
+		final String explicitTypeName = source.getTypeInformation().getName();
+		final Map<String,String> typeParameters = new HashMap<>();
+		final String typeName;
+		if ( explicitTypeName != null ) {
+			// see if there is a corresponding type-def
+			final var typeDefinition =
+					mappingDocument.getMetadataCollector()
+							.getTypeDefinition( explicitTypeName );
+			if ( typeDefinition != null ) {
+				typeName = typeDefinition.getTypeImplementorClass().getName();
+				final var parameters = typeDefinition.getParameters();
+				if ( parameters != null ) {
+					typeParameters.putAll( parameters );
+				}
+			}
+			else {
+				// it could be an unqualified class name, in which case qualify
+				// it with the implicit package name for this context, if one.
+				typeName = mappingDocument.qualifyClassName( explicitTypeName );
+			}
+		}
+		else {
+			typeName = null;
+		}
+		final var parameters = source.getTypeInformation().getParameters();
+		if ( parameters != null ) {
+			typeParameters.putAll( parameters );
+		}
+		binding.setTypeName( typeName );
+		binding.setTypeParameters( typeParameters );
 	}
 
 	private static void bindCustomSql(PluralAttributeSource source, Collection binding) {
@@ -1298,26 +1286,19 @@ public class ModelBinder {
 
 	private static void setupFetching(PluralAttributeSource source, Collection binding) {
 		final var fetchCharacteristics = source.getFetchCharacteristics();
-		switch ( fetchCharacteristics.getFetchStyle() ) {
-			case SELECT:
-				binding.setFetchMode( FetchMode.SELECT );
-				break;
-			case JOIN:
-				binding.setFetchMode( FetchMode.JOIN );
-				break;
+		final var fetchStyle = fetchCharacteristics.getFetchStyle();
+		binding.setFetchMode( switch ( fetchStyle ) {
+			case SELECT, BATCH, SUBSELECT -> FetchMode.SELECT;
+			case JOIN -> FetchMode.JOIN;
+		} );
+		switch ( fetchStyle ) {
 			case BATCH:
-				binding.setFetchMode( FetchMode.SELECT );
 				binding.setBatchSize( fetchCharacteristics.getBatchSize() );
 				break;
 			case SUBSELECT:
-				binding.setFetchMode( FetchMode.SELECT );
 				binding.setSubselectLoadable( true );
-				// todo : this could totally be done using a "symbol map" approach
 				binding.getOwner().setSubselectLoadableCollections( true );
 				break;
-			default:
-				throw new AssertionFailure( "Unexpected FetchStyle : "
-											+ fetchCharacteristics.getFetchStyle().name() );
 		}
 	}
 
@@ -2565,17 +2546,18 @@ public class ModelBinder {
 	private static TypeResolution resolveType(
 			MappingDocument sourceDocument,
 			HibernateTypeSource typeSource) {
-		if ( StringHelper.isEmpty( typeSource.getName() ) ) {
+		final String typeSourceName = typeSource.getName();
+		if ( StringHelper.isEmpty( typeSourceName ) ) {
 			return null;
 		}
 
 		final var typeDefinition =
 				sourceDocument.getMetadataCollector()
-						.getTypeDefinition( typeSource.getName() );
+						.getTypeDefinition( typeSourceName );
 		final Map<String,String> typeParameters = new HashMap<>();
 		final String typeName;
 		if ( typeDefinition == null ) {
-			typeName = typeSource.getName();
+			typeName = typeSourceName;
 		}
 		else {
 			// the explicit name referred to a type-def
@@ -2585,13 +2567,11 @@ public class ModelBinder {
 				typeParameters.putAll( parameters );
 			}
 		}
-
 		// parameters on the property mapping should override parameters in the type-def
 		final var parameters = typeSource.getParameters();
 		if ( parameters != null ) {
 			typeParameters.putAll( parameters );
 		}
-
 		return new TypeResolution( typeName, typeParameters );
 	}
 

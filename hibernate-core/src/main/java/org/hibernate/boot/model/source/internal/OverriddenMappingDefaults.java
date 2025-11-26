@@ -151,7 +151,7 @@ public class OverriddenMappingDefaults implements EffectiveMappingDefaults {
 		private String implicitDiscriminatorColumnName;
 		private String implicitPackageName;
 		private boolean autoImportEnabled;
-		private final EnumSet<CascadeType> implicitCascadeTypes;
+		private EnumSet<CascadeType> implicitCascadeTypes;
 		private jakarta.persistence.AccessType implicitPropertyAccessType;
 		private String implicitPropertyAccessorName;
 		private boolean entitiesImplicitlyLazy;
@@ -229,12 +229,12 @@ public class OverriddenMappingDefaults implements EffectiveMappingDefaults {
 			return this;
 		}
 
-//		public Builder setImplicitCascadeStyleName(String implicitCascadeStyleName) {
-//			if ( StringHelper.isNotEmpty( implicitCascadeStyleName ) ) {
-//				this.implicitCascadeStyleName = implicitCascadeStyleName;
-//			}
-//			return this;
-//		}
+		public Builder setImplicitCascadeTypes(EnumSet<CascadeType> implicitCascadeTypes) {
+			if (implicitCascadeTypes != null) {
+				this.implicitCascadeTypes = implicitCascadeTypes;
+			}
+			return this;
+		}
 
 		public Builder setImplicitPropertyAccessType(jakarta.persistence.AccessType accessType) {
 			if ( accessType != null ) {

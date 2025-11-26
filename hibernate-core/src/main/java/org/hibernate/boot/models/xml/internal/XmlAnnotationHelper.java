@@ -20,6 +20,7 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -32,6 +33,7 @@ import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.boot.internal.LimitedCollectionClassification;
+import org.hibernate.boot.jaxb.mapping.GenerationTiming;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAssociationOverrideImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributeOverrideImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbBasicMapping;
@@ -90,6 +92,7 @@ import org.hibernate.boot.models.xml.internal.db.TableProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocument;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
+import org.hibernate.generator.EventType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.ModelsException;
@@ -477,6 +480,27 @@ public class XmlAnnotationHelper {
 		}
 
 		memberDetails.applyAnnotationUsage( HibernateAnnotations.NATIONALIZED, xmlDocumentContext.getModelBuildingContext() );
+	}
+
+	public static void applyGenerated(
+			GenerationTiming timing,
+			MutableMemberDetails memberDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( timing == null ) {
+			return;
+		}
+
+		EnumSet<EventType> eventTypes = timing.getEventTypes();
+		if ( eventTypes == null ) {
+			return;
+		}
+
+		final GeneratedAnnotation generatedAnn = (GeneratedAnnotation) memberDetails.applyAnnotationUsage(
+				HibernateAnnotations.GENERATED,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+
+		generatedAnn.event( eventTypes.toArray( new EventType[0] ) );
 	}
 
 	public static void applyGeneratedValue(

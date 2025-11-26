@@ -1,0 +1,17 @@
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+
+    <entity name="tractor" class="org.hibernate.orm.test.annotations.various.Tractor" access="FIELD" metadata-complete="true">
+        <attributes>
+            <id name="id" />
+            <basic name="model"/>
+            <basic name="serialNumber">
+                <generated>ALWAYS</generated>
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>

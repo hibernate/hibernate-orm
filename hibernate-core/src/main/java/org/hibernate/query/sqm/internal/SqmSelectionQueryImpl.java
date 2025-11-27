@@ -59,8 +59,6 @@ import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.spi.InterpretationsKeySource;
 import org.hibernate.query.sqm.spi.SqmSelectionQueryImplementor;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
@@ -194,11 +192,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		parameterBindings = parameterMetadata.createBindings( session.getFactory() );
 
 		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
-		for ( SqmParameter<?> sqmParameter : domainParameterXref.getParameterResolutions().getSqmParameters() ) {
-			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> wrapper ) {
-				bindCriteriaParameter( wrapper );
-			}
-		}
+		bindValueBindCriteriaParameters( domainParameterXref, parameterBindings );
 
 		resultType = determineResultType( sqm, expectedResultType );
 
@@ -254,11 +248,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		original.getQueryParameterBindings().visitBindings( this::setBindValues );
 
 		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
-		for ( SqmParameter<?> sqmParameter : domainParameterXref.getParameterResolutions().getSqmParameters() ) {
-			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> parameterWrapper ) {
-				bindCriteriaParameter( parameterWrapper );
-			}
-		}
+		bindValueBindCriteriaParameters( domainParameterXref, parameterBindings );
 
 		//noinspection unchecked
 		expectedResultType = (Class<R>) KeyedResult.class;

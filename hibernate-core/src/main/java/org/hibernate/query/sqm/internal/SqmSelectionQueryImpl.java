@@ -169,11 +169,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		this.parameterBindings = parameterMetadata.createBindings( session.getFactory() );
 
 		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
-		for ( SqmParameter<?> sqmParameter : domainParameterXref.getParameterResolutions().getSqmParameters() ) {
-			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> ) {
-				bindCriteriaParameter( (SqmJpaCriteriaParameterWrapper<?>) sqmParameter );
-			}
-		}
+		bindValueBindCriteriaParameters( domainParameterXref, parameterBindings );
 
 		this.expectedResultType = expectedResultType;
 		this.resultType = determineResultType( sqm, expectedResultType );
@@ -252,11 +248,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		);
 
 		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
-		for ( SqmParameter<?> sqmParameter : domainParameterXref.getParameterResolutions().getSqmParameters() ) {
-			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> ) {
-				bindCriteriaParameter( (SqmJpaCriteriaParameterWrapper<?>) sqmParameter );
-			}
-		}
+		bindValueBindCriteriaParameters( domainParameterXref, parameterBindings );
 
 		//noinspection unchecked
 		this.expectedResultType = (Class<R>) KeyedResult.class;
@@ -297,19 +289,6 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		else {
 			// for JPA compatibility
 			return Object[].class;
-		}
-	}
-
-	private <T> void bindCriteriaParameter(SqmJpaCriteriaParameterWrapper<T> sqmParameter) {
-		final JpaCriteriaParameter<T> jpaCriteriaParameter = sqmParameter.getJpaCriteriaParameter();
-		final T value = jpaCriteriaParameter.getValue();
-		// We don't set a null value, unless the type is also null which
-		// is the case when using HibernateCriteriaBuilder.value
-		if ( value != null || jpaCriteriaParameter.getNodeType() == null ) {
-			// Use the anticipated type for binding the value if possible
-			getQueryParameterBindings()
-					.getBinding( jpaCriteriaParameter )
-					.setBindValue( value, jpaCriteriaParameter.getAnticipatedType() );
 		}
 	}
 

@@ -17,7 +17,6 @@ import org.hibernate.query.Page;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.JpaSelection;
-import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.named.NamedQueryMemento;
@@ -27,11 +26,13 @@ import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
@@ -53,7 +54,6 @@ import jakarta.persistence.criteria.CompoundSelection;
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.cfg.QuerySettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH;
 import static org.hibernate.query.KeyedPage.KeyInterpretation.KEY_OF_FIRST_ON_NEXT_PAGE;
-import static org.hibernate.query.sqm.internal.KeyBasedPagination.paginate;
 import static org.hibernate.query.sqm.internal.KeyedResult.collectKeys;
 import static org.hibernate.query.sqm.internal.KeyedResult.collectResults;
 import static org.hibernate.query.sqm.internal.SqmUtil.isHqlTuple;
@@ -126,6 +126,44 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		}
 		else {
 			throw new IllegalSelectQueryException( "Not a select query" );
+		}
+	}
+
+	protected static void bindValueBindCriteriaParameters(
+			DomainParameterXref domainParameterXref,
+			QueryParameterBindings bindings) {
+		for ( var entry : domainParameterXref.getQueryParameters().entrySet() ) {
+			final var sqmParameter = entry.getValue().get( 0 );
+			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> ) {
+				final SqmJpaCriteriaParameterWrapper<?> wrapper = (SqmJpaCriteriaParameterWrapper<?>) sqmParameter;
+				@SuppressWarnings("unchecked")
+				final var criteriaParameter = (JpaCriteriaParameter<Object>) wrapper.getJpaCriteriaParameter();
+				final var value = criteriaParameter.getValue();
+				// We don't set a null value, unless the type is also null which
+				// is the case when using HibernateCriteriaBuilder.value
+				if ( value != null || criteriaParameter.getNodeType() == null ) {
+					// Use the anticipated type for binding the value if possible
+					//noinspection unchecked
+					final var parameter = (QueryParameterImplementor<Object>) entry.getKey();
+					bindings.getBinding( parameter )
+							.setBindValue( value, criteriaParameter.getAnticipatedType() );
+				}
+			}
+		}
+	}
+
+	@Override
+	protected <P> QueryParameterImplementor<P> getQueryParameter(QueryParameterImplementor<P> parameter) {
+		if ( parameter instanceof JpaCriteriaParameter<?> ) {
+			final JpaCriteriaParameter<?> criteriaParameter = (JpaCriteriaParameter<?>) parameter;
+			final var parameterWrapper = getDomainParameterXref().getParameterResolutions()
+					.getJpaCriteriaParamResolutions()
+					.get( criteriaParameter );
+			//noinspection unchecked
+			return (QueryParameterImplementor<P>) getDomainParameterXref().getQueryParameter( parameterWrapper );
+		}
+		else {
+			return parameter;
 		}
 	}
 

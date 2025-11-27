@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -35,7 +36,7 @@ public class ExamplesTestIT {
     }
 
     @Test
-    public void test5MinuteTutorial() throws Exception {
+    public void test5MinuteTutorial() {
         File buildFile = new File(baseFolder, "5-minute-tutorial/build.xml");
         Project project = createProject(buildFile);
         assertNotNull(project);
@@ -63,7 +64,7 @@ public class ExamplesTestIT {
     }
 
     @Test
-    public void testClasspath() throws Exception {
+    public void testClasspath() {
         PrintStream savedOut = System.out;
         try {
             File buildFile = new File(baseFolder, "classpath/build.xml");
@@ -80,18 +81,29 @@ public class ExamplesTestIT {
     }
 
     @Test
-    public void testConfiguration() throws Exception {
-        File buildFile = new File(baseFolder, "configuration/build.xml");
+    public void testConfigurationDefault() {
+        File buildFile = new File(baseFolder, "configuration/default/build.xml");
         Project project = createProject(buildFile);
         assertNotNull(project);
-        File cfgXmlFile = new File(baseFolder, "configuration/generated/hibernate.cfg.xml");
+        File cfgXmlFile = new File(baseFolder, "configuration/default/generated/hibernate.cfg.xml");
         assertFalse(cfgXmlFile.exists());
         project.executeTarget("reveng");
         assertTrue(cfgXmlFile.exists());
     }
 
     @Test
-    public void testJpa() throws Exception {
+    public void testConfigurationFileset() {
+        File buildFile = new File(baseFolder, "configuration/fileset/build.xml");
+        Project project = createProject(buildFile);
+        assertNotNull(project);
+        File cfgXmlFile = new File(baseFolder, "configuration/fileset/generated/Foo.java");
+        assertFalse(cfgXmlFile.exists());
+        project.executeTarget("reveng");
+        assertTrue(cfgXmlFile.exists());
+    }
+
+    @Test
+    public void testJpa() {
         File buildFile = new File(baseFolder, "jpa/build.xml");
         Project project = createProject(buildFile);
         assertNotNull(project);
@@ -102,7 +114,7 @@ public class ExamplesTestIT {
     }
 
     @Test
-    public void testNative() throws Exception {
+    public void testNative() {
         File buildFile = new File(baseFolder, "native/build.xml");
         Project project = createProject(buildFile);
         assertNotNull(project);
@@ -113,7 +125,7 @@ public class ExamplesTestIT {
     }
 
     @Test
-    public void testProperties() throws Exception {
+    public void testProperties() {
         PrintStream savedOut = System.out;
         try {
             File buildFile = new File(baseFolder, "properties/build.xml");
@@ -146,7 +158,7 @@ public class ExamplesTestIT {
         assertTrue(personFileContents.contains("// This is just an example of a custom template"));
     }
 
-    private Project createProject(File buildXmlFile) throws Exception {
+    private Project createProject(File buildXmlFile) {
         Project result = new Project();
         ProjectHelper projectHelper = ProjectHelper.getProjectHelper();
         result.addReference(MagicNames.REFID_PROJECT_HELPER, projectHelper);
@@ -166,7 +178,7 @@ public class ExamplesTestIT {
 
     private static void editIncludedXml() throws Exception {
         File xmlFile = new File(baseFolder, "common/included.xml");
-        StringBuffer xmlFileContents = new StringBuffer(
+        StringBuilder xmlFileContents = new StringBuilder(
                 new String(Files.readAllBytes(xmlFile.toPath())));
         int start = xmlFileContents.indexOf("<ivy:cachepath");
         int end = xmlFileContents.indexOf("<ivy:cachepath", start + 1);
@@ -207,7 +219,10 @@ public class ExamplesTestIT {
     }
 
     private static File determineBaseFolder() throws Exception {
-        return new File(ExamplesTestIT.class.getClassLoader().getResource("common/included.xml").toURI())
+        return new File(
+                Objects.requireNonNull(
+                    ExamplesTestIT.class.getClassLoader().getResource(
+                        "common/included.xml")).toURI())
                 .getParentFile().getParentFile();
     }
 

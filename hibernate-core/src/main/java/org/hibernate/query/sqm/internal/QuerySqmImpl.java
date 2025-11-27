@@ -226,11 +226,7 @@ public class QuerySqmImpl<R>
 		this.parameterBindings = parameterMetadata.createBindings( producer.getFactory() );
 
 		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
-		for ( SqmParameter<?> sqmParameter : domainParameterXref.getParameterResolutions().getSqmParameters() ) {
-			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> ) {
-				bindCriteriaParameter((SqmJpaCriteriaParameterWrapper<?>) sqmParameter);
-			}
-		}
+		bindValueBindCriteriaParameters( domainParameterXref, parameterBindings );
 		if ( sqm instanceof SqmSelectStatement<?> ) {
 			final SqmSelectStatement<R> selectStatement = (SqmSelectStatement<R>) sqm;
 			final SqmQueryPart<R> queryPart = selectStatement.getQueryPart();
@@ -248,18 +244,6 @@ public class QuerySqmImpl<R>
 
 		resultType = expectedResultType;
 		tupleMetadata = buildTupleMetadata( criteria, expectedResultType );
-	}
-
-	private <T> void bindCriteriaParameter(SqmJpaCriteriaParameterWrapper<T> sqmParameter) {
-		final JpaCriteriaParameter<T> jpaCriteriaParameter = sqmParameter.getJpaCriteriaParameter();
-		final T value = jpaCriteriaParameter.getValue();
-		// We don't set a null value, unless the type is also null which
-		// is the case when using HibernateCriteriaBuilder.value
-		if ( value != null || jpaCriteriaParameter.getNodeType() == null ) {
-			// Use the anticipated type for binding the value if possible
-			getQueryParameterBindings().getBinding( jpaCriteriaParameter )
-					.setBindValue( value, jpaCriteriaParameter.getAnticipatedType() );
-		}
 	}
 
 	@Override

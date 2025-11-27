@@ -730,7 +730,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	protected <P> QueryParameterBinding<P> locateBinding(QueryParameterImplementor<P> parameter) {
 		getSession().checkOpen();
-		return getQueryParameterBindings().getBinding( parameter );
+		return getQueryParameterBindings().getBinding( getQueryParameter( parameter ) );
 	}
 
 	protected <P> QueryParameterBinding<P> locateBinding(String name) {
@@ -745,8 +745,12 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	public boolean isBound(Parameter<?> param) {
 		getSession().checkOpen();
-		final QueryParameterImplementor<?> qp = getParameterMetadata().resolve( param );
-		return qp != null && getQueryParameterBindings().isBound( qp );
+		final QueryParameterImplementor<?> parameter = getParameterMetadata().resolve( param );
+		return parameter != null && getQueryParameterBindings().isBound( getQueryParameter( parameter ) );
+	}
+
+	protected <P> QueryParameterImplementor<P> getQueryParameter(QueryParameterImplementor<P> parameter) {
+		return parameter;
 	}
 
 	public <T> T getParameterValue(Parameter<T> param) {
@@ -759,7 +763,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			throw new IllegalArgumentException( "The parameter [" + param + "] is not part of this Query" );
 		}
 
-		final QueryParameterBinding<T> binding = getQueryParameterBindings().getBinding( qp );
+		final QueryParameterBinding<T> binding = getQueryParameterBindings().getBinding( getQueryParameter( qp ) );
 		if ( binding == null || !binding.isBound() ) {
 			throw new IllegalStateException( "Parameter value not yet bound : " + param.toString() );
 		}

@@ -25,12 +25,12 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.results.internal.TupleMetadata;
@@ -150,20 +150,39 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		} );
 
 		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
-		for ( SqmParameter<?> sqmParameter : getDomainParameterXref().getParameterResolutions().getSqmParameters() ) {
+		bindValueBindCriteriaParameters( getDomainParameterXref(), parameterBindings );
+	}
+
+	protected static void bindValueBindCriteriaParameters(
+			DomainParameterXref domainParameterXref,
+			QueryParameterBindings bindings) {
+		for ( var entry : domainParameterXref.getQueryParameters().entrySet() ) {
+			final var sqmParameter = entry.getValue().get( 0 );
 			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> wrapper ) {
-				bindCriteriaParameter( wrapper );
+				@SuppressWarnings("unchecked")
+				final var criteriaParameter = (JpaCriteriaParameter<Object>) wrapper.getJpaCriteriaParameter();
+				if ( criteriaParameter instanceof ValueBindJpaCriteriaParameter<?> ) {
+					// Use the anticipated type for binding the value if possible
+					//noinspection unchecked
+					final var parameter = (QueryParameterImplementor<Object>) entry.getKey();
+					bindings.getBinding( parameter )
+							.setBindValue( criteriaParameter.getValue(), criteriaParameter.getAnticipatedType() );
+				}
 			}
 		}
 	}
 
-	protected <T> void bindCriteriaParameter(SqmJpaCriteriaParameterWrapper<T> sqmParameter) {
-		final JpaCriteriaParameter<T> criteriaParameter = sqmParameter.getJpaCriteriaParameter();
-		if ( criteriaParameter instanceof ValueBindJpaCriteriaParameter<?> ) {
-			// Use the anticipated type for binding the value if possible
-			getQueryParameterBindings()
-					.getBinding( criteriaParameter )
-					.setBindValue( criteriaParameter.getValue(), criteriaParameter.getAnticipatedType() );
+	@Override
+	protected <P> QueryParameterImplementor<P> getQueryParameter(QueryParameterImplementor<P> parameter) {
+		if ( parameter instanceof JpaCriteriaParameter<?> criteriaParameter ) {
+			final var parameterWrapper = getDomainParameterXref().getParameterResolutions()
+					.getJpaCriteriaParamResolutions()
+					.get( criteriaParameter );
+			//noinspection unchecked
+			return (QueryParameterImplementor<P>) getDomainParameterXref().getQueryParameter( parameterWrapper );
+		}
+		else {
+			return parameter;
 		}
 	}
 

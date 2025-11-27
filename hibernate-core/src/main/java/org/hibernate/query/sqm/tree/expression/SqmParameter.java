@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import java.util.Comparator;
+
 import org.hibernate.HibernateException;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.criteria.JpaParameterExpression;
@@ -21,6 +23,22 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
  * @author Steve Ebersole
  */
 public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpression<T>, Comparable<SqmParameter<T>> {
+	Comparator<SqmParameter<?>> COMPARATOR = new Comparator<>() {
+		@Override
+		public int compare(SqmParameter<?> o1, SqmParameter<?> o2) {
+			if ( o1 instanceof SqmNamedParameter<?> ) {
+				return o2 instanceof SqmNamedParameter<?>
+						? o1.getName().compareTo( o2.getName() )
+						: -1;
+			}
+			else if ( o1 instanceof SqmPositionalParameter<?> ) {
+				return o2 instanceof SqmPositionalParameter<?>
+						? o1.getPosition().compareTo( o2.getPosition() )
+						: 1;
+			}
+			throw new HibernateException( "Unexpected SqmParameter type for comparison : " + this + " & " + o2 );
+		}
+	};
 	/**
 	 * If this represents a named parameter, return that parameter name;
 	 * otherwise return {@code null}.

@@ -6,15 +6,14 @@ package org.hibernate.query.sqm.internal;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
-import org.hibernate.internal.util.collections.LinkedIdentityHashMap;
+import org.hibernate.query.internal.QueryParameterIdentifiedImpl;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.query.sqm.SqmTreeTransformationLogger;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
@@ -31,7 +30,7 @@ import static java.util.Collections.emptyList;
 public class DomainParameterXref {
 
 	public static final DomainParameterXref EMPTY = new DomainParameterXref(
-			new LinkedIdentityHashMap<>( 0 ),
+			new LinkedHashMap<>( 0 ),
 			new IdentityHashMap<>( 0 ),
 			SqmStatement.ParameterResolutions.empty()
 	);
@@ -46,8 +45,8 @@ public class DomainParameterXref {
 		}
 		else {
 			final int sqmParamCount = parameterResolutions.getSqmParameters().size();
-			final Map<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam =
-					new LinkedIdentityHashMap<>( sqmParamCount );
+			final LinkedHashMap<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam =
+					new LinkedHashMap<>( sqmParamCount );
 			final IdentityHashMap<SqmParameter<?>, QueryParameterImplementor<?>> queryParamBySqmParam =
 					new IdentityHashMap<>( sqmParamCount );
 
@@ -60,48 +59,27 @@ public class DomainParameterXref {
 					);
 				}
 
-				// `xrefMap` is used to help maintain the proper cardinality between an
-				// SqmParameter and a QueryParameter.  Multiple SqmParameter references
-				// can map to the same QueryParameter.  Consider, e.g.,
-				// `.. where a.b = :param or a.c = :param`.  Here we have 2 SqmParameter
-				// references (one for each occurrence of `:param`) both of which map to
-				// the same QueryParameter.
-				final Map<SqmParameter<?>, QueryParameterImplementor<?>> xrefMap = new TreeMap<>();
-
-				final QueryParameterImplementor<?> queryParameter = xrefMap.computeIfAbsent(
-						sqmParameter,
-						parameter -> {
-							if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> sqmJpaCriteriaParameterWrapper ) {
-								return sqmJpaCriteriaParameterWrapper.getJpaCriteriaParameter();
-							}
-							else if ( sqmParameter.getName() != null ) {
-								return QueryParameterNamedImpl.fromSqm( sqmParameter );
-							}
-							else if ( sqmParameter.getPosition() != null ) {
-								return QueryParameterPositionalImpl.fromSqm( sqmParameter );
-							}
-							else {
-								throw new UnsupportedOperationException(
-										"Unexpected SqmParameter type : " + sqmParameter );
-							}
-						}
-				);
-
-				if ( !sqmParameter.allowMultiValuedBinding() ) {
-					if ( queryParameter.allowsMultiValuedBinding() ) {
-						SqmTreeTransformationLogger.LOGGER.debugf(
-								"SqmParameter [%s] does not allow multi-valued binding, " +
-								"but mapped to existing QueryParameter [%s] that does - " +
-								"disallowing multi-valued binding",
-								sqmParameter,
-								queryParameter
-						);
-						queryParameter.disallowMultiValuedBinding();
-					}
+				final QueryParameterImplementor<?> queryParameter;
+				if ( sqmParameter.getName() != null ) {
+					queryParameter = QueryParameterNamedImpl.fromSqm( sqmParameter );
 				}
-				else if ( sqmParameter.getExpressible() != null
-						&& sqmParameter.getExpressible().getSqmType() instanceof BasicCollectionType ) {
-					queryParameter.disallowMultiValuedBinding();
+				else if ( sqmParameter.getPosition() != null ) {
+					queryParameter = QueryParameterPositionalImpl.fromSqm( sqmParameter );
+				}
+				else if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> ) {
+					final SqmJpaCriteriaParameterWrapper<?> criteriaParameter = (SqmJpaCriteriaParameterWrapper<?>) sqmParameter;
+					if ( sqmParameter.allowMultiValuedBinding()
+							&& sqmParameter.getExpressible() != null
+							&& sqmParameter.getExpressible().getSqmType() instanceof BasicCollectionType ) {
+						// The wrapper parameter was inferred to be of a basic collection type,
+						// so we disallow multivalued bindings, because binding a list of collections isn't useful
+						criteriaParameter.getJpaCriteriaParameter().disallowMultiValuedBinding();
+					}
+					queryParameter = QueryParameterIdentifiedImpl.fromSqm( criteriaParameter );
+				}
+				else {
+					throw new UnsupportedOperationException(
+							"Unexpected SqmParameter type : " + sqmParameter );
 				}
 
 				sqmParamsByQueryParam.computeIfAbsent( queryParameter, impl -> new ArrayList<>() ).add( sqmParameter );
@@ -118,13 +96,13 @@ public class DomainParameterXref {
 
 	private final SqmStatement.ParameterResolutions parameterResolutions;
 
-	private final Map<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam;
+	private final LinkedHashMap<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam;
 	private final IdentityHashMap<SqmParameter<?>, QueryParameterImplementor<?>> queryParamBySqmParam;
 
 	private Map<SqmParameter<?>,List<SqmParameter<?>>> expansions;
 
 	private DomainParameterXref(
-			Map<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam,
+			LinkedHashMap<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam,
 			IdentityHashMap<SqmParameter<?>, QueryParameterImplementor<?>> queryParamBySqmParam,
 			SqmStatement.ParameterResolutions parameterResolutions) {
 		this.sqmParamsByQueryParam = sqmParamsByQueryParam;
@@ -180,10 +158,7 @@ public class DomainParameterXref {
 	}
 
 	public QueryParameterImplementor<?> getQueryParameter(SqmParameter<?> sqmParameter) {
-		if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> parameterWrapper ) {
-			return parameterWrapper.getJpaCriteriaParameter();
-		}
-		else if ( sqmParameter instanceof QueryParameterImplementor<?> parameterImplementor ) {
+		if ( sqmParameter instanceof QueryParameterImplementor<?> parameterImplementor ) {
 			return parameterImplementor;
 		}
 		else {

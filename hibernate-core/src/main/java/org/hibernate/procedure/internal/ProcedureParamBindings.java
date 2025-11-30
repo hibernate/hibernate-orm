@@ -75,23 +75,21 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 	}
 
 	@Override
-	public <P> ProcedureParameterBinding<P> getBinding(String name) {
+	public ProcedureParameterBinding<?> getBinding(String name) {
 		final var parameter = parameterMetadata.getQueryParameter( name );
 		if ( parameter == null ) {
 			throw new IllegalArgumentException( "Parameter with name '" + name + "' does not exist" );
 		}
-		//noinspection unchecked
-		return getQueryParameterBinding( (ProcedureParameterImplementor<P>) parameter );
+		return getQueryParameterBinding( (ProcedureParameterImplementor<?>) parameter );
 	}
 
 	@Override
-	public <P> ProcedureParameterBinding<P> getBinding(int position) {
+	public ProcedureParameterBinding<?> getBinding(int position) {
 		final var parameter = parameterMetadata.getQueryParameter( position );
 		if ( parameter == null ) {
 			throw new IllegalArgumentException( "Parameter at position " + position + "does not exist" );
 		}
-		//noinspection unchecked
-		return getQueryParameterBinding( (ProcedureParameterImplementor<P>) parameter );
+		return getQueryParameterBinding( (ProcedureParameterImplementor<?>) parameter );
 	}
 
 	@Override

@@ -1,6 +1,17 @@
 Hibernate 6 Changelog
 =======================
 
+Changes in 6.6.38.Final (November 30, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/36410
+
+
+** Bug
+    * HHH-19905 Implicit join re-use with nested inner and left joins causes ParsingException
+    * HHH-19883 JOIN TREAT ignores predicates
+    * HHH-18871 Nested NativeQuery mappings causing 'Could not locate TableGroup' exception after migration
+
 Changes in 6.6.37.Final (November 24, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

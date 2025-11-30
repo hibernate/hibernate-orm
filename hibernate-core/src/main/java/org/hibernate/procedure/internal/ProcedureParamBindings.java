@@ -71,10 +71,9 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 	}
 
 	@Override
-	public <P> ProcedureParameterBinding<P> getBinding(String name) {
-		//noinspection unchecked
+	public ProcedureParameterBinding<?> getBinding(String name) {
 		final var parameter =
-				(ProcedureParameterImplementor<P>)
+				(ProcedureParameterImplementor<?>)
 						parameterMetadata.getQueryParameter( name );
 		if ( parameter == null ) {
 			throw new IllegalArgumentException( "Parameter does not exist: " + name );
@@ -83,10 +82,9 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 	}
 
 	@Override
-	public <P> ProcedureParameterBinding<P> getBinding(int position) {
-		//noinspection unchecked
+	public ProcedureParameterBinding<?> getBinding(int position) {
 		final var parameter =
-				(ProcedureParameterImplementor<P>)
+				(ProcedureParameterImplementor<?>)
 						parameterMetadata.getQueryParameter( position );
 		if ( parameter == null ) {
 			throw new IllegalArgumentException( "Parameter at position " + position + "does not exist" );

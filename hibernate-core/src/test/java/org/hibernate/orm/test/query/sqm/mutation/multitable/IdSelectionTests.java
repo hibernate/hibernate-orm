@@ -12,6 +12,7 @@ import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
@@ -61,7 +62,8 @@ public class IdSelectionTests {
 				parameterMetadata,
 				scope.getSessionFactory()
 		);
-		domainParamBindings.getBinding( "n" ).setBindValue( "abc" );
+		((QueryParameterBinding) domainParamBindings.getBinding( "n" ))
+				.setBindValue( "abc" );
 
 		scope.inTransaction(
 				session -> {
@@ -86,7 +88,8 @@ public class IdSelectionTests {
 				parameterMetadata,
 				scope.getSessionFactory()
 		);
-		domainParamBindings.getBinding( "d" ).setBindValue( "123" );
+		((QueryParameterBinding) domainParamBindings.getBinding( "d" ))
+				.setBindValue( "123" );
 
 		scope.inTransaction(
 				session -> {
@@ -111,7 +114,8 @@ public class IdSelectionTests {
 				parameterMetadata,
 				scope.getSessionFactory()
 		);
-		domainParamBindings.getBinding( "n" ).setBindValue( "Acme" );
+		((QueryParameterBinding) domainParamBindings.getBinding( "n" ))
+				.setBindValue( "Acme" );
 
 		scope.inTransaction(
 				session -> {
@@ -136,7 +140,8 @@ public class IdSelectionTests {
 				parameterMetadata,
 				scope.getSessionFactory()
 		);
-		domainParamBindings.getBinding( "n" ).setBindValue( "Acme" );
+		((QueryParameterBinding) domainParamBindings.getBinding( "n" ))
+				.setBindValue( "Acme" );
 
 		scope.inTransaction(
 				session -> {
@@ -161,7 +166,8 @@ public class IdSelectionTests {
 				parameterMetadata,
 				scope.getSessionFactory()
 		);
-		domainParamBindings.getBinding( "v" ).setBindValue( "123" );
+		((QueryParameterBinding) domainParamBindings.getBinding( "v" ))
+				.setBindValue( "123" );
 
 		scope.inTransaction(
 				session -> {

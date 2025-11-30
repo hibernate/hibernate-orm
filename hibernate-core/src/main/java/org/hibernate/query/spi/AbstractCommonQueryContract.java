@@ -35,10 +35,10 @@ import org.hibernate.query.QueryArgumentException;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.TypedParameterValue;
+import org.hibernate.query.QueryArgumentTypeException;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -51,10 +51,12 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static java.util.Arrays.asList;
+import static java.lang.Math.round;
+import static java.util.Collections.unmodifiableSet;
 import static java.util.Locale.ROOT;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
@@ -282,7 +284,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 					//fall through:
 				case HINT_SPEC_QUERY_TIMEOUT:
 					// convert milliseconds to seconds
-					int timeout = (int) Math.round( getInteger( value ).doubleValue() / 1000.0 );
+					final int timeout = (int) round( getInteger( value ).doubleValue() / 1000.0 );
 					applyTimeoutHint( timeout );
 					return true;
 				case HINT_COMMENT:
@@ -621,15 +623,13 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	@Override
 	public abstract ParameterMetadataImplementor getParameterMetadata();
 
-	@SuppressWarnings({"unchecked", "rawtypes"})
 	public Set<Parameter<?>> getParameters() {
 		checkOpenNoRollback();
-		return (Set) getParameterMetadata().getRegistrations();
+		return unmodifiableSet( getParameterMetadata().getRegistrations() );
 	}
 
 	public QueryParameterImplementor<?> getParameter(String name) {
 		checkOpenNoRollback();
-
 		try {
 			return getParameterMetadata().getQueryParameter( name );
 		}
@@ -638,21 +638,20 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public <T> QueryParameterImplementor<T> getParameter(String name, Class<T> type) {
 		checkOpenNoRollback();
-
 		try {
-			//noinspection rawtypes
-			final QueryParameterImplementor parameter = getParameterMetadata().getQueryParameter( name );
+			final var parameter = getParameterMetadata().getQueryParameter( name );
 			if ( !type.isAssignableFrom( parameter.getParameterType() ) ) {
-				throw new IllegalArgumentException(
-						"The type [" + parameter.getParameterType().getName() +
-								"] associated with the parameter corresponding to name [" + name +
-								"] is not assignable to requested Java type [" + type.getName() + "]"
+				throw new QueryArgumentTypeException(
+						"Type specified for parameter named '" + name + "' is incompatible",
+						parameter.getParameterType(),
+						type
 				);
 			}
-			return parameter;
+			@SuppressWarnings("unchecked") // safe, just checked
+			var castParameter = (QueryParameterImplementor<T>) parameter;
+			return castParameter;
 		}
 		catch ( HibernateException e ) {
 			throw getExceptionConverter().convert( e );
@@ -661,7 +660,6 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	public QueryParameterImplementor<?> getParameter(int position) {
 		checkOpenNoRollback();
-
 		try {
 			return getParameterMetadata().getQueryParameter( position );
 		}
@@ -670,20 +668,20 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 	}
 
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public <T> QueryParameterImplementor<T> getParameter(int position, Class<T> type) {
 		checkOpenNoRollback();
-
 		try {
-			final QueryParameterImplementor parameter = getParameterMetadata().getQueryParameter( position );
+			final var parameter = getParameterMetadata().getQueryParameter( position );
 			if ( !type.isAssignableFrom( parameter.getParameterType() ) ) {
-				throw new IllegalArgumentException(
-						"The type [" + parameter.getParameterType().getName() +
-								"] associated with the parameter corresponding to position [" + position +
-								"] is not assignable to requested Java type [" + type.getName() + "]"
+				throw new QueryArgumentTypeException(
+						"Type specified for parameter at position " + position + " is incompatible",
+						parameter.getParameterType(),
+						type
 				);
 			}
-			return parameter;
+			@SuppressWarnings("unchecked") // safe, just checked
+			var castParameter = (QueryParameterImplementor<T>) parameter;
+			return castParameter;
 		}
 		catch ( HibernateException e ) {
 			throw getExceptionConverter().convert( e );
@@ -703,15 +701,31 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				.resolveDescriptor( javaType );
 	}
 
-	protected <P> QueryParameterBinding<P> locateBinding(Parameter<P> parameter) {
+	protected <P> QueryParameterBinding<P> locateBinding(Parameter<P> parameter, P value) {
 		if ( parameter instanceof QueryParameterImplementor<P> parameterImplementor ) {
 			return locateBinding( parameterImplementor );
 		}
 		else if ( parameter.getName() != null ) {
-			return locateBinding( parameter.getName() );
+			return locateBinding( parameter.getName(), parameter.getParameterType(), value );
 		}
 		else if ( parameter.getPosition() != null ) {
-			return locateBinding( parameter.getPosition() );
+			return locateBinding( parameter.getPosition(), parameter.getParameterType(), value );
+		}
+
+		throw getExceptionConverter().convert(
+				new IllegalArgumentException( "Could not resolve binding for given parameter reference [" + parameter + "]" )
+		);
+	}
+
+	protected <P> QueryParameterBinding<P> locateBinding(Parameter<P> parameter, Collection<? extends P> values) {
+		if ( parameter instanceof QueryParameterImplementor<P> parameterImplementor ) {
+			return locateBinding( parameterImplementor );
+		}
+		else if ( parameter.getName() != null ) {
+			return locateBinding( parameter.getName(), parameter.getParameterType(), values );
+		}
+		else if ( parameter.getPosition() != null ) {
+			return locateBinding( parameter.getPosition(), parameter.getParameterType(), values );
 		}
 
 		throw getExceptionConverter().convert(
@@ -724,14 +738,76 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return getQueryParameterBindings().getBinding( getQueryParameter( parameter ) );
 	}
 
-	protected <P> QueryParameterBinding<P> locateBinding(String name) {
+	protected <P> QueryParameterBinding<P> locateBinding(String name, Class<P> javaType, P value) {
 		getCheckOpen();
-		return getQueryParameterBindings().getBinding( name );
+		final var binding = getQueryParameterBindings().getBinding( name );
+		final var parameterType = binding.getBindType();
+		if ( parameterType != null ) {
+			final var parameterJavaType = parameterType.getJavaType();
+			if ( !parameterJavaType.isAssignableFrom( javaType )
+					&& !isInstance( parameterType, value ) ) {
+				throw new QueryArgumentTypeException(
+						"Argument to parameter named '" + name + "' has an incompatible type",
+						parameterJavaType, javaType);
+			}
+		}
+		@SuppressWarnings("unchecked") // safe, just checked
+		var castBinding = (QueryParameterBinding<P>) binding;
+		return castBinding;
 	}
 
-	protected <P> QueryParameterBinding<P> locateBinding(int position) {
+	protected <P> QueryParameterBinding<P> locateBinding(int position, Class<P> javaType, P value) {
 		getCheckOpen();
-		return getQueryParameterBindings().getBinding( position );
+		final var binding = getQueryParameterBindings().getBinding( position );
+		final var parameterType = binding.getBindType();
+		if ( parameterType != null ) {
+			final var parameterJavaType = parameterType.getJavaType();
+			if ( !parameterJavaType.isAssignableFrom( javaType )
+					&& !isInstance( parameterType, value ) ) {
+				throw new QueryArgumentTypeException(
+						"Argument to parameter at position " + position + " has an incompatible type",
+						parameterJavaType, javaType );
+			}
+		}
+		@SuppressWarnings("unchecked") // safe, just checked
+		var castBinding = (QueryParameterBinding<P>) binding;
+		return castBinding;
+	}
+
+	protected <P> QueryParameterBinding<P> locateBinding(String name, Class<P> javaType, Collection<? extends P> values) {
+		getCheckOpen();
+		final var binding = getQueryParameterBindings().getBinding( name );
+		final var parameterType = binding.getBindType();
+		if ( parameterType != null ) {
+			final var parameterJavaType = parameterType.getJavaType();
+			if ( !parameterJavaType.isAssignableFrom( javaType )
+					&& !areInstances( parameterType, values ) ) {
+				throw new QueryArgumentTypeException(
+						"Argument to parameter named '" + name + "' has an incompatible type",
+						parameterJavaType, javaType);
+			}
+		}
+		@SuppressWarnings("unchecked") // safe, just checked
+		var castBinding = (QueryParameterBinding<P>) binding;
+		return castBinding;
+	}
+
+	protected <P> QueryParameterBinding<P> locateBinding(int position, Class<P> javaType, Collection<? extends P> values) {
+		getCheckOpen();
+		final var binding = getQueryParameterBindings().getBinding( position );
+		final var parameterType = binding.getBindType();
+		if ( parameterType != null ) {
+			final var parameterJavaType = parameterType.getJavaType();
+			if ( !parameterJavaType.isAssignableFrom( javaType )
+					&& !areInstances( parameterType, values ) ) {
+				throw new QueryArgumentTypeException(
+						"Argument to parameter at position " + position + " has an incompatible type",
+						parameterJavaType, javaType );
+			}
+		}
+		@SuppressWarnings("unchecked") // safe, just checked
+		var castBinding = (QueryParameterBinding<P>) binding;
+		return castBinding;
 	}
 
 	protected <P> QueryParameterImplementor<P> getQueryParameter(QueryParameterImplementor<P> parameter) {
@@ -741,23 +817,24 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	public boolean isBound(Parameter<?> param) {
 		getCheckOpen();
 		final var parameter = getParameterMetadata().resolve( param );
-		return parameter != null && getQueryParameterBindings().isBound( getQueryParameter( parameter ) );
+		return parameter != null
+			&& getQueryParameterBindings().isBound( getQueryParameter( parameter ) );
 	}
 
 	public <T> T getParameterValue(Parameter<T> param) {
 		checkOpenNoRollback();
-
 		final var parameter = getParameterMetadata().resolve( param );
 		if ( parameter == null ) {
 			throw new IllegalArgumentException( "The parameter [" + param + "] is not part of this Query" );
 		}
-
-		final var binding = getQueryParameterBindings().getBinding( getQueryParameter( parameter ) );
+		final var binding =
+				getQueryParameterBindings()
+						.getBinding( getQueryParameter( parameter ) );
 		if ( binding == null || !binding.isBound() ) {
 			throw new IllegalStateException( "Parameter value not yet bound : " + param.toString() );
 		}
-
 		if ( binding.isMultiValued() ) {
+			// TODO: this cast is complete garbage
 			//noinspection unchecked
 			return (T) binding.getBindValues();
 		}
@@ -768,54 +845,69 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	public Object getParameterValue(String name) {
 		checkOpenNoRollback();
-
-		final QueryParameterBinding<?> binding = getQueryParameterBindings().getBinding( name );
+		final var binding = getQueryParameterBindings().getBinding( name );
 		if ( !binding.isBound() ) {
 			throw new IllegalStateException( "The parameter [" + name + "] has not yet been bound" );
 		}
-
-		if ( binding.isMultiValued() ) {
-			return binding.getBindValues();
-		}
-		else {
-			return binding.getBindValue();
-		}
+		return binding.isMultiValued() ? binding.getBindValues() : binding.getBindValue();
 	}
 
 	public Object getParameterValue(int position) {
 		checkOpenNoRollback();
-
-		final QueryParameterBinding<?> binding = getQueryParameterBindings().getBinding( position );
+		final var binding = getQueryParameterBindings().getBinding( position );
 		if ( !binding.isBound() ) {
 			throw new IllegalStateException( "The parameter [" + position + "] has not yet been bound" );
 		}
-
 		return binding.isMultiValued() ? binding.getBindValues() : binding.getBindValue();
 	}
+
+	private <P> void setParameterValue(Object value, QueryParameterBinding<P> binding) {
+		final var parameterType = binding.getBindType();
+		if ( parameterType != null
+				&& !isInstanceOrAreInstances( value, binding, parameterType ) ) {
+			throw new QueryArgumentTypeException( "Argument to query parameter has an incompatible type",
+					parameterType.getJavaType(), value.getClass() );
+		}
+		@SuppressWarnings("unchecked") // safe, just checked
+		final var castValue = (P) value;
+		binding.setBindValue( castValue, resolveJdbcParameterTypeIfNecessary() );
+	}
+
+	private <P> boolean isInstanceOrAreInstances(
+			Object value, QueryParameterBinding<P> binding, BindableType<? super P> parameterType) {
+		return binding.isMultiValued() && value instanceof Collection<?> values
+				? areInstances( parameterType, values )
+				: isInstance( parameterType, value );
+	}
+
 	@Override
 	public CommonQueryContract setParameter(String name, Object value) {
 		checkOpenNoRollback();
-
 		if ( value instanceof TypedParameterValue<?> typedParameterValue ) {
 			setTypedParameter( name, typedParameterValue );
 		}
 		else {
-			final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( name );
-			if ( multipleBinding( binding.getQueryParameter(), value )
-				&& value instanceof Collection<?> collectionValue
-				&& !isRegisteredAsBasicType( value.getClass() ) ) {
-				return setParameterList( name, collectionValue );
+			final var binding = getQueryParameterBindings().getBinding( name );
+			if ( multipleBinding( binding.getQueryParameter(), value ) ) {
+				setParameterList( name, (Collection<?>) value );
 			}
-			binding.setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
+			else {
+				setParameterValue( value, binding );
+			}
 		}
-
 		return this;
 	}
 
-	private boolean multipleBinding(QueryParameter<Object> parameter, Object value){
-		if ( parameter.allowsMultiValuedBinding() ) {
+	private boolean multipleBinding(QueryParameter<?> parameter, Object value){
+		if ( parameter.allowsMultiValuedBinding()
+				&& value instanceof Collection<?> values
+				// this check only needed for some native queries
+				&& !isRegisteredAsBasicType( value.getClass() ) ) {
 			final var hibernateType = parameter.getHibernateType();
-			return hibernateType == null || value == null || isInstance( hibernateType, value );
+			return hibernateType == null
+				|| values.isEmpty()
+				|| !isInstance( hibernateType, value )
+				|| isInstance( hibernateType, values.iterator().next() );
 		}
 		else {
 			return false;
@@ -831,12 +923,67 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	private boolean isInstance(Type<?> parameterType, Object value) {
-		final SqmExpressible<?> sqmExpressible = getNodeuilder().resolveExpressible( parameterType );
+		if ( value == null ) {
+			return true;
+		}
+		final var sqmExpressible = getNodeBuilder().resolveExpressible( parameterType );
 		assert sqmExpressible != null;
-		return sqmExpressible.getExpressibleJavaType().isInstance( value );
+		final var javaType = sqmExpressible.getExpressibleJavaType();
+		if ( !javaType.isInstance( value ) ) {
+			try {
+				// if this succeeds, we are good
+				javaType.wrap( value, session );
+			}
+			catch ( HibernateException|UnsupportedOperationException e) {
+				return false;
+			}
+		}
+		return true;
 	}
 
-	private NodeBuilder getNodeuilder() {
+	private boolean areInstances(Type<?> parameterType, Collection<?> values) {
+		if ( values.isEmpty() ) {
+			return true;
+		}
+		final var sqmExpressible = getNodeBuilder().resolveExpressible( parameterType );
+		assert sqmExpressible != null;
+		final var javaType = sqmExpressible.getExpressibleJavaType();
+		for ( Object value : values ) {
+			if ( !javaType.isInstance( value ) ) {
+				try {
+					// if this succeeds, we are good
+					javaType.wrap( value, session );
+				}
+				catch (HibernateException | UnsupportedOperationException e) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	private boolean areInstances(Type<?> parameterType, Object[] values) {
+		if ( values.length == 0 ) {
+			return true;
+		}
+		final var sqmExpressible = getNodeBuilder().resolveExpressible( parameterType );
+		assert sqmExpressible != null;
+		final var javaType = sqmExpressible.getExpressibleJavaType();
+		for ( Object value : values ) {
+			if ( !javaType.isInstance( value ) ) {
+				try {
+					// if this succeeds, we are good
+					javaType.wrap( value, session );
+				}
+				catch (HibernateException | UnsupportedOperationException e) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	private NodeBuilder getNodeBuilder() {
 		return getSessionFactory().getQueryEngine().getCriteriaBuilder();
 	}
 
@@ -854,31 +1001,30 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public <P> CommonQueryContract setParameter(String name, P value, Type<P> type) {
-		this.<P>locateBinding( name ).setBindValue( value, (BindableType<P>) type );
+		locateBinding( name, type.getJavaType(), value ).setBindValue( value, (BindableType<P>) type );
 		return this;
 	}
 
 	@Override @Deprecated(since = "7")
 	public CommonQueryContract setParameter(String name, Instant value, TemporalType temporalType) {
-		this.locateBinding( name ).setBindValue( value, temporalType );
+		locateBinding( name, Instant.class, value ).setBindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
 	public CommonQueryContract setParameter(int position, Object value) {
 		checkOpenNoRollback();
-
 		if ( value instanceof TypedParameterValue<?> typedParameterValue ) {
 			setTypedParameter( position, typedParameterValue );
 		}
 		else {
-			final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( position );
-			if ( multipleBinding( binding.getQueryParameter(), value )
-				&& value instanceof Collection<?> collectionValue
-				&& !isRegisteredAsBasicType( value.getClass() ) ) {
-				return setParameterList( position, collectionValue );
+			final var binding = getQueryParameterBindings().getBinding( position );
+			if ( multipleBinding( binding.getQueryParameter(), value ) ) {
+				setParameterList( position, (Collection<?>) value );
 			}
-			binding.setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
+			else {
+				setParameterValue( value, binding );
+			}
 		}
 		return this;
 	}
@@ -901,19 +1047,20 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public <P> CommonQueryContract setParameter(int position, P value, Type<P> type) {
-		this.<P>locateBinding( position ).setBindValue( value, (BindableType<P>) type );
+		locateBinding( position, type.getJavaType(), value ).setBindValue( value, (BindableType<P>) type );
 		return this;
 	}
 
 	@Override @Deprecated(since = "7")
 	public CommonQueryContract setParameter(int position, Instant value, TemporalType temporalType) {
-		this.locateBinding( position ).setBindValue( value, temporalType );
+		locateBinding( position, Instant.class, value ).setBindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
 	public <P> CommonQueryContract setParameter(QueryParameter<P> parameter, P value) {
-		locateBinding( parameter ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
+		locateBinding( parameter, value )
+				.setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 		return this;
 	}
 
@@ -931,7 +1078,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public <P> CommonQueryContract setParameter(QueryParameter<P> parameter, P value, Type<P> type) {
-		locateBinding( parameter ).setBindValue( value, (BindableType<P>) type );
+		locateBinding( parameter, value )
+				.setBindValue( value, (BindableType<P>) type );
 		return this;
 	}
 
@@ -950,75 +1098,67 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			}
 			@SuppressWarnings("unchecked") // safe, because we just checked
 			final var typedValue = (TypedParameterValue<P>) value;
-			setParameter( parameter, typedValue.value(), typedValue.type() );
+			final var castValue = typedValue.value();
+			final var castType = typedValue.type();
+			if ( parameter instanceof QueryParameter<P> queryParameter ) {
+				setParameter( queryParameter, castValue, castType );
+			}
+			else {
+				locateBinding( parameter, castValue )
+						.setBindValue( castValue, castType );
+			}
 		}
 		else {
-			locateBinding( parameter ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
+			locateBinding( parameter, value )
+					.setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 		}
 		return this;
 	}
 
-	private <P> void setParameter(Parameter<P> parameter, P value, Type<P> type) {
-		if ( parameter instanceof QueryParameter<P> queryParameter ) {
-			setParameter( queryParameter, value, type );
-		}
-		else if ( value == null ) {
-			locateBinding( parameter ).setBindValue( null, (BindableType<P>) type );
-		}
-		else if ( value instanceof Collection ) {
-			//TODO: this looks wrong to me: how can value be both a P and a (Collection<P>)?
-			locateBinding( parameter ).setBindValues( (Collection<P>) value );
-		}
-		else {
-			locateBinding( parameter ).setBindValue( value, (BindableType<P>) type );
-		}
-	}
-
-
 	@Override @Deprecated
 	public CommonQueryContract setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
-		locateBinding( param ).setBindValue( value, temporalType );
+		locateBinding( param, value ).setBindValue( value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated
 	public CommonQueryContract setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
-		locateBinding( param ).setBindValue( value, temporalType );
+		locateBinding( param, value ).setBindValue( value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated
 	public CommonQueryContract setParameter(String name, Calendar value, TemporalType temporalType) {
-		locateBinding( name ).setBindValue( value, temporalType );
+		locateBinding( name, Calendar.class, value ).setBindValue( value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated
 	public CommonQueryContract setParameter(String name, Date value, TemporalType temporalType) {
-		locateBinding( name ).setBindValue( value, temporalType );
+		locateBinding( name, Date.class, value ).setBindValue( value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated
 	public CommonQueryContract setParameter(int position, Calendar value, TemporalType temporalType) {
-		locateBinding( position ).setBindValue( value, temporalType );
+		locateBinding( position, Calendar.class, value ).setBindValue( value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated
 	public CommonQueryContract setParameter(int position, Date value, TemporalType temporalType) {
-		locateBinding( position ).setBindValue( value, temporalType );
+		locateBinding( position, Date.class, value ).setBindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
 	public CommonQueryContract setParameterList(String name, @SuppressWarnings("rawtypes") Collection values) {
-		locateBinding( name ).setBindValues( values );
+		getQueryParameterBindings().getBinding( name ).setBindValues( values );
 		return this;
 	}
 
 	public <P> CommonQueryContract setParameterList(String name, Collection<? extends P> values, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getJavaType( javaType );
+		final var javaDescriptor = getJavaType( javaType );
 		if ( javaDescriptor == null ) {
 			setParameterList( name, values );
 		}
@@ -1031,14 +1171,33 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public <P> CommonQueryContract setParameterList(String name, Collection<? extends P> values, Type<P> type) {
-		this.<P>locateBinding( name ).setBindValues( values, (BindableType<P>) type );
+		locateBinding( name, type.getJavaType(), values )
+				.setBindValues( values, (BindableType<P>) type );
 		return this;
 	}
 
 	@Override
 	public CommonQueryContract setParameterList(String name, Object[] values) {
-		locateBinding( name ).setBindValues( asList( values ) );
+		final var binding = getQueryParameterBindings().getBinding( name );
+		setParameterValues( values, binding );
 		return this;
+	}
+
+	private <P> void setParameterValues(Object[] values, QueryParameterBinding<P> binding) {
+		final var parameterType = binding.getBindType();
+		if ( parameterType != null
+				&& !areInstances( values, parameterType ) ) {
+			throw new QueryArgumentTypeException( "Argument to query parameter has an incompatible type",
+					parameterType.getJavaType(), values.getClass().getComponentType() );
+		}
+		@SuppressWarnings("unchecked") // safe, just checked
+		final var castArray = (P[]) values;
+		binding.setBindValues( List.of( castArray ) );
+	}
+
+	private <P> boolean areInstances(Object[] values, BindableType<? super P> parameterType) {
+		return parameterType.getJavaType().isAssignableFrom( values.getClass().getComponentType() )
+			|| areInstances( parameterType, values );
 	}
 
 	@Override
@@ -1054,13 +1213,16 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	public <P> CommonQueryContract setParameterList(String name, P[] values, Type<P> type) {
-		this.<P>locateBinding( name ).setBindValues( asList( values ), (BindableType<P>) type );
+		final var list = List.of( values );
+		locateBinding( name, type.getJavaType(), list )
+				.setBindValues( list, (BindableType<P>) type );
 		return this;
 	}
 
 	@Override
 	public CommonQueryContract setParameterList(int position, @SuppressWarnings("rawtypes") Collection values) {
-		locateBinding( position ).setBindValues( values );
+		//TODO: type checking?
+		getQueryParameterBindings().getBinding( position ).setBindValues( values );
 		return this;
 	}
 
@@ -1098,13 +1260,15 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public <P> CommonQueryContract setParameterList(int position, Collection<? extends P> values, Type<P> type) {
-		this.<P>locateBinding( position ).setBindValues( values, (BindableType<P>) type );
+		locateBinding( position, type.getJavaType(), values )
+				.setBindValues( values, (BindableType<P>) type );
 		return this;
 	}
 
 	@Override
 	public CommonQueryContract setParameterList(int position, Object[] values) {
-		locateBinding( position ).setBindValues( asList( values ) );
+		final var binding = getQueryParameterBindings().getBinding( position );
+		setParameterValues( values, binding );
 		return this;
 	}
 
@@ -1117,20 +1281,20 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		else {
 			setParameterList( position, values, getParamType( javaType ) );
 		}
-
 		return this;
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <P> CommonQueryContract setParameterList(int position, P[] values, Type<P> type) {
-		locateBinding( position ).setBindValues( asList( values ), (BindableType) type );
+		final var list = List.of( values );
+		locateBinding( position, type.getJavaType(), list )
+				.setBindValues( list, (BindableType<P>) type );
 		return this;
 	}
 
 
 	@Override
 	public <P> CommonQueryContract setParameterList(QueryParameter<P> parameter, Collection<? extends P> values) {
-		locateBinding( parameter ).setBindValues( values );
+		locateBinding( parameter, values ).setBindValues( values );
 		return this;
 	}
 
@@ -1148,13 +1312,15 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public <P> CommonQueryContract setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type) {
-		locateBinding( parameter ).setBindValues( values, (BindableType<P>) type );
+		locateBinding( parameter, values )
+				.setBindValues( values, (BindableType<P>) type );
 		return this;
 	}
 
 	@Override
 	public <P> CommonQueryContract setParameterList(QueryParameter<P> parameter, P[] values) {
-		locateBinding( parameter ).setBindValues( values == null ? null : asList( values ) );
+		final var list = List.of( values );
+		locateBinding( parameter, list ).setBindValues( list );
 		return this;
 	}
 
@@ -1167,13 +1333,14 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		else {
 			setParameterList( parameter, values, getParamType( javaType ) );
 		}
-
 		return this;
 	}
 
 	@Override
 	public <P> CommonQueryContract setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type) {
-		locateBinding( parameter ).setBindValues( asList( values ), (BindableType<P>) type );
+		final var list = List.of( values );
+		locateBinding( parameter, list )
+				.setBindValues( list, (BindableType<P>) type );
 		return this;
 	}
 
@@ -1183,7 +1350,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			final Object object = map.get( paramName );
 			if ( object == null ) {
 				if ( map.containsKey( paramName ) ) {
-					setParameter( paramName, null, determineType( paramName, null ) );
+					setParameter( paramName, null,
+							determineType( paramName, null ) );
 				}
 			}
 			else {
@@ -1194,7 +1362,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 					setParameterList( paramName, array );
 				}
 				else {
-					setParameter( paramName, object, determineType( paramName, object.getClass() ) );
+					setParameter( paramName, object,
+							determineType( paramName, object.getClass() ) );
 				}
 			}
 		}
@@ -1202,14 +1371,15 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	protected <T> Type<T> determineType(String namedParam, Class<? extends T> retType) {
-		BindableType<?> type = locateBinding( namedParam ).getBindType();
+		var type = getQueryParameterBindings().getBinding( namedParam ).getBindType();
 		if ( type == null ) {
 			type = getParameterMetadata().getQueryParameter( namedParam ).getHibernateType();
 		}
 		if ( type == null && retType != null ) {
 			type = getSessionFactory().getMappingMetamodel().resolveParameterBindType( retType );
 		}
-		if ( retType!= null && !retType.isAssignableFrom( type.getJavaType() ) ) {
+		if ( retType != null && !retType.isAssignableFrom( type.getJavaType() ) ) {
+			// TODO: is this really the correct exception type?
 			throw new IllegalStateException( "Parameter not of expected type: " + retType.getName() );
 		}
 		//noinspection unchecked

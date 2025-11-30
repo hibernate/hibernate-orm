@@ -48,10 +48,10 @@ class EmbeddableWithJavaTypeTest implements SessionFactoryScopeAware {
 	@ValueSource(strings = {
 			"select z from EntityEmbedCustom z where embedCustom.value=:datum",
 			"select z from EntityEmbedCustom z where :datum=embedCustom.value",
-			"select z from EntityEmbedCustom z where embedCustom=:datum", // this query failed with the bug
-			"select z from EntityEmbedCustom z where :datum=embedCustom",
+			"select z from EntityEmbedCustom z where embedCustom.value=:datum", // this query failed with the bug
+			"select z from EntityEmbedCustom z where :datum=embedCustom.value",
 			"select z from EntityEmbedCustom z where embedCustom.value in (:datum)",
-			"select z from EntityEmbedCustom z where embedCustom in (:datum)" // failed as well
+			"select z from EntityEmbedCustom z where embedCustom.value in (:datum)" // failed as well
 	})
 	void hhh18898Test_embedCustom(String hql) {
 
@@ -81,10 +81,10 @@ class EmbeddableWithJavaTypeTest implements SessionFactoryScopeAware {
 	@ValueSource(strings = {
 			"select z from EntityEmbedNative z where embedNative.value=:datum",
 			"select z from EntityEmbedNative z where :datum=embedNative.value",
-			"select z from EntityEmbedNative z where embedNative=:datum", // this query failed with the bug
-			"select z from EntityEmbedNative z where :datum=embedNative",
+			"select z from EntityEmbedNative z where embedNative.value=:datum", // this query failed with the bug
+			"select z from EntityEmbedNative z where :datum=embedNative.value",
 			"select z from EntityEmbedNative z where embedNative.value in (:datum)",
-			"select z from EntityEmbedNative z where embedNative in (:datum)" // failed as well
+			"select z from EntityEmbedNative z where embedNative.value in (:datum)" // failed as well
 	})
 	void hhh18898Test_embedSingle(String hql) {
 

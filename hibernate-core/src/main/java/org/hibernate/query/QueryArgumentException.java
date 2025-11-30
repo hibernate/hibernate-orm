@@ -15,16 +15,29 @@ package org.hibernate.query;
  */
 public class QueryArgumentException extends IllegalArgumentException {
 	private final Class<?> parameterType;
+	private final Class<?> argumentType;
 	private final Object argument;
 
 	public QueryArgumentException(String message, Class<?> parameterType, Object argument) {
-		super(message);
+		super( message + " (argument [" + argument + "] is not assignable to " + parameterType.getName() + ")" );
 		this.parameterType = parameterType;
+		this.argumentType = argument == null ? null : argument.getClass();
+		this.argument = argument;
+	}
+
+	public QueryArgumentException(String message, Class<?> parameterType, Class<?> argumentType, Object argument) {
+		super( message + " (" + argumentType.getName() + " is not assignable to " + parameterType.getName() + ")" );
+		this.parameterType = parameterType;
+		this.argumentType = argumentType;
 		this.argument = argument;
 	}
 
 	public Class<?> getParameterType() {
 		return parameterType;
+	}
+
+	public Class<?> getArgumentType() {
+		return argumentType;
 	}
 
 	public Object getArgument() {

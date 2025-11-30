@@ -641,10 +641,11 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		checkOpenNoRollback();
 		try {
 			final var parameter = getParameterMetadata().getQueryParameter( name );
-			if ( !type.isAssignableFrom( parameter.getParameterType() ) ) {
+			final var parameterType = parameter.getParameterType();
+			if ( !type.isAssignableFrom( parameterType ) ) {
 				throw new IllegalArgumentException(
 						"Type specified for parameter named '" + name + "' is incompatible"
-						+ " (" + parameter.getParameterType().getName() + " is not assignable to " + type.getName() + ")"
+						+ " (" + parameterType.getName() + " is not assignable to " + type.getName() + ")"
 				);
 			}
 			@SuppressWarnings("unchecked") // safe, just checked
@@ -670,10 +671,11 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		checkOpenNoRollback();
 		try {
 			final var parameter = getParameterMetadata().getQueryParameter( position );
-			if ( !type.isAssignableFrom( parameter.getParameterType() ) ) {
+			final var parameterType = parameter.getParameterType();
+			if ( !type.isAssignableFrom( parameterType ) ) {
 				throw new IllegalArgumentException(
 						"Type specified for parameter at position " + position + " is incompatible"
-						+ " (" + parameter.getParameterType().getName() + " is not assignable to " + type.getName() + ")"
+						+ " (" + parameterType.getName() + " is not assignable to " + type.getName() + ")"
 				);
 			}
 			@SuppressWarnings("unchecked") // safe, just checked
@@ -702,11 +704,16 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		if ( parameter instanceof QueryParameterImplementor<P> parameterImplementor ) {
 			return locateBinding( parameterImplementor );
 		}
-		else if ( parameter.getName() != null ) {
-			return locateBinding( parameter.getName(), parameter.getParameterType(), value );
-		}
-		else if ( parameter.getPosition() != null ) {
-			return locateBinding( parameter.getPosition(), parameter.getParameterType(), value );
+		else {
+			final String name = parameter.getName();
+			final Integer position = parameter.getPosition();
+			final var parameterType = parameter.getParameterType();
+			if ( name != null ) {
+				return locateBinding( name, parameterType, value );
+			}
+			else if ( position != null ) {
+				return locateBinding( position, parameterType, value );
+			}
 		}
 
 		throw getExceptionConverter().convert(
@@ -718,11 +725,16 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		if ( parameter instanceof QueryParameterImplementor<P> parameterImplementor ) {
 			return locateBinding( parameterImplementor );
 		}
-		else if ( parameter.getName() != null ) {
-			return locateBinding( parameter.getName(), parameter.getParameterType(), values );
-		}
-		else if ( parameter.getPosition() != null ) {
-			return locateBinding( parameter.getPosition(), parameter.getParameterType(), values );
+		else {
+			final String name = parameter.getName();
+			final Integer position = parameter.getPosition();
+			final var parameterType = parameter.getParameterType();
+			if ( name != null ) {
+				return locateBinding( name, parameterType, values );
+			}
+			else if ( position != null ) {
+				return locateBinding( position, parameterType, values );
+			}
 		}
 
 		throw getExceptionConverter().convert(
@@ -732,7 +744,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	protected <P> QueryParameterBinding<P> locateBinding(QueryParameterImplementor<P> parameter) {
 		getCheckOpen();
-		return getQueryParameterBindings().getBinding( getQueryParameter( parameter ) );
+		return getQueryParameterBindings()
+				.getBinding( getQueryParameter( parameter ) );
 	}
 
 	protected <P> QueryParameterBinding<P> locateBinding(String name, Class<P> javaType, P value) {

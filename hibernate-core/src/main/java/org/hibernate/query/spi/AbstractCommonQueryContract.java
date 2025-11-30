@@ -35,7 +35,6 @@ import org.hibernate.query.QueryArgumentException;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.TypedParameterValue;
-import org.hibernate.query.QueryArgumentTypeException;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -643,10 +642,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		try {
 			final var parameter = getParameterMetadata().getQueryParameter( name );
 			if ( !type.isAssignableFrom( parameter.getParameterType() ) ) {
-				throw new QueryArgumentTypeException(
-						"Type specified for parameter named '" + name + "' is incompatible",
-						parameter.getParameterType(),
-						type
+				throw new IllegalArgumentException(
+						"Type specified for parameter named '" + name + "' is incompatible"
+						+ " (" + parameter.getParameterType().getName() + " is not assignable to " + type.getName() + ")"
 				);
 			}
 			@SuppressWarnings("unchecked") // safe, just checked
@@ -673,10 +671,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		try {
 			final var parameter = getParameterMetadata().getQueryParameter( position );
 			if ( !type.isAssignableFrom( parameter.getParameterType() ) ) {
-				throw new QueryArgumentTypeException(
-						"Type specified for parameter at position " + position + " is incompatible",
-						parameter.getParameterType(),
-						type
+				throw new IllegalArgumentException(
+						"Type specified for parameter at position " + position + " is incompatible"
+						+ " (" + parameter.getParameterType().getName() + " is not assignable to " + type.getName() + ")"
 				);
 			}
 			@SuppressWarnings("unchecked") // safe, just checked
@@ -746,9 +743,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			final var parameterJavaType = parameterType.getJavaType();
 			if ( !parameterJavaType.isAssignableFrom( javaType )
 					&& !isInstance( parameterType, value ) ) {
-				throw new QueryArgumentTypeException(
+				throw new QueryArgumentException(
 						"Argument to parameter named '" + name + "' has an incompatible type",
-						parameterJavaType, javaType);
+						parameterJavaType, javaType, value );
 			}
 		}
 		@SuppressWarnings("unchecked") // safe, just checked
@@ -764,9 +761,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			final var parameterJavaType = parameterType.getJavaType();
 			if ( !parameterJavaType.isAssignableFrom( javaType )
 					&& !isInstance( parameterType, value ) ) {
-				throw new QueryArgumentTypeException(
+				throw new QueryArgumentException(
 						"Argument to parameter at position " + position + " has an incompatible type",
-						parameterJavaType, javaType );
+						parameterJavaType, javaType, value );
 			}
 		}
 		@SuppressWarnings("unchecked") // safe, just checked
@@ -782,9 +779,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			final var parameterJavaType = parameterType.getJavaType();
 			if ( !parameterJavaType.isAssignableFrom( javaType )
 					&& !areInstances( parameterType, values ) ) {
-				throw new QueryArgumentTypeException(
+				throw new QueryArgumentException(
 						"Argument to parameter named '" + name + "' has an incompatible type",
-						parameterJavaType, javaType);
+						parameterJavaType, javaType, values );
 			}
 		}
 		@SuppressWarnings("unchecked") // safe, just checked
@@ -800,9 +797,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			final var parameterJavaType = parameterType.getJavaType();
 			if ( !parameterJavaType.isAssignableFrom( javaType )
 					&& !areInstances( parameterType, values ) ) {
-				throw new QueryArgumentTypeException(
+				throw new QueryArgumentException(
 						"Argument to parameter at position " + position + " has an incompatible type",
-						parameterJavaType, javaType );
+						parameterJavaType, javaType, values );
 			}
 		}
 		@SuppressWarnings("unchecked") // safe, just checked
@@ -865,8 +862,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		final var parameterType = binding.getBindType();
 		if ( parameterType != null
 				&& !isInstanceOrAreInstances( value, binding, parameterType ) ) {
-			throw new QueryArgumentTypeException( "Argument to query parameter has an incompatible type",
-					parameterType.getJavaType(), value.getClass() );
+			throw new QueryArgumentException( "Argument to query parameter has an incompatible type",
+					parameterType.getJavaType(), value.getClass(), value );
 		}
 		@SuppressWarnings("unchecked") // safe, just checked
 		final var castValue = (P) value;
@@ -1187,8 +1184,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		final var parameterType = binding.getBindType();
 		if ( parameterType != null
 				&& !areInstances( values, parameterType ) ) {
-			throw new QueryArgumentTypeException( "Argument to query parameter has an incompatible type",
-					parameterType.getJavaType(), values.getClass().getComponentType() );
+			throw new QueryArgumentException( "Argument to query parameter has an incompatible type",
+					parameterType.getJavaType(), values.getClass().getComponentType(), values );
 		}
 		@SuppressWarnings("unchecked") // safe, just checked
 		final var castArray = (P[]) values;

@@ -112,7 +112,12 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 		else if ( Byte.class.equals( type ) ) {
 			return type.cast( toByte( value ) );
 		}
-		return type.cast( value );
+		else if ( type.isInstance( value )) {
+			return type.cast( value );
+		}
+		else {
+			throw unknownUnwrap( type );
+		}
 	}
 
 	@Override
@@ -138,8 +143,14 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 		else if ( value instanceof Number number ) {
 			return fromLong( number.longValue() );
 		}
-		else {
+		else if ( getJavaType().isInstance( value ) ) {
+			return (T) value;
+		}
+		else if ( isInstance( value ) ) {
 			return cast( value );
+		}
+		else {
+			throw unknownWrap( value.getClass() );
 		}
 	}
 

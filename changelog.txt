@@ -1,6 +1,20 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.1.11.Final (December 01, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/36344
+
+
+** Bug
+    * HHH-19843 Bean Validation may fail on operations with stateless session
+    * HHH-18871 Nested NativeQuery mappings causing 'Could not locate TableGroup' exception after migration
+    * HHH-14082 Hibernate cannot determine it's core version in modular configuration
+
+** Improvement
+    * HHH-19953 Relax scopes of methods in EntityInitializerImpl (for Hibernate Reactive)
+
 Changes in 7.1.10.Final (November 23, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

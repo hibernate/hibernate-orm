@@ -105,6 +105,21 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 		return hashCode;
 	}
 
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Calendar;
+	}
+
+	@Override
+	public Calendar cast(Object value) {
+		return (Calendar) value;
+	}
+
+	@Override
+	public Calendar coerce(Object value) {
+		return wrap( value, null );
+	}
+
 	public <X> X unwrap(Calendar value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -135,7 +150,7 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 			return calendar;
 		}
 		else if ( value instanceof java.util.Date date ) {
-			final Calendar cal = new GregorianCalendar();
+			final var cal = new GregorianCalendar();
 			cal.setTime( date );
 			return cal;
 		}

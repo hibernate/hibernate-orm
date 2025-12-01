@@ -16,13 +16,13 @@ import org.hibernate.type.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
-import org.hibernate.query.spi.QueryParameterBindingValidator;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.query.spi.QueryParameterBindingValidator.validate;
 import static org.hibernate.type.descriptor.java.JavaTypeHelper.isTemporal;
 import static org.hibernate.type.internal.BindingTypeHelper.resolveTemporalPrecision;
 
@@ -116,7 +116,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	public void setBindValue(T value, boolean resolveJdbcTypeIfNecessary) {
 		if ( !handleAsMultiValue( value, null ) ) {
 			final Object coerced = coerceIfNotJpa( value );
-			validate( coerced );
+			validate( getBindType(), coerced, sessionFactory );
 
 			if ( value == null ) {
 				// needed when setting a null value to the parameter of a native SQL query
@@ -174,7 +174,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 			}
 
 			final Object coerced = coerce( value );
-			validate( coerced, clarifiedType );
+			validate( clarifiedType, coerced, sessionFactory );
 			bindValue( coerced );
 		}
 	}
@@ -187,7 +187,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 			}
 
 			final Object coerced = coerceIfNotJpa( value );
-			validate( coerced, temporalTypePrecision );
+			validate( getBindType(), coerced, sessionFactory );
 			bindValue( coerced );
 			setExplicitTemporalPrecision( temporalTypePrecision );
 		}
@@ -218,15 +218,19 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 		this.bindValue = null;
 		this.bindValues = values;
 
+		final T value = firstNonNull( values );
+		if ( canBindValueBeSet( value, bindType ) ) {
+			bindType = getParameterBindingTypeResolver().resolveParameterBindType( value );
+		}
+	}
+
+	private static <T> @Nullable T firstNonNull(Collection<? extends T> values) {
 		final var iterator = values.iterator();
 		T value = null;
 		while ( value == null && iterator.hasNext() ) {
 			value = iterator.next();
 		}
-
-		if ( canBindValueBeSet( value, bindType ) ) {
-			bindType = getParameterBindingTypeResolver().resolveParameterBindType( value );
-		}
+		return value;
 	}
 
 	@Override
@@ -282,18 +286,6 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 			}
 		}
 		return false;
-	}
-
-	private void validate(Object value) {
-		QueryParameterBindingValidator.INSTANCE.validate( getBindType(), value, getCriteriaBuilder() );
-	}
-
-	private void validate(Object value, BindableType<?> clarifiedType) {
-		QueryParameterBindingValidator.INSTANCE.validate( clarifiedType, value, getCriteriaBuilder() );
-	}
-
-	private void validate(Object value, TemporalType clarifiedTemporalType) {
-		QueryParameterBindingValidator.INSTANCE.validate( getBindType(), value, clarifiedTemporalType, getCriteriaBuilder() );
 	}
 
 	public TypeConfiguration getTypeConfiguration() {

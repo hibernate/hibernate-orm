@@ -68,7 +68,8 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		this.parameterBindingMap = linkedMapOfSize( queryParameters.size() );
 		this.parameterBindingMapByNameOrPosition = mapOfSize( queryParameters.size() );
 		for ( var queryParameter : queryParameters ) {
-			parameterBindingMap.put( queryParameter, createBinding( sessionFactory, parameterMetadata, queryParameter ) );
+			parameterBindingMap.put( queryParameter,
+					createBinding( sessionFactory, parameterMetadata, queryParameter ) );
 		}
 		for ( var entry : parameterBindingMap.entrySet() ) {
 			final var queryParameter = entry.getKey();
@@ -129,9 +130,12 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 					"Cannot create binding for parameter reference [" + parameter + "] - reference is not a parameter of this query"
 			);
 		}
-		//TODO: typecheck!
-		//noinspection unchecked
-		return (QueryParameterBinding<P>) binding;
+		if ( !binding.getQueryParameter().equals( parameter ) ) {
+			throw new IllegalStateException("Parameter binding corrupted for: " + parameter.getName() );
+		}
+		@SuppressWarnings("unchecked") // safe because we checked the parameter
+		final var castBinding = (QueryParameterBinding<P>) binding;
+		return castBinding;
 	}
 
 	@Override

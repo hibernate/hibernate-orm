@@ -88,6 +88,21 @@ public class CalendarDateJavaType extends AbstractTemporalJavaType<Calendar> {
 		return hashCode;
 	}
 
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Calendar;
+	}
+
+	@Override
+	public Calendar cast(Object value) {
+		return (Calendar) value;
+	}
+
+	@Override
+	public Calendar coerce(Object value) {
+		return wrap( value, null );
+	}
+
 	public <X> X unwrap(Calendar value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

@@ -7,6 +7,7 @@ package org.hibernate.orm.test.mapping.type.java;
 import jakarta.persistence.AttributeConverter;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.type.NumericBooleanConverter;
 import org.hibernate.type.TrueFalseConverter;
@@ -92,7 +93,7 @@ public class BooleanJavaTypeDescriptorTest {
 		assertFalse(result);
 	}
 
-	@Test
+	@Test @FailureExpected // this was historically allowed
 	public void testWrapShouldReturnFalseWhenRandomStringGiven() {
 		// given
 		// when

@@ -89,6 +89,8 @@ import static org.hibernate.jpa.internal.util.ConfigurationHelper.getBoolean;
 import static org.hibernate.jpa.internal.util.ConfigurationHelper.getCacheMode;
 import static org.hibernate.jpa.internal.util.ConfigurationHelper.getInteger;
 import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
+import static org.hibernate.query.internal.QueryArguments.areInstances;
+import static org.hibernate.query.internal.QueryArguments.isInstance;
 
 /**
  * Base implementation of {@link CommonQueryContract}.
@@ -755,7 +757,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		if ( parameterType != null ) {
 			final var parameterJavaType = parameterType.getJavaType();
 			if ( !parameterJavaType.isAssignableFrom( javaType )
-					&& !isInstance( parameterType, value ) ) {
+					&& !isInstance( parameterType, value, getNodeBuilder() ) ) {
 				throw new QueryArgumentException(
 						"Argument to parameter named '" + name + "' has an incompatible type",
 						parameterJavaType, javaType, value );
@@ -773,7 +775,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		if ( parameterType != null ) {
 			final var parameterJavaType = parameterType.getJavaType();
 			if ( !parameterJavaType.isAssignableFrom( javaType )
-					&& !isInstance( parameterType, value ) ) {
+					&& !isInstance( parameterType, value, getNodeBuilder() ) ) {
 				throw new QueryArgumentException(
 						"Argument to parameter at position " + position + " has an incompatible type",
 						parameterJavaType, javaType, value );
@@ -791,7 +793,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		if ( parameterType != null ) {
 			final var parameterJavaType = parameterType.getJavaType();
 			if ( !parameterJavaType.isAssignableFrom( javaType )
-					&& !areInstances( parameterType, values ) ) {
+					&& !areInstances( parameterType, values, getNodeBuilder() ) ) {
 				throw new QueryArgumentException(
 						"Argument to parameter named '" + name + "' has an incompatible type",
 						parameterJavaType, javaType, values );
@@ -809,7 +811,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		if ( parameterType != null ) {
 			final var parameterJavaType = parameterType.getJavaType();
 			if ( !parameterJavaType.isAssignableFrom( javaType )
-					&& !areInstances( parameterType, values ) ) {
+					&& !areInstances( parameterType, values, getNodeBuilder() ) ) {
 				throw new QueryArgumentException(
 						"Argument to parameter at position " + position + " has an incompatible type",
 						parameterJavaType, javaType, values );
@@ -886,8 +888,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	private <P> boolean isInstanceOrAreInstances(
 			Object value, QueryParameterBinding<P> binding, BindableType<? super P> parameterType) {
 		return binding.isMultiValued() && value instanceof Collection<?> values
-				? areInstances( parameterType, values )
-				: isInstance( parameterType, value );
+				? areInstances( parameterType, values, getNodeBuilder() )
+				: isInstance( parameterType, value, getNodeBuilder() );
 	}
 
 	@Override
@@ -916,8 +918,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			final var hibernateType = parameter.getHibernateType();
 			return hibernateType == null
 				|| values.isEmpty()
-				|| !isInstance( hibernateType, value )
-				|| isInstance( hibernateType, values.iterator().next() );
+				|| !isInstance( hibernateType, value, getNodeBuilder() )
+				|| isInstance( hibernateType, values.iterator().next(), getNodeBuilder() );
 		}
 		else {
 			return false;
@@ -930,67 +932,6 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	private <T> void setTypedParameter(int position, TypedParameterValue<T> typedValue) {
 		setParameter( position, typedValue.value(), typedValue.type() );
-	}
-
-	private boolean isInstance(Type<?> parameterType, Object value) {
-		if ( value == null ) {
-			return true;
-		}
-		final var sqmExpressible = getNodeBuilder().resolveExpressible( parameterType );
-		assert sqmExpressible != null;
-		final var javaType = sqmExpressible.getExpressibleJavaType();
-		if ( !javaType.isInstance( value ) ) {
-			try {
-				// if this succeeds, we are good
-				javaType.wrap( value, session );
-			}
-			catch ( HibernateException|UnsupportedOperationException e) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	private boolean areInstances(Type<?> parameterType, Collection<?> values) {
-		if ( values.isEmpty() ) {
-			return true;
-		}
-		final var sqmExpressible = getNodeBuilder().resolveExpressible( parameterType );
-		assert sqmExpressible != null;
-		final var javaType = sqmExpressible.getExpressibleJavaType();
-		for ( Object value : values ) {
-			if ( !javaType.isInstance( value ) ) {
-				try {
-					// if this succeeds, we are good
-					javaType.wrap( value, session );
-				}
-				catch (HibernateException | UnsupportedOperationException e) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-
-	private boolean areInstances(Type<?> parameterType, Object[] values) {
-		if ( values.length == 0 ) {
-			return true;
-		}
-		final var sqmExpressible = getNodeBuilder().resolveExpressible( parameterType );
-		assert sqmExpressible != null;
-		final var javaType = sqmExpressible.getExpressibleJavaType();
-		for ( Object value : values ) {
-			if ( !javaType.isInstance( value ) ) {
-				try {
-					// if this succeeds, we are good
-					javaType.wrap( value, session );
-				}
-				catch (HibernateException | UnsupportedOperationException e) {
-					return false;
-				}
-			}
-		}
-		return true;
 	}
 
 	private NodeBuilder getNodeBuilder() {
@@ -1196,18 +1137,13 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	private <P> void setParameterValues(Object[] values, QueryParameterBinding<P> binding) {
 		final var parameterType = binding.getBindType();
 		if ( parameterType != null
-				&& !areInstances( values, parameterType ) ) {
+				&& !areInstances( parameterType, values, getNodeBuilder() ) ) {
 			throw new QueryArgumentException( "Argument to query parameter has an incompatible type",
 					parameterType.getJavaType(), values.getClass().getComponentType(), values );
 		}
 		@SuppressWarnings("unchecked") // safe, just checked
 		final var castArray = (P[]) values;
 		binding.setBindValues( List.of( castArray ) );
-	}
-
-	private <P> boolean areInstances(Object[] values, BindableType<? super P> parameterType) {
-		return parameterType.getJavaType().isAssignableFrom( values.getClass().getComponentType() )
-			|| areInstances( parameterType, values );
 	}
 
 	@Override

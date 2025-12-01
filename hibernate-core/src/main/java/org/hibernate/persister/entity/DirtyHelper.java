@@ -96,9 +96,7 @@ class DirtyHelper {
 		int[] results = null;
 		int count = 0;
 		int span = propertyTypes.length;
-
 		for ( int i = 0; i < span; i++ ) {
-
 			if ( isDirty( propertyTypes, currentState, previousState, includeColumns, session, i ) ) {
 				if ( results == null ) {
 					results = new int[span];
@@ -106,7 +104,6 @@ class DirtyHelper {
 				results[count++] = i;
 			}
 		}
-
 		return count == 0 ? null : ArrayHelper.trim( results, count );
 	}
 

@@ -65,11 +65,9 @@ public final class CollectionEntry implements Serializable {
 		// new collections that get found + wrapped
 		// during flush shouldn't be ignored
 		ignore = false;
-
 		// a newly wrapped collection is NOT dirty
 		// (or we get unnecessary version updates)
 		collection.clearDirty();
-
 		snapshot = persister.isMutable() ? collection.getSnapshot( persister ) : null;
 		role = persister.getRole();
 		collection.setSnapshot( loadedKey, role, snapshot );
@@ -84,16 +82,11 @@ public final class CollectionEntry implements Serializable {
 			final Object loadedKey,
 			final boolean ignore ) {
 		this.ignore = ignore;
-
 		//collection.clearDirty()
-
 		this.loadedKey = loadedKey;
-
 		this.loadedPersister = loadedPersister;
 		this.role = loadedPersister == null ? null : loadedPersister.getRole();
-
 		collection.setSnapshot( loadedKey, role, null );
-
 		//postInitialize() will be called after initialization
 	}
 
@@ -104,12 +97,10 @@ public final class CollectionEntry implements Serializable {
 		// detached collection wrappers that get found + reattached
 		// during flush shouldn't be ignored
 		ignore = false;
-
 		//collection.clearDirty()
-
 		this.loadedKey = loadedKey;
 		this.loadedPersister = loadedPersister;
-		this.role = ( loadedPersister == null ? null : loadedPersister.getRole() );
+		this.role = loadedPersister == null ? null : loadedPersister.getRole();
 	}
 
 	/**
@@ -119,11 +110,11 @@ public final class CollectionEntry implements Serializable {
 		// detached collections that get found + reattached
 		// during flush shouldn't be ignored
 		ignore = false;
-
 		loadedKey = collection.getKey();
 		role = collection.getRole();
-		loadedPersister = factory.getMappingMetamodel().getCollectionDescriptor( castNonNull( role ) );
-
+		loadedPersister =
+				factory.getMappingMetamodel()
+						.getCollectionDescriptor( castNonNull( role ) );
 		snapshot = collection.getStoredSnapshot();
 	}
 
@@ -151,53 +142,52 @@ public final class CollectionEntry implements Serializable {
 	 * of the collection elements, if necessary
 	 */
 	private void dirty(PersistentCollection<?> collection) {
-
-		final var loadedPersister = getLoadedPersister();
-		final boolean forceDirty =
-				collection.wasInitialized()
-						&& !collection.isDirty() //optimization
-						&& loadedPersister != null
-						&& loadedPersister.isMutable() //optimization
-						&& ( collection.isDirectlyAccessible() || loadedPersister.getElementType().isMutable() ) //optimization
-						&& !collection.equalsSnapshot( loadedPersister );
-		if ( forceDirty ) {
+		if ( forceDirty( collection ) ) {
 			collection.dirty();
 		}
+	}
 
+	private boolean forceDirty(PersistentCollection<?> collection) {
+		final var loadedPersister = this.loadedPersister;
+		return collection.wasInitialized()
+			&& !collection.isDirty() //optimization
+			&& loadedPersister != null
+			&& loadedPersister.isMutable() //optimization
+			&& ( collection.isDirectlyAccessible() || loadedPersister.getElementType().isMutable() ) //optimization
+			&& !collection.equalsSnapshot( loadedPersister );
 	}
 
 	public void preFlush(PersistentCollection<?> collection) {
-		if ( loadedKey == null && collection.getKey() != null ) {
+		if ( loadedKey == null ) {
 			loadedKey = collection.getKey();
 		}
 
-		final var loadedPersister = getLoadedPersister();
-		final boolean nonMutableChange =
-				collection.isDirty()
-						&& loadedPersister != null
-						&& !loadedPersister.isMutable();
-		if ( nonMutableChange ) {
+		final var loadedPersister = this.loadedPersister;
+		if ( collection.isDirty()
+				&& loadedPersister != null
+				&& !loadedPersister.isMutable() ) {
 			throw new HibernateException( "Immutable collection was modified: " +
-					collectionInfoString( castNonNull( loadedPersister ).getRole(), getLoadedKey() ) );
+					collectionInfoString( loadedPersister.getRole(), getLoadedKey() ) );
 		}
 
 		dirty( collection );
 
-		if ( CORE_LOGGER.isTraceEnabled() && collection.isDirty() && loadedPersister != null ) {
+		if ( CORE_LOGGER.isTraceEnabled()
+				&& loadedPersister != null
+				&& collection.isDirty() ) {
 			CORE_LOGGER.collectionDirty(
 					collectionInfoString( loadedPersister.getRole(), getLoadedKey() ) );
 		}
 
-		setReached( false );
-		setProcessed( false );
-
-		setDoupdate( false );
-		setDoremove( false );
-		setDorecreate( false );
+		reached = false;
+		processed = false;
+		doupdate = false;
+		doremove = false;
+		dorecreate = false;
 	}
 
 	public void postInitialize(PersistentCollection<?> collection, SharedSessionContractImplementor session) {
-		final var loadedPersister = getLoadedPersister();
+		final var loadedPersister = this.loadedPersister;
 		snapshot =
 				loadedPersister != null && loadedPersister.isMutable()
 						? collection.getSnapshot( loadedPersister )
@@ -214,13 +204,11 @@ public final class CollectionEntry implements Serializable {
 	 * Called after a successful flush
 	 */
 	public void postFlush(PersistentCollection<?> collection) {
-		if ( isIgnore() ) {
-			ignore = false;
-		}
-		else if ( !isProcessed() ) {
+		if ( !ignore && !processed ) {
 			throw new HibernateException( "Collection '" + collection.getRole() + "' was not processed by flush"
 					+ " (this is likely due to unsafe use of the session, for example, current use in multiple threads, or updates during entity lifecycle callbacks)");
 		}
+		ignore = false;
 		collection.setSnapshot( loadedKey, role, snapshot );
 	}
 
@@ -228,18 +216,17 @@ public final class CollectionEntry implements Serializable {
 	 * Called after execution of an action
 	 */
 	public void afterAction(PersistentCollection<?> collection) {
-		loadedKey = getCurrentKey();
-		setLoadedPersister( getCurrentPersister() );
-
+		loadedKey = currentKey;
+		loadedPersister = currentPersister;
+		role = currentPersister == null ? null : currentPersister.getRole();
 		if ( collection.wasInitialized()
-				&& ( isDoremove() || isDorecreate() || isDoupdate() ) ) {
+				&& ( doremove || dorecreate || doupdate ) ) {
 			// update the snapshot
 			snapshot =
 					loadedPersister != null && loadedPersister.isMutable()
 							? collection.getSnapshot( castNonNull( loadedPersister ) )
 							: null;
 		}
-
 		collection.postAction();
 	}
 
@@ -266,17 +253,11 @@ public final class CollectionEntry implements Serializable {
 	 */
 	public void resetStoredSnapshot(PersistentCollection<?> collection, Serializable storedSnapshot) {
 		CORE_LOGGER.resetStoredSnapshot( storedSnapshot, this );
-
 		if ( !fromMerge ) {
 			snapshot = storedSnapshot;
 			collection.setSnapshot( loadedKey, role, snapshot );
 			fromMerge = true;
 		}
-	}
-
-	private void setLoadedPersister(@Nullable CollectionPersister persister) {
-		loadedPersister = persister;
-		setRole( persister == null ? null : persister.getRole() );
 	}
 
 	void afterDeserialize(@Nullable SessionFactoryImplementor factory) {
@@ -286,7 +267,7 @@ public final class CollectionEntry implements Serializable {
 	}
 
 	public boolean wasDereferenced() {
-		return getLoadedKey() == null;
+		return loadedKey == null;
 	}
 
 	public boolean isReached() {
@@ -370,13 +351,13 @@ public final class CollectionEntry implements Serializable {
 
 	@Override
 	public String toString() {
-		final StringBuilder result =
+		final var result =
 				new StringBuilder( "CollectionEntry" )
 						.append( collectionInfoString( role, loadedKey ) );
-		final CollectionPersister persister = currentPersister;
-		if ( persister != null ) {
+		final var currentPersister = this.currentPersister;
+		if ( currentPersister != null ) {
 			result.append( "->" )
-					.append( collectionInfoString( persister.getRole(), currentKey ) );
+					.append( collectionInfoString( currentPersister.getRole(), currentKey ) );
 		}
 		return result.toString();
 	}
@@ -395,11 +376,9 @@ public final class CollectionEntry implements Serializable {
 		//TODO: does this really need to be here?
 		//      does the collection already have
 		//      it's own up-to-date snapshot?
-		final var loadedPersister = getLoadedPersister();
-		final Serializable snapshot = getSnapshot();
 		return collection.wasInitialized()
 			&& ( loadedPersister == null || loadedPersister.isMutable() )
-			&& ( snapshot == null || collection.isSnapshotEmpty(snapshot) );
+			&& ( snapshot == null || collection.isSnapshotEmpty( snapshot ) );
 	}
 
 

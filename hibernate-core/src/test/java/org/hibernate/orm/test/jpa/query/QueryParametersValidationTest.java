@@ -43,7 +43,7 @@ public class QueryParametersValidationTest {
 		scope.inEntityManager( entityManager -> {
 			Assertions.assertThrows(
 					IllegalArgumentException.class,
-					() -> entityManager.createQuery( "select e from TestEntity e where e.id = :id" ).setParameter( "id", 1 )
+					() -> entityManager.createQuery( "select e from TestEntity e where e.id = :id" ).setParameter( "id", "X" )
 			);
 		} );
 	}

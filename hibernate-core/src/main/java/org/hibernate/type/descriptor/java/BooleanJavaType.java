@@ -28,6 +28,7 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 	private final char characterValueFalse;
 
 	private final char characterValueTrueLC;
+	private final char characterValueFalseLC;
 
 	private final String stringValueTrue;
 	private final String stringValueFalse;
@@ -42,6 +43,7 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 		this.characterValueFalse = toUpperCase( characterValueFalse );
 
 		characterValueTrueLC = Character.toLowerCase( characterValueTrue );
+		characterValueFalseLC = Character.toLowerCase( characterValueFalse );
 
 		stringValueTrue = String.valueOf( characterValueTrue );
 		stringValueFalse = String.valueOf( characterValueFalse );
@@ -118,21 +120,45 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 			return number.intValue() != 0;
 		}
 		if (value instanceof Character character) {
-			return isTrue( character );
+			if ( isTrue( character ) ) {
+				return true;
+			}
+			if ( isFalse( character ) ) {
+				return false;
+			}
+			throw new IllegalArgumentException( "Cannot convert Character value '" + character + "' to Boolean" );
 		}
 		if (value instanceof String string) {
-			return isTrue( string );
+			if ( isTrue( string ) ) {
+				return true;
+			}
+			if ( isFalse( string ) ) {
+				return false;
+			}
+			throw new IllegalArgumentException( "Cannot convert value '" + string + "' to Boolean" );
 		}
 		throw unknownWrap( value.getClass() );
 	}
 
 	private boolean isTrue(String strValue) {
-		return strValue != null && !strValue.isEmpty() && isTrue( strValue.charAt(0) );
+		return strValue != null
+			&& !strValue.isEmpty()
+			&& isTrue( strValue.charAt(0) );
+	}
+
+	private boolean isFalse(String strValue) {
+		return strValue != null
+			&& ( strValue.isEmpty() || isFalse( strValue.charAt(0) ) );
 	}
 
 	private boolean isTrue(char charValue) {
 		return charValue == characterValueTrue
 			|| charValue == characterValueTrueLC;
+	}
+
+	private boolean isFalse(char charValue) {
+		return charValue == characterValueFalse
+			|| charValue == characterValueFalseLC;
 	}
 
 	public int toInt(Boolean value) {

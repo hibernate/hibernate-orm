@@ -83,6 +83,7 @@ dependencyResolutionManagement {
             def hibernateModelsVersion = version "hibernateModels", "1.0.1"
             def jandexVersion = version "jandex", "3.3.2"
             def jacksonVersion = version "jackson", "2.19.4"
+            def jackson3Version = version "jackson3", "3.0.3"
             def jbossLoggingVersion = version "jbossLogging", "3.6.1.Final"
             def jbossLoggingToolVersion = version "jbossLoggingTool", "3.0.4.Final"
 
@@ -118,6 +119,9 @@ dependencyResolutionManagement {
             library( "jackson", "com.fasterxml.jackson.core", "jackson-databind" ).versionRef( jacksonVersion )
             library( "jacksonXml", "com.fasterxml.jackson.dataformat", "jackson-dataformat-xml" ).versionRef( jacksonVersion )
             library( "jacksonJsr310", "com.fasterxml.jackson.datatype", "jackson-datatype-jsr310" ).versionRef( jacksonVersion )
+
+            library( "jackson3", "tools.jackson.core", "jackson-databind" ).versionRef( jackson3Version )
+            library( "jackson3Xml", "tools.jackson.dataformat", "jackson-dataformat-xml" ).versionRef( jackson3Version )
 
             library( "agroal", "io.agroal", "agroal-api" ).versionRef( agroalVersion )
             library( "agroalPool", "io.agroal", "agroal-pool" ).versionRef( agroalVersion )

@@ -42,6 +42,8 @@ dependencies {
     compileOnly jakartaLibs.jsonbApi
     compileOnly libs.jackson
     compileOnly libs.jacksonXml
+    compileOnly libs.jackson3
+    compileOnly libs.jackson3Xml
     compileOnly jdbcLibs.postgresql
     compileOnly jdbcLibs.edb
 
@@ -79,6 +81,8 @@ dependencies {
     testImplementation libs.jackson
     testRuntimeOnly libs.jacksonXml
     testRuntimeOnly libs.jacksonJsr310
+    testImplementation libs.jackson3
+    testImplementation libs.jackson3Xml
 
     testAnnotationProcessor project( ':hibernate-processor' )
 

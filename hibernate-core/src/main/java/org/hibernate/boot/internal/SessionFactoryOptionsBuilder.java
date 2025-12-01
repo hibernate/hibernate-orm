@@ -101,10 +101,11 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 import static org.hibernate.jpa.internal.util.CacheModeHelper.interpretCacheMode;
 import static org.hibernate.jpa.internal.util.ConfigurationHelper.getFlushMode;
 import static org.hibernate.stat.Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE;
+import static org.hibernate.type.format.jackson.JacksonIntegration.getJsonJackson3FormatMapperOrNull;
 import static org.hibernate.type.format.jackson.JacksonIntegration.getJsonJacksonFormatMapperOrNull;
 import static org.hibernate.type.format.jackson.JacksonIntegration.getOsonJacksonFormatMapperOrNull;
+import static org.hibernate.type.format.jackson.JacksonIntegration.getXMLJackson3FormatMapperOrNull;
 import static org.hibernate.type.format.jackson.JacksonIntegration.getXMLJacksonFormatMapperOrNull;
-import static org.hibernate.type.format.jackson.JacksonIntegration.isJacksonOsonExtensionAvailable;
 import static org.hibernate.type.format.jakartajson.JakartaJsonIntegration.getJakartaJsonBFormatMapperOrNull;
 
 /**
@@ -852,13 +853,24 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				selector,
 				() -> {
 					// Prefer the OSON Jackson FormatMapper by default if available
-					final FormatMapper jsonJacksonFormatMapper =
-							osonExtensionEnabled && isJacksonOsonExtensionAvailable()
-									? getOsonJacksonFormatMapperOrNull( creationContext )
-									: getJsonJacksonFormatMapperOrNull( creationContext );
-					return jsonJacksonFormatMapper != null
-							? jsonJacksonFormatMapper
-							: getJakartaJsonBFormatMapperOrNull();
+					final FormatMapper jacksonOsonFormatMapper = osonExtensionEnabled
+							? getOsonJacksonFormatMapperOrNull( creationContext )
+							: null;
+					if ( jacksonOsonFormatMapper != null ) {
+						return jacksonOsonFormatMapper;
+					}
+
+					final FormatMapper jacksonFormatMapper = getJsonJacksonFormatMapperOrNull( creationContext );
+					if ( jacksonFormatMapper != null ) {
+						return jacksonFormatMapper;
+					}
+
+					final FormatMapper jackson3FormatMapper = getJsonJackson3FormatMapperOrNull( creationContext );
+					if ( jackson3FormatMapper != null ) {
+						return jackson3FormatMapper;
+					}
+
+					return getJakartaJsonBFormatMapperOrNull();
 				},
 				creationContext
 		);
@@ -870,9 +882,16 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				selector,
 				() -> {
 					final FormatMapper jacksonFormatMapper = getXMLJacksonFormatMapperOrNull( creationContext );
-					return jacksonFormatMapper != null
-							? jacksonFormatMapper
-							: new JaxbXmlFormatMapper( legacyFormat );
+					if (jacksonFormatMapper != null) {
+						return jacksonFormatMapper;
+					}
+
+					final FormatMapper jackson3FormatMapper = getXMLJackson3FormatMapperOrNull( creationContext );
+					if (jackson3FormatMapper != null) {
+						return jackson3FormatMapper;
+					}
+
+					return new JaxbXmlFormatMapper( legacyFormat );
 				},
 				creationContext
 		);

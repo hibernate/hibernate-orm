@@ -100,12 +100,11 @@ public class LoadedConfig {
 					final String eventTypeName = listenerGroup.getType().value();
 					final var eventType = EventType.resolveEventTypeByName( eventTypeName );
 					for ( var listener : listenerGroup.getListener() ) {
-					if ( listener.getType() != null ) {
-						BOOT_LOGGER.listenerDefinedAlsoDefinedEventType(
-								listener.getClazz()
-						);
-					}
-						cfg.addEventListener( eventType, listener.getClazz() );
+						final String listenerClassName = listener.getClazz();
+						if ( listener.getType() != null ) {
+							BOOT_LOGGER.listenerDefinedAlsoDefinedEventType( listenerClassName );
+						}
+						cfg.addEventListener( eventType, listenerClassName );
 					}
 				}
 			}

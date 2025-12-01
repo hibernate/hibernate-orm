@@ -105,9 +105,7 @@ public class MetadataSources implements Serializable {
 		// service registry really should be either BootstrapServiceRegistry or StandardServiceRegistry type...
 		if ( !isExpectedServiceRegistryType( serviceRegistry ) ) {
 			if ( BOOT_LOGGER.isDebugEnabled() ) {
-				BOOT_LOGGER.unexpectedServiceRegistryType(
-						serviceRegistry.getClass().getName()
-				);
+				BOOT_LOGGER.unexpectedServiceRegistryType( serviceRegistry.getClass().getName() );
 			}
 		}
 		this.serviceRegistry = serviceRegistry;

@@ -14,6 +14,8 @@ import java.util.List;
 
 import org.hibernate.boot.archive.spi.ArchiveException;
 
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+
 
 /**
  * Helper for dealing with archives
@@ -89,7 +91,7 @@ public class ArchiveHelper {
 					"Unable to determine JAR Url from " + url + ". Cause: " + e.getMessage()
 			);
 		}
-		org.hibernate.boot.BootLogging.BOOT_LOGGER.jarUrlFromUrlEntry( String.valueOf(url), String.valueOf(jarUrl) );
+		BOOT_LOGGER.jarUrlFromUrlEntry( String.valueOf(url), String.valueOf(jarUrl) );
 		return jarUrl;
 	}
 

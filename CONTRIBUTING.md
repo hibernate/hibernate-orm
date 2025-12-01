@@ -36,7 +36,10 @@ While we try to keep requirements for contributing to a minimum, there are a few
 we ask that you mind.
 
 For code contributions, these guidelines include:
-* Respect the project code style - find templates for [IntelliJ IDEA](https://hibernate.org/community/contribute/intellij-idea/) or [Eclipse](https://hibernate.org/community/contribute/eclipse-ide/)
+* Respect the project code style: make sure to run spotless and checkstyle checks before commiting your changes, e.g. `./gradlew formatChecks`.
+Project contains the basic set of formatting styles for IntelliJ IDEA in the [.idea](.idea) directory.
+You can also refer to more generic [IntelliJ IDEA](https://hibernate.org/community/contribute/intellij-idea/) or [Eclipse](https://hibernate.org/community/contribute/eclipse-ide/)
+guides for additional details.
 * Have a corresponding JIRA [issue](https://hibernate.atlassian.net/browse/HHH) and be sure to include the key for this JIRA issue in your commit messages.
 * Have a set of appropriate tests.  
   	For your convenience, a [set of test templates](https://github.com/hibernate/hibernate-test-case-templates/tree/main/orm) have been made available.

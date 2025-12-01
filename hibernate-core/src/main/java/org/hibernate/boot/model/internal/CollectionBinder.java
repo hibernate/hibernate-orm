@@ -1062,9 +1062,7 @@ public abstract class CollectionBinder {
 		}
 		collection = createCollection( propertyHolder.getPersistentClass() );
 		final String role = qualify( propertyHolder.getPath(), propertyName );
-		if ( BOOT_LOGGER.isTraceEnabled() ) {
-			BOOT_LOGGER.bindingCollectionRole( role );
-		}
+		BOOT_LOGGER.bindingCollectionRole( role );
 		collection.setRole( role );
 		collection.setMappedByProperty( mappedBy );
 
@@ -1145,16 +1143,14 @@ public abstract class CollectionBinder {
 			}
 			if ( oneToMany ) {
 				if ( property.hasDirectAnnotationUsage( MapKeyColumn.class ) ) {
-					BOOT_LOGGER.warn( "Association '"
-									+ qualify( propertyHolder.getPath(), propertyName )
-									+ "' is 'mappedBy' another entity and should not specify a '@MapKeyColumn'"
-									+ " (use '@MapKey' instead)" );
+					BOOT_LOGGER.mappedByShouldNotSpecifyMapKeyColumn(
+							qualify( propertyHolder.getPath(), propertyName )
+					);
 				}
 				if ( property.hasDirectAnnotationUsage( OrderColumn.class ) ) {
-					BOOT_LOGGER.warn( "Association '"
-									+ qualify( propertyHolder.getPath(), propertyName )
-									+ "' is 'mappedBy' another entity and should not specify an '@OrderColumn'"
-									+ " (use '@OrderBy' instead)" );
+					BOOT_LOGGER.mappedByShouldNotSpecifyOrderColumn(
+							qualify( propertyHolder.getPath(), propertyName )
+					);
 				}
 			}
 			else {

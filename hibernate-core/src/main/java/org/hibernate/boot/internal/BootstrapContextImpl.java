@@ -318,7 +318,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	void injectScanOptions(ScanOptions scanOptions) {
 		if ( scanOptions != this.scanOptions ) {
-			BOOT_LOGGER.injectingScanOptions(scanOptions, this.scanOptions);
+			BOOT_LOGGER.injectingScanOptions( scanOptions, this.scanOptions );
 		}
 		this.scanOptions = scanOptions;
 	}
@@ -332,7 +332,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	void injectScanner(Scanner scanner) {
 		if ( scanner != this.scannerSetting ) {
-			BOOT_LOGGER.injectingScanner( scanner, scannerSetting );
+			BOOT_LOGGER.injectingScanner( scanner, this.scannerSetting );
 		}
 		this.scannerSetting = scanner;
 	}

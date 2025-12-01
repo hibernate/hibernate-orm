@@ -3239,42 +3239,49 @@ public class ModelBinder {
 			}
 
 			for ( var filterSource : elementSource.getFilterSources() ) {
-				if ( filterSource.getName() == null ) {
-					if ( BOOT_LOGGER.isTraceEnabled() ) {
-						BOOT_LOGGER.tracef(
-								"Encountered filter with no name associated with many-to-many [%s]; skipping",
-								getPluralAttributeSource().getAttributeRole().getFullPath()
-						);
-					}
-				}
-				else {
-					if ( filterSource.getCondition() == null ) {
-						throw new MappingException(
-								String.format(
-										Locale.ENGLISH,
-										"No filter condition found for filter [%s] associated with many-to-many [%s]",
-										filterSource.getName(),
-										getPluralAttributeSource().getAttributeRole().getFullPath()
-								),
-								mappingDocument.getOrigin()
-						);
-					}
-					if ( BOOT_LOGGER.isTraceEnabled() ) {
-						BOOT_LOGGER.tracef(
-								"Applying many-to-many filter [%s] as [%s] to collection [%s]",
-								filterSource.getName(),
-								filterSource.getCondition(),
-								getPluralAttributeSource().getAttributeRole().getFullPath()
-						);
-					}
-					collectionBinding.addManyToManyFilter(
-							filterSource.getName(),
-							filterSource.getCondition(),
-							filterSource.shouldAutoInjectAliases(),
-							filterSource.getAliasToTableMap(),
-							filterSource.getAliasToEntityMap()
+				bindManyToManyFilter( mappingDocument, collectionBinding, filterSource );
+			}
+		}
+
+		private void bindManyToManyFilter(
+				MappingDocument mappingDocument, Collection collectionBinding, FilterSource filterSource) {
+			final String name = filterSource.getName();
+			if ( name == null ) {
+				if ( BOOT_LOGGER.isTraceEnabled() ) {
+					BOOT_LOGGER.tracef(
+							"Encountered filter with no name associated with many-to-many [%s]; skipping",
+							getPluralAttributeSource().getAttributeRole().getFullPath()
 					);
 				}
+			}
+			else {
+				final String condition = filterSource.getCondition();
+				if ( condition == null ) {
+					throw new MappingException(
+							String.format(
+									Locale.ENGLISH,
+									"No filter condition found for filter [%s] associated with many-to-many [%s]",
+									name,
+									getPluralAttributeSource().getAttributeRole().getFullPath()
+							),
+							mappingDocument.getOrigin()
+					);
+				}
+				if ( BOOT_LOGGER.isTraceEnabled() ) {
+					BOOT_LOGGER.tracef(
+							"Applying many-to-many filter [%s] as [%s] to collection [%s]",
+							name,
+							condition,
+							getPluralAttributeSource().getAttributeRole().getFullPath()
+					);
+				}
+				collectionBinding.addManyToManyFilter(
+						name,
+						condition,
+						filterSource.shouldAutoInjectAliases(),
+						filterSource.getAliasToTableMap(),
+						filterSource.getAliasToEntityMap()
+				);
 			}
 		}
 
@@ -3451,10 +3458,9 @@ public class ModelBinder {
 					&& !collectionBinding.isInverse()
 					&& !indexIsFormula ) {
 				final var oneToMany = (OneToMany) collectionBinding.getElement();
-				final String entityName = oneToMany.getReferencedEntityName();
 				final var referenced =
 						getMappingDocument().getMetadataCollector()
-								.getEntityBinding( entityName );
+								.getEntityBinding( oneToMany.getReferencedEntityName() );
 				final var backref = new IndexBackref();
 				backref.setName( '_' + collectionBinding.getOwnerEntityName()
 								+ "." + getPluralAttributeSource().getName() + "IndexBackref" );
@@ -3533,10 +3539,9 @@ public class ModelBinder {
 				&& !collectionBinding.getKey().isNullable()
 				&& !collectionBinding.isInverse() ) {
 			final var oneToMany = (OneToMany) collectionBinding.getElement();
-			final String entityName = oneToMany.getReferencedEntityName();
 			final var referenced =
 					mappingDocument.getMetadataCollector()
-							.getEntityBinding( entityName );
+							.getEntityBinding( oneToMany.getReferencedEntityName() );
 			final var backref = new IndexBackref();
 			backref.setName( '_' + collectionBinding.getOwnerEntityName()
 							+ "." + pluralAttributeSource.getName() + "IndexBackref" );

@@ -10,7 +10,8 @@ import org.hibernate.tool.schema.spi.GeneratorSynchronizer;
 /**
  * Allows programmatic {@linkplain #exportMappedObjects schema export},
  * {@linkplain #validateMappedObjects schema validation},
- * {@linkplain #truncateMappedObjects data cleanup}, and
+ * {@linkplain #truncateMappedObjects data cleanup},
+ * {@linkplain #populate data population}, and
  * {@linkplain #dropMappedObjects schema cleanup} as a convenience for
  * writing tests.
  *

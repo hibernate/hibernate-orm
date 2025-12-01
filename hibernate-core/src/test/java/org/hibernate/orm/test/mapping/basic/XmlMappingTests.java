@@ -68,6 +68,14 @@ public abstract class XmlMappingTests {
 		}
 	}
 
+	@ServiceRegistry(settings = @Setting(name = AvailableSettings.XML_FORMAT_MAPPER, value = "jackson3-xml"))
+	public static class Jackson3 extends XmlMappingTests {
+
+		public Jackson3() {
+			super( false );
+		}
+	}
+
 
 	private final Map<String, StringNode> stringMap;
 	private final Map<StringNode, StringNode> objectMap;

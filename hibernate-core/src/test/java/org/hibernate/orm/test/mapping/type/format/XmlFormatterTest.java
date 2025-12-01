@@ -13,6 +13,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.format.FormatMapper;
+import org.hibernate.type.format.jackson.Jackson3XmlFormatMapper;
 import org.hibernate.type.format.jackson.JacksonXmlFormatMapper;
 import org.hibernate.type.format.jaxb.JaxbXmlFormatMapper;
 import org.hibernate.type.internal.ParameterizedTypeImpl;
@@ -61,7 +62,7 @@ public class XmlFormatterTest implements SessionFactoryScopeAware {
 	}
 
 	private static Stream<Arguments> formatMappers() {
-		return Stream.of( new JaxbXmlFormatMapper( false ), new JacksonXmlFormatMapper( false ) )
+		return Stream.of( new JaxbXmlFormatMapper( false ), new JacksonXmlFormatMapper( false ), new Jackson3XmlFormatMapper( false ) )
 				.map( Arguments::of );
 	}
 

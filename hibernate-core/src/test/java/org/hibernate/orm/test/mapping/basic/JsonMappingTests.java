@@ -78,6 +78,14 @@ public abstract class JsonMappingTests {
 		}
 	}
 
+	@ServiceRegistry(settings = @Setting(name = AvailableSettings.JSON_FORMAT_MAPPER, value = "jackson3"))
+	public static class Jackson3 extends JsonMappingTests {
+
+		public Jackson3() {
+			super( false );
+		}
+	}
+
 	private final Map<String, String> stringMap;
 	private final Map<StringNode, StringNode> objectMap;
 	private final List<StringNode> list;
@@ -147,6 +155,7 @@ public abstract class JsonMappingTests {
 					assertThat( entityWithJson.objectMap, is( objectMap ) );
 					assertThat( entityWithJson.list, is( list ) );
 					assertThat( entityWithJson.jsonNode, is( nullValue() ) );
+					assertThat( entityWithJson.jackson3JsonNode, is( nullValue() ) );
 					assertThat( entityWithJson.jsonValue, is( nullValue() ) );
 				}
 		);
@@ -168,6 +177,7 @@ public abstract class JsonMappingTests {
 					assertThat( entityWithJson.list, is( nullValue() ) );
 					assertThat( entityWithJson.jsonString, is( nullValue() ) );
 					assertThat( entityWithJson.jsonNode, is( nullValue() ) );
+					assertThat( entityWithJson.jackson3JsonNode, is( nullValue() ) );
 					assertThat( entityWithJson.jsonValue, is( nullValue() ) );
 					assertThat( entityWithJson.complexMap, is( nullValue() ) );
 				}
@@ -300,6 +310,9 @@ public abstract class JsonMappingTests {
 
 		@JdbcTypeCode( SqlTypes.JSON )
 		private JsonNode jsonNode;
+
+		@JdbcTypeCode( SqlTypes.JSON )
+		private tools.jackson.databind.JsonNode jackson3JsonNode;
 
 		@JdbcTypeCode( SqlTypes.JSON )
 		private JsonValue jsonValue;

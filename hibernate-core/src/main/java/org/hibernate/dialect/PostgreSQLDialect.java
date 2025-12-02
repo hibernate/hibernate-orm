@@ -85,6 +85,7 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.sql.model.jdbc.OptionalTableUpdateWithUpsertOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
@@ -1574,7 +1575,7 @@ public class PostgreSQLDialect extends Dialect {
 					.createMergeOperation( optionalTableUpdate );
 		}
 		else {
-			return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+			return new OptionalTableUpdateWithUpsertOperation( mutationTarget, optionalTableUpdate, factory );
 		}
 	}
 

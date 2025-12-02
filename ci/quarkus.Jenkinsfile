@@ -117,8 +117,8 @@ pipeline {
                         configurations.each { BuildConfiguration configuration ->
                             executions.put(configuration.name, {
                                 dir('quarkus') {
-                                    def quarkusVersionToTest = '3.27'
-                                    sh "git clone -b ${quarkusVersionToTest} --single-branch https://github.com/quarkusio/quarkus.git . || git reset --hard && git clean -fx && git pull"
+                                    def quarkusVersionToTest = 'orm-7-1-10-3.27'
+                                    sh "git clone -b ${quarkusVersionToTest} --single-branch https://github.com/yrodiere/quarkus.git . || git reset --hard && git clean -fx && git pull"
                                     script {
                                         def sedStatus = sh (script: "sed -i 's@<hibernate-orm.version>.*</hibernate-orm.version>@<hibernate-orm.version>${env.HIBERNATE_VERSION}</hibernate-orm.version>@' pom.xml", returnStatus: true)
                                         if ( sedStatus != 0 ) {

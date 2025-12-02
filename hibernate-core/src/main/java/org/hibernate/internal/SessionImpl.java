@@ -624,13 +624,13 @@ public class SessionImpl
 
 	private void fireLock(final LockEvent lockEvent) {
 		checkOpen();
-		checkEntityManaged( lockEvent.getEntityName(), lockEvent.getObject() );
 		try {
 			pulseTransactionCoordinator();
 			checkTransactionNeededForLock( lockEvent.getLockMode() );
 			eventListenerGroups.eventListenerGroup_LOCK
 					.fireEventOnEachListener( lockEvent,
 							LockEventListener::onLock );
+			checkEntityManaged( lockEvent.getEntityName(), lockEvent.getObject() );
 		}
 		catch ( RuntimeException e ) {
 			convertIfJpaBootstrap( e, lockEvent.getLockOptions() );

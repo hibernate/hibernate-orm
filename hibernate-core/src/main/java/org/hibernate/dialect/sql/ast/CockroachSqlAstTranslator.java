@@ -27,6 +27,8 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
+import org.hibernate.sql.model.internal.OptionalTableInsert;
+import org.hibernate.sql.model.internal.TableInsertStandard;
 
 /**
  * A SQL AST translator for Cockroach.
@@ -45,6 +47,39 @@ public class CockroachSqlAstTranslator<T extends JdbcOperation> extends Abstract
 			appendSql( "floor" );
 		}
 		super.visitBinaryArithmeticExpression(arithmeticExpression);
+	}
+
+	@Override
+	public void visitStandardTableInsert(TableInsertStandard tableInsert) {
+		getCurrentClauseStack().push( Clause.INSERT );
+		try {
+			renderInsertInto( tableInsert );
+			if ( tableInsert instanceof OptionalTableInsert optionalTableInsert ) {
+				appendSql( " on conflict " );
+				final String constraintName = optionalTableInsert.getConstraintName();
+				if ( constraintName != null ) {
+					appendSql( " on constraint " );
+					appendSql( constraintName );
+				}
+				else {
+					char separator = '(';
+					for ( String constraintColumnName : optionalTableInsert.getConstraintColumnNames() ) {
+						appendSql( separator );
+						appendSql( constraintColumnName );
+						separator = ',';
+					}
+					appendSql( ')' );
+				}
+				appendSql( " do nothing" );
+			}
+
+			if ( tableInsert.getNumberOfReturningColumns() > 0 ) {
+				visitReturningColumns( tableInsert::getReturningColumns );
+			}
+		}
+		finally {
+			getCurrentClauseStack().pop();
+		}
 	}
 
 	@Override

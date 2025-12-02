@@ -632,12 +632,12 @@ public class SessionImpl
 
 	private void fireLock(LockEvent event) {
 		checkOpen();
-		checkEntityManaged( event.getEntityName(), event.getObject() );
 		try {
 			pulseTransactionCoordinator();
 			checkTransactionNeededForLock( event.getLockMode() );
 			eventListenerGroups.eventListenerGroup_LOCK
 					.fireEventOnEachListener( event, LockEventListener::onLock );
+			checkEntityManaged( event.getEntityName(), event.getObject() );
 		}
 		catch ( RuntimeException e ) {
 			convertIfJpaBootstrap( e, event.getLockOptions() );

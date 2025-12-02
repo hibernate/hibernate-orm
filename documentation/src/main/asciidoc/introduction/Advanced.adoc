@@ -886,6 +886,17 @@ On the other hand, the following annotations specify how a collection should be 
 
 Under the covers, Hibernate uses a `TreeSet` or `TreeMap` to maintain the collection in sorted order.
 
+[CAUTION]
+====
+The unowned (`mappedBy`) side of a bidirectional association is not responsible for specifying column mappings.
+So it's wrong in principle to use `@OrderColumn` or `@MapKeyColumn` on the unowned side of an association mapping.
+But for unowned collections, we may use `@OrderBy` or `@MapKey` instead.
+That is:
+
+- You can use `@OrderColumn` or `@MapKeyColumn` with an `@ElementCollection`, owned `@ManyToMany`, or owned `@OneToMany`.
+- But use `@OrderBy` or `@MapKey` when it's an _unowned_ `@ManyToMany` or `@OneToMany`.
+====
+
 [[any]]
 === Any mappings
 

@@ -112,6 +112,22 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		return tableMapping;
 	}
 
+	public List<ColumnValueBinding> getValueBindings() {
+		return valueBindings;
+	}
+
+	public List<ColumnValueBinding> getKeyBindings() {
+		return keyBindings;
+	}
+
+	public List<ColumnValueBinding> getOptimisticLockBindings() {
+		return optimisticLockBindings;
+	}
+
+	public List<ColumnValueParameter> getParameters() {
+		return parameters;
+	}
+
 	@Override
 	public JdbcValueDescriptor findValueDescriptor(String columnName, ParameterUsage usage) {
 		for ( int i = 0; i < jdbcValueDescriptors.size(); i++ ) {
@@ -404,8 +420,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	}
 
 	private void performInsert(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {
-		final JdbcInsertMutation jdbcInsert = createJdbcInsert( session );
-
+		final JdbcMutationOperation jdbcInsert = createJdbcOptionalInsert( session );
 		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 		final PreparedStatement insertStatement = createStatementDetails( jdbcInsert, jdbcCoordinator );
 
@@ -445,7 +460,17 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		}
 	}
 
-	private JdbcInsertMutation createJdbcInsert(SharedSessionContractImplementor session) {
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected JdbcMutationOperation createJdbcOptionalInsert(SharedSessionContractImplementor session) {
+		return createJdbcInsert( session );
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected JdbcInsertMutation createJdbcInsert(SharedSessionContractImplementor session) {
 		final TableInsert tableInsert;
 		if ( tableMapping.getInsertDetails() != null
 				&& tableMapping.getInsertDetails().getCustomSql() != null ) {

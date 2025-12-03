@@ -33,6 +33,12 @@ public class MappingExporter implements Exporter {
     private UnmodifiableList<File> hbmXmlFiles;
     private boolean formatResult = true;
 
+    private final MappingBinder mappingBinder;
+
+    public MappingExporter() {
+        mappingBinder = createMappingBinder();
+    }
+
     public void setHbmFiles(List<File> fileList) {
         hbmXmlFiles = new UnmodifiableList<>( fileList );
     }
@@ -48,9 +54,8 @@ public class MappingExporter implements Exporter {
 
     @Override
     public void start() {
-        MappingBinder mappingBinder = createMappingBinder();
-        List<Binding<JaxbHbmHibernateMapping>> hbmMappings = getHbmMappings(mappingBinder);
-        performTransformation(hbmMappings, mappingBinder, createServiceRegistry(), formatResult);
+        List<Binding<JaxbHbmHibernateMapping>> hbmMappings = getHbmMappings();
+        performTransformation(hbmMappings, createServiceRegistry(), formatResult);
     }
 
     private ServiceRegistry createServiceRegistry() {
@@ -67,7 +72,7 @@ public class MappingExporter implements Exporter {
                 UnsupportedFeatureHandling.ERROR);
     }
 
-    private List<Binding<JaxbHbmHibernateMapping>> getHbmMappings(MappingBinder mappingBinder) {
+    private List<Binding<JaxbHbmHibernateMapping>> getHbmMappings() {
         List<Binding<JaxbHbmHibernateMapping>> result = new ArrayList<>();
         hbmXmlFiles.forEach((hbmXmlFile) -> {
             final String fullPath = hbmXmlFile.getAbsolutePath();
@@ -129,7 +134,6 @@ public class MappingExporter implements Exporter {
 
     private void performTransformation(
             List<Binding<JaxbHbmHibernateMapping>> hbmBindings,
-            MappingBinder mappingBinder,
             ServiceRegistry serviceRegistry,
             boolean formatResult) {
         Marshaller marshaller = createMarshaller(mappingBinder);

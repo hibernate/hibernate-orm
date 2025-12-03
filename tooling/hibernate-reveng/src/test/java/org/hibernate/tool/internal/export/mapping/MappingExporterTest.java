@@ -41,6 +41,13 @@ public class MappingExporterTest {
     }
 
     @Test
+    public void testConstructor() throws Exception {
+        Field mappingBinderField = MappingExporter.class.getDeclaredField("mappingBinder");
+        mappingBinderField.setAccessible(true);
+        assertNotNull(mappingBinderField.get(mappingExporter));
+    }
+
+    @Test
     public void testSetHbmFiles() throws NoSuchFieldException, IllegalAccessException {
         Field hbmFilesField = MappingExporter.class.getDeclaredField("hbmXmlFiles");
         List<File> origin = new ArrayList<>();
@@ -105,9 +112,7 @@ public class MappingExporterTest {
 
     @Test
     public void testGetHbmMappings() throws Exception {
-        Method getHbmMappingsMethod = MappingExporter.class.getDeclaredMethod(
-                "getHbmMappings",
-                MappingBinder.class);
+        Method getHbmMappingsMethod = MappingExporter.class.getDeclaredMethod("getHbmMappings");
         assertNotNull(getHbmMappingsMethod);
         getHbmMappingsMethod.setAccessible(true);
         Field hbmFilesField = MappingExporter.class.getDeclaredField("hbmXmlFiles");
@@ -117,8 +122,10 @@ public class MappingExporterTest {
         Files.writeString(file.toPath(), "foobar");
         hbmXmlFiles.add(file);
         hbmFilesField.set(mappingExporter, new UnmodifiableList<>(hbmXmlFiles));
-        final MappingBinder mappingBinder = new TestMappingBinder(file, "barfoo");
-        Object object = getHbmMappingsMethod.invoke(mappingExporter, mappingBinder);
+        Field mappingBinderField = MappingExporter.class.getDeclaredField("mappingBinder");
+        mappingBinderField.setAccessible(true);
+        mappingBinderField.set(mappingExporter, new TestMappingBinder(file, "barfoo"));
+        Object object = getHbmMappingsMethod.invoke(mappingExporter);
         assertInstanceOf(List.class, object);
         assertEquals(1, ((List<?>)object).size());
         object = ((List<?>) object).get(0);

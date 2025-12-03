@@ -14,7 +14,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.EnabledFetchProfile;
-import org.hibernate.FindBy;
+import org.hibernate.KeyType;
 import org.hibernate.FindMultipleOption;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -47,16 +47,16 @@ import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossRefere
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
-/// Support for loading a single entity by key (either [id][FindBy#ID] or [natural-id][FindBy#NATURAL_ID]).
+/// Support for loading a single entity by key (either [id][KeyType#ID] or [natural-id][KeyType#NATURAL_ID]).
 ///
 /// @see org.hibernate.Session#find
-/// @see FindBy
+/// @see KeyType
 ///
 /// @author Steve Ebersole
 public class FindByKeyOperation<T> implements NaturalIdLoader.Options {
 	private final EntityPersister entityDescriptor;
 
-	private FindBy findBy = FindBy.ID;
+	private KeyType keyType = KeyType.ID;
 
 	private CacheStoreMode cacheStoreMode;
 	private CacheRetrieveMode cacheRetrieveMode;
@@ -110,8 +110,8 @@ public class FindByKeyOperation<T> implements NaturalIdLoader.Options {
 		readOnlyMode = defaultReadOnly ? ReadOnlyMode.READ_ONLY : ReadOnlyMode.READ_WRITE;
 
 		for ( FindOption option : findOptions ) {
-			if ( option instanceof FindBy findBy ) {
-				this.findBy = findBy;
+			if ( option instanceof KeyType keyType ) {
+				this.keyType = keyType;
 			}
 			else if ( option instanceof CacheStoreMode cacheStoreMode ) {
 				this.cacheStoreMode = cacheStoreMode;
@@ -164,7 +164,7 @@ public class FindByKeyOperation<T> implements NaturalIdLoader.Options {
 	}
 
 	public T performFind(Object key, LoadAccessContext loadAccessContext) {
-		if ( findBy == FindBy.NATURAL_ID ) {
+		if ( keyType == KeyType.NATURAL_ID ) {
 			return findByNaturalId( key, loadAccessContext );
 		}
 		else {

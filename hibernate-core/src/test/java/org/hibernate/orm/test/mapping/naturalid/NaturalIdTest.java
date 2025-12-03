@@ -2,12 +2,18 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.annotations.naturalid;
+package org.hibernate.orm.test.mapping.naturalid;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import org.hibernate.Session;
+import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.query.Query;
@@ -33,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @ServiceRegistry(settings = @Setting(name = USE_QUERY_CACHE, value = "true"))
-@DomainModel( annotatedClasses = { Citizen.class, State.class, NaturalIdOnManyToOne.class } )
+@DomainModel( annotatedClasses = { NaturalIdTest.Citizen.class, NaturalIdTest.State.class, NaturalIdTest.NaturalIdOnManyToOne.class } )
 @SessionFactory
 public class NaturalIdTest {
 	@AfterEach
@@ -297,5 +303,143 @@ public class NaturalIdTest {
 		Query<State> query = s.createQuery( criteria );
 		query.setCacheable( true );
 		return query.list().get( 0 );
+	}
+
+	/**
+	 * @author Emmanuel Bernard
+	 */
+	@Entity
+	public static class State {
+		@Id
+		private Integer id;
+		private String name;
+
+		public State() {
+		}
+
+		public State(Integer id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+	}
+
+	/**
+	 * @author Emmanuel Bernard
+	 */
+	@Entity
+	@NaturalIdCache
+	public static class Citizen {
+		@Id
+		private Integer id;
+		private String firstname;
+		private String lastname;
+		@NaturalId
+		@ManyToOne
+		private State state;
+		@NaturalId
+		private String ssn;
+
+		public Citizen() {
+		}
+
+		public Citizen(Integer id, String firstname, String lastname, State state, String ssn) {
+			this.id = id;
+			this.firstname = firstname;
+			this.lastname = lastname;
+			this.state = state;
+			this.ssn = ssn;
+		}
+
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public String getFirstname() {
+			return firstname;
+		}
+
+		public void setFirstname(String firstname) {
+			this.firstname = firstname;
+		}
+
+		public String getLastname() {
+			return lastname;
+		}
+
+		public void setLastname(String lastname) {
+			this.lastname = lastname;
+		}
+
+		public State getState() {
+			return state;
+		}
+
+		public void setState(State state) {
+			this.state = state;
+		}
+
+		public String getSsn() {
+			return ssn;
+		}
+
+		public void setSsn(String ssn) {
+			this.ssn = ssn;
+		}
+	}
+
+	/**
+	 * Test case for NaturalId annotation - ANN-750
+	 *
+	 * @author Emmanuel Bernard
+	 * @author Hardy Ferentschik
+	 */
+	@Entity
+	@NaturalIdCache
+	static
+	class NaturalIdOnManyToOne {
+
+		@Id
+		@GeneratedValue
+		int id;
+
+		@NaturalId
+		@ManyToOne
+		Citizen citizen;
+
+		public int getId() {
+			return id;
+		}
+
+		public void setId(int id) {
+			this.id = id;
+		}
+
+		public Citizen getCitizen() {
+			return citizen;
+		}
+
+		public void setCitizen(Citizen citizen) {
+			this.citizen = citizen;
+		}
 	}
 }

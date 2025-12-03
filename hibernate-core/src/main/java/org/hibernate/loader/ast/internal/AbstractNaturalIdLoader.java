@@ -257,12 +257,14 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			Consumer<Predicate> predicateConsumer,
 			LoaderSqlAstCreationState sqlAstCreationState,
 			SharedSessionContractImplementor session) {
+		assert naturalIdMapping.isNormalized( naturalIdValue );
+
 		final var factory = session.getFactory();
 
 		final var bindings =
 				new JdbcParameterBindingsImpl( naturalIdMapping.getJdbcTypeCount() );
 		applyNaturalIdRestriction(
-				naturalIdMapping().normalizeInput( naturalIdValue ),
+				naturalIdValue,
 				rootTableGroup,
 				predicateConsumer,
 				bindings::addBinding,

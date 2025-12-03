@@ -5,7 +5,7 @@
   -->
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-<hibernate-mapping package="org.hibernate.orm.test.mapping.naturalid.cid" default-access="field">
+<hibernate-mapping package="org.hibernate.orm.test.mapping.naturalid.composite" default-access="field">
   <class name="Account" table="accounts" >
      <composite-id name="accountId">
         <key-property name="id"/>

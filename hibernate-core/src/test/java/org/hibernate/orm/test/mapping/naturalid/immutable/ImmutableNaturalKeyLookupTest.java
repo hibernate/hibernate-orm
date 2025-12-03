@@ -2,10 +2,21 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.annotations.naturalid;
+package org.hibernate.orm.test.mapping.naturalid.immutable;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.FlushModeType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 import org.hibernate.Session;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
@@ -18,6 +29,9 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.hibernate.cfg.CacheSettings.USE_QUERY_CACHE;
 import static org.hibernate.cfg.StatisticsSettings.GENERATE_STATISTICS;
@@ -32,7 +46,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		@Setting(name=GENERATE_STATISTICS, value="true"),
 		@Setting(name=USE_QUERY_CACHE, value="true")
 })
-@DomainModel(annotatedClasses = {A.class, D.class})
+@DomainModel(annotatedClasses = {
+		ImmutableNaturalKeyLookupTest.A.class,
+		ImmutableNaturalKeyLookupTest.D.class
+})
 @SessionFactory
 public class ImmutableNaturalKeyLookupTest {
 	@AfterEach
@@ -282,5 +299,86 @@ public class ImmutableNaturalKeyLookupTest {
 		return a;
 	}
 
+	@Entity
+	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+	@NaturalIdCache
+	public static class A {
 
+		@Id
+		@GeneratedValue(strategy = GenerationType.TABLE)
+		private long oid;
+
+		@Version
+		private int version;
+
+		@Column
+		@NaturalId(mutable = false)
+		private String name;
+
+		@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+		@org.hibernate.annotations.OptimisticLock(excluded = true)
+		@jakarta.persistence.OneToMany(mappedBy = "a")
+		private Set<D> ds = new HashSet<D>();
+
+		@jakarta.persistence.OneToOne
+		private D singleD = null;
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public Set<D> getDs() {
+			return ds;
+		}
+
+		public void setDs(Set<D> ds) {
+			this.ds = ds;
+		}
+
+		public D getSingleD() {
+			return singleD;
+		}
+
+		public void setSingleD(D singleD) {
+			this.singleD = singleD;
+		}
+
+	}
+
+	@Entity
+	@Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
+	public static class D {
+		@Id
+		@GeneratedValue(strategy = GenerationType.TABLE)
+		public long oid;
+
+		@Version
+		private int version;
+
+		@jakarta.persistence.ManyToOne(fetch = FetchType.LAZY)
+		private A a = null;
+
+		@jakarta.persistence.OneToOne(mappedBy = "singleD")
+		private A singleA = null;
+
+		public A getA() {
+			return a;
+		}
+
+		public void setA(A a) {
+			this.a = a;
+		}
+
+		public A getSingleA() {
+			return singleA;
+		}
+
+		public void setSingleA(A singleA) {
+			this.singleA = singleA;
+		}
+	}
 }

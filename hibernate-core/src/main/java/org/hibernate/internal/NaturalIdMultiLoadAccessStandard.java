@@ -9,7 +9,7 @@ import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
-import org.hibernate.FindBy;
+import org.hibernate.KeyType;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
@@ -141,7 +141,7 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 	private FindMultipleByKeyOperation<T> buildOperation() {
 		return new FindMultipleByKeyOperation<T>(
 				entityDescriptor,
-				FindBy.NATURAL_ID,
+				KeyType.NATURAL_ID,
 				batchSize == null ? null : new BatchSize( batchSize ),
 				SessionCheckMode.ENABLED,
 				removalsMode,

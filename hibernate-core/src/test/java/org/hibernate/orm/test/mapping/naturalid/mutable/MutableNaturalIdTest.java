@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 				@Setting( name = GENERATE_STATISTICS, value = "true" ),
 		}
 )
-@DomainModel( xmlMappings = "org/hibernate/orm/test/mapping/naturalid/mutable/User.hbm.xml" )
+@DomainModel( xmlMappings = "mappings/natural-id/mutable/User.hbm.xml" )
 @SessionFactory
 public class MutableNaturalIdTest {
 

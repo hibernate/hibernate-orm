@@ -9,7 +9,7 @@ import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
-import org.hibernate.FindBy;
+import org.hibernate.KeyType;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MultiIdentifierLoadAccess;
@@ -178,7 +178,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	private FindMultipleByKeyOperation<T> buildOperation() {
 		return new FindMultipleByKeyOperation<T>(
 				entityPersister,
-				FindBy.ID,
+				KeyType.ID,
 				batchSize,
 				sessionCheckMode,
 				removalsMode,

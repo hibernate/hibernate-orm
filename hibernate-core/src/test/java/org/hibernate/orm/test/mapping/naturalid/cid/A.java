@@ -4,10 +4,8 @@
  */
 package org.hibernate.orm.test.mapping.naturalid.cid;
 
-import jakarta.persistence.Basic;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 
 import org.hibernate.annotations.NaturalId;
 
@@ -15,26 +13,23 @@ import org.hibernate.annotations.NaturalId;
  * @author Donnchadh O Donnabhain
  */
 @Entity
-@Table( name = "t_acct" )
-public class Account {
+public class A {
 	@EmbeddedId
-	private AccountId accountId;
-
-	@Basic( optional = false )
-	@NaturalId
+	private AId accountId;
+	@NaturalId(mutable = false)
 	private String shortCode;
 
-	protected Account() {
+	protected A() {
 	}
 
-	public Account(AccountId accountId, String shortCode) {
+	public A(AId accountId, String shortCode) {
 		this.accountId = accountId;
 		this.shortCode = shortCode;
 	}
 	public String getShortCode() {
 		return shortCode;
 	}
-	public AccountId getAccountId() {
+	public AId getAccountId() {
 		return accountId;
 	}
 }

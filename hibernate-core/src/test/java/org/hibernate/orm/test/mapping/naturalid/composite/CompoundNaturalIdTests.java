@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.mapping.naturalid;
+package org.hibernate.orm.test.mapping.naturalid.composite;
 
 import java.util.HashMap;
 import java.util.List;
@@ -13,10 +13,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.KeyType;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.loader.ast.spi.NaturalIdLoadOptions;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.MappingMetamodel;
@@ -102,30 +102,31 @@ public class CompoundNaturalIdTests {
 
 	@Test
 	public void testGetReference(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					final NaturalIdLoadAccess<Account> loadAccess = session.byNaturalId( Account.class );
-					loadAccess.using( "system", "matrix" );
-					loadAccess.using( "username", "neo" );
-					verifyEntity( loadAccess.getReference() );
-				}
-		);
+		scope.inTransaction(session -> {
+			final MappingMetamodel mappingMetamodel = session.getFactory().getRuntimeMetamodels().getMappingMetamodel();
+			final EntityPersister accountMapping = mappingMetamodel.findEntityDescriptor( Account.class );
+			final NaturalIdMapping naturalIdMapping = accountMapping.getNaturalIdMapping();
 
-		scope.inTransaction(
-				session -> {
-					final MappingMetamodel mappingMetamodel = session.getFactory().getRuntimeMetamodels().getMappingMetamodel();
-					final EntityPersister accountMapping = mappingMetamodel.findEntityDescriptor( Account.class );
-					final NaturalIdMapping naturalIdMapping = accountMapping.getNaturalIdMapping();
+			// test load by array
+			var id = accountMapping.getNaturalIdLoader().resolveNaturalIdToId(
+					naturalIdMapping.normalizeInput( VALUE_ARRAY ),
+					session
+			);
+			assertThat( id, is( 1 ) );
 
-					// test load by array
-					Object id = accountMapping.getNaturalIdLoader().resolveNaturalIdToId( VALUE_ARRAY, session );
-					assertThat( id, is( 1 ) );
+			// and by Map
+			id = accountMapping.getNaturalIdLoader().resolveNaturalIdToId(
+					naturalIdMapping.normalizeInput( VALUE_MAP ),
+					session
+			);
+			assertThat( id, is( 1 ) );
 
-					// and by Map
-					id = accountMapping.getNaturalIdLoader().resolveNaturalIdToId( VALUE_MAP, session );
-					assertThat( id, is( 1 ) );
-				}
-		);
+			// finally, by the deprecated loader access contract
+			final NaturalIdLoadAccess<Account> loadAccess = session.byNaturalId( Account.class );
+			loadAccess.using( "system", "matrix" );
+			loadAccess.using( "username", "neo" );
+			verifyEntity( loadAccess.getReference() );
+		} );
 	}
 
 	public void verifyEntity(Account accountRef) {
@@ -137,29 +138,22 @@ public class CompoundNaturalIdTests {
 
 	@Test
 	public void testLoad(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					final Account account = session.byNaturalId( Account.class )
-							.using( "system", "matrix" )
-							.using( "username", "neo" )
-							.load();
-					verifyEntity( account );
-				}
-		);
+		scope.inTransaction(session -> {
+			// test load by array
+			var account = session.find( Account.class, VALUE_ARRAY, KeyType.NATURAL_ID );
+			verifyEntity( account );
 
-		scope.inTransaction(
-				session -> {
-					final MappingMetamodel mappingMetamodel = session.getFactory().getRuntimeMetamodels().getMappingMetamodel();
-					final EntityPersister accountMapping = mappingMetamodel.findEntityDescriptor( Account.class );
-					final NaturalIdMapping naturalIdMapping = accountMapping.getNaturalIdMapping();
+			// and by Map
+			account = session.find( Account.class, VALUE_MAP, KeyType.NATURAL_ID );
+			verifyEntity( account );
 
-					// test load by array
-					accountMapping.getNaturalIdLoader().load( VALUE_ARRAY, NaturalIdLoadOptions.NONE, session );
-
-					// and by Map
-					accountMapping.getNaturalIdLoader().load( VALUE_MAP, NaturalIdLoadOptions.NONE, session );
-				}
-		);
+			// finally, using the deprecated load-access contract
+			account = session.byNaturalId( Account.class )
+					.using( "system", "matrix" )
+					.using( "username", "neo" )
+					.load();
+			verifyEntity( account );
+		} );
 	}
 
 	@Test

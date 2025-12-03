@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.annotations.naturalid;
+package org.hibernate.orm.test.mapping.naturalid;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;

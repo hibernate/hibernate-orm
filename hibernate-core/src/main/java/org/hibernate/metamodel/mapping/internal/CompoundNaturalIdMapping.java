@@ -9,6 +9,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.loader.ast.internal.CompoundNaturalIdLoader;
@@ -64,7 +65,7 @@ import java.util.function.Function;
 public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implements MappingType, FetchableContainer {
 
 	private final List<SingularAttributeMapping> attributes;
-	private final KeyClassNormalizer<Object> keyClassNormalizer;
+	private final ValueNormalizer valueNormalizer;
 
 	private List<JdbcMapping> jdbcMappings;
 	/*
@@ -73,13 +74,15 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	 */
 	private final int maxFetchableKeyIndex;
 
+	private final SessionFactoryImplementor sessionFactory;
+
 	public CompoundNaturalIdMapping(
 			EntityMappingType declaringType,
 			ClassDetails naturalIdClass,
 			List<SingularAttributeMapping> attributes,
 			MappingModelCreationProcess creationProcess) {
 		super( declaringType, isMutable( attributes ) );
-		this.keyClassNormalizer = KeyClassNormalizer.create( naturalIdClass, attributes, creationProcess );
+		this.valueNormalizer = createValueNormalizer( naturalIdClass, attributes, creationProcess );
 		this.attributes = attributes;
 
 		int maxIndex = 0;
@@ -103,6 +106,8 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 					return true;
 				}
 		);
+
+		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 	}
 
 	private static boolean isMutable(List<SingularAttributeMapping> attributes) {
@@ -117,7 +122,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	@Override
 	@Nullable
 	public Class<?> getNaturalIdClass() {
-		return keyClassNormalizer == null ? null : keyClassNormalizer.idClassType;
+		return valueNormalizer.getIdClassType();
 	}
 
 	@Override
@@ -149,24 +154,20 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Override
 	public Object[] normalizeInput(Object incoming) {
-		if ( keyClassNormalizer != null
-				&& keyClassNormalizer.idClassType.isInstance( incoming ) ) {
-			return keyClassNormalizer.normalize( incoming );
-		}
-		else if ( incoming instanceof Object[] array ) {
+		sessionFactory.getStatistics().normalizeNaturalId( getDeclaringType().getEntityName() );
+
+		if ( incoming instanceof Object[] array ) {
+			// already normalized
 			return array;
 		}
-		else if ( incoming instanceof Map<?, ?> valueMap ) {
-			final var attributes = getNaturalIdAttributes();
-			final var values = new Object[attributes.size()];
-			for ( int i = 0; i < attributes.size(); i++ ) {
-				values[i] = valueMap.get( attributes.get( i ).getAttributeName() );
-			}
-			return values;
-		}
 		else {
-			throw new UnsupportedMappingException( "Could not normalize compound natural id value: " + incoming );
+			return valueNormalizer.normalize( incoming );
 		}
+	}
+
+	@Override
+	public boolean isNormalized(Object incoming) {
+		return incoming instanceof Object[];
 	}
 
 	@Override
@@ -687,154 +688,220 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 	}
 
+	interface ValueNormalizer {
+		boolean isInstance(Object value);
+		Object[] normalize(Object value);
+		Class<?> getIdClassType();
+	}
+
+	private static <T> ValueNormalizer createValueNormalizer(
+			ClassDetails naturalIdClassDetails,
+			List<SingularAttributeMapping> keyAttributes,
+			MappingModelCreationProcess creationProcess) {
+		if ( naturalIdClassDetails == null ) {
+			return new ValueNormalizerSupport( keyAttributes );
+		}
+
+		final ModelsContext modelsContext = creationProcess
+				.getCreationContext()
+				.getBootstrapContext()
+				.getModelsContext();
+
+		var naturalIdClass = naturalIdClassDetails.toJavaClass( modelsContext.getClassLoading(), modelsContext );
+		var naturalIdClassComponents = extractComponents( naturalIdClass );
+		var naturalIdClassGetterAccess = createNaturalIdClassGetterAccess( naturalIdClass );
+
+		final List<AttributeMapper<Object, T>> attributeMappers = new ArrayList<>();
+		keyAttributes.forEach( (keyAttribute) -> {
+			// find the matching MemberDetails on the `naturalIdClass`...
+			final Getter extractor = resolveMatchingExtractor(
+					naturalIdClass,
+					keyAttribute,
+					naturalIdClassGetterAccess,
+					naturalIdClassComponents,
+					modelsContext
+			);
+			// todo (natural-id-class) : atm there is functionally no difference
+			//		between BasicAttributeMapperImpl and ToOneAttributeMapperImpl.
+			//		ideally we'd eventually support usage of the associated key entity's
+			//		id and then there would.  see the note in ToOneAttributeMapperImpl#extractFrom
+			final AttributeMapper<Object,T> attrMapper;
+			if ( keyAttribute instanceof ToOneAttributeMapping ) {
+				attrMapper = new ToOneAttributeMapperImpl<>( keyAttribute, extractor );
+			}
+			else {
+				attrMapper = new BasicAttributeMapperImpl<>( keyAttribute, extractor );
+			}
+			attributeMappers.add( attrMapper );
+		} );
+
+		//noinspection unchecked,rawtypes
+		return new KeyClassNormalizer( keyAttributes, naturalIdClass, attributeMappers );
+	}
+
+	static class ValueNormalizerSupport implements ValueNormalizer {
+		private final List<SingularAttributeMapping> naturalIdAttributes;
+
+		public ValueNormalizerSupport(List<SingularAttributeMapping> naturalIdAttributes) {
+			this.naturalIdAttributes = naturalIdAttributes;
+		}
+
+		@Override
+		public boolean isInstance(Object value) {
+			return value instanceof Map;
+		}
+
+		@Override
+		public Object[] normalize(Object incoming) {
+			if ( !isInstance( incoming ) ) {
+				throw new UnsupportedMappingException( "Could not normalize compound natural id value: " + incoming );
+			}
+			final var values = new Object[naturalIdAttributes.size()];
+			//noinspection unchecked
+			final Map<String,Object> valuesMap = (Map<String,Object>) incoming;
+			for ( int i = 0; i < naturalIdAttributes.size(); i++ ) {
+				values[i] = valuesMap.get( naturalIdAttributes.get( i ).getAttributeName() );
+			}
+			return values;
+		}
+
+		@Override
+		public Class<?> getIdClassType() {
+			return null;
+		}
+	}
+
 	/// Responsible for decomposing a value of the NaturalIdClass into the internal array format
-	public record KeyClassNormalizer<T>(
-			Class<T> idClassType,
-			List<AttributeMapper<Object, T>> attributeMappers) {
-		public Object[] normalize(T idClassValue) {
-			final Object[] result = new Object[attributeMappers.size()];
-			for ( int i = 0; i < attributeMappers.size(); i++ ) {
-				var value = attributeMappers.get( i ).extractFrom( idClassValue );
+	static class KeyClassNormalizer<T> extends ValueNormalizerSupport {
+		private final Class<T> idClassType;
+		private final List<AttributeMapper<Object, T>> idClassAttributeMappers;
+
+		public KeyClassNormalizer(
+				List<SingularAttributeMapping> naturalIdAttributes,
+				Class<T> idClassType,
+				List<AttributeMapper<Object, T>> idClassAttributeMappers) {
+			super( naturalIdAttributes );
+			this.idClassType = idClassType;
+			this.idClassAttributeMappers = idClassAttributeMappers;
+		}
+
+		@Override
+		public Class<?> getIdClassType() {
+			return idClassType;
+		}
+
+		@Override
+		public Object[] normalize(Object value) {
+			if ( idClassType.isInstance( value ) ) {
+				return doNormalize( idClassType.cast( value ) );
+			}
+
+			return super.normalize( value );
+		}
+
+		public Object[] doNormalize(T idClassValue) {
+			final Object[] result = new Object[idClassAttributeMappers.size()];
+			for ( int i = 0; i < idClassAttributeMappers.size(); i++ ) {
+				var value = idClassAttributeMappers.get( i ).extractFrom( idClassValue );
 				result[i] = value;
 			}
 			return result;
 		}
 
-		public static <T> KeyClassNormalizer<T> create(
-				ClassDetails naturalIdClassDetails,
-				List<SingularAttributeMapping> keyAttributes,
-				MappingModelCreationProcess creationProcess) {
-			if ( naturalIdClassDetails == null ) {
-				return null;
-			}
-
-			final ModelsContext modelsContext = creationProcess
-					.getCreationContext()
-					.getBootstrapContext()
-					.getModelsContext();
-
-			var naturalIdClass = naturalIdClassDetails.toJavaClass( modelsContext.getClassLoading(), modelsContext );
-			var naturalIdClassComponents = extractComponents( naturalIdClass );
-			var naturalIdClassGetterAccess = createNaturalIdClassGetterAccess( naturalIdClass );
-
-			final List<AttributeMapper<Object, T>> attributeMappers = new ArrayList<>();
-			keyAttributes.forEach( (keyAttribute) -> {
-				// find the matching MemberDetails on the `naturalIdClass`...
-				final Getter extractor = resolveMatchingExtractor(
-						naturalIdClass,
-						keyAttribute,
-						naturalIdClassGetterAccess,
-						naturalIdClassComponents,
-						modelsContext
-				);
-				// todo (natural-id-class) : atm there is functionally no difference
-				//		between BasicAttributeMapperImpl and ToOneAttributeMapperImpl.
-				//		ideally we'd eventually support usage of the associated key entity's
-				//		id and then there would.  see the note in ToOneAttributeMapperImpl#extractFrom
-				final AttributeMapper<Object,T> attrMapper;
-				if ( keyAttribute instanceof ToOneAttributeMapping ) {
-					attrMapper = new ToOneAttributeMapperImpl<>( keyAttribute, extractor );
-				}
-				else {
-					attrMapper = new BasicAttributeMapperImpl<>( keyAttribute, extractor );
-				}
-				attributeMappers.add( attrMapper );
-			} );
-
-			//noinspection unchecked,rawtypes
-			return new KeyClassNormalizer( naturalIdClass, attributeMappers );
+		public boolean isInstance(Object value) {
+			return idClassType.isInstance( value ) || super.isInstance( value );
 		}
+	}
 
-		private static <T> Function<String, Method> createNaturalIdClassGetterAccess(Class<T> naturalIdClass) {
-			return new Function<>() {
-				private Map<String,Method> getterMethods;
-				@Override
-				public Method apply(String name) {
-					if ( getterMethods == null ) {
-						getterMethods = extractGetterMethods( naturalIdClass );
-					}
-					return getterMethods.get( name );
+	private static <T> Function<String, Method> createNaturalIdClassGetterAccess(Class<T> naturalIdClass) {
+		return new Function<>() {
+			private Map<String,Method> getterMethods;
+			@Override
+			public Method apply(String name) {
+				if ( getterMethods == null ) {
+					getterMethods = extractGetterMethods( naturalIdClass );
 				}
-			};
-		}
-
-		private static <T> Getter resolveMatchingExtractor(
-				Class<T> naturalIdClass,
-				AttributeMapping keyAttribute,
-				Function<String, Method> getterMethodAccess,
-				Map<String, RecordComponent> naturalIdClassComponents,
-				ModelsContext modelsContext) {
-			// first, if the `naturalIdClass` is a record, look for a component
-			if ( naturalIdClass.isRecord() ) {
-				var component = naturalIdClassComponents.get( keyAttribute.getAttributeName() );
-				if ( component != null ) {
-					return new GetterMethodImpl(
-							naturalIdClass,
-							keyAttribute.getAttributeName(),
-							component.getAccessor()
-					);
-				}
+				return getterMethods.get( name );
 			}
+		};
+	}
 
-			// next look for a getter method
-			var getterMethod = getterMethodAccess.apply( keyAttribute.getAttributeName() );
-			if ( getterMethod != null ) {
+	private static <T> Getter resolveMatchingExtractor(
+			Class<T> naturalIdClass,
+			AttributeMapping keyAttribute,
+			Function<String, Method> getterMethodAccess,
+			Map<String, RecordComponent> naturalIdClassComponents,
+			ModelsContext modelsContext) {
+		// first, if the `naturalIdClass` is a record, look for a component
+		if ( naturalIdClass.isRecord() ) {
+			var component = naturalIdClassComponents.get( keyAttribute.getAttributeName() );
+			if ( component != null ) {
 				return new GetterMethodImpl(
 						naturalIdClass,
 						keyAttribute.getAttributeName(),
-						getterMethod
+						component.getAccessor()
 				);
 			}
-
-			// lastly, look for a field
-			try {
-				var field = naturalIdClass.getDeclaredField( keyAttribute.getAttributeName() );
-				return new GetterFieldImpl( naturalIdClass, keyAttribute.getAttributeName(), field );
-			}
-			catch (NoSuchFieldException ignore) {
-			}
-
-			throw new MappingException( "Unable to find NaturalIdClass accessor for natural-id attribute: " + keyAttribute.getAttributeName() );
 		}
 
-		private static <T> Map<String, Method> extractGetterMethods(Class<T> naturalIdClass) {
-			final Map<String, Method>  result = new HashMap<>();
+		// next look for a getter method
+		var getterMethod = getterMethodAccess.apply( keyAttribute.getAttributeName() );
+		if ( getterMethod != null ) {
+			return new GetterMethodImpl(
+					naturalIdClass,
+					keyAttribute.getAttributeName(),
+					getterMethod
+			);
+		}
 
-			for ( Method declaredMethod : naturalIdClass.getDeclaredMethods() ) {
-				if ( declaredMethod.getParameterCount() == 0
-						&& declaredMethod.getReturnType() != void.class
-						&& !Modifier.isStatic(  declaredMethod.getModifiers() ) ) {
-					var methodName = declaredMethod.getName();
-					if ( methodName.startsWith( "is" ) ) {
-						result.put(
-								Introspector.decapitalize( methodName.substring( 2 ) ),
-								declaredMethod
-						);
-					}
-					else if ( methodName.startsWith( "get" ) ) {
-						result.put(
-								Introspector.decapitalize( methodName.substring( 3 ) ),
-								declaredMethod
-						);
-					}
+		// lastly, look for a field
+		try {
+			var field = naturalIdClass.getDeclaredField( keyAttribute.getAttributeName() );
+			return new GetterFieldImpl( naturalIdClass, keyAttribute.getAttributeName(), field );
+		}
+		catch (NoSuchFieldException ignore) {
+		}
+
+		throw new MappingException( "Unable to find NaturalIdClass accessor for natural-id attribute: " + keyAttribute.getAttributeName() );
+	}
+
+	private static <T> Map<String, Method> extractGetterMethods(Class<T> naturalIdClass) {
+		final Map<String, Method>  result = new HashMap<>();
+
+		for ( Method declaredMethod : naturalIdClass.getDeclaredMethods() ) {
+			if ( declaredMethod.getParameterCount() == 0
+				&& declaredMethod.getReturnType() != void.class
+				&& !Modifier.isStatic(  declaredMethod.getModifiers() ) ) {
+				var methodName = declaredMethod.getName();
+				if ( methodName.startsWith( "is" ) ) {
+					result.put(
+							Introspector.decapitalize( methodName.substring( 2 ) ),
+							declaredMethod
+					);
+				}
+				else if ( methodName.startsWith( "get" ) ) {
+					result.put(
+							Introspector.decapitalize( methodName.substring( 3 ) ),
+							declaredMethod
+					);
 				}
 			}
-
-			return result;
 		}
 
-		private static Map<String, RecordComponent> extractComponents(Class<?> naturalIdClass) {
-			if ( !naturalIdClass.isRecord() ) {
-				return Map.of();
-			}
+		return result;
+	}
 
-			final RecordComponent[] recordComponents = naturalIdClass.getRecordComponents();
-			final Map<String, RecordComponent> result = new HashMap<>();
-			for ( RecordComponent recordComponent : recordComponents ) {
-				result.put( recordComponent.getName(), recordComponent );
-			}
-			return result;
+	private static Map<String, RecordComponent> extractComponents(Class<?> naturalIdClass) {
+		if ( !naturalIdClass.isRecord() ) {
+			return Map.of();
 		}
+
+		final RecordComponent[] recordComponents = naturalIdClass.getRecordComponents();
+		final Map<String, RecordComponent> result = new HashMap<>();
+		for ( RecordComponent recordComponent : recordComponents ) {
+			result.put( recordComponent.getName(), recordComponent );
+		}
+		return result;
 	}
 
 	public interface AttributeMapper<V, T> {

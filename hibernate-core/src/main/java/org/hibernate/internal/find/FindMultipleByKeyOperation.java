@@ -15,7 +15,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
 import org.hibernate.EnabledFetchProfile;
-import org.hibernate.FindBy;
+import org.hibernate.KeyType;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
@@ -45,16 +45,16 @@ import static org.hibernate.Timeouts.WAIT_FOREVER;
 import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossReferenceSynchronizations;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 
-/// Support for loading multiple entities (of a type) by key (either [id][FindBy#ID] or [natural-id][FindBy#NATURAL_ID]).
+/// Support for loading multiple entities (of a type) by key (either [id][KeyType#ID] or [natural-id][KeyType#NATURAL_ID]).
 ///
 /// @see org.hibernate.Session#findMultiple
-/// @see FindBy
+/// @see KeyType
 ///
 /// @author Steve Ebersole
 public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiNaturalIdLoadOptions {
 	private final EntityPersister entityDescriptor;
 
-	private FindBy findBy = FindBy.ID;
+	private KeyType keyType = KeyType.ID;
 
 	private BatchSize batchSize;
 	private SessionCheckMode sessionCheckMode = SessionCheckMode.DISABLED;
@@ -107,8 +107,8 @@ public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiN
 		readOnlyMode = defaultReadOnly ? ReadOnlyMode.READ_ONLY : ReadOnlyMode.READ_WRITE;
 
 		for ( FindOption option : findOptions ) {
-			if ( option instanceof FindBy findBy ) {
-				this.findBy = findBy;
+			if ( option instanceof KeyType keyType ) {
+				this.keyType = keyType;
 			}
 			else if (  option instanceof BatchSize batchSize ) {
 				this.batchSize = batchSize;
@@ -176,7 +176,7 @@ public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiN
 			LoadAccessContext loadAccessContext) {
 		// todo (natural-id-class) : these impls are temporary
 		//		longer term, move the logic here as much of it can be shared
-		if ( findBy == FindBy.NATURAL_ID ) {
+		if ( keyType == KeyType.NATURAL_ID ) {
 			return findByNaturalIds( keys, graphSemantic, rootGraph, loadAccessContext );
 		}
 		else {
@@ -310,7 +310,7 @@ public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiN
 	@Deprecated
 	public FindMultipleByKeyOperation(
 			EntityPersister entityDescriptor,
-			FindBy findBy,
+			KeyType keyType,
 			BatchSize batchSize,
 			SessionCheckMode sessionCheckMode,
 			RemovalsMode removalsMode,
@@ -328,7 +328,7 @@ public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiN
 			lockOptions = LockOptions.NONE;
 		}
 		this.entityDescriptor = entityDescriptor;
-		this.findBy = findBy;
+		this.keyType = keyType;
 		this.batchSize = batchSize;
 		this.sessionCheckMode = sessionCheckMode;
 		this.removalsMode = removalsMode;

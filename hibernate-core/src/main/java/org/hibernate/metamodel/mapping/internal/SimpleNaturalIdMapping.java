@@ -108,11 +108,16 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 	}
 
 	@Override
+	public boolean isNormalized(Object incoming) {
+		return incoming == null || getJavaType().getJavaTypeClass().isInstance( incoming );
+	}
+
+	@Override
 	public void validateInternalForm(Object naturalIdValue) {
 		if ( naturalIdValue != null ) {
 			final var naturalIdValueClass = naturalIdValue.getClass();
+			// be flexible - allow a single-valued array
 			if ( naturalIdValueClass.isArray() && !naturalIdValueClass.getComponentType().isPrimitive() ) {
-				// be flexible
 				final var values = (Object[]) naturalIdValue;
 				if ( values.length == 1 ) {
 					naturalIdValue = values[0];
@@ -148,6 +153,8 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 	}
 
 	private Object normalizedValue(Object incoming) {
+		sessionFactory.getStatistics().normalizeNaturalId( getDeclaringType().getEntityName() );
+
 		if ( incoming instanceof Map<?,?> valueMap ) {
 			assert valueMap.size() == 1;
 			assert valueMap.containsKey( getAttribute().getAttributeName() );

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.mapping.naturalid.cid;
+package org.hibernate.orm.test.mapping.naturalid.composite;
 
 import jakarta.persistence.Embeddable;
 
@@ -20,24 +20,31 @@ public class AccountId implements java.io.Serializable {
 	public AccountId(int id) {
 		this.id = id;
 	}
+
 	public int intValue() {
 		return id;
 	}
+
 	@Override
 	public int hashCode() {
 		return id;
 	}
+
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if ( this == obj ) {
 			return true;
-		if (obj == null)
+		}
+		if ( obj == null ) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if ( getClass() != obj.getClass() ) {
 			return false;
+		}
 		AccountId other = (AccountId) obj;
-		if (other != null && id != other.id)
+		if ( other != null && id != other.id ) {
 			return false;
+		}
 		return true;
 	}
 }

@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" )
 		}
 )
-@DomainModel( xmlMappings = "org/hibernate/orm/test/mapping/naturalid/immutable/User.hbm.xml" )
+@DomainModel( xmlMappings = "mappings/natural-id/immutable/User.hbm.xml" )
 @SessionFactory
 public class ImmutableNaturalIdTest {
 	@AfterEach

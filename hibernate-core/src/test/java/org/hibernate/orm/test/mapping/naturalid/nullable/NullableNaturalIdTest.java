@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DomainModel(
 		annotatedClasses = { A.class, B.class, C.class, D.class },
-		xmlMappings = "/org/hibernate/orm/test/mapping/naturalid/nullable/User.hbm.xml"
+		xmlMappings = "mappings/natural-id/nullable/User.hbm.xml"
 )
 @SessionFactory
 public class NullableNaturalIdTest {

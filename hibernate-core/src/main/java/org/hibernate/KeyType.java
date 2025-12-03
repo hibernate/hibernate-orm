@@ -6,15 +6,14 @@ package org.hibernate;
 
 import jakarta.persistence.FindOption;
 
-/// FindOption allowing to load based on either id (default)
-///  or natural-id.
+/// FindOption allowing to load based on either id (default) or natural-id.
 ///
 /// @see jakarta.persistence.EntityManager#find
 /// @see Session#findMultiple
 ///
 /// @author Steve Ebersole
 /// @author Gavin King
-public enum FindBy implements FindOption {
+public enum KeyType implements FindOption {
 	/// Indicates to find by the entity's identifier.  The default.
 	///
 	/// @see jakarta.persistence.Id

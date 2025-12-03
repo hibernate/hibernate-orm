@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -30,14 +31,14 @@ public class MappingExporter implements Exporter {
 
     private static final Logger LOGGER = Logger.getLogger( MappingExporter.class.getName() );
 
-    private UnmodifiableList<File> hbmXmlFiles;
+    private UnmodifiableList<File> hbmXmlFiles = new UnmodifiableList<>(Collections.emptyList());
     private boolean formatResult = true;
 
     private final MappingBinder mappingBinder;
 
     public MappingExporter() {
         mappingBinder = createMappingBinder();
-    }
+     }
 
     public void setHbmFiles(List<File> fileList) {
         hbmXmlFiles = new UnmodifiableList<>( fileList );
@@ -54,8 +55,21 @@ public class MappingExporter implements Exporter {
 
     @Override
     public void start() {
-        List<Binding<JaxbHbmHibernateMapping>> hbmMappings = getHbmMappings();
-        performTransformation(hbmMappings, createServiceRegistry(), formatResult);
+        List<Binding<JaxbHbmHibernateMapping>> hbmBindings = getHbmMappings();
+        Marshaller marshaller = createMarshaller(mappingBinder);
+        MetadataSources metadataSources = new MetadataSources( createServiceRegistry() );
+        hbmBindings.forEach( metadataSources::addHbmXmlBinding );
+        List<Binding<JaxbEntityMappingsImpl>> transformedBindings = HbmXmlTransformer.transform(
+                hbmBindings,
+                (MetadataImplementor) metadataSources.buildMetadata(),
+                UnsupportedFeatureHandling.ERROR
+        );
+        for (int i = 0; i < hbmBindings.size(); i++) {
+            Binding<JaxbHbmHibernateMapping> hbmBinding = hbmBindings.get( i );
+            Binding<JaxbEntityMappingsImpl> transformedBinding = transformedBindings.get( i );
+            HbmXmlOrigin origin = (HbmXmlOrigin)hbmBinding.getOrigin();
+            marshall(marshaller, transformedBinding.getRoot(), origin.getHbmXmlFile());
+        }
     }
 
     private ServiceRegistry createServiceRegistry() {
@@ -108,8 +122,7 @@ public class MappingExporter implements Exporter {
     private void marshall(
             Marshaller marshaller,
             JaxbEntityMappingsImpl mappings,
-            File hbmXmlFile,
-            boolean formatResult) {
+            File hbmXmlFile) {
         File mappingXmlFile =  new File(
                 hbmXmlFile.getParentFile(),
                 hbmXmlFile.getName().replace(".hbm.xml", ".mapping.xml"));
@@ -129,27 +142,6 @@ public class MappingExporter implements Exporter {
             throw new RuntimeException(
                     "Unable to format XML file `" + mappingXmlFile.getAbsolutePath() + "`",
                     e);
-        }
-    }
-
-    private void performTransformation(
-            List<Binding<JaxbHbmHibernateMapping>> hbmBindings,
-            ServiceRegistry serviceRegistry,
-            boolean formatResult) {
-        Marshaller marshaller = createMarshaller(mappingBinder);
-        MetadataSources metadataSources = new MetadataSources( serviceRegistry );
-        hbmBindings.forEach( metadataSources::addHbmXmlBinding );
-        List<Binding<JaxbEntityMappingsImpl>> transformedBindings = HbmXmlTransformer.transform(
-                hbmBindings,
-                (MetadataImplementor) metadataSources.buildMetadata(),
-                UnsupportedFeatureHandling.ERROR
-        );
-        for (int i = 0; i < hbmBindings.size(); i++) {
-            Binding<JaxbHbmHibernateMapping> hbmBinding = hbmBindings.get( i );
-            Binding<JaxbEntityMappingsImpl> transformedBinding = transformedBindings.get( i );
-            HbmXmlOrigin origin = (HbmXmlOrigin)hbmBinding.getOrigin();
-            File hbmXmlFile = origin.getHbmXmlFile();
-            marshall(marshaller, transformedBinding.getRoot(), hbmXmlFile, formatResult);
         }
     }
 

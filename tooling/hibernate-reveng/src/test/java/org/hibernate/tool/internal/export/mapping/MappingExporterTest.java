@@ -55,7 +55,7 @@ public class MappingExporterTest {
         origin.add( fooFile );
         assertNotNull(hbmFilesField);
         hbmFilesField.setAccessible(true);
-        assertNull(hbmFilesField.get(mappingExporter));
+        assertTrue(((List<?>)hbmFilesField.get(mappingExporter)).isEmpty());
         mappingExporter.setHbmFiles(origin);
         List<?> destination = (List<?>) hbmFilesField.get(mappingExporter);
         assertEquals(1, destination.size());
@@ -155,8 +155,7 @@ public class MappingExporterTest {
                 "marshall",
                 Marshaller.class,
                 JaxbEntityMappingsImpl.class,
-                File.class,
-                boolean.class);
+                File.class);
         assertNotNull(marshallMethod);
         marshallMethod.setAccessible(true);
         File hbmFile = new File(this.tempDir, "foo.hbm.xml");
@@ -164,7 +163,7 @@ public class MappingExporterTest {
         Files.writeString(mappingFile.toPath(), "<foo><bar>foobar</bar></foo>");
         List<String> lines = Files.readAllLines(mappingFile.toPath());
         assertEquals(1, lines.size());
-        marshallMethod.invoke(mappingExporter, DUMMY_MARSHALLER, null, hbmFile, true);
+        marshallMethod.invoke(mappingExporter, DUMMY_MARSHALLER, null, hbmFile);
         lines = Files.readAllLines(mappingFile.toPath());
         assertEquals(4, lines.size());
     }

@@ -153,11 +153,17 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 							performInsert( jdbcValueBindings, session );
 						}
 						catch (ConstraintViolationException cve) {
-							throw cve.getKind() == UNIQUE
+							if ( cve.getKind() == UNIQUE ) {
+								// Ignore primary key violation if the insert is composed of just the primary key
+								if ( !valueBindings.isEmpty() ) {
 									// assume it was the primary key constraint which was violated,
 									// due to a new version of the row existing in the database
-									? new StaleStateException( mutationTarget.getRolePath(), cve )
-									: cve;
+									throw new StaleStateException( mutationTarget.getRolePath(), cve );
+								}
+							}
+							else {
+								throw cve;
+							}
 						}
 					}
 				}

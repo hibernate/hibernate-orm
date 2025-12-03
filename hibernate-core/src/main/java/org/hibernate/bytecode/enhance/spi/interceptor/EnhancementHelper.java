@@ -32,28 +32,26 @@ public class EnhancementHelper {
 	 * Should the given property be included in the owner's base fetch group?
 	 */
 	public static boolean includeInBaseFetchGroup(
-			Property bootMapping,
+			Property property,
 			boolean isEnhanced,
 			InheritanceChecker inheritanceChecker,
 			boolean collectionsInDefaultFetchGroupEnabled) {
-		final var value = bootMapping.getValue();
+		final var value = property.getValue();
 
-		if ( ! isEnhanced ) {
-			if ( value instanceof ToOne toOne ) {
-				if ( toOne.isUnwrapProxy() ) {
-					BYTECODE_INTERCEPTOR_LOGGER.toOneLazyNoProxyButNotEnhanced(
-							bootMapping.getPersistentClass().getEntityName(),
-							bootMapping.getName()
-					);
-				}
+		if ( !isEnhanced ) {
+			if ( value instanceof ToOne toOne && toOne.isUnwrapProxy() ) {
+				BYTECODE_INTERCEPTOR_LOGGER.toOneLazyNoProxyButNotEnhanced(
+						property.getPersistentClass().getEntityName(),
+						property.getName()
+				);
 			}
 			return true;
 		}
 
 		// if we get here, we know the property owner is enhanced for laziness
 		//
-		// NOTE : we make the (potentially untrue) assumption here that
-		// if the owner is enhanced, then all classes are enhanced..
+		// NOTE: we make the (potentially untrue) assumption here that
+		//       if the owner is enhanced, then all classes are enhanced.
 
 		if ( value instanceof ToOne toOne ) {
 
@@ -64,7 +62,7 @@ public class EnhancementHelper {
 
 			// it is lazy.  see if we should select the FK
 
-			if ( bootMapping.getLazyGroup() != null ) {
+			if ( property.getLazyGroup() != null ) {
 				// a non-base fetch group was explicitly specified
 				//
 				// really this should indicate to not select it as part of the base group.
@@ -72,9 +70,9 @@ public class EnhancementHelper {
 				// we simply log a message that we are ignoring the `@LazyGroup` for to-ones
 
 				BYTECODE_INTERCEPTOR_LOGGER.lazyGroupIgnoredForToOne(
-						bootMapping.getLazyGroup(),
-						bootMapping.getPersistentClass().getEntityName(),
-						bootMapping.getName()
+						property.getLazyGroup(),
+						property.getPersistentClass().getEntityName(),
+						property.getName()
 				);
 
 				// at a later time - for example 6.0 when we can implement the join solution
@@ -84,13 +82,13 @@ public class EnhancementHelper {
 				// for now, fall through
 			}
 
-			if ( ! toOne.isReferenceToPrimaryKey() ) {
+			if ( !toOne.isReferenceToPrimaryKey() ) {
 				// we do not have a reference to the associated primary-key
 				return false;
 			}
 
 			if ( toOne.getColumnSpan() == 0 ) {
-				// generally this would indicate a "shared PK" on-to-one and there
+				// generally this would indicate a "shared PK" one-to-one and there
 				// is no column for the association on the owner table - do not add
 				// the association to the base group (which would force an immediate
 				// select from the association table effectively making this
@@ -98,15 +96,16 @@ public class EnhancementHelper {
 				return false;
 			}
 
-			final boolean unwrapExplicitlyRequested = toOne.isUnwrapProxy() && !toOne.isUnwrapProxyImplicit();
+			final boolean unwrapExplicitlyRequested =
+					toOne.isUnwrapProxy() && !toOne.isUnwrapProxyImplicit();
 
 			if ( inheritanceChecker.hasSubclasses( toOne.getReferencedEntityName() ) ) {
 				// the associated type has subclasses - we cannot use the enhanced proxy and will generate a HibernateProxy
 				if ( unwrapExplicitlyRequested ) {
 					// NO_PROXY was explicitly requested
 					BYTECODE_INTERCEPTOR_LOGGER.lazyNoProxyButAssociatedHasSubclasses(
-							bootMapping.getPersistentClass().getEntityName(),
-							bootMapping.getName(),
+							property.getPersistentClass().getEntityName(),
+							property.getName(),
 							toOne.getReferencedEntityName()
 					);
 				}
@@ -117,8 +116,8 @@ public class EnhancementHelper {
 			if ( toOne instanceof ManyToOne manyToOne && manyToOne.isIgnoreNotFound() ) {
 				if ( unwrapExplicitlyRequested ) {
 					BYTECODE_INTERCEPTOR_LOGGER.notFoundIgnoreWithNoProxySkippingFkSelection(
-							bootMapping.getPersistentClass().getEntityName(),
-							bootMapping.getName()
+							property.getPersistentClass().getEntityName(),
+							property.getName()
 					);
 					return false;
 				}
@@ -135,7 +134,7 @@ public class EnhancementHelper {
 		}
 
 		return collectionsInDefaultFetchGroupEnabled && ( value instanceof Collection )
-			|| ! bootMapping.isLazy();
+			|| ! property.isLazy();
 	}
 
 	public static <T> T performWork(
@@ -143,7 +142,7 @@ public class EnhancementHelper {
 			BiFunction<SharedSessionContractImplementor, Boolean, T> work,
 			String entityName,
 			String attributeName) {
-		SharedSessionContractImplementor session = interceptor.getLinkedSession();
+		var session = interceptor.getLinkedSession();
 
 		final boolean isTempSession;
 		final boolean isJta;
@@ -236,23 +235,20 @@ public class EnhancementHelper {
 		NO_SF_UUID
 	}
 
-	private static LazyInitializationException createLazyInitializationException(final Cause cause, final String entityName, final String attributeName) {
-		final String reason = switch ( cause ) {
-			case NO_SESSION -> "no session and settings disallow loading outside the Session";
-			case CLOSED_SESSION -> "session is closed and settings disallow loading outside the Session";
-			case DISCONNECTED_SESSION -> "session is disconnected and settings disallow loading outside the Session";
-			case NO_SF_UUID -> "could not determine SessionFactory UUId to create temporary Session for loading";
-		};
-
-		final String message = String.format(
+	private static LazyInitializationException createLazyInitializationException(
+			Cause cause, String entityName, String attributeName) {
+		return new LazyInitializationException( String.format(
 				Locale.ROOT,
 				"Unable to perform requested lazy initialization [%s.%s] - %s",
 				entityName,
 				attributeName,
-				reason
-		);
-
-		return new LazyInitializationException( message );
+				switch ( cause ) {
+					case NO_SESSION -> "no session and settings disallow loading outside the Session";
+					case CLOSED_SESSION -> "session is closed and settings disallow loading outside the Session";
+					case DISCONNECTED_SESSION -> "session is disconnected and settings disallow loading outside the Session";
+					case NO_SF_UUID -> "could not determine SessionFactory UUId to create temporary Session for loading";
+				}
+		) );
 	}
 
 	private static SharedSessionContractImplementor openTemporarySessionForLoading(

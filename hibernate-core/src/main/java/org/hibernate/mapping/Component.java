@@ -927,7 +927,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 			if ( customInstantiator != null ) {
 				return simpleRecord = false;
 			}
-			if ( componentClass == null || !ReflectHelper.isRecord( componentClass ) ) {
+			if ( componentClass == null || !componentClass.isRecord() ) {
 				return simpleRecord = false;
 			}
 			final String[] recordComponentNames = ReflectHelper.getRecordComponentNames( componentClass );

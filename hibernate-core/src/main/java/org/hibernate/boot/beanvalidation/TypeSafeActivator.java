@@ -106,7 +106,6 @@ class TypeSafeActivator {
 					// There is a Jakarta Validation provider, but it failed to bootstrap the factory for some reason,
 					// we should fail and let the user deal with it:
 					throw exception;
-
 				}
 			}
 		}
@@ -148,10 +147,10 @@ class TypeSafeActivator {
 			ValidatorFactory validatorFactory,
 			SessionFactoryServiceRegistry serviceRegistry,
 			SessionFactoryImplementor sessionFactory) {
-		final var classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
-		final var cfgService = serviceRegistry.requireService( ConfigurationService.class );
 		final var listener =
-				new BeanValidationEventListener( validatorFactory, cfgService.getSettings(), classLoaderService );
+				new BeanValidationEventListener( validatorFactory,
+						serviceRegistry.requireService( ConfigurationService.class ).getSettings(),
+						serviceRegistry.requireService( ClassLoaderService.class ) );
 		final var listenerRegistry = sessionFactory.getEventListenerRegistry();
 		listenerRegistry.addDuplicationStrategy( DuplicationStrategyImpl.INSTANCE );
 		listenerRegistry.appendListeners( EventType.PRE_INSERT, listener );
@@ -183,7 +182,8 @@ class TypeSafeActivator {
 					context.getMetadata().getEntityBindings(),
 					serviceRegistry.requireService( ConfigurationService.class ).getSettings(),
 					serviceRegistry.requireService( JdbcServices.class ).getDialect(),
-					new ClassLoaderAccessImpl( null, serviceRegistry.getService( ClassLoaderService.class ) )
+					new ClassLoaderAccessImpl( null,
+							serviceRegistry.getService( ClassLoaderService.class ) )
 			);
 		}
 	}

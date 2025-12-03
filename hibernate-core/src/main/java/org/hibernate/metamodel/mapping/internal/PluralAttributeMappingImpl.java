@@ -32,6 +32,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
@@ -225,11 +226,31 @@ public class PluralAttributeMappingImpl
 	@Override
 	public boolean isBidirectionalAttributeName(NavigablePath fetchablePath, ToOneAttributeMapping modelPart) {
 		return bidirectionalAttributeName == null
-				// If the FK-target of the to-one mapping is the same as the FK-target of this plural mapping,
-				// then we say this is bidirectional, given that this is only invoked for model parts of the
-				// collection elements
-				? fkDescriptor.getTargetPart() == modelPart.getForeignKeyDescriptor().getTargetPart()
-				: fetchablePath.getLocalName().endsWith( bidirectionalAttributeName );
+				// If the FK-target of the to-one mapping is the same as the FK-target of this one-to-many mapping,
+				// and the FK-key refer to the same column then we say this is bidirectional,
+				// given that this is only invoked for model parts of the collection elements
+				? modelPart.getSideNature() == ForeignKeyDescriptor.Nature.KEY
+				&& collectionDescriptor.isOneToMany()
+				&& fkDescriptor.getTargetPart() == modelPart.getForeignKeyDescriptor().getTargetPart()
+				&& areEqual( fkDescriptor.getKeyPart(), modelPart.getForeignKeyDescriptor().getKeyPart() )
+				: fetchablePath.getLocalName().equals( bidirectionalAttributeName );
+	}
+
+	private boolean areEqual(ValuedModelPart part1, ValuedModelPart part2) {
+		final int typeCount = part1.getJdbcTypeCount();
+		if ( part2.getJdbcTypeCount() != typeCount ) {
+			return false;
+		}
+		for ( int i = 0; i < typeCount; i++ ) {
+			final SelectableMapping selectable1 = part1.getSelectable( i );
+			final SelectableMapping selectable2 = part2.getSelectable( i );
+			if ( selectable1.getJdbcMapping() != selectable2.getJdbcMapping()
+				|| !selectable1.getContainingTableExpression().equals( selectable2.getContainingTableExpression() )
+				|| !selectable1.getSelectionExpression().equals( selectable2.getSelectionExpression() ) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public void finishInitialization(

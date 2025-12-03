@@ -95,9 +95,9 @@ public class Namespace {
 		final Table previous = tables.put( logicalName, table );
 		if ( previous != null ) {
 			BOOT_LOGGER.replacingTableRegistration(
-					String.valueOf(logicalName),
-					String.valueOf(previous),
-					String.valueOf(table)
+					String.valueOf( logicalName ),
+					String.valueOf( previous ),
+					String.valueOf( table )
 			);
 		}
 	}

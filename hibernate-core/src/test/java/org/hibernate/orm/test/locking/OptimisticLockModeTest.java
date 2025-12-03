@@ -9,11 +9,13 @@ import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.lock.OptimisticEntityLockException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -75,6 +77,8 @@ public class OptimisticLockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@JiraKey(value = "HHH-19937")
+	@SkipForDialect(dialectClass = CockroachDialect.class,
+			reason = "Cockroach uses SERIALIZABLE by default and seems to fail reading state that was written by a different TX that completed within this TX")
 	public void testRefreshWithOptimisticForceIncrementLockRefresh() {
 		doInHibernate( this::sessionFactory, session -> {
 			C c = session.find( C.class, id, LockModeType.OPTIMISTIC_FORCE_INCREMENT );
@@ -87,6 +91,8 @@ public class OptimisticLockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@JiraKey(value = "HHH-19937")
+	@SkipForDialect(dialectClass = CockroachDialect.class,
+			reason = "Cockroach uses SERIALIZABLE by default and seems to fail reading state that was written by a different TX that completed within this TX")
 	public void testRefreshWithOptimisticLockFailure() {
 		assertThrows( OptimisticEntityLockException.class, () ->
 			doInHibernate( this::sessionFactory, session -> {
@@ -101,9 +107,11 @@ public class OptimisticLockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@JiraKey(value = "HHH-19937")
+	@SkipForDialect(dialectClass = CockroachDialect.class,
+			reason = "Cockroach uses SERIALIZABLE by default and seems to fail reading state that was written by a different TX that completed within this TX")
 	public void testRefreshWithOptimisticForceIncrementLockFailure() {
 		// TODO: shouldn't this also be an OptimisticEntityLockException
-		assertThrows( StaleObjectStateException.class, () ->
+		assertThrows( StaleObjectStateException.class /* or TransactionSerializationException */, () ->
 			doInHibernate( this::sessionFactory, session -> {
 				C c = session.find( C.class, id, LockModeType.OPTIMISTIC_FORCE_INCREMENT );
 				session.refresh( c );

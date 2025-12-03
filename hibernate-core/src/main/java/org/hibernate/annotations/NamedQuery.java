@@ -54,6 +54,8 @@ public @interface NamedQuery {
 	 * {@link EntityManager#createNamedQuery(String, Class)}.
 	 *
 	 * @see jakarta.persistence.NamedQuery#resultClass()
+	 *
+	 * @since 7.0
 	 */
 	Class<?> resultClass() default void.class;
 
@@ -127,6 +129,8 @@ public @interface NamedQuery {
 	 *
 	 * @see org.hibernate.query.Query#setCacheStoreMode(CacheStoreMode)
 	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_CACHE_STORE_MODE
+	 *
+	 * @since 6.2
 	 */
 	CacheStoreMode cacheStoreMode() default CacheStoreMode.USE;
 
@@ -135,6 +139,8 @@ public @interface NamedQuery {
 	 *
 	 * @see org.hibernate.query.Query#setCacheRetrieveMode(CacheRetrieveMode)
 	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_CACHE_RETRIEVE_MODE
+	 *
+	 * @since 6.2
 	 */
 	CacheRetrieveMode cacheRetrieveMode() default CacheRetrieveMode.USE;
 

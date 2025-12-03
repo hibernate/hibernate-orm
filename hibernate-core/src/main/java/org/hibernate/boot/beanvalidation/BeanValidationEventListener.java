@@ -13,6 +13,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.event.spi.PreDeleteEvent;
@@ -51,6 +52,8 @@ public class BeanValidationEventListener
 	private final Validator validator;
 	private final GroupsPerOperation groupsPerOperation;
 
+	private SessionFactoryImplementor sessionFactory;
+
 	public BeanValidationEventListener(
 			ValidatorFactory factory, Map<String, Object> settings, ClassLoaderService classLoaderService) {
 		traversableResolver = new HibernateTraversableResolver();
@@ -58,14 +61,17 @@ public class BeanValidationEventListener
 				factory.usingContext()
 						.traversableResolver( traversableResolver )
 						.getValidator();
-		groupsPerOperation = GroupsPerOperation.from( settings, new ClassLoaderAccessImpl( classLoaderService ) );
+		groupsPerOperation =
+				GroupsPerOperation.from( settings,
+						new ClassLoaderAccessImpl( classLoaderService ) );
 	}
 
 	@Override
 	public void sessionFactoryCreated(SessionFactory factory) {
-		var implementor = factory.unwrap( SessionFactoryImplementor.class );
-		implementor.getMappingMetamodel()
-				.forEachEntityDescriptor( entityPersister -> traversableResolver.addPersister( entityPersister, implementor ) );
+		sessionFactory = factory.unwrap( SessionFactoryImplementor.class );
+		sessionFactory.getMappingMetamodel()
+				.forEachEntityDescriptor( entityPersister ->
+						traversableResolver.addPersister( entityPersister, sessionFactory ) );
 	}
 
 	public boolean onPreInsert(PreInsertEvent event) {
@@ -110,53 +116,69 @@ public class BeanValidationEventListener
 		final Object entity = castNonNull( event.getCollection().getOwner() );
 		validate(
 				entity,
-				event.getSession().getEntityPersister( event.getAffectedOwnerEntityName(), entity ),
+				getEntityPersister( event.getSession(), event.getAffectedOwnerEntityName(), entity ),
 				GroupsPerOperation.Operation.UPDATE
 		);
 	}
 
-	private <T> void validate(
-			T object,
-			EntityPersister persister,
-			GroupsPerOperation.Operation operation) {
+	private EntityPersister getEntityPersister(
+			SharedSessionContractImplementor session, String entityName, Object entity) {
+		if ( session != null ) {
+			return session.getEntityPersister( entityName, entity );
+		}
+		else {
+			final var metamodel = sessionFactory.getMappingMetamodel();
+			return entityName == null
+					? metamodel.getEntityDescriptor( entity.getClass().getName() )
+					: metamodel.getEntityDescriptor( entityName )
+							.getSubclassEntityPersister( entity, sessionFactory );
+		}
+	}
+
+	private <T> void validate(T object, EntityPersister persister, GroupsPerOperation.Operation operation) {
 		if ( object != null
 				&& persister.getRepresentationStrategy().getMode() == RepresentationMode.POJO ) {
-			final Class<?>[] groups = groupsPerOperation.get( operation );
+			final var groups = groupsPerOperation.get( operation );
 			if ( groups.length > 0 ) {
 				final var constraintViolations = validator.validate( object, groups );
 				if ( !constraintViolations.isEmpty() ) {
-					final Set<ConstraintViolation<?>> propagatedViolations = setOfSize( constraintViolations.size() );
+					final Set<ConstraintViolation<?>> propagatedViolations =
+							setOfSize( constraintViolations.size() );
 					final Set<String> classNames = new HashSet<>();
 					for ( var violation : constraintViolations ) {
 						BEAN_VALIDATION_LOGGER.trace( violation );
 						propagatedViolations.add( violation );
 						classNames.add( violation.getLeafBean().getClass().getName() );
 					}
-					final var builder =
-							new StringBuilder()
-									.append( "Validation failed for classes " )
-									.append( classNames )
-									.append( " during " )
-									.append( operation.getName() )
-									.append( " time for groups " )
-									.append( toString( groups ) )
-									.append( "\nList of constraint violations:[\n" );
-					for ( var violation : constraintViolations ) {
-						builder.append( "\t" ).append( violation.toString() ).append( "\n" );
-					}
-					builder.append( "]" );
-					throw new ConstraintViolationException( builder.toString(), propagatedViolations );
+					throw new ConstraintViolationException(
+							message( operation, classNames, groups, constraintViolations ),
+							propagatedViolations );
 				}
 			}
 		}
 	}
 
-	private String toString(Class<?>[] groups) {
-		final var string = new StringBuilder( "[" );
+	private <T> String message(
+			GroupsPerOperation.Operation operation,
+			Set<String> classNames,
+			Class<?>[] groups,
+			Set<ConstraintViolation<T>> constraintViolations) {
+		final var builder = new StringBuilder();
+		builder.append( "Validation failed for classes " )
+				.append( classNames )
+				.append( " during " )
+				.append( operation.getName() )
+				.append( " time for groups [" );
 		for ( var group : groups ) {
-			string.append( group.getName() ).append( ", " );
+			builder.append( group.getName() ).append( ", " );
 		}
-		string.append( "]" );
-		return string.toString();
+		builder.append( "]\nList of constraint violations:[\n" );
+		for ( var violation : constraintViolations ) {
+			builder.append( "\t" )
+					.append( violation.toString() )
+					.append( "\n" );
+		}
+		builder.append( "]" );
+		return builder.toString();
 	}
 }

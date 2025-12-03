@@ -30,7 +30,7 @@ public enum QueryFlushMode {
 	 */
 	NO_FLUSH,
 	/**
-	 * Let the owning {@link org.hibernate.Session session}
+	 * Let the owning {@linkplain org.hibernate.Session session}
 	 * decide whether to flush, depending on its current
 	 * {@link org.hibernate.FlushMode}.
 	 *

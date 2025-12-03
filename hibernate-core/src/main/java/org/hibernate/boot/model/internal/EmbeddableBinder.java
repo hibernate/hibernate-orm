@@ -59,17 +59,21 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import static org.hibernate.boot.model.internal.AggregateComponentBinder.processAggregate;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
+import static org.hibernate.boot.model.internal.ComponentPropertyHolder.applyExplicitTableName;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.GeneratorBinder.createIdGeneratorsFromGeneratorAnnotations;
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+import static org.hibernate.internal.util.ReflectHelper.OBJECT_CLASS_NAME;
+import static org.hibernate.internal.util.ReflectHelper.RECORD_CLASS_NAME;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.unqualify;
@@ -438,9 +442,7 @@ public class EmbeddableBinder {
 		);
 
 		final String subpath = getPath( propertyHolder, inferredData );
-		if ( BOOT_LOGGER.isTraceEnabled() ) {
-BOOT_LOGGER.bindingEmbeddable( subpath );
-		}
+		BOOT_LOGGER.bindingEmbeddable( subpath );
 		final var subholder = buildPropertyHolder(
 				embeddable,
 				subpath,
@@ -465,7 +467,7 @@ BOOT_LOGGER.bindingEmbeddable( subpath );
 			embeddable.setTypeName( compositeUserTypeClass.getName() );
 			returnedClassOrElement = context.getBootstrapContext().getModelsContext().getClassDetailsRegistry().resolveClassDetails( compositeUserType.embeddable().getName() );
 		}
-		AggregateComponentBinder.processAggregate(
+		processAggregate(
 				embeddable,
 				propertyHolder,
 				inferredData,
@@ -529,7 +531,7 @@ BOOT_LOGGER.bindingEmbeddable( subpath );
 				&& !hasAnnotationsOnIdClass( annotatedTypeDetails ) ) {
 			processIdClassElements( propertyHolder, baseInferredData, classElements, baseClassElements );
 		}
-		for ( PropertyData propertyAnnotatedElement : classElements ) {
+		for ( var propertyAnnotatedElement : classElements ) {
 			processElementAnnotations(
 					subholder,
 					entityBinder.getPersistentClass() instanceof SingleTableSubclass
@@ -544,27 +546,15 @@ BOOT_LOGGER.bindingEmbeddable( subpath );
 					context,
 					inheritanceStatePerClass
 			);
-
-			final var memberDetails = propertyAnnotatedElement.getAttributeMember();
-			if ( isIdClass || subholder.isOrWithinEmbeddedId() ) {
-				final var property = findProperty( embeddable, memberDetails.getName() );
-				if ( property != null ) {
-					// Identifier properties are always simple values
-					final var value = (SimpleValue) property.getValue();
-					createIdGeneratorsFromGeneratorAnnotations(
-							subholder,
-							propertyAnnotatedElement,
-							value,
-							context
-					);
-				}
-			}
-			else if ( memberDetails.hasDirectAnnotationUsage( GeneratedValue.class ) ) {
-				throw new AnnotationException(
-						"Property '" + memberDetails.getName() + "' of '"
-								+ getPath( propertyHolder, inferredData )
-								+ "' is annotated '@GeneratedValue' but is not part of an identifier" );
-			}
+			processGeneratorAnnotations(
+					propertyHolder,
+					inferredData,
+					isIdClass,
+					propertyAnnotatedElement,
+					subholder,
+					embeddable,
+					context
+			);
 		}
 
 		if ( compositeUserType != null ) {
@@ -572,6 +562,34 @@ BOOT_LOGGER.bindingEmbeddable( subpath );
 		}
 
 		return embeddable;
+	}
+
+	private static void processGeneratorAnnotations(
+			PropertyHolder propertyHolder, PropertyData inferredData,
+			boolean isIdClass,
+			PropertyData propertyAnnotatedElement, PropertyHolder subholder,
+			Component embeddable,
+			MetadataBuildingContext context) {
+		final var memberDetails = propertyAnnotatedElement.getAttributeMember();
+		if ( isIdClass || subholder.isOrWithinEmbeddedId() ) {
+			final var property = findProperty( embeddable, memberDetails.getName() );
+			if ( property != null ) {
+				// Identifier properties are always simple values
+				final var value = (SimpleValue) property.getValue();
+				createIdGeneratorsFromGeneratorAnnotations(
+						subholder,
+						propertyAnnotatedElement,
+						value,
+						context
+				);
+			}
+		}
+		else if ( memberDetails.hasDirectAnnotationUsage( GeneratedValue.class ) ) {
+			throw new AnnotationException(
+					"Property '" + memberDetails.getName() + "' of '"
+							+ getPath( propertyHolder, inferredData )
+							+ "' is annotated '@GeneratedValue' but is not part of an identifier" );
+		}
 	}
 
 	private static Property findProperty(Component embeddable, String name) {
@@ -773,45 +791,48 @@ BOOT_LOGGER.bindingEmbeddable( subpath );
 			ClassDetails annotatedClass,
 			BasicType<?> discriminatorType,
 			Map<Object, String> discriminatorValues) {
-		final String explicitValue =
-				annotatedClass.hasDirectAnnotationUsage( DiscriminatorValue.class )
-						? annotatedClass.getDirectAnnotationUsage( DiscriminatorValue.class ).value()
-						: null;
-		final String discriminatorValue;
-		if ( isBlank( explicitValue ) ) {
-			final String name = unqualify( annotatedClass.getName() );
-			if ( "character".equals( discriminatorType.getName() ) ) {
-				throw new AnnotationException( String.format(
-						"Embeddable '%s' has a discriminator of character type and must specify its '@DiscriminatorValue'",
-						name
-				) );
-			}
-			else if ( "integer".equals( discriminatorType.getName() ) ) {
-				discriminatorValue = String.valueOf( name.hashCode() );
-			}
-			else {
-				discriminatorValue = name;
-			}
-		}
-		else {
-			discriminatorValue = explicitValue;
-		}
 		return discriminatorValues.put(
-				discriminatorType.getJavaTypeDescriptor().fromString( discriminatorValue ),
+				discriminatorType.getJavaTypeDescriptor()
+						.fromString( discriminatorValue( annotatedClass, discriminatorType ) ),
 				annotatedClass.getName().intern()
 		);
 	}
 
+	private static String discriminatorValue(ClassDetails annotatedClass, BasicType<?> discriminatorType) {
+		final String explicitValue =
+				annotatedClass.hasDirectAnnotationUsage( DiscriminatorValue.class )
+						? annotatedClass.getDirectAnnotationUsage( DiscriminatorValue.class ).value()
+						: null;
+		if ( isBlank( explicitValue ) ) {
+			final String name = unqualify( annotatedClass.getName() );
+			return switch ( discriminatorType.getName() ) {
+				case "character" ->
+						throw new AnnotationException( "Embeddable '" + name
+								+ "' has a discriminator of character type and must specify its '@DiscriminatorValue'" );
+				case "integer" -> String.valueOf( name.hashCode() );
+				default -> name;
+			};
+		}
+		else {
+			return explicitValue;
+		}
+	}
 
 	private static boolean isValidSuperclass(ClassDetails superClass, boolean isIdClass) {
 		if ( superClass == null ) {
 			return false;
 		}
-
-		return superClass.hasDirectAnnotationUsage( MappedSuperclass.class )
-			|| isIdClass
-				&& !superClass.getName().equals( Object.class.getName() )
-				&& !superClass.getName().equals( "java.lang.Record" );
+		else if ( superClass.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
+			return true;
+		}
+		else if ( isIdClass ) {
+			final String superClassName = superClass.getName();
+			return !superClassName.equals( OBJECT_CLASS_NAME )
+				&& !superClassName.equals( RECORD_CLASS_NAME );
+		}
+		else {
+			return false;
+		}
 	}
 
 	private static List<PropertyData> collectBaseClassElements(
@@ -824,12 +845,11 @@ BOOT_LOGGER.bindingEmbeddable( subpath );
 			// iterate from base returned class up hierarchy to handle cases where the @Id attributes
 			// might be spread across the subclasses and super classes.
 			TypeDetails baseReturnedClassOrElement = baseInferredData.getClassOrElementType();
-			while ( !Object.class.getName().equals( baseReturnedClassOrElement.getName() ) ) {
-				final var container =
-						new PropertyContainer( baseReturnedClassOrElement.determineRawClass(),
-								entityAtStake, propertyAccessor );
+			while ( !OBJECT_CLASS_NAME.equals( baseReturnedClassOrElement.getName() ) ) {
+				final var rawClass = baseReturnedClassOrElement.determineRawClass();
+				final var container = new PropertyContainer( rawClass, entityAtStake, propertyAccessor );
 				addElementsOfClass( baseClassElements, container, context, 0 );
-				baseReturnedClassOrElement = baseReturnedClassOrElement.determineRawClass().getGenericSuperType();
+				baseReturnedClassOrElement = rawClass.getGenericSuperType();
 			}
 			return baseClassElements;
 		}
@@ -848,11 +868,12 @@ BOOT_LOGGER.bindingEmbeddable( subpath );
 				sortedPropertyTypes
 		);
 		for ( var property : embeddable.getProperties() ) {
-			sortedPropertyNames.add( property.getName() );
+			final String propertyName = property.getName();
+			sortedPropertyNames.add( propertyName );
 			sortedPropertyTypes.add(
 					PropertyAccessStrategyGetterImpl.INSTANCE.buildPropertyAccess(
 							compositeUserType.embeddable(),
-							property.getName(),
+							propertyName,
 							false
 					).getGetter().getReturnType()
 			);
@@ -893,39 +914,53 @@ BOOT_LOGGER.bindingEmbeddable( subpath );
 			List<PropertyData> classElements,
 			List<PropertyData> baseClassElements) {
 		final Map<String, PropertyData> baseClassElementsByName = new HashMap<>();
-		for ( PropertyData element : baseClassElements ) {
+		for ( var element : baseClassElements ) {
 			baseClassElementsByName.put( element.getPropertyName(), element );
 		}
-
 		for ( int i = 0; i < classElements.size(); i++ ) {
-			final PropertyData idClassPropertyData = classElements.get( i );
-			final String propertyName = idClassPropertyData.getPropertyName();
-			final PropertyData entityPropertyData = baseClassElementsByName.get( propertyName );
-			if ( propertyHolder.isInIdClass() ) {
-				if ( entityPropertyData == null ) {
-					throw new AnnotationException(
-							"Property '" + getPath(propertyHolder, idClassPropertyData )
-									+ "' belongs to an '@IdClass' but has no matching property in entity class '"
-									+ baseInferredData.getPropertyType().getName()
-									+ "' (every property of the '@IdClass' must have a corresponding persistent property in the '@Entity' class)"
-					);
-				}
-				if ( hasToOneAnnotation( entityPropertyData.getAttributeMember() )
-						&& !entityPropertyData.getClassOrElementType().equals( idClassPropertyData.getClassOrElementType() ) ) {
-					//don't replace here as we need to use the actual original return type
-					//the annotation overriding will be dealt with by a mechanism similar to @MapsId
-					continue;
-				}
-				if ( !hasCompatibleType( idClassPropertyData.getTypeName(), entityPropertyData.getTypeName() ) ) {
-					throw new AnnotationException(
-							"Property '" + propertyName + "' in @IdClass '" + idClassPropertyData.getDeclaringClass().getName()
-									+ "' doesn't match type in entity class '" + baseInferredData.getPropertyType().getName()
-									+ "' (expected '" + entityPropertyData.getTypeName() + "' but was '" + idClassPropertyData.getTypeName() + "')"
-					);
-				}
+			final var idClassPropertyData = classElements.get( i );
+			final var entityPropertyData = baseClassElementsByName.get( idClassPropertyData.getPropertyName() );
+			if ( !propertyHolder.isInIdClass()
+					|| checkIdProperty( propertyHolder, baseInferredData, entityPropertyData, idClassPropertyData ) ) {
+				classElements.set( i, entityPropertyData );  //this works since they are in the same order
 			}
-			classElements.set( i, entityPropertyData );  //this works since they are in the same order
 		}
+	}
+
+	private static boolean checkIdProperty(
+			PropertyHolder propertyHolder, PropertyData baseInferredData,
+			PropertyData entityPropertyData, PropertyData idClassPropertyData) {
+		if ( entityPropertyData == null ) {
+			throw new AnnotationException(
+					"Property '" + getPath( propertyHolder, idClassPropertyData )
+					+ "' belongs to an '@IdClass' but has no matching property in entity class '"
+					+ baseInferredData.getPropertyType().getName()
+					+ "' (every property of the '@IdClass' must have a corresponding persistent property in the '@Entity' class)"
+			);
+		}
+		else if ( deferIdProperty( entityPropertyData, idClassPropertyData ) ) {
+			return false;
+		}
+		else {
+			final String idPropertyTypeName = idClassPropertyData.getTypeName();
+			final String entityPropertyTypeName = entityPropertyData.getTypeName();
+			if ( !hasCompatibleType( idPropertyTypeName, entityPropertyTypeName ) ) {
+				throw new AnnotationException(
+						"Property '" + idClassPropertyData.getPropertyName()
+						+ "' in @IdClass '" + idClassPropertyData.getDeclaringClass().getName()
+						+ "' doesn't match type in entity class '" + baseInferredData.getPropertyType().getName()
+						+ "' (expected '" + entityPropertyTypeName + "' but was '" + idPropertyTypeName + "')"
+				);
+			}
+			return true;
+		}
+	}
+
+	//don't replace here as we need to use the actual original return type
+	//the annotation overriding will be dealt with by a mechanism similar to @MapsId
+	private static boolean deferIdProperty(PropertyData entityPropertyData, PropertyData idClassPropertyData) {
+		return hasToOneAnnotation( entityPropertyData.getAttributeMember() )
+			&& !entityPropertyData.getClassOrElementType().equals( idClassPropertyData.getClassOrElementType() );
 	}
 
 	private static boolean hasCompatibleType(String typeNameInIdClass, String typeNameInEntityClass) {
@@ -957,10 +992,10 @@ BOOT_LOGGER.bindingEmbeddable( subpath );
 			MetadataBuildingContext context) {
 		final var embeddable = new Component( context, propertyHolder.getPersistentClass() );
 		embeddable.setEmbedded( isNonAggregated );
-		ComponentPropertyHolder.applyExplicitTableName( embeddable, inferredData, propertyHolder, context );
+		applyExplicitTableName( embeddable, inferredData, propertyHolder, context );
 
 		if ( isIdentifierMapper
-			|| isNonAggregated && inferredData.getPropertyName() == null ) {
+				|| isNonAggregated && inferredData.getPropertyName() == null ) {
 			embeddable.setComponentClassName( embeddable.getOwner().getClassName() );
 		}
 		else {
@@ -987,17 +1022,14 @@ BOOT_LOGGER.bindingEmbeddable( subpath );
 			PropertyHolder propertyHolder) {
 		final var embeddableClass = type.determineRawClass();
 		while ( propertyHolder.isComponent() ) {
-			final ComponentPropertyHolder componentHolder = (ComponentPropertyHolder) propertyHolder;
+			final var componentHolder = (ComponentPropertyHolder) propertyHolder;
 			// we need to check that the embeddable is not used in a recursive hierarchy
 			var classDetails = embeddableClass;
 			while ( classDetails != null ) {
 				if ( propertyHolder.getClassName().equals( classDetails.getClassName() ) ) {
-					throw new MappingException( String.format(
-							Locale.ROOT,
-							"Recursive embeddable mapping detected for property '%s' for type [%s]",
-							getPath( propertyHolder, propertyData ),
-							propertyHolder.getClassName()
-					) );
+					throw new MappingException( "Recursive embeddable mapping detected for property '"
+												+ getPath( propertyHolder, propertyData )
+												+ "' of class '" + propertyHolder.getClassName() + "'" );
 				}
 				classDetails = classDetails.getSuperClass();
 			}
@@ -1137,7 +1169,7 @@ BOOT_LOGGER.bindingEmbeddable( subpath );
 			boolean isExplicitReference = true;
 			final List<AnnotatedJoinColumn> columns = joinColumns.getJoinColumns();
 			final Map<String, AnnotatedJoinColumn> columnByReferencedName = mapOfSize( columns.size() );
-			for ( AnnotatedJoinColumn joinColumn : columns ) {
+			for ( var joinColumn : columns ) {
 				if ( !joinColumn.isReferenceImplicit() ) {
 					//JPA 2 requires referencedColumnNames to be case-insensitive
 					columnByReferencedName.put( joinColumn.getReferencedColumn().toLowerCase( Locale.ROOT), joinColumn );
@@ -1151,8 +1183,8 @@ BOOT_LOGGER.bindingEmbeddable( subpath );
 				}
 			}
 
-			final MutableInteger index = new MutableInteger();
-			for ( Property referencedProperty : referencedComponent.getProperties() ) {
+			final var index = new MutableInteger();
+			for ( var referencedProperty : referencedComponent.getProperties() ) {
 				final Property property;
 				if ( referencedProperty.isComposite() ) {
 					property = createComponentProperty(
@@ -1260,7 +1292,7 @@ BOOT_LOGGER.bindingEmbeddable( subpath );
 			value.copyTypeFrom( referencedValue );
 
 			//TODO: this bit is nasty, move up to AnnotatedJoinColumns
-			final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
+			final var firstColumn = joinColumns.getJoinColumns().get(0);
 			if ( firstColumn.isNameDeferred() ) {
 				firstColumn.copyReferencedStructureAndCreateDefaultJoinColumns(
 						referencedPersistentClass,
@@ -1269,6 +1301,9 @@ BOOT_LOGGER.bindingEmbeddable( subpath );
 				);
 			}
 			else {
+				final var physicalNamingStrategy =
+						buildingContext.getBuildingOptions().getPhysicalNamingStrategy();
+				final var database = buildingContext.getMetadataCollector().getDatabase();
 				for ( var selectable : referencedValue.getSelectables() ) {
 					if ( selectable instanceof org.hibernate.mapping.Column column ) {
 						final AnnotatedJoinColumn joinColumn;
@@ -1296,9 +1331,8 @@ BOOT_LOGGER.bindingEmbeddable( subpath );
 										? "tata_" + column.getName()
 										: joinColumn.getName();
 
-						final var database = buildingContext.getMetadataCollector().getDatabase();
 						final String physicalName =
-								buildingContext.getBuildingOptions().getPhysicalNamingStrategy()
+								physicalNamingStrategy
 										.toPhysicalColumnName( database.toIdentifier( columnName ),
 												database.getJdbcEnvironment() )
 										.render( database.getDialect() );

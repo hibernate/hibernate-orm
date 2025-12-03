@@ -245,7 +245,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 		final String[] structColumnNames = component.getStructColumnNames();
 		if ( structColumnNames == null || structColumnNames.length == 0 ) {
 			final int[] propertyMappingIndex;
-			if ( ReflectHelper.isRecord( componentClass ) ) {
+			if ( componentClass.isRecord() ) {
 				if ( originalOrder == null ) {
 					propertyMappingIndex = null;
 				}

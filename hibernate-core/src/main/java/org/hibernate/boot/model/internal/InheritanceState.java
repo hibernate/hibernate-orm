@@ -33,6 +33,7 @@ import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
 import static jakarta.persistence.InheritanceType.TABLE_PER_CLASS;
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
 import static org.hibernate.boot.model.internal.PropertyBinder.hasIdAnnotation;
+import static org.hibernate.internal.util.ReflectHelper.OBJECT_CLASS_NAME;
 
 /**
  * Some extra data to the inheritance position of a class.
@@ -101,7 +102,7 @@ public class InheritanceState {
 				return currentState;
 			}
 		}
-		while ( candidate != null && !Object.class.getName().equals( candidate.getName() ) );
+		while ( candidate != null && !OBJECT_CLASS_NAME.equals( candidate.getName() ) );
 		return null;
 	}
 
@@ -116,7 +117,7 @@ public class InheritanceState {
 				return currentState;
 			}
 		}
-		while ( superclass != null && !Object.class.getName().equals( superclass.getName() ) );
+		while ( superclass != null && !OBJECT_CLASS_NAME.equals( superclass.getName() ) );
 		return null;
 	}
 
@@ -250,7 +251,7 @@ public class InheritanceState {
 
 	private AccessType determineDefaultAccessType() {
 		for ( ClassDetails candidate = classDetails; candidate != null; candidate = candidate.getSuperClass() ) {
-			if ( ( candidate.getSuperClass() == null || Object.class.getName().equals( candidate.getSuperClass().getName() ) )
+			if ( ( candidate.getSuperClass() == null || OBJECT_CLASS_NAME.equals( candidate.getSuperClass().getName() ) )
 					&& ( candidate.hasDirectAnnotationUsage( Entity.class ) || candidate.hasDirectAnnotationUsage( MappedSuperclass.class ) )
 					&& candidate.hasDirectAnnotationUsage( Access.class ) ) {
 				return AccessType.getAccessStrategy( candidate.getDirectAnnotationUsage( Access.class ).value() );
@@ -260,7 +261,7 @@ public class InheritanceState {
 		// FIX: Shouldn't this be determined by the first attribute (i.e., field or property) with annotations,
 		// but without an explicit Access annotation, according to JPA 2.0 spec 2.3.1: Default Access Type?
 		for ( ClassDetails candidate = classDetails;
-				candidate != null && !Object.class.getName().equals( candidate.getName() );
+				candidate != null && !OBJECT_CLASS_NAME.equals( candidate.getName() );
 				candidate = candidate.getSuperClass() ) {
 			if ( candidate.hasDirectAnnotationUsage( Entity.class )
 				|| candidate.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
@@ -295,7 +296,7 @@ public class InheritanceState {
 				superclassState = inheritanceStatePerClass.get( superClass );
 			}
 			while ( superClass != null
-					&& !Object.class.getName().equals( superClass.getClassName() )
+					&& !OBJECT_CLASS_NAME.equals( superClass.getClassName() )
 					&& superclassState == null );
 			currentClassInHierarchy = superClass;
 		}

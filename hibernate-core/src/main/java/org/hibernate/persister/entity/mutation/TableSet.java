@@ -34,6 +34,13 @@ public final class TableSet {
 		bits.set( tableMapping.getRelativePosition() );
 	}
 
+	public void remove(final TableMapping tableMapping) {
+		if ( bits != null ) {
+			assert addForChecks( tableMapping );
+			bits.set( tableMapping.getRelativePosition(), false );
+		}
+	}
+
 	public boolean isEmpty() {
 		return bits == null;
 	}

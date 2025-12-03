@@ -14,18 +14,14 @@ import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterc
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.bytecode.spi.NotInstrumentedException;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ManagedEntity;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CompositeType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -50,9 +46,9 @@ public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementM
 			CompositeType nonAggregatedCidMapper,
 			boolean collectionsInDefaultFetchGroupEnabled,
 			Metadata metadata) {
-		final Class<?> mappedClass = persistentClass.getMappedClass();
+		final var mappedClass = persistentClass.getMappedClass();
 		final boolean enhancedForLazyLoading = isPersistentAttributeInterceptableType( mappedClass );
-		final LazyAttributesMetadata lazyAttributesMetadata = enhancedForLazyLoading
+		final var lazyAttributesMetadata = enhancedForLazyLoading
 				? LazyAttributesMetadata.from( persistentClass, true, collectionsInDefaultFetchGroupEnabled, metadata )
 				: LazyAttributesMetadata.nonEnhanced( persistentClass.getEntityName() );
 
@@ -139,7 +135,7 @@ public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementM
 			return true;
 		}
 
-		final BytecodeLazyAttributeInterceptor interceptor = extractLazyInterceptor( entity );
+		final var interceptor = extractLazyInterceptor( entity );
 		if ( interceptor instanceof LazyAttributeLoadingInterceptor ) {
 			return interceptor.isAttributeLoaded( attributeName );
 		}
@@ -154,12 +150,12 @@ public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementM
 
 	@Override
 	public PersistentAttributeInterceptable createEnhancedProxy(EntityKey entityKey, boolean addEmptyEntry, SharedSessionContractImplementor session) {
-		final EntityPersister persister = entityKey.getPersister();
+		final var persister = entityKey.getPersister();
 		final Object identifier = entityKey.getIdentifier();
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final var persistenceContext = session.getPersistenceContext();
 
 		// first, instantiate the entity instance to use as the proxy
-		final PersistentAttributeInterceptable entity = asPersistentAttributeInterceptable( persister.instantiate( identifier, session ) );
+		final var entity = asPersistentAttributeInterceptable( persister.instantiate( identifier, session ) );
 
 		// clear the fields that are marked as dirty in the dirtiness tracker
 		processIfSelfDirtinessTracker( entity, BytecodeEnhancementMetadataPojoImpl::clearDirtyAttributes );
@@ -170,8 +166,8 @@ public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementM
 
 		// if requested, add the "holder entry" to the PC
 		if ( addEmptyEntry ) {
-			EntityHolder entityHolder = persistenceContext.getEntityHolder( entityKey );
-			EntityEntry entityEntry = persistenceContext.addEntry(
+			final var entityHolder = persistenceContext.getEntityHolder( entityKey );
+			final var entityEntry = persistenceContext.addEntry(
 					entity,
 					Status.MANAGED,
 					// loaded state
@@ -223,14 +219,12 @@ public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementM
 					)
 			);
 		}
-		final LazyAttributeLoadingInterceptor interceptor = new LazyAttributeLoadingInterceptor(
-				this.lazyAttributeLoadingInterceptorState,
+		final var interceptor = new LazyAttributeLoadingInterceptor(
+				lazyAttributeLoadingInterceptorState,
 				identifier,
 				session
 		);
-
 		injectInterceptor( entity, interceptor, session );
-
 		return interceptor;
 	}
 
@@ -257,10 +251,11 @@ public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementM
 	//This state object needs to be lazily initialized as it needs access to the Persister, but once
 	//initialized it can be reused across multiple sessions.
 	public EnhancementAsProxyLazinessInterceptor.EntityRelatedState getEnhancementAsProxyLazinessInterceptorMetastate(SharedSessionContractImplementor session) {
-		EnhancementAsProxyLazinessInterceptor.EntityRelatedState state = this.enhancementAsProxyInterceptorState;
+		var state = this.enhancementAsProxyInterceptorState;
 		if ( state == null ) {
-			final EntityPersister entityPersister = session.getFactory().getMappingMetamodel()
-					.getEntityDescriptor( entityName );
+			final var entityPersister =
+					session.getFactory().getMappingMetamodel()
+							.getEntityDescriptor( entityName );
 			state = new EnhancementAsProxyLazinessInterceptor.EntityRelatedState(
 					entityPersister,
 					nonAggregatedCidMapper,

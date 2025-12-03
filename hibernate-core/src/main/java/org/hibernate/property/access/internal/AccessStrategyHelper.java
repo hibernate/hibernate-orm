@@ -27,7 +27,6 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttrib
 import static org.hibernate.internal.util.ReflectHelper.NO_PARAM_SIGNATURE;
 import static org.hibernate.internal.util.ReflectHelper.findField;
 import static org.hibernate.internal.util.ReflectHelper.getterMethodOrNull;
-import static org.hibernate.internal.util.ReflectHelper.isRecord;
 
 /**
  * @author Steve Ebersole
@@ -64,7 +63,7 @@ public class AccessStrategyHelper {
 	}
 
 	public static @Nullable AccessType getExplicitAccessType(Class<?> containerClass, String propertyName, @Nullable Field field) {
-		if ( isRecord( containerClass ) ) {
+		if ( containerClass.isRecord() ) {
 			try {
 				containerClass.getMethod( propertyName, NO_PARAM_SIGNATURE );
 				return AccessType.PROPERTY;

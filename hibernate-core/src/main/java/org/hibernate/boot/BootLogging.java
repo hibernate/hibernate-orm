@@ -45,7 +45,6 @@ public interface BootLogging extends BasicLogger {
 	@Message(id = 160101, value = "Duplicate generator name: '%s'")
 	void duplicateGeneratorName(String name);
 
-
 	@LogMessage(level = DEBUG)
 	@Message(id = 160111, value = "Package not found or no package-info.java: %s")
 	void packageNotFound(String packageName);
@@ -84,7 +83,6 @@ public interface BootLogging extends BasicLogger {
 					@ManyToOne and @OneToOne associations mapped with @NotFound are forced to EAGER fetching""")
 	void ignoreNotFoundWithFetchTypeLazy(String entity, String association);
 
-	// --- New typed TRACE/DEBUG messages for boot internals ---
 	@LogMessage(level = TRACE)
 	@Message(id = 160140, value = "Binding formula: %s")
 	void bindingFormula(String formula);
@@ -449,4 +447,12 @@ public interface BootLogging extends BasicLogger {
 	@LogMessage(level = DEBUG)
 	@Message(id = 160244, value = "Skipping HBM processing of entity hierarchy [%s], as at least one entity [%s] has been processed")
 	void skippingHbmProcessingOfEntityHierarchy(String rootEntityName, String processedEntity);
+
+	@LogMessage(level = WARN)
+	@Message(id = 160245, value = "Association '%s' is 'mappedBy' another entity and should not specify a '@MapKeyColumn' (use '@MapKey' instead)")
+	void mappedByShouldNotSpecifyMapKeyColumn(String associationPath);
+
+	@LogMessage(level = WARN)
+	@Message(id = 160246, value = "Association '%s' is 'mappedBy' another entity and should not specify an '@OrderColumn' (use '@OrderBy' instead)")
+	void mappedByShouldNotSpecifyOrderColumn(String associationPath);
 }

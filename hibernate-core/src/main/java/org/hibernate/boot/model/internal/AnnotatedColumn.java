@@ -235,9 +235,7 @@ public class AnnotatedColumn {
 
 	public void bind() {
 		if ( isNotEmpty( formulaString ) ) {
-if ( BOOT_LOGGER.isTraceEnabled() ) {
-				BOOT_LOGGER.bindingFormula( formulaString );
-			}
+			BOOT_LOGGER.bindingFormula( formulaString );
 			formula = new Formula();
 			formula.setFormula( formulaString );
 		}
@@ -269,7 +267,7 @@ if ( BOOT_LOGGER.isTraceEnabled() ) {
 			if ( generatedAs != null ) {
 				mappingColumn.setGeneratedAs( generatedAs );
 			}
-if ( BOOT_LOGGER.isDebugEnabled() && logicalColumnName != null ) {
+			if ( logicalColumnName != null ) {
 				BOOT_LOGGER.bindingColumn( logicalColumnName );
 			}
 		}
@@ -770,7 +768,7 @@ if ( BOOT_LOGGER.isDebugEnabled() && logicalColumnName != null ) {
 						+ " columns (every column must have exactly one '@AttributeOverride')" );
 			}
 			if ( BOOT_LOGGER.isTraceEnabled() ) {
-	BOOT_LOGGER.columnMappingOverridden( inferredData.getPropertyName() );
+				BOOT_LOGGER.columnMappingOverridden( inferredData.getPropertyName() );
 			}
 			return isEmpty( overriddenCols ) ? null : overriddenCols;
 		}
@@ -930,7 +928,7 @@ if ( BOOT_LOGGER.isDebugEnabled() && logicalColumnName != null ) {
 			}
 		}
 		else {
-BOOT_LOGGER.couldNotPerformColumnDefaultLookup();
+			BOOT_LOGGER.couldNotPerformColumnDefaultLookup();
 		}
 	}
 
@@ -951,7 +949,7 @@ BOOT_LOGGER.couldNotPerformColumnDefaultLookup();
 			}
 		}
 		else {
-BOOT_LOGGER.couldNotPerformGeneratedColumnLookup();
+			BOOT_LOGGER.couldNotPerformGeneratedColumnLookup();
 		}
 }
 
@@ -994,9 +992,9 @@ BOOT_LOGGER.couldNotPerformGeneratedColumnLookup();
 			}
 		}
 		else {
-BOOT_LOGGER.couldNotPerformCheckLookup();
+			BOOT_LOGGER.couldNotPerformCheckLookup();
 		}
-}
+	}
 
 	//must only be called after all setters are defined and before binding
 	private void extractDataFromPropertyData(

@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.criteria.Root;
+import org.assertj.core.api.AssertionsForClassTypes;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
@@ -42,8 +43,12 @@ import org.junit.jupiter.api.Test;
 import java.nio.charset.StandardCharsets;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.util.ArrayDeque;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -53,12 +58,14 @@ import static org.hamcrest.Matchers.isA;
 import static org.hamcrest.Matchers.isOneOf;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.hibernate.type.SqlTypes.JSON;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Christian Beikov
  * @author Yanming Zhou
  */
-@DomainModel(annotatedClasses = JsonMappingTests.EntityWithJson.class)
+@DomainModel(annotatedClasses = {JsonMappingTests.EntityWithJson.class, JsonMappingTests.EntityWithObjectJson.class})
 @SessionFactory
 public abstract class JsonMappingTests {
 
@@ -75,6 +82,75 @@ public abstract class JsonMappingTests {
 
 		public Jackson() {
 			super( false );
+		}
+
+		@Test
+		@JiraKey( "https://hibernate.atlassian.net/browse/HHH-19969" )
+		public void jsonMappedToObjectTest(SessionFactoryScope scope) {
+			scope.inTransaction(
+					session -> {
+						var entity = new EntityWithObjectJson();
+						entity.id = 1L;
+						entity.json = Map.of("a", 1, "b", 2);
+						session.persist(entity);
+
+						entity = new EntityWithObjectJson();
+						entity.id = 2L;
+						entity.json = List.<Object>of("c", 11, 22, "d");
+						session.persist(entity);
+
+						entity = new EntityWithObjectJson();
+						entity.id = 3L;
+						entity.json = Set.<Object>of("s1", 2, "s3");
+						session.persist(entity);
+
+						entity = new EntityWithObjectJson();
+						entity.id = 4L;
+						Queue<Integer> ad = new ArrayDeque<>();
+						ad.add(2);
+						ad.add(1);
+						ad.add(3);
+						entity.json = ad;
+						session.persist(entity);
+
+						entity = new EntityWithObjectJson();
+						entity.id = 5L;
+						Dictionary<Integer, String> ht = new Hashtable<>();
+						ht.put(1, "one");
+						ht.put(2, "two");
+						ht.put(3, "three");
+						entity.json = ht;
+						session.persist(entity);
+					}
+			);
+			scope.inTransaction(
+					session -> {
+						var entity = session.find( EntityWithObjectJson.class, 1L );
+						AssertionsForClassTypes.assertThat( entity ).isNotNull();
+						AssertionsForClassTypes.assertThat( entity.json ).isInstanceOf( Map.class );
+						assertEquals( 2, ((Map<?,?>)entity.json).size() );
+
+						entity = session.find( EntityWithObjectJson.class, 2L );
+						AssertionsForClassTypes.assertThat( entity ).isNotNull();
+						AssertionsForClassTypes.assertThat( entity.json ).isInstanceOf( List.class );
+						assertEquals( 4, ((List<?>)entity.json).size() );
+
+						entity = session.find( EntityWithObjectJson.class, 3L );
+						AssertionsForClassTypes.assertThat( entity ).isNotNull();
+						AssertionsForClassTypes.assertThat( entity.json ).isInstanceOf( List.class );
+						assertEquals( 3, ((List<?>)entity.json).size() );
+
+						entity = session.find( EntityWithObjectJson.class, 4L );
+						AssertionsForClassTypes.assertThat( entity ).isNotNull();
+						AssertionsForClassTypes.assertThat( entity.json ).isInstanceOf( List.class );
+						assertEquals( 3, ((List<?>)entity.json).size() );
+
+						entity = session.find( EntityWithObjectJson.class, 5L );
+						AssertionsForClassTypes.assertThat( entity ).isNotNull();
+						AssertionsForClassTypes.assertThat( entity.json ).isInstanceOf( Map.class );
+						assertEquals( 3, ((Map<?,?>)entity.json).size() );
+					}
+			);
 		}
 	}
 
@@ -238,15 +314,13 @@ public abstract class JsonMappingTests {
 							.get( 0 );
 					final String jsonText;
 					try {
-						if ( nativeJson instanceof Blob ) {
-							final Blob blob = (Blob) nativeJson;
+						if ( nativeJson instanceof Blob blob ) {
 							jsonText = new String(
 									blob.getBytes( 1L, (int) blob.length() ),
 									StandardCharsets.UTF_8
 							);
 						}
-						else if ( nativeJson instanceof Clob ) {
-							final Clob jsonClob = (Clob) nativeJson;
+						else if ( nativeJson instanceof Clob jsonClob ) {
 							jsonText = jsonClob.getSubString( 1L, (int) jsonClob.length() );
 						}
 						else {
@@ -374,6 +448,23 @@ public abstract class JsonMappingTests {
 		@Override
 		public int hashCode() {
 			return string != null ? string.hashCode() : 0;
+		}
+	}
+
+	@Entity
+	public static class EntityWithObjectJson {
+		@Id
+		long id;
+
+		@JdbcTypeCode(JSON)
+		Object json;
+
+		public EntityWithObjectJson() {
+		}
+
+		public EntityWithObjectJson(long id, Object json) {
+			this.id = id;
+			this.json = json;
 		}
 	}
 }

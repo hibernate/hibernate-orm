@@ -5,6 +5,8 @@ import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
 import org.apache.commons.collections4.list.UnmodifiableList;
 import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
+import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
@@ -14,11 +16,11 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.internal.util.DummyDialect;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.lang.reflect.*;
 import java.nio.file.Files;
@@ -174,14 +176,67 @@ public class MappingExporterTest {
         marshallMethod.invoke(mappingExporter, null, hbmFile);
         lines = Files.readAllLines(mappingFile.toPath());
         assertEquals(4, lines.size());
+        Field formatResultField = MappingExporter.class.getDeclaredField("formatResult");
+        formatResultField.setAccessible(true);
+        formatResultField.set(mappingExporter, false);
+        Files.writeString(mappingFile.toPath(), "<foo><bar>foobar</bar></foo>");
+        lines = Files.readAllLines(mappingFile.toPath());
+        assertEquals(1, lines.size());
+        marshallMethod.invoke(mappingExporter, null, hbmFile);
+        lines = Files.readAllLines(mappingFile.toPath());
+        assertEquals(1, lines.size());
     }
 
-    @Disabled
     @Test
-    public void testStart() {
-        MappingExporter exporter = new MappingExporter();
-        assertNotNull(exporter);
-        exporter.start();
+    public void testTransformBindings() throws Exception {
+        File simpleHbmXmlFile = new File(this.tempDir, "simple.hbm.xml");
+        Files.writeString(simpleHbmXmlFile.toPath(), SIMPLE_HBM_XML);
+        MappingBinder mappingBinder = new MappingBinder(
+                MappingBinder.class.getClassLoader()::getResourceAsStream,
+                UnsupportedFeatureHandling.ERROR);
+        Binding<JaxbHbmHibernateMapping> hbmBinding = mappingBinder.bind(
+                new FileInputStream(simpleHbmXmlFile),
+                new HbmXmlOrigin(simpleHbmXmlFile));
+        List<Binding<JaxbHbmHibernateMapping>> bindings = new ArrayList<>();
+        bindings.add(hbmBinding);
+        Method transformBindingsMethod = MappingExporter.class.getDeclaredMethod(
+                "transformBindings",
+                List.class);
+        assertNotNull(transformBindingsMethod);
+        transformBindingsMethod.setAccessible(true);
+        List<?> transformedBindings = (List<?>)transformBindingsMethod.invoke(mappingExporter, bindings);
+        assertNotNull(transformedBindings);
+        assertEquals(1, transformedBindings.size());
+        Object object = transformedBindings.get(0);
+        assertInstanceOf(Binding.class, object);
+        Binding<?> entityBinding = (Binding<?>)object;
+        Origin origin = entityBinding.getOrigin();
+        assertInstanceOf(HbmXmlOrigin.class, origin);
+        assertSame(simpleHbmXmlFile, ((HbmXmlOrigin)origin).getHbmXmlFile());
+        Object root = entityBinding.getRoot();
+        assertInstanceOf(JaxbEntityMappingsImpl.class, root);
+        JaxbEntityMappingsImpl entityMappings = (JaxbEntityMappingsImpl)root;
+        assertEquals(1, entityMappings.getEntities().size());
+        assertEquals("Foo", entityMappings.getEntities().get(0).getClazz());
+    }
+
+    @Test
+    public void testStart() throws Exception {
+        File simpleHbmXmlFile = new File(this.tempDir, "simple.hbm.xml");
+        File simpleMappingXmlFile = new File(this.tempDir, "simple.mapping.xml");
+        Files.writeString(simpleHbmXmlFile.toPath(), SIMPLE_HBM_XML);
+        Field hbmFilesField = MappingExporter.class.getDeclaredField("hbmXmlFiles");
+        hbmFilesField.setAccessible(true);
+        hbmFilesField.set(
+                mappingExporter,
+                new UnmodifiableList<>(List.of(simpleHbmXmlFile)));
+        assertTrue(simpleHbmXmlFile.exists());
+        assertFalse(simpleMappingXmlFile.exists());
+        mappingExporter.start();
+        assertTrue(simpleMappingXmlFile.exists());
+        String mappingXml = Files.readString(simpleMappingXmlFile.toPath());
+        assertTrue(mappingXml.contains("entity-mappings"));
+        System.out.println(mappingXml);
     }
 
     private static final Marshaller DUMMY_MARSHALLER = (Marshaller) Proxy.newProxyInstance(
@@ -224,5 +279,15 @@ public class MappingExporterTest {
             };
         }
     }
+
+    private static final String SIMPLE_HBM_XML =
+                """
+                        <hibernate-mapping>
+                        	<class name="Foo">
+                        		<id name="id" type="long"/>
+                        		<property name="name" type="string"/>
+                        	</class>
+                        </hibernate-mapping>
+                    """;
 
 }

@@ -58,19 +58,22 @@ public class MappingExporter implements Exporter {
     @Override
     public void start() {
         List<Binding<JaxbHbmHibernateMapping>> hbmBindings = getHbmBindings();
+        List<Binding<JaxbEntityMappingsImpl>> transformedBindings = transformBindings(hbmBindings);
+        for (int i = 0; i < hbmBindings.size(); i++) {
+            marshall(
+                    transformedBindings.get(i).getRoot(),
+                    ((HbmXmlOrigin)hbmBindings.get(i).getOrigin()).getHbmXmlFile());
+        }
+    }
+
+    private List<Binding<JaxbEntityMappingsImpl>> transformBindings(
+            List<Binding<JaxbHbmHibernateMapping>> hbmBindings) {
         MetadataSources metadataSources = new MetadataSources( createServiceRegistry() );
         hbmBindings.forEach( metadataSources::addHbmXmlBinding );
-        List<Binding<JaxbEntityMappingsImpl>> transformedBindings = HbmXmlTransformer.transform(
+        return HbmXmlTransformer.transform(
                 hbmBindings,
                 (MetadataImplementor) metadataSources.buildMetadata(),
-                UnsupportedFeatureHandling.ERROR
-        );
-        for (int i = 0; i < hbmBindings.size(); i++) {
-            Binding<JaxbHbmHibernateMapping> hbmBinding = hbmBindings.get( i );
-            Binding<JaxbEntityMappingsImpl> transformedBinding = transformedBindings.get( i );
-            HbmXmlOrigin origin = (HbmXmlOrigin)hbmBinding.getOrigin();
-            marshall(transformedBinding.getRoot(), origin.getHbmXmlFile());
-        }
+                UnsupportedFeatureHandling.ERROR);
     }
 
     private ServiceRegistry createServiceRegistry() {

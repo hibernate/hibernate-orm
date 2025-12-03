@@ -55,7 +55,7 @@ public class MappingExporter implements Exporter {
 
     @Override
     public void start() {
-        List<Binding<JaxbHbmHibernateMapping>> hbmBindings = getHbmMappings();
+        List<Binding<JaxbHbmHibernateMapping>> hbmBindings = getHbmBindings();
         Marshaller marshaller = createMarshaller(mappingBinder);
         MetadataSources metadataSources = new MetadataSources( createServiceRegistry() );
         hbmBindings.forEach( metadataSources::addHbmXmlBinding );
@@ -86,20 +86,19 @@ public class MappingExporter implements Exporter {
                 UnsupportedFeatureHandling.ERROR);
     }
 
-    private List<Binding<JaxbHbmHibernateMapping>> getHbmMappings() {
+    private List<Binding<JaxbHbmHibernateMapping>> getHbmBindings() {
         List<Binding<JaxbHbmHibernateMapping>> result = new ArrayList<>();
         hbmXmlFiles.forEach((hbmXmlFile) -> {
             final String fullPath = hbmXmlFile.getAbsolutePath();
             LOGGER.info("Adding file: '" + fullPath + "' to the list to be transformed.");
             HbmXmlOrigin origin = new HbmXmlOrigin( hbmXmlFile );
-            Binding<JaxbHbmHibernateMapping> binding = bindMapping( mappingBinder, origin );
+            Binding<JaxbHbmHibernateMapping> binding = bindHbmXml( origin );
             result.add(binding);
         });
         return result;
     }
 
-    private Binding<JaxbHbmHibernateMapping> bindMapping(
-            MappingBinder mappingBinder, HbmXmlOrigin origin) {
+    private Binding<JaxbHbmHibernateMapping> bindHbmXml(HbmXmlOrigin origin) {
         File hbmXmlFile = origin.getHbmXmlFile();
         try ( final FileInputStream fileStream = new FileInputStream(hbmXmlFile) ) {
             return mappingBinder.bind( fileStream, origin );

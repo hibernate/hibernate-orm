@@ -91,18 +91,20 @@ public class MappingExporterTest {
     }
 
     @Test
-    public void testBindMapping() throws Exception{
+    public void testBindHbmXml() throws Exception{
         Method bindMappingMethod = MappingExporter.class.getDeclaredMethod(
-                "bindMapping",
-                MappingBinder.class,
+                "bindHbmXml",
                 HbmXmlOrigin.class);
         assertNotNull(bindMappingMethod);
         bindMappingMethod.setAccessible(true);
         File file = new File(this.tempDir, "foo.bar");
         Files.writeString(file.toPath(), "foobar");
         final MappingBinder mappingBinder = new TestMappingBinder(file, "barfoo");
+        Field mappingBinderField = MappingExporter.class.getDeclaredField("mappingBinder");
+        mappingBinderField.setAccessible(true);
+        mappingBinderField.set(mappingExporter, mappingBinder);
         assertNotEquals("barfoo", Files.readString(file.toPath()));
-        Object object = bindMappingMethod.invoke(mappingExporter, mappingBinder, new HbmXmlOrigin(file));
+        Object object = bindMappingMethod.invoke(mappingExporter, new HbmXmlOrigin(file));
         assertInstanceOf(Binding.class, object);
         Origin origin = ((Binding<?>)object).getOrigin();
         assertInstanceOf(HbmXmlOrigin.class, origin);
@@ -111,8 +113,8 @@ public class MappingExporterTest {
     }
 
     @Test
-    public void testGetHbmMappings() throws Exception {
-        Method getHbmMappingsMethod = MappingExporter.class.getDeclaredMethod("getHbmMappings");
+    public void testGetHbmBindings() throws Exception {
+        Method getHbmMappingsMethod = MappingExporter.class.getDeclaredMethod("getHbmBindings");
         assertNotNull(getHbmMappingsMethod);
         getHbmMappingsMethod.setAccessible(true);
         Field hbmFilesField = MappingExporter.class.getDeclaredField("hbmXmlFiles");

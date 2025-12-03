@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.mapping.naturalid.idclass;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -156,6 +157,7 @@ public class SimpleNaturalIdClassTests {
 		@Id
 		private Integer id;
 		@NaturalId
+		@Column(name = "sys")
 		private String system;
 		@NaturalId
 		private String username;

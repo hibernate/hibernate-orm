@@ -35,6 +35,11 @@ public interface EntityHolder {
 	 * Will be {@code null} if entity is initialized already or the entity holder is not claimed yet.
 	 */
 	@Nullable EntityInitializer<?> getEntityInitializer();
+	/**
+	 * The {@link JdbcValuesSourceProcessingState} for the entity initializer that claims to initialize the entity for this holder.
+	 * Will be {@code null} if entity is initialized already or the entity holder is not claimed yet.
+	 */
+	@Nullable JdbcValuesSourceProcessingState getJdbcValuesProcessingState();
 
 	/**
 	 * The proxy if there is one and otherwise the entity.

@@ -45,6 +45,9 @@ public class MappingExporterTest {
         Field mappingBinderField = MappingExporter.class.getDeclaredField("mappingBinder");
         mappingBinderField.setAccessible(true);
         assertNotNull(mappingBinderField.get(mappingExporter));
+        Field marshallerField = MappingExporter.class.getDeclaredField("marshaller");
+        marshallerField.setAccessible(true);
+        assertNotNull(marshallerField.get(mappingExporter));
     }
 
     @Test
@@ -140,32 +143,35 @@ public class MappingExporterTest {
 
     @Test
     public void testCreateMarshaller() throws Exception {
-        Method createMarshallerMethod = MappingExporter.class.getDeclaredMethod(
-                "createMarshaller",
-                MappingBinder.class);
+        Method createMarshallerMethod = MappingExporter.class.getDeclaredMethod("createMarshaller");
         assertNotNull(createMarshallerMethod);
         createMarshallerMethod.setAccessible(true);
         final MappingBinder mappingBinder = new TestMappingBinder(new File("foo"), "foobar");
+        Field mappingBinderField = MappingExporter.class.getDeclaredField("mappingBinder");
+        mappingBinderField.setAccessible(true);
+        mappingBinderField.set(mappingExporter, mappingBinder);
         assertSame(
                 DUMMY_MARSHALLER,
-                createMarshallerMethod.invoke(mappingExporter, mappingBinder));
+                createMarshallerMethod.invoke(mappingExporter));
     }
 
     @Test
     public void testMarshall() throws Exception {
         Method marshallMethod = MappingExporter.class.getDeclaredMethod(
                 "marshall",
-                Marshaller.class,
                 JaxbEntityMappingsImpl.class,
                 File.class);
         assertNotNull(marshallMethod);
         marshallMethod.setAccessible(true);
+        Field marshallerField = MappingExporter.class.getDeclaredField("marshaller");
+        marshallerField.setAccessible(true);
+        marshallerField.set(mappingExporter, DUMMY_MARSHALLER);
         File hbmFile = new File(this.tempDir, "foo.hbm.xml");
         File mappingFile = new File(this.tempDir, "foo.mapping.xml");
         Files.writeString(mappingFile.toPath(), "<foo><bar>foobar</bar></foo>");
         List<String> lines = Files.readAllLines(mappingFile.toPath());
         assertEquals(1, lines.size());
-        marshallMethod.invoke(mappingExporter, DUMMY_MARSHALLER, null, hbmFile);
+        marshallMethod.invoke(mappingExporter, null, hbmFile);
         lines = Files.readAllLines(mappingFile.toPath());
         assertEquals(4, lines.size());
     }

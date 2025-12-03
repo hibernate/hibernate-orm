@@ -35,9 +35,11 @@ public class MappingExporter implements Exporter {
     private boolean formatResult = true;
 
     private final MappingBinder mappingBinder;
+    private final Marshaller marshaller;
 
     public MappingExporter() {
         mappingBinder = createMappingBinder();
+        marshaller = createMarshaller();
      }
 
     public void setHbmFiles(List<File> fileList) {
@@ -56,7 +58,6 @@ public class MappingExporter implements Exporter {
     @Override
     public void start() {
         List<Binding<JaxbHbmHibernateMapping>> hbmBindings = getHbmBindings();
-        Marshaller marshaller = createMarshaller(mappingBinder);
         MetadataSources metadataSources = new MetadataSources( createServiceRegistry() );
         hbmBindings.forEach( metadataSources::addHbmXmlBinding );
         List<Binding<JaxbEntityMappingsImpl>> transformedBindings = HbmXmlTransformer.transform(
@@ -68,7 +69,7 @@ public class MappingExporter implements Exporter {
             Binding<JaxbHbmHibernateMapping> hbmBinding = hbmBindings.get( i );
             Binding<JaxbEntityMappingsImpl> transformedBinding = transformedBindings.get( i );
             HbmXmlOrigin origin = (HbmXmlOrigin)hbmBinding.getOrigin();
-            marshall(marshaller, transformedBinding.getRoot(), origin.getHbmXmlFile());
+            marshall(transformedBinding.getRoot(), origin.getHbmXmlFile());
         }
     }
 
@@ -109,7 +110,7 @@ public class MappingExporter implements Exporter {
         }
     }
 
-    private Marshaller createMarshaller(MappingBinder mappingBinder) {
+    private Marshaller createMarshaller() {
         try {
             return mappingBinder.mappingJaxbContext().createMarshaller();
         }
@@ -119,7 +120,6 @@ public class MappingExporter implements Exporter {
     }
 
     private void marshall(
-            Marshaller marshaller,
             JaxbEntityMappingsImpl mappings,
             File hbmXmlFile) {
         File mappingXmlFile =  new File(

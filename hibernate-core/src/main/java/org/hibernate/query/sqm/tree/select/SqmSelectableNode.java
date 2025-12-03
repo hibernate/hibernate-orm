@@ -11,6 +11,7 @@ import jakarta.persistence.criteria.Selection;
 
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 
@@ -35,7 +36,8 @@ public interface SqmSelectableNode<T> extends JpaSelection<T>, SqmTypedNode<T> {
 	SqmSelectableNode<T> copy(SqmCopyContext context);
 
 	default Integer getTupleLength() {
-		final DomainType<T> sqmType = getNodeType() == null ? null : getNodeType().getSqmType();
+		final SqmExpressible<T> nodeType = getExpressible();
+		final DomainType<T> sqmType = nodeType == null ? null : nodeType.getSqmType();
 		return sqmType == null ? 1 : sqmType.getTupleLength();
 	}
 }

@@ -1249,7 +1249,12 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 					}
 				}
 				else if ( data.entityHolder.getEntityInitializer() != this ) {
-					data.setState( State.INITIALIZED );
+					// The other initializer will take care of initialization
+					if ( !hasLazyInitializingSubAssemblers ) {
+						// but we can only skip the initialization phase of this initializer,
+						// if this initializer does not initialize lazy basic attributes
+						data.setState( State.INITIALIZED );
+					}
 				}
 				else if ( data.shallowCached ) {
 					// For shallow cached entities, only the id is available, so ensure we load the data immediately

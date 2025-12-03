@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 import jakarta.persistence.criteria.Selection;
 
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
@@ -33,7 +34,8 @@ public interface SqmSelectableNode<T> extends JpaSelection<T>, SqmTypedNode<T> {
 	SqmSelectableNode<T> copy(SqmCopyContext context);
 
 	default Integer getTupleLength() {
-		final SqmDomainType<T> sqmType = getNodeType() == null ? null : getNodeType().getSqmType();
+		final SqmBindableType<T> nodeType = getExpressible();
+		final SqmDomainType<T> sqmType = nodeType == null ? null : nodeType.getSqmType();
 		return sqmType == null ? 1 : sqmType.getTupleLength();
 	}
 }

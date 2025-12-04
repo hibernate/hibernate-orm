@@ -1113,6 +1113,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsIntervalSecondType implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesDdlType( dialect, SqlTypes.INTERVAL_SECOND );
+		}
+	}
+
 	public static class SupportsVectorType implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesDdlType( dialect, SqlTypes.VECTOR );

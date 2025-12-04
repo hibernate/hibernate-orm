@@ -4,6 +4,7 @@
  */
 package org.hibernate.event.spi;
 
+import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
@@ -66,32 +67,36 @@ public class LoadEvent extends AbstractSessionEvent {
 			boolean isAssociationFetch,
 			EventSource source,
 			Boolean readOnly) {
-
 		super( source );
-
-		if ( entityId == null ) {
-			throw new IllegalArgumentException( "id to load is required for loading" );
-		}
-
-		if ( lockOptions.getLockMode() == LockMode.WRITE ) {
-			throw new IllegalArgumentException("Invalid lock mode for loading");
-		}
-		else if ( lockOptions.getLockMode() == null ) {
-			lockOptions.setLockMode( LockMode.NONE );
-		}
-
 		this.entityId = entityId;
 		this.entityClassName = entityClassName;
 		this.instanceToLoad = instanceToLoad;
 		this.lockOptions = lockOptions;
 		this.isAssociationFetch = isAssociationFetch;
 		this.readOnly = readOnly;
+		validate();
+	}
+
+	@Internal
+	public void validate() {
+		if ( entityId == null ) {
+			throw new IllegalArgumentException( "Identifier may not be null" );
+		}
+
+		final var lockMode = lockOptions.getLockMode();
+		if ( lockMode == LockMode.WRITE ) {
+			throw new IllegalArgumentException( "Invalid lock mode: " + LockMode.WRITE );
+		}
+		else if ( lockMode == null ) {
+			lockOptions.setLockMode( LockMode.NONE );
+		}
 	}
 
 	public Object getEntityId() {
 		return entityId;
 	}
 
+	@Internal
 	public void setEntityId(Object entityId) {
 		this.entityId = entityId;
 	}
@@ -100,6 +105,7 @@ public class LoadEvent extends AbstractSessionEvent {
 		return entityClassName;
 	}
 
+	@Internal
 	public void setEntityClassName(String entityClassName) {
 		this.entityClassName = entityClassName;
 	}
@@ -108,6 +114,7 @@ public class LoadEvent extends AbstractSessionEvent {
 		return isAssociationFetch;
 	}
 
+	@Internal
 	public void setAssociationFetch(boolean associationFetch) {
 		isAssociationFetch = associationFetch;
 	}
@@ -116,6 +123,7 @@ public class LoadEvent extends AbstractSessionEvent {
 		return instanceToLoad;
 	}
 
+	@Internal
 	public void setInstanceToLoad(Object instanceToLoad) {
 		this.instanceToLoad = instanceToLoad;
 	}
@@ -124,6 +132,7 @@ public class LoadEvent extends AbstractSessionEvent {
 		return lockOptions;
 	}
 
+	@Internal
 	public void setLockOptions(LockOptions lockOptions) {
 		this.lockOptions = lockOptions;
 	}
@@ -140,11 +149,10 @@ public class LoadEvent extends AbstractSessionEvent {
 		return readOnly;
 	}
 
+	@Internal
 	public void setReadOnly(Boolean readOnly) {
 		this.readOnly = readOnly;
 	}
-
-
 
 	/**
 	 * @deprecated Use {@linkplain #getLockOptions()} instead.

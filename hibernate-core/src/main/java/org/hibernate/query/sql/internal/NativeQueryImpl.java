@@ -554,6 +554,14 @@ public class NativeQueryImpl<R>
 		return callback != null && callback.hasAfterLoadActions();
 	}
 
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	@Override
+	protected void resetCallback() {
+		callback = null;
+	}
+
 	@Override
 	public QueryParameterBindings getQueryParameterBindings() {
 		return parameterBindings;
@@ -722,14 +730,17 @@ public class NativeQueryImpl<R>
 				getSession().flush();
 			}
 			// Reset the callback before every execution
-			callback = null;
+			resetCallback();
 		}
 		// Otherwise, the application specified query spaces via the Hibernate
 		// SynchronizeableQuery and so the query will already perform a partial
 		// flush according to the defined query spaces - no need for a full flush.
 	}
 
-	private boolean shouldFlush() {
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected boolean shouldFlush() {
 		if ( getSession().isTransactionInProgress() ) {
 			final var flushMode = getQueryOptions().getFlushMode();
 			return switch ( flushMode == null ? getSession().getHibernateFlushMode() : flushMode ) {

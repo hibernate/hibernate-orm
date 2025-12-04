@@ -68,7 +68,7 @@ public class InferredBasicValueResolver {
 		final var typeConfiguration = bootstrapContext.getTypeConfiguration();
 		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 
-		final var reflectedJtd = reflectedJtdResolver.get();
+		final JavaType<T> reflectedJtd;
 
 		// NOTE: the distinction that is made below wrt `explicitJavaType` and `reflectedJtd`
 		//       is needed temporarily to trigger "legacy resolution" versus "ORM6 resolution.
@@ -110,7 +110,7 @@ public class InferredBasicValueResolver {
 				}
 			}
 		}
-		else if ( reflectedJtd != null ) {
+		else if ( ( reflectedJtd = reflectedJtdResolver.get() ) != null ) {
 			// we were able to determine the "reflected java-type"
 			// Use JTD if we know it to apply any specialized resolutions
 			if ( reflectedJtd instanceof EnumJavaType enumJavaType ) {
@@ -150,7 +150,7 @@ public class InferredBasicValueResolver {
 
 				if ( registeredType != null ) {
 					// so here is the legacy resolution
-					jdbcMapping = resolveSqlTypeIndicators( stdIndicators, registeredType, reflectedJtd );
+					jdbcMapping = resolveSqlTypeIndicators( stdIndicators, registeredType, registeredType.getJavaTypeDescriptor() );
 				}
 				else {
 					// there was not a "legacy" BasicType registration,
@@ -311,7 +311,11 @@ public class InferredBasicValueResolver {
 					pluralJavaType.resolveType(
 							bootstrapContext.getTypeConfiguration(),
 							dialect,
-							resolveSqlTypeIndicators( stdIndicators, registeredElementType, elementJavaType ),
+							resolveSqlTypeIndicators(
+									stdIndicators,
+									registeredElementType,
+									registeredElementType.getJavaTypeDescriptor()
+							),
 							selectable instanceof ColumnTypeInformation information ? information : null,
 							stdIndicators
 					);

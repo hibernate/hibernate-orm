@@ -4,7 +4,6 @@
  */
 package org.hibernate.dialect.lock;
 
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -29,8 +28,5 @@ public class PessimisticWriteUpdateLockingStrategy extends AbstractPessimisticUp
 	 */
 	public PessimisticWriteUpdateLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		super( lockable, lockMode );
-		if ( lockMode.lessThan( LockMode.PESSIMISTIC_READ ) ) {
-			throw new HibernateException( "[" + lockMode + "] not valid for update statement" );
-		}
 	}
 }

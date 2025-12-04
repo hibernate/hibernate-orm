@@ -271,10 +271,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	void warningsCreatingTempTable(SQLWarning warning);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Write locks via update not supported for non-versioned entities [%s]", id = 416)
-	void writeLocksNotSupported(String entityName);
-
-	@LogMessage(level = WARN)
 	@Message(
 			value = """
 					Dialect [%s] limits the number of elements in an IN predicate to %s entries.  \

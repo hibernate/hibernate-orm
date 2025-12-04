@@ -1128,6 +1128,7 @@ public class SessionImpl
 			event.setReadOnly( readOnly );
 			event.setLockOptions( lockOptions );
 			event.setAssociationFetch( false );
+			event.validate();
 			return event;
 		}
 	}

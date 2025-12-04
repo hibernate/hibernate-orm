@@ -51,16 +51,18 @@ public class DefaultPostLoadEventListener implements PostLoadEventListener, Call
 						OptimisticLockHelper.forceVersionIncrement( entity, entry, session );
 						break;
 					case OPTIMISTIC_FORCE_INCREMENT:
-						session.getActionQueue().registerCallback( new EntityIncrementVersionProcess( entity ) );
+						session.getActionQueue()
+								.registerCallback( new EntityIncrementVersionProcess( entity ) );
 						break;
 					case OPTIMISTIC:
-						session.getActionQueue().registerCallback( new EntityVerifyVersionProcess( entity ) );
+						session.getActionQueue()
+								.registerCallback( new EntityVerifyVersionProcess( entity ) );
 						break;
 				}
 			}
 			else {
-				throw new HibernateException("[" + lockMode
-						+ "] not supported for non-versioned entities [" + persister.getEntityName() + "]");
+				throw new HibernateException( "Entity '" + persister.getEntityName()
+							+ "' has no version and may not be locked at level " + lockMode);
 			}
 		}
 	}

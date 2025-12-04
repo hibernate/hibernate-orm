@@ -5,6 +5,7 @@ import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
 import org.apache.commons.collections4.list.UnmodifiableList;
 import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static org.hibernate.tool.internal.export.mapping.MappingExporter.HbmXmlOrigin;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class MappingExporterTest {
@@ -237,6 +239,16 @@ public class MappingExporterTest {
         String mappingXml = Files.readString(simpleMappingXmlFile.toPath());
         assertTrue(mappingXml.contains("entity-mappings"));
         System.out.println(mappingXml);
+    }
+
+    @Test
+    public void testHbmXmlOrigin() {
+        File hbmXmlFile = new File(tempDir, "foo.hbm.xml");
+        HbmXmlOrigin hxo = new HbmXmlOrigin(hbmXmlFile);
+        assertNotNull(hxo);
+        assertEquals(hbmXmlFile, hxo.getHbmXmlFile());
+        assertEquals(hbmXmlFile.getAbsolutePath(), hxo.getName());
+        assertEquals(SourceType.FILE, hxo.getType());
     }
 
     private static final Marshaller DUMMY_MARSHALLER = (Marshaller) Proxy.newProxyInstance(

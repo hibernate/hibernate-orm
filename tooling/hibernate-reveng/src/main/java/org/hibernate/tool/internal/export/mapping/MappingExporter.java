@@ -4,6 +4,8 @@ import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 import org.apache.commons.collections4.list.UnmodifiableList;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
 import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
@@ -21,6 +23,7 @@ import org.hibernate.tool.internal.util.DummyDialect;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -147,4 +150,21 @@ public class MappingExporter implements Exporter {
         }
     }
 
+    static class  HbmXmlOrigin extends Origin {
+
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        private final File hbmXmlFile;
+
+        public HbmXmlOrigin(File hbmXmlFile) {
+            super( SourceType.FILE, hbmXmlFile.getAbsolutePath() );
+            this.hbmXmlFile = hbmXmlFile;
+        }
+
+        public File getHbmXmlFile() {
+            return hbmXmlFile;
+        }
+
+    }
 }

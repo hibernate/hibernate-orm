@@ -129,8 +129,9 @@ public class ProcedureCallImpl<R>
 	}
 
 	private void registerParameters(SharedSessionContractImplementor session, NamedCallableQueryMemento memento) {
-		memento.getParameterMementos()
-				.forEach( parameterMemento -> registerParameter( parameterMemento.resolve( session ) ) );
+		for ( var parameterMemento : memento.getParameterMementos() ) {
+			registerParameter( parameterMemento.resolve( session ) );
+		}
 	}
 
 	private ProcedureCallImpl(

@@ -60,7 +60,7 @@ public class CalendarTimeJavaType extends AbstractTemporalJavaType<Calendar> {
 	}
 
 	public Calendar fromString(CharSequence string) {
-		Calendar result = new GregorianCalendar();
+		final var result = new GregorianCalendar();
 		result.setTime( JdbcTimeJavaType.INSTANCE.fromString( string.toString() ) );
 		return result;
 	}

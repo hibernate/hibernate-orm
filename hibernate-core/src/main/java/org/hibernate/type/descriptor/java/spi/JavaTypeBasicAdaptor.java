@@ -38,18 +38,6 @@ public class JavaTypeBasicAdaptor<T> extends AbstractClassJavaType<T> {
 	}
 
 	@Override
-	public String toString(T value) {
-		return value.toString();
-	}
-
-	@Override
-	public T fromString(CharSequence string) {
-		throw new UnsupportedOperationException(
-				"Conversion from String strategy not known for this Java type: " + getTypeName()
-		);
-	}
-
-	@Override
 	public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
 		throw new UnsupportedOperationException(
 				"Unwrap strategy not known for this Java type: " + getTypeName()

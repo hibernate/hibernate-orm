@@ -62,18 +62,6 @@ public final class UnknownBasicJavaType<T> extends AbstractJavaType<T> {
 	}
 
 	@Override
-	public String toString(T value) {
-		return value.toString();
-	}
-
-	@Override
-	public T fromString(CharSequence string) {
-		throw new UnsupportedOperationException(
-				"Conversion from String strategy not known for this Java type: " + getTypeName()
-		);
-	}
-
-	@Override
 	public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
 		if ( type.isAssignableFrom( getJavaTypeClass() ) ) {
 			//noinspection unchecked

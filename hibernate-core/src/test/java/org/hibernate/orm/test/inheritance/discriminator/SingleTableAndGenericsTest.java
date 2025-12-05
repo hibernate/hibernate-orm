@@ -32,16 +32,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				// the order is important to reproduce the issue
 				SingleTableAndGenericsTest.B.class,
 				SingleTableAndGenericsTest.A.class,
+				SingleTableAndGenericsTest.C.class,
 		}
 )
 @SessionFactory
 @JiraKey("HHH-17644")
+@JiraKey("HHH-19978")
 public class SingleTableAndGenericsTest {
 
 	@Test
 	public void testIt(SessionFactoryScope scope) {
 		Map<String,String> payload = Map.of("book","1");
 		String aId = "1";
+		String cId = "2";
 
 		scope.inTransaction(
 				session -> {
@@ -49,6 +52,11 @@ public class SingleTableAndGenericsTest {
 					a.setId( aId );
 					session.persist( a );
 					a.setPayload( payload );
+
+					C c = new C();
+					c.setId( cId );
+					session.persist( c );
+					c.setPayload( "{\"book\":\"2\"}" );
 				}
 		);
 
@@ -59,6 +67,32 @@ public class SingleTableAndGenericsTest {
 					Map<?,?> payload1 = a.getPayload();
 					assertThat( payload1 ).isNotNull();
 					assertTrue( payload1.containsKey("book") );
+
+					C c = session.find( C.class, cId );
+					assertThat( c ).isNotNull();
+					String payload2 = c.getPayload();
+					assertThat( payload2 ).isNotNull();
+					assertThat( payload2 ).contains( "book" );
+					assertThat( payload2 ).contains( "2" );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					Object aPayload = session.createQuery( "select a.payload from A a where a.id = :id").setParameter( "id", aId ).getSingleResult();
+					assertThat( aPayload ).isNotNull();
+					assertThat( aPayload ).isInstanceOf( Map.class );
+					Map<?,?> payload1 = (Map<?, ?>) aPayload;
+					assertThat( payload1 ).isNotNull();
+					assertTrue( payload1.containsKey("book") );
+
+					Object cPayload = session.createQuery( "select c.payload from C c where c.id = :id").setParameter( "id", cId ).getSingleResult();
+					assertThat( cPayload ).isNotNull();
+					assertThat( cPayload ).isInstanceOf( String.class );
+					String payload2 = (String) cPayload;
+					assertThat( payload2 ).isNotNull();
+					assertThat( payload2 ).contains( "book" );
+					assertThat( payload2 ).contains( "2" );
 				}
 		);
 	}
@@ -94,11 +128,13 @@ public class SingleTableAndGenericsTest {
 		}
 	}
 
-	@Entity(name = "C")
+	@Entity(name = "A")
 	@DiscriminatorValue("child")
-	// Changed from <String> to <Map> since the fix for HHH-19969; the restriction '|| type == Object.class' inside
-	// AbstractFormatMapper.fromString() was removed, so now no cast to String happens, but instead the json is serialized
-	// to either Map or List (depending on the json format)
 	public static class A extends B<Map<?,?>> {
+	}
+
+	@Entity(name = "C")
+	@DiscriminatorValue("child2")
+	public static class C extends B<String> {
 	}
 }

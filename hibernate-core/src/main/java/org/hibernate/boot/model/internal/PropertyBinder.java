@@ -109,6 +109,8 @@ public class PropertyBinder {
 
 	private String name;
 	private String returnedClassName;
+	private boolean generic;
+	private boolean genericSpecialization;
 	private boolean lazy;
 	private String lazyGroup;
 	private AccessType accessType;
@@ -164,6 +166,14 @@ public class PropertyBinder {
 
 	private void setReturnedClassName(String returnedClassName) {
 		this.returnedClassName = returnedClassName;
+	}
+
+	public void setGeneric(boolean generic) {
+		this.generic = generic;
+	}
+
+	public void setGenericSpecialization(boolean genericSpecialization) {
+		this.genericSpecialization = genericSpecialization;
 	}
 
 	public void setLazy(boolean lazy) {
@@ -441,6 +451,8 @@ public class PropertyBinder {
 		property.setCascade( cascadeTypes );
 		property.setPropertyAccessorName( accessType.getType() );
 		property.setReturnedClassName( returnedClassName );
+		property.setGeneric( generic );
+		property.setGenericSpecialization( genericSpecialization );
 //		property.setPropertyAccessStrategy( propertyAccessStrategy );
 		handleValueGeneration( property );
 		handleNaturalId( property );
@@ -1001,6 +1013,11 @@ public class PropertyBinder {
 			AnnotatedColumns columns,
 			ClassDetails returnedClass) {
 		final var memberDetails = inferredData.getAttributeMember();
+
+		if ( propertyHolder.isEntity() && propertyHolder.getPersistentClass().isAbstract() ) {
+			// When the type of the member is a type variable, we mark it as generic for abstract classes
+			setGeneric( inferredData.getClassOrElementType().getTypeKind() == TypeDetails.Kind.TYPE_VARIABLE );
+		}
 
 		// overrides from @MapsId or @IdClass if needed
 		final PropertyData overridingProperty =

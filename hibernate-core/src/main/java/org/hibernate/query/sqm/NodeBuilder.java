@@ -84,6 +84,7 @@ import jakarta.persistence.criteria.Subquery;
  * Adapts the JPA CriteriaBuilder to generate SQM nodes.
  *
  * @author Steve Ebersole
+ * @author Yoobin Yoon
  */
 public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContext {
 	default JpaMetamodel getDomainModel() {
@@ -245,6 +246,24 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Override
 	<T> SqmExpression<T[]> arrayTrim(Expression<T[]> arrayExpression, Integer elementCount);
+
+	@Override
+	<T> SqmExpression<T[]> arrayReverse(Expression<T[]> arrayExpression);
+
+	@Override
+	<T> SqmExpression<T[]> arraySort(Expression<T[]> arrayExpression);
+
+	@Override
+	<T> SqmExpression<T[]> arraySort(Expression<T[]> arrayExpression, boolean descending);
+
+	@Override
+	<T> SqmExpression<T[]> arraySort(Expression<T[]> arrayExpression, Expression<Boolean> descendingExpression);
+
+	@Override
+	<T> SqmExpression<T[]> arraySort(Expression<T[]> arrayExpression, boolean descending, boolean nullsFirst);
+
+	@Override
+	<T> SqmExpression<T[]> arraySort(Expression<T[]> arrayExpression, Expression<Boolean> descendingExpression, Expression<Boolean> nullsFirstExpression);
 
 	@Override
 	<T> SqmExpression<T[]> arrayFill(Expression<T> elementExpression, Expression<Integer> elementCountExpression);
@@ -497,6 +516,32 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Override
 	<C extends Collection<?>> SqmExpression<C> collectionTrim(Expression<C> arrayExpression, Integer elementCount);
+
+	@Override
+	<C extends Collection<?>> SqmExpression<C> collectionReverse(Expression<C> collectionExpression);
+
+	@Override
+	<C extends Collection<?>> SqmExpression<C> collectionSort(Expression<C> collectionExpression);
+
+	@Override
+	<C extends Collection<?>> SqmExpression<C> collectionSort(Expression<C> collectionExpression, boolean descending);
+
+	@Override
+	<C extends Collection<?>> SqmExpression<C> collectionSort(
+			Expression<C> collectionExpression,
+			Expression<Boolean> descendingExpression);
+
+	@Override
+	<C extends Collection<?>> SqmExpression<C> collectionSort(
+			Expression<C> collectionExpression,
+			boolean descending,
+			boolean nullsFirst);
+
+	@Override
+	<C extends Collection<?>> SqmExpression<C> collectionSort(
+			Expression<C> collectionExpression,
+			Expression<Boolean> descendingExpression,
+			Expression<Boolean> nullsFirstExpression);
 
 	@Override
 	<T> SqmExpression<Collection<T>> collectionFill(Expression<T> elementExpression, Expression<Integer> elementCountExpression);

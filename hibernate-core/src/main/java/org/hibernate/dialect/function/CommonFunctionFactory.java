@@ -62,6 +62,7 @@ import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTyp
  *
  * @author Steve Ebersole
  * @author Gavin King
+ * @author Yoobin Yoon
  */
 public class CommonFunctionFactory {
 
@@ -3319,6 +3320,108 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayTrim_oracle() {
 		functionRegistry.register( "array_trim", new OracleArrayTrimFunction() );
+	}
+
+	/**
+	 * CockroachDB and PostgreSQL array_reverse() function
+	 */
+	public void arrayReverse() {
+		functionRegistry.namedDescriptorBuilder( "array_reverse" )
+				.setArgumentsValidator(
+						StandardArgumentsValidators.composite(
+								StandardArgumentsValidators.exactly( 1 ),
+								ArrayArgumentValidator.DEFAULT_INSTANCE
+						) )
+				.setReturnTypeResolver( ArrayViaArgumentReturnTypeResolver.DEFAULT_INSTANCE )
+				.setArgumentTypeResolver(
+						StandardFunctionArgumentTypeResolvers.composite(
+								StandardFunctionArgumentTypeResolvers.invariant( ANY )
+						) )
+				.setArgumentListSignature( "(ARRAY array)" )
+				.register();
+	}
+
+	/**
+	 * array_reverse() emulation for PostgreSQL versions before 18 and HSQLDB
+	 */
+	public void arrayReverse_unnest() {
+		functionRegistry.register( "array_reverse", new PostgreSQLArrayReverseEmulation() );
+	}
+
+	/**
+	 * Oracle array_reverse() function
+	 */
+	public void arrayReverse_oracle() {
+		functionRegistry.register( "array_reverse", new OracleArrayReverseFunction() );
+	}
+
+	/**
+	 * H2 array_reverse() function
+	 */
+	public void arrayReverse_h2(int maximumArraySize) {
+		functionRegistry.register( "array_reverse", new H2ArrayReverseFunction( maximumArraySize ) );
+	}
+
+	/**
+	 * CockroachDB and PostgreSQL array_sort() function
+	 */
+	public void arraySort() {
+		functionRegistry.namedDescriptorBuilder( "array_sort" )
+				.setArgumentsValidator(
+						new ArgumentTypesValidator(
+								StandardArgumentsValidators.composite(
+										StandardArgumentsValidators.between( 1, 3 ),
+										ArrayArgumentValidator.DEFAULT_INSTANCE
+								),
+								FunctionParameterType.ANY,
+								FunctionParameterType.BOOLEAN,
+								FunctionParameterType.BOOLEAN
+						)
+				)
+				.setReturnTypeResolver( ArrayViaArgumentReturnTypeResolver.DEFAULT_INSTANCE )
+				.setArgumentTypeResolver(
+						StandardFunctionArgumentTypeResolvers.composite(
+								StandardFunctionArgumentTypeResolvers.invariant( ANY ),
+								StandardFunctionArgumentTypeResolvers.invariant(
+										typeConfiguration,
+										FunctionParameterType.BOOLEAN
+								),
+								StandardFunctionArgumentTypeResolvers.invariant(
+										typeConfiguration,
+										FunctionParameterType.BOOLEAN
+								)
+						)
+				)
+				.setArgumentListSignature( "(ARRAY array[, boolean descending[, boolean nulls_first]])" )
+				.register();
+	}
+
+	/**
+	 * PostgreSQL array_sort() emulation for versions before 18
+	 */
+	public void arraySort_unnest() {
+		functionRegistry.register( "array_sort", new PostgreSQLArraySortEmulation( typeConfiguration ) );
+	}
+
+	/**
+	 * Oracle array_sort() function
+	 */
+	public void arraySort_oracle() {
+		functionRegistry.register( "array_sort", new OracleArraySortFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2 array_sort() function
+	 */
+	public void arraySort_h2(int maximumArraySize) {
+		functionRegistry.register( "array_sort", new H2ArraySortFunction( maximumArraySize, typeConfiguration ) );
+	}
+
+	/**
+	 * HSQL array_sort() function
+	 */
+	public void arraySort_hsql() {
+		functionRegistry.register( "array_sort", new HSQLArraySortFunction( typeConfiguration ) );
 	}
 
 	/**

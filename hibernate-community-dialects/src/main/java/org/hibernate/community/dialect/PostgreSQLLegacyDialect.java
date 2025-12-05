@@ -171,6 +171,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * A {@linkplain Dialect SQL dialect} for PostgreSQL 8 and above.
  *
  * @author Gavin King
+ * @author Yoobin Yoon
  */
 public class PostgreSQLLegacyDialect extends Dialect {
 
@@ -667,6 +668,14 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		}
 		else {
 			functionFactory.arrayTrim_unnest();
+		}
+		if ( getVersion().isSameOrAfter( 18 ) ) {
+			functionFactory.arrayReverse();
+			functionFactory.arraySort();
+		}
+		else {
+			functionFactory.arrayReverse_unnest();
+			functionFactory.arraySort_unnest();
 		}
 		functionFactory.arrayFill_postgresql();
 		functionFactory.arrayToString_postgresql();

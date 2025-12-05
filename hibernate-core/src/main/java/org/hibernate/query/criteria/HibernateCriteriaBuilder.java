@@ -90,6 +90,7 @@ import jakarta.persistence.criteria.TemporalField;
  * @since 6.0
  *
  * @author Steve Ebersole
+ * @author Yoobin Yoon
  */
 @Incubating
 public interface HibernateCriteriaBuilder extends CriteriaBuilder {
@@ -2745,6 +2746,54 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	<T> JpaExpression<T[]> arrayTrim(Expression<T[]> arrayExpression, Integer elementCount);
 
 	/**
+	 * Reverses the order of elements in an array.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayReverse(Expression<T[]> arrayExpression);
+
+	/**
+	 * Sorts the elements of an array in ascending order.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arraySort(Expression<T[]> arrayExpression);
+
+	/**
+	 * Sorts the elements of an array in the specified order.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arraySort(Expression<T[]> arrayExpression, boolean descending);
+
+	/**
+	 * Sorts the elements of an array in the specified order.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arraySort(Expression<T[]> arrayExpression, Expression<Boolean> descendingExpression);
+
+	/**
+	 * Create an expression that sorts the given array with explicit null ordering.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arraySort(Expression<T[]> arrayExpression, boolean descending, boolean nullsFirst);
+
+	/**
+	 * Create an expression that sorts the given array with explicit null ordering.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arraySort(Expression<T[]> arrayExpression, Expression<Boolean> descendingExpression, Expression<Boolean> nullsFirstExpression);
+
+	/**
 	 * Creates array with the same element N times, as specified by the arguments.
 	 *
 	 * @since 6.4
@@ -3402,6 +3451,62 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 */
 	@Incubating
 	<C extends Collection<?>> JpaExpression<C> collectionTrim(Expression<C> arrayExpression, Integer elementCount);
+
+	/**
+	 * Create an expression that reverses the order of the elements of a collection.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	<C extends Collection<?>> JpaExpression<C> collectionReverse(Expression<C> collectionExpression);
+
+	/**
+	 * Create an expression that sorts the elements of a collection.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	<C extends Collection<?>> JpaExpression<C> collectionSort(Expression<C> collectionExpression);
+
+	/**
+	 * Create an expression that sorts the given collection in specified order.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	<C extends Collection<?>> JpaExpression<C> collectionSort(Expression<C> collectionExpression, boolean descending);
+
+	/**
+	 * Create an expression that sorts the given collection in specified order.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	<C extends Collection<?>> JpaExpression<C> collectionSort(
+			Expression<C> collectionExpression,
+			Expression<Boolean> descendingExpression);
+
+	/**
+	 * Create an expression that sorts the given collection with explicit null ordering.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	<C extends Collection<?>> JpaExpression<C> collectionSort(
+			Expression<C> collectionExpression,
+			boolean descending,
+			boolean nullsFirst);
+
+	/**
+	 * Create an expression that sorts the given collection with explicit null ordering.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	<C extends Collection<?>> JpaExpression<C> collectionSort(
+			Expression<C> collectionExpression,
+			Expression<Boolean> descendingExpression,
+			Expression<Boolean> nullsFirstExpression);
 
 	/**
 	 * Creates basic collection with the same element N times, as specified by the arguments.

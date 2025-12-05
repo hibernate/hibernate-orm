@@ -170,6 +170,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  * @author Steve Ebersole
  * @author Gavin King
  * @author Loïc Lefèvre
+ * @author Yoobin Yoon
  */
 public class OracleLegacyDialect extends Dialect {
 
@@ -384,6 +385,8 @@ public class OracleLegacyDialect extends Dialect {
 		functionFactory.arraySlice_oracle();
 		functionFactory.arrayReplace_oracle();
 		functionFactory.arrayTrim_oracle();
+		functionFactory.arrayReverse_oracle();
+		functionFactory.arraySort_oracle();
 		functionFactory.arrayFill_oracle();
 		functionFactory.arrayToString_oracle();
 
